@@ -168,7 +168,7 @@ jobs:
           NX_CACHE_DIRECTORY: ${{ 'tmp' }}
 
       - name: Notify test failure
-        if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name !== 'workflow_dispatch' }}
+        if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'failure'
