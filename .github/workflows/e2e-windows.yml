@@ -44,54 +44,55 @@ jobs:
 
     name: ${{ matrix.packages }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Use Node.js ${{ matrix.node_version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node_version }}
-        registry-url: http://localhost:4872
+      - name: Use Node.js ${{ matrix.node_version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node_version }}
+          registry-url: http://localhost:4872
 
-    - name: Yarn cache directory path
-      id: yarn-cache-dir-path
-      shell: bash
-      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      - name: Yarn cache directory path
+        id: yarn-cache-dir-path
+        shell: bash
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
 
-    - name: Cache yarn
-      uses: actions/cache@v3
-      with:
-        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-        key: windows-node-${{ matrix.node_version }}-yarn-${{ hashFiles('yarn.lock') }}
-        restore-keys: |
-          windows-node-${{ matrix.node_version }}-yarn-
-          windows-node-${{ matrix.node_version }}-
-          windows-
+      - name: Cache yarn
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: windows-node-${{ matrix.node_version }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            windows-node-${{ matrix.node_version }}-yarn-
+            windows-node-${{ matrix.node_version }}-
+            windows-
 
-    - name: Install packages
-      run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+      - name: Install packages
+        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
 
-    - name: Run e2e tests
-      run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}" --parallel=1
-      env:
-        GIT_AUTHOR_EMAIL: test@test.com
-        GIT_AUTHOR_NAME: Test
-        GIT_COMMITTER_EMAIL: test@test.com
-        GIT_COMMITTER_NAME: Test
-        NX_E2E_CI_CACHE_KEY: e2e-gha-windows-${{ matrix.node_version }}-${{ matrix.package_manager }}
-        NX_E2E_RUN_CYPRESS: ${{ 'true' }}
-        NODE_OPTIONS: --max_old_space_size=8192
-        SELECTED_PM: ${{ matrix.package_manager }}
-        npm_config_registry: http://localhost:4872
-        NX_VERBOSE_LOGGING: ${{ 'true' }}
-        NX_E2E_SKIP_BUILD_CLEANUP: ${{ 'true' }}
-        NX_CACHE_DIRECTORY: ${{ 'tmp' }}
+      - name: Run e2e tests
+        run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}" --parallel=1
+        env:
+          GIT_AUTHOR_EMAIL: test@test.com
+          GIT_AUTHOR_NAME: Test
+          GIT_COMMITTER_EMAIL: test@test.com
+          GIT_COMMITTER_NAME: Test
+          NX_E2E_CI_CACHE_KEY: e2e-gha-windows-${{ matrix.node_version }}-${{ matrix.package_manager }}
+          NODE_OPTIONS: --max_old_space_size=8192
+          SELECTED_PM: ${{ matrix.package_manager }}
+          npm_config_registry: http://localhost:4872
+          NX_E2E_SKIP_BUILD_CLEANUP: 'true'
+          NX_E2E_RUN_CYPRESS: 'true'
+          NX_VERBOSE_LOGGING: 'true'
+          NX_PERF_LOGGING: 'false'
+          NX_NATIVE_HASHER: 'true'
 
-    - name: Setup tmate session
-      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
-      uses: mxschmitt/action-tmate@v3.8
-      with:
-        sudo: false # disable sudo for windows debugging
+      - name: Setup tmate session
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
+        uses: mxschmitt/action-tmate@v3.8
+        with:
+          sudo: false # disable sudo for windows debugging
 
   report-success:
     if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name == 'workflow_dispatch' }} # only once it's fixed on manual dispatch
