@@ -872,7 +872,12 @@ function saveProjectsConfigurationsInWrappedSchematic(
       newAngularJson.projects[projectName] = projects[projectName];
     } else {
       if (existingProjects.has(projectName)) {
-        updateProjectConfiguration(host, projectName, projects[projectName]);
+        if (
+          JSON.stringify(existingProjects.get(projectName)) !==
+          JSON.stringify(projects[projectName])
+        ) {
+          updateProjectConfiguration(host, projectName, projects[projectName]);
+        }
       } else {
         addProjectConfiguration(host, projectName, projects[projectName]);
       }
