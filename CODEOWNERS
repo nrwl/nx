@@ -133,7 +133,7 @@
 
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
-/e2e/utils/** @meeroslav @barbados-clemens @vsavkin
+/e2e/utils/** @meeroslav @barbados-clemens @vsavkin @mandarini
 /community @AgentEnder @FrozenPandaz
 /CONTRIBUTING.md @FrozenPandaz @isaacplmann
 /CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
