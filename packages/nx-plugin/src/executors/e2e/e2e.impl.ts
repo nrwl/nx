@@ -12,6 +12,7 @@ import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
 import { jestExecutor } from '@nrwl/jest/src/executors/jest/jest.impl';
 import type { NxPluginE2EExecutorOptions } from './schema';
 
+// TODO(Caleb & Craigory): can we get rid of this and just use @nrwl/jest directly?
 export async function* nxPluginE2EExecutor(
   options: NxPluginE2EExecutorOptions,
   context: ExecutorContext
