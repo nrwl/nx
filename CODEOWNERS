@@ -94,6 +94,7 @@
 /packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz @JamesHenry
 /packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
 /e2e/linter/** @meeroslav @FrozenPandaz @barbados-clemens
+.eslint* @meeroslav @FrozenPandaz @JamesHenry
 
 # Storybook
 /docs/generated/packages/storybook/** @mandarini @jaysoo @Coly010
@@ -132,7 +133,7 @@
 
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
-/e2e/utils/** @meeroslav @barbados-clemens @vsavkin
+/e2e/utils/** @meeroslav @barbados-clemens @vsavkin @mandarini
 /community @AgentEnder @FrozenPandaz
 /CONTRIBUTING.md @FrozenPandaz @isaacplmann
 /CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
@@ -146,7 +147,8 @@
 
 # CI
 /.circleci/** @meeroslav @vsavkin @FrozenPandaz
-/.github/** @meeroslav @vsavkin @FrozenPandaz
+/.github/** @meeroslav @vsavkin @FrozenPandaz @JamesHenry
+/.husky/** @meeroslav @vsavkin @FrozenPandaz
 /packages/workspace/src/generators/ci-workflow/** @meeroslav @StalkAltan @vsavkin
 
 # Global Files
