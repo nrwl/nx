@@ -94,6 +94,7 @@
 /packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz @JamesHenry
 /packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
 /e2e/linter/** @meeroslav @FrozenPandaz @barbados-clemens
+.eslint* @meeroslav @FrozenPandaz @JamesHenry
 
 # Storybook
 /docs/generated/packages/storybook/** @mandarini @jaysoo @Coly010
