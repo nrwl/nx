@@ -11,7 +11,6 @@ import {
   runCreateWorkspace,
   tmpProjPath,
   uniq,
-  updateFile,
   updateJson,
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';

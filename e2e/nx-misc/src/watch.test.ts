@@ -4,13 +4,12 @@ import {
   newProject,
   runCLI,
   uniq,
-  getPackageManagerCommand,
   tmpProjPath,
   getStrippedEnvironmentVariables,
   updateJson,
-  isVerbose,
+  isVerboseE2ERun,
 } from '@nrwl/e2e/utils';
-import { exec, spawn } from 'child_process';
+import { spawn } from 'child_process';
 
 describe('Nx Commands', () => {
   let proj1 = uniq('proj1');
@@ -116,10 +115,8 @@ async function wait(timeout = 200) {
 }
 
 async function runWatch(command: string) {
-  const output = [];
-  const pm = getPackageManagerCommand();
   const runCommand = `npx -c 'nx watch --verbose ${command}'`;
-  isVerbose() && console.log(runCommand);
+  isVerboseE2ERun() && console.log(runCommand);
   return new Promise<(timeout?: number) => Promise<string[]>>((resolve) => {
     const p = spawn(runCommand, {
       cwd: tmpProjPath(),
@@ -136,7 +133,7 @@ async function runWatch(command: string) {
     p.stdout?.on('data', (data) => {
       output += data;
       const s = data.toString().trim();
-      isVerbose() && console.log(s);
+      isVerboseE2ERun() && console.log(s);
       if (s.includes('watch process waiting')) {
         resolve(async (timeout = 6000) => {
           await wait(timeout);

@@ -40,12 +40,14 @@ export function expectTestsPass(v: { stdout: string; stderr: string }) {
   expect(v.stderr).not.toContain('fail');
 }
 
+// TODO(meeroslav): This is test specific, it should not be in the utils
 export function expectNoAngularDevkit() {
   const { list } = getPackageManagerCommand();
   const result = runCommand(`${list} @angular-devkit/core`);
   expect(result).not.toContain('@angular-devkit/core');
 }
 
+// TODO(meeroslav): This is test specific, it should not be in the utils
 export function expectNoTsJestInJestConfig(appName: string) {
   const jestConfig = readFile(
     joinPathFragments('apps', appName, 'jest.config.ts')
