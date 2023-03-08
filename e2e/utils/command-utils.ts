@@ -315,7 +315,7 @@ export function runCLI(
     const r = stripConsoleColors(logs);
 
     if (isVerbose()) {
-      console.log(logs);
+      console.log('Katerina 1', logs);
     }
 
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
@@ -329,7 +329,7 @@ export function runCLI(
       return stripConsoleColors(e.stdout?.toString() + e.stderr?.toString());
     } else {
       logError(
-        `Original command: ${command}`,
+        `Katerina 2 Original command: ${command}`,
         `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
       );
       throw e;

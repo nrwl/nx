@@ -34,18 +34,26 @@ let projName: string;
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
-export function newProject({
-  name = uniq('proj'),
-  packageManager = getSelectedPackageManager(),
-} = {}): string {
+export function newProject(
+  { name = uniq('proj'), packageManager = getSelectedPackageManager() } = {},
+  err: boolean = false
+): string {
   try {
     const projScope = 'proj';
 
     if (!directoryExists(tmpBackupProjPath())) {
-      runCreateWorkspace(projScope, {
-        preset: 'empty',
-        packageManager,
-      });
+      if (err) {
+        runCreateWorkspace(projScope, {
+          preset: 'empty',
+          packageManager,
+          bundler: 'asdfasdf' as any,
+        });
+      } else {
+        runCreateWorkspace(projScope, {
+          preset: 'empty',
+          packageManager,
+        });
+      }
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {

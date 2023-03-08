@@ -28,7 +28,7 @@ describe('Vite Plugin', () => {
     describe('convert React webpack app to vite using the vite:configuration generator', () => {
       beforeEach(() => {
         proj = newProject();
-        runCLI(`generate @nrwl/react:app ${myApp} --bundler=webpack`);
+        runCLI(`generate @nrwl/react:app ${myApp} --bundler=kndnjsu`);
         runCLI(`generate @nrwl/vite:configuration ${myApp}`);
       });
       afterEach(() => cleanupProject());
@@ -63,7 +63,7 @@ describe('Vite Plugin', () => {
 
     describe('set up new React app with --bundler=vite option', () => {
       beforeEach(() => {
-        proj = newProject();
+        proj = newProject({}, true);
         runCLI(`generate @nrwl/react:app ${myApp} --bundler=vite`);
         createFile(`apps/${myApp}/public/hello.md`, `# Hello World`);
         updateFile(
@@ -121,6 +121,23 @@ describe('Vite Plugin', () => {
         expect(
           readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
         ).not.toContain('MyDevelopmentValue');
+        rmDist();
+      }, 200000);
+    });
+
+    describe('set up new React lib with --bundler=none option', () => {
+      const myLib = uniq('my-lib');
+      beforeEach(() => {
+        proj = newProject();
+        runCLI(`generate @nrwl/react:lib ${myLib} --bundler=none`);
+      });
+      afterEach(() => cleanupProject());
+      it('should build application', async () => {
+        console.log(
+          `Katerina will attemps to build non-builable lib with command being "build ${myLib}"`
+        );
+        runCLI(`build ${myLib}`);
+        expect(fileExists(`dist/libs/${myLib}/assets/index.js`)).toBeFalsy();
         rmDist();
       }, 200000);
     });
