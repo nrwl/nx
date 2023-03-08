@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  ensurePackage,
   extractLayoutDirectory,
   formatFiles,
   generateFiles,
@@ -352,6 +353,11 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(tree, schema);
   const tasks: GeneratorCallback[] = [];
+
+  if (options.framework === 'nest') {
+    const { applicationGenerator } = ensurePackage('@nrwl/nest', nxVersion);
+    return await applicationGenerator(tree, options);
+  }
 
   const initTask = await initGenerator(tree, {
     ...schema,

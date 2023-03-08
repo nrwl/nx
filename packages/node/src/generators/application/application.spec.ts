@@ -464,6 +464,7 @@ describe('app', () => {
     ['fastify' as const, true],
     ['express' as const, false],
     ['koa' as const, false],
+    ['nest' as const, false],
   ])('--unitTestRunner', (framework, checkSpecFile) => {
     it('should generate test target and spec file by default', async () => {
       await applicationGenerator(tree, {
