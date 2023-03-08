@@ -57,6 +57,7 @@ function getWebpackBuildConfig(
   return {
     executor: `@nrwl/webpack:webpack`,
     outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
     options: {
       target: 'node',
       compiler: 'tsc',
@@ -77,11 +78,9 @@ function getWebpackBuildConfig(
       ),
     },
     configurations: {
+      development: {},
       production: {
         ...(options.docker && { generateLockfile: true }),
-        optimization: true,
-        extractLicenses: true,
-        inspect: false,
       },
     },
   };
@@ -94,6 +93,7 @@ function getEsBuildConfig(
   return {
     executor: '@nrwl/esbuild:esbuild',
     outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
     options: {
       platform: 'node',
       outputPath: joinPathFragments(
@@ -116,9 +116,14 @@ function getEsBuildConfig(
       },
     },
     configurations: {
+      development: {},
       production: {
         ...(options.docker && { generateLockfile: true }),
-        esbuildOptions: { sourcemap: false },
+        esbuildOptions: {
+          sourcemap: false,
+          // Generate CJS files as .js so imports can be './foo' rather than './foo.cjs'.
+          outExtension: { '.js': '.js' },
+        },
       },
     },
   };
@@ -127,10 +132,14 @@ function getEsBuildConfig(
 function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
     executor: '@nrwl/js:node',
+    defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.name}:build`,
     },
     configurations: {
+      development: {
+        buildTarget: `${options.name}:build:development`,
+      },
       production: {
         buildTarget: `${options.name}:build:production`,
       },
