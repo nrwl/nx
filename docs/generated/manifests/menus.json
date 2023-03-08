@@ -1147,9 +1147,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Encapsulated Nx and the Nx Wrapper",
-            "path": "/more-concepts/encapsulated-nx-and-the-wrapper",
-            "id": "encapsulated-nx-and-the-wrapper",
+            "name": "Nx and the Nx Wrapper",
+            "path": "/more-concepts/nx-and-the-wrapper",
+            "id": "nx-and-the-wrapper",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1310,9 +1310,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Encapsulated Nx and the Nx Wrapper",
-        "path": "/more-concepts/encapsulated-nx-and-the-wrapper",
-        "id": "encapsulated-nx-and-the-wrapper",
+        "name": "Nx and the Nx Wrapper",
+        "path": "/more-concepts/nx-and-the-wrapper",
+        "id": "nx-and-the-wrapper",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

@@ -62,14 +62,15 @@ if (
 
   // this file is already in the local workspace
   if (localNx === resolveNx(null)) {
-    if (localNx.includes('.nx') && !process.env.NX_WRAPPER_SET) {
-      const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
-      require(nxWrapperPath);
-    }
     initLocal(workspace);
   } else {
     // Nx is being run from globally installed CLI - hand off to the local
-    require(localNx);
+    if (localNx.includes('.nx')) {
+      const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
+      require(nxWrapperPath);
+    } else {
+      require(localNx);
+    }
   }
 }
 

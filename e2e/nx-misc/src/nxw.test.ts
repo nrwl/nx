@@ -1,6 +1,6 @@
 import type { NxJsonConfiguration } from '@nrwl/devkit';
 import {
-  newEncapsulatedNxWorkspace,
+  newWrappedNxWorkspace,
   updateFile,
   updateJson,
   checkFilesDoNotExist,
@@ -13,11 +13,11 @@ import {
 } from '@nrwl/e2e/utils';
 import { bold } from 'chalk';
 
-describe('encapsulated nx', () => {
-  let runEncapsulatedNx: ReturnType<typeof newEncapsulatedNxWorkspace>;
+describe('nx wrapper / .nx installation', () => {
+  let runNxWrapper: ReturnType<typeof newWrappedNxWorkspace>;
 
   beforeAll(() => {
-    runEncapsulatedNx = newEncapsulatedNxWorkspace();
+    runNxWrapper = newWrappedNxWorkspace();
   });
 
   afterAll(() => {
@@ -26,7 +26,7 @@ describe('encapsulated nx', () => {
     });
   });
 
-  it('should support running targets in a encapsulated repo', () => {
+  it('should support running targets in a repo with .nx', () => {
     updateFile(
       'projects/a/project.json',
       JSON.stringify({
@@ -47,9 +47,9 @@ describe('encapsulated nx', () => {
       return json;
     });
 
-    expect(runEncapsulatedNx('echo a')).toContain('Hello from A');
+    expect(runNxWrapper('echo a')).toContain('Hello from A');
 
-    expect(runEncapsulatedNx('echo a')).toContain(
+    expect(runNxWrapper('echo a')).toContain(
       'Nx read the output from the cache instead of running the command for 1 out of 1 tasks'
     );
 
@@ -64,7 +64,7 @@ describe('encapsulated nx', () => {
   });
 
   it('should work with nx report', () => {
-    const output = runEncapsulatedNx('report');
+    const output = runNxWrapper('report');
     expect(output).toMatch(new RegExp(`nx.*:.*${getPublishedVersion()}`));
     expect(output).toMatch(
       new RegExp(`@nrwl/nest.*:.*${getPublishedVersion()}`)
@@ -73,7 +73,7 @@ describe('encapsulated nx', () => {
   });
 
   it('should work with nx list', () => {
-    let output = runEncapsulatedNx('list');
+    let output = runNxWrapper('list');
     const lines = output.split('\n');
     const installedPluginStart = lines.findIndex((l) =>
       l.includes('Installed plugins')
@@ -91,7 +91,7 @@ describe('encapsulated nx', () => {
       installedPluginLines.some((x) => x.includes(`${bold('@nrwl/nest')}`))
     );
 
-    output = runEncapsulatedNx('list @nrwl/nest');
+    output = runNxWrapper('list @nrwl/nest');
     expect(output).toContain('Capabilities in @nrwl/nest');
   });
 
@@ -101,9 +101,7 @@ describe('encapsulated nx', () => {
       j.installation.plugins['@nrwl/workspace'] = getPublishedVersion();
       return j;
     });
-    expect(() =>
-      runEncapsulatedNx(`g npm-package ${uniq('pkg')}`)
-    ).not.toThrow();
+    expect(() => runNxWrapper(`g npm-package ${uniq('pkg')}`)).not.toThrow();
     expect(() => checkFilesExist());
   });
 
@@ -215,7 +213,7 @@ describe('encapsulated nx', () => {
       };
       return j;
     });
-    runEncapsulatedNx(
+    runNxWrapper(
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
         env: {
@@ -250,7 +248,7 @@ describe('encapsulated nx', () => {
     });
 
     // runs migrations
-    runEncapsulatedNx('migrate --run-migrations=migrations.json', {
+    runNxWrapper('migrate --run-migrations=migrations.json', {
       env: {
         ...process.env,
         NX_MIGRATE_SKIP_INSTALL: 'true',

@@ -365,13 +365,15 @@ export function newLernaWorkspace({
   }
 }
 
-export function newEncapsulatedNxWorkspace({
-  name = uniq('encapsulated'),
+export function newWrappedNxWorkspace({
+  name = uniq('wrapped'),
   pmc = getPackageManagerCommand(),
 } = {}): (command: string, opts?: Partial<ExecSyncOptions>) => string {
   projName = name;
   ensureDirSync(tmpProjPath());
-  runCommand(`${pmc.runUninstalledPackage} nx@latest init --encapsulated`);
+  runCommand(
+    `${pmc.runUninstalledPackage} nx@latest init --use-dot-nx-installation`
+  );
   return (command: string, opts: Partial<ExecSyncOptions> | undefined) => {
     if (process.platform === 'win32') {
       return runCommand(`./nx.bat ${command}`, { ...opts, failOnError: true });
