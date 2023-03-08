@@ -32,6 +32,7 @@
     "@nrwl/jest": "file:../jest",
     "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
+    "@phenomnomnominal/tsquery": "4.1.1",
     "dotenv": "~10.0.0",
     "fs-extra": "^11.1.0",
     "tslib": "^2.3.0"
