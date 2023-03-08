@@ -21,8 +21,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import { getRootTsConfigPathInTree } from '@nrwl/js';
+import { getRootTsConfigPathInTree, insertImport } from '@nrwl/js';
 import { basename, relative } from 'path';
 import type {
   Node,

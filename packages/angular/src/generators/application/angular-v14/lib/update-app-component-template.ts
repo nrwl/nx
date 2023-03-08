@@ -1,6 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
-import type * as ts from 'typescript';
-import { replaceNodeValue } from '@nrwl/workspace/src/utilities/ast-utils';
+import { replaceNodeValue } from '@nrwl/js';
 import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import { getDecoratorPropertyValueNode } from '../../../../utils/nx-devkit/ast-utils';
 import { nrwlHomeTemplate } from './nrwl-home-tpl';

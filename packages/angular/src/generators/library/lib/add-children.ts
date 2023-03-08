@@ -1,5 +1,5 @@
 import { names, Tree } from '@nrwl/devkit';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
+import { insertImport } from '@nrwl/js';
 import { addImportToModule } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';

@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/devkit';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
+import { insertImport } from '@nrwl/js';
 import { addRouteToNgModule } from './ast-utils';
 import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
