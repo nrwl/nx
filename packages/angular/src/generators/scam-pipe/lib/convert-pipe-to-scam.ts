@@ -1,7 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, names } from '@nrwl/devkit';
 import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
+import { insertImport } from '@nrwl/js';
 import type { FileInfo } from '../../utils/file-info';
 import type { NormalizedSchema } from '../schema';
 

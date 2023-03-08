@@ -1,8 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
-import {
-  addGlobal,
-  removeChange,
-} from '@nrwl/workspace/src/utilities/ast-utils';
+import { addGlobal, removeChange } from '@nrwl/js';
 import type { NormalizedOptions } from '../schema';
 import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 

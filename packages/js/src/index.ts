@@ -5,6 +5,7 @@ export * from './utils/typescript/get-source-nodes';
 export * from './utils/compiler-helper-dependency';
 export * from './utils/typescript/ts-config';
 export * from './utils/typescript/create-ts-config';
+export * from './utils/typescript/ast-utils';
 export * from './utils/package-json';
 export * from './utils/assets';
 export * from './utils/package-json/update-package-json';
