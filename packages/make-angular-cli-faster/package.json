@@ -19,7 +19,7 @@
     "CLI"
   ],
   "bin": {
-    "make-angular-cli-faster": "./src/index.js"
+    "make-angular-cli-faster": "./index.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -27,12 +27,6 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "dependencies": {
-    "enquirer": "^2.3.6",
-    "nx": "file:../nx",
-    "semver": "7.3.4",
-    "yargs-parser": "21.1.1"
-  },
   "publishConfig": {
     "access": "public"
   }
