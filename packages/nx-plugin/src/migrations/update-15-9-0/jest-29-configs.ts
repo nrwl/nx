@@ -1,13 +1,13 @@
 import {
+  createProjectGraphAsync,
   formatFiles,
   logger,
   stripIndents,
   Tree,
-  createProjectGraphAsync,
 } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
-import { forEachExecutorOptionsInGraph } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { forEachExecutorOptionsInGraph } from '@nrwl/devkit/src/generators/executor-options-utils';
 import { TS_QUERY_JEST_CONFIG_PREFIX } from '@nrwl/jest/src/utils/ast-utils';
 import { findRootJestPreset } from '@nrwl/jest/src/utils/config/find-root-jest-files';
 import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
@@ -227,4 +227,5 @@ function getNodeWithComments(fullText: string, node: ts.Node) {
   }
   return node.getText();
 }
+
 export default updateConfigsJest29;

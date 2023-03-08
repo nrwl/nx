@@ -1,9 +1,9 @@
-import {
-  Tree,
-  getProjects,
-  ProjectConfiguration,
-  ProjectGraph,
-} from '@nrwl/devkit';
+import type { Tree } from 'nx/src/generators/tree';
+import type { ProjectGraph } from 'nx/src/config/project-graph';
+import type { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
+import { requireNx } from '../../nx';
+
+const { getProjects } = requireNx();
 
 type CallBack<T> = (
   currentValue: T,
@@ -25,7 +25,7 @@ export function forEachExecutorOptions<Options>(
    * Callback that is called for each options configured for a builder
    */
   callback: CallBack<Options>
-) {
+): void {
   forEachProjectConfig(getProjects(tree), executorName, callback);
 }
 
@@ -37,7 +37,7 @@ export function forEachExecutorOptionsInGraph<Options>(
   graph: ProjectGraph,
   executorName: string,
   callback: CallBack<Options>
-) {
+): void {
   const projects = new Map<string, ProjectConfiguration>();
   Object.values(graph.nodes).forEach((p) => projects.set(p.name, p.data));
 
@@ -48,7 +48,7 @@ function forEachProjectConfig<Options>(
   projects: Map<string, ProjectConfiguration>,
   executorName: string,
   callback: CallBack<Options>
-) {
+): void {
   for (const [projectName, project] of projects) {
     for (const [targetName, target] of Object.entries(project.targets || {})) {
       if (executorName !== target.executor) {
