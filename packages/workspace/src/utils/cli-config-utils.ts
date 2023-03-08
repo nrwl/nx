@@ -1,19 +1,11 @@
 import type { Tree } from '@angular-devkit/schematics';
 
-import { readJsonInTree } from './ast-utils';
-
-import type { NxJsonConfiguration } from '@nrwl/devkit';
-
 /**
  * @deprecated Nx no longer supports workspace.json
  */
 export function getWorkspacePath(host: Tree) {
   const possibleFiles = ['/angular.json', '/workspace.json'];
   return possibleFiles.filter((path) => host.exists(path))[0];
-}
-
-export function getNpmScope(host: Tree): string {
-  return readJsonInTree<NxJsonConfiguration>(host, 'nx.json').npmScope;
 }
 
 export function parseTarget(targetString: string) {

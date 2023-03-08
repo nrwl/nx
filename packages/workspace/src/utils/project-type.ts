@@ -1,7 +1,3 @@
-import type { Tree } from '@angular-devkit/schematics';
-import { getProjectConfig } from './ast-utils';
-import { join } from '@angular-devkit/core';
-
 export enum ProjectType {
   Application = 'application',
   Library = 'library',
@@ -23,12 +19,4 @@ export function projectDir(projectType: ProjectType) {
     // libs/test-lib/src/lib
     return 'lib';
   }
-}
-
-export function projectRootPath(tree: Tree, projectName: string): string {
-  const { sourceRoot: projectSrcRoot, projectType } = getProjectConfig(
-    tree,
-    projectName
-  );
-  return join(projectSrcRoot, projectDir(projectType));
 }
