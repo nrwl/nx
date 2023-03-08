@@ -19,7 +19,7 @@
     "CLI"
   ],
   "bin": {
-    "add-nx-to-monorepo": "./src/add-nx-to-monorepo.js"
+    "add-nx-to-monorepo": "./index.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -27,12 +27,6 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "dependencies": {
-    "enquirer": "~2.3.6",
-    "ignore": "^5.0.4",
-    "nx": "file:../nx",
-    "yargs-parser": "21.1.1"
-  },
   "publishConfig": {
     "access": "public"
   }
