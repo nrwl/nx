@@ -64,6 +64,7 @@ describe('Node Applications + webpack', () => {
     const expressApp = uniq('expressapp');
     const fastifyApp = uniq('fastifyapp');
     const koaApp = uniq('koaapp');
+    const nestApp = uniq('koaapp');
 
     runCLI(`generate @nrwl/node:lib ${testLib1}`);
     runCLI(`generate @nrwl/node:lib ${testLib2} --importPath=@acme/test2`);
@@ -76,18 +77,27 @@ describe('Node Applications + webpack', () => {
     runCLI(
       `generate @nrwl/node:app ${koaApp} --framework=koa --no-interactive`
     );
+    runCLI(
+      `generate @nrwl/node:app ${nestApp} --framework=nest --bundler=webpack --no-interactive`
+    );
 
     // Use esbuild by default
     checkFilesDoNotExist(`apps/${expressApp}/webpack.config.js`);
     checkFilesDoNotExist(`apps/${fastifyApp}/webpack.config.js`);
     checkFilesDoNotExist(`apps/${koaApp}/webpack.config.js`);
 
+    // Uses only webpack
+    checkFilesExist(`apps/${nestApp}/webpack.config.js`);
+
     expect(() => runCLI(`lint ${expressApp}`)).not.toThrow();
     expect(() => runCLI(`lint ${fastifyApp}`)).not.toThrow();
     expect(() => runCLI(`lint ${koaApp}`)).not.toThrow();
+    expect(() => runCLI(`lint ${nestApp}`)).not.toThrow();
+
     expect(() => runCLI(`lint ${expressApp}-e2e`)).not.toThrow();
     expect(() => runCLI(`lint ${fastifyApp}-e2e`)).not.toThrow();
     expect(() => runCLI(`lint ${koaApp}-e2e`)).not.toThrow();
+    expect(() => runCLI(`lint ${nestApp}-e2e`)).not.toThrow();
 
     // Only Fastify generates with unit tests since it supports them without additional libraries.
     expect(() => runCLI(`lint ${fastifyApp}`)).not.toThrow();
@@ -99,9 +109,13 @@ describe('Node Applications + webpack', () => {
     addLibImport(koaApp, testLib1);
     addLibImport(koaApp, testLib2, '@acme/test2');
 
+    addLibImport(nestApp, testLib1);
+    addLibImport(nestApp, testLib2, '@acme/test2');
+
     await runE2eTests(expressApp);
     await runE2eTests(fastifyApp);
     await runE2eTests(koaApp);
+    await runE2eTests(nestApp);
   }, 300_000);
 
   it('should generate a Dockerfile', async () => {

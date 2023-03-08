@@ -47,5 +47,6 @@ export function toNodeApplicationGeneratorOptions(
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
     bundler: 'webpack', // Some features require webpack plugins such as TS transformers
+    isNest: true,
   };
 }

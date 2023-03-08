@@ -39,6 +39,13 @@
       "enum": ["eslint", "none"],
       "default": "eslint"
     },
+    "isNest": {
+      "description": "Is the E2E server project nest",
+      "type": "boolean",
+      "default": false,
+      "hidden": true,
+      "x-priority": "internal"
+    },
     "rootProject": {
       "description": "Create node application at the root of the workspace.",
       "type": "boolean",
