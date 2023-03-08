@@ -58,7 +58,7 @@ export function findProjectForPath(
   return projectRootMap.get(currentPath);
 }
 
-function normalizeProjectRoot(root: string) {
+export function normalizeProjectRoot(root: string) {
   root = root === '' ? '.' : root;
   return root && root.endsWith('/') ? root.substring(0, root.length - 1) : root;
 }
