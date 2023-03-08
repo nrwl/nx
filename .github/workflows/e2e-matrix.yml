@@ -62,9 +62,9 @@ jobs:
         include:
           # os short names
           - os: ubuntu-latest
-            os-name: linux
+            os-name: '🐧'
           - os: macos-latest
-            os-name: macos
+            os-name: ''
           # codeowner groups
           - project: e2e-add-nx-to-monorepo
             codeowners: 'S04SYHYKGNP'
@@ -129,11 +129,11 @@ jobs:
         exclude:
           # exclude react-native tests from ubuntu
           - os: ubuntu-latest
-            packages: e2e-react-native
+            project: e2e-react-native
           - os: ubuntu-latest
-            packages: e2e-detox
+            project: e2e-detox
           - os: ubuntu-latest
-            packages: e2e-expo
+            project: e2e-expo
           # run just npm v16 on macos
           - os: macos-latest
             package_manager: yarn
@@ -226,7 +226,8 @@ jobs:
           NX_CACHE_DIRECTORY: ${{ 'tmp' }}
 
       - name: Notify test failure
-        if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+        # if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+        if: ${{ failure() }}
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'failure'
