@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
-import { getSourceNodes } from '@nrwl/workspace/src/utilities/typescript/get-source-nodes';
+import { getSourceNodes } from '@nrwl/js';
 import type { PropertyDeclaration } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
 import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
@@ -8,6 +8,7 @@ import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescrip
 let tsModule: typeof import('typescript');
 
 export type KnobType = 'text' | 'boolean' | 'number' | 'select';
+
 export interface InputDescriptor {
   name: string;
   type: KnobType;

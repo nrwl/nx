@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 import { findNodes } from 'nx/src/utils/typescript';
-import { getSourceNodes } from '@nrwl/workspace/src/utilities/typescript/get-source-nodes';
+import { getSourceNodes } from '@nrwl/js';
 import { dirname, join } from 'path';
 import { names, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import {
