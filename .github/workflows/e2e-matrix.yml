@@ -66,8 +66,66 @@ jobs:
           - os: macos-latest
             os-name: macos
           # codeowner groups
-          # - project: e2e-...
-          #   codeowners: 'S...'
+          - project: e2e-add-nx-to-monorepo
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-angular-core
+            codeowners: 'S04SS457V38'
+          - project: e2e-angular-extensions
+            codeowners: 'S04SS457V38'
+          - project: e2e-cra-to-nx
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-cypress
+            codeowners: 'S04T16BTJJY'
+          - project: e2e-detox
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-esbuild
+            codeowners: 'S04SJ6HHP0X'
+          - project: e2e-expo
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-jest
+            codeowners: 'S04T16BTJJY'
+          - project: e2e-js
+            codeowners: 'S04SJ6HHP0X'
+          - project: e2e-lerna-smoke-tests
+            codeowners: 'S04TNCVEETS'
+          - project: e2e-linter
+            codeowners: 'S04SYJGKSCT'
+          - project: e2e-make-angular-cli-faster
+            codeowners: 'S04SS457V38'
+          - project: e2e-next
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-node
+            codeowners: 'S04SJ6HHP0X'
+          - project: e2e-nx-init
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-nx-misc
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-nx-plugin
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-nx-run
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-react
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-react-native
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-web
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-rollup
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-storybook
+            codeowners: 'S04SVQ8H0G5'
+          - project: e2e-storybook-angular
+            codeowners: 'S04SVQ8H0G5'
+          - project: e2e-vite
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-webpack
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-workspace-create
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-e2e-workspace-create-npm
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-graph-client
+            codeowners: 'S04T16QL360'
         exclude:
           # exclude react-native tests from ubuntu
           - os: ubuntu-latest
@@ -179,7 +237,7 @@ jobs:
             *Package manager* ${{ matrix.package_manager }}
             *Workflow* {workflow}'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
-          # mention_groups: ${{ matrix.codeowners }}
+          mention_groups: ${{ matrix.codeowners }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
