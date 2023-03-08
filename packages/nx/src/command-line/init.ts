@@ -2,6 +2,7 @@ import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { prerelease } from 'semver';
 import * as parser from 'yargs-parser';
+import { addNxToMonorepo } from '../nx-init/add-nx-to-monorepo';
 import { addNxToNest } from '../nx-init/add-nx-to-nest';
 import { addNxToNpmRepo } from '../nx-init/add-nx-to-npm-repo';
 import { addNxToAngularCliRepo } from '../nx-init/angular';
@@ -53,10 +54,7 @@ export async function initHandler() {
     } else if (isNestCLI(packageJson)) {
       await addNxToNest(packageJson);
     } else if (isMonorepo(packageJson)) {
-      // TODO: vsavkin remove add-nx-to-monorepo
-      execSync(`npx --yes add-nx-to-monorepo@${version} ${args}`, {
-        stdio: [0, 1, 2],
-      });
+      addNxToMonorepo();
     } else {
       await addNxToNpmRepo();
     }
