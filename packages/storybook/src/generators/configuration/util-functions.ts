@@ -282,10 +282,22 @@ export function addStorybookToNamedInputs(tree: Tree) {
   if (nxJson.namedInputs) {
     const hasProductionFileset = !!nxJson.namedInputs?.production;
     if (hasProductionFileset) {
-      nxJson.namedInputs.production.push('!{projectRoot}/.storybook/**/*');
-      nxJson.namedInputs.production.push(
-        '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-      );
+      if (
+        !nxJson.namedInputs.production.includes(
+          '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
+        )
+      ) {
+        nxJson.namedInputs.production.push(
+          '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
+        );
+      }
+      if (
+        !nxJson.namedInputs.production.includes(
+          '!{projectRoot}/.storybook/**/*'
+        )
+      ) {
+        nxJson.namedInputs.production.push('!{projectRoot}/.storybook/**/*');
+      }
     }
 
     nxJson.targetDefaults ??= {};
@@ -295,9 +307,15 @@ export function addStorybookToNamedInputs(tree: Tree) {
       hasProductionFileset ? '^production' : '^default',
     ];
 
-    nxJson.targetDefaults['build-storybook'].inputs.push(
-      '!{projectRoot}/.storybook/**/*'
-    );
+    if (
+      !nxJson.targetDefaults['build-storybook'].inputs.includes(
+        '!{projectRoot}/.storybook/**/*'
+      )
+    ) {
+      nxJson.targetDefaults['build-storybook'].inputs.push(
+        '!{projectRoot}/.storybook/**/*'
+      );
+    }
 
     updateNxJson(tree, nxJson);
   }
