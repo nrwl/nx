@@ -3,6 +3,17 @@ import { EOL } from 'os';
 import { isCI } from './is-ci';
 import { TaskStatus } from '../tasks-runner/tasks-runner';
 
+const colors = {
+  gray: chalk.gray,
+  green: chalk.green,
+  red: chalk.red,
+  cyan: chalk.cyan,
+  white: chalk.white,
+  yellow: chalk.yellow,
+  orange: chalk.keyword('orange'),
+} as const;
+type Color = keyof typeof colors;
+type BaseColors = Color & keyof typeof chalk['inverse'];
 export interface CLIErrorMessageConfig {
   title: string;
   bodyLines?: string[];
@@ -60,13 +71,7 @@ class CLIOutput {
    * more fine-grained control of message bodies are still using a centralized
    * implementation.
    */
-  colors = {
-    gray: chalk.gray,
-    green: chalk.green,
-    red: chalk.red,
-    cyan: chalk.cyan,
-    white: chalk.white,
-  };
+
   bold = chalk.bold;
   underline = chalk.underline;
   dim = chalk.dim;
@@ -82,7 +87,7 @@ class CLIOutput {
     color: string;
     title: string;
   }): void {
-    this.writeToStdOut(` ${this.applyNxPrefix(color, title)}${EOL}`);
+    this.writeToStdOut(` ${this.applyNxPrefix(color as any, title)}${EOL}`);
   }
 
   private writeOptionalOutputBody(bodyLines?: string[]): void {
@@ -93,10 +98,13 @@ class CLIOutput {
     bodyLines.forEach((bodyLine) => this.writeToStdOut(`   ${bodyLine}${EOL}`));
   }
 
-  applyNxPrefix(color = 'cyan', text: string): string {
+  applyNxPrefix(
+    color: Color & keyof typeof chalk['inverse'] = 'cyan',
+    text: string
+  ): string {
     let nxPrefix = '';
-    if (chalk[color]) {
-      nxPrefix = `${chalk[color]('>')} ${chalk.reset.inverse.bold[color](
+    if (colors[color]) {
+      nxPrefix = `${colors[color]('>')} ${chalk.reset.inverse.bold[color](
         ` ${this.cliName} `
       )}`;
     } else {
@@ -111,13 +119,13 @@ class CLIOutput {
     this.writeToStdOut(EOL);
   }
 
-  addVerticalSeparator(color = 'gray') {
+  addVerticalSeparator(color: BaseColors = 'gray') {
     this.addNewline();
     this.addVerticalSeparatorWithoutNewLines(color);
     this.addNewline();
   }
 
-  addVerticalSeparatorWithoutNewLines(color = 'gray') {
+  addVerticalSeparatorWithoutNewLines(color: BaseColors = 'gray') {
     this.writeToStdOut(
       `${this.X_PADDING}${chalk.dim[color](this.VERTICAL_SEPARATOR)}${EOL}`
     );
@@ -239,7 +247,8 @@ class CLIOutput {
       | 'skipped'
       | 'local-cache-kept-existing'
       | 'local-cache'
-      | 'remote-cache',
+      | 'remote-cache'
+      | undefined,
     commandOutput: string
   ) {
     if (taskStatus === 'local-cache') {
@@ -255,12 +264,12 @@ class CLIOutput {
     }
   }
 
-  log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
+  log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: Color }) {
     this.addNewline();
 
     this.writeOutputTitle({
       color: 'cyan',
-      title: color ? chalk[color](title) : title,
+      title: color ? colors[color](title) : title,
     });
 
     this.writeOptionalOutputBody(bodyLines);
