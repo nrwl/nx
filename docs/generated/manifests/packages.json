@@ -369,18 +369,6 @@
     },
     "path": "/packages/angular"
   },
-  "cra-to-nx": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "cra-to-nx",
-    "packageName": "cra-to-nx",
-    "description": "This package will turn your React app into an Nx workspace. To use this package, your React app must have been generated and kept the structure of Create-React-App, with files generated either in js/jsx or ts/tsx.",
-    "documents": {},
-    "root": "/packages/cra-to-nx",
-    "source": "/packages/cra-to-nx/src",
-    "executors": {},
-    "generators": {},
-    "path": "/packages/cra-to-nx"
-  },
   "create-nx-plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "create-nx-plugin",

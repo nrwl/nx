@@ -75,7 +75,6 @@ jobs:
         project:
           - e2e-angular-core
           - e2e-angular-extensions
-          - e2e-cra-to-nx
           - e2e-cypress
           - e2e-esbuild
           - e2e-jest
@@ -104,8 +103,6 @@ jobs:
             codeowners: 'S04SS457V38'
           - project: e2e-angular-extensions
             codeowners: 'S04SS457V38'
-          - project: e2e-cra-to-nx
-            codeowners: 'S04TNCNJG5N'
           - project: e2e-cypress
             codeowners: 'S04T16BTJJY'
           - project: e2e-esbuild
@@ -157,8 +154,6 @@ jobs:
           - node_version: 16
             project: e2e-angular-extensions
           - node_version: 16
-            project: e2e-cra-to-nx
-          - node_version: 16
             project: e2e-cypress
           - node_version: 16
             project: e2e-esbuild
@@ -200,8 +195,6 @@ jobs:
             project: e2e-angular-core
           - node_version: 19
             project: e2e-angular-extensions
-          - node_version: 19
-            project: e2e-cra-to-nx
           - node_version: 19
             project: e2e-cypress
           - node_version: 19
