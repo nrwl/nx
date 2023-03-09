@@ -1252,6 +1252,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "15.8.6": {
+      "version": "15.8.6-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.71.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
