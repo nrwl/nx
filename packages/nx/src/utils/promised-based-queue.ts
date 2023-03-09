@@ -1,16 +1,16 @@
-export class PromisedBasedQueue {
+export class PromisedBasedQueue<T = any> {
   private counter = 0;
-  private promise = Promise.resolve(null);
+  private promise: Promise<void> | undefined;
 
-  sendToQueue(fn: () => Promise<any>): Promise<any> {
+  sendToQueue(fn: () => Promise<T>): Promise<T> {
     this.counter++;
-    let res, rej;
-    const r = new Promise((_res, _rej) => {
+    let res: (value: T) => void, rej: (err: unknown) => void;
+    const r = new Promise<T>((_res, _rej) => {
       res = _res;
       rej = _rej;
     });
 
-    this.promise = this.promise
+    this.promise = (this.promise ? this.promise : Promise.resolve())
       .then(async () => {
         try {
           res(await fn());
