@@ -689,10 +689,6 @@
           "version": "~0.18.12",
           "alwaysAddToPackageJson": false
         },
-        "react-native-svg": {
-          "version": "13.8.0",
-          "alwaysAddToPackageJson": false
-        },
         "metro": {
           "version": "0.74.1",
           "alwaysAddToPackageJson": false,

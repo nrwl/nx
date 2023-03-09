@@ -53,11 +53,17 @@
     },
     "install": {
       "type": "boolean",
-      "description": "Should install missing dependencies before building."
+      "description": "Should install missing dependencies before building.",
+      "default": true
     },
     "buildCache": {
       "type": "boolean",
       "description": "Should use derived data for builds."
+    },
+    "clean": {
+      "type": "boolean",
+      "description": "Delete the native folders and regenerate them before applying changes",
+      "default": false
     }
   },
   "required": ["platform"],

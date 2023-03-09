@@ -26,10 +26,15 @@ export default async function* prebuildExecutor(
 
     if (options.install) {
       await installAsync(context.root, {
-        check: true,
-        fix: false,
+        fix: true,
       });
-      await podInstall(join(context.root, projectRoot, 'ios'));
+      if (options.platform === 'ios') {
+        await podInstall(join(context.root, projectRoot, 'ios'));
+      }
+    } else {
+      await installAsync(context.root, {
+        check: true,
+      });
     }
 
     yield {
@@ -42,7 +47,7 @@ export default async function* prebuildExecutor(
   }
 }
 
-function prebuildAsync(
+export function prebuildAsync(
   workspaceRoot: string,
   projectRoot: string,
   options: ExpoPrebuildOptions
