@@ -48,7 +48,9 @@ export function readJsonFile<T extends object = any>(
   try {
     return parseJson<T>(content, options);
   } catch (e) {
-    e.message = e.message.replace('JSON', path);
+    if (e instanceof Error) {
+      e.message = e.message.replace('JSON', path);
+    }
     throw e;
   }
 }

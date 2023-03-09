@@ -65,7 +65,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   const nxArgs: RawNxArgs = args;
-  let overrides = yargsParser(args.__overrides_unparsed__ as string[], {
+  let overrides: Omit<typeof yargsParser['arguments'], '_'> = yargsParser(args.__overrides_unparsed__ as string[], {
     configuration: {
       'camel-case-expansion': false,
       'dot-notation': true,
@@ -184,7 +184,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     args['parallel'] === ''
   ) {
     nxArgs['parallel'] = Number(
-      nxArgs['maxParallel'] || nxArgs['max-parallel'] || 3
+      (nxArgs as any)['maxParallel'] || (nxArgs as any)['max-parallel'] || 3
     );
   } else if (args['parallel'] !== undefined) {
     nxArgs['parallel'] = Number(args['parallel']);
@@ -223,6 +223,9 @@ export function parseFiles(options: NxArgs): { files: string[] } {
       ),
     };
   }
+  throw new Error(
+    'Nx was unable to determine which files should be parsed. Please pass `--files`, `--uncommitted`, `--untracked`, or some combination of `base` and `head`'
+  );
 }
 
 function getUncommittedFiles(): string[] {

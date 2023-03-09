@@ -175,12 +175,9 @@ export async function resolvePackageVersionUsingRegistry(
     }
 
     // get the last line of the output, strip the package version and quotes
-    const resolvedVersion = result
-      .split('\n')
-      .pop()
-      .split(' ')
-      .pop()
-      .replace(/'/g, '');
+    const resolvedVersion = (
+      (result.split('\n').pop() as string).split(' ').pop() as string
+    ).replace(/'/g, '');
 
     return resolvedVersion;
   } catch {

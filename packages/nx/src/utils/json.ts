@@ -1,6 +1,6 @@
 import { parse, printParseErrorCode, stripComments } from 'jsonc-parser';
 import type { ParseError, ParseOptions } from 'jsonc-parser';
-import { LinesAndColumns } from 'lines-and-columns';
+import { LinesAndColumns, SourceLocation } from 'lines-and-columns';
 import { codeFrameColumns } from './code-frames';
 
 export { stripComments as stripJsonComments };
@@ -68,7 +68,7 @@ export function parseJson<T extends object = any>(
  */
 function formatParseError(input: string, parseError: ParseError) {
   const { error, offset, length } = parseError;
-  let { line, column } = new LinesAndColumns(input).locationForIndex(offset);
+  let { line, column } = new LinesAndColumns(input).locationForIndex(offset) as SourceLocation;
   line++;
   column++;
 

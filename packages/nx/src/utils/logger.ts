@@ -7,8 +7,8 @@ export const NX_PREFIX = `${chalk.cyan('>')} ${chalk.inverse(
 export const NX_ERROR = chalk.inverse(chalk.bold(chalk.red(' ERROR ')));
 
 export const logger = {
-  warn: (s) => console.warn(chalk.bold(chalk.yellow(s))),
-  error: (s) => {
+  warn: (s: any) => console.warn(chalk.bold(chalk.yellow(s))),
+  error: (s: any) => {
     if (typeof s === 'string' && s.startsWith('NX ')) {
       console.error(`\n${NX_ERROR} ${chalk.bold(chalk.red(s.slice(3)))}\n`);
     } else if (s instanceof Error && s.stack) {
@@ -17,20 +17,20 @@ export const logger = {
       console.error(chalk.bold(chalk.red(s)));
     }
   },
-  info: (s) => {
+  info: (s: any) => {
     if (typeof s === 'string' && s.startsWith('NX ')) {
       console.info(`\n${NX_PREFIX} ${chalk.bold(s.slice(3))}\n`);
     } else {
       console.info(s);
     }
   },
-  log: (...s) => {
+  log: (...s: any[]) => {
     console.log(...s);
   },
-  debug: (...s) => {
+  debug: (...s: any[]) => {
     console.debug(...s);
   },
-  fatal: (...s) => {
+  fatal: (...s: any[]) => {
     console.error(...s);
   },
 };

@@ -65,7 +65,7 @@ export function loadNxPlugin(
     pluginPath = require.resolve(moduleName, {
       paths,
     });
-  } catch (e) {
+  } catch (e: any) {
     if (e.code === 'MODULE_NOT_FOUND') {
       const plugin = resolveLocalNxPlugin(moduleName, root);
       if (plugin) {
@@ -152,7 +152,7 @@ export function readPluginPackageJson(
       json: result.packageJson,
       path: result.path,
     };
-  } catch (e) {
+  } catch (e: any) {
     if (e.code === 'MODULE_NOT_FOUND') {
       const localPluginPath = resolveLocalNxPlugin(pluginName);
       if (localPluginPath) {
@@ -177,7 +177,7 @@ export function readPluginPackageJson(
  */
 const localPluginCache: Record<
   string,
-  { path: string; projectConfig: ProjectConfiguration }
+  { path: string; projectConfig: ProjectConfiguration } | null
 > = {};
 export function resolveLocalNxPlugin(
   importPath: string,
@@ -259,6 +259,7 @@ function findNxProjectForImportPath(
       'Unable to resolve local plugin with import path ' + importPath
     );
   }
+  return null;
 }
 
 let tsconfigPaths: Record<string, string[]>;
@@ -280,10 +281,12 @@ function readPluginMainFromProjectConfiguration(
   plugin: ProjectConfiguration
 ): string | null {
   const { main } =
-    Object.values(plugin.targets).find((x) =>
-      ['@nrwl/js:tsc', '@nrwl/js:swc', '@nrwl/node:package'].includes(
-        x.executor
-      )
+    Object.values(plugin.targets ?? {}).find(
+      (x) =>
+        x.executor &&
+        ['@nrwl/js:tsc', '@nrwl/js:swc', '@nrwl/node:package'].includes(
+          x.executor
+        )
     )?.options ||
     plugin.targets?.build?.options ||
     {};

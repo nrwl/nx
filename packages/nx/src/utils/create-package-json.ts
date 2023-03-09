@@ -113,7 +113,7 @@ function findAllNpmDeps(
   } = { dependencies: {}, peerDependencies: {}, peerDependenciesMeta: {} },
   seen = new Set<string>()
 ) {
-  const node = graph.externalNodes[projectName];
+  const node = graph.externalNodes?.[projectName];
 
   if (seen.has(projectName)) {
     // if it's in peerDependencies, move it to regular dependencies
@@ -152,7 +152,7 @@ function recursivelyCollectPeerDependencies(
   },
   seen = new Set<string>()
 ) {
-  const npmPackage = graph.externalNodes[projectName];
+  const npmPackage = graph.externalNodes?.[projectName];
   if (!npmPackage) {
     return list;
   }
@@ -166,10 +166,10 @@ function recursivelyCollectPeerDependencies(
 
     Object.keys(packageJson.peerDependencies)
       .map((dependencyName) => `npm:${dependencyName}`)
-      .map((dependency) => graph.externalNodes[dependency])
+      .map((dependency) => graph.externalNodes?.[dependency])
       .filter(Boolean)
       .forEach((node) => {
-        if (!seen.has(node.name)) {
+        if (node && !seen.has(node.name)) {
           seen.add(node.name);
           list.peerDependencies[node.data.packageName] = node.data.version;
           if (
