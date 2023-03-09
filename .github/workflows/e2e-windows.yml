@@ -224,8 +224,8 @@ jobs:
             // message
             let result = `
               \`\`\`
-               | Failed project                | Node | PM   | OS     |
-               |-------------------------------|------|------|--------|`;
+               | Failed project                 | Node | PM   | OS     |
+               |--------------------------------|------|------|--------|`;
             failedProjects.forEach(matrix => {
               result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.padEnd(3)} | ${matrix.package_manager.padEnd(4)} | Windows |`
             });

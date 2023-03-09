@@ -21,7 +21,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          # - macos-latest
+          - macos-latest
         node_version:
           - '16'
         package_manager:
@@ -29,116 +29,116 @@ jobs:
           - yarn
           - pnpm
         project:
-          # - e2e-add-nx-to-monorepo
-          # - e2e-angular-core
-          # - e2e-angular-extensions
-          # - e2e-cra-to-nx
-          # - e2e-cypress
-          # - e2e-detox
-          # - e2e-esbuild
-          # - e2e-expo
-          # - e2e-jest
-          # - e2e-js
-          # - e2e-lerna-smoke-tests
+          - e2e-add-nx-to-monorepo
+          - e2e-angular-core
+          - e2e-angular-extensions
+          - e2e-cra-to-nx
+          - e2e-cypress
+          - e2e-detox
+          - e2e-esbuild
+          - e2e-expo
+          - e2e-jest
+          - e2e-js
+          - e2e-lerna-smoke-tests
           - e2e-linter
-          # - e2e-make-angular-cli-faster
-          # - e2e-next
-          # - e2e-node
-          # - e2e-nx-init
-          # - e2e-nx-misc
-          # - e2e-nx-plugin
-          # - e2e-nx-run
-          # - e2e-react
-          # - e2e-react-native
-          # - e2e-web
-          # - e2e-rollup
+          - e2e-make-angular-cli-faster
+          - e2e-next
+          - e2e-node
+          - e2e-nx-init
+          - e2e-nx-misc
+          - e2e-nx-plugin
+          - e2e-nx-run
+          - e2e-react
+          - e2e-react-native
+          - e2e-web
+          - e2e-rollup
           - e2e-storybook
-          # - e2e-storybook-angular
-          # - e2e-vite
-          # - e2e-webpack
-          # - e2e-workspace-create
-          # - e2e-e2e-workspace-create-npm
-          # - e2e-graph-client
+          - e2e-storybook-angular
+          - e2e-vite
+          - e2e-webpack
+          - e2e-workspace-create
+          - e2e-e2e-workspace-create-npm
+          - e2e-graph-client
         include:
           # os short names
           - os: ubuntu-latest
             os_name: 'Linux'
-          # - os: macos-latest
-          #   os_name: 'MacOS'
+          - os: macos-latest
+            os_name: 'MacOS'
           # codeowner groups
-          # - project: e2e-add-nx-to-monorepo
-          #   codeowners: 'S04SYHYKGNP'
-          # - project: e2e-angular-core
-          #   codeowners: 'S04SS457V38'
-          # - project: e2e-angular-extensions
-          #   codeowners: 'S04SS457V38'
-          # - project: e2e-cra-to-nx
-          #   codeowners: 'S04TNCNJG5N'
-          # - project: e2e-cypress
-          #   codeowners: 'S04T16BTJJY'
-          # - project: e2e-detox
-          #   codeowners: 'S04TNCNJG5N'
-          # - project: e2e-esbuild
-          #   codeowners: 'S04SJ6HHP0X'
-          # - project: e2e-expo
-          #   codeowners: 'S04TNCNJG5N'
-          # - project: e2e-jest
-          #   codeowners: 'S04T16BTJJY'
-          # - project: e2e-js
-          #   codeowners: 'S04SJ6HHP0X'
-          # - project: e2e-lerna-smoke-tests
-          #   codeowners: 'S04TNCVEETS'
+          - project: e2e-add-nx-to-monorepo
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-angular-core
+            codeowners: 'S04SS457V38'
+          - project: e2e-angular-extensions
+            codeowners: 'S04SS457V38'
+          - project: e2e-cra-to-nx
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-cypress
+            codeowners: 'S04T16BTJJY'
+          - project: e2e-detox
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-esbuild
+            codeowners: 'S04SJ6HHP0X'
+          - project: e2e-expo
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-jest
+            codeowners: 'S04T16BTJJY'
+          - project: e2e-js
+            codeowners: 'S04SJ6HHP0X'
+          - project: e2e-lerna-smoke-tests
+            codeowners: 'S04TNCVEETS'
           - project: e2e-linter
             codeowners: 'S04SYJGKSCT'
-          # - project: e2e-make-angular-cli-faster
-          #   codeowners: 'S04SS457V38'
-          # - project: e2e-next
-          #   codeowners: 'S04TNCNJG5N'
-          # - project: e2e-node
-          #   codeowners: 'S04SJ6HHP0X'
-          # - project: e2e-nx-init
-          #   codeowners: 'S04SYHYKGNP'
-          # - project: e2e-nx-misc
-          #   codeowners: 'S04SYHYKGNP'
-          # - project: e2e-nx-plugin
-          #   codeowners: 'S04SYHYKGNP'
-          # - project: e2e-nx-run
-          #   codeowners: 'S04SYHYKGNP'
-          # - project: e2e-react
-          #   codeowners: 'S04TNCNJG5N'
-          # - project: e2e-react-native
-          #   codeowners: 'S04TNCNJG5N'
-          # - project: e2e-web
-          #   codeowners: 'S04SJ6PL98X'
-          # - project: e2e-rollup
-          #   codeowners: 'S04SJ6PL98X'
+          - project: e2e-make-angular-cli-faster
+            codeowners: 'S04SS457V38'
+          - project: e2e-next
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-node
+            codeowners: 'S04SJ6HHP0X'
+          - project: e2e-nx-init
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-nx-misc
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-nx-plugin
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-nx-run
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-react
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-react-native
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-web
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-rollup
+            codeowners: 'S04SJ6PL98X'
           - project: e2e-storybook
             codeowners: 'S04SVQ8H0G5'
-          # - project: e2e-storybook-angular
-          #   codeowners: 'S04SVQ8H0G5'
-          # - project: e2e-vite
-          #   codeowners: 'S04SJ6PL98X'
-          # - project: e2e-webpack
-          #   codeowners: 'S04SJ6PL98X'
-          # - project: e2e-workspace-create
-          #   codeowners: 'S04SYHYKGNP'
-          # - project: e2e-e2e-workspace-create-npm
-          #   codeowners: 'S04SYHYKGNP'
-          # - project: e2e-graph-client
-          #   codeowners: 'S04T16QL360'
-        # exclude:
-        #   # exclude react-native tests from ubuntu
-        #   - os: ubuntu-latest
-        #     project: e2e-react-native
-        #   - os: ubuntu-latest
-        #     project: e2e-detox
-        #   - os: ubuntu-latest
-        #     project: e2e-expo
-        #   # run just npm v16 on macos
-        #   - os: macos-latest
-        #     package_manager: yarn
-        #   - os: macos-latest
-        #     package_manager: pnpm
+          - project: e2e-storybook-angular
+            codeowners: 'S04SVQ8H0G5'
+          - project: e2e-vite
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-webpack
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-workspace-create
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-e2e-workspace-create-npm
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-graph-client
+            codeowners: 'S04T16QL360'
+        exclude:
+          # exclude react-native tests from ubuntu
+          - os: ubuntu-latest
+            project: e2e-react-native
+          - os: ubuntu-latest
+            project: e2e-detox
+          - os: ubuntu-latest
+            project: e2e-expo
+          # run just npm v16 on macos
+          - os: macos-latest
+            package_manager: yarn
+          - os: macos-latest
+            package_manager: pnpm
       fail-fast: false
 
     name: ${{ matrix.os_name }}/${{ matrix.package_manager }} ${{ join(matrix.project) }}
@@ -259,7 +259,6 @@ jobs:
     outputs:
       message: ${{ steps.process-json.outputs.SLACK_MESSAGE }}
       codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
-      # combi_message: ${{ steps.process-json.outputs.COMBI_SLACK_MESSAGE }}
     steps:
       - name: Load outputs
         uses: actions/download-artifact@v3
@@ -293,8 +292,8 @@ jobs:
             // message
             let result = `
               \`\`\`
-               | Failed project                | Node | PM   | OS   |
-               |-------------------------------|------|------|------|`;
+               | Failed project                 | Node | PM   | OS   |
+               |--------------------------------|------|------|------|`;
             failedProjects.forEach(matrix => {
               result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.padEnd(3)} | ${matrix.package_manager.padEnd(4)} | ${matrix.os_name} |`
             });
@@ -303,8 +302,7 @@ jobs:
             core.setOutput('SLACK_MESSAGE', message);
 
   report-failure:
-    # if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
-    if: ${{ failure() }}
+    if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     needs: process-result
     runs-on: ubuntu-latest
     name: Report failure
@@ -321,8 +319,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   report-success:
-    # if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
-    if: ${{ success() }}
+    if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     needs: e2e
     runs-on: ubuntu-latest
     name: Report status
