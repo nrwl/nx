@@ -1,4 +1,3 @@
-import { UnitTestRunner } from '@nrwl/angular/src/utils/test-runners';
 import {
   readJson,
   readProjectConfiguration,
@@ -8,6 +7,7 @@ import {
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { generateTestApplication } from '../../generators/utils/testing';
+import { UnitTestRunner } from '../../utils/test-runners';
 import updateTypescriptTarget from './update-typescript-target';
 
 describe('Migration to update target and add useDefineForClassFields', () => {
