@@ -64,7 +64,7 @@ export function resolveModuleByImport(
   importExpr: string,
   filePath: string,
   tsConfigPath: string
-) {
+): string | null {
   compilerHost = compilerHost || getCompilerHost(tsConfigPath);
   const { options, host, moduleResolutionCache } = compilerHost;
 
@@ -77,7 +77,7 @@ export function resolveModuleByImport(
   );
 
   if (!resolvedModule) {
-    return;
+    return null;
   } else {
     return resolvedModule.resolvedFileName.replace(`${normalizedAppRoot}/`, '');
   }

@@ -36,7 +36,7 @@ export class TargetProjectLocator {
    * @param importExpr
    * @param filePath
    */
-  findProjectWithImport(importExpr: string, filePath: string): string {
+  findProjectWithImport(importExpr: string, filePath: string): string | null | undefined {
     const normalizedImportExpr = importExpr.split('#')[0];
     if (isRelativePath(normalizedImportExpr)) {
       const resolvedModule = posix.join(
@@ -122,15 +122,15 @@ export class TargetProjectLocator {
   private resolveImportWithTypescript(
     normalizedImportExpr: string,
     filePath: string
-  ): string | undefined {
-    let resolvedModule: string;
+  ): string | null {
+    let resolvedModule: string | null;
     if (this.typescriptResolutionCache.has(normalizedImportExpr)) {
-      resolvedModule = this.typescriptResolutionCache.get(normalizedImportExpr);
+      resolvedModule = this.typescriptResolutionCache.get(normalizedImportExpr) ?? null;
     } else {
       resolvedModule = resolveModuleByImport(
         normalizedImportExpr,
         filePath,
-        this.tsConfig.absolutePath
+        this.tsConfig.absolutePath as string
       );
       this.typescriptResolutionCache.set(
         normalizedImportExpr,
@@ -145,7 +145,7 @@ export class TargetProjectLocator {
         return resolvedProject;
       }
     }
-    return;
+    return null;
   }
 
   private resolveImportWithRequire(
@@ -159,7 +159,7 @@ export class TargetProjectLocator {
       })
     );
   }
-  private findNpmPackage(npmImport: string): string | undefined {
+  private findNpmPackage(npmImport: string): string | null | undefined {
     if (this.npmResolutionCache.has(npmImport)) {
       return this.npmResolutionCache.get(npmImport);
     } else {
@@ -177,14 +177,14 @@ export class TargetProjectLocator {
 
   private findProjectOfResolvedModule(
     resolvedModule: string
-  ): string | undefined {
+  ): string | null {
     const normalizedResolvedModule = resolvedModule.startsWith('./')
       ? resolvedModule.substring(2)
       : resolvedModule;
     const importedProject = this.findMatchingProjectFiles(
       normalizedResolvedModule
     );
-    return importedProject ? importedProject.name : void 0;
+    return importedProject ? importedProject.name : null;
   }
 
   private getAbsolutePath(path: string) {
@@ -211,7 +211,11 @@ export class TargetProjectLocator {
 
   private findMatchingProjectFiles(file: string) {
     const project = findProjectForPath(file, this.projectRootMappings);
-    return this.nodes[project];
+    if (project) {
+      return this.nodes[project];
+    } else {
+      return undefined
+    }
   }
 }
 
