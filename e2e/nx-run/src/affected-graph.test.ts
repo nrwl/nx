@@ -35,8 +35,8 @@ describe('Nx Affected and Graph Tests', () => {
       const mypublishablelib = uniq('mypublishablelib');
       runCLI(`generate @nrwl/web:app ${myapp}`);
       runCLI(`generate @nrwl/web:app ${myapp2}`);
-      runCLI(`generate @nrwl/js:lib ${mylib} --bundler=tsc`);
-      runCLI(`generate @nrwl/js:lib ${mylib2} --bundler=tsc`);
+      runCLI(`generate @nrwl/js:lib ${mylib}`);
+      runCLI(`generate @nrwl/js:lib ${mylib2}`);
       runCLI(
         `generate @nrwl/js:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib}`
       );
@@ -195,7 +195,7 @@ describe('Nx Affected and Graph Tests', () => {
     function generateAll() {
       runCLI(`generate @nrwl/web:app ${myapp}`);
       runCLI(`generate @nrwl/web:app ${myapp2}`);
-      runCLI(`generate @nrwl/js:lib ${mylib} --bundler=tsc`);
+      runCLI(`generate @nrwl/js:lib ${mylib}`);
       runCommand(`git add . && git commit -am "add all"`);
     }
 
@@ -211,7 +211,7 @@ describe('Nx Affected and Graph Tests', () => {
         expect(runCLI('affected:apps')).toContain(myapp2);
         runCommand(`git add . && git commit -am "add ${myapp2}"`);
 
-        runCLI(`generate @nrwl/js:lib ${mylib} --bundler=tsc`);
+        runCLI(`generate @nrwl/js:lib ${mylib}`);
         expect(runCLI('affected:apps')).not.toContain(myapp);
         expect(runCLI('affected:apps')).not.toContain(myapp2);
         expect(runCLI('affected:libs')).toContain(mylib);
@@ -294,8 +294,8 @@ describe('Nx Affected and Graph Tests', () => {
 
       runCLI(`generate @nrwl/web:app ${myapp}`);
       runCLI(`generate @nrwl/web:app ${myapp2}`);
-      runCLI(`generate @nrwl/js:lib ${mylib} --bundler=tsc`);
-      runCLI(`generate @nrwl/js:lib ${mylib2} --bundler=tsc`);
+      runCLI(`generate @nrwl/js:lib ${mylib}`);
+      runCLI(`generate @nrwl/js:lib ${mylib2}`);
       runCLI(`generate @nrwl/js:lib ${mypublishablelib}`);
 
       const app1ElementSpec = readFile(
@@ -413,8 +413,8 @@ describe('Nx Affected and Graph Tests', () => {
       runCLI(`generate @nrwl/web:app ${myapp}`);
       runCLI(`generate @nrwl/web:app ${myapp2}`);
       runCLI(`generate @nrwl/web:app ${myapp3}`);
-      runCLI(`generate @nrwl/js:lib ${mylib} --bundler=tsc`);
-      runCLI(`generate @nrwl/js:lib ${mylib2} --bundler=tsc`);
+      runCLI(`generate @nrwl/js:lib ${mylib}`);
+      runCLI(`generate @nrwl/js:lib ${mylib2}`);
 
       runCommand(`git init`);
       runCommand(`git config user.email "test@test.com"`);

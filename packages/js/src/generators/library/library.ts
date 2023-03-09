@@ -383,17 +383,18 @@ function normalizeOptions(
    * and no compiler was provided.
    *
    * If the user has not provided a bundler and no compiler, and has not set buildable to true, then
-   * set the bundler to none.
+   * set the bundler to tsc, to preserve old default behaviour (buildable: true by default).
    *
    * If it's publishable, we need to build the code before publishing it, so again
    * we default to `tsc`. In the previous version of this, it would set `buildable` to true
    * and that would default to `tsc`.
+   *
+   * In the past, the only way to get a non-buildable library was to set buildable to false.
+   * Now, the only way to get a non-buildble library is to set bundler to none.
+   * By default, with nothing provided, libraries are buildable with `@nrwl/js:tsc`.
    */
 
-  options.bundler =
-    options.bundler ??
-    options.compiler ??
-    (options.buildable || options.publishable ? 'tsc' : 'none');
+  options.bundler = options.bundler ?? options.compiler ?? 'tsc';
 
   if (options.publishable) {
     if (!options.importPath) {
@@ -403,9 +404,13 @@ function normalizeOptions(
     }
 
     if (options.bundler === 'none') {
-      // It must be buildable, so default to tsc
       options.bundler = 'tsc';
     }
+  }
+
+  // This is to preserve old behaviour, buildable: false
+  if (options.publishable === false && options.buildable === false) {
+    options.bundler = 'none';
   }
 
   const { Linter } = require('@nrwl/linter');
