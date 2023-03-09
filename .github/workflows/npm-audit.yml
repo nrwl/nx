@@ -32,7 +32,7 @@ jobs:
     name: Report status
     steps:
       - name: Send notification
-        uses: ravsamhq/notify-slack-action@v1
+        uses: ravsamhq/notify-slack-action@v2
         with:
           status: ${{ needs.audit.result }}
           message_format: '{emoji} Audit has {status_message}'

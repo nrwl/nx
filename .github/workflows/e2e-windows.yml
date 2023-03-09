@@ -15,7 +15,7 @@ permissions: {}
 jobs:
   e2e:
     permissions:
-      contents: read  #  to fetch code (actions/checkout)
+      contents: read
 
     runs-on: windows-latest
     strategy:
@@ -156,8 +156,7 @@ jobs:
           NX_CACHE_DIRECTORY: ${{ 'tmp' }}
 
       - name: Notify test failure
-        # if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
-        if: ${{ failure() }}
+        if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'failure'
@@ -185,7 +184,7 @@ jobs:
     name: Report status
     steps:
       - name: Send notification
-        uses: ravsamhq/notify-slack-action@v1
+        uses: ravsamhq/notify-slack-action@v2
         with:
           status: ${{ needs.e2e.result }}
           message_format: '{emoji} Workflow has {status_message}'
