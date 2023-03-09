@@ -1139,7 +1139,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       if (
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
-        !isCI
+        !isCI()
       ) {
         const useCloud = await connectToNxCloudCommand(
           messages.getPromptMessage('nxCloudMigration')
@@ -1169,7 +1169,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       fetch: createFetcher(),
       from: opts.from,
       to: opts.to,
-      interactive: opts.interactive && !isCI,
+      interactive: opts.interactive && !isCI(),
       excludeAppliedMigrations: opts.excludeAppliedMigrations,
     });
 
