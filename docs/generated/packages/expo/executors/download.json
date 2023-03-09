@@ -8,13 +8,13 @@
     "$id": "NxExpoDownloadEasBuild",
     "cli": "nx",
     "title": "Download EAS Build executor",
-    "description": "Download an EAS build.",
+    "description": "Download an Expo Application Services (EAS) build.",
     "type": "object",
     "properties": {
       "platform": {
         "enum": ["ios", "android"],
         "alias": "p",
-        "description": "The platform to build the app, example values: ios, android, all.",
+        "description": "The platform to download the app",
         "x-priority": "important"
       },
       "distribution": {

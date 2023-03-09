@@ -17,7 +17,7 @@ The `prebuild` command generates native code before a native app can compile.
 }
 ```
 
-```bash
+```shell
 nx run mobile:prebuild
 ```
 

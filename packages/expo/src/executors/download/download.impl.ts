@@ -18,6 +18,7 @@ import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlin
 
 import { ExpoEasDownloadOptions } from './schema';
 import { runCliBuildList } from '../build-list/build-list.impl';
+import { BuildFragment } from '../build-list/build-fragment';
 
 export interface ReactNativeDownloadOutput {
   success: boolean;
@@ -27,7 +28,7 @@ const streamPipeline = promisify(pipeline);
 
 /**
  * This executor downloads the latest EAS build.
- * It calls the build list exectuor to list EAS builds with options passed in.
+ * It calls the build list executor to list EAS builds with options passed in.
  */
 export default async function* downloadExecutor(
   options: ExpoEasDownloadOptions,
@@ -37,7 +38,7 @@ export default async function* downloadExecutor(
     context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
 
-  const build = getBuild(context.root, projectRoot, options);
+  const build = await getBuild(context.root, projectRoot, options);
   const buildUrl = build?.artifacts?.buildUrl;
   if (!buildUrl) {
     throw new Error(`No build URL found.`);
@@ -61,7 +62,7 @@ export default async function* downloadExecutor(
     await copyBuildFile(downloadFilePath, outputFilePath);
   }
 
-  logger.info(`Succesfully download the build to ${outputFilePath}`);
+  logger.info(`Successfully download the build to ${outputFilePath}`);
 
   yield { success: true };
 }
@@ -77,19 +78,19 @@ async function downloadBuild(buildUrl: string, output: string) {
   return streamPipeline(response.body, createWriteStream(output));
 }
 
-export function getBuild(
+export async function getBuild(
   workspaceRoot: string,
   projectRoot: string,
   options: ExpoEasDownloadOptions
 ) {
-  const buildList = runCliBuildList(workspaceRoot, projectRoot, {
+  const buildList = await runCliBuildList(workspaceRoot, projectRoot, {
     ...options,
-    nonInteractive: true,
+    interactive: false,
     json: true,
     status: 'finished',
     limit: 1,
   });
-  const builds = JSON.parse(buildList);
+  const builds: BuildFragment[] = JSON.parse(buildList);
   if (!builds.length) {
     throw new Error(
       `No EAS build found. Please check expo.dev to make sure your build is finished.`

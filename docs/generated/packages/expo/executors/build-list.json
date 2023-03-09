@@ -8,22 +8,22 @@
     "$id": "NxExpoEasBuildList",
     "cli": "nx",
     "title": "Expo EAS Build List executor",
-    "description": "List all EAS builds for your Expo project.",
+    "description": "List all Expo Application Services (EAS) builds for your Expo project.",
     "type": "object",
     "properties": {
       "platform": {
         "enum": ["ios", "android", "all"],
         "alias": "p",
-        "description": "The platform to build the app, example values: ios, android, all.",
+        "description": "The platform to build the app.",
         "x-priority": "important"
       },
       "json": {
         "type": "boolean",
         "description": "Enable JSON output, non-JSON messages will be printed to stderr"
       },
-      "nonInteractive": {
+      "interactive": {
         "type": "boolean",
-        "description": "Run the command in non-interactive mode."
+        "description": "Run the command in interactive mode."
       },
       "status": {
         "enum": [
@@ -75,6 +75,7 @@
       }
     },
     "required": [],
+    "examplesFile": "The `build-list` command allows to check the details of your Expo Application Services (EAS) build status.\n\n`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"build-list\": {\n      \"executor\": \"@nrwl/expo:build-list\",\n      \"options\": {}\n    }\n    //...\n  }\n}\n```\n\n```shell\nnx run mobile:build-list\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Get Status of Different Platforms\" %}\nThe `platform` option allows you to check build status of different platform (e.g. android, ios, all):\n\n```json\n    \"build-list\": {\n      \"executor\": \"@nrwl/expo:build-list\",\n      \"options\": {\n        \"platform\": \"ios\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Get Status Interactively\" %}\n\nThe `interactive` option allows you to specify whether to use interactive mode:\n\n```json\n    \"build-list\": {\n      \"executor\": \"@nrwl/expo:build-list\",\n      \"options\": {\n        \"interactive\": true\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Get Status in JSON Format\" %}\n\nThe `json` option allows you to print the output in JSON format:\n\n```json\n    \"build-list\": {\n      \"executor\": \"@nrwl/expo:build-list\",\n      \"options\": {\n        \"interactive\": false,\n        \"json\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
     "presets": []
   },
   "description": "List all EAS builds for your Expo project",
