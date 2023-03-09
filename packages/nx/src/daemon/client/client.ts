@@ -191,9 +191,11 @@ export class DaemonClient {
     return this.queue
       .sendToQueue(() => this.sendMessageToDaemon(messageToDaemon))
       .then((value) => {
-        if (this.queue.isEmpty()) {
-          this.closeConnection();
-        }
+        setTimeout(() => {
+          if (this.queue.isEmpty()) {
+            this.closeConnection();
+          }
+        }, 0);
         return value;
       });
   }
