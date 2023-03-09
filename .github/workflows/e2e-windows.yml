@@ -115,6 +115,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Prepare dir for output
+        run: mkdir -p outputs
+
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v3
         with:
@@ -155,27 +158,94 @@ jobs:
           NX_E2E_SKIP_BUILD_CLEANUP: ${{ 'true' }}
           NX_CACHE_DIRECTORY: ${{ 'tmp' }}
 
-      - name: Notify test failure
-        if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
-        uses: ravsamhq/notify-slack-action@v2
+      - name: Save matrix config in file
+        if: ${{ always() }}
+        id: save-matrix
+        run: |
+          matrix=$((
+            echo '${{ toJSON(matrix) }}'
+          ) | jq -c '. + { "status": "${{ steps.e2e-run.outcome}}" }')
+          echo "$matrix" > matrix
+          path=outputs/${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
+          echo "path=$path" >> $GITHUB_OUTPUT
+          echo "$matrix" > $path
+
+      - name: Upload matrix config
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
         with:
-          status: 'failure'
-          notification_title: 'Test requires attention'
-          message_format: '{emoji} *${{ join(matrix.project) }}* has {status_message}
-            *OS* windows
-            *Node* v${{ matrix.node_version }}
-            *Package manager* ${{ matrix.package_manager }}
-            *Workflow* {workflow}'
-          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
-          mention_groups: ${{ matrix.codeowners }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+          name: outputs
+          path: ${{ steps.save-matrix.outputs.path }}
 
       - name: Setup tmate session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
         uses: mxschmitt/action-tmate@v3.8
         with:
           sudo: false # disable sudo for windows debugging
+
+  process-result:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    needs: e2e
+    outputs:
+      message: ${{ steps.process-json.outputs.SLACK_MESSAGE }}
+      codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
+    steps:
+      - name: Load outputs
+        uses: actions/download-artifact@v3
+        with:
+          name: outputs
+          path: outputs
+
+      - name: Join and stringify matrix configs
+        id: combine-json
+        run: |
+          combined=$((jq -s . outputs/*) | jq tostring)
+          echo "combined=$combined" >> $GITHUB_OUTPUT
+
+      - name: Make slack outputs
+        id: process-json
+        uses: actions/github-script@v6
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          script: |
+            const combined = JSON.parse(${{ steps.combine-json.outputs.combined }});
+            const failedProjects = combined.filter(c => c.status === 'failure');
+
+            // codeowners
+            const codeowners = new Set();
+            failedProjects.forEach(c => {
+              codeowners.add(c.codeowners);
+            });
+            core.setOutput('CODEOWNERS', Array.from(codeowners).join(','));
+
+            // message
+            let result = `
+               | Failed project | Node | PM | OS |
+               |--|--|--|--|`;
+            failedProjects.forEach(matrix => {
+              result += `\n|**${matrix.project}**|v${matrix.node_version}|${matrix.package_manager}|Windows|`
+            });
+            const message = result.split('\n').map(l => l.trim()).join('\n');
+            core.setOutput('SLACK_MESSAGE', message);
+
+  report-failure:
+    if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: process-result
+    runs-on: ubuntu-latest
+    name: Report status
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: 'failure'
+          message_format: '{emoji} Workflow has {status_message} ${{ needs.process-result.outputs.message }}'
+          notification_title: '{workflow}'
+          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
+          mention_groups: ${{ needs.process-result.outputs.codeowners }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   report:
     if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
