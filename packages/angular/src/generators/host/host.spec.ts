@@ -1,12 +1,14 @@
+import { stripIndents, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import host from './host';
-import remote from '../remote/remote';
-import { E2eTestRunner } from '../../utils/test-runners';
 import {
   getProjects,
   readProjectConfiguration,
 } from 'nx/src/generators/utils/project-configuration';
-import { stripIndents, updateJson } from '@nrwl/devkit';
+import { E2eTestRunner } from '../../utils/test-runners';
+import {
+  generateTestHostApplication,
+  generateTestRemoteApplication,
+} from '../utils/testing';
 
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
@@ -14,7 +16,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'test',
     });
 
@@ -26,12 +28,12 @@ describe('Host App Generator', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'remote',
     });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'test',
       remotes: ['remote'],
     });
@@ -49,7 +51,7 @@ describe('Host App Generator', () => {
 
     // ACT
 
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'hostApp',
       remotes: ['remote1', 'remote2'],
     });
@@ -76,12 +78,12 @@ describe('Host App Generator', () => {
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'remote1',
     });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'hostApp',
       remotes: ['remote1', 'remote2', 'remote3'],
     });
@@ -98,12 +100,12 @@ describe('Host App Generator', () => {
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'remote1',
     });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'hostApp',
       directory: 'foo',
       remotes: ['remote1', 'remote2', 'remote3'],
@@ -123,7 +125,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'host',
       remotes: ['remote1'],
       standalone: true,
@@ -143,7 +145,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'host',
       remotes: ['remote1'],
       standalone: true,
@@ -160,7 +162,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'dashboard',
       remotes: ['remote1'],
       directory: 'test',
@@ -178,7 +180,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'dashboard',
       remotes: ['remote1'],
       e2eTestRunner: E2eTestRunner.None,
@@ -196,7 +198,7 @@ describe('Host App Generator', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       // ACT
-      await host(tree, {
+      await generateTestHostApplication(tree, {
         name: 'test',
         ssr: true,
       });
@@ -242,7 +244,7 @@ describe('Host App Generator', () => {
 
     // ACT & ASSERT
     await expect(
-      host(tree, {
+      generateTestHostApplication(tree, {
         name: 'test',
         standalone: true,
       })

@@ -8,10 +8,9 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { applicationGenerator } from '../application/application';
 import { componentGenerator } from '../component/component';
-import librarySecondaryEntryPointGenerator from '../library-secondary-entry-point/library-secondary-entry-point';
-import { libraryGenerator } from '../library/library';
+import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
+import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
 
 let projectGraph: ProjectGraph;
@@ -44,10 +43,10 @@ describe('Cypress Component Testing Configuration', () => {
 
   describe('updateProjectConfig', () => {
     it('should add project config with --target=<project>:<target>', async () => {
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'fancy-app',
       });
-      await libraryGenerator(tree, {
+      await generateTestLibrary(tree, {
         name: 'fancy-lib',
       });
       await componentGenerator(tree, {
@@ -106,10 +105,10 @@ describe('Cypress Component Testing Configuration', () => {
     });
 
     it('should add project config with --target=<project>:<target>:<config>', async () => {
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'fancy-app',
       });
-      await libraryGenerator(tree, {
+      await generateTestLibrary(tree, {
         name: 'fancy-lib',
       });
       await componentGenerator(tree, {
@@ -168,10 +167,10 @@ describe('Cypress Component Testing Configuration', () => {
     });
 
     it('should throw with invalid --build-target', async () => {
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'fancy-app',
       });
-      await libraryGenerator(tree, {
+      await generateTestLibrary(tree, {
         name: 'fancy-lib',
       });
       await componentGenerator(tree, {
@@ -223,7 +222,7 @@ describe('Cypress Component Testing Configuration', () => {
       `);
     });
     it('should use own project config', async () => {
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'fancy-app',
       });
       await componentGenerator(tree, {
@@ -261,10 +260,10 @@ describe('Cypress Component Testing Configuration', () => {
     });
 
     it('should use the project graph to find the correct project config', async () => {
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'fancy-app',
       });
-      await libraryGenerator(tree, {
+      await generateTestLibrary(tree, {
         name: 'fancy-lib',
       });
       await componentGenerator(tree, {
@@ -323,7 +322,7 @@ describe('Cypress Component Testing Configuration', () => {
 
   it('should throw if an invalid --build-target', async () => {});
   it('should work with simple components', async () => {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'my-lib',
     });
 
@@ -375,7 +374,7 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should work with standalone component', async () => {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'my-lib-standalone',
     });
 
@@ -427,7 +426,7 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should work with complex component', async () => {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'with-inputs-cmp',
     });
 
@@ -481,7 +480,7 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should work with complex standalone component', async () => {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'with-inputs-standalone-cmp',
     });
 
@@ -535,10 +534,10 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should work with secondary entry point libs', async () => {
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'my-cool-app',
     });
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'secondary',
       buildable: true,
     });
@@ -599,7 +598,7 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should not overwrite existing component test', async () => {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'cool-lib',
       flat: true,
     });
@@ -653,7 +652,7 @@ describe('Cypress Component Testing Configuration', () => {
 
   // TODO: should we support this?
   it.skip('should handle multiple components per file', async () => {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'multiple-components',
       flat: true,
     });
@@ -744,7 +743,7 @@ async function setup(
     basePath?: string;
   }
 ) {
-  await applicationGenerator(tree, {
+  await generateTestApplication(tree, {
     name: options.name,
     standalone: options.standalone,
   });

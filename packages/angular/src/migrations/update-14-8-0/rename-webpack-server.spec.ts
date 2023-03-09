@@ -1,13 +1,13 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { readJson, updateJson } from '@nrwl/devkit';
-import remote from '../../generators/remote/remote';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { generateTestRemoteApplication } from '../../generators/utils/testing';
 import renameWebpackServer from './rename-webpack-server';
 
 describe('renameWebpackServer', () => {
   it('should rename webpack-server to webpack-dev-server correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await remote(tree, { name: 'remote' });
+    await generateTestRemoteApplication(tree, { name: 'remote' });
 
     updateJson(tree, 'apps/remote/project.json', (json) => {
       json.targets.serve.executor = '@nrwl/angular:webpack-server';

@@ -5,10 +5,13 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
-import { libraryGenerator } from '../library/library';
 import { scamGenerator } from '../scam/scam';
-import { createStorybookTestWorkspaceForLib } from '../utils/testing';
+import {
+  createStorybookTestWorkspaceForLib,
+  generateTestLibrary,
+} from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
+
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
@@ -28,7 +31,7 @@ describe('angularStories generator: libraries', () => {
 
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await libraryGenerator(tree, { name: libName });
+      await generateTestLibrary(tree, { name: libName });
     });
 
     it('should not fail on empty NgModule declarations', () => {

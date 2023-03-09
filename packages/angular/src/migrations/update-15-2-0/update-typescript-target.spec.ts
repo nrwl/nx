@@ -6,18 +6,18 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import applicationGenerator from '../../generators/application/application';
+import { generateTestApplication } from '../../generators/utils/testing';
+import { UnitTestRunner } from '../../utils/test-runners';
 import updateTypescriptTarget from './update-typescript-target';
-import { UnitTestRunner } from '@nrwl/angular/src/utils/test-runners';
 
 describe('Migration to update target and add useDefineForClassFields', () => {
   let tree: Tree;
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'test',
     });
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'karma',
       unitTestRunner: UnitTestRunner.None,
     });
