@@ -5,8 +5,8 @@ import {
 
 export interface PluginCapabilities {
   name: string;
-  executors?: { [name: string]: ExecutorsJsonEntry };
-  generators?: { [name: string]: GeneratorsJsonEntry };
+  executors?: { [name: string]: ExecutorsJsonEntry } | null;
+  generators?: { [name: string]: GeneratorsJsonEntry } | null;
   projectInference?: boolean;
   projectGraphExtension?: boolean;
 }

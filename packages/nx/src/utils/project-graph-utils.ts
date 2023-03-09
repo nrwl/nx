@@ -23,14 +23,14 @@ export function projectHasTargetAndConfiguration(
 ) {
   return (
     projectHasTarget(project, target) &&
-    project.data.targets[target].configurations &&
-    project.data.targets[target].configurations[configuration]
+    project.data.targets?.[target].configurations &&
+    project.data.targets[target]?.configurations?.[configuration]
   );
 }
 
 export function mergeNpmScriptsWithTargets(
   projectRoot: string,
-  targets
+  targets: Record<string, TargetConfiguration>
 ): Record<string, TargetConfiguration> {
   try {
     const { scripts, nx }: PackageJson = readJsonFile(
@@ -39,7 +39,7 @@ export function mergeNpmScriptsWithTargets(
     const res: Record<string, TargetConfiguration> = {};
     // handle no scripts
     Object.keys(scripts || {}).forEach((script) => {
-      if (!nx?.includedScripts || nx?.includedScripts.includes(script)) {
+      if (nx && (!nx?.includedScripts || nx?.includedScripts.includes(script))) {
         res[script] = buildTargetFromScript(script, nx);
       }
     });
@@ -62,8 +62,9 @@ export function getSourceDirOfDependentProjects(
   const nodeNames = findAllProjectNodeDependencies(projectName, projectGraph);
   return nodeNames.reduce(
     (result, nodeName) => {
-      if (projectGraph.nodes[nodeName].data.sourceRoot) {
-        result[0].push(projectGraph.nodes[nodeName].data.sourceRoot);
+      const sourceRoot = projectGraph.nodes[nodeName].data.sourceRoot;
+      if (sourceRoot) {
+        result[0].push(sourceRoot);
       } else {
         result[1].push(nodeName);
       }

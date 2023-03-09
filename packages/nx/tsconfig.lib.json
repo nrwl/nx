@@ -13,5 +13,5 @@
     "jest.config.ts",
     "**/__fixtures__/**/*.*"
   ],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "declarations.d.ts"]
 }

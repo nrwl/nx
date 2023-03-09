@@ -8,19 +8,20 @@ import { readJsonFile } from '../fileutils';
 import { getPackageManagerCommand } from '../package-manager';
 import { loadNxPlugin, readPluginPackageJson } from '../nx-plugin';
 import { getNxRequirePaths } from '../installation-directory';
+import { GeneratorsJson, ExecutorsJson } from '../../config/misc-interfaces';
 
-function tryGetCollection<T extends object>(
+function tryGetCollection<T extends object, TKey extends keyof T>(
   packageJsonPath: string,
   collectionFile: string | undefined,
-  propName: string
-): T | null {
+  propName: TKey
+): T[TKey] | null {
   if (!collectionFile) {
     return null;
   }
 
   try {
     const collectionFilePath = join(dirname(packageJsonPath), collectionFile);
-    return readJsonFile<T>(collectionFilePath)[propName];
+    return readJsonFile(collectionFilePath)[propName];
   } catch {
     return null;
   }
@@ -43,27 +44,31 @@ export function getPluginCapabilities(
     return {
       name: pluginName,
       generators:
-        tryGetCollection(
+        tryGetCollection<GeneratorsJson, 'generators'>(
           packageJsonPath,
           packageJson.generators,
           'generators'
         ) ||
-        tryGetCollection(
+        tryGetCollection<GeneratorsJson, 'schematics'>(
+          packageJsonPath,
+          packageJson.generators,
+          'schematics'
+        ) ||
+        tryGetCollection<GeneratorsJson, 'generators'>(
           packageJsonPath,
           packageJson.schematics,
           'generators'
         ) ||
-        tryGetCollection(
+        tryGetCollection<GeneratorsJson, 'schematics'>(
           packageJsonPath,
           packageJson.schematics,
-          'generators'
-        ) ||
-        tryGetCollection(packageJsonPath, packageJson.schematics, 'schematics'),
+          'schematics'
+        ),
       executors:
-        tryGetCollection(packageJsonPath, packageJson.executors, 'executors') ||
-        tryGetCollection(packageJsonPath, packageJson.executors, 'builders') ||
-        tryGetCollection(packageJsonPath, packageJson.builders, 'executors') ||
-        tryGetCollection(packageJsonPath, packageJson.builders, 'builders'),
+        tryGetCollection<ExecutorsJson, 'executors'>(packageJsonPath, packageJson.executors, 'executors') ||
+        tryGetCollection<ExecutorsJson, 'builders'>(packageJsonPath, packageJson.executors, 'builders') ||
+        tryGetCollection<ExecutorsJson, 'executors'>(packageJsonPath, packageJson.builders, 'executors') ||
+        tryGetCollection<ExecutorsJson, 'builders'>(packageJsonPath, packageJson.builders, 'builders'),
       projectGraphExtension: !!pluginModule.processProjectGraph,
       projectInference: !!pluginModule.projectFilePatterns,
     };
@@ -109,8 +114,8 @@ export function listPluginCapabilities(pluginName: string) {
     bodyLines.push(chalk.bold(chalk.green('GENERATORS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.generators).map(
-        (name) => `${chalk.bold(name)} : ${plugin.generators[name].description}`
+      ...Object.keys(plugin.generators ?? {}).map(
+        (name) => `${chalk.bold(name)} : ${plugin.generators?.[name].description}`
       )
     );
     if (hasBuilders) {
@@ -122,8 +127,9 @@ export function listPluginCapabilities(pluginName: string) {
     bodyLines.push(chalk.bold(chalk.green('EXECUTORS/BUILDERS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.executors).map(
-        (name) => `${chalk.bold(name)} : ${plugin.executors[name].description}`
+      ...Object.keys(plugin.executors ?? {}).map(
+        (name) =>
+          `${chalk.bold(name)} : ${plugin.executors?.[name].description}`
       )
     );
   }

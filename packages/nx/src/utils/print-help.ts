@@ -33,7 +33,7 @@ ${output.applyNxPrefix(
 ${generateOverviewOutput({
   pluginName: meta.plugin,
   name: meta.entity,
-  description: schema.description,
+  description: schema.description as string,
   mode: meta.mode,
   aliases: meta.mode === 'generate' ? meta.aliases : [],
 })}
@@ -190,7 +190,7 @@ const formatOptionVal = (maybeStr: unknown) =>
   typeof maybeStr === 'string' ? `"${maybeStr}"` : JSON.stringify(maybeStr);
 
 // From our JSON schemas an option could possibly have more than one valid type
-const formatOptionType = (optionConfig: Schema['properties'][0]) => {
+const formatOptionType: (optionConfig: Schema['properties'][0]) => string = (optionConfig: Schema['properties'][0]) => {
   if (Array.isArray(optionConfig.oneOf)) {
     return optionConfig.oneOf
       .map((typeConfig) => formatOptionType(typeConfig))
@@ -244,7 +244,7 @@ function generateOptionsOutput(schema: Schema): string {
 
     optionsToRender.set(optionName, {
       renderedFlagAndAlias,
-      renderedDescription,
+      renderedDescription: renderedDescription as string,
       renderedTypesAndDefault,
     });
   }
