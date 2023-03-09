@@ -1,6 +1,6 @@
 // This file should be committed to your repository! It wraps Nx and ensures
 // that your local installation matches nx.json.
-// See: https://nx.dev/more-concepts/encapsulated-nx-and-the-wrapper for more info.
+// See: https://nx.dev/more-concepts/nx-and-the-wrapper for more info.
 //
 //# The contents of this file are executed before packages are installed.
 //# As such, we should not import anything from nx, other @nrwl packages,
@@ -60,7 +60,7 @@ function ensureUpToDateInstallation() {
     nxJson = require(nxJsonPath);
   } catch {
     console.error(
-      '[NX]: nx.json is required when running in encapsulated mode. Run `npx nx init --encapsulated` to restore it.'
+      '[NX]: nx.json is required when running the nx wrapper. See https://nx.dev/more-concepts/nx-and-the-wrapper'
     );
     process.exit(1);
   }
@@ -99,10 +99,8 @@ function ensureUpToDateInstallation() {
   }
 }
 
-if (require.main === module || !process.env.NX_WRAPPER_SET) {
-  if (!process.env.NX_WRAPPER_SKIP_INSTALL) {
-    ensureUpToDateInstallation();
-  }
-  process.env.NX_WRAPPER_SET = 'true';
-  require('./installation/node_modules/nx/bin/nx');
+if (!process.env.NX_WRAPPER_SKIP_INSTALL) {
+  ensureUpToDateInstallation();
 }
+// eslint-disable-next-line no-restricted-modules
+require('./installation/node_modules/nx/bin/nx');

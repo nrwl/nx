@@ -32,7 +32,7 @@ command -v npm >/dev/null 2>&1 || { echo >&2 "${NPM_MISSING_ERR}"; exit 1; }
 path_to_root=$(dirname $BASH_SOURCE)
 node ${path.posix.join('$path_to_root', nxWrapperPath(path.posix))} $@`;
 
-export function generateEncapsulatedNxSetup(version?: string) {
+export function generateDotNxSetup(version?: string) {
   const host = new FsTree(process.cwd(), false);
   writeMinimalNxJson(host, version);
   updateGitIgnore(host);
@@ -75,11 +75,24 @@ export function updateGitIgnore(host: Tree) {
   );
 }
 
+// Gets the sanitized contents for nxw.js
 export function getNxWrapperContents() {
-  // Read nxw.js, but remove any empty comments or comments that start with `//#: `
-  // This removes the sourceMapUrl since it is invalid, as well as any internal comments.
-  return readFileSync(path.join(__dirname, 'nxw.js'), 'utf-8').replace(
-    /(\/\/# .*)|(\/\/\w*)$/gm,
-    ''
+  return sanitizeWrapperScript(
+    readFileSync(path.join(__dirname, 'nxw.js'), 'utf-8')
   );
+}
+
+// Remove any empty comments or comments that start with `//#: ` or eslint-disable comments.
+// This removes the sourceMapUrl since it is invalid, as well as any internal comments.
+export function sanitizeWrapperScript(input: string) {
+  const linesToRemove = [
+    // Comments that start with //#
+    '\\/\\/# .*',
+    // Comments that are empty (often used for newlines between internal comments)
+    '\\s*\\/\\/\\s*',
+    // Comments that disable an eslint rule.
+    '\\/\\/ eslint-disable-next-line.*',
+  ];
+  const regex = `(${linesToRemove.join('|')})$`;
+  return input.replace(new RegExp(regex, 'gm'), '');
 }
