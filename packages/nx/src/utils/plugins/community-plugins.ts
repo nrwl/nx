@@ -9,11 +9,11 @@ const COMMUNITY_PLUGINS_JSON_URL =
 export async function fetchCommunityPlugins(): Promise<CommunityPlugin[]> {
   return new Promise((resolve, reject) => {
     const req = get(COMMUNITY_PLUGINS_JSON_URL, (res) => {
-      if (res.statusCode < 200 || res.statusCode >= 300) {
+      if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
         reject(new Error(`Request failed with status code ${res.statusCode}`));
       }
 
-      const data = [];
+      const data: Array<any> = [];
       res.on('data', (chunk) => {
         data.push(chunk);
       });

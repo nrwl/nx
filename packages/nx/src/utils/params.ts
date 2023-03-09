@@ -79,7 +79,7 @@ export type Options = {
 export async function handleErrors(isVerbose: boolean, fn: Function) {
   try {
     return await fn();
-  } catch (err) {
+  } catch (err: any) {
     err ||= new Error('Unknown error caught');
     if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
       logger.error('The generator workflow failed. See above.');
@@ -140,40 +140,42 @@ export function coerceTypesInOptions(opts: Options, schema: Schema): Options {
   return opts;
 }
 
-function coerceType(prop: PropertyDescription | undefined, value: any) {
-  if (!prop) return value;
-  if (typeof value !== 'string' && value !== undefined) return value;
+function coerceType<TOriginal, TCoerced = unknown>(prop: PropertyDescription | undefined, value: TOriginal): TCoerced {
+  if (!prop) return value as unknown as TCoerced;
+  if (typeof value !== 'string' && value !== undefined) return value as TCoerced;
 
   if (prop.oneOf) {
     for (let i = 0; i < prop.oneOf.length; ++i) {
       const coerced = coerceType(prop.oneOf[i], value);
       if (coerced !== value) {
-        return coerced;
+        return coerced as TCoerced;
       }
     }
-    return value;
+    return value as unknown as TCoerced;
   } else if (Array.isArray(prop.type)) {
     for (let i = 0; i < prop.type.length; ++i) {
       const coerced = coerceType({ type: prop.type[i] }, value);
       if (coerced !== value) {
-        return coerced;
+        return coerced as TCoerced;
       }
     }
-    return value;
+    return value as unknown as TCoerced;
   } else if (
+    prop.type &&
     normalizedPrimitiveType(prop.type) == 'boolean' &&
     isConvertibleToBoolean(value)
   ) {
-    return value === true || value == 'true';
+    return (value === true || value == 'true') as TCoerced;
   } else if (
+    prop.type &&
     normalizedPrimitiveType(prop.type) == 'number' &&
     isConvertibleToNumber(value)
   ) {
-    return Number(value);
-  } else if (prop.type == 'array') {
-    return value.split(',').map((v) => coerceType(prop.items, v));
+    return Number(value) as TCoerced;
+  } else if (prop.type == 'array' && typeof value === 'string') {
+    return value.split(',').map((v) => coerceType(prop.items, v)) as TCoerced;
   } else {
-    return value;
+    return value as unknown as TCoerced;
   }
 }
 
@@ -189,7 +191,7 @@ export function convertAliases(
   schema: Schema,
   excludeUnmatched: boolean
 ): Options {
-  return Object.keys(opts).reduce((acc, k) => {
+  return Object.keys(opts).reduce((acc: Options, k) => {
     const prop = findSchemaForProperty(k, schema);
     if (prop) {
       acc[prop.name] = opts[k];
@@ -230,7 +232,9 @@ export function validateObject(
       try {
         validateObject(opts, s, definitions);
       } catch (e) {
-        errors.push(e);
+        if (e instanceof Error) {
+          errors.push(e);
+        }
       }
     }
     if (errors.length > 0) {
@@ -248,7 +252,9 @@ export function validateObject(
         try {
           validateObject(opts, s, definitions);
         } catch (e) {
-          errors.push(e);
+          if (e instanceof Error) {
+            errors.push(e);
+          }
         }
       }
       if (errors.length === schema.oneOf.length) {
@@ -273,7 +279,7 @@ export function validateObject(
 
   if (schema.additionalProperties === false) {
     Object.keys(opts).find((p) => {
-      if (Object.keys(schema.properties).indexOf(p) === -1) {
+      if (Object.keys(schema.properties ?? {}).indexOf(p) === -1) {
         if (p === '_') {
           throw new SchemaError(
             `Schema does not support positional arguments. Argument '${opts[p]}' found`
@@ -518,7 +524,7 @@ function setPropertyDefault(
       Array.isArray(opts[propName]) &&
       items.type === 'object'
     ) {
-      opts[propName].forEach((valueInArray) =>
+      opts[propName].forEach((valueInArray: any) =>
         setDefaultsInObject(valueInArray, items.properties || {}, definitions)
       );
     } else if (!opts[propName] && schema.default) {
@@ -665,7 +671,7 @@ export function convertSmartDefaultsIntoNamedParams(
   relativeCwd: string | null
 ) {
   const argv = opts['_'] || [];
-  const usedPositionalArgs = {};
+  const usedPositionalArgs: Options = {};
   Object.entries(schema.properties).forEach(([k, v]) => {
     if (
       opts[k] === undefined &&
@@ -734,10 +740,10 @@ function getGeneratorDefaults(
     projectsConfigurations?.projects[projectName]?.generators
   ) {
     const g = projectsConfigurations.projects[projectName].generators;
-    if (g[collectionName] && g[collectionName][generatorName]) {
+    if (g?.[collectionName] && g?.[collectionName][generatorName]) {
       defaults = { ...defaults, ...g[collectionName][generatorName] };
     }
-    if (g[`${collectionName}:${generatorName}`]) {
+    if (g?.[`${collectionName}:${generatorName}`]) {
       defaults = {
         ...defaults,
         ...g[`${collectionName}:${generatorName}`],
@@ -786,7 +792,11 @@ export function getPromptsForSchema(
           validateProperty(k, s, v, schema.definitions || {});
           return true;
         } catch (e) {
-          return e.message;
+          if (e instanceof Error) {
+            return e.message;
+          } else {
+            return 'Value invalid.'
+          }
         }
       };
 
@@ -885,7 +895,7 @@ function isTTY(): boolean {
  * Verifies whether the given value can be converted to a boolean
  * @param value
  */
-function isConvertibleToBoolean(value) {
+function isConvertibleToBoolean<T>(value: T) {
   if ('boolean' === typeof value) {
     return true;
   }
@@ -901,7 +911,7 @@ function isConvertibleToBoolean(value) {
  * Verifies whether the given value can be converted to a number
  * @param value
  */
-function isConvertibleToNumber(value) {
+function isConvertibleToNumber<T>(value: T) {
   // exclude booleans explicitly
   if ('boolean' === typeof value) {
     return false;
