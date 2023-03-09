@@ -47,7 +47,7 @@ export function registerTranspiler(
   compilerOptions: CompilerOptions
 ): () => void {
   // Function to register transpiler that returns cleanup function
-  let registerTranspiler: () => () => void;
+  let registerTranspiler: (() => () => void) | null = null;
 
   if (swcNodeInstalled) {
     // These are requires to prevent it from registering when it shouldn't
@@ -87,7 +87,7 @@ export function registerTranspiler(
  * @param tsConfigPath Adds the paths from a tsconfig file into node resolutions
  * @returns cleanup function
  */
-export function registerTsConfigPaths(tsConfigPath): () => void {
+export function registerTsConfigPaths(tsConfigPath: string): () => void {
   try {
     /**
      * Load the ts config from the source project
@@ -110,7 +110,7 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
   return () => {};
 }
 
-function readCompilerOptions(tsConfigPath): CompilerOptions {
+function readCompilerOptions(tsConfigPath: string): CompilerOptions {
   if (swcNodeInstalled) {
     const {
       readDefaultTsConfig,
@@ -121,7 +121,7 @@ function readCompilerOptions(tsConfigPath): CompilerOptions {
   }
 }
 
-function readCompilerOptionsWithTypescript(tsConfigPath) {
+function readCompilerOptionsWithTypescript(tsConfigPath: string) {
   if (!ts) {
     ts = require('typescript');
   }
@@ -193,6 +193,7 @@ export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
 
   for (const flag in flagMap) {
     if (compilerOptions[flag]) {
+      //@ts-ignore -- This line is really hard to get TS to like, but the current typings give good intellisense.
       result[flag] = ts[flagMap[flag]][compilerOptions[flag]];
     }
   }
