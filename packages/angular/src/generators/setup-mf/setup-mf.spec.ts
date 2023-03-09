@@ -5,20 +5,19 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-
+import { generateTestApplication } from '../utils/testing';
 import { setupMf } from './setup-mf';
-import applicationGenerator from '../application/application';
 
 describe('Init MF', () => {
   let tree: Tree;
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'app1',
       routing: true,
     });
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'remote1',
       routing: true,
     });
@@ -204,7 +203,7 @@ describe('Init MF', () => {
 
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
     // ARRANGE
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'remote2',
     });
 
@@ -238,7 +237,7 @@ describe('Init MF', () => {
 
   it('should add a remote application and add it to a specified host applications router config', async () => {
     // ARRANGE
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'remote2',
       routing: true,
     });
@@ -273,7 +272,7 @@ describe('Init MF', () => {
 
   it('should modify the associated cypress project to add the workaround correctly', async () => {
     // ARRANGE
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'testApp',
       routing: true,
     });
@@ -327,7 +326,7 @@ describe('Init MF', () => {
       },
     }));
 
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'ng14',
       routing: true,
       standalone: true,

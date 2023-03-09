@@ -12,19 +12,21 @@ import {
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
+import * as enquirer from 'enquirer';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   autoprefixerVersion,
   postcssVersion,
   tailwindVersion,
 } from '../../utils/versions';
-import { applicationGenerator } from './application';
+import { generateTestApplication } from '../utils/testing';
 import type { Schema } from './schema';
-import * as enquirer from 'enquirer';
+
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
 jest.mock('enquirer');
+
 describe('app', () => {
   let appTree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
@@ -942,7 +944,7 @@ async function generateApp(
   name: string = 'myApp',
   options: Partial<Schema> = {}
 ) {
-  await applicationGenerator(appTree, {
+  await generateTestApplication(appTree, {
     name,
     skipFormat: false,
     e2eTestRunner: E2eTestRunner.Cypress,

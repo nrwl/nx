@@ -17,7 +17,6 @@ describe('init', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    require('@nrwl/devkit').ensurePackage.mockImplementation(() => {});
   });
 
   it('should add angular dependencies', async () => {

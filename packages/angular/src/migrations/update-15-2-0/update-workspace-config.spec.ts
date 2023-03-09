@@ -1,16 +1,16 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import applicationGenerator from '../../generators/application/application';
-import updateWorkspaceConfig from './update-workspace-config';
+import { Builders } from '@schematics/angular/utility/workspace-models';
 import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from 'nx/src/generators/utils/project-configuration';
-import { Builders } from '@schematics/angular/utility/workspace-models';
+import { generateTestApplication } from '../../generators/utils/testing';
+import updateWorkspaceConfig from './update-workspace-config';
 
 describe(`Migration to remove bundleDependencies`, () => {
   it(`should remove 'bundleDependencies'`, async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'test',
     });
 

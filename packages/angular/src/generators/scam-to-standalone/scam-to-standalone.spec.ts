@@ -1,13 +1,13 @@
-import { scamToStandalone } from './scam-to-standalone';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import applicationGenerator from '../application/application';
-import scamGenerator from '../scam/scam';
 import { stripIndents, updateJson } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import scamGenerator from '../scam/scam';
+import { generateTestApplication } from '../utils/testing';
+import { scamToStandalone } from './scam-to-standalone';
 
 describe('scam-to-standalone', () => {
   it('should convert an inline scam to standalone', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await applicationGenerator(tree, { name: 'foo' });
+    await generateTestApplication(tree, { name: 'foo' });
     await scamGenerator(tree, { name: 'bar', project: 'foo' });
 
     tree.write(

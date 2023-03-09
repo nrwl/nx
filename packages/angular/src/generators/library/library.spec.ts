@@ -9,8 +9,8 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { Linter } from '@nrwl/linter';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -18,8 +18,7 @@ import {
   postcssVersion,
   tailwindVersion,
 } from '../../utils/versions';
-import applicationGenerator from '../application/application';
-import libraryGenerator from './library';
+import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { Schema } from './schema';
 
 let projectGraph: ProjectGraph;
@@ -27,9 +26,6 @@ jest.mock('@nrwl/devkit', () => {
   return {
     ...jest.requireActual('@nrwl/devkit'),
     createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
-    // need to mock so it doesn't resolve what the workspace has installed
-    // and be able to test with different versions
-    ensurePackage: jest.fn().mockImplementation((pkg) => require(pkg)),
   };
 });
 
@@ -37,7 +33,7 @@ describe('lib', () => {
   let tree: Tree;
 
   async function runLibraryGeneratorWithOpts(opts: Partial<Schema> = {}) {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'myLib',
       publishable: false,
       buildable: false,
@@ -1419,7 +1415,7 @@ describe('lib', () => {
 
     it('should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child', async () => {
       // ARRANGE
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'app1',
         routing: true,
       });
@@ -1443,7 +1439,7 @@ describe('lib', () => {
 
     it('should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child', async () => {
       // ARRANGE
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'app1',
         routing: true,
       });
@@ -1468,7 +1464,7 @@ describe('lib', () => {
 
     it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent module as direct child', async () => {
       // ARRANGE
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'app1',
         routing: true,
         standalone: true,
@@ -1494,7 +1490,7 @@ describe('lib', () => {
 
     it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent module as a lazy child', async () => {
       // ARRANGE
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'app1',
         routing: true,
         standalone: true,
