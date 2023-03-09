@@ -60,6 +60,11 @@
         ]
       }
     },
+    "appDir": {
+      "type": "boolean",
+      "description": "Use experimental `apps/` directory for the project.",
+      "x-prompt": "Would you like to use experimental `app/` directory with this project?"
+    },
     "server": {
       "description": "The server script path to be used with next.",
       "type": "string"

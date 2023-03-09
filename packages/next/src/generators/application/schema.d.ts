@@ -4,6 +4,7 @@ import { SupportedStyles } from '@nrwl/react';
 export interface Schema {
   name: string;
   style?: SupportedStyles;
+  appDir?: boolean;
   server?: string;
   skipFormat?: boolean;
   directory?: string;
