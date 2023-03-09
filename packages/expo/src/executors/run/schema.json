@@ -60,5 +60,6 @@
       "description": "Should use derived data for builds."
     }
   },
-  "required": ["platform"]
+  "required": ["platform"],
+  "examplesFile": "../../../docs/run-examples.md"
 }

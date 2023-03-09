@@ -680,7 +680,19 @@
     "name": "expo",
     "packageName": "@nrwl/expo",
     "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
-    "documents": {},
+    "documents": {
+      "/packages/expo/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
+        "file": "generated/packages/expo/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/expo/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/expo/expo-plugin"
+      }
+    },
     "root": "/packages/expo",
     "source": "/packages/expo/src",
     "executors": {

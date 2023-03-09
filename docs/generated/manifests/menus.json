@@ -4201,6 +4201,23 @@
         "name": "expo",
         "children": [
           {
+            "id": "documents",
+            "path": "/packages/expo/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/packages/expo/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
             "id": "executors",
             "path": "/packages/expo/executors",
             "name": "executors",

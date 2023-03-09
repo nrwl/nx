@@ -30,12 +30,22 @@ npx create-nx-workspace your-workspace-name
 
 For existing Nx workspaces, install the `@nrwl/react-native` package to add React Native capabilities to it.
 
-```shell
-npm install @nrwl/react-native --save-dev
+{% tabs %}
+{%tab label="npm"%}
 
-# Or with yarn
-yarn add @nrwl/react-native --dev
+```shell
+npm i --save-dev @nrwl/react-native
 ```
+
+{% /tab %}
+{%tab label="yarn"%}
+
+```shell
+yarn add --dev @nrwl/react-native
+```
+
+{% /tab %}
+{% /tabs %}
 
 ### Generating Applications
 

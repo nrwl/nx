@@ -1938,6 +1938,19 @@
               "file": "shared/packages/react-native/react-native-plugin"
             }
           ]
+        },
+        {
+          "name": "expo",
+          "id": "expo",
+          "description": "Expo package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "name": "Overview",
+              "path": "/packages/expo",
+              "file": "shared/packages/expo/expo-plugin"
+            }
+          ]
         }
       ]
     }

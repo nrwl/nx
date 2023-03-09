@@ -99,5 +99,6 @@
       "description": "Start a Webpack dev server for the web app.",
       "x-deprecated": "This option will be removed in v16. It is no longer supported by @expo/cli."
     }
-  }
+  },
+  "examplesFile": "../../../docs/start-examples.md"
 }
