@@ -1,7 +1,7 @@
 import {
   DependentBuildableProjectNode,
   findMissingBuildDependencies,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 import * as chalk from 'chalk';
 import { ExecutorContext, stripIndents } from '@nrwl/devkit';
 

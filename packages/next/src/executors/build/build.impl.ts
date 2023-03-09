@@ -15,7 +15,7 @@ import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
 
 import { prepareConfig } from '../../utils/config';
