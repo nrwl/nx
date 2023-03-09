@@ -699,6 +699,23 @@
           "addToPackageJson": "devDependencies"
         }
       }
+    },
+    "15.8.6": {
+      "version": "15.8.6-beta.0",
+      "packages": {
+        "expo": {
+          "version": "48.0.6",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.76.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.76.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
