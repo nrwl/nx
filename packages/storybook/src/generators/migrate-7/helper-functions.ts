@@ -649,22 +649,17 @@ export function logResult(
     color: 'green',
   });
 
-  generateFiles(
-    tree,
-    'packages/storybook/src/generators/migrate-7/templates',
-    '.',
-    {
-      tmpl: '',
-      successfulProjects: Object.entries(
-        migrationSummary?.successfulProjects
-      )?.map(([_projectName, command]) => command),
-      failedProjects: Object.entries(migrationSummary?.failedProjects)?.map(
-        ([_projectName, command]) => command
-      ),
-      hasFailedProjects:
-        Object.keys(migrationSummary?.failedProjects)?.length > 0,
-      hasSuccessfulProjects:
-        Object.keys(migrationSummary?.successfulProjects)?.length > 0,
-    }
-  );
+  generateFiles(tree, joinPathFragments(__dirname, 'files'), '.', {
+    tmpl: '',
+    successfulProjects: Object.entries(
+      migrationSummary?.successfulProjects
+    )?.map(([_projectName, command]) => command),
+    failedProjects: Object.entries(migrationSummary?.failedProjects)?.map(
+      ([_projectName, command]) => command
+    ),
+    hasFailedProjects:
+      Object.keys(migrationSummary?.failedProjects)?.length > 0,
+    hasSuccessfulProjects:
+      Object.keys(migrationSummary?.successfulProjects)?.length > 0,
+  });
 }
