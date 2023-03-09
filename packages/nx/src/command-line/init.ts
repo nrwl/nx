@@ -1,45 +1,35 @@
 import { execSync } from 'child_process';
+import { prompt } from 'enquirer';
 import { existsSync } from 'fs';
 import { addNxToNest } from '../nx-init/add-nx-to-nest';
 import { addNxToNpmRepo } from '../nx-init/add-nx-to-npm-repo';
 import { directoryExists, readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
 import * as parser from 'yargs-parser';
-import { generateEncapsulatedNxSetup } from '../nx-init/encapsulated/add-nx-scripts';
+import { generateDotNxSetup } from '../nx-init/dot-nx/add-nx-scripts';
 import { prerelease } from 'semver';
+import { runNxSync } from '../utils/child-process';
 
 export async function initHandler() {
   const args = process.argv.slice(2).join(' ');
   const flags = parser(args, {
-    boolean: ['encapsulated'],
-    default: {
-      encapsulated: false,
+    boolean: ['useDotNxInstallation'],
+    alias: {
+      useDotNxInstallation: ['encapsulated'],
     },
-  }) as any as { encapsulated: boolean };
+    default: {
+      useDotNxInstallation: false,
+    },
+  }) as any as { useDotNxInstallation: boolean };
 
   const version =
-    process.env.NX_VERSION ?? prerelease(require('../../package.json').version)
-      ? 'next'
-      : 'latest';
+    process.env.NX_VERSION ??
+    (prerelease(require('../../package.json').version) ? 'next' : 'latest');
   if (process.env.NX_VERSION) {
     console.log(`Using version ${process.env.NX_VERSION}`);
   }
-  if (flags.encapsulated === true) {
-    if (process.platform !== 'win32') {
-      console.log(
-        'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx --help`'
-      );
-    } else {
-      console.log(
-        'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx.bat --help`'
-      );
-    }
-    generateEncapsulatedNxSetup(version);
-    if (process.platform === 'win32') {
-      execSync('./nx.bat', { stdio: 'inherit' });
-    } else {
-      execSync('./nx', { stdio: 'inherit' });
-    }
+  if (flags.useDotNxInstallation === true) {
+    setupDotNxInstallation(version);
   } else if (existsSync('package.json')) {
     const packageJson: PackageJson = readJsonFile('package.json');
     if (existsSync('angular.json')) {
@@ -63,9 +53,30 @@ export async function initHandler() {
       await addNxToNpmRepo();
     }
   } else {
-    execSync(`npx --yes create-nx-workspace@${version} ${args}`, {
-      stdio: [0, 1, 2],
-    });
+    const useDotNxFolder = await prompt<{ useDotNxFolder: string }>([
+      {
+        name: 'useDotNxFolder',
+        type: 'autocomplete',
+        message: 'Where should your workspace be created?',
+        choices: [
+          {
+            name: 'In a new folder under this directory',
+            value: 'false',
+          },
+          {
+            name: 'In this directory',
+            value: 'true',
+          },
+        ],
+      },
+    ]).then((r) => r.useDotNxFolder === 'true');
+    if (useDotNxFolder) {
+      setupDotNxInstallation(version);
+    } else {
+      execSync(`npx --yes create-nx-workspace@${version} ${args}`, {
+        stdio: [0, 1, 2],
+      });
+    }
   }
 }
 
@@ -108,4 +119,19 @@ function isMonorepo(packageJson: PackageJson) {
   if (existsSync('lerna.json')) return true;
 
   return false;
+}
+
+function setupDotNxInstallation(version: string) {
+  if (process.platform !== 'win32') {
+    console.log(
+      'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx --help`'
+    );
+  } else {
+    console.log(
+      'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx.bat --help`'
+    );
+  }
+  generateDotNxSetup(version);
+  // invokes the wrapper, thus invoking the initial installation process
+  runNxSync('');
 }
