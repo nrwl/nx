@@ -28,7 +28,7 @@ export type MixedPackageGroup =
 export type PackageGroup = MixedPackageGroup | ArrayPackageGroup;
 
 export interface NxMigrationsConfiguration {
-  migrations?: string;
+  migrations?: string | null;
   packageGroup?: PackageGroup;
 }
 
