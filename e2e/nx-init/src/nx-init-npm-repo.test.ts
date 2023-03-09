@@ -10,7 +10,7 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 
-describe('nx init', () => {
+describe('nx init (NPM repo)', () => {
   const pmc = getPackageManagerCommand({
     packageManager: getSelectedPackageManager(),
   });

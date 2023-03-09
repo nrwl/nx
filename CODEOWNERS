@@ -124,6 +124,9 @@
 /packages/nx/src/lock-file @meeroslav @FrozenPandaz
 /packages/nx/src/nx-init/angular/** @Coly010 @leosvelperez @FrozenPandaz
 /e2e/nx-init/src/nx-init-angular.test.ts @Coly010 @leosvelperez
+/packages/nx/src/nx-init/react/** @jaysoo @xiongemi @mandarini
+/e2e/nx-init/src/nx-init-react.test.ts @jaysoo @xiongemi @mandarini @ndcunningham
+/e2e/nx-init/src/files/cra/** @jaysoo @xiongemi @mandarini @ndcunningham
 /e2e/nx*/** @FrozenPandaz @AgentEnder @vsavkin
 /packages/workspace/** @FrozenPandaz @AgentEnder @vsavkin
 /e2e/workspace-create/** @FrozenPandaz @AgentEnder @vsavkin

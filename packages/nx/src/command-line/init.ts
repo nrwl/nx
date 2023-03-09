@@ -1,16 +1,17 @@
 import { execSync } from 'child_process';
+import { prompt } from 'enquirer';
 import { existsSync } from 'fs';
 import { prerelease } from 'semver';
 import * as parser from 'yargs-parser';
-import { prompt } from 'enquirer';
 import { addNxToMonorepo } from '../nx-init/add-nx-to-monorepo';
 import { addNxToNest } from '../nx-init/add-nx-to-nest';
 import { addNxToNpmRepo } from '../nx-init/add-nx-to-npm-repo';
 import { addNxToAngularCliRepo } from '../nx-init/angular';
 import { generateDotNxSetup } from '../nx-init/dot-nx/add-nx-scripts';
+import { addNxToCraRepo } from '../nx-init/react';
+import { runNxSync } from '../utils/child-process';
 import { directoryExists, readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
-import { runNxSync } from '../utils/child-process';
 
 export async function initHandler() {
   const args = process.argv.slice(2).join(' ');
@@ -37,10 +38,7 @@ export async function initHandler() {
     if (existsSync('angular.json')) {
       await addNxToAngularCliRepo();
     } else if (isCRA(packageJson)) {
-      // TODO(jack): remove cra-to-nx
-      execSync(`npx --yes cra-to-nx@${version} ${args}`, {
-        stdio: [0, 1, 2],
-      });
+      await addNxToCraRepo();
     } else if (isNestCLI(packageJson)) {
       await addNxToNest(packageJson);
     } else if (isMonorepo(packageJson)) {
