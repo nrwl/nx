@@ -12,7 +12,7 @@ export function workspaceRootInner(
 ): string {
   if (process.env.NX_WORKSPACE_ROOT_PATH)
     return process.env.NX_WORKSPACE_ROOT_PATH;
-  if (path.dirname(dir) === dir) return candidateRoot;
+  if (path.dirname(dir) === dir) return candidateRoot as string;
 
   const matches = [
     path.join(dir, 'nx.json'),
