@@ -42,7 +42,7 @@ export async function initHandler() {
     } else if (isNestCLI(packageJson)) {
       await addNxToNest(packageJson);
     } else if (isMonorepo(packageJson)) {
-      addNxToMonorepo();
+      await addNxToMonorepo();
     } else {
       await addNxToNpmRepo();
     }
