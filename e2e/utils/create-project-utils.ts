@@ -27,6 +27,7 @@ import {
   RunCmdOpts,
   runCommand,
 } from './command-utils';
+import { output } from '@nrwl/devkit';
 
 let projName: string;
 
@@ -90,7 +91,7 @@ export function newProject({
     projName = name;
     copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
 
-    if (process.env.NX_VERBOSE_LOGGING == 'true') {
+    if (isVerbose()) {
       logInfo(`NX`, `E2E test is creating a project: ${tmpProjPath()}`);
     }
     return projScope;
@@ -169,13 +170,27 @@ export function runCreateWorkspace(
     command += ` ${extraArgs}`;
   }
 
-  const create = execSync(command, {
-    cwd,
-    stdio: isVerbose() ? 'inherit' : 'pipe',
-    env: { CI: 'true', ...process.env },
-    encoding: 'utf-8',
-  });
-  return create ? create.toString() : '';
+  try {
+    const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
+      cwd,
+      stdio: 'pipe',
+      env: { CI: 'true', ...process.env },
+      encoding: 'utf-8',
+    });
+
+    if (isVerbose()) {
+      output.log({
+        title: `Command: ${command}`,
+        bodyLines: [create as string],
+        color: 'green',
+      });
+    }
+
+    return create;
+  } catch (e) {
+    logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+    throw e;
+  }
 }
 
 export function runCreatePlugin(
@@ -212,13 +227,27 @@ export function runCreatePlugin(
     command += ` ${extraArgs}`;
   }
 
-  const create = execSync(command, {
-    cwd: e2eCwd,
-    stdio: ['pipe', 'pipe', 'pipe'],
-    env: process.env,
-    encoding: 'utf-8',
-  });
-  return create ? create.toString() : '';
+  try {
+    const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
+      cwd: e2eCwd,
+      stdio: 'pipe',
+      env: process.env,
+      encoding: 'utf-8',
+    });
+
+    if (isVerbose()) {
+      output.log({
+        title: `Command: ${command}`,
+        bodyLines: [create as string],
+        color: 'green',
+      });
+    }
+
+    return create;
+  } catch (e) {
+    logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+    throw e;
+  }
 }
 
 export function packageInstall(
@@ -233,16 +262,37 @@ export function packageInstall(
     .split(' ')
     .map((pgk) => `${pgk}@${version}`)
     .join(' ');
-  const install = execSync(
-    `${mode === 'dev' ? pm.addDev : pm.addProd} ${pkgsWithVersions}`,
-    {
-      cwd,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: process.env,
-      encoding: 'utf-8',
+
+  const command = `${
+    mode === 'dev' ? pm.addDev : pm.addProd
+  } ${pkgsWithVersions}${isVerbose() ? ' --verbose' : ''}`;
+
+  try {
+    const install = execSync(
+      `${mode === 'dev' ? pm.addDev : pm.addProd} ${pkgsWithVersions}${
+        isVerbose() ? ' --verbose' : ''
+      }`,
+      {
+        cwd,
+        stdio: 'pipe',
+        env: process.env,
+        encoding: 'utf-8',
+      }
+    );
+
+    if (isVerbose()) {
+      output.log({
+        title: `Command: ${command}`,
+        bodyLines: [install as string],
+        color: 'green',
+      });
     }
-  );
-  return install ? install.toString() : '';
+
+    return install;
+  } catch (e) {
+    logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+    throw e;
+  }
 }
 
 export function runNgNew(
@@ -259,10 +309,10 @@ export function runNgNew(
 
   return execSync(command, {
     cwd: e2eCwd,
-    stdio: ['pipe', 'pipe', 'pipe'],
+    stdio: isVerbose() ? 'inherit' : 'pipe',
     env: process.env,
     encoding: 'utf-8',
-  }).toString();
+  });
 }
 
 export function newLernaWorkspace({
@@ -290,7 +340,7 @@ export function newLernaWorkspace({
       );
     }
 
-    if (process.env.NX_VERBOSE_LOGGING == 'true') {
+    if (isVerbose()) {
       logInfo(`NX`, `E2E test has created a lerna workspace: ${tmpProjPath()}`);
     }
 

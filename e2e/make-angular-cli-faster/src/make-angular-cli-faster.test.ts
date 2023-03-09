@@ -35,7 +35,7 @@ describe('make-angular-cli-faster', () => {
           cwd: tmpProjPath(),
           env: process.env,
           encoding: 'utf-8',
-          stdio: ['pipe', 'pipe', 'pipe'],
+          stdio: 'pipe',
         }
       )
     ).not.toThrow();

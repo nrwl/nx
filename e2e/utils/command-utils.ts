@@ -1,4 +1,4 @@
-import { PackageManager } from '@nrwl/devkit';
+import { output, PackageManager } from '@nrwl/devkit';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   detectPackageManager,
@@ -70,9 +70,9 @@ export function runCommand(
 ): string {
   const { failOnError, ...childProcessOptions } = options ?? {};
   try {
-    const r = execSync(command, {
+    const r = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd: tmpProjPath(),
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: 'pipe',
       env: {
         ...getStrippedEnvironmentVariables(),
         ...childProcessOptions?.env,
@@ -80,16 +80,23 @@ export function runCommand(
       },
       encoding: 'utf-8',
       ...childProcessOptions,
-    }).toString();
-    if (process.env.NX_VERBOSE_LOGGING) {
-      console.log(r);
+    });
+
+    if (isVerbose()) {
+      output.log({
+        title: `Command: ${command}`,
+        bodyLines: [r as string],
+        color: 'green',
+      });
     }
-    return r;
+
+    return r as string;
   } catch (e) {
     // this is intentional
     // npm ls fails if package is not found
+    logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     if (!failOnError && (e.stdout || e.stderr)) {
-      return e.stdout?.toString() + e.stderr?.toString();
+      return e.stdout + e.stderr;
     }
     throw e;
   }
@@ -272,25 +279,33 @@ export function runNgAdd(
   try {
     const pmc = getPackageManagerCommand();
     packageInstall(packageName, undefined, version);
-    return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
+    const fullCommand = pmc.run(
+      `ng g ${packageName}:ng-add`,
+      `${command}${isVerbose() ? ' --verbose' : ''}` ?? ''
+    );
+    const result = execSync(fullCommand, {
       cwd: tmpProjPath(),
       stdio: 'pipe',
       env: { ...(opts.env || getStrippedEnvironmentVariables()) },
       encoding: 'utf-8',
-    })
-      .toString()
-      .replace(
-        /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-        ''
-      );
+    });
+
+    const r = stripConsoleColors(result);
+
+    if (isVerbose()) {
+      output.log({
+        title: `Original command: ${fullCommand}`,
+        bodyLines: [result as string],
+        color: 'green',
+      });
+    }
+
+    return r;
   } catch (e) {
     if (opts.silenceError) {
-      return e.stdout.toString();
+      return e.stdout;
     } else {
-      logError(
-        `Ng Add failed: ${command}`,
-        `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
-      );
+      logError(`Ng Add failed: ${command}`, `${e.stdout}\n\n${e.stderr}`);
       throw e;
     }
   }
@@ -305,19 +320,30 @@ export function runCLI(
 ): string {
   try {
     const pm = getPackageManagerCommand();
-    const logs = execSync(`${pm.runNx} ${command}`, {
-      cwd: opts.cwd || tmpProjPath(),
-      env: { CI: 'true', ...getStrippedEnvironmentVariables(), ...opts.env },
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      maxBuffer: 50 * 1024 * 1024,
-    });
-    const r = stripConsoleColors(logs);
+    const logs = execSync(
+      `${pm.runNx} ${command} ${isVerbose() ? ' --verbose' : ''}`,
+      {
+        cwd: opts.cwd || tmpProjPath(),
+        env: {
+          CI: 'true',
+          ...getStrippedEnvironmentVariables(),
+          ...opts.env,
+        },
+        encoding: 'utf-8',
+        stdio: 'pipe',
+        maxBuffer: 50 * 1024 * 1024,
+      }
+    );
 
     if (isVerbose()) {
-      console.log(logs);
+      output.log({
+        title: `Original command: ${command}`,
+        bodyLines: [logs as string],
+        color: 'green',
+      });
     }
 
+    const r = stripConsoleColors(logs);
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
     if (needsMaxWorkers.test(command)) {
       setMaxWorkers();
@@ -326,12 +352,9 @@ export function runCLI(
     return r;
   } catch (e) {
     if (opts.silenceError) {
-      return stripConsoleColors(e.stdout?.toString() + e.stderr?.toString());
+      return stripConsoleColors(e.stdout + e.stderr);
     } else {
-      logError(
-        `Original command: ${command}`,
-        `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
-      );
+      logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
       throw e;
     }
   }
@@ -346,28 +369,35 @@ export function runLernaCLI(
 ): string {
   try {
     const pm = getPackageManagerCommand();
-    const logs = execSync(`${pm.runLerna} ${command}`, {
+    const fullCommand = `${pm.runLerna} ${command}${
+      isVerbose() ? ' --verbose' : ''
+    }`;
+    const logs = execSync(fullCommand, {
       cwd: opts.cwd || tmpProjPath(),
-      env: { CI: 'true', ...(opts.env || getStrippedEnvironmentVariables()) },
+      env: {
+        CI: 'true',
+        ...(opts.env || getStrippedEnvironmentVariables()),
+      },
       encoding: 'utf-8',
       stdio: 'pipe',
       maxBuffer: 50 * 1024 * 1024,
     });
-    const r = stripConsoleColors(logs);
 
     if (isVerbose()) {
-      console.log(logs);
+      output.log({
+        title: `Original command: ${fullCommand}`,
+        bodyLines: [logs as string],
+        color: 'green',
+      });
     }
+    const r = stripConsoleColors(logs);
 
     return r;
   } catch (e) {
     if (opts.silenceError) {
-      return stripConsoleColors(e.stdout?.toString() + e.stderr?.toString());
+      return stripConsoleColors(e.stdout + e.stderr);
     } else {
-      logError(
-        `Original command: ${command}`,
-        `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
-      );
+      logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
       throw e;
     }
   }
