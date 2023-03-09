@@ -4,14 +4,14 @@ import {
   parseTargetString,
   readTargetOptions,
   runExecutor,
+  workspaceLayout,
 } from '@nrwl/devkit';
 import exportApp from 'next/dist/export';
 import { join, resolve } from 'path';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { workspaceLayout } from '@nrwl/devkit';
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 
 import { prepareConfig } from '../../utils/config';
 import {

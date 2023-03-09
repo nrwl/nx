@@ -14,7 +14,7 @@ import {
   calculateProjectDependencies,
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 import nodeResolve from '@rollup/plugin-node-resolve';
 
 import { AssetGlobPattern, RollupExecutorOptions } from './schema';

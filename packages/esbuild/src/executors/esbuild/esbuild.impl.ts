@@ -22,7 +22,7 @@ import {
   getOutfile,
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
-import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { DependentBuildableProjectNode } from '@nrwl/js/src/utils/buildable-libs-utils';
 import { join } from 'path';
 
 const BUILD_WATCH_FAILED = `[ ${chalk.red(

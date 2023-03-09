@@ -22,7 +22,7 @@ import { WithNxOptions } from '../../plugins/with-nx';
 import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 
 const loadConfig = require('next/dist/server/config').default;
 

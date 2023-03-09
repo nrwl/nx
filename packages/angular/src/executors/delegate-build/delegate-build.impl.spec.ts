@@ -1,6 +1,6 @@
 jest.mock('@nrwl/devkit');
 jest.mock('@nrwl/devkit');
-jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
+jest.mock('@nrwl/js/src/utils/buildable-libs-utils');
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
@@ -11,7 +11,7 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
 
 import type { ExecutorContext, Target } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
-import * as buildableLibsUtils from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import * as buildableLibsUtils from '@nrwl/js/src/utils/buildable-libs-utils';
 import delegateBuildExecutor from './delegate-build.impl';
 import type { DelegateBuildExecutorSchema } from './schema';
 

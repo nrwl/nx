@@ -5,7 +5,7 @@ import {
   stripIndents,
 } from '@nrwl/devkit';
 import { WebpackNxBuildCoordinationPlugin } from '@nrwl/webpack/src/plugins/webpack-nx-build-coordination-plugin';
-import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { DependentBuildableProjectNode } from '@nrwl/js/src/utils/buildable-libs-utils';
 import { existsSync } from 'fs';
 import { readNxJson } from 'nx/src/project-graph/file-utils';
 import { isNpmProject } from 'nx/src/project-graph/operators';
