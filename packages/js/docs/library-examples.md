@@ -123,4 +123,14 @@ npx nx g lib mylib --directory=myapp
 
 {% /tab %}
 
+{% tab label="Non-buildable library" %}
+
+Generate a non-buildable library.
+
+```bash
+npx nx g @nrwl/js:lib mylib --bundler=none
+```
+
+{% /tab %}
+
 {% /tabs %}

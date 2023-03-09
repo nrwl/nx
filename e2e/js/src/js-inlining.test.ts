@@ -102,7 +102,7 @@ describe('inlining', () => {
 
   it('should inline nesting libraries', async () => {
     const parent = uniq('parent');
-    runCLI(`generate @nrwl/js:lib ${parent} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${parent} --no-interactive`);
 
     const child = uniq('child');
     runCLI(`generate @nrwl/js:lib ${child} --bundler=none --no-interactive`);
