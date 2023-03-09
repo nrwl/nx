@@ -180,6 +180,7 @@ jobs:
       - name: Setup tmate session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
         uses: mxschmitt/action-tmate@v3.8
+        timeout-minutes: 15
         with:
           sudo: false # disable sudo for windows debugging
 
@@ -222,11 +223,13 @@ jobs:
 
             // message
             let result = `
-               | Failed project | Node | PM | OS |
-               |--|--|--|--|`;
+              \`\`\`
+               | Failed project                | Node | PM   | OS     |
+               |-------------------------------|------|------|--------|`;
             failedProjects.forEach(matrix => {
-              result += `\n|**${matrix.project}**|v${matrix.node_version}|${matrix.package_manager}|Windows|`
+              result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.padEnd(3)} | ${matrix.package_manager.padEnd(4)} | Windows |`
             });
+            result += `\`\`\``;
             const message = result.split('\n').map(l => l.trim()).join('\n');
             core.setOutput('SLACK_MESSAGE', message);
 
@@ -234,7 +237,7 @@ jobs:
     if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     needs: process-result
     runs-on: ubuntu-latest
-    name: Report status
+    name: Report failure
     steps:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@v2
@@ -247,11 +250,11 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
-  report:
+  report-success:
     if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     needs: e2e
     runs-on: ubuntu-latest
-    name: Report status
+    name: Report success
     steps:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@v2
