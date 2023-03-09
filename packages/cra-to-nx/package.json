@@ -15,20 +15,13 @@
     "CLI"
   ],
   "bin": {
-    "cra-to-nx": "src/index.js"
+    "cra-to-nx": "./index.js"
   },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "dependencies": {
-    "fs-extra": "^11.1.0",
-    "glob": "7.1.4",
-    "nx": "file:../nx",
-    "tslib": "^2.3.0",
-    "yargs": "^17.6.2"
-  },
   "publishConfig": {
     "access": "public"
   }
