@@ -86,6 +86,14 @@ const rspackSection = {
           isExternal: false,
           disableCollapsible: false,
         },
+        {
+          id: 'application',
+          path: '/packages/rspack/generators/application',
+          name: 'application',
+          children: [],
+          isExternal: false,
+          disableCollapsible: false,
+        },
       ],
       isExternal: false,
       disableCollapsible: false,
@@ -104,11 +112,14 @@ export function SidebarContainer({
   // TODO(jack): Remove this rspack modification once we move rspack into main repo (when stable).
   const menuWithRspack = useMemo(() => {
     const storybookIdx = menu.sections.findIndex((s) => s.id === 'storybook');
-    const sections = [
-      ...menu.sections.slice(0, storybookIdx),
-      rspackSection,
-      ...menu.sections.slice(storybookIdx),
-    ];
+    const sections =
+      storybookIdx > -1
+        ? [
+            ...menu.sections.slice(0, storybookIdx),
+            rspackSection,
+            ...menu.sections.slice(storybookIdx),
+          ]
+        : menu.sections;
     return {
       ...menu,
       sections,
