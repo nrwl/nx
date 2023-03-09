@@ -5,7 +5,8 @@ import {
   readJson,
   updateJson,
 } from '@nrwl/devkit';
-import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
+import { prettierVersion } from '@nrwl/js/src/utils/versions';
+import { initGenerator as jsInitGenerator } from '@nrwl/js';
 import { nxVersion } from '../../utils/versions';
 import type { ProjectMigrator } from './migrators';
 import { AppMigrator, LibMigrator } from './migrators';
@@ -24,7 +25,6 @@ import {
   getWorkspaceRootFileTypesInfo,
   normalizeOptions,
   updatePackageJson,
-  updatePrettierConfig,
   updateRootEsLintConfig,
   updateRootTsConfig,
   updateVsCodeRecommendedExtensions,
@@ -55,7 +55,7 @@ export async function migrateFromAngularCli(
     );
     createNxJson(tree, options, angularJson.defaultProject);
     updateVsCodeRecommendedExtensions(tree);
-    await updatePrettierConfig(tree);
+    await jsInitGenerator(tree, {});
 
     // convert workspace config format to standalone project configs
     updateJson(tree, 'angular.json', (json) => ({

@@ -393,13 +393,6 @@ Visit the [Nx Documentation](https://nx.dev) to learn more.
 "
 `;
 
-exports[`@nrwl/workspace:generateWorkspaceFiles should create a prettierrc file 1`] = `
-"{
-  \\"singleQuote\\": true
-}
-"
-`;
-
 exports[`@nrwl/workspace:generateWorkspaceFiles should recommend vscode extensions (angular) 1`] = `
 Array [
   "nrwl.angular-console",

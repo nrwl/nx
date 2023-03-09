@@ -61,14 +61,6 @@
       "nx": "*"
     }
   },
-  "peerDependencies": {
-    "prettier": "^2.6.2"
-  },
-  "peerDependenciesMeta": {
-    "prettier": {
-      "optional": true
-    }
-  },
   "dependencies": {
     "@nrwl/devkit": "file:../devkit",
     "@parcel/watcher": "2.0.4",

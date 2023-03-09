@@ -52,3 +52,7 @@ export function expectNoTsJestInJestConfig(appName: string) {
   );
   expect(jestConfig).not.toContain('ts-jest');
 }
+
+export function expectCodeIsFormatted() {
+  expect(() => runCLI(`format:check`)).not.toThrow();
+}

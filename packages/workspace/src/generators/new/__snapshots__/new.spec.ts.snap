@@ -8,7 +8,6 @@ Object {
   "devDependencies": Object {
     "@nrwl/workspace": "0.0.1",
     "nx": "0.0.1",
-    "prettier": "^2.6.2",
   },
   "license": "MIT",
   "name": "my-workspace",
@@ -24,7 +23,6 @@ Object {
   "devDependencies": Object {
     "@nrwl/workspace": "0.0.1",
     "nx": "0.0.1",
-    "prettier": "^2.6.2",
   },
   "license": "MIT",
   "name": "my-workspace",
@@ -41,7 +39,6 @@ Object {
     "@nrwl/react": "0.0.1",
     "@nrwl/workspace": "0.0.1",
     "nx": "0.0.1",
-    "prettier": "^2.6.2",
   },
   "license": "MIT",
   "name": "my-workspace",

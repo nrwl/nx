@@ -22,8 +22,6 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     });
     expect(tree.exists('/proj/README.md')).toBe(true);
     expect(tree.exists('/proj/nx.json')).toBe(true);
-    expect(tree.exists('/proj/.prettierrc')).toBe(true);
-    expect(tree.exists('/proj/.prettierignore')).toBe(true);
   });
 
   describe('README.md', () => {
@@ -158,16 +156,6 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     `);
   });
 
-  it('should create a prettierrc file', async () => {
-    await generateWorkspaceFiles(tree, {
-      name: 'proj',
-      directory: 'proj',
-      preset: Preset.Empty,
-      defaultBase: 'main',
-    });
-    expect(tree.read('proj/.prettierrc', 'utf-8')).toMatchSnapshot();
-  });
-
   it('should recommend vscode extensions', async () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
@@ -237,7 +225,6 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
         "dependencies": Object {},
         "devDependencies": Object {
           "nx": "0.0.1",
-          "prettier": "^2.6.2",
         },
         "license": "MIT",
         "name": "proj",
@@ -266,7 +253,6 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
         "dependencies": Object {},
         "devDependencies": Object {
           "nx": "0.0.1",
-          "prettier": "^2.6.2",
         },
         "license": "MIT",
         "name": "proj",
