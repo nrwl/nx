@@ -17,7 +17,7 @@ import * as ts from 'typescript';
  * compatibility with TS < 4.8 due to the API change in TS4.8.
  * This helper allows for support of TS <= 4.8.
  */
-import { getDecorators, getModifiers } from '@typescript-eslint/type-utils';
+import { getModifiers } from '@typescript-eslint/type-utils';
 
 describe('Linter', () => {
   describe('linting errors', () => {
@@ -675,7 +675,6 @@ function updateGeneratedRuleImplementation(
         ) {
           return ts.factory.updateMethodDeclaration(
             node,
-            getDecorators(node),
             getModifiers(node),
             node.asteriskToken,
             node.name,
@@ -752,7 +751,6 @@ function updateGeneratedRuleImplementation(
        */
       const importAdded = ts.factory.updateSourceFile(rootNode, [
         ts.factory.createImportDeclaration(
-          undefined,
           undefined,
           ts.factory.createImportClause(
             false,
