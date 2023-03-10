@@ -56,7 +56,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
         uiFramework: '@storybook/react', // it's wrong on purpose to verify that it's being ignored
         standaloneConfig: false,
         tsConfiguration: true,
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/angular',
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib');
@@ -79,7 +79,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular', // it's wrong on purpose to verify that it's being ignored
         standaloneConfig: false,
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
       const tsconfigJson = readJson<TsConfig>(
@@ -98,7 +98,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
         standaloneConfig: false,
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
       const tsconfigJson = readJson<TsConfig>(
@@ -139,7 +139,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
         name: 'test-ui-lib2',
         uiFramework: '@storybook/angular', // it's wrong on purpose to verify that it's being ignored
         standaloneConfig: false,
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
 
@@ -164,7 +164,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
         name: 'test-ui-lib2',
         uiFramework: '@storybook/react',
         standaloneConfig: false,
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
 
@@ -179,7 +179,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
         uiFramework: '@storybook/angular',
         standaloneConfig: false,
         tsConfiguration: true,
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/angular',
       });
 
@@ -198,7 +198,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
         configureTestRunner: true,
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
 
@@ -255,74 +255,74 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
         name: 'reapp',
         tsConfiguration: false,
         uiFramework: '@storybook/react',
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-vite',
       });
       await configurationGenerator(tree, {
         name: 'main-vite',
         tsConfiguration: false,
         uiFramework: '@storybook/react',
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-vite',
       });
       await configurationGenerator(tree, {
         name: 'main-vite-ts',
         tsConfiguration: true,
         uiFramework: '@storybook/react',
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-vite',
       });
       await configurationGenerator(tree, {
         name: 'main-webpack',
         uiFramework: '@storybook/react',
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
       await configurationGenerator(tree, {
         name: 'reappw',
         uiFramework: '@storybook/react',
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
       await configurationGenerator(tree, {
         name: 'react-rollup',
         uiFramework: '@storybook/react',
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
 
       await configurationGenerator(tree, {
         name: 'react-vite',
         uiFramework: '@storybook/react',
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-vite',
       });
 
       await configurationGenerator(tree, {
         name: 'nextapp',
         uiFramework: '@storybook/react',
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/nextjs',
       });
 
       await configurationGenerator(tree, {
         name: 'react-swc',
         uiFramework: '@storybook/react',
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
 
       await configurationGenerator(tree, {
         name: 'wv1',
         uiFramework: '@storybook/react',
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/web-components-vite',
       });
 
       await configurationGenerator(tree, {
         name: 'ww1',
         uiFramework: '@storybook/react',
-        storybook7betaConfiguration: true,
+        storybook7Configuration: true,
         storybook7UiFramework: '@storybook/web-components-webpack5',
       });
     });

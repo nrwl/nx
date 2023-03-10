@@ -62,11 +62,11 @@ export async function configurationGenerator(
   try {
     storybook7 = isStorybookV7();
   } catch (e) {
-    storybook7 = schema.storybook7betaConfiguration;
+    storybook7 = schema.storybook7Configuration;
   }
 
-  if (storybook7 && !schema.storybook7betaConfiguration) {
-    schema.storybook7betaConfiguration = true;
+  if (storybook7 && !schema.storybook7Configuration) {
+    schema.storybook7Configuration = true;
     logger.info(
       `You are using Storybook version 7. 
        So Nx will configure Storybook for version 7.`
@@ -91,7 +91,7 @@ export async function configurationGenerator(
     );
   }
 
-  if (schema.storybook7betaConfiguration) {
+  if (schema.storybook7Configuration) {
     if (viteBuildTarget) {
       if (schema.storybook7UiFramework === '@storybook/react-webpack5') {
         logger.info(
@@ -133,7 +133,7 @@ export async function configurationGenerator(
   }
 
   // If we're on Storybook 7, ignore schema.uiFramework
-  const uiFrameworkUsed = schema.storybook7betaConfiguration
+  const uiFrameworkUsed = schema.storybook7Configuration
     ? schema.storybook7UiFramework
     : schema.uiFramework;
 
@@ -141,7 +141,7 @@ export async function configurationGenerator(
     uiFramework: uiFrameworkUsed,
     js: schema.js,
     bundler: schema.bundler,
-    storybook7betaConfiguration: schema.storybook7betaConfiguration,
+    storybook7Configuration: schema.storybook7Configuration,
   });
   tasks.push(initTask);
 
@@ -157,7 +157,7 @@ export async function configurationGenerator(
     !!nextBuildTarget,
     compiler === 'swc',
     schema.bundler === 'vite',
-    schema.storybook7betaConfiguration,
+    schema.storybook7Configuration,
     viteConfigFilePath
   );
 
@@ -176,7 +176,7 @@ export async function configurationGenerator(
       schema.name,
       uiFrameworkUsed,
       schema.configureTestRunner,
-      schema.storybook7betaConfiguration
+      schema.storybook7Configuration
     );
   }
 
@@ -212,7 +212,7 @@ export async function configurationGenerator(
   if (
     nextBuildTarget &&
     projectType === 'application' &&
-    !schema.storybook7betaConfiguration
+    !schema.storybook7Configuration
   ) {
     tasks.push(
       addDependenciesToPackageJson(

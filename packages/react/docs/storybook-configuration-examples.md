@@ -49,7 +49,7 @@ This will generate stories for all the components in the `ui` project using Java
 ### Generate Storybook configuration for Storybook version 7
 
 ```bash
-nx g @nrwl/react:storybook-configuration ui --storybook7betaConfiguration=true
+nx g @nrwl/react:storybook-configuration ui --storybook7Configuration=true
 ```
 
 This will generate a Storybook configuration for the `ui` project using Storybook version 7. It will install the Storybook version 7 dependencies and configure the Storybook configuration files (the files inside the `.storybook` directory) to use Storybook version 7. You can read more about Storybook 7 Nx support in the [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup).

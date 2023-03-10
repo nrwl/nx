@@ -13,5 +13,5 @@ export interface StorybookConfigureSchema {
   ignorePaths?: string[];
   bundler?: 'webpack' | 'vite';
   configureTestRunner?: boolean;
-  storybook7betaConfiguration?: boolean;
+  storybook7Configuration?: boolean;
 }

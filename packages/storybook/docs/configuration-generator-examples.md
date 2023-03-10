@@ -41,13 +41,13 @@ This will generate a Storybook configuration for the `ui` project using TypeScri
 ### Generate Storybook configuration for Storybook version 7
 
 ```bash
-nx g @nrwl/storybook:configuration ui --uiFramework=@storybook/react --storybook7betaConfiguration=true
+nx g @nrwl/storybook:configuration ui --uiFramework=@storybook/react --storybook7Configuration=true
 ```
 
 OR
 
 ```bash
-nx g @nrwl/storybook:configuration ui --storybook7UiFramework=@storybook/react-vite --storybook7betaConfiguration=true
+nx g @nrwl/storybook:configuration ui --storybook7UiFramework=@storybook/react-vite --storybook7Configuration=true
 ```
 
 This will generate a Storybook configuration for the `ui` project using Storybook version 7. It will install the Storybook version 7 dependencies and configure the Storybook configuration files (the files inside the `.storybook` directory) to use Storybook version 7. You can read more about Storybook 7 Nx support in the [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup).
