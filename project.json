@@ -55,6 +55,16 @@
         "jestConfig": "packages/rspack/jest.config.ts",
         "passWithNoTests": true
       }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        "commands": [
+          "nx build rspack",
+          "node tools/scripts/publish.mjs rspack {args.ver} {args.tag}"
+        ]
+      }
     }
   },
   "tags": []
