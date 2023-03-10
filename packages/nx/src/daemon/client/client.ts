@@ -88,6 +88,9 @@ export class DaemonClient {
   reset() {
     this.socketMessenger = null;
     this.queue = new PromisedBasedQueue();
+    this.queue.onQueueEmpty(() => {
+      this.socketMessenger.close();
+    });
     this.currentMessage = null;
     this.currentResolve = null;
     this.currentReject = null;
@@ -188,20 +191,9 @@ export class DaemonClient {
   }
 
   private async sendToDaemonViaQueue(messageToDaemon: Message): Promise<any> {
-    return this.queue
-      .sendToQueue(() => this.sendMessageToDaemon(messageToDaemon))
-      .then((value) => {
-        setTimeout(() => {
-          if (this.queue.isEmpty()) {
-            this.closeConnection();
-          }
-        }, 100);
-        return value;
-      });
-  }
-
-  private closeConnection() {
-    this.socketMessenger.close();
+    return this.queue.sendToQueue(() =>
+      this.sendMessageToDaemon(messageToDaemon)
+    );
   }
 
   private setUpConnection() {
