@@ -2,39 +2,22 @@ import {
   joinPathFragments,
   ProjectGraph,
   readCachedProjectGraph,
-  stripIndents,
 } from '@nrwl/devkit';
+import type { DependentBuildableProjectNode } from '@nrwl/js/src/utils/buildable-libs-utils';
 import { WebpackNxBuildCoordinationPlugin } from '@nrwl/webpack/src/plugins/webpack-nx-build-coordination-plugin';
-import { DependentBuildableProjectNode } from '@nrwl/js/src/utils/buildable-libs-utils';
 import { existsSync } from 'fs';
 import { readNxJson } from 'nx/src/project-graph/file-utils';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import {
   mergeCustomWebpackConfig,
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
-
-export type BrowserBuilderSchema =
-  import('@angular-devkit/build-angular/src/builders/browser/schema').Schema & {
-    customWebpackConfig?: {
-      path: string;
-    };
-    indexFileTransformer?: string;
-    buildLibsFromSource?: boolean;
-  };
-
-function validateOptions(options: BrowserBuilderSchema): void {
-  const { major, version } = getInstalledAngularVersionInfo();
-  if (major < 15 && Array.isArray(options.polyfills)) {
-    throw new Error(stripIndents`The array syntax for the "polyfills" option is supported from Angular >= 15.0.0. You are currently using ${version}.
-    You can resolve this error by removing the "polyfills" option, setting it to a string value or migrating to Angular 15.0.0.`);
-  }
-}
+import type { BrowserBuilderSchema } from './schema';
+import { validateOptions } from './validate-options';
 
 function shouldSkipInitialTargetRun(
   projectGraph: ProjectGraph,

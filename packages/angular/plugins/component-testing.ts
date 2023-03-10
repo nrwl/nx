@@ -23,7 +23,7 @@ import {
 } from '@nrwl/devkit';
 import { existsSync, lstatSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
-import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/webpack-browser.impl';
+import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/schema';
 
 /**
  * Angular nx preset for Cypress Component Testing
