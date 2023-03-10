@@ -7,11 +7,15 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
+  workspaceRoot,
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import ts = require('typescript');
 import * as fs from 'fs';
+import { fileExists } from 'nx/src/utils/fileutils';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export function onlyShowGuide(storybookProjects: {
   [key: string]: {
@@ -530,10 +534,37 @@ export function handleMigrationResult(
     successfulProjects: {};
     failedProjects: {};
   },
-  allStorybookProjectsLength: number
-) {
+  allStorybookProjects: {
+    [key: string]: {
+      configDir: string;
+      uiFramework: string;
+      viteConfigFilePath?: string;
+    };
+  }
+): { successfulProjects: {}; failedProjects: {} } {
   if (
-    allStorybookProjectsLength ===
+    fileExists(join(workspaceRoot, 'migration-storybook.log')) &&
+    Object.keys(migrateResult.successfulProjects)?.length
+  ) {
+    const sbLogFile = readFileSync(
+      join(workspaceRoot, 'migration-storybook.log'),
+      'utf-8'
+    );
+    Object.keys(migrateResult.successfulProjects).forEach((projectName) => {
+      if (
+        sbLogFile.includes(
+          `The migration failed to update your ${allStorybookProjects[projectName].configDir}`
+        )
+      ) {
+        migrateResult.failedProjects[projectName] =
+          migrateResult.successfulProjects[projectName];
+        delete migrateResult.successfulProjects[projectName];
+      }
+    });
+  }
+
+  if (
+    Object.keys(allStorybookProjects)?.length ===
       Object.keys(migrateResult.successfulProjects)?.length ||
     Object.keys(migrateResult.failedProjects)?.length === 0
   ) {
@@ -578,6 +609,7 @@ export function handleMigrationResult(
       });
     }
   }
+  return migrateResult;
 }
 
 export function checkStorybookInstalled(packageJson): boolean {

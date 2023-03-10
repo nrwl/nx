@@ -169,6 +169,8 @@ Please make sure to check the results yourself and make sure that everything is 
 
 
 
+### Some migrations failed
+
 The following commands failed and your Storybook configuration for these projects was not
 migrated to the latest version 7:
 
@@ -181,6 +183,10 @@ migrated to the latest version 7:
 You can run these commands again, manually, and follow the instructions in the
 output of these commands to migrate your Storybook configuration to the latest version 7.
 
+
+Also, we may have missed something. Please make sure to check the logs of the Storybook CLI commands that were run, and look for 
+the \`❌ Failed trying to evaluate\` message or \`❌ The migration failed to update\` message. This will indicate if a command was 
+unsuccessful, and will help you run the migration again, manually.
 
 ## Final adjustments
 

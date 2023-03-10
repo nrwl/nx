@@ -68,9 +68,9 @@ export async function migrate7Generator(tree: Tree, schema: Schema) {
 
       migrateResult = callAutomigrate(allStorybookProjects, schema);
 
-      handleMigrationResult(
+      migrateResult = handleMigrationResult(
         migrateResult,
-        Object.keys(allStorybookProjects).length
+        allStorybookProjects
       );
     }
   }
