@@ -2,8 +2,6 @@ export class PromisedBasedQueue {
   private counter = 0;
   private promise = Promise.resolve(null);
 
-  private emptyCallback: () => void = null;
-
   sendToQueue(fn: () => Promise<any>): Promise<any> {
     this.counter++;
     let res, rej;
@@ -16,19 +14,19 @@ export class PromisedBasedQueue {
       .then(async () => {
         try {
           res(await fn());
-          this._promiseResolved();
+          this.counter--;
         } catch (e) {
           rej(e);
-          this._promiseResolved();
+          this.counter--;
         }
       })
       .catch(async () => {
         try {
           res(await fn());
-          this._promiseResolved();
+          this.counter--;
         } catch (e) {
           rej(e);
-          this._promiseResolved();
+          this.counter--;
         }
       });
     return r;
@@ -36,16 +34,5 @@ export class PromisedBasedQueue {
 
   isEmpty() {
     return this.counter === 0;
-  }
-
-  onQueueEmpty(callback: () => void): void {
-    this.emptyCallback = callback;
-  }
-
-  private _promiseResolved() {
-    this.counter--;
-    if (this.isEmpty()) {
-      this.emptyCallback();
-    }
   }
 }
