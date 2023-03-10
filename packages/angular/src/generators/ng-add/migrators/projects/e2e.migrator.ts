@@ -42,7 +42,7 @@ import type {
   Target,
   ValidationResult,
 } from '../../utilities';
-import { FileChangeRecorder } from '../../utilities';
+import { FileChangeRecorder } from '../../../../utils/file-change-recorder';
 import { ProjectMigrator } from './project.migrator';
 import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 

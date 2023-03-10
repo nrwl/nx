@@ -8,6 +8,7 @@ export class FileChangeRecorder {
   get content(): string {
     return this.mutableContent.toString();
   }
+
   get originalContent(): string {
     return this.mutableContent.original;
   }
@@ -28,8 +29,8 @@ export class FileChangeRecorder {
     this.mutableContent.appendRight(index, content);
   }
 
-  remove(index: number, length: number): void {
-    this.mutableContent.remove(index, length);
+  remove(index: number, end: number): void {
+    this.mutableContent.remove(index, end);
   }
 
   replace(node: Node, content: string): void {
