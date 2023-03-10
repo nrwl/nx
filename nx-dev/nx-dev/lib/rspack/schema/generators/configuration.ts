@@ -57,7 +57,7 @@ export const schema = {
     },
     required: ['project'],
   },
-  description: 'configurationialize the `@nrwl/rspack` plugin.',
+  description: 'Configures Rspack for a project.',
   aliases: [],
   hidden: false,
   implementation:

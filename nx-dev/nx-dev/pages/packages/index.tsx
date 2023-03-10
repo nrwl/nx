@@ -40,7 +40,6 @@ export default function Packages({
     },
     packages: useMemo(() => {
       const storybookIdx = packages.findIndex((p) => p.name === 'storybook');
-      console.log({ packages, storybookIdx });
       const packagesWithRspack = [
         ...packages.slice(0, storybookIdx),
         {

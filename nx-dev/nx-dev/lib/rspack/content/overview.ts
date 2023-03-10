@@ -48,7 +48,23 @@ pnpm add -D @nrwl/rspack@latest
 {% /tab %}
 {% /tabs %}
 
-### Generate a new project using Rspack
+### Generate a new React project using Rspack
+
+The easiest way to generate a new application that uses Rspack is by using the \`@nrwl/rspack:app\` generator.
+
+\`\`\`bash
+nx g @nrwl/rspack:app my-app --style=css
+\`\`\`
+
+Then you should be able to serve, test, and build the application.
+
+\`\`\`bash
+nx serve my-app
+nx test my-app
+nx build my-app
+\`\`\`
+
+### Generate a non-React project using Rspack
 
 You can generate a [Web](/packages/web) application, and then use the \`@nrwl/rspack:configuration\` generator to configure the build and serve targets.
 

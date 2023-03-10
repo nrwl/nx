@@ -76,6 +76,16 @@ export const pkg: ProcessedPackageMetadata = {
       path: '/packages/rspack/generators/configuration',
       type: 'generator',
     },
+    '/packages/rspack/generators/application': {
+      description: 'Add Rspack application to a project.',
+      file: 'generated/packages/rspack/generators/application.json',
+      hidden: false,
+      name: 'application',
+      originalFilePath:
+        '/packages/rspack/src/generators/application/schema.json',
+      path: '/packages/rspack/generators/application',
+      type: 'generator',
+    },
   },
   githubRoot: 'https://github.com/nrwl/nx-labs/tree/main/packages/rspack',
   name: 'Rspack',
