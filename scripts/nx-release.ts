@@ -1,14 +1,14 @@
 #!/usr/bin/env node
+import * as yargs from 'yargs';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
 import { URL } from 'url';
-import * as yargs from 'yargs';
+import { join } from 'path';
 
 import { parse } from 'semver';
 
-const version = require('lerna/commands/version');
-const publish = require('lerna/commands/publish');
+import * as version from '@lerna/version/index';
+import * as publish from '@lerna/publish/index';
 
 const lernaJsonPath = join(__dirname, '../lerna.json');
 const originalLernaJson = readFileSync(lernaJsonPath);
