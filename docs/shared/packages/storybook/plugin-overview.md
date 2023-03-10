@@ -7,8 +7,8 @@ description: This is an overview page for the Storybook plugin in Nx. It explain
 
 This guide will briefly walk you through using Storybook within an Nx workspace.
 
-{% callout type="info" title="Try out Storybook 7 beta" %}
-[Storybook version 7 is still in beta](https://storybook.js.org/blog/7-0-beta/). However, you can try it out with Nx by following the instructions in the [Storybook 7 setup](/packages/storybook/documents/storybook-7-setup) guide.
+{% callout type="info" title="Try out Storybook 7" %}
+You can set up your workspace to use Storybook 7 with Nx by following the instructions in the [Storybook 7 setup](/packages/storybook/documents/storybook-7-setup) guide.
 {% /callout %}
 
 ## Setting Up Storybook

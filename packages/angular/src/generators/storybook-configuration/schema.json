@@ -80,8 +80,8 @@
       "type": "boolean",
       "description": "Add a Storybook Test-Runner target."
     },
-    "storybook7betaConfiguration": {
-      "description": "Configure your workspace to use Storybook 7, even though Storybook v7 is still in beta.",
+    "storybook7Configuration": {
+      "description": "Configure your workspace using Storybook version 7.",
       "type": "boolean",
       "default": false,
       "hidden": true

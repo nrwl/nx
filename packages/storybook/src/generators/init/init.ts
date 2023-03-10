@@ -41,7 +41,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   // base deps
   devDependencies['@nrwl/storybook'] = nxVersion;
 
-  if (schema.storybook7betaConfiguration) {
+  if (schema.storybook7Configuration) {
     if (schema.uiFramework === '@storybook/react-native') {
       devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
     } else {
