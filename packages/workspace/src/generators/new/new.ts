@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  formatFiles,
   installPackagesTask,
   names,
   PackageManager,
@@ -34,16 +33,16 @@ interface Schema {
 
 export interface NormalizedSchema extends Schema {
   presetVersion?: string;
+  isCustomPreset: boolean;
 }
 
-export async function newGenerator(host: Tree, options: Schema) {
-  options = normalizeOptions(options);
+export async function newGenerator(host: Tree, opts: Schema) {
+  const options = normalizeOptions(opts);
   validateOptions(options, host);
 
   await generateWorkspaceFiles(host, { ...options, nxCloud: undefined } as any);
 
   addPresetDependencies(host, options);
-  const isCustomPreset = !Object.values(Preset).includes(options.preset as any);
   addCloudDependencies(host, options);
 
   return async () => {
@@ -52,7 +51,7 @@ export async function newGenerator(host: Tree, options: Schema) {
     if (
       options.preset !== Preset.NPM &&
       options.preset !== Preset.Core &&
-      !isCustomPreset
+      !options.isCustomPreset
     ) {
       await generatePreset(host, options);
     }
@@ -93,10 +92,11 @@ function validateOptions(options: Schema, host: Tree) {
   }
 }
 
-function normalizeOptions(options: NormalizedSchema): NormalizedSchema {
-  options.name = names(options.name).fileName;
+function normalizeOptions(options: Schema): NormalizedSchema {
+  const normalized: Partial<NormalizedSchema> = { ...options };
+  normalized.name = names(options.name).fileName;
   if (!options.directory) {
-    options.directory = options.name;
+    normalized.directory = options.name;
   }
 
   // If the preset already contains a version in the name
@@ -106,11 +106,15 @@ function normalizeOptions(options: NormalizedSchema): NormalizedSchema {
     /^(?<package>(@.+\/)?[^@]+)(@(?<version>\d+\.\d+\.\d+))?$/
   );
   if (match) {
-    options.preset = match.groups.package;
-    options.presetVersion = match.groups.version;
+    normalized.preset = match.groups.package;
+    normalized.presetVersion = match.groups.version;
   }
 
-  return options;
+  normalized.isCustomPreset = !Object.values(Preset).includes(
+    options.preset as any
+  );
+
+  return normalized as NormalizedSchema;
 }
 
 function addCloudDependencies(host: Tree, options: Schema) {

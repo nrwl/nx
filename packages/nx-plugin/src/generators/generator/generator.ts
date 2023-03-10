@@ -122,7 +122,7 @@ function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
     createGeneratorsJson(host, options);
   }
 
-  return updateJson(host, generatorsPath, (json) => {
+  return updateJson<GeneratorsJson>(host, generatorsPath, (json) => {
     let generators = json.generators ?? json.schematics;
     generators = generators || {};
     generators[options.name] = {
@@ -130,6 +130,10 @@ function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
       schema: `./src/generators/${options.fileName}/schema.json`,
       description: options.description,
     };
+    // @todo(v17): Remove this, prop is defunct.
+    if (options.name === 'preset') {
+      generators[options.name]['x-use-standalone-layout'] = true;
+    }
     json.generators = generators;
 
     return json;

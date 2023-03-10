@@ -319,7 +319,12 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       normalizedGeneratorName,
       schema,
       implementationFactory,
-      generatorConfiguration: { aliases, hidden, ['x-deprecated']: deprecated },
+      generatorConfiguration: {
+        aliases,
+        hidden,
+        ['x-deprecated']: deprecated,
+        ['x-use-standalone-layout']: isStandalonePreset,
+      },
     } = ws.readGenerator(opts.collectionName, opts.generatorName);
 
     if (deprecated) {
@@ -359,6 +364,13 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
       const host = new FsTree(workspaceRoot, verbose);
       const implementation = implementationFactory();
+
+      // @todo(v17): Remove this, isStandalonePreset property is defunct.
+      if (normalizedGeneratorName === 'preset' && !isStandalonePreset) {
+        host.write('apps/.gitkeep', '');
+        host.write('libs/.gitkeep', '');
+      }
+
       const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
 

@@ -19,6 +19,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       directory: 'proj',
       preset: Preset.Empty,
       defaultBase: 'main',
+      isCustomPreset: false,
     });
     expect(tree.exists('/proj/README.md')).toBe(true);
     expect(tree.exists('/proj/nx.json')).toBe(true);
@@ -51,6 +52,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
           preset: Preset[preset],
           defaultBase: 'main',
           appName,
+          isCustomPreset: false,
         });
         expect(tree.read('proj/README.md', 'utf-8')).toMatchSnapshot();
       }
@@ -61,8 +63,10 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
         directory: 'proj',
         preset: 'custom-nx-preset',
         defaultBase: 'main',
+        isCustomPreset: true,
       });
       expect(tree.read('proj/README.md', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('proj/apps/.gitkeep')).toBeFalsy();
     });
   });
 
@@ -74,6 +78,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       directory: 'proj',
       preset: Preset.Empty,
       defaultBase: 'main',
+      isCustomPreset: false,
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toMatchInlineSnapshot(`
@@ -112,6 +117,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       directory: 'proj',
       preset: Preset.ReactMonorepo,
       defaultBase: 'main',
+      isCustomPreset: false,
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toMatchInlineSnapshot(`
@@ -162,6 +168,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       directory: 'proj',
       preset: Preset.Empty,
       defaultBase: 'main',
+      isCustomPreset: false,
     });
     const recommendations = readJson<{ recommendations: string[] }>(
       tree,
@@ -177,6 +184,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       directory: 'proj',
       preset: Preset.Empty,
       defaultBase: 'main',
+      isCustomPreset: false,
     });
     const recommendations = readJson<{ recommendations: string[] }>(
       tree,
@@ -194,6 +202,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       preset: Preset.NPM,
       defaultBase: 'main',
       packageManager: 'npm',
+      isCustomPreset: false,
     });
     expect(tree.exists('/proj/packages/.gitkeep')).toBe(true);
     expect(tree.exists('/proj/apps/.gitkeep')).toBe(false);
@@ -246,6 +255,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       preset: Preset.NPM,
       defaultBase: 'main',
       packageManager: 'pnpm',
+      isCustomPreset: false,
     });
     const packageJson = readJson(tree, '/proj/package.json');
     expect(packageJson).toMatchInlineSnapshot(`

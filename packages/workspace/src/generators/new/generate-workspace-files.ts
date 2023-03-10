@@ -67,7 +67,8 @@ function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
   } else if (
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
-    options.preset === Preset.NodeServer
+    options.preset === Preset.NodeServer ||
+    options.isCustomPreset
   ) {
     // don't generate any folders
   } else {
