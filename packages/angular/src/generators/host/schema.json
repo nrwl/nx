@@ -18,7 +18,8 @@
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "pattern": "^[a-zA-Z].*$"
     },
     "remotes": {
       "type": "array",
