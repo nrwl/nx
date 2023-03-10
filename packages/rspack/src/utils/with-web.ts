@@ -1,5 +1,5 @@
 import { Configuration } from '@rspack/core';
-import { ModuleRule } from '@rspack/core/dist/config/module';
+import { RuleSetRule } from '@rspack/core';
 import * as path from 'path';
 import { SharedConfigContext } from './model';
 
@@ -95,7 +95,7 @@ export function withWeb(opts: WithWebOptions = {}) {
               },
             ],
           },
-        ].filter((a): a is ModuleRule => !!a),
+        ].filter((a): a is RuleSetRule => !!a),
       },
       builtins: {
         ...config.builtins,

@@ -28,7 +28,7 @@ export function withNx(_opts = {}) {
       return acc;
     }, {});
 
-    const updated = {
+    const updated: Configuration = {
       ...config,
       target: options.target,
       mode: 'development' as const,
@@ -96,6 +96,10 @@ export function withNx(_opts = {}) {
           refresh: isDev,
         },
       },
+      stats: {
+        colors: true,
+        preset: 'normal'
+      }
     };
 
     if (options.optimization) {

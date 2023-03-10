@@ -19,9 +19,29 @@ export default async function runExecutor(
   const compiler = await createCompiler(options, context);
 
   return new Promise<{ success: boolean }>((res) => {
-    compiler.run(() => {
-      compiler.close((err: any) => {
-        res({ success: !err });
+    compiler.run((error, stats) => {
+      // OURS
+      compiler.close(() => {
+        if (error) {
+          console.error(error);
+          res({ success: false });
+          return;
+        }
+        if (!compiler || !stats) {
+          res({ success: false });
+          return;
+        }
+
+        // TODO: Handle MultipleCompiler
+        const statsOptions = compiler.options
+            ? compiler.options.stats
+            : undefined;
+        const printedStats = stats.toString(statsOptions);
+        // Avoid extra empty line when `stats: 'none'`
+        if (printedStats) {
+          console.error(printedStats);
+        }
+        res({ success: !stats.hasErrors() });
       });
     });
   });
