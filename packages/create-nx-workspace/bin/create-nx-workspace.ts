@@ -1,112 +1,39 @@
-import { exec, spawn } from 'child_process';
-import { writeFileSync } from 'fs';
 import * as enquirer from 'enquirer';
-import * as path from 'path';
-import { join } from 'path';
-import { dirSync } from 'tmp';
 import * as yargs from 'yargs';
-import { showNxWarning, unparse } from './shared';
-import { output } from './output';
-import * as ora from 'ora';
+import * as chalk from 'chalk';
+
+import { ciList } from '../src/utils/ci/ci-list';
+import { CreateWorkspaceOptions } from '../src/create-workspace-options';
+import { createWorkspace } from '../src/create-workspace';
+import { isKnownPreset, Preset } from '../src/utils/preset/preset';
+import { presetOptions } from '../src/utils/preset/preset-options';
+import { messages } from '../src/utils/nx/ab-testing';
+import { output } from '../src/utils/output';
+import { deduceDefaultBase } from '../src/utils/git/default-base';
+import { stringifyCollection } from '../src/utils/string-utils';
 import {
   detectInvokedPackageManager,
-  generatePackageManagerFiles,
-  getPackageManagerCommand,
-  getPackageManagerVersion,
   PackageManager,
   packageManagerList,
-} from './package-manager';
-import { validateNpmPackage } from './validate-npm-package';
-import { deduceDefaultBase } from './default-base';
-import { getFileName, stringifyCollection } from './utils';
-import { yargsDecorator } from './decorator';
-import { ciList } from './ci';
-import { initializeGitRepo } from './git';
-import { messages, recordStat } from './ab-testing';
-import chalk = require('chalk');
+} from '../src/utils/package-manager';
+import { nxVersion } from '../src/utils/nx/nx-version';
+import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-and-course';
 
-type Arguments = {
-  name: string;
+import { yargsDecorator } from './decorator';
+import { getThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
+import { Framework, frameworkList } from './types/framework-list';
+import { Bundler, bundlerList } from './types/bundler-list';
+
+interface Arguments extends CreateWorkspaceOptions {
   preset: string;
   appName: string;
   style: string;
-  framework: string;
+  framework: Framework;
   standaloneApi: boolean;
   docker: boolean;
-  nxCloud: boolean;
   routing: boolean;
-  allPrompts: boolean;
-  packageManager: PackageManager;
-  defaultBase: string;
-  ci: string;
-  skipGit: boolean;
-  commit: {
-    message: string;
-    name: string;
-    email: string;
-  };
-  bundler: 'vite' | 'webpack';
-  interactive: boolean;
-};
-
-enum Preset {
-  Apps = 'apps',
-  Empty = 'empty', // same as apps, deprecated
-  Core = 'core', // same as npm, deprecated
-  NPM = 'npm',
-  TS = 'ts',
-  WebComponents = 'web-components',
-  AngularMonorepo = 'angular-monorepo',
-  AngularStandalone = 'angular-standalone',
-  ReactMonorepo = 'react-monorepo',
-  ReactStandalone = 'react-standalone',
-  ReactNative = 'react-native',
-  Expo = 'expo',
-  NextJs = 'next',
-  Nest = 'nest',
-  Express = 'express',
-  React = 'react',
-  Angular = 'angular',
-  NodeServer = 'node-server',
+  bundler: Bundler;
 }
-
-const presetOptions: { name: Preset; message: string }[] = [
-  {
-    name: Preset.Apps,
-    message:
-      'apps              [an empty monorepo with no plugins with a layout that works best for building apps]',
-  },
-  {
-    name: Preset.TS,
-    message:
-      'ts                [an empty monorepo with the JS/TS plugin preinstalled]',
-  },
-  {
-    name: Preset.ReactMonorepo,
-    message: 'react             [a monorepo with a single React application]',
-  },
-  {
-    name: Preset.AngularMonorepo,
-    message: 'angular           [a monorepo with a single Angular application]',
-  },
-  {
-    name: Preset.NextJs,
-    message: 'next.js           [a monorepo with a single Next.js application]',
-  },
-  {
-    name: Preset.Nest,
-    message: 'nest              [a monorepo with a single Nest application]',
-  },
-  {
-    name: Preset.ReactNative,
-    message:
-      'react-native      [a monorepo with a single React Native application]',
-  },
-];
-
-const nxVersion = require('../package.json').version;
-const tsVersion = 'TYPESCRIPT_VERSION'; // This gets replaced with the typescript version in the root package.json during build
-const prettierVersion = 'PRETTIER_VERSION'; // This gets replaced with the prettier version in the root package.json during build
 
 export const commandsObject: yargs.Argv<Arguments> = yargs
   .wrap(yargs.terminalWidth())
@@ -156,10 +83,12 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         })
         .option('bundler', {
           describe: chalk.dim`Bundler to be used to build the application`,
+          choices: bundlerList,
           type: 'string',
         })
         .option('framework', {
           describe: chalk.dim`Framework option to be used when the node-server preset is selected`,
+          choices: frameworkList,
           type: 'string',
         })
         .option('docker', {
@@ -195,7 +124,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           type: 'string',
         })
         .option('skipGit', {
-          describe: chalk.dim`Skip initializing a git repository.`,
+          describe: chalk.dim`Skip initializing a git repository`,
           type: 'boolean',
           default: false,
           alias: 'g',
@@ -222,7 +151,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         throw error;
       });
     },
-    [getConfiguration]
+    [normalizeArgsMiddleware]
   )
   .help('help', chalk.dim`Show help`)
   .updateLocale(yargsDecorator)
@@ -233,99 +162,20 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
   ) as yargs.Argv<Arguments>;
 
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
-  const {
-    name,
-    preset,
-    appName,
-    style,
-    standaloneApi,
-    routing,
-    nxCloud,
-    packageManager,
-    defaultBase,
-    ci,
-    skipGit,
-    commit,
-    framework,
-    docker,
-    bundler,
-  } = parsedArgs;
+  await createWorkspace<Arguments>(parsedArgs.preset, parsedArgs);
 
-  output.log({
-    title: `Nx is creating your v${nxVersion} workspace.`,
-    bodyLines: [
-      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
-      `Nx will run "${packageManager} install" several times. Please wait.`,
-    ],
-  });
-
-  const tmpDir = await createSandbox(packageManager);
-
-  const directory = await createApp(
-    tmpDir,
-    name,
-    packageManager as PackageManager,
-    {
-      ...parsedArgs,
-      preset,
-      appName,
-      style,
-      routing,
-      standaloneApi,
-      nxCloud,
-      defaultBase,
-      framework,
-      docker,
-      bundler,
-    }
-  );
-
-  if (!isKnownPreset(parsedArgs.preset)) {
-    await createPreset(parsedArgs, packageManager as PackageManager, directory);
+  if (isKnownPreset(parsedArgs.preset)) {
+    pointToTutorialAndCourse(parsedArgs.preset as Preset);
   }
-
-  let nxCloudInstallRes;
-  if (nxCloud) {
-    nxCloudInstallRes = await setupNxCloud(
-      name,
-      packageManager as PackageManager
-    );
-  }
-  if (ci) {
-    await setupCI(
-      name,
-      ci,
-      packageManager as PackageManager,
-      nxCloud && nxCloudInstallRes.code === 0
-    );
-  }
-  if (!skipGit) {
-    try {
-      await initializeGitRepo(directory, { defaultBase, commit });
-    } catch (e) {
-      output.error({
-        title: 'Could not initialize git repository',
-        bodyLines: [e.message],
-      });
-    }
-  }
-
-  showNxWarning(name);
-  pointToTutorialAndCourse(preset as Preset);
-
-  if (nxCloud && nxCloudInstallRes.code === 0) {
-    printNxCloudSuccessMessage(nxCloudInstallRes.stdout);
-  }
-
-  await recordStat({
-    nxVersion,
-    command: 'create-nx-workspace',
-    useCloud: nxCloud,
-    meta: messages.codeOfSelectedPromptMessage('nxCloudCreation'),
-  });
 }
 
-async function getConfiguration(
+/**
+ * This function is used to normalize the arguments passed to the command.
+ * It would:
+ * - normalize the preset.
+ * @param argv user arguments
+ */
+async function normalizeArgsMiddleware(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   try {
@@ -344,7 +194,16 @@ async function getConfiguration(
         "Let's create a new workspace [https://nx.dev/getting-started/intro]",
     });
 
-    const thirdPartyPreset = await determineThirdPartyPackage(argv);
+    let thirdPartyPreset: string;
+    try {
+      thirdPartyPreset = await getThirdPartyPreset(argv.preset);
+    } catch (e) {
+      output.error({
+        title: `Could not find preset "${argv.preset}"`,
+      });
+      process.exit(1);
+    }
+
     if (thirdPartyPreset) {
       preset = thirdPartyPreset;
       name = await determineRepoName(argv);
@@ -443,7 +302,7 @@ async function getConfiguration(
   }
 }
 
-function determineRepoName(
+async function determineRepoName(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
   const repoName: string = parsedArgs._[0]
@@ -454,101 +313,92 @@ function determineRepoName(
     return Promise.resolve(repoName);
   }
 
-  return enquirer
-    .prompt([
-      {
-        name: 'RepoName',
-        message: `Repository name                      `,
-        type: 'input',
-      },
-    ])
-    .then((a: { RepoName: string }) => {
-      if (!a.RepoName) {
-        output.error({
-          title: 'Invalid repository name',
-          bodyLines: [`Repository name cannot be empty`],
-        });
-        process.exit(1);
-      }
-      return a.RepoName;
+  const a = await enquirer.prompt<{ RepoName: string }>([
+    {
+      name: 'RepoName',
+      message: `Repository name                      `,
+      type: 'input',
+    },
+  ]);
+  if (!a.RepoName) {
+    output.error({
+      title: 'Invalid repository name',
+      bodyLines: [`Repository name cannot be empty`],
     });
+    process.exit(1);
+  }
+  return a.RepoName;
 }
 
-function monorepoOrStandalone(preset: string): Promise<string> {
-  return enquirer
-    .prompt([
-      {
-        name: 'MonorepoOrStandalone',
-        message: `--preset=${preset} has been replaced with the following:`,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: preset + '-standalone',
-            message: `${preset}-standalone: a standalone ${preset} application.`,
-          },
-          {
-            name: preset + '-monorepo',
-            message: `${preset}-monorepo:   a monorepo with the apps and libs folders.`,
-          },
-        ],
-      },
-    ])
-    .then((a: { MonorepoOrStandalone: string }) => {
-      if (!a.MonorepoOrStandalone) {
-        output.error({
-          title: 'Invalid selection',
-        });
-        process.exit(1);
-      }
-      return a.MonorepoOrStandalone;
+async function monorepoOrStandalone(preset: string): Promise<string> {
+  const a = await enquirer.prompt<{ MonorepoOrStandalone: string }>([
+    {
+      name: 'MonorepoOrStandalone',
+      message: `--preset=${preset} has been replaced with the following:`,
+      type: 'autocomplete',
+      choices: [
+        {
+          name: preset + '-standalone',
+          message: `${preset}-standalone: a standalone ${preset} application.`,
+        },
+        {
+          name: preset + '-monorepo',
+          message: `${preset}-monorepo:   a monorepo with the apps and libs folders.`,
+        },
+      ],
+    },
+  ]);
+  if (!a.MonorepoOrStandalone) {
+    output.error({
+      title: 'Invalid selection',
     });
+    process.exit(1);
+  }
+  return a.MonorepoOrStandalone;
 }
 
-function determineMonorepoStyle(): Promise<string> {
-  return enquirer
-    .prompt([
-      {
-        name: 'MonorepoStyle',
-        message: `Choose what to create                `,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'package-based',
-            message:
-              'Package-based monorepo:     Nx makes it fast, but lets you run things your way.',
-          },
-          {
-            name: 'integrated',
-            message:
-              'Integrated monorepo:        Nx configures your favorite frameworks and lets you focus on shipping features.',
-          },
-          {
-            name: 'react',
-            message:
-              'Standalone React app:       Nx configures Vite (or Webpack), ESLint, and Cypress.',
-          },
-          {
-            name: 'angular',
-            message:
-              'Standalone Angular app:     Nx configures Jest, ESLint and Cypress.',
-          },
-          {
-            name: 'node-server',
-            message:
-              'Standalone Node Server app: Nx configures a framework (ex. Express), esbuild, ESlint and Jest.',
-          },
-        ],
-      },
-    ])
-    .then((a: { MonorepoStyle: string }) => {
-      if (!a.MonorepoStyle) {
-        output.error({
-          title: 'Invalid monorepo style',
-        });
-        process.exit(1);
-      }
-      return a.MonorepoStyle;
+async function determineMonorepoStyle(): Promise<string> {
+  const a = await enquirer.prompt<{ MonorepoStyle: string }>([
+    {
+      name: 'MonorepoStyle',
+      message: `Choose what to create                `,
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'package-based',
+          message:
+            'Package-based monorepo:     Nx makes it fast, but lets you run things your way.',
+        },
+        {
+          name: 'integrated',
+          message:
+            'Integrated monorepo:        Nx configures your favorite frameworks and lets you focus on shipping features.',
+        },
+        {
+          name: 'react',
+          message:
+            'Standalone React app:       Nx configures Vite (or Webpack), ESLint, and Cypress.',
+        },
+        {
+          name: 'angular',
+          message:
+            'Standalone Angular app:     Nx configures Jest, ESLint and Cypress.',
+        },
+        {
+          name: 'node-server',
+          message:
+            'Standalone Node Server app: Nx configures a framework (ex. Express), esbuild, ESlint and Jest.',
+        },
+      ],
+    },
+  ]);
+  if (!a.MonorepoStyle) {
+    output.error({
+      title: 'Invalid monorepo style',
     });
+    process.exit(1);
+  }
+  return a.MonorepoStyle;
 }
 
 async function determinePackageManager(
@@ -573,9 +423,9 @@ async function determinePackageManager(
 
   if (parsedArgs.allPrompts) {
     return enquirer
-      .prompt([
+      .prompt<{ packageManager: PackageManager }>([
         {
-          name: 'PackageManager',
+          name: 'packageManager',
           message: `Which package manager to use         `,
           initial: 'npm' as any,
           type: 'autocomplete',
@@ -586,7 +436,7 @@ async function determinePackageManager(
           ],
         },
       ])
-      .then((a: { PackageManager }) => a.PackageManager);
+      .then((a: { packageManager }) => a.packageManager);
   }
 
   return Promise.resolve(detectInvokedPackageManager());
@@ -622,37 +472,6 @@ async function determineDefaultBase(
   return Promise.resolve(deduceDefaultBase());
 }
 
-function isKnownPreset(preset: string): preset is Preset {
-  return Object.values(Preset).includes(preset as Preset);
-}
-
-async function determineThirdPartyPackage({
-  preset,
-}: yargs.Arguments<Arguments>) {
-  if (preset && !isKnownPreset(preset)) {
-    const packageName = preset.match(/.+@/)
-      ? preset[0] + preset.substring(1).split('@')[0]
-      : preset;
-    const validateResult = validateNpmPackage(packageName);
-    if (validateResult.validForNewPackages) {
-      return Promise.resolve(preset);
-    } else {
-      //! Error here
-      output.error({
-        title: 'Invalid preset npm package',
-        bodyLines: [
-          `There was an error with the preset npm package you provided:`,
-          '',
-          ...validateResult.errors,
-        ],
-      });
-      process.exit(1);
-    }
-  } else {
-    return Promise.resolve(null);
-  }
-}
-
 async function determinePreset(parsedArgs: any): Promise<Preset> {
   if (parsedArgs.preset) {
     if (Object.values(Preset).indexOf(parsedArgs.preset) === -1) {
@@ -671,16 +490,16 @@ async function determinePreset(parsedArgs: any): Promise<Preset> {
   }
 
   return enquirer
-    .prompt([
+    .prompt<{ preset: Preset }>([
       {
-        name: 'Preset',
+        name: 'preset',
         message: `What to create in the new workspace  `,
         initial: 'empty' as any,
         type: 'autocomplete',
         choices: presetOptions,
       },
     ])
-    .then((a: { Preset: Preset }) => a.Preset);
+    .then((a: { preset: Preset }) => a.preset);
 }
 
 async function determineAppName(
@@ -961,7 +780,7 @@ async function determineRouting(
 
 async function determineBundler(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'vite' | 'webpack'> {
+): Promise<Bundler> {
   const choices = [
     {
       name: 'vite',
@@ -1081,348 +900,4 @@ async function determineCI(
     );
   }
   return '';
-}
-
-async function createSandbox(packageManager: PackageManager) {
-  const installSpinner = ora(
-    `Installing dependencies with ${packageManager}`
-  ).start();
-
-  const { install } = getPackageManagerCommand(packageManager);
-
-  const tmpDir = dirSync().name;
-  try {
-    writeFileSync(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        dependencies: {
-          '@nrwl/workspace': nxVersion,
-          nx: nxVersion,
-          typescript: tsVersion,
-          prettier: prettierVersion,
-        },
-        license: 'MIT',
-      })
-    );
-    generatePackageManagerFiles(tmpDir, packageManager);
-
-    await execAndWait(install, tmpDir);
-
-    installSpinner.succeed();
-  } catch (e) {
-    installSpinner.fail();
-    output.error({
-      title: `Nx failed to install dependencies`,
-      bodyLines: mapErrorToBodyLines(e),
-    });
-    process.exit(1);
-  } finally {
-    installSpinner.stop();
-  }
-
-  return tmpDir;
-}
-
-async function createApp(
-  tmpDir: string,
-  name: string,
-  packageManager: PackageManager,
-  parsedArgs: any
-): Promise<string> {
-  const { _, ...restArgs } = parsedArgs;
-
-  // Ensure to use packageManager for args
-  // if it's not already passed in from previous process
-  if (!restArgs.packageManager) {
-    restArgs.packageManager = packageManager;
-  }
-
-  const args = unparse({
-    ...restArgs,
-  }).join(' ');
-
-  const pmc = getPackageManagerCommand(packageManager);
-
-  const command = `new ${name} ${args}`;
-
-  const workingDir = process.cwd().replace(/\\/g, '/');
-  let nxWorkspaceRoot = `"${workingDir}"`;
-
-  // If path contains spaces there is a problem in Windows for npm@6.
-  // In this case we have to escape the wrapping quotes.
-  if (
-    process.platform === 'win32' &&
-    /\s/.test(nxWorkspaceRoot) &&
-    packageManager === 'npm'
-  ) {
-    const pmVersion = +getPackageManagerVersion(packageManager).split('.')[0];
-    if (pmVersion < 7) {
-      nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
-    }
-  }
-  let workspaceSetupSpinner = ora(
-    `Creating your workspace in ${getFileName(name)}`
-  ).start();
-
-  try {
-    const fullCommand = `${pmc.exec} nx ${command} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
-    await execAndWait(fullCommand, tmpDir);
-
-    workspaceSetupSpinner.succeed(
-      `Nx has successfully created the workspace: ${getFileName(name)}.`
-    );
-  } catch (e) {
-    workspaceSetupSpinner.fail();
-    output.error({
-      title: `Nx failed to create a workspace.`,
-      bodyLines: mapErrorToBodyLines(e),
-    });
-    process.exit(1);
-  } finally {
-    workspaceSetupSpinner.stop();
-  }
-  return join(workingDir, getFileName(name));
-}
-
-async function createPreset(
-  parsedArgs: yargs.Arguments<Arguments>,
-  packageManager: PackageManager,
-  directory: string
-): Promise<void> {
-  const { _, skipGit, ci, commit, allPrompts, nxCloud, preset, ...restArgs } =
-    parsedArgs;
-
-  const args = unparse({
-    ...restArgs,
-  }).join(' ');
-
-  const pmc = getPackageManagerCommand(packageManager);
-
-  const workingDir = process.cwd().replace(/\\/g, '/');
-  let nxWorkspaceRoot = `"${workingDir}"`;
-
-  // If path contains spaces there is a problem in Windows for npm@6.
-  // In this case we have to escape the wrapping quotes.
-  if (
-    process.platform === 'win32' &&
-    /\s/.test(nxWorkspaceRoot) &&
-    packageManager === 'npm'
-  ) {
-    const pmVersion = +getPackageManagerVersion(packageManager).split('.')[0];
-    if (pmVersion < 7) {
-      nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
-    }
-  }
-
-  const command = `g ${preset}:preset ${args}`;
-
-  try {
-    const [exec, ...args] = pmc.exec.split(' ');
-    args.push(
-      'nx',
-      `--nxWorkspaceRoot=${nxWorkspaceRoot}`,
-      ...command.split(' ')
-    );
-    await spawnAndWait(exec, args, directory);
-
-    output.log({
-      title: `Successfully applied preset: ${preset}.`,
-    });
-  } catch (e) {
-    output.error({
-      title: `Failed to apply preset: ${preset}`,
-      bodyLines: ['See above'],
-    });
-    process.exit(1);
-  }
-}
-
-async function setupNxCloud(name: string, packageManager: PackageManager) {
-  const nxCloudSpinner = ora(`Setting up NxCloud`).start();
-  try {
-    const pmc = getPackageManagerCommand(packageManager);
-    const res = await execAndWait(
-      `${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics --installationSource=create-nx-workspace`,
-      path.join(process.cwd(), getFileName(name))
-    );
-    nxCloudSpinner.succeed('NxCloud has been set up successfully');
-    return res;
-  } catch (e) {
-    nxCloudSpinner.fail();
-
-    output.error({
-      title: `Nx failed to setup NxCloud`,
-      bodyLines: mapErrorToBodyLines(e),
-    });
-
-    process.exit(1);
-  } finally {
-    nxCloudSpinner.stop();
-  }
-}
-
-async function setupCI(
-  name: string,
-  ci: string,
-  packageManager: PackageManager,
-  nxCloudSuccessfullyInstalled: boolean
-) {
-  if (!nxCloudSuccessfullyInstalled) {
-    output.error({
-      title: `CI workflow generation skipped`,
-      bodyLines: [
-        `Nx Cloud was not installed`,
-        `The autogenerated CI workflow requires Nx Cloud to be set-up.`,
-      ],
-    });
-  }
-  const ciSpinner = ora(`Generating CI workflow`).start();
-  try {
-    const pmc = getPackageManagerCommand(packageManager);
-    const res = await execAndWait(
-      `${pmc.exec} nx g @nrwl/workspace:ci-workflow --ci=${ci}`,
-      path.join(process.cwd(), getFileName(name))
-    );
-    ciSpinner.succeed('CI workflow has been generated successfully');
-    return res;
-  } catch (e) {
-    ciSpinner.fail();
-
-    output.error({
-      title: `Nx failed to generate CI workflow`,
-      bodyLines: mapErrorToBodyLines(e),
-    });
-
-    process.exit(1);
-  } finally {
-    ciSpinner.stop();
-  }
-}
-
-function printNxCloudSuccessMessage(nxCloudOut: string) {
-  const bodyLines = nxCloudOut
-    .split('Distributed caching via Nx Cloud has been enabled')[1]
-    .trim();
-  output.note({
-    title: `Distributed caching via Nx Cloud has been enabled`,
-    bodyLines: bodyLines.split('\n').map((r) => r.trim()),
-  });
-}
-
-function mapErrorToBodyLines(error: {
-  logMessage: string;
-  code: number;
-  logFile: string;
-}): string[] {
-  if (error.logMessage?.split('\n').filter((line) => !!line).length < 3) {
-    // print entire log message only if it's only a single message
-    return [`Error: ${error.logMessage}`];
-  }
-  const lines = [`Exit code: ${error.code}`, `Log file: ${error.logFile}`];
-  if (process.env.NX_VERBOSE_LOGGING) {
-    lines.push(`Error: ${error.logMessage}`);
-  }
-  return lines;
-}
-
-function execAndWait(command: string, cwd: string) {
-  return new Promise((res, rej) => {
-    exec(
-      command,
-      { cwd, env: { ...process.env, NX_DAEMON: 'false' } },
-      (error, stdout, stderr) => {
-        if (error) {
-          const logFile = path.join(cwd, 'error.log');
-          writeFileSync(logFile, `${stdout}\n${stderr}`);
-          rej({ code: error.code, logFile, logMessage: stderr });
-        } else {
-          res({ code: 0, stdout });
-        }
-      }
-    );
-  });
-}
-
-/**
- * Use spawn only for interactive shells
- */
-function spawnAndWait(command: string, args: string[], cwd: string) {
-  return new Promise((res, rej) => {
-    const childProcess = spawn(command, args, {
-      cwd,
-      stdio: 'inherit',
-      env: { ...process.env, NX_DAEMON: 'false' },
-    });
-
-    childProcess.on('exit', (code) => {
-      if (code !== 0) {
-        rej({ code: code });
-      } else {
-        res({ code: 0 });
-      }
-    });
-  });
-}
-
-function pointToTutorialAndCourse(preset: Preset) {
-  const title = `First time using Nx? Check out this interactive Nx tutorial.`;
-  switch (preset) {
-    case Preset.Empty:
-    case Preset.NPM:
-    case Preset.Apps:
-    case Preset.Core:
-      output.addVerticalSeparator();
-      output.note({
-        title,
-        bodyLines: [`https://nx.dev/core-tutorial/01-create-blog`],
-      });
-      break;
-
-    case Preset.TS:
-      output.addVerticalSeparator();
-      output.note({
-        title,
-        bodyLines: [`https://nx.dev/getting-started/nx-and-typescript`],
-      });
-      break;
-    case Preset.ReactStandalone:
-      output.addVerticalSeparator();
-      output.note({
-        title,
-        bodyLines: [`https://nx.dev/getting-started/react-standalone-tutorial`],
-      });
-      break;
-    case Preset.ReactMonorepo:
-    case Preset.NextJs:
-      output.addVerticalSeparator();
-      output.note({
-        title,
-        bodyLines: [`https://nx.dev/react-tutorial/1-code-generation`],
-      });
-      break;
-    case Preset.AngularStandalone:
-      output.addVerticalSeparator();
-      output.note({
-        title,
-        bodyLines: [
-          `https://nx.dev/getting-started/angular-standalone-tutorial`,
-        ],
-      });
-      break;
-    case Preset.AngularMonorepo:
-      output.addVerticalSeparator();
-      output.note({
-        title,
-        bodyLines: [`https://nx.dev/angular-tutorial/1-code-generation`],
-      });
-      break;
-    case Preset.Express:
-    case Preset.NodeServer:
-      output.addVerticalSeparator();
-      output.note({
-        title,
-        bodyLines: [`https://nx.dev/node-server-tutorial/1-code-generation`],
-      });
-      break;
-  }
 }
