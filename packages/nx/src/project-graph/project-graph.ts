@@ -130,10 +130,11 @@ export async function createProjectGraphAsync(
     }
   } else {
     try {
+      const projectGraph = await daemonClient.getProjectGraph();
       if (opts.resetDaemonClient) {
         daemonClient.reset();
       }
-      return await daemonClient.getProjectGraph();
+      return projectGraph;
     } catch (e) {
       if (e.message.indexOf('inotify_add_watch') > -1) {
         // common errors with the daemon due to OS settings (cannot watch all the files available)
