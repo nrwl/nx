@@ -17,6 +17,7 @@ import {
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
   storeOutputsWatcherSubscription,
+  storeProcessJsonSubscription,
   storeSourceWatcherSubscription,
 } from './shutdown-utils';
 import {
@@ -24,6 +25,7 @@ import {
   subscribeToOutputsChanges,
   subscribeToWorkspaceChanges,
   FileWatcherCallback,
+  subscribeToServerProcessJsonChanges,
 } from './watcher';
 import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
 import { existsSync, statSync } from 'fs';
@@ -45,6 +47,10 @@ import {
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
+import { nxVersion } from '../../utils/versions';
+import { readJsonFile } from '../../utils/fileutils';
+import { PackageJson } from '../../utils/package-json';
+import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -93,6 +99,8 @@ const server = createServer(async (socket) => {
     removeRegisteredFileWatcherSocket(socket);
   });
 });
+registerProcessTerminationListeners();
+registerProcessServerJsonTracking();
 
 async function handleMessage(socket, data: string) {
   if (workspaceWatcherError) {
@@ -103,7 +111,7 @@ async function handleMessage(socket, data: string) {
     );
   }
 
-  if (lockFileChanged()) {
+  if (daemonIsOutdated()) {
     await respondWithErrorAndExit(socket, `Lock files changed`, {
       name: '',
       message: 'LOCK-FILES-CHANGED',
@@ -175,38 +183,67 @@ function handleInactivityTimeout() {
   }
 }
 
-process
-  .on('SIGINT', () =>
-    handleServerProcessTermination({
-      server,
-      reason: 'received process SIGINT',
-    })
-  )
-  .on('SIGTERM', () =>
-    handleServerProcessTermination({
-      server,
-      reason: 'received process SIGTERM',
-    })
-  )
-  .on('SIGHUP', () =>
-    handleServerProcessTermination({
-      server,
-      reason: 'received process SIGHUP',
+function registerProcessTerminationListeners() {
+  process
+    .on('SIGINT', () =>
+      handleServerProcessTermination({
+        server,
+        reason: 'received process SIGINT',
+      })
+    )
+    .on('SIGTERM', () =>
+      handleServerProcessTermination({
+        server,
+        reason: 'received process SIGTERM',
+      })
+    )
+    .on('SIGHUP', () =>
+      handleServerProcessTermination({
+        server,
+        reason: 'received process SIGHUP',
+      })
+    );
+}
+
+async function registerProcessServerJsonTracking() {
+  storeProcessJsonSubscription(
+    await subscribeToServerProcessJsonChanges(async () => {
+      if (getDaemonProcessIdSync() !== process.pid) {
+        await handleServerProcessTermination({
+          server,
+          reason: 'this process is no longer the current daemon',
+        });
+      }
     })
   );
+}
 
 let existingLockHash: string | undefined;
+const hasher = new HashingImpl();
 
-function lockFileChanged(): boolean {
-  const hash = new HashingImpl();
+function daemonIsOutdated(): boolean {
+  return nxVersionChanged() || lockFileHashChanged();
+}
+
+function nxVersionChanged(): boolean {
+  return nxVersion !== getInstalledNxVersion();
+}
+
+const nxPackageJsonPath = require.resolve('nx/package.json');
+function getInstalledNxVersion() {
+  const { version } = readJsonFile<PackageJson>(nxPackageJsonPath);
+  return version;
+}
+
+function lockFileHashChanged(): boolean {
   const lockHashes = [
     join(workspaceRoot, 'package-lock.json'),
     join(workspaceRoot, 'yarn.lock'),
     join(workspaceRoot, 'pnpm-lock.yaml'),
   ]
     .filter((file) => existsSync(file))
-    .map((file) => hash.hashFile(file));
-  const newHash = hash.hashArray(lockHashes);
+    .map((file) => hasher.hashFile(file));
+  const newHash = hasher.hashArray(lockHashes);
   if (existingLockHash && newHash != existingLockHash) {
     existingLockHash = newHash;
     return true;
@@ -235,7 +272,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
   try {
     resetInactivityTimeout(handleInactivityTimeout);
 
-    if (lockFileChanged()) {
+    if (daemonIsOutdated()) {
       await handleServerProcessTermination({
         server,
         reason: 'Lock file changed',
@@ -312,6 +349,11 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
 };
 
 export async function startServer(): Promise<Server> {
+  // Persist metadata about the background process so that it can be cleaned up later if needed
+  await writeDaemonJsonProcessCache({
+    processId: process.pid,
+  });
+
   // See notes in socket-command-line-utils.ts on OS differences regarding clean up of existings connections.
   if (!isWindows) {
     killSocketOrPath();
@@ -323,7 +365,7 @@ export async function startServer(): Promise<Server> {
         try {
           serverLogger.log(`Started listening on: ${FULL_OS_SOCKET_PATH}`);
           // this triggers the storage of the lock file hash
-          lockFileChanged();
+          daemonIsOutdated();
 
           if (!getSourceWatcherSubscription()) {
             storeSourceWatcherSubscription(
@@ -354,25 +396,5 @@ export async function startServer(): Promise<Server> {
     } catch (err) {
       reject(err);
     }
-  });
-}
-
-export async function stopServer(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    server.close((err) => {
-      if (err) {
-        /**
-         * If the server is running in a detached background process then server.close()
-         * will throw this error even if server is actually alive. We therefore only reject
-         * in case of any other unexpected errors.
-         */
-        if (!err.message.startsWith('Server is not running')) {
-          return reject(err);
-        }
-      }
-
-      killSocketOrPath();
-      return resolve();
-    });
   });
 }

@@ -1,15 +1,11 @@
 import { workspaceRoot } from '../../utils/workspace-root';
-import { ChildProcess, spawn, spawnSync } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import { openSync, readFileSync, statSync } from 'fs';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
-import { connect, Socket } from 'net';
+import { connect } from 'net';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { output } from '../../utils/output';
-import {
-  safelyCleanUpExistingProcess,
-  writeDaemonJsonProcessCache,
-} from '../cache';
 import { FULL_OS_SOCKET_PATH, killSocketOrPath } from '../socket-utils';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
@@ -24,6 +20,7 @@ import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { Workspaces } from '../../config/workspaces';
 import { Message, SocketMessenger } from './socket-messenger';
+import { safelyCleanUpExistingProcess } from '../cache';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
@@ -312,7 +309,6 @@ export class DaemonClient {
   }
 
   async startInBackground(): Promise<ChildProcess['pid']> {
-    await safelyCleanUpExistingProcess();
     ensureDirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
     ensureFileSync(DAEMON_OUTPUT_LOG_FILE);
 
@@ -332,11 +328,6 @@ export class DaemonClient {
     );
     backgroundProcess.unref();
     //
-
-    // Persist metadata about the background process so that it can be cleaned up later if needed
-    await writeDaemonJsonProcessCache({
-      processId: backgroundProcess.pid,
-    });
 
     /**
      * Ensure the server is actually available to connect to via IPC before resolving
@@ -362,11 +353,16 @@ export class DaemonClient {
     });
   }
 
-  stop(): void {
-    spawnSync(process.execPath, ['../server/stop.js'], {
-      cwd: __dirname,
-      stdio: 'inherit',
-    });
+  async stop(): Promise<void> {
+    try {
+      await safelyCleanUpExistingProcess();
+    } catch (err) {
+      output.error({
+        title:
+          err?.message ||
+          'Something unexpected went wrong when stopping the server',
+      });
+    }
 
     removeSocketDir();
     output.log({ title: 'Daemon Server - Stopped' });
