@@ -7,12 +7,12 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
 } from '@nrwl/jest';
 import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { join } from 'path';
 
 /**

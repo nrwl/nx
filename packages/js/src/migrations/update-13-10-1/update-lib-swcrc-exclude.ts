@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree, updateJson } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
 import { join } from 'path';
 import { SwcExecutorOptions } from '../../utils/schema';
 import { defaultExclude } from '../../utils/swc/add-swc-config';

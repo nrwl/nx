@@ -16,6 +16,7 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nrwl/devkit';
+import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
 import { Linter } from '@nrwl/linter';
 import { join, relative } from 'path';
 import {
@@ -24,7 +25,6 @@ import {
   TsConfig,
 } from '../../utils/utilities';
 import { StorybookConfigureSchema } from './schema';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { UiFramework, UiFramework7 } from '../../utils/models';
 
 const DEFAULT_PORT = 4400;

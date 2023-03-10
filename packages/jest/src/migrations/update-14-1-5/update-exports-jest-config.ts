@@ -1,7 +1,7 @@
-import { addDependenciesToPackageJson, GeneratorCallback } from '@nrwl/devkit';
 import type { Tree } from '@nrwl/devkit';
+import { addDependenciesToPackageJson } from '@nrwl/devkit';
+import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
 import { tsNodeVersion } from '../../utils/versions';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import type { BinaryExpression } from 'typescript';
 import type { JestExecutorOptions } from '../../executors/jest/schema';

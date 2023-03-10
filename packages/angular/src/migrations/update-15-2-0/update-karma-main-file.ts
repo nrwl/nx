@@ -2,7 +2,7 @@ import type { Tree } from '@nrwl/devkit';
 import { formatFiles } from '@nrwl/devkit';
 import * as ts from 'typescript';
 import { Builders } from '@schematics/angular/utility/workspace-models';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
 
 export default async function (tree: Tree) {

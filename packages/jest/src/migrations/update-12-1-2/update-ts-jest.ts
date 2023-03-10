@@ -1,7 +1,6 @@
 import { formatFiles, logger, stripIndents, Tree } from '@nrwl/devkit';
+import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
 import { join } from 'path';
-
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { JestExecutorOptions } from '../../executors/jest/schema';
 import {
   addPropertyToJestConfig,

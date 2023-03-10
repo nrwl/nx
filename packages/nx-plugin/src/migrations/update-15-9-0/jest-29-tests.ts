@@ -7,7 +7,7 @@ import {
 } from '@nrwl/devkit';
 import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
 import { TEST_FILE_PATTERN } from '@nrwl/jest/src/utils/ast-utils';
-import { forEachExecutorOptionsInGraph } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { forEachExecutorOptionsInGraph } from '@nrwl/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import {
   CallExpression,

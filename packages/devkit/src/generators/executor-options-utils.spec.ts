@@ -1,7 +1,7 @@
-import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, Tree } from 'nx/src/devkit-exports';
+import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { forEachExecutorOptions } from './executor-options-utils';
 
 describe('forEachExecutorOptions', () => {
   let tree: Tree;
