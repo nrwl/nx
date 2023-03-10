@@ -195,7 +195,7 @@ export class DaemonClient {
           if (this.queue.isEmpty()) {
             this.closeConnection();
           }
-        }, 0);
+        }, 100);
         return value;
       });
   }
