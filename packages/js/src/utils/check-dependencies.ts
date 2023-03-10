@@ -22,23 +22,13 @@ export function checkDependencies(
     context.configurationName
   );
   const projectRoot = target.data.root;
-
-  if (dependencies.length > 0) {
-    return {
-      tmpTsConfig: createTmpTsConfig(
-        tsConfigPath,
-        context.root,
-        projectRoot,
-        dependencies
-      ),
-      projectRoot,
-      target,
-      dependencies,
-    };
-  }
-
   return {
-    tmpTsConfig: null,
+    tmpTsConfig: createTmpTsConfig(
+      tsConfigPath,
+      context.root,
+      projectRoot,
+      dependencies
+    ),
     projectRoot,
     target,
     dependencies,
