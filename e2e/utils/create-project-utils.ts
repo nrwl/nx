@@ -94,6 +94,18 @@ export function newProject({
     if (isVerbose()) {
       logInfo(`NX`, `E2E created a project: ${tmpProjPath()}`);
     }
+    if (packageManager === 'pnpm') {
+      updateFile(
+        '.npmrc',
+        'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
+      );
+      execSync(getPackageManagerCommand().install, {
+        cwd: tmpProjPath(),
+        stdio: 'pipe',
+        env: { CI: 'true', ...process.env },
+        encoding: 'utf-8',
+      });
+    }
     return projScope;
   } catch (e) {
     logError(`Failed to set up project for e2e tests.`, e.message);
