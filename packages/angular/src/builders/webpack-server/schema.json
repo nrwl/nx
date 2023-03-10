@@ -126,6 +126,11 @@
       "description": "URL where files will be deployed.",
       "x-deprecated": "Use \"baseHref\" browser builder option, \"APP_BASE_HREF\" DI token or a combination of both instead. For more information, see https://angular.io/guide/deployment#the-deploy-url."
     },
+    "vendorChunk": {
+      "type": "boolean",
+      "description": "Generate a seperate bundle containing only vendor libraries. This option should only be used for development to reduce the incremental compilation time. _Note: supported in Angular versions >= 15.1.0_",
+      "default": false
+    },
     "verbose": {
       "type": "boolean",
       "description": "Adds more details to output logging.",

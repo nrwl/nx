@@ -1,7 +1,7 @@
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { major } from 'semver';
 
-type VersionInfo = { major: number; version: string };
+export type VersionInfo = { major: number; version: string };
 
 export function getInstalledAngularVersionInfo(): VersionInfo | null {
   return getInstalledPackageVersionInfo('@angular/core');
