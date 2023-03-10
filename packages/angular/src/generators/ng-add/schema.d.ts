@@ -5,7 +5,6 @@ import type { Styles } from '../utils/types';
 export interface GeneratorOptions {
   skipInstall?: boolean;
   npmScope?: string;
-  preserveAngularCliLayout?: boolean;
   defaultBase?: string;
 
   unitTestRunner?: UnitTestRunner;

@@ -25,12 +25,6 @@
         "default": false,
         "x-priority": "internal"
       },
-      "preserveAngularCliLayout": {
-        "type": "boolean",
-        "description": "Preserve the Angular CLI layout instead of moving the app into apps. NOTE: only used if running the generator in an Angular CLI workspace.",
-        "default": false,
-        "x-priority": "important"
-      },
       "unitTestRunner": {
         "type": "string",
         "enum": ["karma", "jest", "none"],
