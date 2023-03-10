@@ -79,24 +79,14 @@ export function callAutomigrate(
           color: 'green',
         });
 
-        const result = execSync(
+        execSync(
           `${commandToRun}  ${schema.autoAcceptAllPrompts ? '--yes' : ''}`,
           {
-            stdio: [0, 1, 2],
+            stdio: 'inherit',
           }
         );
 
-        const outputResult = result?.toString();
-
-        if (
-          outputResult?.includes(
-            `The migration failed to update your ${storybookProjectInfo.configDir}`
-          )
-        ) {
-          resultOfMigration.failedProjects[projectName] = commandToRun;
-        } else {
-          resultOfMigration.successfulProjects[projectName] = commandToRun;
-        }
+        resultOfMigration.successfulProjects[projectName] = commandToRun;
       } catch (e) {
         output.error({
           title: 'Migration failed',
