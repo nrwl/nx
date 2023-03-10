@@ -22,8 +22,7 @@
     "project": {
       "type": "string",
       "description": "The name of the project.",
-      "x-dropdown": "projects",
-      "x-priority": "important"
+      "x-dropdown": "projects"
     },
     "name": {
       "type": "string",
@@ -123,5 +122,5 @@
       "x-priority": "important"
     }
   },
-  "required": ["name"]
+  "required": ["name", "project"]
 }
