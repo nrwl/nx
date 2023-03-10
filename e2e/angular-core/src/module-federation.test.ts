@@ -60,7 +60,7 @@ describe('Angular Projects', () => {
       import { AppComponent } from './app.component';
       import { NxWelcomeComponent } from './nx-welcome.component';
       import { RouterModule } from '@angular/router';
-      
+
       @NgModule({
         declarations: [AppComponent, NxWelcomeComponent],
         imports: [
@@ -95,7 +95,7 @@ describe('Angular Projects', () => {
         names(secondaryEntry).className
       }Module } from '@${proj}/${secondaryEntry}';
     import { RemoteEntryComponent } from './entry.component';
-    
+
     @NgModule({
       declarations: [RemoteEntryComponent],
       imports: [
@@ -168,18 +168,24 @@ describe('Angular Projects', () => {
       `generate @nrwl/angular:remote ${remoteApp1} --ssr --no-interactive`
     );
 
-    let process = await runCommandUntil(`serve-ssr ${remoteApp1}`, (output) => {
-      return (
-        output.includes(`Browser application bundle generation complete.`) &&
-        output.includes(`Server application bundle generation complete.`) &&
-        output.includes(
-          `Angular Universal Live Development Server is listening`
-        )
-      );
-    });
-
-    // port and process cleanup
     try {
+      let process = await runCommandUntil(
+        `serve-ssr ${remoteApp1}`,
+        (output) => {
+          return (
+            output.includes(
+              `Browser application bundle generation complete.`
+            ) &&
+            output.includes(`Server application bundle generation complete.`) &&
+            output.includes(
+              `Angular Universal Live Development Server is listening`
+            )
+          );
+        }
+      );
+
+      // port and process cleanup
+
       if (process && process.pid) {
         await promisifiedTreeKill(process.pid, 'SIGKILL');
       }
@@ -204,22 +210,23 @@ describe('Angular Projects', () => {
     const remoteApp2Port =
       readProjectConfig(remoteApp2).targets.serve.options.port;
 
-    let process = await runCommandUntil(`serve-ssr ${hostApp}`, (output) => {
-      return (
-        output.includes(
-          `Node Express server listening on http://localhost:${remoteApp1Port}`
-        ) &&
-        output.includes(
-          `Node Express server listening on http://localhost:${remoteApp2Port}`
-        ) &&
-        output.includes(
-          `Angular Universal Live Development Server is listening`
-        )
-      );
-    });
-
-    // port and process cleanup
     try {
+      let process = await runCommandUntil(`serve-ssr ${hostApp}`, (output) => {
+        return (
+          output.includes(
+            `Node Express server listening on http://localhost:${remoteApp1Port}`
+          ) &&
+          output.includes(
+            `Node Express server listening on http://localhost:${remoteApp2Port}`
+          ) &&
+          output.includes(
+            `Angular Universal Live Development Server is listening`
+          )
+        );
+      });
+
+      // port and process cleanup
+
       if (process && process.pid) {
         await promisifiedTreeKill(process.pid, 'SIGKILL');
       }
@@ -241,14 +248,14 @@ describe('Angular Projects', () => {
     });
 
     // ACT
-    let process = await runCommandUntil(`serve-ssr ${ssrApp}`, (output) => {
-      return output.includes(
-        `Angular Universal Live Development Server is listening on http://localhost:4200`
-      );
-    });
-
-    // port and process cleanup
     try {
+      let process = await runCommandUntil(`serve-ssr ${ssrApp}`, (output) => {
+        return output.includes(
+          `Angular Universal Live Development Server is listening on http://localhost:4200`
+        );
+      });
+
+      // port and process cleanup
       if (process && process.pid) {
         await promisifiedTreeKill(process.pid, 'SIGKILL');
       }

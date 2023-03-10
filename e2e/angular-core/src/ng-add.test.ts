@@ -66,11 +66,13 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   beforeEach(() => {
     project = uniq('proj');
     packageManager = getSelectedPackageManager();
+    // TODO: solve issues with pnpm and remove this fallback
+    packageManager = packageManager === 'pnpm' ? 'yarn' : packageManager;
     runNgNew(project, packageManager);
   });
 
   afterEach(() => {
-    cleanupProject();
+    cleanupProject({ skipReset: true });
   });
 
   it('should generate a workspace', () => {

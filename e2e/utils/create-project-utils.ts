@@ -81,7 +81,7 @@ export function newProject({
       packageInstall(packages.join(` `), projScope);
 
       // stop the daemon
-      execSync('nx reset', {
+      execSync('npx nx reset', {
         cwd: `${e2eCwd}/proj`,
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
@@ -95,10 +95,6 @@ export function newProject({
       logInfo(`NX`, `E2E created a project: ${tmpProjPath()}`);
     }
     if (packageManager === 'pnpm') {
-      updateFile(
-        '.npmrc',
-        'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
-      );
       execSync(getPackageManagerCommand().install, {
         cwd: tmpProjPath(),
         stdio: 'pipe',
@@ -111,6 +107,14 @@ export function newProject({
     logError(`Failed to set up project for e2e tests.`, e.message);
     throw e;
   }
+}
+
+// pnpm v7 sadly doesn't automatically install peer dependencies
+export function addPnpmRc() {
+  updateFile(
+    '.npmrc',
+    'strict-peer-dependencies=false\nauto-install-peers=true'
+  );
 }
 
 export function runCreateWorkspace(
