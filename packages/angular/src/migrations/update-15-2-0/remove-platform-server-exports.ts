@@ -1,60 +1,27 @@
-/**
- * @license
- * Copyright Google LLC All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-
-import {
-  chain,
-  DirEntry,
-  Rule,
-  UpdateRecorder,
-} from '@angular-devkit/schematics';
+import type { Tree } from '@nrwl/devkit';
+import { formatFiles, visitNotIgnoredFiles } from '@nrwl/devkit';
 import * as ts from 'typescript';
-import { formatFiles } from '@nrwl/workspace';
+import { FileChangeRecorder } from '../../utils/file-change-recorder';
 
-function* visit(directory: DirEntry): IterableIterator<ts.SourceFile> {
-  for (const path of directory.subfiles) {
+export default async function (tree: Tree) {
+  visitNotIgnoredFiles(tree, '/', (path) => {
     if (path.endsWith('.ts') && !path.endsWith('.d.ts')) {
-      const entry = directory.file(path);
-      if (entry) {
-        const content = entry.content;
-        if (
-          content.includes('@angular/platform-server') &&
-          content.includes('renderModule')
-        ) {
-          const source = ts.createSourceFile(
-            entry.path,
-            content.toString().replace(/^\uFEFF/, ''),
-            ts.ScriptTarget.Latest,
-            true
-          );
+      const content = tree.read(path, 'utf8');
+      if (
+        content.includes('@angular/platform-server') &&
+        content.includes('renderModule')
+      ) {
+        const source = ts.createSourceFile(
+          path,
+          content.toString().replace(/^\uFEFF/, ''),
+          ts.ScriptTarget.Latest,
+          true
+        );
 
-          yield source;
-        }
-      }
-    }
-  }
-
-  for (const path of directory.subdirs) {
-    if (path === 'node_modules' || path.startsWith('.')) {
-      continue;
-    }
-
-    yield* visit(directory.dir(path));
-  }
-}
-
-export default function (): Rule {
-  return chain([
-    (tree) => {
-      for (const sourceFile of visit(tree.root)) {
-        let recorder: UpdateRecorder | undefined;
+        let recorder: FileChangeRecorder | undefined;
         let printer: ts.Printer | undefined;
 
-        ts.forEachChild(sourceFile, function analyze(node) {
+        ts.forEachChild(source, function analyze(node) {
           if (
             !(
               ts.isExportDeclaration(node) &&
@@ -82,7 +49,7 @@ export default function (): Rule {
             return;
           }
 
-          recorder ??= tree.beginUpdate(sourceFile.fileName);
+          recorder ??= new FileChangeRecorder(tree, path);
 
           if (newElements.length) {
             // Update named exports as there are leftovers.
@@ -94,25 +61,27 @@ export default function (): Rule {
             const fix = printer.printNode(
               ts.EmitHint.Unspecified,
               newExportClause,
-              sourceFile
+              source
             );
 
             const index = exportClause.getStart();
             const length = exportClause.getWidth();
-            recorder.remove(index, length).insertLeft(index, fix);
+            recorder.remove(index, index + length);
+            recorder.insertLeft(index, fix);
           } else {
             // Delete export as no exports remain.
-            recorder.remove(node.getStart(), node.getWidth());
+            recorder.remove(node.getStart(), node.getStart() + node.getWidth());
           }
 
           ts.forEachChild(node, analyze);
         });
 
         if (recorder) {
-          tree.commitUpdate(recorder);
+          recorder.applyChanges();
         }
       }
-    },
-    formatFiles(),
-  ]);
+    }
+  });
+
+  await formatFiles(tree);
 }
