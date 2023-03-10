@@ -36,7 +36,7 @@ export function loadPnpmHoistedDepsDefinition() {
 
   if (existsSync(fullPath)) {
     const content = readFileSync(fullPath, 'utf-8');
-    return load(content)?.hoistedDependencies;
+    return load(content)?.hoistedDependencies ?? {};
   } else {
     throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
   }
