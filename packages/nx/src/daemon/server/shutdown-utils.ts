@@ -3,6 +3,7 @@ import type { Server, Socket } from 'net';
 import { serverLogger } from './logger';
 import { serializeResult } from '../socket-utils';
 import type { AsyncSubscription } from '@parcel/watcher';
+import { deleteDaemonJsonProcessCache } from '../cache';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
@@ -13,16 +14,22 @@ export function getSourceWatcherSubscription() {
   return sourceWatcherSubscription;
 }
 
-export function getOutputsWatcherSubscription() {
-  return outputsWatcherSubscription;
-}
-
 export function storeSourceWatcherSubscription(s: AsyncSubscription) {
   sourceWatcherSubscription = s;
 }
 
+export function getOutputsWatcherSubscription() {
+  return outputsWatcherSubscription;
+}
+
 export function storeOutputsWatcherSubscription(s: AsyncSubscription) {
   outputsWatcherSubscription = s;
+}
+
+let processJsonSubscription: AsyncSubscription | undefined;
+
+export function storeProcessJsonSubscription(s: AsyncSubscription) {
+  processJsonSubscription = s;
 }
 
 interface HandleServerProcessTerminationParams {
@@ -36,6 +43,7 @@ export async function handleServerProcessTermination({
 }: HandleServerProcessTerminationParams) {
   try {
     server.close();
+    deleteDaemonJsonProcessCache();
     if (sourceWatcherSubscription) {
       await sourceWatcherSubscription.unsubscribe();
       serverLogger.watcherLog(
@@ -46,6 +54,12 @@ export async function handleServerProcessTermination({
       await outputsWatcherSubscription.unsubscribe();
       serverLogger.watcherLog(
         `Unsubscribed from changes within: ${workspaceRoot} (outputs)`
+      );
+    }
+    if (processJsonSubscription) {
+      await processJsonSubscription.unsubscribe();
+      serverLogger.watcherLog(
+        `Unsubscribed from changes within: ${workspaceRoot} (server-process.json)`
       );
     }
     serverLogger.log(`Server stopped because: "${reason}"`);
