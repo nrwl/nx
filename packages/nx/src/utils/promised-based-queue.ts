@@ -45,7 +45,7 @@ export class PromisedBasedQueue {
   private _promiseResolved() {
     this.counter--;
     if (this.isEmpty()) {
-      this.emptyCallback();
+      this.emptyCallback?.();
     }
   }
 }
