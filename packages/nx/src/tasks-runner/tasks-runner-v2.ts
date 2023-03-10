@@ -41,7 +41,7 @@ export const tasksRunnerV2 = (
       convertCompletedTasksToOutputFormat(tasks).forEach((k) => r.next(k));
       r.complete();
     })
-    .catch((e) => {
+    .catch((e: any) => {
       r.error(e);
       r.complete();
     });

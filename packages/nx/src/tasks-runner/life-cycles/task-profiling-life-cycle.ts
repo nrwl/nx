@@ -13,7 +13,24 @@ export class TaskProfilingLifeCycle implements LifeCycle {
       perfEnd?: number;
     };
   } = {};
-  private profile = [];
+  private profile: {
+    name: string;
+    cat?: string;
+    ph: string;
+    ts: number;
+    dur?: number;
+    pid: number;
+    tid: number;
+    args: Partial<{
+      target: {
+        project: string;
+        target: string;
+        configuration?: string | undefined;
+      };
+      status: TaskStatus;
+      name?: string;
+    }>;
+  }[] = [];
   private readonly profileFile: string;
   private registeredGroups = new Set();
 
@@ -63,7 +80,7 @@ export class TaskProfilingLifeCycle implements LifeCycle {
         cat: Object.values(task.target).join(','),
         ph: 'X',
         ts: perfStart * 1000,
-        dur: (perfEnd - perfStart) * 1000,
+        dur: ((perfEnd as number) - perfStart) * 1000,
         pid: process.pid,
         tid: groupId,
         args: {

@@ -33,7 +33,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       output.logSingleLine(
         `No projects with ${formatTargetsAndProjects(
           this.projectNames,
-          this.args.targets,
+          this.args.targets!,
           this.tasks
         )} were run`
       );
@@ -53,7 +53,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
 
     const title = `Running ${formatTargetsAndProjects(
       this.projectNames,
-      this.args.targets,
+      this.args.targets!,
       this.tasks
     )}:`;
 
@@ -84,7 +84,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       output.success({
         title: `Successfully ran ${formatTargetsAndProjects(
           this.projectNames,
-          this.args.targets,
+          this.args.targets!,
           this.tasks
         )}`,
         bodyLines,
@@ -114,7 +114,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       output.error({
         title: `Running ${formatTargetsAndProjects(
           this.projectNames,
-          this.args.targets,
+          this.args.targets!,
           this.tasks
         )} failed`,
         bodyLines,

@@ -93,7 +93,7 @@ export async function createRunManyDynamicOutputRenderer({
   const renderPinnedFooter = (lines: string[], dividerColor = 'cyan') => {
     let additionalLines = 0;
     if (hasTaskOutput) {
-      output.addVerticalSeparator(dividerColor);
+      output.addVerticalSeparator(dividerColor as any);
       additionalLines += 3;
     }
     // Create vertical breathing room for cursor position under the pinned footer
@@ -217,11 +217,11 @@ export async function createRunManyDynamicOutputRenderer({
       if (
         totalCompletedTasks !== totalTasks &&
         Number.isInteger(args.parallel) &&
-        runningTasks.length < args.parallel
+        runningTasks.length < args.parallel!
       ) {
         // Don't bother with this optimization if there are fewer tasks remaining than rows required
-        if (remainingTasks >= args.parallel) {
-          for (let i = runningTasks.length; i < args.parallel; i++) {
+        if (remainingTasks >= args.parallel!) {
+          for (let i = runningTasks.length; i < args.parallel!; i++) {
             additionalFooterRows.push('');
           }
         }
@@ -255,7 +255,7 @@ export async function createRunManyDynamicOutputRenderer({
     if (additionalFooterRows.length > 1) {
       const text = `Running ${formatTargetsAndProjects(
         projectNames,
-        targets,
+        targets!,
         tasks
       )}`;
       const taskOverridesRows = [];
@@ -297,7 +297,7 @@ export async function createRunManyDynamicOutputRenderer({
           'gray',
           `No projects with ${formatTargetsAndProjects(
             projectNames,
-            targets,
+            targets!,
             tasks
           )} were run`
         ),
@@ -316,7 +316,7 @@ export async function createRunManyDynamicOutputRenderer({
     if (totalSuccessfulTasks === totalTasks) {
       const text = `Successfully ran ${formatTargetsAndProjects(
         projectNames,
-        targets,
+        targets!,
         tasks
       )}`;
       const taskOverridesRows = [];
@@ -351,7 +351,7 @@ export async function createRunManyDynamicOutputRenderer({
     } else {
       const text = `Ran ${formatTargetsAndProjects(
         projectNames,
-        targets,
+        targets!,
         tasks
       )}`;
       const taskOverridesRows = [];
@@ -393,7 +393,7 @@ export async function createRunManyDynamicOutputRenderer({
         )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} targets failed, including the following:`,
         `${failedTasksForPrinting
           .map(
-            (t) =>
+            (t: any) =>
               `        ${output.colors.red('-')} ${output.formatCommand(
                 t.toString()
               )}`

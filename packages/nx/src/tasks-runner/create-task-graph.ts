@@ -27,7 +27,7 @@ export class ProcessTasks {
     for (const projectName of projectNames) {
       for (const target of targets) {
         const project = this.projectGraph.nodes[projectName];
-        if (targets.length === 1 || project.data.targets[target]) {
+        if (targets.length === 1 || project.data.targets?.[target]) {
           const resolvedConfiguration = this.resolveConfiguration(
             project,
             target,
@@ -99,7 +99,7 @@ export class ProcessTasks {
       this.defaultDependencyConfigs,
       this.projectGraph
     );
-    for (const dependencyConfig of dependencyConfigs) {
+    for (const dependencyConfig of dependencyConfigs || []) {
       const taskOverrides =
         dependencyConfig.params === 'forward'
           ? overrides
@@ -201,7 +201,7 @@ export class ProcessTasks {
     resolvedConfiguration: string | undefined,
     overrides: Object
   ): Task {
-    if (!project.data.targets[target]) {
+    if (!project.data.targets?.[target]) {
       throw new Error(
         `Cannot find configuration for task ${project.name}:${target}`
       );
@@ -235,7 +235,7 @@ export class ProcessTasks {
     const defaultConfiguration =
       project.data.targets?.[target]?.defaultConfiguration;
     configuration ??= defaultConfiguration;
-    return projectHasTargetAndConfiguration(project, target, configuration)
+    return projectHasTargetAndConfiguration(project, target, configuration!)
       ? configuration
       : defaultConfiguration;
   }
@@ -266,7 +266,7 @@ export function createTaskGraph(
   const roots = p.processTasks(
     projectNames,
     targets,
-    configuration,
+    configuration!,
     overrides,
     excludeTaskDependencies
   );
@@ -277,12 +277,12 @@ export function createTaskGraph(
   };
 }
 
-function interpolateOverrides<T = any>(
+function interpolateOverrides<T extends Record<string, any> = any>(
   args: T,
   projectName: string,
   project: any
 ): T {
-  const interpolatedArgs: T = { ...args };
+  const interpolatedArgs: Record<string, any> = { ...args };
   Object.entries(interpolatedArgs).forEach(([name, value]) => {
     interpolatedArgs[name] =
       typeof value === 'string'
@@ -294,5 +294,5 @@ function interpolateOverrides<T = any>(
           })
         : value;
   });
-  return interpolatedArgs;
+  return interpolatedArgs as T;
 }

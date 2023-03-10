@@ -31,7 +31,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     const numberOfDeps = this.tasks.length - 1;
     const title = `Running ${formatTargetsAndProjects(
       this.projectNames,
-      this.args.targets,
+      this.args.targets!,
       this.tasks
     )}:`;
     if (numberOfDeps > 0) {
@@ -61,7 +61,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
       output.success({
         title: `Successfully ran ${formatTargetsAndProjects(
           this.projectNames,
-          this.args.targets,
+          this.args.targets!,
           this.tasks
         )}`,
         bodyLines,
@@ -81,7 +81,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
       output.error({
         title: `Running ${formatTargetsAndProjects(
           this.projectNames,
-          this.args.targets,
+          this.args.targets!,
           this.tasks
         )} failed`,
         bodyLines,

@@ -42,7 +42,7 @@ export class TaskOrchestrator {
   } = {};
   private waitingForTasks: Function[] = [];
 
-  private groups = [];
+  private groups: boolean[] = [];
 
   private bailed = false;
 
@@ -66,7 +66,7 @@ export class TaskOrchestrator {
     const threads = [];
 
     // initial seeding of the queue
-    for (let i = 0; i < this.options.parallel; ++i) {
+    for (let i = 0; i < (this.options.parallel as number); ++i) {
       threads.push(this.executeNextBatchOfTasksUsingTaskSchedule());
     }
     await Promise.all(threads);
@@ -82,7 +82,9 @@ export class TaskOrchestrator {
     return this.completedTasks;
   }
 
-  private async executeNextBatchOfTasksUsingTaskSchedule() {
+  private async executeNextBatchOfTasksUsingTaskSchedule(): Promise<
+    void | null
+  > {
     // completed all the tasks
     if (!this.tasksSchedule.hasTasks() || this.bailed) {
       return null;
@@ -94,7 +96,7 @@ export class TaskOrchestrator {
 
     const batch = this.tasksSchedule.nextBatch();
     if (batch) {
-      const groupId = this.closeGroup();
+      const groupId = this.closeGroup() as number;
 
       await this.applyFromCacheOrRunBatch(doNotSkipCache, batch, groupId);
 
@@ -133,29 +135,36 @@ export class TaskOrchestrator {
     const res = await Promise.all(
       cacheableTasks.map((t) => this.applyCachedResult(t))
     );
-    return res.filter((r) => r !== null);
+    return res.filter((r) => r !== null) as {
+      task: Task;
+      status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
+    }[];
   }
 
   private async applyCachedResult(task: Task): Promise<{
     task: Task;
     status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
-  }> {
+  } | null> {
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
     const outputs = getOutputs(this.projectGraph.nodes, task);
     const shouldCopyOutputsFromCache =
       !!outputs.length &&
-      (await this.shouldCopyOutputsFromCache(outputs, task.hash));
+      (await this.shouldCopyOutputsFromCache(outputs, task.hash as string));
     if (shouldCopyOutputsFromCache) {
-      await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);
+      await this.cache.copyFilesFromCache(
+        task.hash as string,
+        cachedResult,
+        outputs
+      );
     }
     const status = cachedResult.remote
       ? 'remote-cache'
       : shouldCopyOutputsFromCache
       ? 'local-cache'
       : 'local-cache-kept-existing';
-    this.options.lifeCycle.printTaskTerminalOutput(
+    this.options.lifeCycle.printTaskTerminalOutput?.(
       task,
       status,
       cachedResult.terminalOutput
@@ -183,7 +192,13 @@ export class TaskOrchestrator {
       task: Task;
       status: TaskStatus;
       terminalOutput?: string;
-    }[] = doNotSkipCache ? await this.applyCachedResults(tasks) : [];
+    }[] = doNotSkipCache
+      ? ((await this.applyCachedResults(tasks)) as {
+          task: Task;
+          status: TaskStatus;
+          terminalOutput?: string;
+        }[])
+      : [];
 
     // Run tasks that were not cached
     if (results.length !== taskEntries.length) {
@@ -279,7 +294,7 @@ export class TaskOrchestrator {
       const temporaryOutputPath = this.cache.temporaryOutputPath(task);
       const streamOutput = shouldStreamOutput(
         task,
-        this.initiatingProject,
+        this.initiatingProject as string,
         this.options
       );
 
@@ -317,7 +332,7 @@ export class TaskOrchestrator {
 
   // region Lifecycle
   private async preRunSteps(tasks: Task[], metadata: TaskMetadata) {
-    this.options.lifeCycle.startTasks(tasks, metadata);
+    this.options.lifeCycle.startTasks?.(tasks, metadata);
   }
 
   private async postRunSteps(
@@ -359,11 +374,11 @@ export class TaskOrchestrator {
           .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
           .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
           .map(async ({ task, code, terminalOutput, outputs }) =>
-            this.cache.put(task, terminalOutput, outputs, code)
+            this.cache.put(task, terminalOutput as string, outputs, code)
           )
       );
     }
-    this.options.lifeCycle.endTasks(
+    this.options.lifeCycle.endTasks?.(
       results.map((result) => {
         const code =
           result.status === 'success' ||
@@ -459,13 +474,14 @@ export class TaskOrchestrator {
     );
   }
 
-  private closeGroup() {
-    for (let i = 0; i < this.options.parallel; i++) {
+  private closeGroup(): number {
+    for (let i = 0; i < (this.options.parallel as number); i++) {
       if (!this.groups[i]) {
         this.groups[i] = true;
         return i;
       }
     }
+    throw new Error('Unable to locate group to close');
   }
 
   private openGroup(id: number) {
@@ -484,7 +500,7 @@ export class TaskOrchestrator {
     if (this.daemon?.enabled()) {
       return this.daemon.recordOutputsHash(
         getOutputs(this.projectGraph.nodes, task),
-        task.hash
+        task.hash as string
       );
     }
   }

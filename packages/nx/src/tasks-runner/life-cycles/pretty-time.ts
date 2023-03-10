@@ -2,7 +2,7 @@
  * All credit to https://github.com/jonschlinkert/pretty-time
  */
 
-const nano = (time) => +time[0] * 1e9 + +time[1];
+const nano = (time: [number, number]) => +time[0] * 1e9 + +time[1];
 
 const scale = {
   w: 6048e11,
@@ -13,7 +13,7 @@ const scale = {
   ms: 1e6,
   μs: 1e3,
   ns: 1,
-};
+} as const;
 
 const regex = {
   w: /^(w((ee)?k)?s?)$/,
@@ -24,19 +24,19 @@ const regex = {
   ms: /^(milli(second)?s?|ms)$/,
   μs: /^(micro(second)?s?|μs)$/,
   ns: /^(nano(second)?s?|ns?)$/,
-};
+} as const;
 
-const isSmallest = function (uom, unit) {
+const isSmallest = function (uom: keyof typeof scale, unit: keyof typeof scale) {
   return regex[uom].test(unit);
 };
 
-const round = function (num, digits) {
+const round = function (num: number, digits: number) {
   const n = Math.abs(num);
-  return /[0-9]/.test(digits) ? Number(n.toFixed(digits)) : Math.round(n);
+  return /[0-9]/.test(digits.toString()) ? Number(n.toFixed(digits)) : Math.round(n);
 };
 
-export function prettyTime(time, smallest?, digits?) {
-  const isNumber = /^[0-9]+$/.test(time);
+export function prettyTime(time: string | number | [number, number], smallest?: any, digits?: any) {
+  const isNumber = !Array.isArray(time) && /^[0-9]+$/.test(time.toString());
   if (!isNumber && !Array.isArray(time)) {
     throw new TypeError('expected an array or number in nanoseconds');
   }
@@ -49,15 +49,15 @@ export function prettyTime(time, smallest?, digits?) {
     smallest = null;
   }
 
-  let num = isNumber ? time : nano(time);
+  let num: number = isNumber ? +time : nano(time as any);
   let res = '';
   let prev;
 
   for (const uom of Object.keys(scale)) {
-    const step = scale[uom];
-    let inc = num / step;
+    const step = scale[uom as keyof typeof scale];
+    let inc = +num / step;
 
-    if (smallest && isSmallest(uom, smallest)) {
+    if (smallest && isSmallest(uom as keyof typeof scale, smallest)) {
       inc = round(inc, digits);
       if (prev && inc === prev / step) --inc;
       res += inc + uom;

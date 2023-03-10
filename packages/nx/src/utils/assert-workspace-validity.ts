@@ -7,7 +7,7 @@ import { findMatchingProjects } from './find-matching-projects';
 import { stripIndents } from './strip-indents';
 
 export function assertWorkspaceValidity(
-  projectsConfigurations,
+  projectsConfigurations: ProjectsConfigurations,
   nxJson: NxJsonConfiguration
 ) {
   const projectNames = Object.keys(projectsConfigurations.projects);
@@ -23,7 +23,11 @@ export function assertWorkspaceValidity(
     nxJson.implicitDependencies || {}
   )
     .reduce((acc, entry) => {
-      function recur(value, acc = [], path: string[]) {
+      function recur(
+        value: typeof entry['1'],
+        acc: any[] = [],
+        path: string[]
+      ) {
         if (value === '*') {
           // do nothing since '*' is calculated and always valid.
         } else if (typeof value === 'string') {
@@ -45,7 +49,7 @@ export function assertWorkspaceValidity(
 
       recur(entry[1], acc, [entry[0]]);
       return acc;
-    }, [])
+    }, [] as any[])
     .reduce((map, [filename, projectNames]: [string, string[]]) => {
       detectAndSetInvalidProjectGlobValues(
         map,
@@ -85,7 +89,7 @@ export function assertWorkspaceValidity(
     .map((key) => {
       const projectNames = invalidImplicitDependencies.get(key);
       return `  ${key}\n${projectNames
-        .map((projectName) => `    ${projectName}`)
+        ?.map((projectName: string) => `    ${projectName}`)
         .join('\n')}`;
     })
     .join('\n\n');
@@ -95,12 +99,12 @@ export function assertWorkspaceValidity(
 function detectAndSetInvalidProjectGlobValues(
   map: Map<string, string[]>,
   sourceName: string,
-  desiredImplicitDeps: string[],
+  desiredImplicitDeps: string[] | undefined,
   projectConfigurations: ProjectsConfigurations['projects'],
   projectNames: string[],
   projectNameSet: Set<string>
 ) {
-  const invalidProjectsOrGlobs = desiredImplicitDeps.filter((implicit) => {
+  const invalidProjectsOrGlobs = desiredImplicitDeps?.filter((implicit) => {
     const projectName = implicit.startsWith('!')
       ? implicit.substring(1)
       : implicit;
@@ -111,7 +115,7 @@ function detectAndSetInvalidProjectGlobValues(
     );
   });
 
-  if (invalidProjectsOrGlobs.length > 0) {
-    map.set(sourceName, invalidProjectsOrGlobs);
+  if ((invalidProjectsOrGlobs ?? []).length > 0) {
+    map.set(sourceName, invalidProjectsOrGlobs as string[]);
   }
 }

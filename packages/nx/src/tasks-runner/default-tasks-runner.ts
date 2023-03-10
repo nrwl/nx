@@ -21,47 +21,48 @@ export interface DefaultTasksRunnerOptions {
   runtimeCacheInputs?: string[];
   cacheDirectory?: string;
   remoteCache?: RemoteCache;
-  lifeCycle: LifeCycle;
+  lifeCycle: Required<LifeCycle>;
   captureStderr?: boolean;
   skipNxCache?: boolean;
 }
 
-export const defaultTasksRunner: TasksRunner<
-  DefaultTasksRunnerOptions
-> = async (
-  tasks: Task[],
-  options: DefaultTasksRunnerOptions,
-  context: {
-    target: string;
-    initiatingProject?: string;
-    projectGraph: ProjectGraph;
-    nxJson: NxJsonConfiguration;
-    nxArgs: NxArgs;
-    taskGraph: TaskGraph;
-    hasher: Hasher;
-    daemon: DaemonClient;
-  }
-): Promise<{ [id: string]: TaskStatus }> => {
-  if (
-    (options as any)['parallel'] === 'false' ||
-    (options as any)['parallel'] === false
-  ) {
-    (options as any)['parallel'] = 1;
-  } else if (
-    (options as any)['parallel'] === 'true' ||
-    (options as any)['parallel'] === true ||
-    (options as any)['parallel'] === undefined
-  ) {
-    (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
-  }
+export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> =
+  (async (
+    tasks: Task[],
+    options: DefaultTasksRunnerOptions,
+    context: {
+      target: string;
+      initiatingProject?: string;
+      projectGraph: ProjectGraph;
+      nxJson: NxJsonConfiguration;
+      nxArgs: NxArgs;
+      taskGraph: TaskGraph;
+      hasher: Hasher;
+      daemon: DaemonClient;
+    }
+  ): Promise<{ [id: string]: TaskStatus }> => {
+    if (
+      (options as any)['parallel'] === 'false' ||
+      (options as any)['parallel'] === false
+    ) {
+      (options as any)['parallel'] = 1;
+    } else if (
+      (options as any)['parallel'] === 'true' ||
+      (options as any)['parallel'] === true ||
+      (options as any)['parallel'] === undefined
+    ) {
+      (options as any)['parallel'] = Number(
+        (options as any)['maxParallel'] || 3
+      );
+    }
 
-  options.lifeCycle.startCommand();
-  try {
-    return await runAllTasks(tasks, options, context);
-  } finally {
-    options.lifeCycle.endCommand();
-  }
-};
+    options.lifeCycle.startCommand?.();
+    try {
+      return await runAllTasks(tasks, options, context);
+    } finally {
+      options.lifeCycle.endCommand?.();
+    }
+  }) as TasksRunner<DefaultTasksRunnerOptions>;
 
 async function runAllTasks(
   tasks: Task[],
@@ -92,7 +93,7 @@ async function runAllTasks(
     context.projectGraph,
     context.taskGraph,
     options,
-    context.nxArgs?.nxBail,
+    !!context.nxArgs?.nxBail,
     context.daemon
   );
 

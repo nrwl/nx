@@ -3,6 +3,7 @@ import { workspaceRoot } from '../src/utils/workspace-root';
 import { fileExists } from '../src/utils/fileutils';
 import { join } from 'path';
 import { daemonClient } from '../src/daemon/client/client';
+import { getNxRequirePaths } from '../src/utils/installation-directory';
 
 (async () => {
   try {
@@ -30,7 +31,7 @@ import { daemonClient } from '../src/daemon/client/client';
 
 function isMainNxPackage() {
   const mainNxPath = require.resolve('nx', {
-    paths: [workspaceRoot],
+    paths: getNxRequirePaths(),
   });
   const thisNxPath = require.resolve('nx');
   return mainNxPath === thisNxPath;

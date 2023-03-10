@@ -14,11 +14,11 @@ export class PromptMessages {
         message: `Enable distributed caching to make your CI faster?`,
       },
     ],
-  };
+  } as const;
 
-  private selectedMessages = {};
+  private selectedMessages: any = {};
 
-  getPromptMessage(key: string): string {
+  getPromptMessage(key: keyof typeof this.messages): string {
     if (this.selectedMessages[key] === undefined) {
       if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
         this.selectedMessages[key] = 0;
@@ -28,10 +28,10 @@ export class PromptMessages {
         );
       }
     }
-    return this.messages[key][this.selectedMessages[key]].message;
+    return this.messages[key][this.selectedMessages[key] as number].message;
   }
 
-  codeOfSelectedPromptMessage(key: string): string {
+  codeOfSelectedPromptMessage(key: keyof typeof this.messages): string | null {
     if (this.selectedMessages[key] === undefined) return null;
     return this.messages[key][this.selectedMessages[key]].code;
   }

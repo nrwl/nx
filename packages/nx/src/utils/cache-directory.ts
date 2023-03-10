@@ -7,7 +7,7 @@ import { workspaceRoot } from './workspace-root';
 function readCacheDirectoryProperty(root: string): string | undefined {
   try {
     const nxJson = readJsonFile<NxJsonConfiguration>(join(root, 'nx.json'));
-    return nxJson.tasksRunnerOptions.default.options.cacheDirectory;
+    return nxJson.tasksRunnerOptions?.default?.options?.cacheDirectory;
   } catch {
     return undefined;
   }
@@ -21,7 +21,7 @@ function absolutePath(root: string, path: string): string {
   }
 }
 
-function cacheDirectory(root: string, cacheDirectory: string) {
+function cacheDirectory(root: string, cacheDirectory?: string | null) {
   const cacheDirFromEnv = process.env.NX_CACHE_DIRECTORY;
   if (cacheDirFromEnv) {
     cacheDirectory = cacheDirFromEnv;

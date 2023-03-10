@@ -14,7 +14,7 @@ type NodeLocation = {
 /**
  * Chalk styles for code frame token types.
  */
-function getDefs(chalk) {
+function getDefs(chalk: typeof import('chalk')) {
   return {
     gutter: chalk.grey,
     marker: chalk.red.bold,
@@ -35,7 +35,7 @@ function getMarkerLines(
   loc: NodeLocation,
   source: Array<string>,
   opts: { linesAbove?: number; linesBelow?: number } = {}
-): { start: number; end: number; markerLines: Object } {
+): { start: number; end: number; markerLines: Record<number, boolean | [number, number]> } {
   const startLoc: Location = {
     column: 0,
     line: -1,
@@ -63,7 +63,7 @@ function getMarkerLines(
   }
 
   const lineDiff = endLine - startLine;
-  const markerLines = {};
+  const markerLines: Record<number, boolean | [number, number]> = {};
 
   if (lineDiff) {
     for (let i = 0; i <= lineDiff; i++) {
@@ -121,7 +121,7 @@ export function codeFrameColumns(
       const number = start + 1 + index;
       const paddedNumber = ` ${number}`.slice(-numberMaxWidth);
       const gutter = ` ${paddedNumber} | `;
-      const hasMarker = markerLines[number];
+      const hasMarker = markerLines?.[number];
       if (hasMarker) {
         let markerLine = '';
         if (Array.isArray(hasMarker)) {

@@ -5,7 +5,7 @@ function _findCycle(
   taskId: string,
   visited: { [taskId: string]: boolean },
   path: string[]
-) {
+): string[] | null {
   if (visited[taskId]) return null;
   visited[taskId] = true;
 
@@ -18,7 +18,7 @@ function _findCycle(
 }
 
 export function findCycle(taskGraph: TaskGraph): string[] | null {
-  const visited = {};
+  const visited: Record<string, boolean> = {};
   for (const t of Object.keys(taskGraph.dependencies)) {
     visited[t] = false;
   }
@@ -52,7 +52,7 @@ function _makeAcyclic(
 }
 
 export function makeAcyclic(taskGraph: TaskGraph): void {
-  const visited = {};
+  const visited: Record<string, boolean> = {};
   for (const t of Object.keys(taskGraph.dependencies)) {
     visited[t] = false;
   }

@@ -41,7 +41,7 @@ async function getTerminalOutputLifeCycle(
   const { runnerOptions } = getRunner(nxArgs, nxJson);
   const isRunOne = initiatingProject != null;
   const useDynamicOutput =
-    shouldUseDynamicLifeCycle(tasks, runnerOptions, nxArgs.outputStyle) &&
+    shouldUseDynamicLifeCycle(tasks, runnerOptions, nxArgs.outputStyle as string) &&
     process.env.NX_VERBOSE_LOGGING !== 'true' &&
     process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT !== 'false';
 
@@ -120,7 +120,7 @@ function createTaskGraphAndValidateCycles(
     projectGraph,
     defaultDependencyConfigs,
     projectNames,
-    nxArgs.targets,
+    nxArgs.targets as string[],
     nxArgs.configuration,
     overrides,
     extraOptions.excludeTaskDependencies
@@ -160,14 +160,14 @@ export async function runCommand(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
       const defaultDependencyConfigs = mergeTargetDependencies(
-        nxJson.targetDefaults,
+        nxJson.targetDefaults!,
         extraTargetDependencies
       );
       const projectNames = projectsToRun.map((t) => t.name);
 
       const taskGraph = createTaskGraphAndValidateCycles(
         projectGraph,
-        defaultDependencyConfigs,
+        defaultDependencyConfigs!,
         projectNames,
         nxArgs,
         overrides,
@@ -176,7 +176,7 @@ export async function runCommand(
       const tasks = Object.values(taskGraph.tasks);
 
       const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
-        initiatingProject,
+        initiatingProject!,
         projectNames,
         tasks,
         nxArgs,
@@ -298,15 +298,15 @@ function constructLifeCycles(lifeCycle: LifeCycle) {
 function mergeTargetDependencies(
   defaults: TargetDefaults,
   deps: TargetDependencies
-): TargetDependencies {
-  const res = {};
+): TargetDependencies | undefined {
+  const res: Record<string, (string | TargetDependencyConfig)[]>  = {};
   Object.keys(defaults).forEach((k) => {
-    res[k] = defaults[k].dependsOn;
+    res[k] = defaults[k].dependsOn || [];
   });
   if (deps) {
     Object.keys(deps).forEach((k) => {
       if (res[k]) {
-        res[k] = [...res[k], deps[k]];
+        res[k] = [...res[k], ...deps[k]];
       } else {
         res[k] = deps[k];
       }
@@ -328,12 +328,12 @@ async function anyFailuresInObservable(obs: any) {
   return await new Promise((res) => {
     let anyFailures = false;
     obs.subscribe(
-      (t) => {
+      (t: any) => {
         if (!t.success) {
           anyFailures = true;
         }
       },
-      (error) => {
+      (error: any) => {
         output.error({
           title: 'Unhandled error in task executor',
         });

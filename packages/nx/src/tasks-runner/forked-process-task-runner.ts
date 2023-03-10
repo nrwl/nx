@@ -61,7 +61,7 @@ export class ForkedProcessTaskRunner {
 
         p.once('exit', (code, signal) => {
           this.processes.delete(p);
-          if (code === null) code = this.signalToCode(signal);
+          if (code === null) code = this.signalToCode(signal!);
           if (code !== 0) {
             const results: BatchResults = {};
             for (const rootTaskId of taskGraph.roots) {
@@ -133,8 +133,6 @@ export class ForkedProcessTaskRunner {
             process.env.FORCE_COLOR === undefined
               ? 'true'
               : process.env.FORCE_COLOR,
-            null,
-            null
           ),
         });
         this.processes.add(p);
@@ -151,29 +149,29 @@ export class ForkedProcessTaskRunner {
             const color = getColor(task.target.project);
             const prefixText = `${task.target.project}:`;
 
-            p.stdout
+            p.stdout!
               .pipe(logTransformer({ tag: color.bold(prefixText) }))
               .pipe(process.stdout);
-            p.stderr
+            p.stderr!
               .pipe(logTransformer({ tag: color(prefixText) }))
               .pipe(process.stderr);
           } else {
-            p.stdout.pipe(logTransformer()).pipe(process.stdout);
-            p.stderr.pipe(logTransformer()).pipe(process.stderr);
+            p.stdout!.pipe(logTransformer()).pipe(process.stdout);
+            p.stderr!.pipe(logTransformer()).pipe(process.stderr);
           }
         }
 
-        let outWithErr = [];
-        p.stdout.on('data', (chunk) => {
+        let outWithErr: any[] = [];
+        p.stdout!.on('data', (chunk) => {
           outWithErr.push(chunk.toString());
         });
-        p.stderr.on('data', (chunk) => {
+        p.stderr!.on('data', (chunk) => {
           outWithErr.push(chunk.toString());
         });
 
         p.on('exit', (code, signal) => {
           this.processes.delete(p);
-          if (code === null) code = this.signalToCode(signal);
+          if (code === null) code = this.signalToCode(signal!);
           // we didn't print any output as we were running the command
           // print all the collected output|
           const terminalOutput = outWithErr.join('');
@@ -232,7 +230,7 @@ export class ForkedProcessTaskRunner {
         });
 
         p.on('exit', (code, signal) => {
-          if (code === null) code = this.signalToCode(signal);
+          if (code === null) code = this.signalToCode(signal!);
           // we didn't print any output as we were running the command
           // print all the collected output
           let terminalOutput = '';
@@ -245,7 +243,7 @@ export class ForkedProcessTaskRunner {
                 terminalOutput
               );
             }
-          } catch (e) {
+          } catch (e: any) {
             console.log(stripIndents`
               Unable to print terminal output for Task "${task.id}".
               Task failed with Exit Code ${code} and Signal "${signal}".
@@ -290,9 +288,9 @@ export class ForkedProcessTaskRunner {
 
   private getEnvVariablesForTask(
     task: Task,
-    forceColor: string,
-    outputPath: string,
-    streamOutput: boolean
+    forceColor?: string,
+    outputPath?: string | undefined,
+    streamOutput?: boolean
   ) {
     const res = {
       // Start With Dotenv Variables
@@ -321,7 +319,7 @@ export class ForkedProcessTaskRunner {
   }
 
   private getNxEnvVariablesForForkedProcess(
-    forceColor: string,
+    forceColor?: string,
     outputPath?: string,
     streamOutput?: boolean
   ) {
@@ -345,9 +343,9 @@ export class ForkedProcessTaskRunner {
 
   private getNxEnvVariablesForTask(
     task: Task,
-    forceColor: string,
-    outputPath: string,
-    streamOutput: boolean
+    forceColor?: string,
+    outputPath?: string | undefined,
+    streamOutput?: boolean
   ) {
     const env: NodeJS.ProcessEnv = {
       NX_TASK_TARGET_PROJECT: task.target.project,

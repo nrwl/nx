@@ -6,12 +6,12 @@ import { TaskStatus } from '../../tasks-runner/tasks-runner';
 import { projectGraphCacheDirectory } from '../../utils/cache-directory';
 
 export class StoreRunInformationLifeCycle implements LifeCycle {
-  private startTime: string;
+  private startTime?: string;
 
   private timings: {
     [target: string]: {
       start: string;
-      end: string;
+      end?: string;
     };
   } = {};
 

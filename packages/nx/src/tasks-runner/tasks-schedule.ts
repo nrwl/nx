@@ -71,15 +71,15 @@ export class TasksSchedule {
 
   public nextTask() {
     if (this.scheduledTasks.length > 0) {
-      return this.taskGraph.tasks[this.scheduledTasks.shift()];
+      return this.taskGraph.tasks[this.scheduledTasks.shift()!];
     } else {
       return null;
     }
   }
 
-  public nextBatch(): Batch {
+  public nextBatch(): Batch | null {
     return this.scheduledBatches.length > 0
-      ? this.scheduledBatches.shift()
+      ? this.scheduledBatches.shift()!
       : null;
   }
 
@@ -136,7 +136,7 @@ export class TasksSchedule {
         rootTask,
         this.nxJson,
         this.projectGraph
-      );
+      ) as string;
       this.processTaskForBatches(batchMap, rootTask, executorName, true);
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {

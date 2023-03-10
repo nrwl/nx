@@ -44,7 +44,7 @@ export interface LifeCycle {
   ): void;
 }
 
-export class CompositeLifeCycle implements LifeCycle {
+export class CompositeLifeCycle implements Required<LifeCycle> {
   constructor(private readonly lifeCycles: LifeCycle[]) {}
 
   startCommand(): void {
@@ -92,7 +92,9 @@ export class CompositeLifeCycle implements LifeCycle {
       if (l.startTasks) {
         l.startTasks(tasks, metadata);
       } else if (l.startTask) {
-        tasks.forEach((t) => l.startTask(t));
+        for (const task of tasks) {
+          l.startTask(task);
+        }
       }
     }
   }
@@ -102,7 +104,9 @@ export class CompositeLifeCycle implements LifeCycle {
       if (l.endTasks) {
         l.endTasks(taskResults, metadata);
       } else if (l.endTask) {
-        taskResults.forEach((t) => l.endTask(t.task, t.code));
+        for (const t of taskResults) {
+          l.endTask(t.task, t.code);
+        }
       }
     }
   }

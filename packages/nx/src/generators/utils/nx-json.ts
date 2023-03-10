@@ -38,15 +38,17 @@ export function updateNxJson(tree: Tree, nxJson: NxJsonConfiguration): void {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       if (json.extends) {
         const nxJsonExtends = readNxJsonExtends(tree, json.extends);
-        const changedPropsOfNxJson = {};
-        Object.keys(nxJson).forEach((prop) => {
+        const changedPropsOfNxJson: Partial<NxJsonConfiguration> = {};
+        for (const prop in nxJson) {
           if (
-            JSON.stringify(nxJson[prop], null, 2) !=
+            JSON.stringify(nxJson[prop as keyof typeof nxJson], null, 2) !=
             JSON.stringify(nxJsonExtends[prop], null, 2)
           ) {
-            changedPropsOfNxJson[prop] = nxJson[prop];
+            changedPropsOfNxJson[prop as keyof NxJsonConfiguration] = nxJson[
+              prop as keyof NxJsonConfiguration
+            ] as any;
           }
-        });
+        }
         return changedPropsOfNxJson;
       } else {
         return nxJson;
@@ -66,7 +68,7 @@ function readNxJsonExtends(tree: Tree, extendsPath: string) {
         })
       )
     );
-  } catch (e) {
+  } catch (e: any) {
     throw new Error(`Unable to resolve nx.json extends. Error: ${e.message}`);
   }
 }

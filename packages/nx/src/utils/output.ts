@@ -50,6 +50,8 @@ class CLIOutput {
   cliName = 'NX';
   formatCommand = (taskId: string) => `${chalk.dim('nx run')} ${taskId}`;
 
+  readonly colors = colors;
+
   /**
    * Longer dash character which forms more of a continuous line when place side to side
    * with itself, unlike the standard dash character

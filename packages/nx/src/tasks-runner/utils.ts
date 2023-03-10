@@ -27,7 +27,7 @@ export function getDependencyConfigs(
   projectGraph: ProjectGraph
 ): TargetDependencyConfig[] | undefined {
   const dependencyConfigs = expandDependencyConfigSyntaxSugar(
-    projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
+    projectGraph.nodes[project].data?.targets?.[target]?.dependsOn ??
       defaultDependencyConfigs[target] ??
       []
   );
@@ -128,11 +128,11 @@ export function getOutputsForTargetAndConfiguration(
 ): string[] {
   const { target, configuration } = task.target;
 
-  const targetConfiguration = node.data.targets[target];
+  const targetConfiguration = node.data.targets?.[target];
 
   const options = {
-    ...targetConfiguration.options,
-    ...targetConfiguration?.configurations?.[configuration],
+    ...targetConfiguration?.options,
+    ...(configuration && targetConfiguration?.configurations?.[configuration]),
     ...task.overrides,
   };
 
@@ -221,11 +221,11 @@ export function getExecutorNameForTask(
 
   const projectRoot = join(workspaceRoot, project.root);
   if (existsSync(join(projectRoot, 'package.json'))) {
-    project.targets = mergeNpmScriptsWithTargets(projectRoot, project.targets);
+    project.targets = mergeNpmScriptsWithTargets(projectRoot, project.targets ?? {});
   }
   project.targets = mergePluginTargetsWithNxTargets(
     project.root,
-    project.targets,
+    project.targets ?? {},
     loadNxPlugins(nxJson.plugins)
   );
 
@@ -239,7 +239,7 @@ export function getExecutorForTask(
   nxJson: NxJsonConfiguration
 ) {
   const executor = getExecutorNameForTask(task, nxJson, projectGraph);
-  const [nodeModule, executorName] = executor.split(':');
+  const [nodeModule, executorName] = executor?.split(':') ?? [];
 
   return workspace.readExecutor(nodeModule, executorName);
 }
@@ -263,8 +263,8 @@ export function removeTasksFromTaskGraph(
   graph: TaskGraph,
   ids: string[]
 ): TaskGraph {
-  const tasks = {};
-  const dependencies = {};
+  const tasks: Record<string, Task> = {};
+  const dependencies: Record<string, string[]> = {};
   const removedSet = new Set(ids);
   for (let taskId of Object.keys(graph.tasks)) {
     if (!removedSet.has(taskId)) {
@@ -350,7 +350,7 @@ export function isCacheableTask(
   }
 ): boolean {
   const cacheable = options.cacheableOperations || options.cacheableTargets;
-  return (
+  return !!(
     cacheable &&
     cacheable.indexOf(task.target.target) > -1 &&
     !longRunningTask(task)

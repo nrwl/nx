@@ -106,7 +106,7 @@ export async function createRunOneDynamicOutputRenderer({
   ) => {
     let additionalLines = 0;
     if (renderDivider) {
-      output.addVerticalSeparator(dividerColor);
+      output.addVerticalSeparator(dividerColor as any);
       additionalLines += 3;
     }
     if (renderDivider) {
