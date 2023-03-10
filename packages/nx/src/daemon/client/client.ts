@@ -86,6 +86,7 @@ export class DaemonClient {
   }
 
   reset() {
+    this.socketMessenger?.close();
     this.socketMessenger = null;
     this.queue = new PromisedBasedQueue();
     this.currentMessage = null;
