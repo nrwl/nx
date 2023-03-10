@@ -49,4 +49,25 @@ describe('checkProjectIsSafeToRemove', () => {
       );
     }).toThrow();
   });
+
+  it('should be able to remove e2e project in standalone', () => {
+    addProjectConfiguration(tree, 'e2e', {
+      root: 'e2e',
+    });
+    addProjectConfiguration(tree, 'root', {
+      root: '.',
+    });
+
+    expect(() => {
+      checkProjectIsSafeToRemove(
+        tree,
+        {
+          projectName: 'e2e',
+          forceRemove: false,
+          skipFormat: false,
+        },
+        readProjectConfiguration(tree, 'e2e')
+      );
+    }).not.toThrow();
+  });
 });
