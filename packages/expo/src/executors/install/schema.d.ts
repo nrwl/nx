@@ -2,6 +2,6 @@
 
 export interface ExpoInstallOptions {
   packages?: string | string[]; // either a string separated by comma or a string array
-  check: boolean; // default is true
-  fix: boolean; // default is false
+  check?: boolean; // default is false
+  fix?: boolean; // default is false
 }
