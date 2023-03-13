@@ -8,7 +8,7 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { NormalizedPackageJson } from './utils/package-json';
-import { defaultHashing } from '../hasher/hashing-impl';
+import { hashValues } from './utils/hashing';
 
 /**
  * NPM
@@ -166,13 +166,13 @@ function createNode(
 
   const node: ProjectGraphExternalNode = {
     type: 'npm',
-    name: `npm:${packageName}@${version}`,
+    name: version ? `npm:${packageName}@${version}` : `npm:${packageName}`,
     data: {
       version,
       packageName,
       hash:
         snapshot.integrity ||
-        defaultHashing.hashArray(
+        hashValues(
           snapshot.resolved ? [snapshot.resolved] : [packageName, version]
         ),
     },
