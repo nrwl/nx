@@ -219,14 +219,15 @@ jobs:
           GIT_COMMITTER_EMAIL: test@test.com
           GIT_COMMITTER_NAME: Test
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
-          NX_E2E_RUN_CYPRESS: ${{ 'true' }}
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
-          NX_VERBOSE_LOGGING: ${{ 'true' }}
-          NX_E2E_SKIP_BUILD_CLEANUP: ${{ 'true' }}
-          NX_CACHE_DIRECTORY: ${{ 'tmp' }}
+          NX_CACHE_DIRECTORY: 'tmp'
+          NX_E2E_SKIP_BUILD_CLEANUP: 'true'
+          NX_E2E_RUN_CYPRESS: 'true'
+          NX_VERBOSE_LOGGING: 'true'
+          NX_PERF_LOGGING: 'false'
 
       - name: Save matrix config in file
         if: ${{ always() }}
