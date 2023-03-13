@@ -223,7 +223,7 @@ jobs:
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
-          NX_CACHE_DIRECTORY: ${{ 'tmp' }}
+          NX_CACHE_DIRECTORY: 'tmp'
           NX_E2E_SKIP_BUILD_CLEANUP: 'true'
           NX_E2E_RUN_CYPRESS: 'true'
           NX_VERBOSE_LOGGING: 'true'
