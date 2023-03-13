@@ -198,44 +198,6 @@ describe('init', () => {
         );
       });
     });
-
-    describe('protractor', () => {
-      it('should add protractor dependencies', async () => {
-        // ACT
-        await init(tree, {
-          unitTestRunner: UnitTestRunner.None,
-          e2eTestRunner: E2eTestRunner.Protractor,
-          linter: Linter.EsLint,
-          skipFormat: false,
-        });
-
-        const { devDependencies } = readJson(tree, 'package.json');
-
-        // ASSERT
-        expect(devDependencies['protractor']).toBeDefined();
-        expect(devDependencies['jasmine-core']).toBeDefined();
-        expect(devDependencies['jasmine-spec-reporter']).toBeDefined();
-        expect(devDependencies['@types/jasmine']).toBeDefined();
-        expect(devDependencies['@types/jasminewd2']).toBeDefined();
-      });
-
-      it('should set defaults', async () => {
-        // ACT
-        await init(tree, {
-          unitTestRunner: UnitTestRunner.None,
-          e2eTestRunner: E2eTestRunner.Protractor,
-          linter: Linter.EsLint,
-          skipFormat: false,
-        });
-
-        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
-
-        // ASSERT
-        expect(generators['@nrwl/angular:application'].e2eTestRunner).toEqual(
-          'protractor'
-        );
-      });
-    });
   });
 
   describe('--linter', () => {
@@ -525,54 +487,6 @@ bar
           // ASSERT
           expect(generators['@nrwl/angular:application'].e2eTestRunner).toEqual(
             'cypress'
-          );
-        });
-      });
-
-      describe('protractor', () => {
-        it('should add protractor dependencies', async () => {
-          // ACT
-          await init(tree, {
-            unitTestRunner: UnitTestRunner.None,
-            e2eTestRunner: E2eTestRunner.Protractor,
-            linter: Linter.EsLint,
-            skipFormat: false,
-          });
-
-          const { devDependencies } = readJson(tree, 'package.json');
-
-          // ASSERT
-          expect(devDependencies['protractor']).toEqual(
-            backwardCompatibleVersions.angularV14.protractorVersion
-          );
-          expect(devDependencies['jasmine-core']).toEqual(
-            backwardCompatibleVersions.angularV14.jasmineCoreVersion
-          );
-          expect(devDependencies['jasmine-spec-reporter']).toEqual(
-            backwardCompatibleVersions.angularV14.jasmineSpecReporterVersion
-          );
-          expect(devDependencies['@types/jasmine']).toEqual(
-            backwardCompatibleVersions.angularV14.typesJasmineVersion
-          );
-          expect(devDependencies['@types/jasminewd2']).toEqual(
-            backwardCompatibleVersions.angularV14.typesJasminewd2Version
-          );
-        });
-
-        it('should set defaults', async () => {
-          // ACT
-          await init(tree, {
-            unitTestRunner: UnitTestRunner.None,
-            e2eTestRunner: E2eTestRunner.Protractor,
-            linter: Linter.EsLint,
-            skipFormat: false,
-          });
-
-          const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
-
-          // ASSERT
-          expect(generators['@nrwl/angular:application'].e2eTestRunner).toEqual(
-            'protractor'
           );
         });
       });

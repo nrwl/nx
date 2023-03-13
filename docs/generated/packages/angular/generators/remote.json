@@ -103,7 +103,7 @@
       },
       "e2eTestRunner": {
         "type": "string",
-        "enum": ["protractor", "cypress", "none"],
+        "enum": ["cypress", "none"],
         "description": "Test runner to use for end to end (E2E) tests.",
         "default": "cypress"
       },
