@@ -20,6 +20,7 @@ export interface Schema {
   port?: number;
   rootProject?: boolean;
   docker?: boolean;
+  isNest?: boolean;
 }
 
-export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'none';
+export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'nest' | 'none';

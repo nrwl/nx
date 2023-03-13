@@ -12,19 +12,21 @@ import {
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
+import * as enquirer from 'enquirer';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   autoprefixerVersion,
   postcssVersion,
   tailwindVersion,
 } from '../../utils/versions';
-import { applicationGenerator } from './application';
+import { generateTestApplication } from '../utils/testing';
 import type { Schema } from './schema';
-import * as enquirer from 'enquirer';
+
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
 jest.mock('enquirer');
+
 describe('app', () => {
   let appTree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
@@ -586,27 +588,6 @@ describe('app', () => {
       });
     });
 
-    describe('karma', () => {
-      it('should generate a karma config', async () => {
-        await generateApp(appTree, 'myApp', {
-          unitTestRunner: UnitTestRunner.Karma,
-        });
-
-        expect(appTree.exists('apps/my-app/tsconfig.spec.json')).toBeTruthy();
-        expect(appTree.exists('apps/my-app/karma.conf.js')).toBeTruthy();
-        expect(
-          readProjectConfiguration(appTree, 'my-app').targets.test.executor
-        ).toEqual('@angular-devkit/build-angular:karma');
-        const tsconfigAppJson = readJson(
-          appTree,
-          'apps/my-app/tsconfig.app.json'
-        );
-        expect(tsconfigAppJson.compilerOptions.outDir).toEqual(
-          '../../dist/out-tsc'
-        );
-      });
-    });
-
     describe('none', () => {
       it('should not generate test configuration', async () => {
         await generateApp(appTree, 'myApp', {
@@ -942,7 +923,7 @@ async function generateApp(
   name: string = 'myApp',
   options: Partial<Schema> = {}
 ) {
-  await applicationGenerator(appTree, {
+  await generateTestApplication(appTree, {
     name,
     skipFormat: false,
     e2eTestRunner: E2eTestRunner.Cypress,

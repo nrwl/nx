@@ -3,7 +3,7 @@ import {
   calculateProjectDependencies,
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from './buildable-libs-utils';
 
 export function checkDependencies(
   context: ExecutorContext,

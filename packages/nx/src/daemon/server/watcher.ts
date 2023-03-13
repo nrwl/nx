@@ -7,7 +7,7 @@
  */
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { AsyncSubscription, Event } from '@parcel/watcher';
-import { relative } from 'path';
+import { dirname, relative } from 'path';
 import { FULL_OS_SOCKET_PATH } from '../socket-utils';
 import { handleServerProcessTermination } from './shutdown-utils';
 import { Server } from 'net';
@@ -18,6 +18,7 @@ import {
   getIgnoreObject,
 } from '../../utils/ignore';
 import { platform } from 'os';
+import { serverProcessJsonPath } from '../cache';
 
 const ALWAYS_IGNORE = [...getAlwaysIgnore(workspaceRoot), FULL_OS_SOCKET_PATH];
 
@@ -105,6 +106,24 @@ export async function subscribeToWorkspaceChanges(
       }
     },
     watcherOptions(getIgnoredGlobs(workspaceRoot))
+  );
+}
+
+// TODO: When we update @parcel/watcher to a version that handles negation globs, then this can be folded into the workspace watcher
+export async function subscribeToServerProcessJsonChanges(
+  cb: () => void
+): Promise<AsyncSubscription> {
+  const watcher = await import('@parcel/watcher');
+
+  return await watcher.subscribe(
+    dirname(serverProcessJsonPath),
+    (err, events) => {
+      for (const event of events) {
+        if (event.path === serverProcessJsonPath) {
+          cb();
+        }
+      }
+    }
   );
 }
 

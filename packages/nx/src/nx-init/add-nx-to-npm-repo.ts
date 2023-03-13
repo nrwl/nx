@@ -76,7 +76,7 @@ export async function addNxToNpmRepo() {
     useCloud = false;
   }
 
-  createNxJsonFile(repoRoot, [], cacheableOperations, {}, packageJson.name);
+  createNxJsonFile(repoRoot, [], cacheableOperations, {});
 
   const pmc = getPackageManagerCommand();
 
@@ -93,7 +93,7 @@ export async function addNxToNpmRepo() {
   runInstall(repoRoot, pmc);
 
   if (useCloud) {
-    initCloud(repoRoot);
+    initCloud(repoRoot, 'nx-init-npm-repo');
   }
 
   printFinalMessage();

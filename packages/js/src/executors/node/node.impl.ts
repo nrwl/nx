@@ -5,7 +5,7 @@ import {
   parseTargetString,
   runExecutor,
 } from '@nrwl/devkit';
-import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { calculateProjectDependencies } from '../../utils/buildable-libs-utils';
 import { ChildProcess, fork } from 'child_process';
 import { randomUUID } from 'crypto';
 import { HashingImpl } from 'nx/src/hasher/hashing-impl';

@@ -39,10 +39,12 @@ function updateDependencies(tree: Tree, schema: Schema) {
 }
 
 export async function webInitGenerator(tree: Tree, schema: Schema) {
-  await jsInitGenerator(tree, {
+  const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(tree, {
     js: false,
   });
-  let tasks: GeneratorCallback[] = [];
+  tasks.push(jsInitTask);
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
     const jestTask = await jestInitGenerator(tree, {
@@ -60,7 +62,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
     const installTask = updateDependencies(tree, schema);
     tasks.push(installTask);
   }
-  addBabelInputs(tree);
+  await addBabelInputs(tree);
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

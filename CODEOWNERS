@@ -94,6 +94,7 @@
 /packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz @JamesHenry
 /packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
 /e2e/linter/** @meeroslav @FrozenPandaz @barbados-clemens
+.eslint* @meeroslav @FrozenPandaz @JamesHenry
 
 # Storybook
 /docs/generated/packages/storybook/** @mandarini @jaysoo @Coly010
@@ -121,17 +122,22 @@
 /packages/nx/src/adapter @AgentEnder @leosvelperez
 /packages/nx/src/native @vsavkin @FrozenPandaz @Cammisuli
 /packages/nx/src/lock-file @meeroslav @FrozenPandaz
+/packages/nx/src/nx-init/angular/** @Coly010 @leosvelperez @FrozenPandaz
+/e2e/nx-init/src/nx-init-angular.test.ts @Coly010 @leosvelperez
+/packages/nx/src/nx-init/react/** @jaysoo @xiongemi @mandarini
+/e2e/nx-init/src/nx-init-react.test.ts @jaysoo @xiongemi @mandarini @ndcunningham
+/e2e/nx-init/src/files/cra/** @jaysoo @xiongemi @mandarini @ndcunningham
 /e2e/nx*/** @FrozenPandaz @AgentEnder @vsavkin
 /packages/workspace/** @FrozenPandaz @AgentEnder @vsavkin
-/e2e/workspace/** @FrozenPandaz @AgentEnder @vsavkin
-/e2e/workspace-create/** @FrozenPandaz @vsavkin
+/e2e/workspace-create/** @FrozenPandaz @AgentEnder @vsavkin
+/e2e/workspace-create-npm/** @FrozenPandaz @vsavkin
 
 /packages/add-nx-to-monorepo/** @vsavkin @FrozenPandaz @AgentEnder
 /e2e/add-nx-to-monorepo/** @vsavkin @FrozenPandaz @AgentEnder
 
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
-/e2e/utils/** @meeroslav @barbados-clemens @vsavkin
+/e2e/utils/** @meeroslav @barbados-clemens @vsavkin @mandarini
 /community @AgentEnder @FrozenPandaz
 /CONTRIBUTING.md @FrozenPandaz @isaacplmann
 /CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
@@ -145,7 +151,8 @@
 
 # CI
 /.circleci/** @meeroslav @vsavkin @FrozenPandaz
-/.github/** @meeroslav @vsavkin @FrozenPandaz
+/.github/** @meeroslav @vsavkin @FrozenPandaz @JamesHenry
+/.husky/** @meeroslav @vsavkin @FrozenPandaz
 /packages/workspace/src/generators/ci-workflow/** @meeroslav @StalkAltan @vsavkin
 
 # Global Files

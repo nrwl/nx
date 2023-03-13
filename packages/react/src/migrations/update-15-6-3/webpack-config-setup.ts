@@ -5,7 +5,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
 import { basename } from 'path';
 import type { WebpackExecutorOptions } from '@nrwl/webpack';
 

@@ -2,10 +2,7 @@ import type { Tree } from '@nrwl/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
 import * as ts from 'typescript';
-import {
-  addGlobal,
-  replaceNodeValue,
-} from '@nrwl/workspace/src/utilities/ast-utils';
+import { addGlobal, replaceNodeValue } from '@nrwl/js';
 import { getDecoratorPropertyValueNode } from '../../../../utils/nx-devkit/ast-utils';
 import { nrwlHomeTemplate } from './nrwl-home-tpl';
 

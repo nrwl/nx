@@ -2,6 +2,7 @@ import { ExecutorContext, names } from '@nrwl/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 import { platform } from 'os';
+import { existsSync } from 'fs-extra';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import {
@@ -9,6 +10,9 @@ import {
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
 import { ExpoRunOptions } from './schema';
+import { prebuildAsync } from '../prebuild/prebuild.impl';
+import { podInstall } from '../../utils/pod-install-task';
+import { installAsync } from '../install/install.impl';
 
 export interface ExpoRunOutput {
   success: boolean;
@@ -38,6 +42,26 @@ export default async function* runExecutor(
     );
   }
 
+  if (!existsSync(join(context.root, projectRoot, options.platform))) {
+    await prebuildAsync(context.root, projectRoot, {
+      install: options.install,
+      platform: options.platform,
+      clean: options.clean,
+    });
+  }
+  if (options.install) {
+    await installAsync(context.root, {
+      fix: true,
+    });
+    if (options.platform === 'ios') {
+      await podInstall(join(context.root, projectRoot, 'ios'));
+    }
+  } else {
+    await installAsync(context.root, {
+      check: true,
+    });
+  }
+
   try {
     await runCliRun(context.root, projectRoot, options);
 
@@ -57,7 +81,7 @@ function runCliRun(
   return new Promise((resolve, reject) => {
     childProcess = fork(
       join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
-      ['run:' + options.platform, ...createRunOptions(options)],
+      ['run:' + options.platform, ...createRunOptions(options), '--no-install'], // pass in no-install to prevent node_modules install
       {
         cwd: projectRoot,
       }
@@ -80,7 +104,7 @@ function runCliRun(
   });
 }
 
-const nxOptions = ['sync', 'platform'];
+const nxOptions = ['sync', 'platform', 'install', 'clean'];
 const iOSOptions = ['xcodeConfiguration', 'schema'];
 const androidOptions = ['variant'];
 /*
@@ -102,7 +126,7 @@ function createRunOptions(options: ExpoRunOptions) {
       if (k === 'xcodeConfiguration') {
         acc.push('--configuration', v);
       } else if (typeof v === 'boolean') {
-        // no need to pass in the flag when it is true, pass the --no-<flag> when it is false
+        // no need to pass in the flag when it is true, pass the --no-<flag> when it is false. e.g. --no-build-cache, --no-bundler
         if (v === false) {
           acc.push(`--no-${names(k).fileName}`);
         }

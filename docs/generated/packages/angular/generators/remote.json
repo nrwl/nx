@@ -18,7 +18,8 @@
       "name": {
         "type": "string",
         "description": "The name to give to the remote Angular app.",
-        "$default": { "$source": "argv", "index": 0 }
+        "$default": { "$source": "argv", "index": 0 },
+        "pattern": "^[a-zA-Z].*$"
       },
       "host": {
         "type": "string",
@@ -96,7 +97,7 @@
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["karma", "jest", "none"],
+        "enum": ["jest", "none"],
         "description": "Test runner to use for unit tests.",
         "default": "jest"
       },

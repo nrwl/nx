@@ -13,7 +13,7 @@ import { getDevServerConfig } from './lib/get-dev-server-config';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 import { runWebpackDevServer } from '../../utils/run-webpack';
 import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 import { normalizeOptions } from '../webpack/lib/normalize-options';

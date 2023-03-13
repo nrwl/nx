@@ -18,6 +18,6 @@ export async function generateStorybookConfiguration(
     cypressDirectory: options.cypressDirectory,
     tsConfiguration: options.tsConfiguration,
     configureTestRunner: options.configureTestRunner,
-    storybook7betaConfiguration: options.storybook7betaConfiguration,
+    storybook7Configuration: options.storybook7Configuration,
   });
 }

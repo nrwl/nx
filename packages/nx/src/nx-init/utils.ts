@@ -1,12 +1,13 @@
-import { joinPathFragments } from '../utils/path';
-import { readJsonFile, writeJsonFile } from '../utils/fileutils';
-import * as enquirer from 'enquirer';
 import { execSync } from 'child_process';
+import * as enquirer from 'enquirer';
+import { join } from 'path';
+import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
 import {
   getPackageManagerCommand,
   PackageManagerCommands,
 } from '../utils/package-manager';
 import { runNxSync } from '../utils/child-process';
+import { joinPathFragments } from '../utils/path';
 
 export function askAboutNxCloud() {
   return enquirer
@@ -35,8 +36,7 @@ export function createNxJsonFile(
   repoRoot: string,
   targetDefaults: string[],
   cacheableOperations: string[],
-  scriptOutputs: { [name: string]: string },
-  defaultProject: string | undefined
+  scriptOutputs: { [name: string]: string }
 ) {
   const nxJsonPath = joinPathFragments(repoRoot, 'nx.json');
   let nxJson = {} as any;
@@ -121,9 +121,42 @@ export function runInstall(
   execSync(pmc.install, { stdio: [0, 1, 2], cwd: repoRoot });
 }
 
-export function initCloud(repoRoot: string) {
-  runNxSync(`g @nrwl/nx-cloud:init --installationSource=add-nx-to-monorepo`, {
-    stdio: [0, 1, 2],
-    cwd: repoRoot,
-  });
+export function initCloud(
+  repoRoot: string,
+  installationSource:
+    | 'nx-init-angular'
+    | 'nx-init-cra'
+    | 'nx-init-monorepo'
+    | 'nx-init-nest'
+    | 'nx-init-npm-repo'
+) {
+  runNxSync(
+    `g @nrwl/nx-cloud:init --installationSource=${installationSource}`,
+    {
+      stdio: [0, 1, 2],
+      cwd: repoRoot,
+    }
+  );
+}
+
+export function addVsCodeRecommendedExtensions(
+  repoRoot: string,
+  extensions: string[]
+): void {
+  const vsCodeExtensionsPath = join(repoRoot, '.vscode/extensions.json');
+
+  if (fileExists(vsCodeExtensionsPath)) {
+    const vsCodeExtensionsJson = readJsonFile(vsCodeExtensionsPath);
+
+    vsCodeExtensionsJson.recommendations ??= [];
+    extensions.forEach((extension) => {
+      if (!vsCodeExtensionsJson.recommendations.includes(extension)) {
+        vsCodeExtensionsJson.recommendations.push(extension);
+      }
+    });
+
+    writeJsonFile(vsCodeExtensionsPath, vsCodeExtensionsJson);
+  } else {
+    writeJsonFile(vsCodeExtensionsPath, { recommendations: extensions });
+  }
 }

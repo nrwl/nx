@@ -16,10 +16,12 @@ export function normalizeOptions(
     ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
     : names(options.name).fileName;
 
-  const appProjectRoot = joinPathFragments(
-    layoutDirectory ?? getWorkspaceLayout(tree).appsDir,
-    appDirectory
-  );
+  const appProjectRoot = options.rootProject
+    ? '.'
+    : joinPathFragments(
+        layoutDirectory ?? getWorkspaceLayout(tree).appsDir,
+        appDirectory
+      );
 
   return {
     ...options,
@@ -43,6 +45,8 @@ export function toNodeApplicationGeneratorOptions(
     tags: options.tags,
     unitTestRunner: options.unitTestRunner,
     setParserOptionsProject: options.setParserOptionsProject,
+    rootProject: options.rootProject,
     bundler: 'webpack', // Some features require webpack plugins such as TS transformers
+    isNest: true,
   };
 }

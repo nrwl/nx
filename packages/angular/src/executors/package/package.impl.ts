@@ -6,7 +6,7 @@ import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 import type { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
 import { from } from 'rxjs';

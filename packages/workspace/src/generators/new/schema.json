@@ -70,7 +70,7 @@
     "framework": {
       "description": "The framework which the application is using",
       "type": "string",
-      "enum": ["express", "koa", "fastify", "connect"]
+      "enum": ["express", "koa", "fastify", "nest", "none"]
     }
   },
   "additionalProperties": true

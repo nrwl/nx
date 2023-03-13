@@ -1,53 +1,36 @@
-/**
- * @license
- * Copyright Google LLC All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-
-import { chain, Rule, Tree } from '@angular-devkit/schematics';
+import type { Tree } from '@nrwl/devkit';
+import { formatFiles } from '@nrwl/devkit';
 import * as ts from 'typescript';
-import { readWorkspace } from '@schematics/angular/utility';
 import { Builders } from '@schematics/angular/utility/workspace-models';
-import { allTargetOptions } from '@schematics/angular/utility/workspace';
-import { formatFiles } from '@nrwl/workspace';
+import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+import { FileChangeRecorder } from '../../utils/file-change-recorder';
 
-export default function (): Rule {
-  return chain([
-    async (host) => {
-      for (const file of await findTestMainFiles(host)) {
-        updateTestFile(host, file);
-      }
-    },
-    formatFiles(),
-  ]);
+export default async function (tree: Tree) {
+  for (const file of findTestMainFiles(tree)) {
+    updateTestFile(tree, file);
+  }
+  await formatFiles(tree);
 }
 
-async function findTestMainFiles(host: Tree): Promise<Set<string>> {
+function findTestMainFiles(tree: Tree): Set<string> {
   const testFiles = new Set<string>();
-  const workspace = await readWorkspace(host);
 
   // find all test.ts files.
-  for (const project of workspace.projects.values()) {
-    for (const target of project.targets.values()) {
-      if (target.builder !== Builders.Karma) {
-        continue;
-      }
-
-      for (const [, options] of allTargetOptions(target)) {
-        if (typeof options.main === 'string' && host.exists(options.main)) {
-          testFiles.add(options.main);
-        }
+  forEachExecutorOptions<{ main: string | undefined }>(
+    tree,
+    Builders.Karma,
+    (options) => {
+      if (typeof options.main === 'string' && tree.exists(options.main)) {
+        testFiles.add(options.main);
       }
     }
-  }
+  );
 
   return testFiles;
 }
 
-function updateTestFile(host: Tree, file: string): void {
-  const content = host.readText(file);
+function updateTestFile(tree: Tree, file: string): void {
+  const content = tree.read(file, 'utf8');
   if (!content.includes('require.context')) {
     return;
   }
@@ -60,7 +43,7 @@ function updateTestFile(host: Tree, file: string): void {
   );
 
   const usedVariableNames = new Set<string>();
-  const recorder = host.beginUpdate(sourceFile.fileName);
+  const recorder = new FileChangeRecorder(tree, sourceFile.fileName);
 
   ts.forEachChild(sourceFile, (node) => {
     if (ts.isVariableStatement(node)) {
@@ -90,7 +73,10 @@ function updateTestFile(host: Tree, file: string): void {
       }
 
       // Delete node.
-      recorder.remove(node.getFullStart(), node.getFullWidth());
+      recorder.remove(
+        node.getFullStart(),
+        node.getFullStart() + node.getFullWidth()
+      );
     }
 
     if (
@@ -111,9 +97,12 @@ function updateTestFile(host: Tree, file: string): void {
     ) {
       // `context.keys().map(context);`
       // `context.keys().forEach(context);`
-      recorder.remove(node.getFullStart(), node.getFullWidth());
+      recorder.remove(
+        node.getFullStart(),
+        node.getFullStart() + node.getFullWidth()
+      );
     }
   });
 
-  host.commitUpdate(recorder);
+  recorder.applyChanges();
 }

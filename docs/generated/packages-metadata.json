@@ -11,12 +11,12 @@
     "source": "/packages/add-nx-to-monorepo/src"
   },
   {
-    "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, Karma, and Protractor. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
+    "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, and Protractor. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
     "documents": [
       {
         "id": "overview",
         "name": "Overview",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, Karma, and Protractor. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
+        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, and Protractor. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
         "file": "generated/packages/angular/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -27,7 +27,7 @@
       {
         "id": "angular-nx-version-matrix",
         "name": "Angular and Nx Version Matrix",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, Karma, and Protractor. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
+        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, and Protractor. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
         "file": "generated/packages/angular/documents/angular-nx-version-matrix",
         "itemList": [],
         "isExternal": false,
@@ -190,24 +190,6 @@
         "name": "init",
         "originalFilePath": "/packages/angular/src/generators/init/schema.json",
         "path": "angular/generators/init",
-        "type": "generator"
-      },
-      {
-        "description": "Adds Karma configuration to a workspace.",
-        "file": "generated/packages/angular/generators/karma.json",
-        "hidden": false,
-        "name": "karma",
-        "originalFilePath": "/packages/angular/src/generators/karma/schema.json",
-        "path": "angular/generators/karma",
-        "type": "generator"
-      },
-      {
-        "description": "Adds Karma configuration to a project.",
-        "file": "generated/packages/angular/generators/karma-project.json",
-        "hidden": false,
-        "name": "karma-project",
-        "originalFilePath": "/packages/angular/src/generators/karma-project/schema.json",
-        "path": "angular/generators/karma-project",
         "type": "generator"
       },
       {
@@ -685,7 +667,19 @@
   },
   {
     "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
-    "documents": [],
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
+        "file": "generated/packages/expo/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "expo/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/expo/expo-plugin"
+      }
+    ],
     "executors": [
       {
         "description": "Start an EAS update for your expo project",
@@ -2755,6 +2749,15 @@
         "name": "application",
         "originalFilePath": "/packages/web/src/generators/application/schema.json",
         "path": "web/generators/application",
+        "type": "generator"
+      },
+      {
+        "description": "Add a new static-serve target to a project.",
+        "file": "generated/packages/web/generators/static-config.json",
+        "hidden": false,
+        "name": "static-config",
+        "originalFilePath": "/packages/web/src/generators/static-serve/schema.json",
+        "path": "web/generators/static-config",
         "type": "generator"
       }
     ],

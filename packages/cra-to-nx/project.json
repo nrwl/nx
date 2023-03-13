@@ -1,7 +1,7 @@
 {
   "name": "cra-to-nx",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/cra-to-nx/src",
+  "sourceRoot": "packages/cra-to-nx",
   "projectType": "library",
   "targets": {
     "lint": {},
@@ -9,7 +9,7 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/cra-to-nx/src/index.ts",
+        "main": "packages/cra-to-nx/index.ts",
         "assets": [
           "packages/cra-to-nx/*.md",
           "packages/cra-to-nx/package.json",
@@ -27,7 +27,7 @@
       "options": {
         "commands": [
           {
-            "command": "node ./scripts/chmod build/packages/cra-to-nx/src/index.js"
+            "command": "node ./scripts/chmod build/packages/cra-to-nx/index.js"
           },
           {
             "command": "node ./scripts/copy-readme.js cra-to-nx"

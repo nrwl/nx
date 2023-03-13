@@ -11,5 +11,5 @@ export interface StorybookConfigurationOptions {
   skipFormat?: boolean;
   ignorePaths?: string[];
   configureTestRunner?: boolean;
-  storybook7betaConfiguration?: boolean;
+  storybook7Configuration?: boolean;
 }

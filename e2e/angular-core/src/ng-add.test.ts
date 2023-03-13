@@ -527,48 +527,4 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       `Successfully ran target build for project ${app1}`
     );
   });
-
-  it('should support --preserve-angular-cli-layout', () => {
-    // add another app and a library
-    runCommand(`ng g @schematics/angular:application app2`);
-    runCommand(`ng g @schematics/angular:library lib1`);
-
-    runNgAdd('@nrwl/angular', '--preserve-angular-cli-layout');
-
-    // check project configs
-    const projectJson = readJson('project.json');
-    expect(projectJson.sourceRoot).toEqual('src');
-    const app2ProjectJson = readJson('projects/app2/project.json');
-    expect(app2ProjectJson.sourceRoot).toEqual('projects/app2/src');
-    const lib1ProjectJson = readJson('projects/lib1/project.json');
-    expect(lib1ProjectJson.sourceRoot).toEqual('projects/lib1/src');
-
-    // check building an app
-    let output = runCLI(`build ${project} --outputHashing none`);
-    expect(output).toContain(
-      `> nx run ${project}:build:production --outputHashing none`
-    );
-    expect(output).toContain(
-      `Successfully ran target build for project ${project}`
-    );
-    checkFilesExist(`dist/${project}/main.js`);
-
-    output = runCLI(`build ${project} --outputHashing none`);
-    expect(output).toContain(
-      `> nx run ${project}:build:production --outputHashing none  [local cache]`
-    );
-    expect(output).toContain(
-      `Successfully ran target build for project ${project}`
-    );
-
-    // check building lib1
-    output = runCLI('build lib1');
-    expect(output).toContain('> nx run lib1:build:production');
-    expect(output).toContain('Successfully ran target build for project lib1');
-    checkFilesExist('dist/lib1/package.json');
-
-    output = runCLI('build lib1');
-    expect(output).toContain('> nx run lib1:build:production  [local cache]');
-    expect(output).toContain('Successfully ran target build for project lib1');
-  });
 });

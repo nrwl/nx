@@ -148,6 +148,43 @@ describe('ProjectGraphBuilder', () => {
     });
   });
 
+  it(`should record deps for all files when duplicated`, () => {
+    builder.addStaticDependency('source', 'target', 'source/index.ts');
+    builder.addStaticDependency('source', 'target', 'source/second.ts');
+
+    const graph = builder.getUpdatedProjectGraph();
+    expect(graph.dependencies).toEqual({
+      source: [
+        {
+          source: 'source',
+          target: 'target',
+          type: 'static',
+        },
+      ],
+      target: [],
+    });
+    expect(graph.nodes.source.data.files[0]).toMatchObject({
+      file: 'source/index.ts',
+      dependencies: [
+        {
+          source: 'source',
+          target: 'target',
+          type: 'static',
+        },
+      ],
+    });
+    expect(graph.nodes.source.data.files[1]).toMatchObject({
+      file: 'source/second.ts',
+      dependencies: [
+        {
+          source: 'source',
+          target: 'target',
+          type: 'static',
+        },
+      ],
+    });
+  });
+
   it(`remove dependency`, () => {
     builder.addNode({
       name: 'target2',

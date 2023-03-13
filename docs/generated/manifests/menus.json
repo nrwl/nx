@@ -1147,9 +1147,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Encapsulated Nx and the Nx Wrapper",
-            "path": "/more-concepts/encapsulated-nx-and-the-wrapper",
-            "id": "encapsulated-nx-and-the-wrapper",
+            "name": "Nx and the Nx Wrapper",
+            "path": "/more-concepts/nx-and-the-wrapper",
+            "id": "nx-and-the-wrapper",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1310,9 +1310,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Encapsulated Nx and the Nx Wrapper",
-        "path": "/more-concepts/encapsulated-nx-and-the-wrapper",
-        "id": "encapsulated-nx-and-the-wrapper",
+        "name": "Nx and the Nx Wrapper",
+        "path": "/more-concepts/nx-and-the-wrapper",
+        "id": "nx-and-the-wrapper",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3708,22 +3708,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "karma",
-                "path": "/packages/angular/generators/karma",
-                "name": "karma",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "karma-project",
-                "path": "/packages/angular/generators/karma-project",
-                "name": "karma-project",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "library",
                 "path": "/packages/angular/generators/library",
                 "name": "library",
@@ -4216,6 +4200,23 @@
         "path": "/packages/expo",
         "name": "expo",
         "children": [
+          {
+            "id": "documents",
+            "path": "/packages/expo/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/packages/expo/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
           {
             "id": "executors",
             "path": "/packages/expo/executors",
@@ -6282,6 +6283,14 @@
                 "id": "application",
                 "path": "/packages/web/generators/application",
                 "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "static-config",
+                "path": "/packages/web/generators/static-config",
+                "name": "static-config",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

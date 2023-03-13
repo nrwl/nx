@@ -38,14 +38,27 @@ export default function Packages({
         'id'
       ),
     },
-    packages: useMemo(
-      () =>
-        sortCorePackagesFirst<IntrinsicPackageMetadata>(
-          filterMigrationPackages<IntrinsicPackageMetadata>(packages),
-          'name'
-        ),
-      [packages]
-    ),
+    packages: useMemo(() => {
+      const storybookIdx = packages.findIndex((p) => p.name === 'storybook');
+      const packagesWithRspack = [
+        ...packages.slice(0, storybookIdx),
+        {
+          description:
+            'The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.',
+          githubRoot: 'https://github.com/nrwl/nx/blob/master',
+          name: 'rspack',
+          packageName: '@nrwl/rspack',
+          path: '/packages/rspack',
+          root: '/packages/rspack',
+          source: '/packages/rspack/src',
+        },
+        ...packages.slice(storybookIdx),
+      ];
+      return sortCorePackagesFirst<IntrinsicPackageMetadata>(
+        filterMigrationPackages<IntrinsicPackageMetadata>(packagesWithRspack),
+        'name'
+      );
+    }, [packages]),
   };
 
   return (
@@ -96,7 +109,7 @@ export default function Packages({
                   <section id="packages-section" className="py-12">
                     <nav
                       aria-labelledby="package-index-navigation"
-                      className="relative mb-24 grid grid-cols-2 gap-4 md:grid-cols-4"
+                      className="relative mb-24 grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5"
                     >
                       {vm.packages.map((pkg) => (
                         <Link

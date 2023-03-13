@@ -14,4 +14,4 @@
 - [Grouping Libraries](/more-concepts/grouping-libraries)
 - [Buildable and Publishable Libraries](/more-concepts/buildable-and-publishable-libraries)
 - [How the Project Graph is Built](/more-concepts/how-project-graph-is-built)
-- [Encapsulated Nx and the Nx Wrapper](/more-concepts/encapsulated-nx-and-the-wrapper)
+- [Nx and the Nx Wrapper](/more-concepts/nx-and-the-wrapper)

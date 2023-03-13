@@ -4,9 +4,11 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { componentGenerator } from '../component/component';
-import { libraryGenerator } from '../library/library';
+import { generateTestLibrary } from '../utils/testing';
 import { componentTestGenerator } from './component-test';
+
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
+
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;
   let mockedAssertMinimumCypressVersion: jest.Mock<
@@ -20,7 +22,7 @@ describe('Angular Cypress Component Test Generator', () => {
   });
 
   it('should handle component w/o inputs', async () => {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
@@ -41,7 +43,7 @@ describe('Angular Cypress Component Test Generator', () => {
   });
 
   it('should generate a component test', async () => {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
@@ -93,7 +95,7 @@ export class MyLibComponent implements OnInit {
   });
 
   it('should work with standalone components', async () => {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
@@ -144,7 +146,7 @@ export class MyLibComponent implements OnInit {
   });
 
   it('should not overwrite an existing component test', async () => {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
@@ -169,7 +171,7 @@ export class MyLibComponent implements OnInit {
   });
 
   it('should be idempotent', async () => {
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,

@@ -2,7 +2,7 @@ import {
   calculateProjectDependencies,
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 import { ProjectGraph, readCachedProjectGraph } from '@nrwl/devkit';
 import { join } from 'path';
 

@@ -1,6 +1,6 @@
 import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import { addDependenciesToPackageJson, readJson } from '@nrwl/devkit';
-import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
 import { gte } from 'semver';
 import { getPkgVersionForAngularMajorVersion } from '../../../utils/version-utils';
 import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions';

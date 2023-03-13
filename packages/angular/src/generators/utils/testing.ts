@@ -1,13 +1,55 @@
 import type { Tree } from '@nrwl/devkit';
+import { updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { UnitTestRunner } from '../../utils/test-runners';
-import libraryGenerator from '../library/library';
+import { angularDevkitVersion } from '../../utils/versions';
+import { applicationGenerator } from '../application/application';
+import type { Schema as ApplicationOptions } from '../application/schema';
+import { host } from '../host/host';
+import type { Schema as HostOptions } from '../host/schema';
+import { libraryGenerator } from '../library/library';
+import type { Schema as LibraryOptions } from '../library/schema';
+import { remote } from '../remote/remote';
+import type { Schema as RemoteOptions } from '../remote/schema';
+
+export async function generateTestApplication(
+  tree: Tree,
+  options: ApplicationOptions
+): Promise<void> {
+  addAngularPluginPeerDeps(tree);
+  await applicationGenerator(tree, options);
+}
+
+export async function generateTestHostApplication(
+  tree: Tree,
+  options: HostOptions
+): Promise<void> {
+  addAngularPluginPeerDeps(tree);
+  await host(tree, options);
+}
+
+export async function generateTestRemoteApplication(
+  tree: Tree,
+  options: RemoteOptions
+): Promise<void> {
+  addAngularPluginPeerDeps(tree);
+  await remote(tree, options);
+}
+
+export async function generateTestLibrary(
+  tree: Tree,
+  options: LibraryOptions
+): Promise<void> {
+  addAngularPluginPeerDeps(tree);
+  await libraryGenerator(tree, options);
+}
 
 export async function createStorybookTestWorkspaceForLib(
   libName: string
 ): Promise<Tree> {
   let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  addAngularPluginPeerDeps(tree);
 
   const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const moduleGenerator = wrapAngularDevkitSchematic(
@@ -240,4 +282,16 @@ export class StaticMemberDeclarationsModule {
   });
 
   return tree;
+}
+
+function addAngularPluginPeerDeps(tree: Tree): void {
+  updateJson(tree, 'package.json', (json) => ({
+    ...json,
+    devDependencies: {
+      ...json.devDependencies,
+      '@angular-devkit/core': angularDevkitVersion,
+      '@angular-devkit/schematics': angularDevkitVersion,
+      '@schematics/angular': angularDevkitVersion,
+    },
+  }));
 }

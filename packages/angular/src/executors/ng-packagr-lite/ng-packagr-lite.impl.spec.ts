@@ -1,11 +1,11 @@
 jest.mock('@nrwl/devkit');
-jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
+jest.mock('@nrwl/js/src/utils/buildable-libs-utils');
 jest.mock('ng-packagr');
 jest.mock('ng-packagr/lib/utils/ng-compiler-cli');
 jest.mock('./ng-packagr-adjustments/ng-package/options.di');
 
 import type { ExecutorContext } from '@nrwl/devkit';
-import * as buildableLibsUtils from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import * as buildableLibsUtils from '@nrwl/js/src/utils/buildable-libs-utils';
 import * as ngPackagr from 'ng-packagr';
 import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import { BehaviorSubject } from 'rxjs';

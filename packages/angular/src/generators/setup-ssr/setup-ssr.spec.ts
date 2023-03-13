@@ -8,16 +8,15 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { angularVersion, ngUniversalVersion } from '../../utils/versions';
-
-import applicationGenerator from '../application/application';
-import setupSsr from './setup-ssr';
+import { generateTestApplication } from '../utils/testing';
+import { setupSsr } from './setup-ssr';
 
 describe('setupSSR', () => {
   it('should create the files correctly for ssr', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'app1',
     });
 
@@ -155,7 +154,7 @@ describe('setupSSR', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'app1',
     });
 
@@ -183,7 +182,7 @@ describe('setupSSR', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'app1',
     });
 

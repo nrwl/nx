@@ -4,7 +4,7 @@ import {
   readCachedProjectGraph,
 } from '@nrwl/devkit';
 import { WebpackNxBuildCoordinationPlugin } from '@nrwl/webpack/src/plugins/webpack-nx-build-coordination-plugin';
-import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { DependentBuildableProjectNode } from '@nrwl/js/src/utils/buildable-libs-utils';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { existsSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';

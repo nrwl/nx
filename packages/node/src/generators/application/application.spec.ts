@@ -49,6 +49,7 @@ describe('app', () => {
           build: {
             executor: '@nrwl/webpack:webpack',
             outputs: ['{options.outputPath}'],
+            defaultConfiguration: 'production',
             options: {
               target: 'node',
               compiler: 'tsc',
@@ -60,19 +61,20 @@ describe('app', () => {
               assets: ['my-node-app/src/assets'],
             },
             configurations: {
-              production: {
-                optimization: true,
-                extractLicenses: true,
-                inspect: false,
-              },
+              development: {},
+              production: {},
             },
           },
           serve: {
             executor: '@nrwl/js:node',
+            defaultConfiguration: 'development',
             options: {
               buildTarget: 'my-node-app:build',
             },
             configurations: {
+              development: {
+                buildTarget: 'my-node-app:build:development',
+              },
               production: {
                 buildTarget: 'my-node-app:build:production',
               },
@@ -464,6 +466,7 @@ describe('app', () => {
     ['fastify' as const, true],
     ['express' as const, false],
     ['koa' as const, false],
+    ['nest' as const, false],
   ])('--unitTestRunner', (framework, checkSpecFile) => {
     it('should generate test target and spec file by default', async () => {
       await applicationGenerator(tree, {

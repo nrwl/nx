@@ -2,6 +2,7 @@ import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { dirname } from 'path';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import {
   AppConfig,
   createApp,
@@ -10,10 +11,9 @@ import {
   getLibConfig,
 } from '../../utils/nx-devkit/testing';
 import { ngrxVersion } from '../../utils/versions';
+import { generateTestApplication } from '../utils/testing';
 import { ngrxGenerator } from './ngrx';
-import applicationGenerator from '../application/application';
 import type { NgRxGeneratorOptions } from './schema';
-import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 
 describe('ngrx', () => {
   let appConfig: AppConfig;
@@ -496,7 +496,7 @@ describe('ngrx', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'my-app',
         standalone: true,
         routing: true,
@@ -640,7 +640,7 @@ describe('ngrx', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await applicationGenerator(tree, { name: 'myapp' });
+      await generateTestApplication(tree, { name: 'myapp' });
       devkit.updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {

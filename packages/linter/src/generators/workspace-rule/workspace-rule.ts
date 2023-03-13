@@ -8,7 +8,7 @@ import {
   logger,
   Tree,
 } from '@nrwl/devkit';
-import { camelize } from '@nrwl/workspace/src/utils/strings';
+import { camelize } from '@nrwl/devkit/src/utils/string-utils';
 import { join } from 'path';
 import * as ts from 'typescript';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';

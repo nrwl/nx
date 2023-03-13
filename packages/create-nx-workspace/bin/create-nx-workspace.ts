@@ -731,11 +731,15 @@ async function determineFramework(
     },
     {
       name: 'fastify',
-      message: 'fastify [https://www.fastify.io/]',
+      message: 'Fastify [https://www.fastify.io/]',
     },
     {
       name: 'koa',
-      message: 'koa     [https://koajs.com/]',
+      message: 'Koa     [https://koajs.com/]',
+    },
+    {
+      name: 'nest',
+      message: 'NestJs  [https://nestjs.com/]',
     },
   ];
 

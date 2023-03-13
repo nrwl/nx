@@ -1,7 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
+import { insertImport } from '@nrwl/js';
 import { addImportToModule } from '../../../utils/nx-devkit/ast-utils';
 import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 

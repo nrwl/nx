@@ -10,11 +10,12 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { Linter, lintInitGenerator } from '@nrwl/linter';
-import { DEFAULT_NRWL_PRETTIER_CONFIG } from '@nrwl/workspace/src/generators/new/generate-workspace-files';
-import { deduceDefaultBase } from '@nrwl/workspace/src/utilities/default-base';
-import { resolveUserExistingPrettierConfig } from '@nrwl/workspace/src/utilities/prettier';
-import { getRootTsConfigPathInTree } from '@nrwl/js';
-import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
+import {
+  getRootTsConfigPathInTree,
+  initGenerator as jsInitGenerator,
+} from '@nrwl/js';
+import { deduceDefaultBase } from 'nx/src/utils/default-base';
+import { prettierVersion } from '@nrwl/js/src/utils/versions';
 import { toNewFormat } from 'nx/src/adapter/angular-json';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';
@@ -262,7 +263,8 @@ export function cleanupEsLintPackages(tree: Tree): void {
 
 export async function createWorkspaceFiles(tree: Tree): Promise<void> {
   updateVsCodeRecommendedExtensions(tree);
-  await updatePrettierConfig(tree);
+
+  await jsInitGenerator(tree, {});
 
   generateFiles(tree, joinPathFragments(__dirname, '../files/root'), '.', {
     tmpl: '',
@@ -343,22 +345,6 @@ export function updateVsCodeRecommendedExtensions(tree: Tree): void {
     writeJson(tree, '.vscode/extensions.json', {
       recommendations,
     });
-  }
-}
-
-export async function updatePrettierConfig(tree: Tree): Promise<void> {
-  const existingPrettierConfig = await resolveUserExistingPrettierConfig();
-  if (!existingPrettierConfig) {
-    writeJson(tree, '.prettierrc', DEFAULT_NRWL_PRETTIER_CONFIG);
-  }
-
-  if (!tree.exists('.prettierignore')) {
-    generateFiles(
-      tree,
-      joinPathFragments(__dirname, '../files/prettier'),
-      '.',
-      { tmpl: '', dot: '.' }
-    );
   }
 }
 

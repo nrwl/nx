@@ -51,7 +51,7 @@
     "15.8.2-update-nx-wrapper": {
       "cli": "nx",
       "version": "15.8.2-beta.0",
-      "description": "Updates the nx wrapper in encapsulated repos.",
+      "description": "Updates the nx wrapper.",
       "implementation": "./src/migrations/update-15-8-2/update-nxw"
     }
   }

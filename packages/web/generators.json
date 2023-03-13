@@ -15,6 +15,11 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create an web application."
+    },
+    "static-config": {
+      "factory": "./src/generators/static-serve/static-serve-configuration",
+      "schema": "./src/generators/static-serve/schema.json",
+      "description": "Add a new static-serve target to a project."
     }
   },
   "schematics": {
@@ -30,6 +35,11 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create an web application."
+    },
+    "static-config": {
+      "factory": "./src/generators/static-serve/static-serve-configuration#compat",
+      "schema": "./src/generators/static-serve/schema.json",
+      "description": "Add a new static-serve target to a project."
     }
   }
 }

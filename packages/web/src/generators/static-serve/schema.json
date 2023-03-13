@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxWebStaticServe",
+  "cli": "nx",
+  "title": "Static Serve Configuration",
+  "description": "Add a new serve target to serve a build apps static files. This allows for faster serving of the static build files by reusing the case. Helpful when reserving the app over and over again like in e2e tests.",
+  "type": "object",
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "Name of the build target to serve"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "Path to the directory of the built files. This is only needed if buildTarget doesn't specify an outputPath executor option."
+    },
+    "targetName": {
+      "type": "string",
+      "description": "Name of the serve target to add. Defaults to 'serve-static'.",
+      "default": "serve-static"
+    }
+  },
+  "required": ["buildTarget"]
+}

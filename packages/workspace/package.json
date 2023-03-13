@@ -61,14 +61,6 @@
       "nx": "*"
     }
   },
-  "peerDependencies": {
-    "prettier": "^2.6.2"
-  },
-  "peerDependenciesMeta": {
-    "prettier": {
-      "optional": true
-    }
-  },
   "dependencies": {
     "@nrwl/devkit": "file:../devkit",
     "@parcel/watcher": "2.0.4",
@@ -85,7 +77,6 @@
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
     "rxjs": "^6.5.4",
-    "semver": "7.3.4",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
     "yargs": "^17.6.2",

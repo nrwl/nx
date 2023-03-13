@@ -12,6 +12,6 @@ export interface StorybookConfigureSchema {
   cypressDirectory?: string;
   standaloneConfig?: boolean;
   configureTestRunner?: boolean;
-  storybook7betaConfiguration?: boolean; // TODO(katerina): Change when Storybook 7
+  storybook7Configuration?: boolean; // TODO(katerina): Change when Storybook 7
   storybook7UiFramework?: UiFramework7; // TODO(katerina): Change when Storybook 7
 }

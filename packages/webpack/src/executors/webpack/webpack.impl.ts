@@ -14,7 +14,7 @@ import { resolve } from 'path';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 
 import { getWebpackConfig } from './lib/get-webpack-config';
 import { runWebpack } from './lib/run-webpack';

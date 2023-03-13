@@ -8,7 +8,7 @@ import {
 } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 import { ArrayLiteralExpression } from 'typescript';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
+import { insertImport } from '@nrwl/js';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
 import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 

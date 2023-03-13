@@ -27,7 +27,7 @@ describe('nx init (for NestCLI)', () => {
         cwd: e2eCwd,
         encoding: 'utf-8',
         env: process.env,
-        stdio: ['pipe', 'pipe', 'pipe'],
+        stdio: 'pipe',
       }
     );
 
@@ -39,7 +39,7 @@ describe('nx init (for NestCLI)', () => {
         cwd: projectRoot,
         encoding: 'utf-8',
         env: process.env,
-        stdio: ['pipe', 'pipe', 'pipe'],
+        stdio: 'pipe',
       }
     );
 

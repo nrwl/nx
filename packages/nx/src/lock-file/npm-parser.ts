@@ -413,7 +413,7 @@ function mapSnapshots(
   const visitedNodes = new Map<ProjectGraphExternalNode, Set<string>>();
   const visitedPaths = new Set<string>();
 
-  const remappedPackages: MappedPackage[] = [];
+  const remappedPackages: Map<string, MappedPackage> = new Map();
 
   // add first level children
   Object.values(graph.externalNodes).forEach((node) => {
@@ -423,7 +423,7 @@ function mapSnapshots(
         node.data.packageName,
         node.data.version
       );
-      remappedPackages.push(mappedPackage);
+      remappedPackages.set(mappedPackage.path, mappedPackage);
       visitedNodes.set(node, new Set([mappedPackage.path]));
       visitedPaths.add(mappedPackage.path);
     } else {
@@ -431,6 +431,7 @@ function mapSnapshots(
     }
   });
 
+  let remappedPackagesArray: MappedPackage[];
   if (nestedNodes.size) {
     const invertedGraph = reverse(graph);
     nestMappedPackages(
@@ -441,9 +442,13 @@ function mapSnapshots(
       visitedPaths,
       rootLockFile
     );
+    // initially we naively map package paths to topParent/../parent/child
+    // but some of those should be nested higher up the tree
+    remappedPackagesArray = elevateNestedPaths(remappedPackages);
+  } else {
+    remappedPackagesArray = Array.from(remappedPackages.values());
   }
-
-  return remappedPackages.sort((a, b) => a.path.localeCompare(b.path));
+  return remappedPackagesArray.sort((a, b) => a.path.localeCompare(b.path));
 }
 
 function mapPackage(
@@ -452,8 +457,8 @@ function mapPackage(
   version: string,
   parentPath = ''
 ): MappedPackage {
-  const path = parentPath + `node_modules/${packageName}`;
   const lockfileVersion = rootLockFile.lockfileVersion;
+
   let valueV3, valueV1;
   if (lockfileVersion < 3) {
     valueV1 = findMatchingPackageV1(
@@ -471,7 +476,7 @@ function mapPackage(
   }
 
   return {
-    path,
+    path: parentPath + `node_modules/${packageName}`,
     name: packageName,
     valueV1,
     valueV3,
@@ -480,7 +485,7 @@ function mapPackage(
 
 function nestMappedPackages(
   invertedGraph: ProjectGraph,
-  result: MappedPackage[],
+  result: Map<string, MappedPackage>,
   nestedNodes: Set<ProjectGraphExternalNode>,
   visitedNodes: Map<ProjectGraphExternalNode, Set<string>>,
   visitedPaths: Set<string>,
@@ -499,15 +504,13 @@ function nestMappedPackages(
 
       if (visitedNodes.has(targetNode)) {
         visitedNodes.get(targetNode).forEach((path) => {
-          const parentPath =
-            findParentPath(path, node.data.packageName, visitedPaths) + '/';
           const mappedPackage = mapPackage(
             rootLockFile,
             node.data.packageName,
             node.data.version,
-            parentPath
+            path + '/'
           );
-          result.push(mappedPackage);
+          result.set(mappedPackage.path, mappedPackage);
           if (visitedNodes.has(node)) {
             visitedNodes.get(node).add(mappedPackage.path);
           } else {
@@ -524,7 +527,12 @@ function nestMappedPackages(
   });
 
   if (initialSize === nestedNodes.size) {
-    throw Error('Loop detected while pruning. Please report this issue.');
+    throw new Error(
+      [
+        'Following packages could not be mapped to the NPM lockfile:',
+        ...Array.from(nestedNodes).map((n) => `- ${n.name}`),
+      ].join('\n')
+    );
   } else {
     nestMappedPackages(
       invertedGraph,
@@ -537,21 +545,59 @@ function nestMappedPackages(
   }
 }
 
-function findParentPath(
-  path: string,
-  packageName: string,
-  visitedPaths: Set<string>
-): string {
-  const segments = path.split('/node_modules/');
-  let parentPath = path;
-  while (
-    segments.length > 1 &&
-    !visitedPaths.has(`${parentPath}/node_modules/${packageName}`)
-  ) {
-    segments.pop();
-    parentPath = segments.join('/node_modules/');
-  }
-  return parentPath;
+// sort paths by number of segments and then alphabetically
+function sortMappedPackagesPaths(mappedPackages: Map<string, MappedPackage>) {
+  return Array.from(mappedPackages.keys()).sort((a, b) => {
+    const aLength = a.split('/node_modules/').length;
+    const bLength = b.split('/node_modules/').length;
+    if (aLength > bLength) {
+      return 1;
+    }
+    if (aLength < bLength) {
+      return -1;
+    }
+    return a.localeCompare(b);
+  });
+}
+
+function elevateNestedPaths(
+  remappedPackages: Map<string, MappedPackage>
+): MappedPackage[] {
+  const result = new Map<string, MappedPackage>();
+  const sortedPaths = sortMappedPackagesPaths(remappedPackages);
+
+  sortedPaths.forEach((path) => {
+    const segments = path.split('/node_modules/');
+
+    // we keep hoisted packages intact
+    if (segments.length === 1) {
+      result.set(path, remappedPackages.get(path));
+      return;
+    }
+
+    const packageName = segments.pop();
+    const getNewPath = (segs) =>
+      `${segs.join('/node_modules/')}/node_modules/${packageName}`;
+
+    // check if grandparent has the same package
+    while (
+      segments.length > 1 &&
+      !result.has(getNewPath(segments.slice(0, -1)))
+    ) {
+      segments.pop();
+    }
+    const newPath = getNewPath(segments);
+    if (path !== newPath) {
+      result.set(newPath, {
+        ...remappedPackages.get(path),
+        path: newPath,
+      });
+    } else {
+      result.set(path, remappedPackages.get(path));
+    }
+  });
+
+  return Array.from(result.values());
 }
 
 function findMatchingPackageV3(

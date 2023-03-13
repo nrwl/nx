@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       debug_enabled:
+        type: boolean
         description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
         required: false
         default: false
@@ -14,85 +15,139 @@ permissions: {}
 jobs:
   e2e:
     permissions:
-      contents: read  #  to fetch code (actions/checkout)
+      contents: read
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os:
           - ubuntu-latest
           - macos-latest
-        include:
-          - os: ubuntu-latest
-            os-name: ubuntu
-          - os: macos-latest
-            os-name: osx
         node_version:
           - '16'
         package_manager:
           - npm
           - yarn
           - pnpm
-        packages:
+        project:
+          - e2e-add-nx-to-monorepo
           - e2e-angular-core
           - e2e-angular-extensions
-          - e2e-nx-run,e2e-nx-misc,e2e-nx-plugin
-          - e2e-make-angular-cli-faster
-          - e2e-jest
-          - e2e-linter
+          - e2e-cra-to-nx
           - e2e-cypress
-          - e2e-react
+          - e2e-detox
+          - e2e-esbuild
+          - e2e-expo
+          - e2e-jest
+          - e2e-js
+          - e2e-lerna-smoke-tests
+          - e2e-linter
+          - e2e-make-angular-cli-faster
           - e2e-next
           - e2e-node
-          - e2e-web
-          - e2e-storybook,e2e-storybook-angular
-          - e2e-cra-to-nx
-          - e2e-workspace-create
+          - e2e-nx-init
+          - e2e-nx-misc
+          - e2e-nx-plugin
+          - e2e-nx-run
+          - e2e-react
           - e2e-react-native
-          # - e2e-detox
-          - e2e-add-nx-to-monorepo
+          - e2e-web
+          - e2e-rollup
+          - e2e-storybook
+          - e2e-storybook-angular
+          - e2e-vite
+          - e2e-webpack
+          - e2e-workspace-create
+          - e2e-e2e-workspace-create-npm
           - e2e-graph-client
-        exclude:
-          # exclude react-native and detox from ubuntu
+        include:
+          # os short names
           - os: ubuntu-latest
-            packages: e2e-react-native
-          # - os: ubuntu-latest
-          #   packages: e2e-detox
-          # run just npm on macos
+            os_name: 'Linux'
+          - os: macos-latest
+            os_name: 'MacOS'
+          # codeowner groups
+          - project: e2e-add-nx-to-monorepo
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-angular-core
+            codeowners: 'S04SS457V38'
+          - project: e2e-angular-extensions
+            codeowners: 'S04SS457V38'
+          - project: e2e-cra-to-nx
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-cypress
+            codeowners: 'S04T16BTJJY'
+          - project: e2e-detox
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-esbuild
+            codeowners: 'S04SJ6HHP0X'
+          - project: e2e-expo
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-jest
+            codeowners: 'S04T16BTJJY'
+          - project: e2e-js
+            codeowners: 'S04SJ6HHP0X'
+          - project: e2e-lerna-smoke-tests
+            codeowners: 'S04TNCVEETS'
+          - project: e2e-linter
+            codeowners: 'S04SYJGKSCT'
+          - project: e2e-make-angular-cli-faster
+            codeowners: 'S04SS457V38'
+          - project: e2e-next
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-node
+            codeowners: 'S04SJ6HHP0X'
+          - project: e2e-nx-init
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-nx-misc
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-nx-plugin
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-nx-run
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-react
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-react-native
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-web
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-rollup
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-storybook
+            codeowners: 'S04SVQ8H0G5'
+          - project: e2e-storybook-angular
+            codeowners: 'S04SVQ8H0G5'
+          - project: e2e-vite
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-webpack
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-workspace-create
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-e2e-workspace-create-npm
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-graph-client
+            codeowners: 'S04T16QL360'
+        exclude:
+          # exclude react-native tests from ubuntu
+          - os: ubuntu-latest
+            project: e2e-react-native
+          - os: ubuntu-latest
+            project: e2e-detox
+          - os: ubuntu-latest
+            project: e2e-expo
+          # run just npm v16 on macos
           - os: macos-latest
             package_manager: yarn
           - os: macos-latest
             package_manager: pnpm
-          # exclude everything but react-native and detox from macos
-          - os: macos-latest
-            packages: e2e-angular-core,e2e-angular-extensions
-          - os: macos-latest
-            packages: e2e-nx-run,e2e-nx-misc,e2e-nx-plugin,e2e-jest,e2e-linter
-          - os: macos-latest
-            packages: e2e-cypress
-          - os: macos-latest
-            packages: e2e-react
-          - os: macos-latest
-            packages: e2e-next
-          - os: macos-latest
-            packages: e2e-node
-          - os: macos-latest
-            packages: e2e-web
-          - os: macos-latest
-            packages: e2e-storybook,e2e-storybook-angular
-          - os: macos-latest
-            packages: e2e-workspace-create
-          - os: macos-latest
-            packages: e2e-add-nx-to-monorepo
-          - os: macos-latest
-            packages: e2e-graph-client
-          - os: macos-latest
-            packages: e2e-make-angular-cli-faster
       fail-fast: false
 
-    name: ${{ matrix.os-name }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
+    name: ${{ matrix.os_name }}/${{ matrix.package_manager }} ${{ join(matrix.project) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Prepare dir for output
+        run: mkdir -p outputs
 
       - name: Install PNPM
         if: ${{ matrix.package_manager == 'pnpm' }}
@@ -156,7 +211,8 @@ jobs:
           xcrun simctl shutdown all && xcrun simctl erase all
 
       - name: Run e2e tests
-        run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}" --parallel=1
+        id: e2e-run
+        run: yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1
         env:
           GIT_AUTHOR_EMAIL: test@test.com
           GIT_AUTHOR_NAME: Test
@@ -174,42 +230,108 @@ jobs:
           NX_PERF_LOGGING: 'false'
           NX_NATIVE_HASHER: 'true'
 
-      - name: Setup tmate session
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
-        uses: mxschmitt/action-tmate@v3.8
+      - name: Save matrix config in file
+        if: ${{ always() }}
+        id: save-matrix
+        run: |
+          matrix=$((
+            echo '${{ toJSON(matrix) }}'
+          ) | jq -c '. + { "status": "${{ steps.e2e-run.outcome}}" }')
+          echo "$matrix" > matrix
+          path=outputs/${{ matrix.os_name}}-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
+          echo "path=$path" >> $GITHUB_OUTPUT
+          echo "$matrix" > $path
 
-  report-success:
-    if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name == 'workflow_dispatch' }} # only once it's fixed on manual dispatch
-    needs: e2e
+      - name: Upload matrix config
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: outputs
+          path: ${{ steps.save-matrix.outputs.path }}
+
+      - name: Setup tmate session
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
+        uses: mxschmitt/action-tmate@v3.8
+        timeout-minutes: 15
+
+  process-result:
+    if: ${{ always() }}
     runs-on: ubuntu-latest
-    name: Report success
+    needs: e2e
+    outputs:
+      message: ${{ steps.process-json.outputs.SLACK_MESSAGE }}
+      codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
+    steps:
+      - name: Load outputs
+        uses: actions/download-artifact@v3
+        with:
+          name: outputs
+          path: outputs
+
+      - name: Join and stringify matrix configs
+        id: combine-json
+        run: |
+          combined=$((jq -s . outputs/*) | jq tostring)
+          echo "combined=$combined" >> $GITHUB_OUTPUT
+
+      - name: Make slack outputs
+        id: process-json
+        uses: actions/github-script@v6
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          script: |
+            const combined = JSON.parse(${{ steps.combine-json.outputs.combined }});
+            const failedProjects = combined.filter(c => c.status === 'failure');
+
+            // codeowners
+            const codeowners = new Set();
+            failedProjects.forEach(c => {
+              codeowners.add(c.codeowners);
+            });
+            core.setOutput('CODEOWNERS', Array.from(codeowners).join(','));
+
+            // message
+            let result = `
+              \`\`\`
+               | Failed project                 | Node | PM   | OS   |
+               |--------------------------------|------|------|------|`;
+            failedProjects.forEach(matrix => {
+              result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.padEnd(3)} | ${matrix.package_manager.padEnd(4)} | ${matrix.os_name} |`
+            });
+            result += `\`\`\``;
+            const message = result.split('\n').map(l => l.trim()).join('\n');
+            core.setOutput('SLACK_MESSAGE', message);
+
+  report-failure:
+    if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: process-result
+    runs-on: ubuntu-latest
+    name: Report failure
     steps:
       - name: Send notification
-        uses: ravsamhq/notify-slack-action@v1
+        uses: ravsamhq/notify-slack-action@v2
         with:
-          status: ${{ needs.e2e.result }}
-          message_format: '{emoji} *{workflow}* {status_message} (last commit <{commit_url}|{commit_sha}>)'
-          notification_title: '{workflow} has {status_message}'
-          footer: '<{run_url}|View Run>'
-          mention_users: 'U01UELKLYF2,U9NPA6C90'
-          mention_users_when: 'failure,warnings'
+          status: 'failure'
+          message_format: '{emoji} Workflow has {status_message} ${{ needs.process-result.outputs.message }}'
+          notification_title: '{workflow}'
+          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
+          mention_groups: ${{ needs.process-result.outputs.codeowners }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
-  report:
-    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+  report-success:
+    if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     needs: e2e
     runs-on: ubuntu-latest
     name: Report status
     steps:
       - name: Send notification
-        uses: ravsamhq/notify-slack-action@v1
+        uses: ravsamhq/notify-slack-action@v2
         with:
           status: ${{ needs.e2e.result }}
-          message_format: '{emoji} *{workflow}* {status_message} (last commit <{commit_url}|{commit_sha}>)'
-          notification_title: '{workflow} has {status_message}'
-          footer: '<{run_url}|View Run>'
-          mention_users: 'U01UELKLYF2,U9NPA6C90'
-          mention_users_when: 'failure,warnings'
+          message_format: '{emoji} Workflow has {status_message}'
+          notification_title: '{workflow}'
+          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}

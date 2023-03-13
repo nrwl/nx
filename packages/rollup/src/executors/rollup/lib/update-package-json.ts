@@ -4,7 +4,7 @@ import { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import {
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 import { writeJsonFile } from 'nx/src/utils/fileutils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { NormalizedRollupExecutorOptions } from './normalize';

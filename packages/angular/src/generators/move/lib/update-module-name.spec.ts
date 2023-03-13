@@ -3,7 +3,7 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { moveGenerator } from '@nrwl/workspace/generators';
 import { UnitTestRunner } from '../../../utils/test-runners';
-import libraryGenerator from '../../library/library';
+import { generateTestLibrary } from '../../utils/testing';
 import { Schema } from '../schema';
 import { updateModuleName } from './update-module-name';
 
@@ -16,7 +16,7 @@ describe('updateModuleName Rule', () => {
 
   it('should handle nesting resulting in the same project name', async () => {
     const updatedModulePath = '/libs/my/first/src/lib/my-first.module.ts';
-    await libraryGenerator(tree, {
+    await generateTestLibrary(tree, {
       name: 'my-first',
       simpleName: true,
     });
@@ -49,7 +49,7 @@ describe('updateModuleName Rule', () => {
     };
 
     beforeEach(async () => {
-      await libraryGenerator(tree, {
+      await generateTestLibrary(tree, {
         name: 'my-first',
         buildable: false,
         linter: Linter.EsLint,
@@ -58,7 +58,7 @@ describe('updateModuleName Rule', () => {
         skipFormat: false,
         unitTestRunner: UnitTestRunner.Jest,
       });
-      await libraryGenerator(tree, {
+      await generateTestLibrary(tree, {
         name: 'my-second',
         buildable: false,
         linter: Linter.EsLint,
@@ -164,7 +164,7 @@ describe('updateModuleName Rule', () => {
 
     beforeEach(async () => {
       // fake a mid-move tree:
-      await libraryGenerator(tree, {
+      await generateTestLibrary(tree, {
         name: 'my-destination',
         buildable: false,
         linter: Linter.EsLint,
@@ -209,7 +209,7 @@ describe('updateModuleName Rule', () => {
       tree.delete(modulePath);
       tree.delete(moduleSpecPath);
 
-      await libraryGenerator(tree, {
+      await generateTestLibrary(tree, {
         name: 'my-importer',
         buildable: false,
         linter: Linter.EsLint,

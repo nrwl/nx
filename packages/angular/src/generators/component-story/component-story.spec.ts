@@ -2,8 +2,8 @@ import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '../library/library';
 import * as storybookUtils from '../utils/storybook-ast/storybook-inputs';
+import { generateTestLibrary } from '../utils/testing';
 import { componentStoryGenerator } from './component-story';
 
 describe('componentStory generator', () => {
@@ -19,7 +19,7 @@ describe('componentStory generator', () => {
       'component'
     );
 
-    await libraryGenerator(tree, { name: libName });
+    await generateTestLibrary(tree, { name: libName });
     await componentGenerator(tree, {
       name: 'test-button',
       project: libName,

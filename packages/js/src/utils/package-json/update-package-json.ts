@@ -1,4 +1,4 @@
-import { createLockFile } from 'nx/src/lock-file/lock-file';
+import { createLockFile, getLockFileName } from 'nx/src/lock-file/lock-file';
 import { createPackageJson } from 'nx/src/utils/create-package-json';
 import {
   ExecutorContext,
@@ -10,9 +10,8 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nrwl/devkit';
-import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { basename, dirname, join, parse, relative } from 'path';
-import { getLockFileName } from 'nx/src/lock-file/lock-file';
 import { writeFileSync } from 'fs-extra';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { fileExists } from 'nx/src/utils/fileutils';

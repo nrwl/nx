@@ -98,26 +98,31 @@ export function DocViewer({
                 target="_blank"
                 rel="noreferrer"
                 title="Report an issue on GitHub"
-                className="relative inline-flex items-center rounded-l-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
+                className={`relative inline-flex items-center rounded-l-md ${
+                  // If there is no file path for this page then don't show edit button.
+                  document.filePath ? '' : 'rounded-r-md '
+                }border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800`}
               >
                 Report an issue
               </a>
-              <a
-                aria-hidden="true"
-                href={[
-                  'https://github.com/nrwl/nx/blob/master',
-                  document.filePath.replace(
-                    'nx-dev/nx-dev/public/documentation',
-                    'docs'
-                  ),
-                ].join('/')}
-                target="_blank"
-                rel="noreferrer"
-                title="Edit this page on GitHub"
-                className="relative -ml-px inline-flex items-center rounded-r-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
-              >
-                Edit this page
-              </a>
+              {document.filePath ? (
+                <a
+                  aria-hidden="true"
+                  href={[
+                    'https://github.com/nrwl/nx/blob/master',
+                    document.filePath.replace(
+                      'nx-dev/nx-dev/public/documentation',
+                      'docs'
+                    ),
+                  ].join('/')}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Edit this page on GitHub"
+                  className="relative -ml-px inline-flex items-center rounded-r-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
+                >
+                  Edit this page
+                </a>
+              ) : null}
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { JestExecutorOptions } from '../../executors/jest/schema';

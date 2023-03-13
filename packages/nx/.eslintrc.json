@@ -26,6 +26,30 @@
           }
         ]
       }
+    },
+    {
+      "files": ["nxw.ts"],
+      "rules": {
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["*", "!fs"],
+                "message": "The Nx wrapper is ran before packages are installed. It should only import node builtins.",
+                "allowTypeImports": true
+              }
+            ]
+          }
+        ],
+        "no-restricted-modules": [
+          "error",
+          {
+            "patterns": ["*", "!fs", "!path", "!child_process", "!node:*"]
+          }
+        ],
+        "no-restricted-imports": "off"
+      }
     }
   ]
 }

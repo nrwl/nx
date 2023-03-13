@@ -2,7 +2,7 @@ import type { ExecutorContext } from '@nrwl/devkit';
 import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 import { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
 import { createLibraryExecutor } from '../package/package.impl';

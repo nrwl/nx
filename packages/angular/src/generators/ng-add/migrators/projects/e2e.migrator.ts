@@ -21,8 +21,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import { getRootTsConfigPathInTree } from '@nrwl/js';
+import { getRootTsConfigPathInTree, insertImport } from '@nrwl/js';
 import { basename, relative } from 'path';
 import type {
   Node,
@@ -43,7 +42,7 @@ import type {
   Target,
   ValidationResult,
 } from '../../utilities';
-import { FileChangeRecorder } from '../../utilities';
+import { FileChangeRecorder } from '../../../../utils/file-change-recorder';
 import { ProjectMigrator } from './project.migrator';
 import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 

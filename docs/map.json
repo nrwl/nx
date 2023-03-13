@@ -486,9 +486,9 @@
               "file": "shared/concepts/how-project-graph-is-built"
             },
             {
-              "name": "Encapsulated Nx and the Nx Wrapper",
-              "id": "encapsulated-nx-and-the-wrapper",
-              "file": "shared/guides/encapsulated-nx-and-the-wrapper"
+              "name": "Nx and the Nx Wrapper",
+              "id": "nx-and-the-wrapper",
+              "file": "shared/guides/nx-and-the-wrapper"
             }
           ]
         },
@@ -1936,6 +1936,19 @@
               "name": "Overview",
               "path": "/packages/react-native",
               "file": "shared/packages/react-native/react-native-plugin"
+            }
+          ]
+        },
+        {
+          "name": "expo",
+          "id": "expo",
+          "description": "Expo package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "name": "Overview",
+              "path": "/packages/expo",
+              "file": "shared/packages/expo/expo-plugin"
             }
           ]
         }

@@ -10,7 +10,7 @@ import {
 import * as chalk from 'chalk';
 import { existsSync } from 'fs';
 import { join, resolve } from 'path';
-import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { calculateProjectDependencies } from '@nrwl/js/src/utils/buildable-libs-utils';
 
 import { prepareConfig } from '../../utils/config';
 import {
