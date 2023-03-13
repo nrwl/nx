@@ -49,6 +49,11 @@
         },
         "default": []
       },
+      "emptyOutDir": {
+        "description": "When set to false, outputPath will not be emptied during the build process.",
+        "type": "boolean",
+        "default": true
+      },
       "sourcemap": {
         "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
         "oneOf": [{ "type": "boolean" }, { "type": "string" }]
