@@ -1,42 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`new --preset angular-monorepo should generate necessary npm dependencies 1`] = `
-Object {
-  "dependencies": Object {
-    "@nrwl/angular": "0.0.1",
-  },
-  "devDependencies": Object {
-    "@nrwl/workspace": "0.0.1",
-    "nx": "0.0.1",
-  },
-  "license": "MIT",
-  "name": "my-workspace",
-  "private": true,
-  "scripts": Object {},
-  "version": "0.0.0",
-}
-`;
-
-exports[`new --preset empty should generate necessary npm dependencies 1`] = `
+exports[`new --preset should generate necessary npm dependencies for empty preset 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@nrwl/workspace": "0.0.1",
-    "nx": "0.0.1",
-  },
-  "license": "MIT",
-  "name": "my-workspace",
-  "private": true,
-  "scripts": Object {},
-  "version": "0.0.0",
-}
-`;
-
-exports[`new --preset react-monorepo should generate necessary npm dependencies 1`] = `
-Object {
-  "dependencies": Object {},
-  "devDependencies": Object {
-    "@nrwl/react": "0.0.1",
     "@nrwl/workspace": "0.0.1",
     "nx": "0.0.1",
   },

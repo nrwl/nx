@@ -1,8 +1,14 @@
-import { createTree } from '@nrwl/devkit/testing';
 import { readJson, Tree, writeJson } from '@nrwl/devkit';
-import { newGenerator, NormalizedSchema } from './new';
+import { createTree } from '@nrwl/devkit/testing';
 import { Linter } from '../../utils/lint';
+import {
+  angularCliVersion,
+  nxVersion,
+  prettierVersion,
+  typescriptVersion,
+} from '../../utils/versions';
 import { Preset } from '../utils/presets';
+import { newGenerator, NormalizedSchema } from './new';
 
 const defaultOptions: Omit<NormalizedSchema, 'name' | 'directory' | 'appName'> =
   {
@@ -31,22 +37,62 @@ describe('new', () => {
   });
 
   describe('--preset', () => {
-    describe.each([
-      [Preset.Empty],
-      [Preset.AngularMonorepo],
-      [Preset.ReactMonorepo],
-    ])('%s', (preset) => {
-      it('should generate necessary npm dependencies', async () => {
-        await newGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-workspace',
-          directory: 'my-workspace',
-          npmScope: 'npmScope',
-          appName: 'app',
-          preset,
-        });
+    it('should generate necessary npm dependencies for empty preset', async () => {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        npmScope: 'npmScope',
+        appName: 'app',
+        preset: Preset.Empty,
+      });
 
-        expect(readJson(tree, 'my-workspace/package.json')).toMatchSnapshot();
+      expect(readJson(tree, 'my-workspace/package.json')).toMatchSnapshot();
+    });
+
+    it('should generate necessary npm dependencies for react preset', async () => {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        npmScope: 'npmScope',
+        appName: 'app',
+        preset: Preset.ReactMonorepo,
+        bundler: 'vite',
+      });
+
+      const { devDependencies } = readJson(tree, 'my-workspace/package.json');
+      expect(devDependencies).toStrictEqual({
+        '@nrwl/react': nxVersion,
+        '@nrwl/cypress': nxVersion,
+        '@nrwl/vite': nxVersion,
+        '@nrwl/workspace': nxVersion,
+        nx: nxVersion,
+      });
+    });
+
+    it('should generate necessary npm dependencies for angular preset', async () => {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        npmScope: 'npmScope',
+        appName: 'app',
+        preset: Preset.AngularMonorepo,
+      });
+
+      const { devDependencies, dependencies } = readJson(
+        tree,
+        'my-workspace/package.json'
+      );
+      expect(dependencies).toStrictEqual({ '@nrwl/angular': nxVersion });
+      expect(devDependencies).toStrictEqual({
+        '@angular-devkit/core': angularCliVersion,
+        '@angular-devkit/schematics': angularCliVersion,
+        '@nrwl/workspace': nxVersion,
+        '@schematics/angular': angularCliVersion,
+        nx: nxVersion,
+        typescript: typescriptVersion,
       });
     });
   });
