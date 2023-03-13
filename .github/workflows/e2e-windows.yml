@@ -153,12 +153,12 @@ jobs:
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
+          NX_CACHE_DIRECTORY: 'tmp'
           NX_E2E_SKIP_BUILD_CLEANUP: 'true'
           NX_E2E_RUN_CYPRESS: 'true'
           NX_VERBOSE_LOGGING: 'true'
           NX_PERF_LOGGING: 'false'
           NX_NATIVE_HASHER: 'true'
-          NX_CACHE_DIRECTORY: ${{ 'tmp' }}
 
       - name: Save matrix config in file
         if: ${{ always() }}
