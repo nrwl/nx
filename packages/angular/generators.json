@@ -195,6 +195,12 @@
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
       "description": "Converts a project from TSLint to ESLint."
     },
+    "directive": {
+      "factory": "./src/generators/directive/directive",
+      "schema": "./src/generators/directive/schema.json",
+      "aliases": ["d"],
+      "description": "Generate an Angular directive."
+    },
     "init": {
       "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",

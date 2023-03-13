@@ -3700,6 +3700,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "directive",
+                "path": "/packages/angular/generators/directive",
+                "name": "directive",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "init",
                 "path": "/packages/angular/generators/init",
                 "name": "init",

@@ -4,6 +4,7 @@ export * from './src/generators/component-cypress-spec/component-cypress-spec';
 export * from './src/generators/component-story/component-story';
 export * from './src/generators/component/component';
 export * from './src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint';
+export * from './src/generators/directive/directive';
 export * from './src/generators/host/host';
 export * from './src/generators/init/init';
 export * from './src/generators/library-secondary-entry-point/library-secondary-entry-point';
