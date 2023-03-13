@@ -77,12 +77,26 @@ nx start <app-name>
 
 You can compile your app locally with `run-ios` and `run-android` commands:
 
+{% tabs %}
+{%tab label="iOS"%}
+
+Compile for iOS:
+
 ```shell
-# Build for iOS
 nx run-ios <app-name>
-# Build for Android
+```
+
+{% /tab %}
+{%tab label="Android"%}
+
+Compile for Android:
+
+```shell
 nx run-android <app-name>
 ```
+
+{% /tab %}
+{% /tabs %}
 
 To run these commands, you need to have your development environment setup. To run an iOS app,it can only be run on a Mac, and Xcode must be installed. Similarly, to run an Android app, it requires Android Studio and Java to be installed and configured on your computer. Setup steps: https://reactnative.dev/docs/environment-setup.
 
@@ -92,15 +106,46 @@ You can build your JavaScript bundle using Metro bundler by running:
 
 ```shell
 nx export <app-name>
-# Compile for all platforms
+```
+
+{% tabs %}
+{%tab label="All Platforms"%}
+
+Compile for all platforms:
+
+```shell
 nx export <app-name> --platform=all
-# Compile for iOS
+```
+
+{% /tab %}
+{%tab label="iOS"%}
+
+Compile for iOS:
+
+```shell
 nx export <app-name> --platform=ios
-# Compile for Android
+```
+
+{% /tab %}
+{%tab label="Android"%}
+
+Compile for Android:
+
+```shell
 nx export <app-name> --platform=android
-# Compile for Web
+```
+
+{% /tab %}
+{%tab label="Web"%}
+
+Compile for Web:
+
+```shell
 nx export <app-name> --platform=web
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ### Generate Native Code
 
@@ -108,13 +153,37 @@ To generate native code, run:
 
 ```shell
 nx prebuild <app-name>
-# Generate for all platforms
+```
+
+{% tabs %}
+{%tab label="All Platforms"%}
+
+Generate for all platforms:
+
+```shell
 nx prebuild <app-name> --platform=all
-# Generate for iOS
+```
+
+{% /tab %}
+{%tab label="iOS"%}
+
+Generate for iOS:
+
+```shell
 nx prebuild <app-name> --platform=ios
-# Generate for Android
+```
+
+{% /tab %}
+{%tab label="Android"%}
+
+Generate for Android:
+
+```shell
 nx prebuild <app-name> --platform=android
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ### Install Compatible NPM Packages
 
@@ -135,12 +204,26 @@ nx install <app-name> --packages=<packpage-name-1>,<packpage-name-2>,<packpage-n
 
 To check and fix package versions, run:
 
+{% tabs %}
+{%tab label="check"%}
+
+Check which packages needed to be updated:
+
 ```shell
-# check which packages needed to be updated:
 nx install <app-name> --check
-# automatically update invalid packages versions:
+```
+
+{% /tab %}
+{%tab label="fix"%}
+
+Automatically update invalid packages versions:
+
+```shell
 nx install <app-name> --fix
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ### Run an EAS Build
 

@@ -5,22 +5,22 @@
   "$id": "NxExpoEasBuildList",
   "cli": "nx",
   "title": "Expo EAS Build List executor",
-  "description": "List all EAS builds for your Expo project.",
+  "description": "List all Expo Application Services (EAS) builds for your Expo project.",
   "type": "object",
   "properties": {
     "platform": {
       "enum": ["ios", "android", "all"],
       "alias": "p",
-      "description": "The platform to build the app, example values: ios, android, all.",
+      "description": "The platform to build the app.",
       "x-priority": "important"
     },
     "json": {
       "type": "boolean",
       "description": "Enable JSON output, non-JSON messages will be printed to stderr"
     },
-    "nonInteractive": {
+    "interactive": {
       "type": "boolean",
-      "description": "Run the command in non-interactive mode."
+      "description": "Run the command in interactive mode."
     },
     "status": {
       "enum": [
@@ -74,5 +74,6 @@
       "description": "Limit of numbers to list EAS builds"
     }
   },
-  "required": []
+  "required": [],
+  "examplesFile": "../../../docs/build-list-examples.md"
 }
