@@ -1,4 +1,9 @@
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  GeneratorsJson,
+  readJson,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
 import { pluginGenerator } from '../plugin/plugin';
@@ -158,6 +163,27 @@ describe('NxPlugin Generator Generator', () => {
           )
         ).toBeFalsy();
       });
+    });
+  });
+
+  describe('preset generator', () => {
+    it('should default to standalone layout: true', async () => {
+      await generatorGenerator(tree, {
+        project: projectName,
+        name: 'preset',
+        unitTestRunner: 'none',
+      });
+
+      const generatorJson = readJson<GeneratorsJson>(
+        tree,
+        'libs/my-plugin/generators.json'
+      );
+
+      console.log(generatorJson.generators['preset']);
+
+      expect(
+        generatorJson.generators['preset']['x-use-standalone-layout']
+      ).toEqual(true);
     });
   });
 });

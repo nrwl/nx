@@ -4,13 +4,15 @@ import { newGenerator, NormalizedSchema } from './new';
 import { Linter } from '../../utils/lint';
 import { Preset } from '../utils/presets';
 
-const defaultOptions: Omit<NormalizedSchema, 'name' | 'directory' | 'appName'> =
-  {
-    preset: Preset.Apps,
-    skipInstall: false,
-    linter: Linter.EsLint,
-    defaultBase: 'main',
-  };
+const defaultOptions: Omit<
+  NormalizedSchema,
+  'name' | 'directory' | 'appName' | 'isCustomPreset'
+> = {
+  preset: Preset.Apps,
+  skipInstall: false,
+  linter: Linter.EsLint,
+  defaultBase: 'main',
+};
 
 describe('new', () => {
   let tree: Tree;
