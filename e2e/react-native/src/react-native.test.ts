@@ -13,19 +13,22 @@ import { join } from 'path';
 
 describe('react native', () => {
   let proj: string;
+  let appName = uniq('my-app');
+  let libName = uniq('lib');
 
-  beforeAll(() => (proj = newProject()));
-  afterAll(() => cleanupProject());
-
-  it('should test, create ios and android JS bundles', async () => {
-    const appName = uniq('my-app');
-    const libName = uniq('lib');
-    const componentName = uniq('component');
-
+  beforeAll(() => {
+    proj = newProject();
     runCLI(
       `generate @nrwl/react-native:application ${appName} --install=false --no-interactive`
     );
-    runCLI(`generate @nrwl/react-native:library ${libName} --no-interactive`);
+    runCLI(
+      `generate @nrwl/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
+    );
+  });
+  afterAll(() => cleanupProject());
+
+  it('should test, create ios and android JS bundles', async () => {
+    const componentName = uniq('component');
     runCLI(
       `generate @nrwl/react-native:component ${componentName} --project=${libName} --export --no-interactive`
     );
@@ -68,10 +71,6 @@ describe('react native', () => {
   }, 1000000);
 
   it('should create storybook with application', async () => {
-    const appName = uniq('my-app');
-    runCLI(
-      `generate @nrwl/react-native:application ${appName} --install=false --no-interactive`
-    );
     runCLI(
       `generate @nrwl/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
     );
@@ -97,11 +96,6 @@ describe('react native', () => {
   });
 
   it('should upgrade native for application', async () => {
-    const appName = uniq('my-app');
-    runCLI(
-      `generate @nrwl/react-native:application ${appName} --install=false --no-interactive`
-    );
-
     expect(() =>
       runCLI(
         `generate @nrwl/react-native:upgrade-native ${appName} --install=false`
@@ -110,12 +104,8 @@ describe('react native', () => {
   });
 
   it('should build publishable library', async () => {
-    const libName = uniq('lib');
     const componentName = uniq('component');
 
-    runCLI(
-      `generate @nrwl/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
-    );
     runCLI(
       `generate @nrwl/react-native:component ${componentName} --project=${libName} --export`
     );
@@ -127,10 +117,6 @@ describe('react native', () => {
   });
 
   it('sync npm dependencies for autolink', async () => {
-    const appName = uniq('my-app');
-    runCLI(
-      `generate @nrwl/react-native:application ${appName} --install=false --no-interactive`
-    );
     // Add npm package with native modules
     updateFile(join('package.json'), (content) => {
       const json = JSON.parse(content);

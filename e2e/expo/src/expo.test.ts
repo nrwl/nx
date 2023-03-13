@@ -17,17 +17,21 @@ import { join } from 'path';
 
 describe('expo', () => {
   let proj: string;
+  let appName = uniq('my-app');
+  let libName = uniq('lib');
 
-  beforeEach(() => (proj = newProject()));
-  afterEach(() => cleanupProject());
+  beforeAll(() => {
+    proj = newProject();
+    runCLI(`generate @nrwl/expo:application ${appName} --no-interactive`);
+    runCLI(
+      `generate @nrwl/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
+    );
+  });
+  afterAll(() => cleanupProject());
 
-  it('should test, lint, export, export-web, prebuild, install and start', async () => {
-    const appName = uniq('my-app');
-    const libName = uniq('lib');
+  it('should test and lint', async () => {
     const componentName = uniq('component');
 
-    runCLI(`generate @nrwl/expo:application ${appName} --no-interactive`);
-    runCLI(`generate @nrwl/expo:library ${libName} --no-interactive`);
     runCLI(
       `generate @nrwl/expo:component ${componentName} --project=${libName} --export --no-interactive`
     );
@@ -46,7 +50,9 @@ describe('expo', () => {
 
     const libLintResults = await runCLIAsync(`lint ${libName}`);
     expect(libLintResults.combinedOutput).toContain('All files pass linting.');
+  });
 
+  it('should export', async () => {
     const exportResults = await runCLIAsync(
       `export ${appName} --no-interactive`
     );
@@ -54,13 +60,17 @@ describe('expo', () => {
       'Export was successful. Your exported files can be found'
     );
     checkFilesExist(`dist/apps/${appName}/metadata.json`);
+  });
 
+  it('should export-web', async () => {
     expect(() => {
       runCLI(`export-web ${appName}`);
       checkFilesExist(`apps/${appName}/dist/index.html`);
       checkFilesExist(`apps/${appName}/dist/metadata.json`);
     }).not.toThrow();
+  });
 
+  it('should prebuild', async () => {
     // run prebuild command with git check disable
     // set a mock package name for ios and android in expo's app.json
     const workspace = readResolvedConfiguration();
@@ -81,7 +91,9 @@ describe('expo', () => {
       `prebuild ${appName} --no-interactive --install=false`
     );
     expect(prebuildResult.combinedOutput).toContain('Config synced');
+  });
 
+  it('should install', async () => {
     // run install command
     const installResults = await runCLIAsync(
       `install ${appName} --no-interactive --check`
@@ -89,7 +101,9 @@ describe('expo', () => {
     expect(installResults.combinedOutput).toContain(
       'Dependencies are up to date'
     );
+  });
 
+  it('should start', async () => {
     // run start command
     const startProcess = await runCommandUntil(
       `start ${appName} -- --port=8081`,
@@ -105,15 +119,11 @@ describe('expo', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
-  }, 1_000_000);
+  });
 
   it('should build publishable library', async () => {
-    const libName = uniq('lib');
     const componentName = uniq('component');
 
-    runCLI(
-      `generate @nrwl/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
-    );
     runCLI(
       `generate @nrwl/expo:component ${componentName} --project=${libName} --export`
     );
