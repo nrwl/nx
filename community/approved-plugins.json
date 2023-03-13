@@ -408,5 +408,10 @@
     "name": "@nxazure/func",
     "description": "Nx plugin to add Azure Functions support to Nx Workspace.",
     "url": "https://github.com/AlexPshul/nxazure/tree/master/packages/func"
+  },
+  {
+    "name": "@rbnx/webdriverio",
+    "description": "A Nx plugin that adds the WebdriverIO testing framework to a NX workspace.",
+    "url": "https://github.com/Roozenboom/rbnx/tree/main/packages/webdriverio"
   }
 ]
