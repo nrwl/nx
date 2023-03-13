@@ -27,7 +27,7 @@ npx create-nx-workspace@latest --preset=react-monorepo --bundler=webpack
 
 ## Generate a new project using Webpack
 
-You can generate a [React](/packages/react) application or library or a [Web](/packages/web) application that uses Webpack in an existing Nx workspace. The [`@nrwl/react:app`](/packages/react/generators/application), [`@nrwl/react:lib`](/packages/react/generators/library) and [`@nrwl/web:app`](/packages/web/generators/application) generators accept the `bundler` option, where you can pass `webpack`. This will generate a new application configured to use Webpack, and it will also install all the necessary dependencies, including the `@nrwl/webpack` plugin.
+You can generate a [React](/packages/react) application or library or a [Web](/packages/web) application that uses Webpack in an existing Nx workspace. The [`@nrwl/react:app`](/packages/react/generators/application), [`@nrwl/node:app`](/packages/node/generators/application) and [`@nrwl/web:app`](/packages/web/generators/application) generators accept the `bundler` option, where you can pass `webpack`. This will generate a new application configured to use Webpack, and it will also install all the necessary dependencies, including the `@nrwl/webpack` plugin.
 
 To generate a React application using Webpack, run the following:
 
@@ -35,10 +35,10 @@ To generate a React application using Webpack, run the following:
 nx g @nrwl/react:app my-app --bundler=webpack
 ```
 
-To generate a React library using Webpack, run the following:
+To generate a Node application using Webpack, run the following:
 
 ```bash
-nx g @nrwl/react:lib my-lib --bundler=webpack
+nx g @nrwl/node:app my-app --bundler=webpack
 ```
 
 To generate a Web application using Webpack, run the following:
