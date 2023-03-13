@@ -41,7 +41,13 @@ describe('nx init (for React)', () => {
     expect(packageJson.devDependencies['@nrwl/vite']).toBeUndefined();
     expect(packageJson.devDependencies['@nrwl/webpack']).toBeDefined();
 
-    runCLI(`build ${appName}`);
+    runCLI(`build ${appName}`, {
+      env: {
+        // since craco 7.1.0 the NODE_ENV is used, since the tests set it
+        // to "test" is causes an issue with React Refresh Babel
+        NODE_ENV: undefined,
+      },
+    });
     checkFilesExist(`dist/apps/${appName}/index.html`);
   });
 
@@ -111,7 +117,13 @@ describe('nx init (for React)', () => {
 
     expect(craToNxOutput).toContain('🎉 Done!');
 
-    runCLI(`build ${appName}`);
+    runCLI(`build ${appName}`, {
+      env: {
+        // since craco 7.1.0 the NODE_ENV is used, since the tests set it
+        // to "test" is causes an issue with React Refresh Babel
+        NODE_ENV: undefined,
+      },
+    });
     checkFilesExist(`dist/${appName}/index.html`);
   });
 
