@@ -227,7 +227,7 @@ function groupDependencies(
   const resolutionMap = new Map<string, YarnDependency>();
   const snapshotMap = new Map<YarnDependency, Set<string>>();
   Object.entries(dependencies).forEach(([key, snapshot]) => {
-    const resolutionKey = `${snapshot.resolution}${snapshot.integrity}`;
+    const resolutionKey = `${snapshot.resolved}${snapshot.integrity}`;
     if (resolutionMap.has(resolutionKey)) {
       const existingSnapshot = resolutionMap.get(resolutionKey);
       snapshotMap.get(existingSnapshot).add(key);
