@@ -1,30 +1,12 @@
-import {
-  ExecutorContext,
-  joinPathFragments,
-  offsetFromRoot,
-} from '@nrwl/devkit';
-// ignoring while we support both Next 11.1.0 and versions before it
-// @ts-ignore
-import type { NextConfig } from 'next/dist/server/config-shared';
-// @ts-ignore
-import type {
-  PHASE_DEVELOPMENT_SERVER,
-  PHASE_EXPORT,
-  PHASE_PRODUCTION_BUILD,
-  PHASE_PRODUCTION_SERVER,
-} from 'next/dist/shared/lib/constants';
 import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
-import { FileReplacement, NextBuildBuilderOptions } from './types';
+import { FileReplacement } from './types';
 import { createCopyPlugin, normalizeAssets } from '@nrwl/webpack';
-import { WithNxOptions } from '../../plugins/with-nx';
 import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nrwl/js/src/utils/buildable-libs-utils';
-
-const loadConfig = require('next/dist/server/config').default;
 
 export function createWebpackConfig(
   workspaceRoot: string,
@@ -97,70 +79,4 @@ export function createWebpackConfig(
 
     return config;
   };
-}
-
-export async function prepareConfig(
-  phase:
-    | typeof PHASE_PRODUCTION_BUILD
-    | typeof PHASE_EXPORT
-    | typeof PHASE_DEVELOPMENT_SERVER
-    | typeof PHASE_PRODUCTION_SERVER,
-  options: NextBuildBuilderOptions,
-  context: ExecutorContext,
-  dependencies: DependentBuildableProjectNode[],
-  libsDir: string
-) {
-  const config = (await loadConfig(phase, options.root, null)) as NextConfig &
-    WithNxOptions;
-
-  const userWebpack = config.webpack;
-  const userNextConfig = getConfigEnhancer(options.nextConfig, context.root);
-  // Yes, these do have different capitalisation...
-  const outputDir = `${offsetFromRoot(options.root)}${options.outputPath}`;
-  config.distDir =
-    config.distDir && config.distDir !== '.next'
-      ? joinPathFragments(outputDir, config.distDir)
-      : joinPathFragments(outputDir, '.next');
-  config.webpack = (a, b) =>
-    createWebpackConfig(
-      context.root,
-      options.root,
-      options.fileReplacements,
-      options.assets,
-      dependencies,
-      libsDir
-    )(userWebpack ? userWebpack(a, b) : a, b);
-
-  if (typeof userNextConfig !== 'function') {
-    throw new Error(
-      `Module specified by 'nextConfig' option does not export a function. It should be of form 'module.exports = (phase, config, options) => config;'`
-    );
-  }
-
-  return userNextConfig(phase, config, { options });
-}
-
-function getConfigEnhancer(
-  pluginPath: undefined | string,
-  workspaceRoot: string
-) {
-  if (!pluginPath) {
-    return (_, x) => x;
-  }
-
-  let fullPath: string;
-
-  try {
-    fullPath = require.resolve(pluginPath);
-  } catch {
-    fullPath = join(workspaceRoot, pluginPath);
-  }
-
-  try {
-    return require(fullPath);
-  } catch {
-    throw new Error(
-      `Could not find file specified by 'nextConfig' option: ${fullPath}`
-    );
-  }
 }

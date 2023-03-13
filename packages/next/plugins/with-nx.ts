@@ -1,5 +1,18 @@
+import {
+  createProjectGraphAsync,
+  joinPathFragments,
+  offsetFromRoot,
+  parseTargetString,
+  workspaceRoot,
+} from '@nrwl/devkit';
+import {
+  calculateProjectDependencies,
+  DependentBuildableProjectNode,
+} from '@nrwl/js/src/utils/buildable-libs-utils';
 import type { NextConfig } from 'next';
 
+import path = require('path');
+import { createWebpackConfig } from '../src/utils/config';
 export interface WithNxOptions extends NextConfig {
   nx?: {
     svgr?: boolean;
@@ -35,6 +48,87 @@ function getWithNxContext(): WithNxContext {
 }
 
 export function withNx(
+  _nextConfig = {} as WithNxOptions,
+  context: WithNxContext = getWithNxContext()
+): () => Promise<NextConfig> {
+  return async () => {
+    let dependencies: DependentBuildableProjectNode[] = [];
+
+    const graph = await createProjectGraphAsync();
+    const project = process.env.NX_TASK_TARGET_PROJECT;
+    let projectNode = graph.nodes[project];
+
+    const targetName = process.env.NX_TASK_TARGET_TARGET;
+    const configurationName = process.env.NX_TASK_TARGET_CONFIGURATION;
+
+    let options = projectNode.data.targets[targetName].options;
+    if (configurationName) {
+      Object.assign(
+        options,
+        projectNode.data.targets[targetName].configurations[configurationName]
+      );
+    }
+
+    // If we are running serve or export pull the options from the dependent target first (ex. build)
+    if (
+      ['@nrwl/next:server', '@nrwl/next:export'].includes(
+        projectNode.data.targets[targetName].executor
+      )
+    ) {
+      const target = parseTargetString(options.buildTarget, graph);
+      projectNode = graph.nodes[target.project];
+      options = projectNode.data.targets[target.target].options;
+
+      if (target.configuration) {
+        Object.assign(
+          options,
+          projectNode.data.targets[target.target].configurations[
+            target.configuration
+          ]
+        );
+      }
+    }
+    const projectDirectory = projectNode.data.root;
+
+    if (!options.buildLibsFromSource && targetName) {
+      const result = calculateProjectDependencies(
+        graph,
+        workspaceRoot,
+        project,
+        targetName,
+        configurationName
+      );
+      dependencies = result.dependencies;
+    }
+
+    // Get next config
+    const nextConfig = getNextConfig(_nextConfig, context);
+
+    const outputDir = `${offsetFromRoot(projectDirectory)}${
+      options.outputPath
+    }`;
+    nextConfig.distDir =
+      nextConfig.distDir && nextConfig.distDir !== '.next'
+        ? joinPathFragments(outputDir, nextConfig.distDir)
+        : joinPathFragments(outputDir, '.next');
+
+    const userWebpackConfig = nextConfig.webpack;
+
+    nextConfig.webpack = (a, b) =>
+      createWebpackConfig(
+        workspaceRoot,
+        options.root,
+        options.fileReplacements,
+        options.assets,
+        dependencies,
+        path.join(workspaceRoot, context.libsDir)
+      )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
+
+    return nextConfig;
+  };
+}
+
+export function getNextConfig(
   nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
 ): NextConfig {
@@ -223,3 +317,4 @@ function addNxEnvVariables(config: any) {
 module.exports = withNx;
 // Support for newer generated code: `const { withNx } = require(...);`
 module.exports.withNx = withNx;
+module.exports.getNextConfig = getNextConfig;

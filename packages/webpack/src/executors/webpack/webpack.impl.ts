@@ -96,7 +96,9 @@ export async function* webpackExecutor(
       ? options.optimization.scripts
       : false;
 
-  process.env.NODE_ENV ||= isScriptOptimizeOn ? 'production' : 'development';
+  (process.env as any).NODE_ENV ||= isScriptOptimizeOn
+    ? 'production'
+    : 'development';
 
   if (options.compiler === 'swc') {
     try {
