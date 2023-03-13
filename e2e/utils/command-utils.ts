@@ -6,6 +6,7 @@ import {
   getNpmMajorVersion,
   getPublishedVersion,
   getStrippedEnvironmentVariables,
+  isVerboseE2ERun,
 } from './get-env-info';
 import { TargetConfiguration } from '@nrwl/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
@@ -13,7 +14,6 @@ import { join } from 'path';
 import { check as portCheck } from 'tcp-port-used';
 import * as isCI from 'is-ci';
 import { Workspaces } from '../../packages/nx/src/config/workspaces';
-import { isVerbose } from './get-env-info';
 import { updateFile } from './file-utils';
 import { logError, logInfo, logSuccess, stripConsoleColors } from './log-utils';
 
@@ -70,7 +70,7 @@ export function runCommand(
 ): string {
   const { failOnError, ...childProcessOptions } = options ?? {};
   try {
-    const r = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
+    const r = execSync(command, {
       cwd: tmpProjPath(),
       stdio: 'pipe',
       env: {
@@ -82,7 +82,7 @@ export function runCommand(
       ...childProcessOptions,
     });
 
-    if (isVerbose()) {
+    if (isVerboseE2ERun()) {
       output.log({
         title: `Command: ${command}`,
         bodyLines: [r as string],
@@ -279,10 +279,7 @@ export function runNgAdd(
   try {
     const pmc = getPackageManagerCommand();
     packageInstall(packageName, undefined, version);
-    const fullCommand = pmc.run(
-      `ng g ${packageName}:ng-add`,
-      `${command}${isVerbose() ? ' --verbose' : ''}` ?? ''
-    );
+    const fullCommand = pmc.run(`ng g ${packageName}:ng-add`, command ?? '');
     const result = execSync(fullCommand, {
       cwd: tmpProjPath(),
       stdio: 'pipe',
@@ -292,7 +289,7 @@ export function runNgAdd(
 
     const r = stripConsoleColors(result);
 
-    if (isVerbose()) {
+    if (isVerboseE2ERun()) {
       output.log({
         title: `Original command: ${fullCommand}`,
         bodyLines: [result as string],
@@ -321,7 +318,7 @@ export function runCLI(
   try {
     const pm = getPackageManagerCommand();
     const logs = execSync(
-      `${pm.runNx} ${command} ${isVerbose() ? ' --verbose' : ''}`,
+      `${pm.runNx} ${command} ${isVerboseE2ERun() ? ' --verbose' : ''}`,
       {
         cwd: opts.cwd || tmpProjPath(),
         env: {
@@ -335,7 +332,7 @@ export function runCLI(
       }
     );
 
-    if (isVerbose()) {
+    if (isVerboseE2ERun()) {
       output.log({
         title: `Original command: ${command}`,
         bodyLines: [logs as string],
@@ -369,9 +366,7 @@ export function runLernaCLI(
 ): string {
   try {
     const pm = getPackageManagerCommand();
-    const fullCommand = `${pm.runLerna} ${command}${
-      isVerbose() ? ' --verbose' : ''
-    }`;
+    const fullCommand = `${pm.runLerna} ${command}`;
     const logs = execSync(fullCommand, {
       cwd: opts.cwd || tmpProjPath(),
       env: {
@@ -383,7 +378,7 @@ export function runLernaCLI(
       maxBuffer: 50 * 1024 * 1024,
     });
 
-    if (isVerbose()) {
+    if (isVerboseE2ERun()) {
       output.log({
         title: `Original command: ${fullCommand}`,
         bodyLines: [logs as string],

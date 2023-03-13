@@ -12,6 +12,7 @@ import {
   getNpmMajorVersion,
   getPublishedVersion,
   getSelectedPackageManager,
+  isVerbose,
 } from './get-env-info';
 import * as isCI from 'is-ci';
 
@@ -19,7 +20,6 @@ import { angularCliVersion as defaultAngularCliVersion } from '@nrwl/workspace/s
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'child_process';
 
-import { isVerbose } from './get-env-info';
 import { logError, logInfo } from './log-utils';
 import {
   getPackageManagerCommand,
@@ -92,7 +92,7 @@ export function newProject({
     copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
 
     if (isVerbose()) {
-      logInfo(`NX`, `E2E test is creating a project: ${tmpProjPath()}`);
+      logInfo(`NX`, `E2E created a project: ${tmpProjPath()}`);
     }
     return projScope;
   } catch (e) {

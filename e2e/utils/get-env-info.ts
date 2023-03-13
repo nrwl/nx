@@ -58,6 +58,10 @@ export function isVerbose() {
   );
 }
 
+export function isVerboseE2ERun() {
+  return process.env.NX_E2E_VERBOSE_LOGGING === 'true' || isVerbose();
+}
+
 export const e2eCwd = `${e2eRoot}/nx`;
 
 export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {

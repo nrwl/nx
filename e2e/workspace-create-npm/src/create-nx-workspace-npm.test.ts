@@ -1,14 +1,11 @@
-import { forEach } from '@angular-devkit/schematics';
 import {
   checkFilesExist,
   cleanupProject,
   packageInstall,
   readJson,
-  removeFile,
   runCLI,
   runCreateWorkspace,
   uniq,
-  updateJson,
 } from '@nrwl/e2e/utils';
 
 describe('create-nx-workspace --preset=npm', () => {

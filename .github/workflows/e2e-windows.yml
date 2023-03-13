@@ -156,7 +156,7 @@ jobs:
           NX_CACHE_DIRECTORY: 'tmp'
           NX_E2E_SKIP_BUILD_CLEANUP: 'true'
           NX_E2E_RUN_CYPRESS: 'true'
-          NX_VERBOSE_LOGGING: 'true'
+          NX_E2E_VERBOSE_LOGGING: 'true'
           NX_PERF_LOGGING: 'false'
 
       - name: Save matrix config in file
