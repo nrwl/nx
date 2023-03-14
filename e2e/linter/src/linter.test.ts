@@ -473,7 +473,7 @@ describe('Linter', () => {
         'plugin:@nrwl/nx/javascript',
       ]);
 
-      runCLI(`generate @nrwl/react:lib ${mylib} --unitTestRunner=jest`);
+      runCLI(`generate @nrwl/workspace:lib ${mylib} --unitTestRunner=jest`);
       // should add new tslint
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
       const appEslint = readJson(`.eslintrc.json`);
@@ -494,10 +494,7 @@ describe('Linter', () => {
         'plugin:cypress/recommended',
         '../.eslintrc.base.json',
       ]);
-      expect(libEslint.extends).toEqual([
-        'plugin:@nrwl/nx/react',
-        '../../.eslintrc.base.json',
-      ]);
+      expect(libEslint.extends).toEqual(['../../.eslintrc.base.json']);
       // should have no plugin extends
       expect(appEslint.overrides[0].extends).toBeUndefined();
       expect(appEslint.overrides[1].extends).toBeUndefined();
@@ -546,7 +543,7 @@ describe('Linter', () => {
         'plugin:@nrwl/nx/javascript',
       ]);
 
-      runCLI(`generate @nrwl/angular:lib ${mylib} --no-interactive`);
+      runCLI(`generate @nrwl/workspace:lib ${mylib} --no-interactive`);
       // should add new tslint
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
       const appEslint = readJson(`.eslintrc.json`);
@@ -572,10 +569,61 @@ describe('Linter', () => {
       ]);
       expect(e2eEslint.overrides[0].extends).toBeUndefined();
       expect(e2eEslint.overrides[1].extends).toBeUndefined();
-      expect(libEslint.overrides[0].extends).toEqual([
-        'plugin:@nrwl/nx/angular',
-        'plugin:@angular-eslint/template/process-inline-templates',
+      expect(libEslint.overrides[0].extends).toBeUndefined();
+    });
+
+    it('(Node standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
+
+      runCLI(
+        `generate @nrwl/node:app ${myapp} --rootProject=true --no-interactive`
+      );
+
+      let rootEslint = readJson('.eslintrc.json');
+      let e2eEslint = readJson('e2e/.eslintrc.json');
+      expect(() => checkFilesExist(`.eslintrc.base.json`)).toThrow();
+
+      // should directly refer to nx plugin
+      expect(rootEslint.plugins).toEqual(['@nrwl/nx']);
+      expect(e2eEslint.plugins).toEqual(['@nrwl/nx']);
+      // should only extend framework plugin
+      expect(e2eEslint.extends).toEqual([]);
+      // should have plugin extends
+      expect(rootEslint.overrides[0].extends).toEqual([
+        'plugin:@nrwl/nx/typescript',
       ]);
+      expect(rootEslint.overrides[1].extends).toEqual([
+        'plugin:@nrwl/nx/javascript',
+      ]);
+      expect(e2eEslint.overrides[0].extends).toEqual([
+        'plugin:@nrwl/nx/typescript',
+      ]);
+      expect(e2eEslint.overrides[1].extends).toEqual([
+        'plugin:@nrwl/nx/javascript',
+      ]);
+
+      runCLI(`generate @nrwl/workspace:lib ${mylib} --no-interactive`);
+      // should add new tslint
+      expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
+      const appEslint = readJson(`.eslintrc.json`);
+      rootEslint = readJson('.eslintrc.base.json');
+      e2eEslint = readJson('e2e/.eslintrc.json');
+      const libEslint = readJson(`libs/${mylib}/.eslintrc.json`);
+
+      // should directly refer to nx plugin only in the root
+      expect(rootEslint.plugins).toEqual(['@nrwl/nx']);
+      expect(appEslint.plugins).toBeUndefined();
+      expect(e2eEslint.plugins).toBeUndefined();
+      // should extend framework plugin and root config
+      expect(appEslint.extends).toEqual(['./.eslintrc.base.json']);
+      expect(e2eEslint.extends).toEqual(['../.eslintrc.base.json']);
+      expect(libEslint.extends).toEqual(['../../.eslintrc.base.json']);
+      // should have no plugin extends
+      expect(appEslint.overrides[0].extends).toBeUndefined();
+      expect(e2eEslint.overrides[0].extends).toBeUndefined();
+      expect(e2eEslint.overrides[1].extends).toBeUndefined();
+      expect(libEslint.overrides[0].extends).toBeUndefined();
     });
   });
 });

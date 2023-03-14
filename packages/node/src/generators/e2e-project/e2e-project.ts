@@ -14,11 +14,17 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 
 import { Schema } from './schema';
 import { axiosVersion } from '../../utils/versions';
+import { join } from 'path';
+import {
+  globalJavaScriptOverrides,
+  globalTypeScriptOverrides,
+} from '@nrwl/linter/src/generators/init/global-eslint-config';
 
 export async function e2eProjectGenerator(host: Tree, _options: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -90,7 +96,7 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
   );
   tasks.push(installTask);
 
-  if (options.linter === 'eslint') {
+  if (options.linter === Linter.EsLint) {
     const linterTask = await lintProjectGenerator(host, {
       project: options.e2eProjectName,
       linter: Linter.EsLint,
@@ -104,6 +110,33 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
       rootProject: options.rootProject,
     });
     tasks.push(linterTask);
+
+    updateJson(host, join(options.e2eProjectRoot, '.eslintrc.json'), (json) => {
+      if (options.rootProject) {
+        json.plugins = ['@nrwl/nx'];
+        json.extends = [];
+      }
+      json.overrides = [
+        ...(options.rootProject
+          ? [globalTypeScriptOverrides, globalJavaScriptOverrides]
+          : []),
+        /**
+         * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs
+         * behind the scenes during lint runs, we need to make sure the project is configured to use its
+         * own specific tsconfigs, and not fall back to the ones in the root of the workspace.
+         */
+        {
+          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+          /**
+           * Having an empty rules object present makes it more obvious to the user where they would
+           * extend things from if they needed to
+           */
+          rules: {},
+        },
+      ];
+
+      return json;
+    });
   }
 
   if (options.formatFile) {
