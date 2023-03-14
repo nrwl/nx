@@ -83,7 +83,7 @@ You can run below commands:
 You can run your e2e test against a production build:
 
 - `nx test-ios frontend-e2e --prod`: to build the iOS app and execute e2e tests with Detox for iOS with Release configuration (Mac only)
-- `nx test-android frontend-e2e`: rto build the Android app and execute e2e tests with Detox for Android with release build type
+- `nx test-android frontend-e2e --prod`: to build the Android app and execute e2e tests with Detox for Android with release build type
 - `nx build-ios frontend-e2e --prod`: build the iOS app using Release configuration (Mac only)
 - `nx build-android frontend-e2e --prod`: build the Android app using release build type
 
