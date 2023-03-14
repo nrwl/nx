@@ -54,17 +54,15 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             });
           }
 
-          if (helperDependencies.length > 0) {
-            this.projectGraph.dependencies[this.context.projectName] =
-              this.projectGraph.dependencies[this.context.projectName].concat(
-                helperDependencies
-              );
-          }
-
           const packageJson = createPackageJson(
             this.context.projectName,
             this.projectGraph,
-            { root: this.context.root, isProduction: true }
+            {
+              target: this.context.targetName,
+              root: this.context.root,
+              isProduction: true,
+              helperDependencies: helperDependencies.map((dep) => dep.target),
+            }
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
 

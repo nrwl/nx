@@ -186,7 +186,7 @@ export class Hasher {
   }
 }
 
-const DEFAULT_INPUTS = [
+const DEFAULT_INPUTS: ReadonlyArray<InputDefinition> = [
   {
     projects: 'self',
     fileset: '{projectRoot}/**/*',
@@ -221,11 +221,7 @@ class TaskHasher {
       if (!projectNode) {
         return this.hashExternalDependency(task.target.project);
       }
-      const namedInputs = {
-        default: [{ fileset: '{projectRoot}/**/*' }],
-        ...this.nxJson.namedInputs,
-        ...projectNode.data.namedInputs,
-      };
+      const namedInputs = getNamedInputs(this.nxJson, projectNode);
       const targetData = projectNode.data.targets[task.target.target];
       const targetDefaults = (this.nxJson.targetDefaults || {})[
         task.target.target
@@ -399,9 +395,7 @@ class TaskHasher {
     projectName: string,
     inputs: ExpandedSelfInput[]
   ): Promise<PartialHash[]> {
-    const filesets = inputs
-      .filter((r) => !!r['fileset'])
-      .map((r) => r['fileset']);
+    const filesets = extractPatternsFromFileSets(inputs);
 
     const projectFilesets = [];
     const workspaceFilesets = [];
@@ -563,9 +557,52 @@ class TaskHasher {
   }
 }
 
+export function getNamedInputs(
+  nxJson: NxJsonConfiguration,
+  project: ProjectGraphProjectNode
+) {
+  return {
+    default: [{ fileset: '{projectRoot}/**/*' }],
+    ...nxJson.namedInputs,
+    ...project.data.namedInputs,
+  };
+}
+
+export function getTargetInputs(
+  nxJson: NxJsonConfiguration,
+  projectNode: ProjectGraphProjectNode,
+  target: string
+) {
+  const namedInputs = getNamedInputs(nxJson, projectNode);
+
+  const targetData = projectNode.data.targets[target];
+  const targetDefaults = (nxJson.targetDefaults || {})[target];
+
+  const inputs = splitInputsIntoSelfAndDependencies(
+    targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
+    namedInputs
+  );
+
+  const selfInputs = extractPatternsFromFileSets(inputs.selfInputs);
+
+  const dependencyInputs = extractPatternsFromFileSets(
+    inputs.depsInputs.map((s) => expandNamedInput(s.input, namedInputs)).flat()
+  );
+
+  return { selfInputs, dependencyInputs };
+}
+
+export function extractPatternsFromFileSets(
+  inputs: readonly ExpandedSelfInput[]
+): string[] {
+  return inputs
+    .filter((c): c is { fileset: string } => !!c['fileset'])
+    .map((c) => c['fileset']);
+}
+
 export function splitInputsIntoSelfAndDependencies(
-  inputs: (InputDefinition | string)[],
-  namedInputs: { [inputName: string]: (InputDefinition | string)[] }
+  inputs: ReadonlyArray<InputDefinition | string>,
+  namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): {
   depsInputs: { input: string }[];
   selfInputs: ExpandedSelfInput[];
@@ -591,8 +628,8 @@ export function splitInputsIntoSelfAndDependencies(
 }
 
 function expandSelfInputs(
-  inputs: (InputDefinition | string)[],
-  namedInputs: { [inputName: string]: (InputDefinition | string)[] }
+  inputs: ReadonlyArray<InputDefinition | string>,
+  namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): ExpandedSelfInput[] {
   const expanded = [];
   for (const d of inputs) {
@@ -623,7 +660,7 @@ function expandSelfInputs(
 
 export function expandNamedInput(
   input: string,
-  namedInputs: { [inputName: string]: (InputDefinition | string)[] }
+  namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): ExpandedSelfInput[] {
   namedInputs ||= {};
   if (!namedInputs[input]) throw new Error(`Input '${input}' is not defined`);

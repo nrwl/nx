@@ -6,7 +6,7 @@ import {
   UpdatePackageJsonOption,
 } from './update-package-json';
 import { vol } from 'memfs';
-import { ExecutorContext, ProjectGraph } from '@nrwl/devkit';
+import { DependencyType, ExecutorContext, ProjectGraph } from '@nrwl/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
@@ -298,7 +298,24 @@ describe('updatePackageJson', () => {
               outputs: ['{workspaceRoot}/dist/libs/lib1'],
             },
           },
-          files: [],
+          files: [
+            {
+              file: 'test.ts',
+              hash: '',
+              dependencies: [
+                {
+                  type: DependencyType.static,
+                  target: 'npm:external1',
+                  source: '@org/lib1',
+                },
+                {
+                  type: DependencyType.static,
+                  target: 'npm:external2',
+                  source: '@org/lib1',
+                },
+              ],
+            },
+          ],
         },
       },
     },
@@ -330,8 +347,16 @@ describe('updatePackageJson', () => {
     },
     dependencies: {
       '@org/lib1': [
-        { source: '@org/lib1', target: 'npm:external1', type: 'static' },
-        { source: '@org/lib1', target: 'npm:external2', type: 'static' },
+        {
+          source: '@org/lib1',
+          target: 'npm:external1',
+          type: DependencyType.static,
+        },
+        {
+          source: '@org/lib1',
+          target: 'npm:external2',
+          type: DependencyType.static,
+        },
       ],
     },
   };

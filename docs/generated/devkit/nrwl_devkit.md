@@ -1070,13 +1070,15 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 #### Parameters
 
-| Name                    | Type                                                              |
-| :---------------------- | :---------------------------------------------------------------- |
-| `projectName`           | `string`                                                          |
-| `graph`                 | [`ProjectGraph`](../../devkit/documents/nrwl_devkit#projectgraph) |
-| `options`               | `Object`                                                          |
-| `options.isProduction?` | `boolean`                                                         |
-| `options.root?`         | `string`                                                          |
+| Name                          | Type                                                              |
+| :---------------------------- | :---------------------------------------------------------------- |
+| `projectName`                 | `string`                                                          |
+| `graph`                       | [`ProjectGraph`](../../devkit/documents/nrwl_devkit#projectgraph) |
+| `options`                     | `Object`                                                          |
+| `options.helperDependencies?` | `string`[]                                                        |
+| `options.isProduction?`       | `boolean`                                                         |
+| `options.root?`               | `string`                                                          |
+| `options.target?`             | `string`                                                          |
 
 #### Returns
 
