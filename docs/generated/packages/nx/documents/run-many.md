@@ -41,7 +41,7 @@ Test proj1 and proj2 in sequence:
  nx run-many --target=test --projects=proj1,proj2 --parallel=false
 ```
 
-Test all projects ending with `*-app` except `excluded-app`:
+Test all projects ending with `*-app` except `excluded-app`. Note: your shell may require you to escape the `*` like this: `\*`:
 
 ```shell
  nx run-many --target=test --projects=*-app --exclude excluded-app

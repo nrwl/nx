@@ -307,7 +307,7 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'run-many --target=test --projects=*-app --exclude excluded-app',
       description:
-        'Test all projects ending with `*-app` except `excluded-app`',
+        'Test all projects ending with `*-app` except `excluded-app`.  Note: your shell may require you to escape the `*` like this: `\\*`',
     },
     {
       command: 'run-many --targets=lint,test,build --all',
