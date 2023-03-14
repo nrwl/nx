@@ -3780,6 +3780,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "pipe",
+                "path": "/packages/angular/generators/pipe",
+                "name": "pipe",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "scam-to-standalone",
                 "path": "/packages/angular/generators/scam-to-standalone",
                 "name": "scam-to-standalone",

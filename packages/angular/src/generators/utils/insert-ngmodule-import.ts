@@ -13,7 +13,7 @@ import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescrip
 
 let tsModule: typeof import('typescript');
 
-type ngModuleDecoratorProperty =
+export type ngModuleDecoratorProperty =
   | 'imports'
   | 'providers'
   | 'declarations'

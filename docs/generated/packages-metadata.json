@@ -274,6 +274,15 @@
         "type": "generator"
       },
       {
+        "description": "Generate an Angular Pipe",
+        "file": "generated/packages/angular/generators/pipe.json",
+        "hidden": false,
+        "name": "pipe",
+        "originalFilePath": "/packages/angular/src/generators/pipe/schema.json",
+        "path": "angular/generators/pipe",
+        "type": "generator"
+      },
+      {
         "description": "Convert an existing Single Component Angular Module (SCAM) to a Standalone Component.",
         "file": "generated/packages/angular/generators/scam-to-standalone.json",
         "hidden": false,
