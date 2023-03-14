@@ -245,6 +245,7 @@ export const nrwlHomeTemplate = {
       }
       .button-pill {
         padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
         transition-duration: 300ms;
         transition-property: background-color, border-color, color, fill, stroke,
           opacity, box-shadow, transform, filter, backdrop-filter,
@@ -280,10 +281,10 @@ export const nrwlHomeTemplate = {
       .button-pill:hover {
         color: rgba(255, 255, 255, 1) !important;
       }
-      #nx-console:hover {
+      .nx-console:hover {
         background-color: rgba(0, 122, 204, 1);
       }
-      #nx-console svg {
+      .nx-console svg {
         color: rgba(0, 122, 204, 1);
       }
 
@@ -636,7 +637,7 @@ export const nrwlHomeTemplate = {
             </a>
           </div>
           <div id="other-links">
-            <a id="nx-console" class="button-pill rounded shadow" href="https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console&utm_source=nx-project" target="_blank" rel="noreferrer">
+            <a class="button-pill rounded shadow nx-console" href="https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console&utm_source=nx-project" target="_blank" rel="noreferrer">
               <svg
                 fill="currentColor"
                 role="img"
@@ -649,8 +650,28 @@ export const nrwlHomeTemplate = {
                 />
               </svg>
               <span>
-                Install Nx Console
-                <span>Plugin for VSCode</span>
+                Install Nx Console for VSCode
+                <span>The official VSCode plugin for Nx.</span>
+              </span>
+            </a>
+            <a
+              class="button-pill rounded shadow nx-console"
+              href="https://plugins.jetbrains.com/plugin/21060-nx-console"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <svg
+                fill="currentColor"
+                role="img"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <title>IntelliJ</title>
+                <path d="M0 0v24h24V0zm3.723 3.111h5v1.834h-1.39v6.277h1.39v1.834h-5v-1.834h1.444V4.945H3.723zm11.055 0H17v6.5c0 .612-.055 1.111-.222 1.556-.167.444-.39.777-.723 1.11-.277.279-.666.557-1.11.668a3.933 3.933 0 0 1-1.445.278c-.778 0-1.444-.167-1.944-.445a4.81 4.81 0 0 1-1.279-1.056l1.39-1.555c.277.334.555.555.833.722.277.167.611.278.945.278.389 0 .721-.111 1-.389.221-.278.333-.667.333-1.278zM2.222 19.5h9V21h-9z"></path>
+              </svg>
+              <span>
+                Install Nx Console for JetBrains
+                <span>Available for WebStorm, Intellij IDEA Ultimate and more!</span>
               </span>
             </a>
             <div id="nx-cloud" class="rounded shadow">
