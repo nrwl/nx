@@ -12,7 +12,7 @@
       "project": {
         "type": "string",
         "description": "The name of the project to add cypress component testing configuration to",
-        "$default": { "$source": "projectName", "index": 0 },
+        "$default": { "$source": "projectName" },
         "x-dropdown": "projects",
         "x-prompt": "What project should we add Cypress component testing to?",
         "x-priority": "important"
