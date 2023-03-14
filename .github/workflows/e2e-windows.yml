@@ -143,6 +143,7 @@ jobs:
         run: yarn install --prefer-offline --frozen-lockfile --non-interactive
 
       - name: Run e2e tests
+        id: e2e-run
         run: yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1
         env:
           GIT_AUTHOR_EMAIL: test@test.com
@@ -162,12 +163,13 @@ jobs:
       - name: Save matrix config in file
         if: ${{ always() }}
         id: save-matrix
+        shell: bash
         run: |
           matrix=$((
             echo '${{ toJSON(matrix) }}'
           ) | jq -c '. + { "status": "${{ steps.e2e-run.outcome}}" }')
           echo "$matrix" > matrix
-          path=outputs/${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
+          path=outputs/windows-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
           echo "path=$path" >> $GITHUB_OUTPUT
           echo "$matrix" > $path
 
@@ -201,6 +203,7 @@ jobs:
 
       - name: Join and stringify matrix configs
         id: combine-json
+        shell: bash
         run: |
           combined=$((jq -s . outputs/*) | jq tostring)
           echo "combined=$combined" >> $GITHUB_OUTPUT
@@ -225,8 +228,8 @@ jobs:
             // message
             let result = `
               \`\`\`
-               | Failed project                 | Node | PM   | OS     |
-               |--------------------------------|------|------|--------|`;
+               | Failed project                 | Node | PM   | OS      |
+               |--------------------------------|------|------|---------|`;
             failedProjects.forEach(matrix => {
               result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.padEnd(3)} | ${matrix.package_manager.padEnd(4)} | Windows |`
             });
