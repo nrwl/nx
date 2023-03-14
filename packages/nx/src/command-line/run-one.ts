@@ -163,6 +163,14 @@ export function calculateDefaultProjectName(
   projectsConfigurations: ProjectsConfigurations,
   nxJsonConfiguration: NxJsonConfiguration
 ) {
+  if (cwd && /^[A-Z]:/.test(cwd)) {
+    cwd = cwd.charAt(0).toLowerCase() + cwd.slice(1);
+  }
+
+  if (root && /^[A-Z]:/.test(root)) {
+    root = root.charAt(0).toLowerCase() + root.slice(1);
+  }
+
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
 
   relativeCwd = relativeCwd.startsWith('/')
