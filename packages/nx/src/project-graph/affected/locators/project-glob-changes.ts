@@ -8,15 +8,15 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 import minimatch = require('minimatch');
 import {
   getGlobPatternsFromPackageManagerWorkspaces,
-  getGlobPatternsFromPlugins,
+  getGlobPatternsFromPluginsAsync,
 } from '../../../config/workspaces';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator<
   WholeFileChange | JsonChange | DeletedFileChange
-> = (touchedFiles, projectGraphNodes, nxJson): string[] => {
-  const pluginGlobPatterns = getGlobPatternsFromPlugins(
+> = async (touchedFiles, projectGraphNodes, nxJson): Promise<string[]> => {
+  const pluginGlobPatterns = await getGlobPatternsFromPluginsAsync(
     nxJson,
     getNxRequirePaths(),
     workspaceRoot

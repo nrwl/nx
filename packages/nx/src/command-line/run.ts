@@ -152,7 +152,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
     mergePluginTargetsWithNxTargets(
       proj.root,
       proj.targets,
-      loadNxPlugins(nxJsonConfiguration.plugins, [root], root)
+      await loadNxPlugins(nxJsonConfiguration.plugins, [root], root)
     )[target];
 
   if (!targetConfig) {

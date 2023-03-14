@@ -26,11 +26,11 @@ function makeProjectGraphNode(
 
 describe('getTouchedProjectsFromProjectGlobChanges', () => {
   beforeEach(() => {
-    jest.spyOn(nxPlugin, 'loadNxPlugins').mockReturnValue([]);
+    jest.spyOn(nxPlugin, 'loadNxPlugins').mockResolvedValue([]);
   });
 
-  it('should affect all projects if a project is removed', () => {
-    const result = getTouchedProjectsFromProjectGlobChanges(
+  it('should affect all projects if a project is removed', async () => {
+    const result = await getTouchedProjectsFromProjectGlobChanges(
       [
         {
           file: 'libs/proj1/project.json',

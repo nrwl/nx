@@ -97,7 +97,13 @@ async function hashTasksThatDontDependOnOtherTasks(
   const res = [] as Promise<void>[];
   for (let t of Object.values(taskGraph.tasks)) {
     if (
-      !hashDependsOnOtherTasks(workspaces, hasher, projectGraph, taskGraph, t)
+      !(await hashDependsOnOtherTasks(
+        workspaces,
+        hasher,
+        projectGraph,
+        taskGraph,
+        t
+      ))
     ) {
       res.push(hashTask(workspaces, hasher, projectGraph, taskGraph, t));
     }

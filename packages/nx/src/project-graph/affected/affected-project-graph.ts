@@ -16,12 +16,12 @@ import { reverse } from '../operators';
 import { readNxJson } from '../../config/configuration';
 import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';
 
-export function filterAffected(
+export async function filterAffected(
   graph: ProjectGraph,
   touchedFiles: FileChange[],
   nxJson: NxJsonConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
-): ProjectGraph {
+): Promise<ProjectGraph> {
   // Additional affected logic should be in this array.
   const touchedProjectLocators: TouchedProjectLocator[] = [
     getTouchedProjects,
@@ -31,9 +31,18 @@ export function filterAffected(
     getTouchedProjectsFromTsConfig,
     getTouchedProjectsFromProjectGlobChanges,
   ];
-  const touchedProjects = touchedProjectLocators.reduce((acc, f) => {
-    return acc.concat(f(touchedFiles, graph.nodes, nxJson, packageJson, graph));
-  }, [] as string[]);
+
+  const touchedProjects = [];
+  for (const locator of touchedProjectLocators) {
+    const projects = await locator(
+      touchedFiles,
+      graph.nodes,
+      nxJson,
+      packageJson,
+      graph
+    );
+    touchedProjects.push(...projects);
+  }
 
   return filterAffectedProjects(graph, {
     projectGraphNodes: graph.nodes,

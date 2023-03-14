@@ -212,7 +212,7 @@ export function interpolate(template: string, data: any): string {
   });
 }
 
-export function getExecutorNameForTask(
+export async function getExecutorNameForTask(
   task: Task,
   nxJson: NxJsonConfiguration,
   projectGraph: ProjectGraph
@@ -226,35 +226,32 @@ export function getExecutorNameForTask(
   project.targets = mergePluginTargetsWithNxTargets(
     project.root,
     project.targets,
-    loadNxPlugins(nxJson.plugins)
+    await loadNxPlugins(nxJson.plugins)
   );
 
   return project.targets[task.target.target].executor;
 }
 
-export function getExecutorForTask(
+export async function getExecutorForTask(
   task: Task,
   workspace: Workspaces,
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration
 ) {
-  const executor = getExecutorNameForTask(task, nxJson, projectGraph);
+  const executor = await getExecutorNameForTask(task, nxJson, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
 
   return workspace.readExecutor(nodeModule, executorName);
 }
 
-export function getCustomHasher(
+export async function getCustomHasher(
   task: Task,
   workspace: Workspaces,
   nxJson: NxJsonConfiguration,
   projectGraph: ProjectGraph
 ) {
-  const factory = getExecutorForTask(
-    task,
-    workspace,
-    projectGraph,
-    nxJson
+  const factory = (
+    await getExecutorForTask(task, workspace, projectGraph, nxJson)
   ).hasherFactory;
   return factory ? factory() : null;
 }

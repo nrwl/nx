@@ -8,6 +8,7 @@ import { readJsonFile } from '../utils/fileutils';
 import { logger, NX_PREFIX } from '../utils/logger';
 import {
   loadNxPlugins,
+  loadNxPluginsSync,
   readPluginPackageJson,
   registerPluginTSTranspiler,
 } from '../utils/nx-plugin';
@@ -67,6 +68,9 @@ export class Workspaces {
     return nxJson?.defaultProject;
   }
 
+  /**
+   * @deprecated
+   */
   readProjectsConfigurations(opts?: {
     _ignorePluginInference?: boolean;
     _includeProjectsFromAngularJson?: boolean;
@@ -80,7 +84,17 @@ export class Workspaces {
     const nxJson = this.readNxJson();
     const projectsConfigurations = buildProjectsConfigurationsFromGlobs(
       nxJson,
-      globForProjectFiles(this.root, nxJson, opts?._ignorePluginInference),
+      globForProjectFiles(
+        this.root,
+        opts?._ignorePluginInference
+          ? []
+          : getGlobPatternsFromPlugins(
+              nxJson,
+              getNxRequirePaths(this.root),
+              this.root
+            ),
+        nxJson
+      ),
       (path) => readJsonFile(join(this.root, path))
     );
     if (
@@ -472,12 +486,35 @@ export function toProjectName(fileName: string): string {
 let projectGlobCache: string[];
 let projectGlobCacheKey: string;
 
+/**
+ * @deprecated Use getGlobPatternsFromPluginsAsync instead.
+ */
 export function getGlobPatternsFromPlugins(
   nxJson: NxJsonConfiguration,
   paths: string[],
   root = workspaceRoot
 ): string[] {
-  const plugins = loadNxPlugins(nxJson?.plugins, paths, root);
+  const plugins = loadNxPluginsSync(nxJson?.plugins, paths, root);
+
+  const patterns = [];
+  for (const plugin of plugins) {
+    if (!plugin.projectFilePatterns) {
+      continue;
+    }
+    for (const filePattern of plugin.projectFilePatterns) {
+      patterns.push('**/' + filePattern);
+    }
+  }
+
+  return patterns;
+}
+
+export async function getGlobPatternsFromPluginsAsync(
+  nxJson: NxJsonConfiguration,
+  paths: string[],
+  root = workspaceRoot
+): Promise<string[]> {
+  const plugins = await loadNxPlugins(nxJson?.plugins, paths, root);
 
   const patterns = [];
   for (const plugin of plugins) {
@@ -561,11 +598,11 @@ function removeRelativePath(pattern: string): string {
 
 export function globForProjectFiles(
   root: string,
-  nxJson?: NxJsonConfiguration,
-  ignorePluginInference = false
+  pluginsGlobPatterns: string[],
+  nxJson?: NxJsonConfiguration
 ) {
   // Deal w/ Caching
-  const cacheKey = [root, ...(nxJson?.plugins || [])].join(',');
+  const cacheKey = [root, ...pluginsGlobPatterns].join(',');
   if (
     process.env.NX_PROJECT_GLOB_CACHE !== 'false' &&
     projectGlobCache &&
@@ -596,11 +633,7 @@ export function globForProjectFiles(
     ...globsToInclude,
   ];
 
-  if (!ignorePluginInference) {
-    projectGlobPatterns.push(
-      ...getGlobPatternsFromPlugins(nxJson, getNxRequirePaths(root), root)
-    );
-  }
+  projectGlobPatterns.push(...pluginsGlobPatterns);
 
   const combinedProjectGlobPattern = '{' + projectGlobPatterns.join(',') + '}';
 

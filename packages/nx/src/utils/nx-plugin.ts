@@ -50,16 +50,11 @@ export interface NxPlugin {
 // executing resolution mulitple times.
 let nxPluginCache: Map<string, NxPlugin> = new Map();
 
-export function loadNxPlugin(
+function getPluginPathAndName(
   moduleName: string,
   paths: string[],
   root: string
 ) {
-  let pluginModule = nxPluginCache.get(moduleName);
-  if (pluginModule) {
-    return pluginModule;
-  }
-
   let pluginPath: string;
   try {
     pluginPath = require.resolve(moduleName, {
@@ -87,13 +82,43 @@ export function loadNxPlugin(
     existsSync(packageJsonPath) // plugin has a package.json
       ? readJsonFile(packageJsonPath) // read name from package.json
       : { name: path.basename(pluginPath) }; // use the name of the file we point to
+  return { pluginPath, name };
+}
+
+export async function loadNxPluginAsync(
+  moduleName: string,
+  paths: string[],
+  root: string
+) {
+  let pluginModule = nxPluginCache.get(moduleName);
+  if (pluginModule) {
+    return pluginModule;
+  }
+
+  let { pluginPath, name } = getPluginPathAndName(moduleName, paths, root);
+  const plugin = (await import(pluginPath)) as NxPlugin;
+  plugin.name = name;
+  nxPluginCache.set(moduleName, plugin);
+  return plugin;
+}
+
+function loadNxPluginSync(moduleName: string, paths: string[], root: string) {
+  let pluginModule = nxPluginCache.get(moduleName);
+  if (pluginModule) {
+    return pluginModule;
+  }
+
+  let { pluginPath, name } = getPluginPathAndName(moduleName, paths, root);
   const plugin = require(pluginPath) as NxPlugin;
   plugin.name = name;
   nxPluginCache.set(moduleName, plugin);
   return plugin;
 }
 
-export function loadNxPlugins(
+/**
+ * @deprecated Use loadNxPlugins instead.
+ */
+export function loadNxPluginsSync(
   plugins?: string[],
   paths = getNxRequirePaths(),
   root = workspaceRoot
@@ -103,13 +128,44 @@ export function loadNxPlugins(
   // TODO: This should be specified in nx.json
   // Temporarily load js as if it were a plugin which is built into nx
   // In the future, this will be optional and need to be specified in nx.json
-  const jsPlugin = require('../plugins/js');
+  const jsPlugin: any = require('../plugins/js');
   jsPlugin.name = 'index';
   result.push(jsPlugin as NxPlugin);
 
   plugins ??= [];
   for (const plugin of plugins) {
-    result.push(loadNxPlugin(plugin, paths, root));
+    try {
+      result.push(loadNxPluginSync(plugin, paths, root));
+    } catch (e) {
+      if (e.code === 'ERR_REQUIRE_ESM') {
+        throw new Error(
+          `Unable to load "${plugin}". Plugins cannot be ESM modules. They must be CommonJS modules. Follow the issue on github: https://github.com/nrwl/nx/issues/15682`
+        );
+      }
+      throw e;
+    }
+  }
+
+  return result;
+}
+
+export async function loadNxPlugins(
+  plugins?: string[],
+  paths = getNxRequirePaths(),
+  root = workspaceRoot
+): Promise<NxPlugin[]> {
+  const result: NxPlugin[] = [];
+
+  // TODO: This should be specified in nx.json
+  // Temporarily load js as if it were a plugin which is built into nx
+  // In the future, this will be optional and need to be specified in nx.json
+  const jsPlugin: any = await import('../plugins/js');
+  jsPlugin.name = 'index';
+  result.push(jsPlugin as NxPlugin);
+
+  plugins ??= [];
+  for (const plugin of plugins) {
+    result.push(await loadNxPluginAsync(plugin, paths, root));
   }
 
   return result;

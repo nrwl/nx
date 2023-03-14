@@ -5,7 +5,7 @@ import { Hasher } from './hasher';
 import { ProjectGraph } from '../config/project-graph';
 import { Workspaces } from '../config/workspaces';
 
-export function hashDependsOnOtherTasks(
+export async function hashDependsOnOtherTasks(
   workspaces: Workspaces,
   hasher: Hasher,
   projectGraph: ProjectGraph,
@@ -13,7 +13,7 @@ export function hashDependsOnOtherTasks(
   task: Task
 ) {
   try {
-    const customHasher = getCustomHasher(
+    const customHasher = await getCustomHasher(
       task,
       workspaces,
       workspaces.readNxJson(),
@@ -33,7 +33,7 @@ export async function hashTask(
   taskGraph: TaskGraph,
   task: Task
 ) {
-  const customHasher = getCustomHasher(
+  const customHasher = await getCustomHasher(
     task,
     workspaces,
     workspaces.readNxJson(),
