@@ -60,13 +60,13 @@
 /docs/generated/packages/webpack/** @jaysoo @mandarini @ndcunningham
 /docs/generated/packages/esbuild/** @nartc @jaysoo @ndcunningham
 /docs/generated/packages/rollup/** @jaysoo @mandarini @ndcunningham
-/docs/generated/packages/vite/** @jaysoo @mandarini @ndcunningham
+/docs/generated/packages/vite/** @jaysoo @mandarini @ndcunningham @meeroslav
 /docs/shared/packages/js/** @nartc @jaysoo @ndcunningham
 /docs/shared/packages/web/** @jaysoo @mandarini @ndcunningham
 /docs/shared/packages/webpack/** @jaysoo @mandarini @ndcunningham
 /docs/shared/packages/esbuild/** @nartc @jaysoo @ndcunningham
 /docs/shared/packages/rollup/** @jaysoo @mandarini @ndcunningham
-/docs/shared/packages/vite/** @jaysoo @mandarini @ndcunningham
+/docs/shared/packages/vite/** @jaysoo @mandarini @ndcunningham @meeroslav
 /packages/js/** @nartc @jaysoo @ndcunningham
 /e2e/js/** @nartc @jaysoo @ndcunningham
 /packages/web/** @jaysoo @mandarini @ndcunningham
@@ -77,8 +77,8 @@
 /e2e/esbuild/** @jaysoo @nartc @ndcunningham
 /packages/rollup/** @jaysoo @mandarini @ndcunningham
 /e2e/rollup/** @jaysoo @mandarini @ndcunningham
-/packages/vite/** @jaysoo @mandarini @ndcunningham
-/e2e/vite/** @jaysoo @mandarini @ndcunningham
+/packages/vite/** @jaysoo @mandarini @ndcunningham @meeroslav
+/e2e/vite/** @jaysoo @mandarini @ndcunningham @meeroslav
 
 ## Tools
 /docs/generated/packages/cypress/** @barbados-clemens @FrozenPandaz
