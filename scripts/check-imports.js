@@ -34,6 +34,7 @@ function check() {
     'packages/workspace/src/core/file-command-line-utils.ts',
     'packages/workspace/src/generators/preset/preset.ts',
     'packages/workspace/src/generators/new/generate-preset.ts',
+    'packages/workspace/src/generators/new/new.spec.ts',
     'packages/workspace/src/generators/init/init.ts',
     'packages/workspace/src/migrations/update-8-3-0/update-8-3-0.spec.ts',
     'packages/workspace/src/migrations/update-8-3-0/update-ng-cli-8-1.ts',

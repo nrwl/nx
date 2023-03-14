@@ -4,7 +4,11 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { Preset } from '../utils/presets';
-import { nxVersion } from '../../utils/versions';
+import {
+  angularCliVersion,
+  nxVersion,
+  typescriptVersion,
+} from '../../utils/versions';
 import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 import { NormalizedSchema } from './new';
 import { join } from 'path';
@@ -20,10 +24,7 @@ export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
   ) {
     return;
   }
-  const { dependencies, dev } = getPresetDependencies(
-    options.preset,
-    options.presetVersion
-  );
+  const { dependencies, dev } = getPresetDependencies(options);
   return addDependenciesToPackageJson(
     host,
     dependencies,
@@ -86,29 +87,51 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
   }
 }
 
-function getPresetDependencies(preset: string, version?: string) {
+function getPresetDependencies({
+  preset,
+  presetVersion,
+  bundler,
+}: NormalizedSchema) {
   switch (preset) {
     case Preset.TS:
       return { dependencies: {}, dev: { '@nrwl/js': nxVersion } };
 
     case Preset.AngularMonorepo:
     case Preset.AngularStandalone:
-      return { dependencies: { '@nrwl/angular': nxVersion }, dev: {} };
+      return {
+        dependencies: { '@nrwl/angular': nxVersion },
+        dev: {
+          '@angular-devkit/core': angularCliVersion,
+          '@angular-devkit/schematics': angularCliVersion,
+          '@schematics/angular': angularCliVersion,
+          typescript: typescriptVersion,
+        },
+      };
 
     case Preset.Express:
       return { dependencies: {}, dev: { '@nrwl/express': nxVersion } };
 
     case Preset.Nest:
-      return { dependencies: {}, dev: { '@nrwl/nest': nxVersion } };
+      return {
+        dependencies: {},
+        dev: { '@nrwl/nest': nxVersion, typescript: typescriptVersion },
+      };
 
     case Preset.NextJs:
       return { dependencies: { '@nrwl/next': nxVersion }, dev: {} };
 
     case Preset.ReactMonorepo:
-      return { dependencies: {}, dev: { '@nrwl/react': nxVersion } };
-
     case Preset.ReactStandalone:
-      return { dependencies: {}, dev: { '@nrwl/react': nxVersion } };
+      return {
+        dependencies: {},
+        dev: {
+          '@nrwl/react': nxVersion,
+          '@nrwl/cypress': nxVersion,
+          '@nrwl/jest': bundler !== 'vite' ? nxVersion : undefined,
+          '@nrwl/vite': bundler === 'vite' ? nxVersion : undefined,
+          '@nrwl/webpack': bundler === 'webpack' ? nxVersion : undefined,
+        },
+      };
 
     case Preset.ReactNative:
       return { dependencies: {}, dev: { '@nrwl/react-native': nxVersion } };
@@ -117,7 +140,10 @@ function getPresetDependencies(preset: string, version?: string) {
       return { dependencies: {}, dev: { '@nrwl/expo': nxVersion } };
 
     case Preset.WebComponents:
-      return { dependencies: {}, dev: { '@nrwl/web': nxVersion } };
+      return {
+        dependencies: {},
+        dev: { '@nrwl/web': nxVersion, typescript: typescriptVersion },
+      };
 
     case Preset.NodeServer:
       return { dependencies: {}, dev: { '@nrwl/node': nxVersion } };
@@ -125,7 +151,9 @@ function getPresetDependencies(preset: string, version?: string) {
     default: {
       return {
         dev: {},
-        dependencies: { [preset]: version ?? getNpmPackageVersion(preset) },
+        dependencies: {
+          [preset]: presetVersion ?? getNpmPackageVersion(preset),
+        },
       };
     }
   }
