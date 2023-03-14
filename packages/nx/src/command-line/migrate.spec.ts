@@ -1,5 +1,7 @@
 import * as enquirer from 'enquirer';
 import { PackageJson } from '../utils/package-json';
+import * as packageMgrUtils from '../utils/package-manager';
+
 import {
   Migrator,
   normalizeVersion,
@@ -1493,8 +1495,8 @@ describe('Migration', () => {
   });
 
   describe('parseMigrationsOptions', () => {
-    it('should work for generating migrations', () => {
-      const r = parseMigrationsOptions({
+    it('should work for generating migrations', async () => {
+      const r = await parseMigrationsOptions({
         packageAndVersion: '8.12.0',
         from: '@myscope/a@12.3,@myscope/b@1.1.1',
         to: '@myscope/c@12.3.1',
@@ -1513,8 +1515,8 @@ describe('Migration', () => {
       });
     });
 
-    it('should work for running migrations', () => {
-      const r = parseMigrationsOptions({
+    it('should work for running migrations', async () => {
+      const r = await parseMigrationsOptions({
         runMigrations: '',
         ifExists: true,
       });
@@ -1525,117 +1527,148 @@ describe('Migration', () => {
       });
     });
 
-    it('should handle different variations of the target package', () => {
+    it('should handle different variations of the target package', async () => {
+      jest
+        .spyOn(packageMgrUtils, 'packageRegistryView')
+        .mockImplementation((pkg, version) => {
+          return Promise.resolve(version);
+        });
       expect(
-        parseMigrationsOptions({ packageAndVersion: '@angular/core' })
+        await parseMigrationsOptions({ packageAndVersion: '@angular/core' })
       ).toMatchObject({
         targetPackage: '@angular/core',
         targetVersion: 'latest',
       });
       expect(
-        parseMigrationsOptions({ packageAndVersion: '8.12' })
+        await parseMigrationsOptions({ packageAndVersion: '8.12' })
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '8.12.0',
       });
-      expect(parseMigrationsOptions({ packageAndVersion: '8' })).toMatchObject({
+      expect(
+        await parseMigrationsOptions({ packageAndVersion: '8' })
+      ).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '8.0.0',
       });
-      expect(parseMigrationsOptions({ packageAndVersion: '12' })).toMatchObject(
-        {
-          targetPackage: '@nrwl/workspace',
-          targetVersion: '12.0.0',
-        }
-      );
       expect(
-        parseMigrationsOptions({ packageAndVersion: '8.12.0-beta.0' })
+        await parseMigrationsOptions({ packageAndVersion: '12' })
+      ).toMatchObject({
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '12.0.0',
+      });
+      expect(
+        await parseMigrationsOptions({ packageAndVersion: '8.12.0-beta.0' })
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '8.12.0-beta.0',
       });
       expect(
-        parseMigrationsOptions({ packageAndVersion: 'next' })
+        await parseMigrationsOptions({ packageAndVersion: 'next' })
       ).toMatchObject({
         targetPackage: 'nx',
         targetVersion: 'next',
       });
       expect(
-        parseMigrationsOptions({ packageAndVersion: '13.10.0' })
+        await parseMigrationsOptions({ packageAndVersion: '13.10.0' })
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '13.10.0',
       });
       expect(
-        parseMigrationsOptions({ packageAndVersion: '@nrwl/workspace@8.12' })
+        await parseMigrationsOptions({
+          packageAndVersion: '@nrwl/workspace@8.12',
+        })
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '8.12.0',
       });
       expect(
-        parseMigrationsOptions({ packageAndVersion: 'mypackage@8.12' })
+        await parseMigrationsOptions({ packageAndVersion: 'mypackage@8.12' })
       ).toMatchObject({
         targetPackage: 'mypackage',
         targetVersion: '8.12.0',
       });
       expect(
-        parseMigrationsOptions({ packageAndVersion: 'mypackage' })
+        await parseMigrationsOptions({ packageAndVersion: 'mypackage' })
       ).toMatchObject({
         targetPackage: 'mypackage',
         targetVersion: 'latest',
       });
       expect(
-        parseMigrationsOptions({ packageAndVersion: 'mypackage2' })
+        await parseMigrationsOptions({ packageAndVersion: 'mypackage2' })
       ).toMatchObject({
         targetPackage: 'mypackage2',
         targetVersion: 'latest',
       });
       expect(
-        parseMigrationsOptions({ packageAndVersion: '@nrwl/workspace@latest' })
+        await parseMigrationsOptions({
+          packageAndVersion: '@nrwl/workspace@latest',
+        })
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: 'latest',
       });
+      expect(
+        await parseMigrationsOptions({
+          packageAndVersion: '@nrwl/workspace@alpha',
+        })
+      ).toMatchObject({
+        targetPackage: '@nrwl/workspace',
+        targetVersion: 'alpha',
+      });
     });
 
-    it('should handle incorrect from', () => {
-      expect(() =>
+    it('should handle incorrect from', async () => {
+      await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: '8.12.0',
           from: '@myscope/a@',
         })
-      ).toThrowError(`Incorrect 'from' section. Use --from="package@version"`);
-      expect(() =>
+      ).rejects.toThrowError(
+        `Incorrect 'from' section. Use --from="package@version"`
+      );
+      await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: '8.12.0',
           from: '@myscope/a',
         })
-      ).toThrowError(`Incorrect 'from' section. Use --from="package@version"`);
-      expect(() =>
+      ).rejects.toThrowError(
+        `Incorrect 'from' section. Use --from="package@version"`
+      );
+      await expect(() =>
         parseMigrationsOptions({ packageAndVersion: '8.12.0', from: 'myscope' })
-      ).toThrowError(`Incorrect 'from' section. Use --from="package@version"`);
+      ).rejects.toThrowError(
+        `Incorrect 'from' section. Use --from="package@version"`
+      );
     });
 
-    it('should handle incorrect to', () => {
-      expect(() =>
+    it('should handle incorrect to', async () => {
+      await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: '8.12.0',
           to: '@myscope/a@',
         })
-      ).toThrowError(`Incorrect 'to' section. Use --to="package@version"`);
-      expect(() =>
+      ).rejects.toThrowError(
+        `Incorrect 'to' section. Use --to="package@version"`
+      );
+      await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: '8.12.0',
           to: '@myscope/a',
         })
-      ).toThrowError(`Incorrect 'to' section. Use --to="package@version"`);
-      expect(() =>
+      ).rejects.toThrowError(
+        `Incorrect 'to' section. Use --to="package@version"`
+      );
+      await expect(() =>
         parseMigrationsOptions({ packageAndVersion: '8.12.0', to: 'myscope' })
-      ).toThrowError(`Incorrect 'to' section. Use --to="package@version"`);
+      ).rejects.toThrowError(
+        `Incorrect 'to' section. Use --to="package@version"`
+      );
     });
 
-    it('should handle backslashes in package names', () => {
-      const r = parseMigrationsOptions({
+    it('should handle backslashes in package names', async () => {
+      const r = await parseMigrationsOptions({
         packageAndVersion: '@nrwl\\workspace@8.12.0',
         from: '@myscope\\a@12.3,@myscope\\b@1.1.1',
         to: '@myscope\\c@12.3.1',

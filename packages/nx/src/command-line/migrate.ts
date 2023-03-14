@@ -56,6 +56,7 @@ import { isCI } from '../utils/is-ci';
 import { getNxRequirePaths } from '../utils/installation-directory';
 import { readNxJson } from '../config/configuration';
 import { runNxSync } from '../utils/child-process';
+import { Console } from 'console';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -614,14 +615,24 @@ const LEGACY_NRWL_PACKAGE_GROUP: ArrayPackageGroup = [
   { package: '@nrwl/tao', version: '*' },
 ];
 
-function normalizeVersionWithTagCheck(version: string) {
-  if (version === 'latest' || version === 'next') return version;
+async function normalizeVersionWithTagCheck(
+  pkg: string,
+  version: string
+): Promise<string> {
+  // This doesn't seem like a valid version, lets check if its a tag on the registry.
+  if (version && !coerce(version)) {
+    try {
+      return packageRegistryView(pkg, version, 'version');
+    } catch {
+      // fall through to old logic
+    }
+  }
   return normalizeVersion(version);
 }
 
-function versionOverrides(overrides: string, param: string) {
+async function versionOverrides(overrides: string, param: string) {
   const res = {};
-  overrides.split(',').forEach((p) => {
+  for (const p of overrides.split(',')) {
     const split = p.lastIndexOf('@');
     if (split === -1 || split === 0) {
       throw new Error(
@@ -635,13 +646,17 @@ function versionOverrides(overrides: string, param: string) {
         `Incorrect '${param}' section. Use --${param}="package@version"`
       );
     }
-    res[normalizeSlashes(selectedPackage)] =
-      normalizeVersionWithTagCheck(selectedVersion);
-  });
+    res[normalizeSlashes(selectedPackage)] = await normalizeVersionWithTagCheck(
+      selectedPackage,
+      selectedVersion
+    );
+  }
   return res;
 }
 
-function parseTargetPackageAndVersion(args: string) {
+async function parseTargetPackageAndVersion(
+  args: string
+): Promise<{ targetPackage: string; targetVersion: string }> {
   if (!args) {
     throw new Error(
       `Provide the correct package name and version. E.g., my-package@9.0.0.`
@@ -662,7 +677,10 @@ function parseTargetPackageAndVersion(args: string) {
           `Provide the correct package name and version. E.g., my-package@9.0.0.`
         );
       }
-      const targetVersion = normalizeVersionWithTagCheck(maybeVersion);
+      const targetVersion = await normalizeVersionWithTagCheck(
+        targetPackage,
+        maybeVersion
+      );
       return { targetPackage, targetVersion };
     }
   } else {
@@ -672,7 +690,10 @@ function parseTargetPackageAndVersion(args: string) {
       valid(args) ||
       args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/)
     ) {
-      const targetVersion = normalizeVersionWithTagCheck(args);
+      // Passing `nx` here may seem wrong, but nx and @nrwl/workspace are synced in version.
+      // We could duplicate the ternary below, but its not necessary since they are equivalent
+      // on the registry
+      const targetVersion = await normalizeVersionWithTagCheck('nx', args);
       const targetPackage =
         !['latest', 'next'].includes(args) && lt(targetVersion, '14.0.0-beta.0')
           ? '@nrwl/workspace'
@@ -707,19 +728,21 @@ type RunMigrations = {
   ifExists: boolean;
 };
 
-export function parseMigrationsOptions(options: {
+export async function parseMigrationsOptions(options: {
   [k: string]: any;
-}): GenerateMigrations | RunMigrations {
+}): Promise<GenerateMigrations | RunMigrations> {
   if (options.runMigrations === '') {
     options.runMigrations = 'migrations.json';
   }
 
   if (!options.runMigrations) {
     const from = options.from
-      ? versionOverrides(options.from as string, 'from')
+      ? await versionOverrides(options.from as string, 'from')
       : {};
-    const to = options.to ? versionOverrides(options.to as string, 'to') : {};
-    const { targetPackage, targetVersion } = parseTargetPackageAndVersion(
+    const to = options.to
+      ? await versionOverrides(options.to as string, 'to')
+      : {};
+    const { targetPackage, targetVersion } = await parseTargetPackageAndVersion(
       options['packageAndVersion']
     );
     return {
@@ -1525,7 +1548,7 @@ export async function migrate(
   }
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
-    const opts = parseMigrationsOptions(args);
+    const opts = await parseMigrationsOptions(args);
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
