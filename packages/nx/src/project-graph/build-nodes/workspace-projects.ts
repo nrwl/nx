@@ -168,5 +168,11 @@ export function normalizeImplicitDependencies(
     projectNames,
     projectsSet
   );
-  return matches.filter((x) => x !== source);
+  return (
+    matches
+      .filter((x) => x !== source)
+      // implicit dependencies that start with ! should hang around, to be processed by
+      // implicit-project-dependencies.ts after explicit deps are added to graph.
+      .concat(implicitDependencies.filter((x) => x.startsWith('!')))
+  );
 }
