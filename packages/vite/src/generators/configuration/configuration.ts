@@ -142,7 +142,7 @@ export async function viteConfigurationGenerator(
     deleteWebpackConfig(
       tree,
       root,
-      targets[buildTargetName]?.options?.webpackConfig
+      targets?.[buildTargetName]?.options?.webpackConfig
     );
 
     editTsConfig(tree, schema);
