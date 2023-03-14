@@ -391,10 +391,10 @@ export function moveAndEditIndexHtml(
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   let indexHtmlPath =
-    projectConfig.targets[buildTarget].options?.index ??
+    projectConfig.targets?.[buildTarget]?.options?.index ??
     `${projectConfig.root}/src/index.html`;
   let mainPath =
-    projectConfig.targets[buildTarget].options?.main ??
+    projectConfig.targets?.[buildTarget]?.options?.main ??
     `${projectConfig.root}/src/main.ts${
       options.uiFramework === 'react' ? 'x' : ''
     }`;
@@ -638,7 +638,7 @@ export function getViteConfigPathForProject(
   let viteConfigPath: string | undefined;
   const { targets, root } = readProjectConfiguration(tree, projectName);
   if (target) {
-    viteConfigPath = targets[target]?.options?.configFile;
+    viteConfigPath = targets?.[target]?.options?.configFile;
   } else {
     const config = Object.values(targets).find(
       (config) => config.executor === '@nrwl/vite:build'

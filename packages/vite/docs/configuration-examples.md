@@ -59,8 +59,6 @@ The list of executors for building, testing and serving that can be converted to
 
 ### Unsupported executors
 
-We cannot guarantee that the projects using the following executors for either building, testing or serving will work correctly when converted to use the `@nrwl/vite` executors. If you have a project that uses one of these executors, you can try to [configure it to use the `@nrwl/vite` executors manually](/packages/vite/documents/set-up-vite-manually), but it may not work properly.
-
 - `@nrwl/angular:ng-packagr-lite`
 - `@nrwl/angular:package`
 - `@nrwl/angular:webpack-browser`
@@ -71,6 +69,12 @@ We cannot guarantee that the projects using the following executors for either b
 - `@nrwl/next:build`
 - `@nrwl/next:server`
 - `@nrwl/js:tsc`
+- any executor _not_ listed in the lists of "supported executors"
+- any project that does _not_ have a target for building, serving or testing
+
+We **cannot** guarantee that projects using unsupported executors - _or any executor that is NOT listed in the list of "supported executors"_ - for either building, testing or serving will work correctly when converted to use the `@nrwl/vite` executors.
+
+If you have a project that does _not_ use one of the supported executors you can try to [configure it to use the `@nrwl/vite` executors manually](/packages/vite/documents/set-up-vite-manually), but it may not work properly.
 
 You can read more in the [Vite package overview page](/packages/vite).
 
