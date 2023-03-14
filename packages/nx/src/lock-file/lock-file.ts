@@ -10,6 +10,7 @@ import { detectPackageManager, PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
 import { ProjectGraph } from '../config/project-graph';
 import { PackageJson } from '../utils/package-json';
+import { defaultHashing } from '../hasher/hashing-impl';
 
 import { parseNpmLockfile, stringifyNpmLockfile } from './npm-parser';
 import { parsePnpmLockfile, stringifyPnpmLockfile } from './pnpm-parser';
@@ -17,7 +18,6 @@ import { parseYarnLockfile, stringifyYarnLockfile } from './yarn-parser';
 import { pruneProjectGraph } from './project-graph-pruning';
 import { normalizePackageJson } from './utils/package-json';
 import { output } from '../utils/output';
-import { hashValues } from './utils/hashing';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
@@ -64,7 +64,7 @@ export function lockFileHash(
     content = readFileSync(NPM_LOCK_PATH, 'utf8');
   }
   if (content) {
-    return hashValues([content]);
+    return defaultHashing.hashArray([content]);
   } else {
     throw new Error(
       `Unknown package manager ${packageManager} or lock file missing`
