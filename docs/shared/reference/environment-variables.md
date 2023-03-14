@@ -1,5 +1,7 @@
 # Environment Variables
 
+The following environment variables are ones that you can set to change the behavior of Nx in different environments.
+
 | Property                         | Type    | Description                                                                                                                                                                                                                  |
 | -------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | NX_BASE                          | string  | The default base branch to use when calculating the affected projects. Can be overridden on the command line with `--base`.                                                                                                  |
@@ -16,3 +18,13 @@
 | NX_VERBOSE_LOGGING               | boolean | If set to `true`, will print debug information useful for troubleshooting                                                                                                                                                    |
 | NX_DRY_RUN                       | boolean | If set to `true`, will perform a dry run of the generator. No files will be created and no packages will be installed.                                                                                                       |
 | NX_INTERACTIVE                   | boolean | If set to `true`, will allow Nx to prompt you in the terminal to answer some further questions when running generators.                                                                                                      |
+
+Nx will set the following environment variables so they can be accessible within the process even outside of executors and generators
+
+| Property                     | Type    | Description                                                                                                           |
+| ---------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| NX_TASK_TARGET_PROJECT       | string  | Set to the project name of the task being run. Use this to tell which project is being run.                           |
+| NX_TASK_TARGET_TARGET        | string  | Set to the target name of the task being run. Use this to tell which target of the project is being run.              |
+| NX_TASK_TARGET_CONFIGURATION | string  | Set to the configuration name of the task being run. Use this to tell which configuration of the target is being run. |
+| NX_DRY_RUN                   | boolean | Set to `true` during dry runs of generators. Use this to avoid side effects during generators.                        |
+| NX_INTERACTIVE               | boolean | Set to `false` when running generators with `--interactive=false`. Use this to prevent prompting during generators    |
