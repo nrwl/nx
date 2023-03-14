@@ -184,6 +184,15 @@
         "type": "generator"
       },
       {
+        "description": "Generate an Angular directive.",
+        "file": "generated/packages/angular/generators/directive.json",
+        "hidden": false,
+        "name": "directive",
+        "originalFilePath": "/packages/angular/src/generators/directive/schema.json",
+        "path": "angular/generators/directive",
+        "type": "generator"
+      },
+      {
         "description": "Initializes the `@nrwl/angular` plugin.",
         "file": "generated/packages/angular/generators/init.json",
         "hidden": true,

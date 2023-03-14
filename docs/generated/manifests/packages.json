@@ -189,6 +189,15 @@
         "path": "/packages/angular/generators/convert-tslint-to-eslint",
         "type": "generator"
       },
+      "/packages/angular/generators/directive": {
+        "description": "Generate an Angular directive.",
+        "file": "generated/packages/angular/generators/directive.json",
+        "hidden": false,
+        "name": "directive",
+        "originalFilePath": "/packages/angular/src/generators/directive/schema.json",
+        "path": "/packages/angular/generators/directive",
+        "type": "generator"
+      },
       "/packages/angular/generators/init": {
         "description": "Initializes the `@nrwl/angular` plugin.",
         "file": "generated/packages/angular/generators/init.json",

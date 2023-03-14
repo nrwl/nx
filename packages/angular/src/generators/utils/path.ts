@@ -1,4 +1,11 @@
-import { joinPathFragments, workspaceRoot } from '@nrwl/devkit';
+import {
+  joinPathFragments,
+  normalizePath,
+  readNxJson,
+  readProjectConfiguration,
+  Tree,
+  workspaceRoot,
+} from '@nrwl/devkit';
 import { basename, dirname, relative } from 'path';
 
 export function pathStartsWith(path1: string, path2: string): boolean {
@@ -21,4 +28,29 @@ export function getRelativeImportToFile(
     relativeDirToTarget,
     basename(targetFilePath, '.ts')
   )}`;
+}
+
+export function checkPathUnderProjectRoot(
+  tree: Tree,
+  projectName: string,
+  path: string
+): void {
+  if (!path) {
+    return;
+  }
+
+  const project = projectName ?? readNxJson(tree).defaultProject;
+  const { root } = readProjectConfiguration(tree, project);
+
+  let pathToComponent = normalizePath(path);
+  pathToComponent = pathToComponent.startsWith('/')
+    ? pathToComponent.slice(1)
+    : pathToComponent;
+
+  if (!pathStartsWith(pathToComponent, root)) {
+    throw new Error(
+      `The path provided (${path}) does not exist under the project root (${root}). ` +
+        `Please make sure to provide a path that exists under the project root.`
+    );
+  }
 }

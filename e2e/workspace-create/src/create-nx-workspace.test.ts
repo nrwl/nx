@@ -341,7 +341,7 @@ describe('create-nx-workspace', () => {
     process.env.SELECTED_PM = packageManager;
   });
 
-  it('should store package manager preference for angular cli', () => {
+  it('should store package manager preference for angular', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
 

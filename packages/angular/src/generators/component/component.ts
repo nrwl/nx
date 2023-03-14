@@ -1,17 +1,11 @@
 import type { Tree } from '@nrwl/devkit';
-import {
-  formatFiles,
-  normalizePath,
-  readNxJson,
-  readProjectConfiguration,
-  stripIndents,
-} from '@nrwl/devkit';
-import { pathStartsWith } from '../utils/path';
+import { formatFiles, stripIndents } from '@nrwl/devkit';
 import { exportComponentInEntryPoint } from './lib/component';
 import { normalizeOptions } from './lib/normalize-options';
-import type { NormalizedSchema, Schema } from './schema';
+import type { Schema } from './schema';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { lt } from 'semver';
+import { checkPathUnderProjectRoot } from '../utils/path';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
@@ -27,7 +21,7 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   const options = await normalizeOptions(tree, rawOptions);
   const { projectSourceRoot, ...schematicOptions } = options;
 
-  checkPathUnderProjectRoot(tree, options);
+  checkPathUnderProjectRoot(tree, options.project, options.path);
 
   const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const angularComponentSchematic = wrapAngularDevkitSchematic(
@@ -39,27 +33,6 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   exportComponentInEntryPoint(tree, options);
 
   await formatFiles(tree);
-}
-
-function checkPathUnderProjectRoot(tree: Tree, schema: NormalizedSchema): void {
-  if (!schema.path) {
-    return;
-  }
-
-  const project = schema.project ?? readNxJson(tree).defaultProject;
-  const { root } = readProjectConfiguration(tree, project);
-
-  let pathToComponent = normalizePath(schema.path);
-  pathToComponent = pathToComponent.startsWith('/')
-    ? pathToComponent.slice(1)
-    : pathToComponent;
-
-  if (!pathStartsWith(pathToComponent, root)) {
-    throw new Error(
-      `The path provided for the component (${schema.path}) does not exist under the project root (${root}). ` +
-        `Please make sure to provide a path that exists under the project root.`
-    );
-  }
 }
 
 export default componentGenerator;
