@@ -49,6 +49,7 @@ type Options = [
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
+    allowImportOfLazyLoadedDependencies: boolean;
     banTransitiveDependencies: boolean;
     checkNestedExternalImports: boolean;
   }
@@ -85,6 +86,7 @@ export default createESLintRule<Options, MessageIds>({
         properties: {
           enforceBuildableLibDependency: { type: 'boolean' },
           allowCircularSelfDependency: { type: 'boolean' },
+          allowImportOfLazyLoadedDependencies: { type: 'boolean' },
           banTransitiveDependencies: { type: 'boolean' },
           checkNestedExternalImports: { type: 'boolean' },
           allow: [{ type: 'string' }],
@@ -139,6 +141,7 @@ export default createESLintRule<Options, MessageIds>({
       depConstraints: [],
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
+      allowImportOfLazyLoadedDependencies: false,
       banTransitiveDependencies: false,
       checkNestedExternalImports: false,
     },
@@ -151,6 +154,7 @@ export default createESLintRule<Options, MessageIds>({
         depConstraints,
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
+        allowImportOfLazyLoadedDependencies,
         banTransitiveDependencies,
         checkNestedExternalImports,
       },
@@ -494,6 +498,7 @@ export default createESLintRule<Options, MessageIds>({
       if (
         node.type === AST_NODE_TYPES.ImportDeclaration &&
         node.importKind !== 'type' &&
+        allowImportOfLazyLoadedDependencies === false &&
         onlyLoadChildren(
           projectGraph,
           sourceProject.name,
