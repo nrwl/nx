@@ -11,7 +11,6 @@ import type {
 import { dump, load } from '@zkochan/js-yaml';
 import { existsSync, readFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { output } from '../../utils/output';
 
 const LOCKFILE_YAML_FORMAT = {
   blankLines: true,
@@ -39,15 +38,7 @@ export function loadPnpmHoistedDepsDefinition() {
     const content = readFileSync(fullPath, 'utf-8');
     return load(content)?.hoistedDependencies ?? {};
   } else {
-    output.error({
-      title: `Could not find ".modules.yaml" at "${fullPath}"`,
-      bodyLines: [
-        'This error might be reported during the "pnpm install" in which case you can ignore it.',
-        'If this error is reported while running "nx..." commands please open an issue at `https://github.com/nrwl/nx/issues/new?template=1-bug.yml` and provide a reproduction.',
-      ],
-    });
-
-    return {};
+    throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
   }
 }
 
