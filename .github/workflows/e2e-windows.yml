@@ -13,7 +13,30 @@ on:
 
 permissions: {}
 jobs:
+  preinstall:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Cache node_modules
+        id: cache-modules
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: windows-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install packages
+        if: steps.cache-modules.outputs.cache-hit != 'true'
+        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+
   e2e:
+    needs: preinstall
     permissions:
       contents: read
 
@@ -124,22 +147,15 @@ jobs:
           node-version: ${{ matrix.node_version }}
           registry-url: http://localhost:4872
 
-      - name: Yarn cache directory path
-        id: yarn-cache-dir-path
-        shell: bash
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache yarn
+      - name: Cache node_modules
+        id: cache-modules
         uses: actions/cache@v3
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: windows-node-${{ matrix.node_version }}-yarn-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            windows-node-${{ matrix.node_version }}-yarn-
-            windows-node-${{ matrix.node_version }}-
-            windows-
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install packages
+        if: steps.cache-modules.outputs.cache-hit != 'true'
         run: yarn install --prefer-offline --frozen-lockfile --non-interactive
 
       - name: Run e2e tests
