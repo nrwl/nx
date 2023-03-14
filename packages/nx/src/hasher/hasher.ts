@@ -453,12 +453,18 @@ class TaskHasher {
     if (!this.filesetHashes[mapKey]) {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
         const parts = [];
-        this.projectGraph.allWorkspaceFiles
-          .filter((f) => minimatch(f.file, withoutWorkspaceRoot))
-          .forEach((f) => {
-            parts.push(f.hash);
-          });
-
+        const matchingFile = this.projectGraph.allWorkspaceFiles.find(
+          (t) => t.file === withoutWorkspaceRoot
+        );
+        if (matchingFile) {
+          parts.push(matchingFile.hash);
+        } else {
+          this.projectGraph.allWorkspaceFiles
+            .filter((f) => minimatch(f.file, withoutWorkspaceRoot))
+            .forEach((f) => {
+              parts.push(f.hash);
+            });
+        }
         const value = this.hashing.hashArray(parts);
         res({
           value,
