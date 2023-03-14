@@ -409,6 +409,7 @@ export const commandsObject = yargs
       process.exit(0);
     },
   })
+  .scriptName('nx')
   .help()
   .version(nxVersion);
 
