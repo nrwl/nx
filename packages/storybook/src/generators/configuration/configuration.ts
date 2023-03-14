@@ -16,6 +16,7 @@ import { initGenerator } from '../init/init';
 import {
   addAngularStorybookTask,
   addBuildStorybookToCacheableOperations,
+  addStaticTarget,
   addStorybookTask,
   addStorybookToNamedInputs,
   configureTsProjectConfig,
@@ -32,6 +33,7 @@ import {
   isStorybookV7,
 } from '../../utils/utilities';
 import {
+  nxVersion,
   storybookNextAddonVersion,
   storybookSwcAddonVersion,
   storybookTestRunnerVersion,
@@ -180,6 +182,10 @@ export async function configurationGenerator(
     );
   }
 
+  if (schema.configureStaticServe) {
+    addStaticTarget(tree, schema);
+  }
+
   const e2eProject = await getE2EProjectName(tree, schema.name);
   if (schema.configureCypress && !e2eProject) {
     const cypressTask = await cypressProjectGenerator(tree, {
@@ -188,6 +194,9 @@ export async function configurationGenerator(
       linter: schema.linter,
       directory: schema.cypressDirectory,
       standaloneConfig: schema.standaloneConfig,
+      ciTargetName: schema.configureStaticServe
+        ? 'static-storybook'
+        : undefined,
     });
     tasks.push(cypressTask);
   } else {
@@ -196,57 +205,31 @@ export async function configurationGenerator(
     );
   }
 
-  if (schema.tsConfiguration) {
-    tasks.push(
-      addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          ['@storybook/core-common']: storybookVersion,
-          ['ts-node']: tsNodeVersion,
-        }
-      )
-    );
-  }
+  const devDeps = {};
 
+  if (schema.tsConfiguration) {
+    devDeps['@storybook/core-common'] = storybookVersion;
+    devDeps['ts-node'] = tsNodeVersion;
+  }
   if (
     nextBuildTarget &&
     projectType === 'application' &&
     !schema.storybook7Configuration
   ) {
-    tasks.push(
-      addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          ['storybook-addon-next']: storybookNextAddonVersion,
-          ['storybook-addon-swc']: storybookSwcAddonVersion,
-        }
-      )
-    );
+    devDeps['storybook-addon-next'] = storybookNextAddonVersion;
+    devDeps['storybook-addon-swc'] = storybookSwcAddonVersion;
   } else if (compiler === 'swc') {
-    tasks.push(
-      addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          ['storybook-addon-swc']: storybookSwcAddonVersion,
-        }
-      )
-    );
+    devDeps['storybook-addon-swc'] = storybookSwcAddonVersion;
   }
 
   if (schema.configureTestRunner === true) {
-    tasks.push(
-      addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          '@storybook/test-runner': storybookTestRunnerVersion,
-        }
-      )
-    );
+    devDeps['@storybook/test-runner'] = storybookTestRunnerVersion;
   }
+  if (schema.configureStaticServe) {
+    devDeps['@nrwl/web'] = nxVersion;
+  }
+
+  tasks.push(addDependenciesToPackageJson(tree, {}, devDeps));
 
   await formatFiles(tree);
 

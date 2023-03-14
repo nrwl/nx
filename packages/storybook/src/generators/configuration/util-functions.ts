@@ -1,5 +1,6 @@
 import {
   createProjectGraphAsync,
+  ensurePackage,
   generateFiles,
   joinPathFragments,
   logger,
@@ -26,6 +27,7 @@ import {
 } from '../../utils/utilities';
 import { StorybookConfigureSchema } from './schema';
 import { UiFramework, UiFramework7 } from '../../utils/models';
+import { nxVersion } from '../../utils/versions';
 
 const DEFAULT_PORT = 4400;
 
@@ -138,6 +140,28 @@ export function addAngularStorybookTask(
   }
 
   updateProjectConfiguration(tree, projectName, projectConfig);
+}
+
+export function addStaticTarget(tree: Tree, opts: StorybookConfigureSchema) {
+  const nrwlWeb = ensurePackage<typeof import('@nrwl/web')>(
+    '@nrwl/web',
+    nxVersion
+  );
+  nrwlWeb.webStaticServeGenerator(tree, {
+    buildTarget: `${opts.name}:build-storybook`,
+    outputPath: joinPathFragments('dist/storybook', opts.name),
+    targetName: 'static-storybook',
+  });
+
+  const projectConfig = readProjectConfiguration(tree, opts.name);
+
+  projectConfig.targets['static-storybook'].configurations = {
+    ci: {
+      buildTarget: `${opts.name}:build-storybook:ci`,
+    },
+  };
+
+  updateProjectConfiguration(tree, opts.name, projectConfig);
 }
 
 export function configureTsProjectConfig(

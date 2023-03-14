@@ -11,6 +11,7 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { Linter } from '@nrwl/linter';
 import { libraryGenerator } from '@nrwl/workspace/generators';
+import { nxVersion } from '../../utils/versions';
 import { TsConfig } from '../../utils/utilities';
 import configurationGenerator from './configuration';
 import * as workspaceConfiguration from './test-configs/workspace-conifiguration.json';
@@ -42,6 +43,7 @@ describe('@nrwl/storybook:configuration', () => {
         devDependencies: {
           '@storybook/addon-essentials': '~6.2.9',
           '@storybook/react': '~6.2.9',
+          '@nrwl/web': nxVersion,
         },
       });
     });
@@ -327,6 +329,82 @@ describe('@nrwl/storybook:configuration', () => {
             'test-storybook -c libs/test-ui-lib/.storybook --url=http://localhost:4400',
         },
       });
+    });
+
+    it('should add static-storybook target', async () => {
+      await configurationGenerator(tree, {
+        name: 'test-ui-lib',
+        uiFramework: '@storybook/react',
+        configureStaticServe: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'test-ui-lib').targets[
+          'static-storybook'
+        ]
+      ).toMatchInlineSnapshot(`
+        Object {
+          "configurations": Object {
+            "ci": Object {
+              "buildTarget": "test-ui-lib:build-storybook:ci",
+            },
+          },
+          "executor": "@nrwl/web:file-server",
+          "options": Object {
+            "buildTarget": "test-ui-lib:build-storybook",
+            "staticFilePath": "dist/storybook/test-ui-lib",
+          },
+        }
+      `);
+      expect(
+        readJson(tree, 'package.json').devDependencies['@nrwl/web']
+      ).toBeTruthy();
+    });
+    it('should use static-storybook:ci in cypress project', async () => {
+      await configurationGenerator(tree, {
+        name: 'test-ui-lib',
+        uiFramework: '@storybook/react',
+        configureStaticServe: true,
+        configureCypress: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'test-ui-lib').targets[
+          'static-storybook'
+        ]
+      ).toMatchInlineSnapshot(`
+        Object {
+          "configurations": Object {
+            "ci": Object {
+              "buildTarget": "test-ui-lib:build-storybook:ci",
+            },
+          },
+          "executor": "@nrwl/web:file-server",
+          "options": Object {
+            "buildTarget": "test-ui-lib:build-storybook",
+            "staticFilePath": "dist/storybook/test-ui-lib",
+          },
+        }
+      `);
+      expect(readProjectConfiguration(tree, 'test-ui-lib-e2e').targets.e2e)
+        .toMatchInlineSnapshot(`
+        Object {
+          "configurations": Object {
+            "ci": Object {
+              "devServerTarget": "test-ui-lib:static-storybook:ci",
+            },
+          },
+          "executor": "@nrwl/cypress:cypress",
+          "options": Object {
+            "cypressConfig": "apps/test-ui-lib-e2e/cypress.config.ts",
+            "devServerTarget": "test-ui-lib:storybook",
+            "testingType": "e2e",
+          },
+        }
+      `);
+      expect(
+        readJson(tree, 'package.json').devDependencies['@nrwl/web']
+      ).toBeTruthy();
     });
   });
 
