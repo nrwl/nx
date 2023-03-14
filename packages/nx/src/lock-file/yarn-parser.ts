@@ -79,7 +79,7 @@ function addNodes(
 
       const node: ProjectGraphExternalNode = {
         type: 'npm',
-        name: `npm:${packageName}@${version}`,
+        name: version ? `npm:${packageName}@${version}` : `npm:${packageName}`,
         data: {
           version,
           packageName,
