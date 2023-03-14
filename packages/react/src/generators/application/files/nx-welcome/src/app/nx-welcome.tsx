@@ -274,17 +274,11 @@ export function NxWelcome({ title }: { title: string }) {
     .button-pill:hover {
       color: rgba(255, 255, 255, 1) !important;
     }
-    #nx-console-vscode:hover {
+    .nx-console:hover {
       background-color: rgba(0, 122, 204, 1);
     }
-    #nx-console-vscode svg {
+    .nx-console svg {
       color: rgba(0, 122, 204, 1);
-    }
-    #nx-console-intellij:hover {
-      background-color: rgba(138, 84, 170, 1);
-    }
-    #nx-console-intellij svg {
-      color: rgba(138, 84, 170, 1);
     }
     #nx-repo:hover {
       background-color: rgba(24, 23, 23, 1);
@@ -650,8 +644,7 @@ export function NxWelcome({ title }: { title: string }) {
             </div>
             <div id="other-links">
               <a
-                id="nx-console-vscode"
-                className="button-pill rounded shadow"
+                className="button-pill nx-console rounded shadow"
                 href="https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console&utm_source=nx-project"
                 target="_blank"
                 rel="noreferrer"
@@ -671,8 +664,7 @@ export function NxWelcome({ title }: { title: string }) {
                 </span>
               </a>
               <a
-                id="nx-console-intellij"
-                className="button-pill rounded shadow"
+                className="button-pill nx-console rounded shadow"
                 href="https://plugins.jetbrains.com/plugin/21060-nx-console"
                 target="_blank"
                 rel="noreferrer"

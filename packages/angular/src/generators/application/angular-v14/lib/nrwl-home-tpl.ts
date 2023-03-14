@@ -281,17 +281,11 @@ export const nrwlHomeTemplate = {
       .button-pill:hover {
         color: rgba(255, 255, 255, 1) !important;
       }
-      #nx-console-vscode:hover {
+      .nx-console:hover {
         background-color: rgba(0, 122, 204, 1);
       }
-      #nx-console-vscode svg {
+      .nx-console svg {
         color: rgba(0, 122, 204, 1);
-      }
-      #nx-console-intellij:hover {
-        background-color: rgba(138, 84, 170, 1);
-      }
-      #nx-console-intellij svg {
-        color: rgba(138, 84, 170, 1);
       }
 
       #nx-repo:hover {
@@ -643,7 +637,7 @@ export const nrwlHomeTemplate = {
             </a>
           </div>
           <div id="other-links">
-            <a id="nx-console-vscode" class="button-pill rounded shadow" href="https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console&utm_source=nx-project" target="_blank" rel="noreferrer">
+            <a class="button-pill rounded shadow nx-console" href="https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console&utm_source=nx-project" target="_blank" rel="noreferrer">
               <svg
                 fill="currentColor"
                 role="img"
@@ -661,8 +655,7 @@ export const nrwlHomeTemplate = {
               </span>
             </a>
             <a
-              id="nx-console-intellij"
-              class="button-pill rounded shadow"
+              class="button-pill rounded shadow nx-console"
               href="https://plugins.jetbrains.com/plugin/21060-nx-console"
               target="_blank"
               rel="noreferrer"
