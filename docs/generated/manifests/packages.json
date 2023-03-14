@@ -279,6 +279,15 @@
         "path": "/packages/angular/generators/ngrx",
         "type": "generator"
       },
+      "/packages/angular/generators/pipe": {
+        "description": "Generate an Angular Pipe",
+        "file": "generated/packages/angular/generators/pipe.json",
+        "hidden": false,
+        "name": "pipe",
+        "originalFilePath": "/packages/angular/src/generators/pipe/schema.json",
+        "path": "/packages/angular/generators/pipe",
+        "type": "generator"
+      },
       "/packages/angular/generators/scam-to-standalone": {
         "description": "Convert an existing Single Component Angular Module (SCAM) to a Standalone Component.",
         "file": "generated/packages/angular/generators/scam-to-standalone.json",

@@ -254,6 +254,12 @@
       "schema": "./src/generators/ngrx/schema.json",
       "description": "Adds NgRx support to an application or library."
     },
+    "pipe": {
+      "factory": "./src/generators/pipe/pipe",
+      "schema": "./src/generators/pipe/schema.json",
+      "description": "Generate an Angular Pipe",
+      "aliases": ["p"]
+    },
     "scam-to-standalone": {
       "factory": "./src/generators/scam-to-standalone/scam-to-standalone",
       "schema": "./src/generators/scam-to-standalone/schema.json",
