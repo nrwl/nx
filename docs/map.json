@@ -1840,11 +1840,6 @@
               "name": "Overview",
               "path": "/packages/linter",
               "file": "shared/packages/linter/linter-plugin"
-            },
-            {
-              "id": "eslint-plugin-nx",
-              "name": "eslint-plugin-nx",
-              "file": "shared/packages/linter/eslint-plugin-nx"
             }
           ]
         },
@@ -1858,6 +1853,12 @@
               "name": "Overview",
               "path": "/packages/eslint-plugin-nx",
               "file": "shared/packages/linter/eslint-plugin-nx"
+            },
+            {
+              "id": "enforce-module-boundaries",
+              "name": "The `enforce-module-boundaries` rule",
+              "path": "/packages/eslint-plugin-nx",
+              "file": "shared/packages/linter/enforce-module-boundaries"
             }
           ]
         },
