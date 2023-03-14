@@ -1,19 +1,14 @@
 import type { Tree } from '@nrwl/devkit';
-import {
-  joinPathFragments,
-  readNxJson,
-  readProjectConfiguration,
-} from '@nrwl/devkit';
+import { joinPathFragments, readProjectConfiguration } from '@nrwl/devkit';
 import type { NormalizedSchema, Schema } from '../schema';
 
 export function normalizeOptions(
   tree: Tree,
   options: Schema
 ): NormalizedSchema {
-  const project = options.project ?? readNxJson(tree).defaultProject;
   const { projectType, root, sourceRoot } = readProjectConfiguration(
     tree,
-    project
+    options.project
   );
   const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
   const path =
@@ -29,7 +24,6 @@ export function normalizeOptions(
     flat: options.flat ?? true,
     inlineScam: options.inlineScam ?? true,
     path,
-    project,
     projectSourceRoot,
   };
 }

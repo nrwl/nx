@@ -1,7 +1,7 @@
 export interface Schema {
   name: string;
+  project: string;
   path?: string;
-  project?: string;
   displayBlock?: boolean;
   inlineStyle?: boolean;
   inlineTemplate?: boolean;
@@ -21,6 +21,5 @@ export interface Schema {
 
 export interface NormalizedSchema extends Schema {
   path: string;
-  project: string;
   projectSourceRoot: string;
 }

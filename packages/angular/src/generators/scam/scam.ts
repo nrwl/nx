@@ -41,8 +41,7 @@ function checkPathUnderProjectRoot(tree: Tree, options: Partial<Schema>) {
     return;
   }
 
-  const project = options.project ?? readNxJson(tree).defaultProject;
-  const { root } = readProjectConfiguration(tree, project);
+  const { root } = readProjectConfiguration(tree, options.project);
 
   let pathToComponent = normalizePath(options.path);
   pathToComponent = pathToComponent.startsWith('/')

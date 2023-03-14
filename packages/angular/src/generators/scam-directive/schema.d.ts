@@ -1,7 +1,7 @@
 export interface Schema {
   name: string;
+  project: string;
   path?: string;
-  project?: string;
   skipTests?: boolean;
   inlineScam?: boolean;
   flat?: boolean;
@@ -15,6 +15,5 @@ export interface NormalizedSchema extends Schema {
   flat: boolean;
   inlineScam: boolean;
   path: string;
-  project: string;
   projectSourceRoot: string;
 }

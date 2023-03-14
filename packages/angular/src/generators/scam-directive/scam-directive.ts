@@ -2,7 +2,6 @@ import type { Tree } from '@nrwl/devkit';
 import {
   formatFiles,
   normalizePath,
-  readNxJson,
   readProjectConfiguration,
 } from '@nrwl/devkit';
 import { exportScam } from '../utils/export-scam';
@@ -41,8 +40,7 @@ function checkPathUnderProjectRoot(tree: Tree, options: Partial<Schema>) {
     return;
   }
 
-  const project = options.project ?? readNxJson(tree).defaultProject;
-  const { root } = readProjectConfiguration(tree, project);
+  const { root } = readProjectConfiguration(tree, options.project);
 
   let pathToDirective = normalizePath(options.path);
   pathToDirective = pathToDirective.startsWith('/')
