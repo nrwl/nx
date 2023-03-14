@@ -6,7 +6,7 @@ import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
 import { getPackageManagerCommand } from '../package-manager';
-import { loadNxPlugin, readPluginPackageJson } from '../nx-plugin';
+import { loadNxPlugin, NxPlugin, readPluginPackageJson } from '../nx-plugin';
 import { getNxRequirePaths } from '../installation-directory';
 
 function tryGetCollection<T extends object>(
@@ -35,11 +35,20 @@ export function getPluginCapabilities(
       pluginName,
       getNxRequirePaths(workspaceRoot)
     );
-    const pluginModule = loadNxPlugin(
-      pluginName,
-      getNxRequirePaths(workspaceRoot),
-      workspaceRoot
-    );
+    const pluginModule =
+      packageJson.generators ??
+      packageJson.executors ??
+      packageJson['nx-migrations'] ??
+      packageJson['schematics'] ??
+      packageJson['builders']
+        ? loadNxPlugin(
+            pluginName,
+            getNxRequirePaths(workspaceRoot),
+            workspaceRoot
+          )
+        : ({
+            name: pluginName,
+          } as NxPlugin);
     return {
       name: pluginName,
       generators:
