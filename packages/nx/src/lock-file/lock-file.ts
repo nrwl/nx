@@ -92,10 +92,12 @@ export function parseLockFile(
       return parseNpmLockfile(content);
     }
   } catch (e) {
-    output.error({
-      title: `Failed to parse ${packageManager} lockfile`,
-      bodyLines: errorBodyLines(e),
-    });
+    if (!isPostInstallProcess()) {
+      output.error({
+        title: `Failed to parse ${packageManager} lockfile`,
+        bodyLines: errorBodyLines(e),
+      });
+    }
     return;
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
@@ -153,18 +155,20 @@ export function createLockFile(
       return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
   } catch (e) {
-    const additionalInfo = [
-      'To prevent the build from breaking we are returning the root lock file.',
-    ];
-    if (packageManager === 'npm') {
-      additionalInfo.push(
-        'If you run `npm install --package-lock-only` in your output folder it will regenerate the correct pruned lockfile.'
-      );
+    if (!isPostInstallProcess()) {
+      const additionalInfo = [
+        'To prevent the build from breaking we are returning the root lock file.',
+      ];
+      if (packageManager === 'npm') {
+        additionalInfo.push(
+          'If you run `npm install --package-lock-only` in your output folder it will regenerate the correct pruned lockfile.'
+        );
+      }
+      output.error({
+        title: 'An error occured while creating pruned lockfile',
+        bodyLines: errorBodyLines(e, additionalInfo),
+      });
     }
-    output.error({
-      title: 'An error occured while creating pruned lockfile',
-      bodyLines: errorBodyLines(e, additionalInfo),
-    });
     return content;
   }
 }
@@ -179,4 +183,11 @@ function errorBodyLines(originalError: Error, additionalInfo: string[] = []) {
     `\nOriginal error: ${originalError.message}\n\n`,
     originalError.stack,
   ];
+}
+
+function isPostInstallProcess(): boolean {
+  return (
+    process.env.npm_command === 'install' &&
+    process.env.npm_lifecycle_event === 'postinstall'
+  );
 }
