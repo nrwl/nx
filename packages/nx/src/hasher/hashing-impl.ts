@@ -5,7 +5,10 @@ export class HashingImpl {
   hashArray(input: string[]): string {
     const hasher = createHash('sha256');
     for (const part of input) {
-      hasher.update(part);
+      // intentional single equals to check for null and undefined
+      if (part != undefined) {
+        hasher.update(part);
+      }
     }
     return hasher.digest('hex');
   }
