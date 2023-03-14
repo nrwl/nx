@@ -39,8 +39,7 @@ export function checkPathUnderProjectRoot(
     return;
   }
 
-  const project = projectName ?? readNxJson(tree).defaultProject;
-  const { root } = readProjectConfiguration(tree, project);
+  const { root } = readProjectConfiguration(tree, projectName);
 
   let pathToComponent = normalizePath(path);
   pathToComponent = pathToComponent.startsWith('/')

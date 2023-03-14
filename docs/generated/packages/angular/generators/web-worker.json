@@ -17,6 +17,7 @@
       "project": {
         "type": "string",
         "description": "The name of the project.",
+        "$default": { "$source": "projectName", "index": 0 },
         "x-dropdown": "projects",
         "x-priority": "important"
       },

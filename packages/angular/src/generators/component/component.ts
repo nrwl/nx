@@ -1,11 +1,11 @@
 import type { Tree } from '@nrwl/devkit';
 import { formatFiles, stripIndents } from '@nrwl/devkit';
+import { lt } from 'semver';
+import { checkPathUnderProjectRoot } from '../utils/path';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { exportComponentInEntryPoint } from './lib/component';
 import { normalizeOptions } from './lib/normalize-options';
 import type { Schema } from './schema';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
-import { lt } from 'semver';
-import { checkPathUnderProjectRoot } from '../utils/path';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);

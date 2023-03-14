@@ -2,16 +2,15 @@ import {
   joinPathFragments,
   names,
   normalizePath,
-  readNxJson,
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
 
 export type GenerationOptions = {
   name: string;
+  project: string;
   flat?: boolean;
   path?: string;
-  project?: string;
   type?: string;
 };
 export type FileInfo = {
@@ -46,10 +45,9 @@ function getFileInfo(
   options: GenerationOptions,
   defaultType: string
 ): FileInfo {
-  const project = options.project ?? readNxJson(tree).defaultProject;
   const { root, sourceRoot, projectType } = readProjectConfiguration(
     tree,
-    project
+    options.project
   );
   const { fileName: normalizedName } = names(options.name);
 
