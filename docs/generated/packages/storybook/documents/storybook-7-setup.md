@@ -56,6 +56,10 @@ You can generate Storybook configuration for an individual project with this com
 nx g @nrwl/storybook:configuration project-name --storybook7betaConfiguration --storybook7UiFramework=@storybook/react-webpack5
 ```
 
+{% callout type="info" title="For Nx versions <15.9" %}
+The flag is called `storybook7betaConfiguration` for Nx versions <15.9.
+{% /callout %}
+
 In the field `storybook7UiFramework` you must choose one of the following Storybook frameworks:
 
 - `@storybook/angular`

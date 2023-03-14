@@ -44,4 +44,8 @@ This is useful if you have a project that contains components that are not meant
 nx g @nrwl/angular:storybook-configuration ui --storybook7betaConfiguration=true
 ```
 
+{% callout type="info" title="For Nx versions <15.9" %}
+The flag is called `storybook7betaConfiguration` for Nx versions <15.9.
+{% /callout %}
+
 This will generate a Storybook configuration for the `ui` project using Storybook version 7. It will install the Storybook version 7 dependencies and configure the Storybook configuration files (the files inside the `.storybook` directory) to use Storybook version 7. You can read more about Storybook 7 Nx support in the [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup).
