@@ -83,7 +83,8 @@
       "description": "Configure your workspace using Storybook version 7.",
       "type": "boolean",
       "default": false,
-      "hidden": true
+      "hidden": true,
+      "aliases": ["storybook7betaConfiguration"]
     },
     "storybook7UiFramework": {
       "type": "string",
