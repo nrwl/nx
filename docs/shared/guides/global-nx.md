@@ -3,7 +3,7 @@
 Nx can be ran in a total of 3 ways:
 
 - Through your package manager (e.g. `npx nx`, `yarn nx`, or `pnpm exec nx`)
-- Through an [encapsulated install](/more-concepts/encapsulated-nx-and-the-wrapper) (e.g. `./nx` or `./nx.bat`)
+- Through [./nx or ./nx.bat](/more-concepts/nx-and-the-wrapper)
 - Through a global Nx installation (e.g. `nx`)
 
 With a global Nx installation, Nx looks for the local copy of Nx in your repo and hands off the process execution to it. This means that whichever version of Nx is installed locally in your repo is still the version of Nx that runs your code. For the most part, this can eliminate any issues that may arise from the global install being outdated.

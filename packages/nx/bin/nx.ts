@@ -120,7 +120,9 @@ function warnIfUsingOutdatedGlobalInstall(localNxVersion?: string) {
   // Using a global Nx Install
   if (isOutdatedGlobalInstall) {
     const bodyLines = localNxVersion
-      ? ['Its time to update Nx 🎉']
+      ? [
+          `Your repository uses a higher version of Nx (${localNxVersion}) than your global CLI version (${globalVersion})`,
+        ]
       : [
           'Its possible that this is causing Nx to not pick up your workspace properly.',
         ];

@@ -590,25 +590,25 @@ describeCI('global installation', () => {
   });
 
   it('should invoke Nx commands from local repo', () => {
+    const nxJsContents = readFile('node_modules/nx/bin/nx.js');
     updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
     let output: string;
     expect(() => {
-      output = runCommand('nx graph');
+      output = runCommand('nx show projects');
     }).not.toThrow();
     expect(output).toContain('local install');
+    updateFile('node_modules/nx/bin/nx.js', nxJsContents);
   });
 
   it('should warn if local Nx has higher major version', () => {
-    updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
     updateJson('node_modules/nx/package.json', (json) => {
       json.version = `${major(getPublishedVersion()) + 2}.0.0`;
       return json;
     });
     let output: string;
     expect(() => {
-      output = runCommand('nx graph');
+      output = runCommand('nx show projects');
     }).not.toThrow();
     expect(output).toContain('Its time to update Nx');
-    expect(output).toContain('local install');
   });
 });
