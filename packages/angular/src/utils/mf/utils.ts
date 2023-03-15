@@ -47,6 +47,12 @@ export async function getModuleFederationConfig(
     projectGraph = await createProjectGraphAsync();
   }
 
+  if (!projectGraph.nodes[mfConfig.name]?.data) {
+    throw Error(
+      `Cannot find project "${mfConfig.name}". Check that the name is correct in module-federation.config.js`
+    );
+  }
+
   const dependencies = getDependentPackagesForProject(
     projectGraph,
     mfConfig.name
