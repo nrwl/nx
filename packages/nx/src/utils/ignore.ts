@@ -14,7 +14,7 @@ export function getIgnoredGlobs(
   root: string = workspaceRoot,
   prependRoot: boolean = true
 ) {
-  const files = ['.nxignore', '.gitignore'];
+  const files = ['.gitignore', '.nxignore'];
   if (prependRoot) {
     return [
       ...getAlwaysIgnore(root),
