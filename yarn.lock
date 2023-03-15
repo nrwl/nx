@@ -8049,7 +8049,7 @@
 
 "@types/which@^2.0.2":
   version "2.0.2"
-  resolved "http://localhost:4873/@types%2fwhich/-/which-2.0.2.tgz#54541d02d6b1daee5ec01ac0d1b37cecf37db1ae"
+  resolved "https://registry.yarnpkg.com/@types%2fwhich/-/which-2.0.2.tgz#54541d02d6b1daee5ec01ac0d1b37cecf37db1ae"
   integrity sha512-113D3mDkZDjo+EeUEHCFy0qniNc1ZpecGiAU7WSo7YDoSzolZIQKpYFHrPpjkB2nuyahcKfrmLXeQlh7gqJYdw==
 
 "@types/ws@^8.5.1":
@@ -26025,7 +26025,7 @@ which@^2.0.1, which@^2.0.2:
 
 which@^3.0.0:
   version "3.0.0"
-  resolved "http://localhost:4873/which/-/which-3.0.0.tgz#a9efd016db59728758a390d23f1687b6e8f59f8e"
+  resolved "https://registry.yarnpkg.com/which/-/which-3.0.0.tgz#a9efd016db59728758a390d23f1687b6e8f59f8e"
   integrity sha512-nla//68K9NU6yRiwDY/Q8aU6siKlSs64aEC7+IV56QoAuyQT2ovsJcgGYGyqMOmI/CGN1BOR6mM5EN0FBO+zyQ==
   dependencies:
     isexe "^2.0.0"
