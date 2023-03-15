@@ -56,7 +56,6 @@ import { isCI } from '../utils/is-ci';
 import { getNxRequirePaths } from '../utils/installation-directory';
 import { readNxJson } from '../config/configuration';
 import { runNxSync } from '../utils/child-process';
-import { Console } from 'console';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -631,8 +630,8 @@ async function normalizeVersionWithTagCheck(
 }
 
 async function versionOverrides(overrides: string, param: string) {
-  const res = {};
-  for (const p of overrides.split(',')) {
+  const res: Record<string, string> = {};
+  const promises = overrides.split(',').map((p) => {
     const split = p.lastIndexOf('@');
     if (split === -1 || split === 0) {
       throw new Error(
@@ -646,11 +645,13 @@ async function versionOverrides(overrides: string, param: string) {
         `Incorrect '${param}' section. Use --${param}="package@version"`
       );
     }
-    res[normalizeSlashes(selectedPackage)] = await normalizeVersionWithTagCheck(
-      selectedPackage,
-      selectedVersion
+    return normalizeVersionWithTagCheck(selectedPackage, selectedVersion).then(
+      (version) => {
+        res[normalizeSlashes(selectedPackage)] = version;
+      }
     );
-  }
+  });
+  await Promise.all(promises);
   return res;
 }
 
@@ -736,12 +737,14 @@ export async function parseMigrationsOptions(options: {
   }
 
   if (!options.runMigrations) {
-    const from = options.from
-      ? await versionOverrides(options.from as string, 'from')
-      : {};
-    const to = options.to
-      ? await versionOverrides(options.to as string, 'to')
-      : {};
+    const [from, to] = await Promise.all([
+      options.from
+        ? versionOverrides(options.from as string, 'from')
+        : Promise.resolve({} as Record<string, string>),
+      options.to
+        ? await versionOverrides(options.to as string, 'to')
+        : Promise.resolve({} as Record<string, string>),
+    ]);
     const { targetPackage, targetVersion } = await parseTargetPackageAndVersion(
       options['packageAndVersion']
     );
