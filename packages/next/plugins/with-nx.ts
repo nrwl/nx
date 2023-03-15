@@ -3,6 +3,9 @@ import {
   joinPathFragments,
   offsetFromRoot,
   parseTargetString,
+  ProjectGraph,
+  ProjectGraphProjectNode,
+  Target,
   workspaceRoot,
 } from '@nrwl/devkit';
 import {
@@ -13,6 +16,7 @@ import type { NextConfig } from 'next';
 
 import path = require('path');
 import { createWebpackConfig } from '../src/utils/config';
+import { NextBuildBuilderOptions } from '@nrwl/next';
 export interface WithNxOptions extends NextConfig {
   nx?: {
     svgr?: boolean;
@@ -47,6 +51,65 @@ function getWithNxContext(): WithNxContext {
   };
 }
 
+function getTargetConfig(graph: ProjectGraph, target: Target) {
+  const projectNode = graph.nodes[target.project];
+  return projectNode.data.targets[target.target];
+}
+
+function getOptions(graph: ProjectGraph, target: Target) {
+  const targetConfig = getTargetConfig(graph, target);
+  const options = targetConfig.options;
+  if (target.configuration) {
+    Object.assign(options, targetConfig.configurations[target.configuration]);
+  }
+
+  return options;
+}
+
+function getNxContext(
+  graph: ProjectGraph,
+  target: Target
+): {
+  node: ProjectGraphProjectNode;
+  options: NextBuildBuilderOptions;
+  projectName: string;
+  targetName: string;
+  configurationName?: string;
+} {
+  const targetConfig = getTargetConfig(graph, target);
+
+  if ('@nrwl/next:build' === targetConfig.executor) {
+    return {
+      node: graph.nodes[target.project],
+      options: getOptions(graph, target),
+      projectName: target.project,
+      targetName: target.target,
+      configurationName: target.configuration,
+    };
+  }
+
+  const targetOptions = getOptions(graph, target);
+
+  // If we are running serve or export pull the options from the dependent target first (ex. build)
+  if (targetOptions.devServerTarget) {
+    const devServerTarget = parseTargetString(
+      targetOptions.devServerTarget,
+      graph
+    );
+
+    return getNxContext(graph, devServerTarget);
+  } else if (
+    ['@nrwl/next:server', '@nrwl/next:export'].includes(targetConfig.executor)
+  ) {
+    const buildTarget = parseTargetString(targetOptions.buildTarget, graph);
+    return getNxContext(graph, buildTarget);
+  } else {
+    throw new Error(
+      'Could not determine the config for this Next application.'
+    );
+  }
+}
+
 export function withNx(
   _nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
@@ -55,39 +118,20 @@ export function withNx(
     let dependencies: DependentBuildableProjectNode[] = [];
 
     const graph = await createProjectGraphAsync();
-    const project = process.env.NX_TASK_TARGET_PROJECT;
-    let projectNode = graph.nodes[project];
 
-    const targetName = process.env.NX_TASK_TARGET_TARGET;
-    const configurationName = process.env.NX_TASK_TARGET_CONFIGURATION;
+    const originalTarget = {
+      project: process.env.NX_TASK_TARGET_PROJECT,
+      target: process.env.NX_TASK_TARGET_TARGET,
+      configuration: process.env.NX_TASK_TARGET_CONFIGURATION,
+    };
 
-    let options = projectNode.data.targets[targetName].options;
-    if (configurationName) {
-      Object.assign(
-        options,
-        projectNode.data.targets[targetName].configurations[configurationName]
-      );
-    }
-
-    // If we are running serve or export pull the options from the dependent target first (ex. build)
-    if (
-      ['@nrwl/next:server', '@nrwl/next:export'].includes(
-        projectNode.data.targets[targetName].executor
-      )
-    ) {
-      const target = parseTargetString(options.buildTarget, graph);
-      projectNode = graph.nodes[target.project];
-      options = projectNode.data.targets[target.target].options;
-
-      if (target.configuration) {
-        Object.assign(
-          options,
-          projectNode.data.targets[target.target].configurations[
-            target.configuration
-          ]
-        );
-      }
-    }
+    const {
+      node: projectNode,
+      options,
+      projectName: project,
+      targetName,
+      configurationName,
+    } = getNxContext(graph, originalTarget);
     const projectDirectory = projectNode.data.root;
 
     if (!options.buildLibsFromSource && targetName) {
