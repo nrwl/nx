@@ -30,6 +30,7 @@ exports[`StorybookConfiguration generator should generate in the correct folder 
 Array [
   ".eslintignore",
   ".eslintrc.json",
+  ".gitignore",
   ".prettierignore",
   ".prettierrc",
   "apps/.gitignore",
@@ -161,6 +162,7 @@ exports[`StorybookConfiguration generator should generate the right files 1`] = 
 Array [
   ".eslintignore",
   ".eslintrc.json",
+  ".gitignore",
   ".prettierignore",
   ".prettierrc",
   "apps/.gitignore",
