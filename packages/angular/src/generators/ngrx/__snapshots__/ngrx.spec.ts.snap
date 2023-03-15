@@ -582,9 +582,12 @@ import { UsersEffects } from './+state/users.effects';
 
 exports[`ngrx Standalone APIs should add a root module with feature module when minimal is set to false 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
-import { AppComponent } from './app/app.component';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
 import { appRoutes } from './app/app.routes';
+import { AppComponent } from './app/app.component';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
@@ -592,27 +595,35 @@ import { UsersEffects } from './+state/users.effects';
 
 bootstrapApplication(AppComponent, {
   providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
-}).catch((err) => console.error(err));"
+}).catch((err) => console.error(err));
+"
 `;
 
 exports[`ngrx Standalone APIs should add an empty provideStore when minimal and root are set to true 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
-import { AppComponent } from './app/app.component';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
 import { appRoutes } from './app/app.routes';
+import { AppComponent } from './app/app.component';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 
 bootstrapApplication(AppComponent, {
   providers: [provideEffects(),provideStore(),provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
-}).catch((err) => console.error(err));"
+}).catch((err) => console.error(err));
+"
 `;
 
 exports[`ngrx Standalone APIs should add facade provider when facade is true 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
-import { AppComponent } from './app/app.component';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
 import { appRoutes } from './app/app.routes';
+import { AppComponent } from './app/app.component';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
@@ -621,7 +632,8 @@ import { UsersFacade } from './+state/users.facade';
 
 bootstrapApplication(AppComponent, {
   providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),UsersFacade,provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
-}).catch((err) => console.error(err));"
+}).catch((err) => console.error(err));
+"
 `;
 
 exports[`ngrx Standalone APIs should add facade provider when facade is true and --root is false 1`] = `

@@ -23,12 +23,11 @@ export class AppModule {}"
 
 exports[`MF Remote App Generator --ssr should generate the correct files 2`] = `
 "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-
 import { AppModule } from './app/app.module';
 
-
-platformBrowserDynamic().bootstrapModule(AppModule)
-  .catch(err => console.error(err));
+platformBrowserDynamic()
+  .bootstrapModule(AppModule)
+  .catch((err) => console.error(err));
 "
 `;
 
@@ -156,7 +155,8 @@ exports[`MF Remote App Generator --ssr should generate the correct files 9`] = `
 "import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-    {path: '', loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule)},];"
+    {path: '', loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule)},];
+"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 10`] = `
@@ -276,7 +276,8 @@ exports[`MF Remote App Generator should generate the a remote setup for standalo
 "import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-    {path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)},];"
+    {path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)},];
+"
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 5`] = `

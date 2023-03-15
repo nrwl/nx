@@ -1,0 +1,11 @@
+import { bootstrapApplication } from '@angular/platform-browser';<% if(routing) { %>
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
+import { appRoutes } from './app/app.routes';<% } %>
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, {
+  providers: [<% if(routing) { %>provideRouter(appRoutes, withEnabledBlockingInitialNavigation())<% } %>],
+}).catch((err) => console.error(err));

@@ -1,7 +1,12 @@
-export const nrwlHomeTemplate = {
-  getSelector: (prefix) => `<${prefix}-nx-welcome></${prefix}-nx-welcome>`,
-  template: (title) => `
-     <!--
+import { Component, ViewEncapsulation } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: '<%= nxWelcomeSelector %>',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <!--
      * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      This is a starter component and can be deleted.
      * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -55,7 +60,6 @@ export const nrwlHomeTemplate = {
         display: block;
         vertical-align: middle;
       }
-
       svg {
         shape-rendering: auto;
         text-rendering: optimizeLegibility;
@@ -69,7 +73,6 @@ export const nrwlHomeTemplate = {
         overflow: scroll;
         padding: 0.5rem 0.75rem;
       }
-
       .shadow {
         box-shadow: 0 0 #0000, 0 0 #0000, 0 10px 15px -3px rgba(0, 0, 0, 0.1),
           0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -77,7 +80,6 @@ export const nrwlHomeTemplate = {
       .rounded {
         border-radius: 1.5rem;
       }
-
       .wrapper {
         width: 100%;
       }
@@ -156,7 +158,6 @@ export const nrwlHomeTemplate = {
         color: rgba(255, 255, 255, 1);
         width: 66.666667%;
       }
-
       #middle-content {
         align-items: flex-start;
         display: grid;
@@ -164,7 +165,6 @@ export const nrwlHomeTemplate = {
         grid-template-columns: 1fr;
         margin-top: 3.5rem;
       }
-
       #learning-materials {
         padding: 2.5rem 2rem;
       }
@@ -240,7 +240,6 @@ export const nrwlHomeTemplate = {
       .list-item-link:hover svg:last-child {
         transform: translateX(0.25rem);
       }
-
       #other-links {
       }
       .button-pill {
@@ -287,14 +286,12 @@ export const nrwlHomeTemplate = {
       .nx-console svg {
         color: rgba(0, 122, 204, 1);
       }
-
       #nx-repo:hover {
         background-color: rgba(24, 23, 23, 1);
       }
       #nx-repo svg {
         color: rgba(24, 23, 23, 1);
       }
-
       #nx-cloud {
         margin-bottom: 2rem;
         margin-top: 2rem;
@@ -342,10 +339,8 @@ export const nrwlHomeTemplate = {
       #nx-cloud a:hover {
         text-decoration: underline;
       }
-
       #commands {
         padding: 2.5rem 2rem;
-
         margin-top: 3.5rem;
       }
       #commands h2 {
@@ -395,7 +390,6 @@ export const nrwlHomeTemplate = {
         margin-right: 1rem;
         width: 1.5rem;
       }
-
       #love {
         color: rgba(107, 114, 128, 1);
         font-size: 0.875rem;
@@ -411,7 +405,6 @@ export const nrwlHomeTemplate = {
         display: inline;
         margin-top: -0.25rem;
       }
-
       @media screen and (min-width: 768px) {
         #hero {
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -430,10 +423,9 @@ export const nrwlHomeTemplate = {
         <div id="welcome">
           <h1>
             <span> Hello there, </span>
-            Welcome ${title} 👋
+            Welcome <%= appName %> 👋
           </h1>
         </div>
-
         <!--  HERO  -->
         <div id="hero" class="rounded">
           <div class="text-container">
@@ -468,7 +460,6 @@ export const nrwlHomeTemplate = {
             </svg>
           </div>
         </div>
-
         <!--  MIDDLE CONTENT  -->
         <div id="middle-content">
           <div id="learning-materials" class="rounded shadow">
@@ -722,7 +713,6 @@ export const nrwlHomeTemplate = {
             </a>
           </div>
         </div>
-
         <!--  COMMANDS  -->
         <div id="commands" class="rounded shadow">
           <h2>Next steps</h2>
@@ -746,7 +736,6 @@ export const nrwlHomeTemplate = {
             </summary>
             <pre><span># Generate UI lib</span>
 nx g @nrwl/angular:lib ui
-
 <span># Add a component</span>
 nx g @nrwl/angular:component button --project ui</pre>
           </details>
@@ -788,15 +777,12 @@ nx g @nrwl/angular:component button --project ui</pre>
             </summary>
             <pre><span># see what&apos;s been affected by changes</span>
 nx affected:graph
-
 <span># run tests for current changes</span>
 nx affected:test
-
 <span># run e2e tests for current changes</span>
 nx affected:e2e</pre>
           </details>
         </div>
-
         <p id="love">
           Carefully crafted with
           <svg
@@ -816,4 +802,7 @@ nx affected:e2e</pre>
       </div>
     </div>
   `,
-};
+  styles: [],
+  encapsulation: ViewEncapsulation.None,
+})
+export class NxWelcomeComponent {}

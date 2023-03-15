@@ -99,22 +99,18 @@ describe('setupSSR', () => {
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
-
       import { AppComponent } from './app.component';
       import { NxWelcomeComponent } from './nx-welcome.component';
 
       @NgModule({
-        declarations: [
-          AppComponent,
-          NxWelcomeComponent
-        ],
+        declarations: [AppComponent, NxWelcomeComponent],
         imports: [
-          BrowserModule.withServerTransition({ appId: 'serverApp' })
+          BrowserModule.withServerTransition({ appId: 'serverApp' }),
         ],
         providers: [],
-        bootstrap: [AppComponent]
+        bootstrap: [AppComponent],
       })
-      export class AppModule { }
+      export class AppModule {}
       "
     `);
     const packageJson = readJson<PackageJson>(tree, 'package.json');
