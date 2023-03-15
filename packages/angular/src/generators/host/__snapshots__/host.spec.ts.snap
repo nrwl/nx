@@ -100,7 +100,7 @@ export function app(): express.Express {
   );
 
   // All regular routes use the Universal engine
-  server.get('*', (req: any, res: any) => {
+  server.get('*', (req, res) => {
     // keep it async to avoid blocking the server thread
 
     res.render(indexHtml, {
