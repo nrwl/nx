@@ -5,6 +5,7 @@ import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import * as which from 'which';
 import { output } from '../../utils/output';
 import { FULL_OS_SOCKET_PATH, killSocketOrPath } from '../socket-utils';
 import {
@@ -315,8 +316,11 @@ export class DaemonClient {
 
     const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
     const err = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
+    // Find the node path based on the path.
+    // This allows us to use the node version based on the host os, rather than other host processes
+    const nodeExecutable = await which("node")
     const backgroundProcess = spawn(
-      process.execPath,
+      nodeExecutable,
       [join(__dirname, '../server/start.js')],
       {
         cwd: workspaceRoot,

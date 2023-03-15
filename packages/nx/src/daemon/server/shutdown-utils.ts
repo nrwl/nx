@@ -43,7 +43,6 @@ export async function handleServerProcessTermination({
 }: HandleServerProcessTerminationParams) {
   try {
     server.close();
-    deleteDaemonJsonProcessCache();
     if (sourceWatcherSubscription) {
       await sourceWatcherSubscription.unsubscribe();
       serverLogger.watcherLog(
@@ -63,6 +62,7 @@ export async function handleServerProcessTermination({
       );
     }
     serverLogger.log(`Server stopped because: "${reason}"`);
+    deleteDaemonJsonProcessCache();
   } finally {
     process.exit(0);
   }
