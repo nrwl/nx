@@ -31,7 +31,8 @@ export function findMatchingProjects(
     const exclude = nameOrGlob.startsWith('!');
     const pattern = exclude ? nameOrGlob.substring(1) : nameOrGlob;
 
-    const matchedProjectNames = minimatch.match(projectNames, pattern);
+    const matchedProjectNames =
+      pattern === '*' ? projectNames : minimatch.match(projectNames, pattern);
 
     matchedProjectNames.forEach((matchedProjectName) => {
       if (exclude) {
