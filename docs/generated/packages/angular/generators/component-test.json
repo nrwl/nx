@@ -11,7 +11,7 @@
       "project": {
         "type": "string",
         "description": "The name of the project where the component is located.",
-        "$default": { "$source": "projectName", "index": 0 },
+        "$default": { "$source": "projectName" },
         "x-dropdown": "projects",
         "x-prompt": "What project is the component located in?",
         "x-priority": "important"

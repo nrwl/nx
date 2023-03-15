@@ -9,8 +9,7 @@
       "type": "string",
       "description": "The name of the project.",
       "$default": {
-        "$source": "projectName",
-        "index": 0
+        "$source": "projectName"
       },
       "examples": ["ui-samples"],
       "x-priority": "important"
