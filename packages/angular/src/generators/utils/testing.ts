@@ -18,6 +18,7 @@ export async function generateTestApplication(
   options: ApplicationOptions
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
+  tree.write('.gitignore', '');
   await applicationGenerator(tree, options);
 }
 
@@ -26,6 +27,7 @@ export async function generateTestHostApplication(
   options: HostOptions
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
+  tree.write('.gitignore', '');
   await host(tree, options);
 }
 
@@ -34,6 +36,7 @@ export async function generateTestRemoteApplication(
   options: RemoteOptions
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
+  tree.write('.gitignore', '');
   await remote(tree, options);
 }
 
@@ -42,6 +45,7 @@ export async function generateTestLibrary(
   options: LibraryOptions
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
+  tree.write('.gitignore', '');
   await libraryGenerator(tree, options);
 }
 
@@ -50,6 +54,7 @@ export async function createStorybookTestWorkspaceForLib(
 ): Promise<Tree> {
   let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   addAngularPluginPeerDeps(tree);
+  tree.write('.gitignore', '');
 
   const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const moduleGenerator = wrapAngularDevkitSchematic(
