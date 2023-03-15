@@ -474,7 +474,7 @@ describe('Linter', () => {
       ]);
 
       runCLI(`generate @nrwl/workspace:lib ${mylib} --unitTestRunner=jest`);
-      // should add new tslint
+      // should generate new eslint config file
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
       const appEslint = readJson(`.eslintrc.json`);
       rootEslint = readJson('.eslintrc.base.json');
@@ -544,7 +544,7 @@ describe('Linter', () => {
       ]);
 
       runCLI(`generate @nrwl/workspace:lib ${mylib} --no-interactive`);
-      // should add new tslint
+      // should add new eslint config file
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
       const appEslint = readJson(`.eslintrc.json`);
       rootEslint = readJson('.eslintrc.base.json');
@@ -604,7 +604,7 @@ describe('Linter', () => {
       ]);
 
       runCLI(`generate @nrwl/workspace:lib ${mylib} --no-interactive`);
-      // should add new tslint
+      // should add new eslint config file
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
       const appEslint = readJson(`.eslintrc.json`);
       rootEslint = readJson('.eslintrc.base.json');
