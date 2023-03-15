@@ -1,14 +1,8 @@
 import 'nx/src/utils/testing/mock-fs';
 import { createWebpackConfig } from './config';
-import { NextBuildBuilderOptions } from '@nrwl/next';
-import { dirname } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
-import { PHASE_PRODUCTION_BUILD } from './constants';
-
-jest.mock('@nrwl/webpack', () => ({
-  createCopyPlugin: () => {},
-}));
+jest.mock('@nrwl/webpack', () => ({}));
 jest.mock('tsconfig-paths-webpack-plugin');
 jest.mock('next/dist/server/config', () => ({
   __esModule: true,
@@ -57,17 +51,28 @@ describe('Next.js webpack config builder', () => {
       });
     });
 
-    it('should set the rules', () => {
+    it('should add rules for ts', () => {
       const webpackConfig = createWebpackConfig('/root', 'apps/wibble', []);
 
       const config = webpackConfig(
-        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
+        {
+          resolve: { alias: {} },
+          module: {
+            rules: [
+              {
+                test: /\.*.ts/,
+                loader: 'some-ts-loader',
+              },
+            ],
+          },
+          plugins: [],
+        },
         { defaultLoaders: {} }
       );
 
       // not much value in checking what they are
       // just check they get added
-      expect(config.module.rules.length).toBe(1);
+      expect(config.module.rules.length).toBe(2);
     });
   });
 });
