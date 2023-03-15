@@ -12,8 +12,6 @@ import {
 import * as path from 'path';
 import { e2eCwd } from './get-env-info';
 import { tmpProjPath } from './create-project-utils';
-import { promisify } from 'util';
-import * as treeKill from 'tree-kill';
 
 export function createFile(f: string, content: string = ''): void {
   const path = tmpProjPath(f);
@@ -121,8 +119,3 @@ export function getSize(filePath: string): number {
 export function tmpBackupProjPath(path?: string) {
   return path ? `${e2eCwd}/proj-backup/${path}` : `${e2eCwd}/proj-backup`;
 }
-
-export const promisifiedTreeKill: (
-  pid: number,
-  signal: string
-) => Promise<void> = promisify(treeKill);

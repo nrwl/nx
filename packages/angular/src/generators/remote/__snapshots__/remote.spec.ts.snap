@@ -89,7 +89,7 @@ export function app(): express.Express {
   server.use('/server', express.static(serverBundles, { maxAge: '1y' }));
 
   // All regular routes use the Universal engine
-  server.get('*', (req, res) => {
+  server.get('*', (req: any, res: any) => {
 
     res.render(indexHtml, {
       req,
@@ -120,7 +120,8 @@ function run(): void {
 
 run();
 
-export * from './bootstrap.server';"
+export * from './bootstrap.server';
+"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 5`] = `"import('./src/main.server');"`;

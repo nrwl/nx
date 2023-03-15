@@ -40,7 +40,7 @@ export function app(): express.Express {
   server.use('/server', express.static(serverBundles, { maxAge: '1y' }));
 
   // All regular routes use the Universal engine
-  server.get('*', (req, res) => {
+  server.get('*', (req: any, res: any) => {
 
     res.render(indexHtml, {
       req,

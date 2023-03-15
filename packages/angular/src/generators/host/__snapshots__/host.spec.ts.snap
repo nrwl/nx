@@ -100,7 +100,7 @@ export function app(): express.Express {
   );
 
   // All regular routes use the Universal engine
-  server.get('*', (req, res) => {
+  server.get('*', (req: any, res: any) => {
     // keep it async to avoid blocking the server thread
 
     res.render(indexHtml, {
@@ -124,7 +124,8 @@ function run(): void {
 
 run();
 
-export * from './bootstrap.server';"
+export * from './bootstrap.server';
+"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 5`] = `"import('./src/main.server');"`;
