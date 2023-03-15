@@ -17,7 +17,6 @@ export interface NextServerOptions {
   dir: string;
   staticMarkup: boolean;
   quiet: boolean;
-  conf: any;
   port: number;
   path: string;
   hostname: string;

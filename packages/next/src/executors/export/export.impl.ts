@@ -3,7 +3,7 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
-  runExecutor,
+  workspaceLayout,
 } from '@nrwl/devkit';
 import exportApp from 'next/dist/export';
 import { join, resolve } from 'path';
@@ -11,15 +11,19 @@ import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { workspaceLayout } from '@nrwl/devkit';
 
-import { prepareConfig } from '../../utils/config';
 import {
   NextBuildBuilderOptions,
   NextExportBuilderOptions,
 } from '../../utils/types';
 import { PHASE_EXPORT } from '../../utils/constants';
 import nextTrace = require('next/dist/trace');
+import { platform } from 'os';
+import { execFileSync } from 'child_process';
+import * as chalk from 'chalk';
+
+// platform specific command name
+const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
 
 export default async function exportExecutor(
   options: NextExportBuilderOptions,
@@ -38,13 +42,18 @@ export default async function exportExecutor(
   }
 
   const libsDir = join(context.root, workspaceLayout().libsDir);
-  const buildTarget = parseTargetString(options.buildTarget);
-  const build = await runExecutor(buildTarget, {}, context);
+  const buildTarget = parseTargetString(
+    options.buildTarget,
+    context.projectGraph
+  );
 
-  for await (const result of build) {
-    if (!result.success) {
-      return result;
-    }
+  try {
+    const args = getBuildTargetCommand(options);
+    execFileSync(pmCmd, args, {
+      stdio: [0, 1, 2],
+    });
+  } catch {
+    throw new Error(`Build target failed: ${chalk.bold(options.buildTarget)}`);
   }
 
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
@@ -52,13 +61,6 @@ export default async function exportExecutor(
     context
   );
   const root = resolve(context.root, buildOptions.root);
-  const config = await prepareConfig(
-    PHASE_EXPORT,
-    buildOptions,
-    context,
-    dependencies,
-    libsDir
-  );
 
   // Taken from:
   // https://github.com/vercel/next.js/blob/ead56eaab68409e96c19f7d9139747bac1197aa9/packages/next/cli/next-export.ts#L13
@@ -72,9 +74,13 @@ export default async function exportExecutor(
       threads: options.threads,
       outdir: `${buildOptions.outputPath}/exported`,
     } as any,
-    nextExportCliSpan,
-    config
+    nextExportCliSpan
   );
 
   return { success: true };
+}
+
+function getBuildTargetCommand(options: NextExportBuilderOptions) {
+  const cmd = ['nx', 'run', options.buildTarget];
+  return cmd;
 }

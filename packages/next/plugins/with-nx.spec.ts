@@ -1,10 +1,10 @@
 import { NextConfigComplete } from 'next/dist/server/config-shared';
-import { withNx } from './with-nx';
+import { getNextConfig } from './with-nx';
 
 describe('withNx', () => {
   describe('svgr', () => {
     it('should be used by default', () => {
-      const config = withNx({});
+      const config = getNextConfig();
 
       const result = config.webpack(
         {
@@ -32,7 +32,7 @@ describe('withNx', () => {
     });
 
     it('should not be used when disabled', () => {
-      const config = withNx({
+      const config = getNextConfig({
         nx: {
           svgr: false,
         },

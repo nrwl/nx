@@ -5,14 +5,11 @@ import {
   parseTargetString,
   readTargetOptions,
   runExecutor,
-  workspaceLayout,
 } from '@nrwl/devkit';
 import * as chalk from 'chalk';
 import { existsSync } from 'fs';
 import { join, resolve } from 'path';
-import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 
-import { prepareConfig } from '../../utils/config';
 import {
   NextBuildBuilderOptions,
   NextServeBuilderOptions,
@@ -22,10 +19,6 @@ import {
 } from '../../utils/types';
 import { customServer } from './lib/custom-server';
 import { defaultServer } from './lib/default-server';
-import {
-  PHASE_DEVELOPMENT_SERVER,
-  PHASE_PRODUCTION_SERVER,
-} from '../../utils/constants';
 
 const infoPrefix = `[ ${chalk.dim(chalk.cyan('info'))} ] `;
 
@@ -48,42 +41,16 @@ export default async function* serveExecutor(
     context
   );
   const root = resolve(context.root, buildOptions.root);
-  const config = await prepareConfig(
-    options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,
-    buildOptions,
-    context,
-    getDependencies(options, context),
-    join(context.root, workspaceLayout().libsDir)
-  );
 
   if (options.customServerTarget) {
-    yield* runCustomServer(root, config, options, buildOptions, context);
+    yield* runCustomServer(root, options, buildOptions, context);
   } else {
-    yield* runNextDevServer(root, config, options, buildOptions, context);
-  }
-}
-
-function getDependencies(
-  options: NextServeBuilderOptions,
-  context: ExecutorContext
-) {
-  if (options.buildLibsFromSource) {
-    return [];
-  } else {
-    const result = calculateProjectDependencies(
-      context.projectGraph,
-      context.root,
-      context.projectName,
-      'build', // should be generalized
-      context.configurationName
-    );
-    return result.dependencies;
+    yield* runNextDevServer(root, options, buildOptions, context);
   }
 }
 
 async function* runNextDevServer(
   root: string,
-  config: ReturnType<typeof prepareConfig>,
   options: NextServeBuilderOptions,
   buildOptions: NextBuildBuilderOptions,
   context: ExecutorContext
@@ -94,7 +61,6 @@ async function* runNextDevServer(
     dir: root,
     staticMarkup: options.staticMarkup,
     quiet: options.quiet,
-    conf: config,
     port: options.port,
     customServer: !!options.customServerTarget,
     hostname: options.hostname || 'localhost',
@@ -144,7 +110,6 @@ async function* runNextDevServer(
 
 async function* runCustomServer(
   root: string,
-  config: ReturnType<typeof prepareConfig>,
   options: NextServeBuilderOptions,
   buildOptions: NextBuildBuilderOptions,
   context: ExecutorContext
