@@ -1,6 +1,6 @@
 import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import { Configuration } from 'webpack';
+import { Configuration, RuleSetRule } from 'webpack';
 import { FileReplacement } from './types';
 import { createCopyPlugin, normalizeAssets } from '@nrwl/webpack';
 import {
@@ -20,12 +20,10 @@ export function createWebpackConfig(
     config: Configuration,
     {
       isServer,
-      defaultLoaders,
     }: {
       buildId: string;
       dev: boolean;
       isServer: boolean;
-      defaultLoaders: any;
     }
   ): Configuration {
     const mainFields = ['es2015', 'module', 'main'];
@@ -58,12 +56,24 @@ export function createWebpackConfig(
         return alias;
       }, config.resolve.alias);
 
-    config.module.rules.push({
-      test: /\.([jt])sx?$/,
-      include: [libsDir],
-      exclude: /node_modules/,
-      use: [defaultLoaders.babel],
-    });
+    // Apply any rules that work on ts files to the libsDir as well
+    const rulesToAdd = [];
+    for (const r of config.module.rules) {
+      if (typeof r === 'string') {
+        continue;
+      }
+      if (isTsRule(r)) {
+        rulesToAdd.push({ ...r, include: [libsDir] });
+      } else if (r.oneOf && r.oneOf.find(isTsRule)) {
+        rulesToAdd.push({
+          ...r,
+          oneOf: r.oneOf
+            .filter(isTsRule)
+            .map((subRule) => ({ ...subRule, include: [libsDir] })),
+        });
+      }
+    }
+    config.module.rules.push(...rulesToAdd);
 
     // Copy (shared) assets to `public` folder during client-side compilation
     if (!isServer && Array.isArray(assets) && assets.length > 0) {
@@ -79,4 +89,15 @@ export function createWebpackConfig(
 
     return config;
   };
+}
+
+function isTsRule(r: RuleSetRule): boolean {
+  if (typeof r === 'string') {
+    return false;
+  }
+  if (!(r.test instanceof RegExp)) {
+    return false;
+  }
+
+  return r.test.test('a.ts');
 }
