@@ -36,7 +36,7 @@ describe('dev mode - project graph', () => {
   afterEach(() => {
     // clean up by hiding all projects and clearing text input
     getDeselectAllButton().click();
-    getTextFilterInput().clear();
+    getTextFilterInput().clear().type('{enter}');
     getCheckedProjectItems().should('have.length', 0);
   });
 
