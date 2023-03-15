@@ -20,7 +20,6 @@ export default async function runExecutor(
 
   return new Promise<{ success: boolean }>((res) => {
     compiler.run((error, stats) => {
-      // OURS
       compiler.close(() => {
         if (error) {
           console.error(error);
