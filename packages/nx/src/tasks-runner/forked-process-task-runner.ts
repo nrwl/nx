@@ -20,6 +20,7 @@ import {
 } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
 import { Task } from '../config/task-graph';
+import { Transform } from 'stream';
 
 const workerPath = join(__dirname, './batch/run-batch.js');
 
@@ -152,9 +153,13 @@ export class ForkedProcessTaskRunner {
             const prefixText = `${task.target.project}:`;
 
             p.stdout
+              .pipe(
+                logClearLineToPrefixTransformer(color.bold(prefixText) + ' ')
+              )
               .pipe(logTransformer({ tag: color.bold(prefixText) }))
               .pipe(process.stdout);
             p.stderr
+              .pipe(logClearLineToPrefixTransformer(color(prefixText) + ' '))
               .pipe(logTransformer({ tag: color(prefixText) }))
               .pipe(process.stderr);
           } else {
@@ -492,4 +497,21 @@ function getColor(projectName: string) {
   const colorIndex = code % colors.length;
 
   return colors[colorIndex];
+}
+
+/**
+ * Prevents terminal escape sequence from clearing line prefix.
+ */
+function logClearLineToPrefixTransformer(prefix) {
+  let prevChunk = null;
+  return new Transform({
+    transform(chunk, _encoding, callback) {
+      if (prevChunk && prevChunk.toString() === '\x1b[2K') {
+        chunk = chunk.toString().replace(/\x1b\[1G/g, (m) => m + prefix);
+      }
+      this.push(chunk);
+      prevChunk = chunk;
+      callback();
+    },
+  });
 }
