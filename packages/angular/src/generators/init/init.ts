@@ -19,15 +19,9 @@ import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   angularDevkitVersion,
   angularVersion,
-  jasmineCoreVersion,
-  jasmineSpecReporterVersion,
   jestPresetAngularVersion,
-  protractorVersion,
   rxjsVersion,
   tsLibVersion,
-  tsNodeVersion,
-  typesJasmineVersion,
-  typesJasminewd2Version,
   zoneJsVersion,
 } from '../../utils/versions';
 import {
@@ -205,21 +199,6 @@ async function addE2ETestRunner(
   options: Schema
 ): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
-    case E2eTestRunner.Protractor:
-      return !options.skipPackageJson
-        ? addDependenciesToPackageJsonIfDontExist(
-            tree,
-            {},
-            {
-              protractor: protractorVersion,
-              'jasmine-core': jasmineCoreVersion,
-              'jasmine-spec-reporter': jasmineSpecReporterVersion,
-              'ts-node': tsNodeVersion,
-              '@types/jasmine': typesJasmineVersion,
-              '@types/jasminewd2': typesJasminewd2Version,
-            }
-          )
-        : () => {};
     case E2eTestRunner.Cypress:
       return cypressInitGenerator(tree, {
         skipPackageJson: options.skipPackageJson,

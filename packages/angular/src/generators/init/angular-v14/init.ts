@@ -183,27 +183,6 @@ async function addE2ETestRunner(
   options: Schema
 ): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
-    case E2eTestRunner.Protractor:
-      return !options.skipPackageJson
-        ? addDependenciesToPackageJsonIfDontExist(
-            tree,
-            {},
-            {
-              protractor:
-                backwardCompatibleVersions.angularV14.protractorVersion,
-              'jasmine-core':
-                backwardCompatibleVersions.angularV14.jasmineCoreVersion,
-              'jasmine-spec-reporter':
-                backwardCompatibleVersions.angularV14
-                  .jasmineSpecReporterVersion,
-              'ts-node': backwardCompatibleVersions.angularV14.tsNodeVersion,
-              '@types/jasmine':
-                backwardCompatibleVersions.angularV14.typesJasmineVersion,
-              '@types/jasminewd2':
-                backwardCompatibleVersions.angularV14.typesJasminewd2Version,
-            }
-          )
-        : () => {};
     case E2eTestRunner.Cypress:
       return await cypressInitGenerator(tree, {
         skipPackageJson: options.skipPackageJson,

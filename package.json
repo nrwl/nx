@@ -209,7 +209,6 @@
     "prettier": "^2.6.2",
     "prettier-plugin-tailwindcss": "^0.1.5",
     "pretty-quick": "^3.1.0",
-    "protractor": "5.4.3",
     "raw-loader": "^4.0.2",
     "react-redux": "8.0.5",
     "react-refresh": "^0.10.0",

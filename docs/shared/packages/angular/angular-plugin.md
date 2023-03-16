@@ -1,6 +1,7 @@
-The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:
+The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries
+within an Nx workspace. It provides:
 
-- Integration with libraries such as Storybook, Jest, Cypress, Karma, and Protractor.
+- Integration with libraries such as Storybook, Jest and Cypress.
 - Generators to help scaffold code quickly, including:
   - Micro Frontends
   - Libraries, both internal to your codebase and publishable to npm
@@ -10,7 +11,8 @@ The Nx Plugin for Angular contains executors, generators, and utilities for mana
 - Utilities for automatic workspace refactoring.
 
 {% callout type="note" title="Currently using the Angular CLI?" %}
-You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn more [here](/recipes/adopting-nx/migration-angular).
+You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn
+more [here](/recipes/adopting-nx/migration-angular).
 {% /callout %}
 
 ## Setting up the Angular plugin
@@ -79,7 +81,9 @@ Read more about:
 
 ### Fallback to `@schematics/angular`
 
-If you try to invoke a generator that is not present in `@nrwl/angular`, the request will automatically be forwarded on to `@schematics/angular`. So, even though there is no `@nrwl/angular:service` generator, the following command will successfully create a service:
+If you try to invoke a generator that is not present in `@nrwl/angular`, the request will automatically be forwarded on
+to `@schematics/angular`. So, even though there is no `@nrwl/angular:service` generator, the following command will
+successfully create a service:
 
 ```shell
 nx g @nrwl/angular:service my-service

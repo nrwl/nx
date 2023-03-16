@@ -105,8 +105,8 @@
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["protractor", "cypress", "none"],
-      "description": "Test runner to use for end to end (E2E) tests. The `protractor` option is deprecated and it will be removed in v15.",
+      "enum": ["cypress", "none"],
+      "description": "Test runner to use for end to end (E2E) tests.",
       "default": "cypress"
     },
     "tags": {
