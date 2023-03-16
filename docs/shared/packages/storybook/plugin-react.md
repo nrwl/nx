@@ -13,7 +13,7 @@ You first need to set up Storybook for your Nx workspace, if you haven't already
 
 ## Generate Storybook Configuration for a React project
 
-You can generate Storybook configuration for an individual React project with this command:
+You can generate Storybook configuration for an individual React project by using the [`@nrwl/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration), like this:
 
 ```shell
 nx g @nrwl/react:storybook-configuration project-name
@@ -21,7 +21,7 @@ nx g @nrwl/react:storybook-configuration project-name
 
 ## Nx React Storybook Preset
 
-`@nrwl/react` ships with a Storybook addon to make sure it uses the very same configuration as your Nx React application. When you generate a Storybook configuration for a project, it'll automatically add the addon to your configuration.
+The [`@nrwl/react`](/packages/react) package ships with a Storybook addon to make sure it uses the very same configuration as your Nx React application. When you generate a Storybook configuration for a project, it'll automatically add the addon to your configuration.
 
 ```typescript
 module.exports = {
@@ -33,22 +33,21 @@ module.exports = {
 
 ## Auto-generate Stories
 
-The `@nrwl/react:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
+The [`@nrwl/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) has the option to automatically generate `*.stories.ts|tsx` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```text
 <some-folder>/
-├── my.component.ts
-└── my.component.stories.ts
+├── my-component.tsx
+└── my-component.stories.tsx
 ```
 
-You can re-run it at a later point using the following command:
+If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nrwl/react:stories` generator](/packages/react/generators/stories):
 
 ```shell
 nx g @nrwl/react:stories --project=<project-name>
 ```
 
 {% callout type="note" title="Example" %}
-
 Let's take for a example a library in your workspace, under `libs/feature/ui`, called `feature-ui`. This library contains a component, called `my-button`.
 
 The command to generate stories for that library would be:
@@ -69,8 +68,8 @@ and the result would be the following:
 |   |   |   ├── src/
 |   |   |   |   ├──lib
 |   |   |   |   |   ├──my-button
-|   |   |   |   |   |   ├── my-button.component.ts
-|   |   |   |   |   |   ├── my-button.component.stories.ts
+|   |   |   |   |   |   ├── my-button.tsx
+|   |   |   |   |   |   ├── my-button.stories.tsx
 |   |   |   |   |   |   └── etc...
 |   |   |   |   |   └── etc...
 |   |   |   ├── README.md
@@ -88,7 +87,7 @@ and the result would be the following:
 
 ## Cypress tests for Stories
 
-The `storybook-configuration` generator gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
+The [`@nrwl/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
 To launch Storybook and run the Cypress tests against the iframe inside of Storybook:
 
@@ -98,9 +97,9 @@ nx run project-name-e2e:e2e
 
 The url that Cypress points to should look like this:
 
-`'/iframe.html?id=buttoncomponent--primary&args=text:Click+me!;padding;style:default'`
+`'/iframe.html?id=mybutton--primary&args=text:Click+me!;padding;style:default'`
 
-- `buttoncomponent` is a lowercase version of the `Title` in the `*.stories.ts` file.
+- `buttoncomponent` is a lowercase version of the `Title` in the `*.stories.tsx` file.
 - `primary` is the name of an individual story.
 - `style=default` sets the `style` arg to a value of `default`.
 
@@ -112,7 +111,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 
 ### Story file
 
-The Storybook configuration generator would generate a Story file that looks like this:
+The [`@nrwl/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) would generate a Story file that looks like this:
 
 ```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.stories.tsx" %}
 import type { Meta } from '@storybook/react';
@@ -127,8 +126,8 @@ export default Story;
 export const Primary = {
   args: {
     text: 'Click me!',
-    padding: 0,
-    style: 'default',
+    padding: 10,
+    disabled: true,
   },
 };
 ```
@@ -163,7 +162,10 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Upgrading to Storybook 6](/packages/storybook/documents/upgrade-storybook-v6-react)
-- [Migrate to the Nx React Storybook Addon](/packages/storybook/documents/migrate-webpack-final-react)
 - [Set up Storybook version 7](/packages/storybook/documents/storybook-7-setup)
 - [Migrate to Storybook version 7](/packages/storybook/generators/migrate-7)
+
+#### Older migration scenarios
+
+- [Upgrading to Storybook 6](/packages/storybook/documents/upgrade-storybook-v6-react)
+- [Migrate to the Nx React Storybook Addon](/packages/storybook/documents/migrate-webpack-final-react)
