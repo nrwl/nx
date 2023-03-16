@@ -56,6 +56,7 @@ import { isCI } from '../utils/is-ci';
 import { getNxRequirePaths } from '../utils/installation-directory';
 import { readNxJson } from '../config/configuration';
 import { runNxSync } from '../utils/child-process';
+import { daemonClient } from '../daemon/client/client';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1524,11 +1525,7 @@ export async function migrate(
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
-  try {
-    runNxSync('daemon --stop', {
-      cwd: workspaceRoot,
-    });
-  } catch {}
+  await daemonClient.stop();
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
     const opts = parseMigrationsOptions(args);
