@@ -652,12 +652,12 @@
     "source": "/packages/esbuild/src"
   },
   {
-    "description": "The ESLint Plugin for Nx contains a collection of recommended ESLint rule configurations wrapped as ESLint plugins and an Nx specific enforce-module-boundaries rule.",
+    "description": "The eslint-plugin-nx package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
     "documents": [
       {
         "id": "overview",
         "name": "Overview",
-        "description": "The ESLint Plugin for Nx contains a collection of recommended ESLint rule configurations wrapped as ESLint plugins and an Nx specific enforce-module-boundaries rule.",
+        "description": "The eslint-plugin-nx package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
         "file": "generated/packages/eslint-plugin-nx/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -668,7 +668,7 @@
       {
         "id": "enforce-module-boundaries",
         "name": "The `enforce-module-boundaries` rule",
-        "description": "The ESLint Plugin for Nx contains a collection of recommended ESLint rule configurations wrapped as ESLint plugins and an Nx specific enforce-module-boundaries rule.",
+        "description": "The eslint-plugin-nx package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
         "file": "generated/packages/eslint-plugin-nx/documents/enforce-module-boundaries",
         "itemList": [],
         "isExternal": false,
