@@ -30,7 +30,7 @@ describe('SCAM Directive Generator', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[example]'
+        selector: '[projExample]'
       })
       export class ExampleDirective {
 
@@ -161,7 +161,7 @@ describe('SCAM Directive Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Directive({
-          selector: '[example]'
+          selector: '[projExample]'
         })
         export class ExampleDirective {
 
@@ -206,7 +206,7 @@ describe('SCAM Directive Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Directive({
-          selector: '[example]'
+          selector: '[projExample]'
         })
         export class ExampleDirective {
 

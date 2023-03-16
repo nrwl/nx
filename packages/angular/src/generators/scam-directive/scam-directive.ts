@@ -9,20 +9,16 @@ import { getDirectiveFileInfo } from '../utils/file-info';
 import { pathStartsWith } from '../utils/path';
 import { convertDirectiveToScam, normalizeOptions } from './lib';
 import type { Schema } from './schema';
+import directiveGenerator from '../directive/directive';
 
 export async function scamDirectiveGenerator(tree: Tree, rawOptions: Schema) {
   const options = normalizeOptions(tree, rawOptions);
-  const { inlineScam, projectSourceRoot, ...schematicOptions } = options;
+  const { inlineScam, projectSourceRoot, ...directiveOptions } = options;
 
   checkPathUnderProjectRoot(tree, options);
 
-  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
-  const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'directive'
-  );
-  await angularDirectiveSchematic(tree, {
-    ...schematicOptions,
+  await directiveGenerator(tree, {
+    ...directiveOptions,
     skipImport: true,
     export: false,
     standalone: false,
