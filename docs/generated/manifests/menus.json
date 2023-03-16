@@ -4000,6 +4000,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "cypress-e2e-configuration",
+                "path": "/packages/cypress/generators/cypress-e2e-configuration",
+                "name": "cypress-e2e-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "cypress-component-project",
                 "path": "/packages/cypress/generators/cypress-component-project",
                 "name": "cypress-component-project",

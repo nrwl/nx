@@ -64,14 +64,15 @@ export function nxBaseCypressPreset(pathToConfig: string): BaseCypressPreset {
  */
 export function nxE2EPreset(
   pathToConfig: string,
-  options?: { bundler?: string }
+  options?: NxCypressE2EPresetOptions
 ) {
+  const basePath = options?.cypressDir || 'src';
   const baseConfig = {
     ...nxBaseCypressPreset(pathToConfig),
     fileServerFolder: '.',
-    supportFile: 'src/support/e2e.ts',
-    specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
-    fixturesFolder: 'src/fixtures',
+    supportFile: `${basePath}/support/e2e.ts`,
+    specPattern: `${basePath}/**/*.cy.{js,jsx,ts,tsx}`,
+    fixturesFolder: `${basePath}/fixtures`,
   };
 
   if (options?.bundler === 'vite') {
@@ -84,3 +85,13 @@ export function nxE2EPreset(
   }
   return baseConfig;
 }
+
+export type NxCypressE2EPresetOptions = {
+  bundler?: string;
+  /**
+   * The directory from the project root, where the cypress files (support, fixtures, specs) are located.
+   * i.e. 'cypress/' or 'src'
+   * default is 'src'
+   **/
+  cypressDir?: string;
+};
