@@ -2,14 +2,18 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { rmSync } from 'fs';
 import * as path from 'path';
 import { createCompiler } from '../../utils/create-compiler';
+import { isMode } from '../../utils/mode-utils';
 import { RspackExecutorSchema } from './schema';
 
 export default async function runExecutor(
   options: RspackExecutorSchema,
   context: ExecutorContext
 ) {
-  process.env.NODE_ENV ??= 'production';
+  process.env.NODE_ENV ??= options.mode ?? 'production';
 
+  if (isMode(process.env.NODE_ENV)) {
+    options.mode = process.env.NODE_ENV;
+  }
   // Mimic --clean from webpack.
   rmSync(path.join(context.root, options.outputPath), {
     force: true,
@@ -33,8 +37,8 @@ export default async function runExecutor(
 
         // TODO: Handle MultipleCompiler
         const statsOptions = compiler.options
-            ? compiler.options.stats
-            : undefined;
+          ? compiler.options.stats
+          : undefined;
         const printedStats = stats.toString(statsOptions);
         // Avoid extra empty line when `stats: 'none'`
         if (printedStats) {

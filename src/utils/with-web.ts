@@ -1,5 +1,4 @@
-import { Configuration } from '@rspack/core';
-import { RuleSetRule } from '@rspack/core';
+import { Configuration, RuleSetRule } from '@rspack/core';
 import * as path from 'path';
 import { SharedConfigContext } from './model';
 
@@ -14,7 +13,8 @@ export function withWeb(opts: WithWebOptions = {}) {
     config: Configuration,
     { options, context }: SharedConfigContext
   ): Configuration {
-    const isProd = process.env.NODE_ENV === 'production';
+    const isProd =
+      process.env.NODE_ENV === 'production' || options.mode === 'production';
 
     const projectRoot = path.join(
       context.root,

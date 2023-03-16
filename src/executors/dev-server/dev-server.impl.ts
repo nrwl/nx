@@ -6,13 +6,19 @@ import {
 import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
 import { RspackDevServer } from '@rspack/dev-server';
 import { createCompiler } from '../../utils/create-compiler';
+import { isMode } from '../../utils/mode-utils';
 import { DevServerExecutorSchema } from './schema';
 
 export default async function* runExecutor(
   options: DevServerExecutorSchema,
   context: ExecutorContext
 ) {
-  process.env.NODE_ENV ??= 'development';
+  process.env.NODE_ENV ??= options.mode ?? 'development';
+
+  if (isMode(process.env.NODE_ENV)) {
+    options.mode = process.env.NODE_ENV;
+  }
+
   const buildTarget = parseTargetString(
     options.buildTarget,
     context.projectGraph
@@ -23,7 +29,7 @@ export default async function* runExecutor(
   };
   const buildOptions = readTargetOptions<any>(buildTarget, context);
   const compiler = await createCompiler(
-    { ...buildOptions, devServer: devServerConfig },
+    { ...buildOptions, devServer: devServerConfig, mode: options.mode },
     context
   );
 

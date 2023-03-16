@@ -76,8 +76,11 @@ function addBuildTarget(tree: Tree, options: ConfigurationSchema) {
         defaultConfiguration: 'production',
         options: buildOptions,
         configurations: {
-          development: {},
+          development: {
+            mode: 'development',
+          },
           production: {
+            mode: 'production',
             optimization: true,
             sourceMap: false,
           },
