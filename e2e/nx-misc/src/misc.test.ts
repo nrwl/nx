@@ -1,7 +1,7 @@
 import type { NxJsonConfiguration } from '@nrwl/devkit';
 import {
   cleanupProject,
-  createNonNxProjectDirectory,
+  e2eCwd,
   getPackageManagerCommand,
   getPublishedVersion,
   isNotWindows,
@@ -17,12 +17,10 @@ import {
   updateFile,
   updateJson,
 } from '@nrwl/e2e/utils';
-import { renameSync } from 'fs';
-import isCI = require('is-ci');
+import { renameSync, writeFileSync } from 'fs';
+import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 import { major } from 'semver';
-
-const describeCI = isCI || process.env.CI === 'true' ? describe : describe.skip;
 
 describe('Nx Commands', () => {
   let proj: string;
@@ -575,18 +573,42 @@ describe('migrate', () => {
   });
 });
 
-describeCI('global installation', () => {
-  const pm = getPackageManagerCommand();
+describe('global installation', () => {
+  // Additionally, installing Nx under e2eCwd like this still acts like a global install,
+  // but is easier to cleanup and doesn't mess with the users PC if running tests locally.
+  const globalsPath = path.join(e2eCwd, 'globals', 'node_modules', '.bin');
+
+  let oldPath: string;
+
   beforeAll(() => {
-    console.log(
-      '[NX] Warning: Running this test locally will mess with your global installation. This test is ran in CI only for most folks.'
-    );
     newProject();
-    runCommand(`${pm.addGlobal} nx@${getPublishedVersion()}`);
+
+    ensureDirSync(globalsPath);
+    writeFileSync(
+      path.join(path.dirname(path.dirname(globalsPath)), 'package.json'),
+      JSON.stringify(
+        {
+          dependencies: {
+            nx: getPublishedVersion(),
+          },
+        },
+        null,
+        2
+      )
+    );
+
+    runCommand(getPackageManagerCommand().install, {
+      cwd: path.join(e2eCwd, 'globals'),
+    });
+
+    // Update process.path to have access to modules installed in e2ecwd/node_modules/.bin,
+    // this lets commands run things like `nx`. We put it at the beginning so they are found first.
+    oldPath = process.env.PATH;
+    process.env.PATH = globalsPath + path.delimiter + process.env.PATH;
   });
 
   afterAll(() => {
-    runCommand(`${pm.removeGlobal} nx`);
+    process.env.PATH = oldPath;
   });
 
   it('should invoke Nx commands from local repo', () => {
@@ -594,7 +616,7 @@ describeCI('global installation', () => {
     updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
     let output: string;
     expect(() => {
-      output = runCommand('nx show projects');
+      output = runCommand(`nx show projects`);
     }).not.toThrow();
     expect(output).toContain('local install');
     updateFile('node_modules/nx/bin/nx.js', nxJsContents);
@@ -607,7 +629,7 @@ describeCI('global installation', () => {
     });
     let output: string;
     expect(() => {
-      output = runCommand('nx show projects');
+      output = runCommand(`nx show projects`);
     }).not.toThrow();
     expect(output).toContain('Its time to update Nx');
   });

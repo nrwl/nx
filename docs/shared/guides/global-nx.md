@@ -8,16 +8,9 @@ Nx can be ran in a total of 3 ways:
 
 With a global Nx installation, Nx looks for the local copy of Nx in your repo and hands off the process execution to it. This means that whichever version of Nx is installed locally in your repo is still the version of Nx that runs your code. For the most part, this can eliminate any issues that may arise from the global install being outdated.
 
-However, there are still cases where an issue could arise. If the structure of your Nx workspace no longer matches up with what the globally installed copy of Nx expects, it may fail to hand off to your local installation properly and instead error. This commonly results in errors such as:
+## Installing Nx Globally
 
-- Could not find Nx modules in this workspace.
-- The current directory isn't part of an Nx workspace.
-
-If you find yourself in this position, you will need to update your global install of Nx.
-
-## Updating your global Nx installation
-
-Exactly how you do this will depend on which package manager you originally installed Nx with.
+Depending on your package manager of choice, you can install Nx with the following commands:
 
 {% tabs %}
 {% tab label="npm" %}
@@ -42,6 +35,17 @@ pnpm install --global nx@latest
 
 {% /tab %}
 {% /tabs %}
+
+## Updating your global Nx installation
+
+There are some cases where an issue could arise when using an outdated global installation of Nx. If the structure of your Nx workspace no longer matches up with what the globally installed copy of Nx expects, it may fail to hand off to your local installation properly and instead error. This commonly results in errors such as:
+
+- Could not find Nx modules in this workspace.
+- The current directory isn't part of an Nx workspace.
+
+If you find yourself in this position, you will need to update your global install of Nx.
+
+In most cases, you can update a globally installed npm package by rerunning the command you used to install it, as described [above](#installing-nx-globally)
 
 If you cannot remember which package manager you installed Nx globally with or are still encountering issues, you can locate other installs of Nx with these commands:
 
@@ -95,28 +99,4 @@ pnpm rm --global nx
 {% /tab %}
 {% /tabs %}
 
-Finally, to complete your global installation update, simply reinstall it with the package manager of your choosing:
-
-{% tabs %}
-{% tab label="npm" %}
-
-```shell
-npm install --global nx@latest
-```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn global add nx@latest
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm install --global nx@latest
-```
-
-{% /tab %}
-{% /tabs %}
+Finally, to complete your global installation update, simply reinstall it as described [above](#installing-nx-globally).

@@ -28,7 +28,7 @@ if (
   if (workspace && workspace.type === 'nx') {
     require('v8-compile-cache');
   }
-  // polyfill rxjs observable to avoid issues with multiple version fo Observable installed in node_modules
+  // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules
   // https://twitter.com/BenLesh/status/1192478226385428483?s=20
   if (!(Symbol as any).observable)
     (Symbol as any).observable = Symbol('observable polyfill');
@@ -123,9 +123,7 @@ function warnIfUsingOutdatedGlobalInstall(localNxVersion?: string) {
       ? [
           `Your repository uses a higher version of Nx (${localNxVersion}) than your global CLI version (${globalVersion})`,
         ]
-      : [
-          'Its possible that this is causing Nx to not pick up your workspace properly.',
-        ];
+      : [];
 
     bodyLines.push(
       'For more information, see https://nx.dev/more-concepts/global-nx'
@@ -145,11 +143,6 @@ function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string {
   ).version;
 }
 
-function memoize(fn: () => string) {
-  let cache: string = null;
-  return () => cache || (cache = fn());
-}
-
 function _getLatestVersionOfNx(): string {
   try {
     return execSync('npm view nx@latest version').toString().trim();
@@ -162,4 +155,7 @@ function _getLatestVersionOfNx(): string {
   }
 }
 
-const getLatestVersionOfNx = memoize(_getLatestVersionOfNx);
+const getLatestVersionOfNx = ((fn: () => string) => {
+  let cache: string = null;
+  return () => cache || (cache = fn());
+})(_getLatestVersionOfNx);
