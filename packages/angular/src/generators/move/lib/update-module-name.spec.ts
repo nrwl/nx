@@ -31,7 +31,7 @@ describe('updateModuleName Rule', () => {
 
     expect(tree.exists(updatedModulePath)).toBe(true);
     const moduleFile = tree.read(updatedModulePath).toString('utf-8');
-    expect(moduleFile).toContain(`export class MyFirstModule { }`);
+    expect(moduleFile).toContain(`export class MyFirstModule {}`);
   });
 
   describe('move to subfolder', () => {

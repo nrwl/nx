@@ -158,7 +158,10 @@ describe('lib', () => {
       );
       expect(moduleFileExists).toBeFalsy();
       const indexApi = tree.read('libs/my-lib/src/index.ts', 'utf-8');
-      expect(indexApi).toEqual(``);
+      expect(indexApi).toMatchInlineSnapshot(`
+        "
+        "
+      `);
     });
 
     it('should remove "build" target from project.json when a library is not publishable', async () => {
@@ -205,7 +208,7 @@ describe('lib', () => {
       });
 
       // ASSERT
-      expect(tree.read('libs/my-lib/tsconfig.lib.prod.json')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/tsconfig.lib.prod.json')).toBeFalsy();
     });
 
     it('should update tags', async () => {
@@ -348,8 +351,8 @@ describe('lib', () => {
         // ASSERT
         const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
         expect(tsconfigJson.exclude).toEqual([
-          'src/test-setup.ts',
           'src/**/*.spec.ts',
+          'src/test-setup.ts',
           'jest.config.ts',
           'src/**/*.test.ts',
         ]);
@@ -364,9 +367,9 @@ describe('lib', () => {
         // ASSERT
         const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
         expect(tsconfigJson.exclude).toEqual([
+          'src/**/*.spec.ts',
           'jest.config.ts',
           'src/**/*.test.ts',
-          'src/**/*.spec.ts',
         ]);
       });
     });
@@ -742,8 +745,8 @@ describe('lib', () => {
         );
 
         expect(tsConfigLibJson.exclude).toEqual([
-          'src/test-setup.ts',
           'src/**/*.spec.ts',
+          'src/test-setup.ts',
           'jest.config.ts',
           'src/**/*.test.ts',
         ]);
@@ -757,8 +760,8 @@ describe('lib', () => {
         );
 
         expect(tsConfigLibJson2.exclude).toEqual([
-          'src/test-setup.ts',
           'src/**/*.spec.ts',
+          'src/test-setup.ts',
           'jest.config.ts',
           'src/**/*.test.ts',
         ]);
@@ -775,8 +778,8 @@ describe('lib', () => {
         );
 
         expect(tsConfigLibJson3.exclude).toEqual([
-          'src/test-setup.ts',
           'src/**/*.spec.ts',
+          'src/test-setup.ts',
           'jest.config.ts',
           'src/**/*.test.ts',
         ]);
@@ -1365,16 +1368,17 @@ describe('lib', () => {
       ).toMatchSnapshot();
       expect(tree.children('libs/my-lib/src/lib')).toMatchInlineSnapshot(`
         Array [
-          "my-lib.component.spec.ts",
-          "my-lib.component.ts",
+          "lib.routes.ts",
           "my-lib.component.css",
           "my-lib.component.html",
-          "lib.routes.ts",
+          "my-lib.component.spec.ts",
+          "my-lib.component.ts",
         ]
       `);
       expect(tree.children('libs/my-lib/src')).toMatchInlineSnapshot(`
         Array [
           "index.ts",
+          "lib",
           "test-setup.ts",
         ]
       `);
