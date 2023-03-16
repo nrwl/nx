@@ -16,9 +16,17 @@ import { names } from '@nrwl/devkit';
 
 describe('Angular Projects', () => {
   let proj: string;
+  let oldValue;
 
-  beforeAll(() => (proj = newProject()));
-  afterAll(() => cleanupProject());
+  beforeAll(() => {
+    proj = newProject();
+    oldValue = process.env.NX_E2E_VERBOSE_LOGGING;
+    process.env.NX_E2E_VERBOSE_LOGGING = 'true';
+  });
+  afterAll(() => {
+    cleanupProject();
+    process.env.NX_E2E_VERBOSE_LOGGING = oldValue;
+  });
 
   it('should serve the host and remote apps successfully, even with a shared library with a secondary entry point between them', async () => {
     // ACT + ASSERT
