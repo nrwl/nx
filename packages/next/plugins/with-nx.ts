@@ -16,7 +16,7 @@ import type { NextConfig } from 'next';
 
 import path = require('path');
 import { createWebpackConfig } from '../src/utils/config';
-import { NextBuildBuilderOptions } from '@nrwl/next';
+import { NextBuildBuilderOptions } from '../src/utils/types';
 export interface WithNxOptions extends NextConfig {
   nx?: {
     svgr?: boolean;
