@@ -63,7 +63,6 @@
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0",
     "v8-compile-cache": "2.3.0",
-    "which": "^3.0.0",
     "yargs": "^17.6.2",
     "yargs-parser": "21.1.1"
   },

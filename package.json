@@ -117,7 +117,6 @@
     "@types/semver": "^7.3.8",
     "@types/tar-stream": "^2.2.2",
     "@types/tmp": "^0.2.0",
-    "@types/which": "^2.0.2",
     "@types/yargs": "^17.0.10",
     "@types/yarnpkg__lockfile": "^1.1.5",
     "@typescript-eslint/eslint-plugin": "5.38.1",
@@ -315,8 +314,7 @@
     "tailwindcss": "3.2.4",
     "tslib": "^2.3.0",
     "vitest": "^0.25.8",
-    "weak-napi": "^2.0.2",
-    "which": "^3.0.0"
+    "weak-napi": "^2.0.2"
   },
   "resolutions": {
     "**/xmlhttprequest-ssl": "~1.6.2",
@@ -336,3 +334,4 @@
     ]
   }
 }
+
