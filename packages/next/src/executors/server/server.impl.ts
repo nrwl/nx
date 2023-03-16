@@ -101,6 +101,9 @@ async function* runNextDevServer(
     if (options.dev) {
       throw e;
     } else {
+      if (process.env.NX_VERBOSE_LOGGING) {
+        console.error(e);
+      }
       throw new Error(
         `Could not start production server. Try building your app with \`nx build ${context.projectName}\`.`
       );
