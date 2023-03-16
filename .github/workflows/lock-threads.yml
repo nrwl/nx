@@ -2,7 +2,7 @@ name: "Lock Threads"
 
 on:
   schedule:
-    - cron: "0 0 * * *" # Once a day, at midnight UTC
+    - cron: "0 * * * *" # Once a day, at midnight UTC
   workflow_dispatch:
 
 permissions:
