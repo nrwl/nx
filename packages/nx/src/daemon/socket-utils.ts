@@ -2,6 +2,8 @@ import { unlinkSync } from 'fs';
 import { platform } from 'os';
 import { relative, resolve } from 'path';
 import { DAEMON_SOCKET_PATH } from './tmp-dir';
+import { ProjectGraph } from '../config/project-graph';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export const isWindows = platform() === 'win32';
 
@@ -15,7 +17,7 @@ export const isWindows = platform() === 'win32';
  */
 export const FULL_OS_SOCKET_PATH = isWindows
   ? '\\\\.\\pipe\\nx\\' + resolve(DAEMON_SOCKET_PATH)
-  : relative(process.cwd(), resolve(DAEMON_SOCKET_PATH));
+  : relative(workspaceRoot, resolve(DAEMON_SOCKET_PATH));
 
 export function killSocketOrPath(): void {
   try {
