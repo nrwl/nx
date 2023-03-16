@@ -3,7 +3,7 @@ import { satisfies } from 'semver';
 
 // Ignore packages that are defined here per package
 const IGNORE_MATCHES = {
-  '*': [],
+  '*': [] as string[],
   angular: ['webpack-merge', '@phenomnomnominal/tsquery'],
   cypress: ['webpack', '@babel/core', 'babel-loader'],
 };
@@ -13,7 +13,7 @@ export default function getDiscrepancies(
   projectDependencies: JSON,
   devDependencies: JSON
 ) {
-  return Object.keys(projectDependencies)
+  return Object.keys(projectDependencies ?? ({} as Record<string, string>))
     .filter((p) => !p.startsWith('@nrwl/') && p !== 'nx')
     .filter((p) =>
       !IGNORE_MATCHES['*'].includes(p) && IGNORE_MATCHES[name]
