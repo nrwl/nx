@@ -4202,6 +4202,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "The `enforce-module-boundaries` rule",
+                "path": "/packages/eslint-plugin-nx/documents/enforce-module-boundaries",
+                "id": "enforce-module-boundaries",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -4656,14 +4664,6 @@
                 "name": "Overview",
                 "path": "/packages/linter/documents/overview",
                 "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "eslint-plugin-nx",
-                "path": "/packages/linter/documents/eslint-plugin-nx",
-                "id": "eslint-plugin-nx",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
