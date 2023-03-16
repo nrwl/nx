@@ -12,6 +12,8 @@ import {
   corsVersion,
   expressVersion,
   moduleFederationNodeVersion,
+  typesCorsVersion,
+  typesExpressVersion,
 } from '../../../utils/versions';
 
 export async function addSsr(
@@ -70,7 +72,10 @@ export async function addSsr(
       express: expressVersion,
       '@module-federation/node': moduleFederationNodeVersion,
     },
-    {}
+    {
+      '@types/cors': typesCorsVersion,
+      '@types/express': typesExpressVersion,
+    }
   );
 
   return installTask;
