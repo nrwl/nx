@@ -1479,6 +1479,9 @@ describe('Migration', () => {
     it('should return version when it meets semver requirements', () => {
       expect(normalizeVersion('1.2.3')).toEqual('1.2.3');
       expect(normalizeVersion('1.2.3-beta.1')).toEqual('1.2.3-beta.1');
+      expect(normalizeVersion('1.2.3-beta-next.1')).toEqual(
+        '1.2.3-beta-next.1'
+      );
     });
 
     it('should handle versions missing a patch or a minor', () => {
@@ -1488,7 +1491,9 @@ describe('Migration', () => {
     });
 
     it('should handle incorrect versions', () => {
-      expect(normalizeVersion('1-invalid-version')).toEqual('1.0.0-invalid');
+      expect(normalizeVersion('1-invalid-version')).toEqual(
+        '1.0.0-invalid-version'
+      );
       expect(normalizeVersion('1.invalid-version')).toEqual('1.0.0');
       expect(normalizeVersion('invalid-version')).toEqual('0.0.0');
     });

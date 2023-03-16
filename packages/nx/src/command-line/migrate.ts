@@ -64,7 +64,10 @@ export interface ResolvedMigrationConfiguration extends MigrationsJson {
 const execAsync = promisify(exec);
 
 export function normalizeVersion(version: string) {
-  const [semver, prereleaseTag] = version.split('-');
+  const [semver, ...prereleaseTagParts] = version.split('-');
+  // Handle versions like 1.0.0-beta-next.2
+  const prereleaseTag = prereleaseTagParts.join('-');
+
   const [major, minor, patch] = semver.split('.');
 
   const newSemver = `${major || 0}.${minor || 0}.${patch || 0}`;
