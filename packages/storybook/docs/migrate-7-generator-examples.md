@@ -13,7 +13,11 @@ For setting up Storybook version 7 in a new Nx workspace, or a workspace that do
 
 Storybook 7 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 7 beta announcement blog post](https://storybook.js.org/blog/7-0-beta/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7 migration guide](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937).
 
-You can now migrate your existing Nx workspace with Storybook configuration to use Storybook version 7. To help you, Nx offers the `@nrwl/storybook:migrate-7` generator. This generator will help you migrate your existing Storybook setup to version 7.
+You can now migrate your existing Nx workspace with Storybook configuration to use Storybook version 7. To help you, Nx offers the `@nrwl/storybook:migrate-7` generator. This generator will help you migrate your existing Storybook setup to version 7. Just call:
+
+```bash
+npx nx g @nrwl/storybook:migrate-7
+```
 
 Now let's see how this generator works and how you can use it!
 
@@ -174,6 +178,14 @@ Essentially, the way to run the migration manually is the following:
 4. Call the Storybook automigrate scripts for each one of the projects using Storybook (the `@nrwl/storybook:migrate-7` will give you the list of all the commands)
 5. Call the Nx generator to finish the migration. The steps are explained in [Step 04](#step-04) above.
    `nx g @nrwl/storybook:migrate-7 --afterMigration`
+
+## I am not on Nx 15.9.0 yet but I still want to migrate to Storybook 7
+
+You can migrate to Storybook 7 by just using the [Storybook `upgrade` and `automigrate` scripts](https://storybook.js.org/docs/7.0/react/configure/upgrading), but you will have to manually point the `automigrate` script to each one of your projects using Storybook, explained in [Step 03](#step-03) above.
+
+First, you would have to run the `npx storybook@next upgrade --prerelease` to get the latest versions of all the `@storybook/*` packages. Then, for each one of your projects that use Storybook, you would have to run `npx sb@next automigrate --config-dir <MY-PROJECT>/.storybook --renderer @storybook/<react|angular|etc>`.
+
+The `@nrwl/storybook:migrate-7` generator helps you by figuring out all the project paths and the renderers that need to be passed in the `automigrate` script, and also by performing a number of adjustments to your code to make sure the migration scripts run smoothly, so it is recommended to use the generator instead of running the scripts manually.
 
 ## Report any issues and bugs
 

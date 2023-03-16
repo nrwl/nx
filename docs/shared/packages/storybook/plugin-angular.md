@@ -13,7 +13,7 @@ You first need to set up Storybook for your Nx workspace, if you haven't already
 
 ## Generate Storybook Configuration for an Angular project
 
-You can generate Storybook configuration for an individual Angular project with this command:
+You can generate Storybook configuration for an individual Angular project by using the [`@nrwl/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration), like this:
 
 ```shell
 nx g @nrwl/angular:storybook-configuration project-name
@@ -21,7 +21,7 @@ nx g @nrwl/angular:storybook-configuration project-name
 
 ## Auto-generate Stories
 
-The `@nrwl/angular:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
+The [`@nrwl/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```text
 <some-folder>/
@@ -29,20 +29,19 @@ The `@nrwl/angular:storybook-configuration` generator has the option to automati
 └── my.component.stories.ts
 ```
 
-You can re-run it at a later point using the following command:
+If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nrwl/angular:stories` generator](/packages/angular/generators/stories):
 
 ```shell
-nx g @nrwl/angular:stories <project-name>
+nx g @nrwl/angular:stories --project=<project-name>
 ```
 
 {% callout type="note" title="Example" %}
-
 Let's take for a example a library in your workspace, under `libs/feature/ui`, called `feature-ui`. This library contains a component, called `my-button`.
 
 The command to generate stories for that library would be:
 
 ```shell
-nx g @nrwl/angular:stories feature-ui
+nx g @nrwl/angular:stories --project=feature-ui
 ```
 
 and the result would be the following:
@@ -76,7 +75,7 @@ and the result would be the following:
 
 ## Cypress tests for Stories
 
-The `storybook-configuration` generator gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
+The [`@nrwl/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration) gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
 To launch Storybook and run the Cypress tests against the iframe inside of Storybook:
 
@@ -100,7 +99,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 
 ### Story file
 
-The Storybook configuration generator would generate a Story file that looks like this:
+The [`@nrwl/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration) would generate a Story file that looks like this:
 
 ```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.component.stories.ts" %}
 import { Meta } from '@storybook/angular';
@@ -141,6 +140,8 @@ describe('feature-ui', () => {
 });
 ```
 
+Depending on your Cypress version, the file will end with `.spec.ts` or `.cy.ts`.
+
 ## More Documentation
 
 - [Set up Compodoc for Storybook on Nx](/packages/storybook/documents/angular-storybook-compodoc)
@@ -150,13 +151,16 @@ describe('feature-ui', () => {
 
 You can find all Storybook-related Nx topics [here](/packages#storybook).
 
-For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/react/get-started/introduction).
+For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/angular/get-started/introduction).
 
 ### Migration Scenarios
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Upgrading to Storybook 6](/packages/storybook/documents/upgrade-storybook-v6-angular)
-- [Migrate to the new Storybook `webpackFinal` config](/packages/storybook/documents/migrate-webpack-final-angular)
 - [Set up Storybook version 7](/packages/storybook/documents/storybook-7-setup)
 - [Migrate to Storybook version 7](/packages/storybook/generators/migrate-7)
+
+#### Older migration scenarios
+
+- [Upgrading to Storybook 6](/packages/storybook/documents/upgrade-storybook-v6-angular)
+- [Migrate to the new Storybook `webpackFinal` config](/packages/storybook/documents/migrate-webpack-final-angular)
