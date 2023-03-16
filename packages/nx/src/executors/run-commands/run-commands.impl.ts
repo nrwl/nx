@@ -184,7 +184,7 @@ async function runSerially(
     );
     if (!success) {
       process.stderr.write(
-        `Warning: run-commands command "${c}" exited with non-zero status code`
+        `Warning: run-commands command "${c.command}" exited with non-zero status code`
       );
       return false;
     }
