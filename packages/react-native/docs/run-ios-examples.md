@@ -22,7 +22,7 @@ nx run mobile:run-ios
 
 {% tabs %}
 {% tab label="Run on a simulator" %}
-To see all the avaiable simulators, run command:
+To see all the available simulators, run command:
 
 ```bash
 xcrun simctl list

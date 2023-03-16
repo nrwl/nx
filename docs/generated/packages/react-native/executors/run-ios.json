@@ -56,8 +56,7 @@
       "install": {
         "type": "boolean",
         "description": "Runs `pod install` for native modules before building iOS app.",
-        "default": true,
-        "x-priority": "internal"
+        "default": false
       },
       "sync": {
         "type": "boolean",
@@ -90,7 +89,7 @@
         "default": true
       }
     },
-    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-ios\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a simulator\" %}\nTo see all the avaiable simulators, run command:\n\n```bash\nxcrun simctl list\n```\n\nThe `simulator` option allows you to launch your iOS app in a specific simulator:\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"simulator\": \"iPhone 14 Pro\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run on a device\" %}\nThe `device` option allows you to launch your iOS app in a specific device.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"device\": \"deviceName\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the Debug/Release app\" %}\nThe `xcodeConfiguration` option allows to specify the xcode configuartion, such as `Debug` or `Release`.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"xcodeConfiguration\": \"Release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-ios\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a simulator\" %}\nTo see all the available simulators, run command:\n\n```bash\nxcrun simctl list\n```\n\nThe `simulator` option allows you to launch your iOS app in a specific simulator:\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"simulator\": \"iPhone 14 Pro\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run on a device\" %}\nThe `device` option allows you to launch your iOS app in a specific device.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"device\": \"deviceName\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the Debug/Release app\" %}\nThe `xcodeConfiguration` option allows to specify the xcode configuartion, such as `Debug` or `Release`.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"xcodeConfiguration\": \"Release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
   },
   "description": "Runs iOS application.",
   "aliases": [],

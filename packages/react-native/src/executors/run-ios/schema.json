@@ -53,8 +53,7 @@
     "install": {
       "type": "boolean",
       "description": "Runs `pod install` for native modules before building iOS app.",
-      "default": true,
-      "x-priority": "internal"
+      "default": false
     },
     "sync": {
       "type": "boolean",

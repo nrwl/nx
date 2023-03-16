@@ -1,6 +1,5 @@
 require_relative '<%= offsetFromRoot %>../node_modules/react-native/scripts/react_native_pods'
 require_relative '<%= offsetFromRoot %>../node_modules/@react-native-community/cli-platform-ios/native_modules'
-require_relative '<%= offsetFromRoot %>../node_modules/@nrwl/react-native/nx_post_install'
 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
@@ -57,6 +56,5 @@ target '<%= className %>' do
       :mac_catalyst_enabled => false
     )
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
-    nx_post_install(installer)
   end
 end

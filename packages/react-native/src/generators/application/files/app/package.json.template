@@ -9,6 +9,7 @@
     "react-native": "*",
     "react-native-config": "*",
     "react-native-svg": "*",
+    "metro-config": "*",
     "@react-native-async-storage/async-storage": "*"
   }
 }
