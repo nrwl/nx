@@ -9,8 +9,10 @@ export function withNx(_opts = {}) {
     config: Configuration,
     { options, context }: SharedConfigContext
   ): Configuration {
-    const isProd = process.env.NODE_ENV === 'production';
-    const isDev = process.env.NODE_ENV === 'development';
+    const isProd =
+      process.env.NODE_ENV === 'production' || options.mode === 'production';
+    const isDev =
+      process.env.NODE_ENV === 'development' || options.mode === 'development';
     const projectRoot = path.join(
       context.root,
       context.projectGraph.nodes[context.projectName].data.root
@@ -31,7 +33,7 @@ export function withNx(_opts = {}) {
     const updated: Configuration = {
       ...config,
       target: options.target,
-      mode: 'development' as const,
+      mode: options.mode,
       context: context.root,
       devtool:
         options.sourceMap === 'hidden'
@@ -98,8 +100,8 @@ export function withNx(_opts = {}) {
       },
       stats: {
         colors: true,
-        preset: 'normal'
-      }
+        preset: 'normal',
+      },
     };
 
     if (options.optimization) {

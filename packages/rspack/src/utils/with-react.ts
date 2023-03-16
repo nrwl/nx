@@ -7,7 +7,8 @@ export function withReact(opts = {}) {
     config: Configuration,
     { options, context }: SharedConfigContext
   ): Configuration {
-    const isDev = process.env.NODE_ENV === 'development';
+    const isDev =
+      process.env.NODE_ENV === 'development' || options.mode === 'development';
 
     config = withWeb(opts)(config, { options, context });
 

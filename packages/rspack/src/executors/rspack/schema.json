@@ -54,6 +54,11 @@
       "items": {
         "$ref": "#/definitions/assetPattern"
       }
+    },
+    "mode": {
+      "type": "string",
+      "description": "Mode to run the build in.",
+      "enum": ["development", "production", "none"]
     }
   },
   "required": ["target", "main", "outputPath", "tsConfig", "rspackConfig"],
