@@ -1,4 +1,4 @@
-The `@nrwl/eslint-plugin-nx` plugin contains a collection of recommended ESLint rule configurations wrapped as ESLint plugins and an Nx-specific [enforce-module-boundaries rule](#enforce-module-boundaries-rule).
+The `@nrwl/eslint-plugin-nx` package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called [enforce-module-boundaries](#enforce-module-boundaries-rule).
 
 ## Setting Up ESLint Plugin
 
