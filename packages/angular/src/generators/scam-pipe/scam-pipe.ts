@@ -9,20 +9,16 @@ import { getPipeFileInfo } from '../utils/file-info';
 import { pathStartsWith } from '../utils/path';
 import { convertPipeToScam, normalizeOptions } from './lib';
 import type { Schema } from './schema';
+import { pipeGenerator } from '../pipe/pipe';
 
 export async function scamPipeGenerator(tree: Tree, rawOptions: Schema) {
   const options = normalizeOptions(tree, rawOptions);
-  const { inlineScam, projectSourceRoot, ...schematicOptions } = options;
+  const { inlineScam, projectSourceRoot, ...pipeOptions } = options;
 
   checkPathUnderProjectRoot(tree, options);
 
-  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
-  const angularPipeSchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'pipe'
-  );
-  await angularPipeSchematic(tree, {
-    ...schematicOptions,
+  await pipeGenerator(tree, {
+    ...pipeOptions,
     skipImport: true,
     export: false,
     standalone: false,
