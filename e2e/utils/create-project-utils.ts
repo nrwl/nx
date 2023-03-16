@@ -81,7 +81,7 @@ export function newProject({
       packageInstall(packages.join(` `), projScope);
 
       // stop the daemon
-      execSync('npx nx reset', {
+      execSync(`${getPackageManagerCommand().runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });

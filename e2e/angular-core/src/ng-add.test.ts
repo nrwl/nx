@@ -72,7 +72,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   });
 
   afterEach(() => {
-    cleanupProject({ skipReset: true });
+    cleanupProject();
   });
 
   it('should generate a workspace', () => {
