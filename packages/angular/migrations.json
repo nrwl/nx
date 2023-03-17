@@ -152,6 +152,12 @@
       "version": "15.8.0-beta.4",
       "description": "Update the @angular/cli package version to ~15.2.0.",
       "factory": "./src/migrations/update-15-8-0/update-angular-cli"
+    },
+    "update-tsconfig-spec-jest": {
+      "cli": "nx",
+      "version": "15.9.0-beta.3",
+      "description": "Update the tsconfig.spec.json to use target es2016 for jest-preset-angular v13",
+      "factory": "./src/migrations/update-15-9-0/update-testing-tsconfig"
     }
   },
   "packageJsonUpdates": {

@@ -123,6 +123,7 @@ describe('jestProject', () => {
         module: 'commonjs',
         outDir: '../../dist/out-tsc',
         types: ['jest', 'node'],
+        target: 'es2016',
       },
       files: ['src/test-setup.ts'],
       include: [
