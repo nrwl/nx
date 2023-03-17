@@ -1,35 +1,26 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getPackageManagerCommand,
-  getSelectedPackageManager,
   killPorts,
   readJson,
   runCLI,
-  runCommand,
   runCommandUntil,
   runCreateWorkspace,
   tmpProjPath,
   uniq,
-  updateJson,
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
 describe('Storybook generators for nested workspaces', () => {
-  const previousPM = process.env.SELECTED_PM;
   const wsName = uniq('react');
   const appName = uniq('app');
-  const packageManager = getSelectedPackageManager() || 'yarn';
 
   beforeAll(() => {
-    process.env.SELECTED_PM = 'yarn';
-
     // create a workspace with a single react app at the root
     runCreateWorkspace(wsName, {
       preset: 'react-standalone',
       appName,
       style: 'css',
-      packageManager,
       bundler: 'vite',
     });
 
@@ -37,26 +28,11 @@ describe('Storybook generators for nested workspaces', () => {
       `generate @nrwl/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
 
-    // TODO(jack): Overriding enhanced-resolve to 5.10.0 now until the package is fixed.
-    // TODO: Use --storybook7Configuration and remove this
-    // See: https://github.com/webpack/enhanced-resolve/issues/362
-    updateJson('package.json', (json) => {
-      json['overrides'] = {
-        'enhanced-resolve': '5.10.0',
-      };
-
-      return json;
-    });
-
-    runCommand(getPackageManagerCommand().install);
-
-    console.log('Here is the Nx report: ');
     runCLI(`report`);
   });
 
   afterAll(() => {
     cleanupProject();
-    process.env.SELECTED_PM = previousPM;
   });
 
   describe('Storybook generated files', () => {

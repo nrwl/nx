@@ -46,7 +46,7 @@ describe('Storybook generators for non-angular projects', () => {
   });
 
   // TODO: Use --storybook7Configuration and re-enable this test
-  xdescribe('serve storybook', () => {
+  describe('serve storybook', () => {
     afterEach(() => killPorts());
 
     it('should run a React based Storybook setup', async () => {
