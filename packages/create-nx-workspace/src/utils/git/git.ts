@@ -1,6 +1,6 @@
 import { execSync, spawn, SpawnOptions } from 'child_process';
 import { deduceDefaultBase } from './default-base';
-import { output } from './output';
+import { output } from '../output';
 
 export function checkGitVersion(): string | null {
   try {

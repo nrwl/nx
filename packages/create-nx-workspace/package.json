@@ -27,6 +27,8 @@
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "homepage": "https://nx.dev",
   "dependencies": {
     "chalk": "^4.1.0",

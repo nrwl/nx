@@ -1,4 +1,4 @@
-import { isCI } from './output';
+import { isCI } from '../ci/is-ci';
 
 export class PromptMessages {
   private messages = {

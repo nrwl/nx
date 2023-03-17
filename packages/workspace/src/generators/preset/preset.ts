@@ -1,5 +1,4 @@
 import {
-  formatFiles,
   installPackagesTask,
   names,
   readNxJson,

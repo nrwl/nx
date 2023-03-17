@@ -1,4 +1,4 @@
-import { getFileName } from './utils';
+import { getFileName } from './string-utils';
 
 describe('utils', () => {
   describe('getFileName', () => {

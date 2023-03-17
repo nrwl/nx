@@ -6,7 +6,9 @@
       "@nrwl/workspace",
       "@angular-devkit/core",
       "@angular-devkit/architect",
-      "@angular-devkit/schematics"
+      "@angular-devkit/schematics",
+      "nx",
+      "@nrwl/devkit"
     ]
   },
   "ignorePatterns": ["!**/*"],

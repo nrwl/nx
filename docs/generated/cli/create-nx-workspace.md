@@ -35,6 +35,8 @@ The name of the application when a preset with pregenerated app is selected
 
 Type: `string`
 
+Choices: [webpack, vite]
+
 Bundler to be used to build the application
 
 ### ci
@@ -82,6 +84,8 @@ Generate a Dockerfile with your node-server
 ### framework
 
 Type: `string`
+
+Choices: [express, fastify, koa, nest]
 
 Framework option to be used when the node-server preset is selected
 
@@ -137,7 +141,7 @@ Type: `boolean`
 
 Default: `false`
 
-Skip initializing a git repository.
+Skip initializing a git repository
 
 ### standaloneApi
 

@@ -1,3 +1,8 @@
+/**
+ * This file is based on the npm package validate-npm-package-name from npm itself.
+ * https://github.com/npm/validate-npm-package-name/blob/main/lib/index.js
+ */
+
 const scopedPackagePattern = new RegExp('^(?:@([^/]+?)[/])?([^/]+?)$');
 const denyList = ['node_modules', 'favicon.ico'];
 
@@ -8,7 +13,7 @@ export interface ValidateNpmResult {
   warnings?: string[];
 }
 
-export function validateNpmPackage(name: string) {
+export function validateNpmPackage(name: string): ValidateNpmResult {
   let warnings = [];
   let errors = [];
 
