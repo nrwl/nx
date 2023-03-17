@@ -5744,6 +5744,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "build-ios",
+                "path": "/packages/react-native/executors/build-ios",
+                "name": "build-ios",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "start",
                 "path": "/packages/react-native/executors/start",
                 "name": "start",
@@ -5771,6 +5779,14 @@
                 "id": "storybook",
                 "path": "/packages/react-native/executors/storybook",
                 "name": "storybook",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "pod-install",
+                "path": "/packages/react-native/executors/pod-install",
+                "name": "pod-install",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

@@ -6,8 +6,8 @@
   //...
   "targets": {
     //...
-    "run-ios": {
-      "executor": "@nrwl/react-native:run-ios",
+    "build-ios": {
+      "executor": "@nrwl/react-native:build-ios",
       "options": {}
     }
   }
@@ -15,18 +15,31 @@
 ```
 
 ```bash
-nx run mobile:run-ios
+nx run mobile:build-ios
 ```
 
 ## Examples
 
 {% tabs %}
 {% tab label="Build the Debug/Release app" %}
-The `mode` option allows to specify the xcode configuartion schema, such as `Debug` or `Release`.
+The `buildFolder` option allows to specify the location for ios build artifacts. It corresponds to Xcode's -derivedDataPath.
 
 ```json
-    "run-ios": {
-      "executor": "@nrwl/react-native:run-ios",
+    "build-ios": {
+      "executor": "@nrwl/react-native:build-ios",
+      "options": {
+        "buildFolder": "dist/ios/build"
+      }
+    }
+```
+
+{% /tab %}
+{% tab label="Build the Debug/Release app" %}
+The `mode` option allows to specify the xcode configuartion, such as `Debug` or `Release`.
+
+```json
+    "build-ios": {
+      "executor": "@nrwl/react-native:build-ios",
       "options": {
         "mode": "Release"
       }
@@ -34,7 +47,7 @@ The `mode` option allows to specify the xcode configuartion schema, such as `Deb
 ```
 
 {% /tab %}
-{% tab label="Run on a simulator" %}
+{% tab label="Build for a simulator" %}
 To see all the available simulators, run command:
 
 ```bash
@@ -44,8 +57,8 @@ xcrun simctl list
 The `simulator` option allows you to launch your iOS app in a specific simulator:
 
 ```json
-    "run-ios": {
-      "executor": "@nrwl/react-native:run-ios",
+    "build-ios": {
+      "executor": "@nrwl/react-native:build-ios",
       "options": {
         "simulator": "iPhone 14 Pro"
       }
@@ -53,18 +66,18 @@ The `simulator` option allows you to launch your iOS app in a specific simulator
 ```
 
 {% /tab %}
-{% tab label="Run on a device" %}
+{% tab label="Build for a device" %}
 The `device` option allows you to launch your iOS app in a specific device.
 
-To see all the available devices, run command:
+To see all the available device, run command:
 
 ```bash
 xcrun simctl list
 ```
 
 ```json
-    "run-ios": {
-      "executor": "@nrwl/react-native:run-ios",
+    "build-ios": {
+      "executor": "@nrwl/react-native:build-ios",
       "options": {
         "device": "deviceName"
       }
@@ -82,8 +95,8 @@ xcrun simctl list
 ```
 
 ```json
-    "run-ios": {
-      "executor": "@nrwl/react-native:run-ios",
+    "build-ios": {
+      "executor": "@nrwl/react-native:build-ios",
       "options": {
         "udid": "device udid"
       }

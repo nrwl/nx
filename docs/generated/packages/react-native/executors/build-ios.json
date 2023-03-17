@@ -1,0 +1,106 @@
+{
+  "name": "build-ios",
+  "implementation": "/packages/react-native/src/executors/build-ios/build-ios.impl.ts",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "version": 2,
+    "cli": "nx",
+    "title": "React Native Build iOS executor",
+    "description": "Build iOS app.",
+    "type": "object",
+    "presets": [
+      { "name": "Build iOS for a simulator", "keys": ["simulator"] },
+      { "name": "Build iOS for a device", "keys": ["device"] },
+      { "name": "Build iOS for a device with udid", "keys": ["udid"] },
+      {
+        "name": "Run `pod install` before building iOS app",
+        "keys": ["install"]
+      }
+    ],
+    "properties": {
+      "simulator": {
+        "type": "string",
+        "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: \"iPhone 6 (10.0)\"",
+        "examples": [
+          "iPhone 14",
+          "iPhone 13",
+          "iPhone 12",
+          "iPhone 11",
+          "iPhone X"
+        ],
+        "x-priority": "important"
+      },
+      "mode": {
+        "type": "string",
+        "description": "Explicitly set the scheme configuration to use",
+        "default": "Debug",
+        "examples": ["Debug", "Release"],
+        "x-priority": "important"
+      },
+      "schema": {
+        "type": "string",
+        "description": "Explicitly set Xcode scheme to use"
+      },
+      "device": {
+        "type": "string",
+        "description": "Explicitly set device to use by name. The value is not required if you have a single device connected."
+      },
+      "udid": {
+        "type": "string",
+        "description": "Explicitly set device to use by udid"
+      },
+      "verbose": {
+        "type": "boolean",
+        "description": "Do not use xcbeautify or xcpretty even if installed"
+      },
+      "port": {
+        "type": "number",
+        "description": "The port where the packager server is listening on.",
+        "default": 8081
+      },
+      "xcconfig": {
+        "type": "string",
+        "description": "Explicitly set xcconfig to use"
+      },
+      "buildFolder": {
+        "type": "string",
+        "description": "Location for iOS build artifacts. Corresponds to Xcode's \"-derivedDataPath\". Relative to ios directory",
+        "default": "./build"
+      },
+      "interactive": {
+        "type": "boolean",
+        "description": "Explicitly select which scheme and configuration to use before running a build"
+      },
+      "extraParams": {
+        "type": "string",
+        "description": "Custom params that will be passed to xcodebuild command."
+      },
+      "install": {
+        "type": "boolean",
+        "description": "Runs `pod install` for native modules before building iOS app."
+      },
+      "sync": {
+        "type": "boolean",
+        "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
+        "default": true
+      },
+      "resetCache": {
+        "type": "boolean",
+        "description": "Resets metro cache.",
+        "default": false
+      },
+      "packager": {
+        "type": "boolean",
+        "description": "Launch packager while building",
+        "default": true
+      }
+    },
+    "required": [],
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"build-ios\": {\n      \"executor\": \"@nrwl/react-native:build-ios\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:build-ios\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Build the Debug/Release app\" %}\nThe `buildFolder` option allows to specify the location for ios build artifacts. It corresponds to Xcode's -derivedDataPath.\n\n```json\n    \"build-ios\": {\n      \"executor\": \"@nrwl/react-native:build-ios\",\n      \"options\": {\n        \"buildFolder\": \"dist/ios/build\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Build the Debug/Release app\" %}\nThe `mode` option allows to specify the xcode configuartion, such as `Debug` or `Release`.\n\n```json\n    \"build-ios\": {\n      \"executor\": \"@nrwl/react-native:build-ios\",\n      \"options\": {\n        \"mode\": \"Release\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Build for a simulator\" %}\nTo see all the available simulators, run command:\n\n```bash\nxcrun simctl list\n```\n\nThe `simulator` option allows you to launch your iOS app in a specific simulator:\n\n```json\n    \"build-ios\": {\n      \"executor\": \"@nrwl/react-native:build-ios\",\n      \"options\": {\n        \"simulator\": \"iPhone 14 Pro\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Build for a device\" %}\nThe `device` option allows you to launch your iOS app in a specific device.\n\nTo see all the available device, run command:\n\n```bash\nxcrun simctl list\n```\n\n```json\n    \"build-ios\": {\n      \"executor\": \"@nrwl/react-native:build-ios\",\n      \"options\": {\n        \"device\": \"deviceName\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Set Device by udid\" %}\nThe `udid` option allows you to explicitly set device to use by udid.\n\nTo see all the available simulators and devices with udid, run command:\n\n```bash\nxcrun simctl list\n```\n\n```json\n    \"build-ios\": {\n      \"executor\": \"@nrwl/react-native:build-ios\",\n      \"options\": {\n        \"udid\": \"device udid\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
+  },
+  "description": "Build iOS app",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native/src/executors/build-ios/schema.json",
+  "type": "executor"
+}

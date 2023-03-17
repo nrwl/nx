@@ -71,6 +71,12 @@
       "version": "15.0.0-beta.0",
       "description": "Adds babel.config.json to the hash of all tasks",
       "factory": "./src/migrations/update-15-0-0/add-babel-inputs"
+    },
+    "add-build-ios-target": {
+      "cli": "nx",
+      "version": "15.9.1-beta.0",
+      "description": "Add target build-ios and pod-install for react native apps",
+      "factory": "./src/migrations/update-15-9-1/add-build-ios-target"
     }
   },
   "packageJsonUpdates": {
@@ -1258,6 +1264,19 @@
       "packages": {
         "react-native": {
           "version": "0.71.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.9.1": {
+      "version": "15.9.1-beta.0",
+      "packages": {
+        "@react-native-community/cli": {
+          "version": "10.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "10.2.1",
           "alwaysAddToPackageJson": false
         }
       }

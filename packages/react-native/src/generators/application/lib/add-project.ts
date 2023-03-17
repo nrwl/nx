@@ -44,6 +44,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect['bundle-ios'] = {
     executor: '@nrwl/react-native:bundle',
+    outputs: ['{options.bundleOutput}'],
     options: {
       entryFile: options.entryFile,
       platform: 'ios',
@@ -65,8 +66,20 @@ function getTargets(options: NormalizedSchema) {
     options: {},
   };
 
+  architect['build-ios'] = {
+    executor: '@nrwl/react-native:build-ios',
+    outputs: ['{projectRoot}/ios/build/Build'],
+    options: {},
+  };
+
+  architect['pod-install'] = {
+    executor: '@nrwl/react-native:pod-install',
+    options: {},
+  };
+
   architect['bundle-android'] = {
     executor: '@nrwl/react-native:bundle',
+    outputs: ['{options.bundleOutput}'],
     options: {
       entryFile: options.entryFile,
       platform: 'android',
