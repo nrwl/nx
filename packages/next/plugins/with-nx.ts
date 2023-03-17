@@ -11,7 +11,7 @@ import {
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
-} from '@nrwl/js/src/utils/buildable-libs-utils';
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import type { NextConfig } from 'next';
 
 import path = require('path');
