@@ -1,17 +1,15 @@
-import * as isCI from 'is-ci';
 import {
   checkFilesExist,
+  cleanupProject,
   getSelectedPackageManager,
   packageInstall,
   readJson,
   runCommand,
   runNgNew,
-  tmpProjPath,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
 import { PackageManager } from 'nx/src/utils/package-manager';
-import { removeSync } from 'fs-extra';
 
 describe('using Nx executors and generators with Angular CLI', () => {
   let project: string;
@@ -23,13 +21,7 @@ describe('using Nx executors and generators with Angular CLI', () => {
     runNgNew(project, packageManager);
   });
 
-  afterEach(() => {
-    if (isCI) {
-      try {
-        removeSync(tmpProjPath());
-      } catch (e) {}
-    }
-  });
+  afterEach(() => cleanupProject({ skipReset: true }));
 
   it('should convert Nx executors into Angular CLI compatible builders', () => {
     packageInstall('@nrwl/angular');

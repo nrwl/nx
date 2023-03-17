@@ -436,55 +436,12 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     );
   });
 
-  it('should support a workspace with multiple libraries', () => {
-    // add some libraries
-    const lib1 = uniq('lib1');
-    const lib2 = uniq('lib2');
-    runCommand(`ng g @schematics/angular:library ${lib1}`);
-    runCommand(`ng g @schematics/angular:library ${lib2}`);
-
-    runNgAdd('@nrwl/angular', '--npm-scope projscope');
-
-    // check angular.json does not exist
-    checkFilesDoNotExist('angular.json');
-
-    // check building lib1
-    let output = runCLI(`build ${lib1}`);
-    expect(output).toContain(`> nx run ${lib1}:build:production`);
-    expect(output).toContain(
-      `Successfully ran target build for project ${lib1}`
-    );
-    checkFilesExist(`dist/${lib1}/package.json`);
-
-    output = runCLI(`build ${lib1}`);
-    expect(output).toContain(
-      `> nx run ${lib1}:build:production  [local cache]`
-    );
-    expect(output).toContain(
-      `Successfully ran target build for project ${lib1}`
-    );
-
-    // check building lib2
-    output = runCLI(`build ${lib2}`);
-    expect(output).toContain(`> nx run ${lib2}:build:production`);
-    expect(output).toContain(
-      `Successfully ran target build for project ${lib2}`
-    );
-    checkFilesExist(`dist/${lib2}/package.json`);
-
-    output = runCLI(`build ${lib2}`);
-    expect(output).toContain(
-      `> nx run ${lib2}:build:production  [local cache]`
-    );
-    expect(output).toContain(
-      `Successfully ran target build for project ${lib2}`
-    );
-  });
-
-  it('should support a workspace with multiple applications', () => {
-    // add another app
+  it('should support a workspace with multiple projects', () => {
+    // add other projects
     const app1 = uniq('app1');
+    const lib1 = uniq('lib1');
     runCommand(`ng g @schematics/angular:application ${app1}`);
+    runCommand(`ng g @schematics/angular:library ${lib1}`);
 
     runNgAdd('@nrwl/angular', '--npm-scope projscope');
 
@@ -525,6 +482,22 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     );
     expect(output).toContain(
       `Successfully ran target build for project ${app1}`
+    );
+
+    // check building lib1
+    output = runCLI(`build ${lib1}`);
+    expect(output).toContain(`> nx run ${lib1}:build:production`);
+    expect(output).toContain(
+      `Successfully ran target build for project ${lib1}`
+    );
+    checkFilesExist(`dist/${lib1}/package.json`);
+
+    output = runCLI(`build ${lib1}`);
+    expect(output).toContain(
+      `> nx run ${lib1}:build:production  [local cache]`
+    );
+    expect(output).toContain(
+      `Successfully ran target build for project ${lib1}`
     );
   });
 });

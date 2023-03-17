@@ -39,3 +39,19 @@ export async function killPorts(port?: number): Promise<boolean> {
     ? await killPort(port)
     : (await killPort(3333)) && (await killPort(4200));
 }
+
+export async function killProcessAndPorts(
+  pid: number | undefined,
+  ...ports: number[]
+): Promise<void> {
+  try {
+    if (pid) {
+      await promisifiedTreeKill(pid, 'SIGKILL');
+    }
+    for (const port of ports) {
+      await killPort(port);
+    }
+  } catch (err) {
+    expect(err).toBeFalsy();
+  }
+}

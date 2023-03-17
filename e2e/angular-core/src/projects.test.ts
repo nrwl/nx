@@ -1,10 +1,11 @@
+import { names } from '@nrwl/devkit';
 import {
   checkFilesExist,
   cleanupProject,
   getSize,
   killPorts,
+  killProcessAndPorts,
   newProject,
-  promisifiedTreeKill,
   readFile,
   runCLI,
   runCommandUntil,
@@ -14,8 +15,6 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
-
-import { names } from '@nrwl/devkit';
 
 describe('Angular Projects', () => {
   let proj: string;
@@ -82,18 +81,14 @@ describe('Angular Projects', () => {
       expect(await killPorts()).toBeTruthy();
     }
 
+    const appPort = 4207;
     const process = await runCommandUntil(
-      `serve my-dir-${myapp} -- --port=4207`,
+      `serve my-dir-${myapp} -- --port=${appPort}`,
       (output) => output.includes(`listening on localhost:4207`)
     );
 
     // port and process cleanup
-    try {
-      await promisifiedTreeKill(process.pid, 'SIGKILL');
-      await killPorts(4207);
-    } catch (err) {
-      expect(err).toBeFalsy();
-    }
+    killProcessAndPorts(process.pid, appPort);
   }, 1000000);
 
   it('should build the dependent buildable lib and its child lib, as well as the app', async () => {
