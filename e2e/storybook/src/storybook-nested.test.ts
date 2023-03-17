@@ -11,7 +11,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-describe('Storybook generators for nested workspaces', () => {
+describe('Storybook generators and executors for standalone workspaces', () => {
   const wsName = uniq('react');
   const appName = uniq('app');
 
