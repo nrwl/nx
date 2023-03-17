@@ -43,6 +43,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
 
   const jsInitTask = await jsInitGenerator(tree, {
     js: false,
+    skipFormat: true,
   });
   tasks.push(jsInitTask);
 
