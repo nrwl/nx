@@ -109,7 +109,9 @@
       "@nrwl/workspace/testing": ["packages/workspace/testing"],
       "nx": ["packages/nx"],
       "nx-dev/ui-primitives": ["nx-dev/ui-primitives/src/index.ts"],
-      "nx/*": ["packages/nx/*"]
+      "nx/*": ["packages/nx/*"],
+      "create-nx-workspace": ["packages/create-nx-workspace/index.ts"],
+      "create-nx-workspace/*": ["packages/create-nx-workspace/*"]
     }
   }
 }

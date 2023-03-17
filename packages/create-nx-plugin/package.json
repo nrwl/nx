@@ -29,10 +29,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
-    "enquirer": "~2.3.6",
-    "nx": "file:../nx",
-    "tmp": "~0.2.1",
+    "create-nx-workspace": "file:../create-nx-workspace",
     "yargs-parser": "21.1.1"
   },
   "publishConfig": {
