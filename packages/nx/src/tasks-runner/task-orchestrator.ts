@@ -283,7 +283,7 @@ export class TaskOrchestrator {
         this.options
       );
 
-      const pipeOutput = this.pipeOutputCapture(task);
+      const pipeOutput = await this.pipeOutputCapture(task);
 
       // execution
       const { code, terminalOutput } = pipeOutput
@@ -434,9 +434,9 @@ export class TaskOrchestrator {
 
   // region utils
 
-  private pipeOutputCapture(task: Task) {
+  private async pipeOutputCapture(task: Task) {
     try {
-      const { schema } = getExecutorForTask(
+      const { schema } = await getExecutorForTask(
         task,
         this.workspace,
         this.projectGraph,

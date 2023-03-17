@@ -24,9 +24,11 @@ describe('globForProjectFiles', () => {
         name: 'project-1',
       })
     );
-    expect(globForProjectFiles(fs.tempDir)).not.toContain(
+    expect(globForProjectFiles(fs.tempDir, [])).not.toContain(
       'not-projects/project.json'
     );
-    expect(globForProjectFiles(fs.tempDir)).toContain('projects/project.json');
+    expect(globForProjectFiles(fs.tempDir, [])).toContain(
+      'projects/project.json'
+    );
   });
 });

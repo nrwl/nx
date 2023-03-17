@@ -46,7 +46,7 @@ export async function affected(
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const projects = projectsToRun(nxArgs, projectGraph);
+  const projects = await projectsToRun(nxArgs, projectGraph);
 
   try {
     switch (command) {
@@ -137,13 +137,13 @@ export async function affected(
   }
 }
 
-function projectsToRun(
+async function projectsToRun(
   nxArgs: NxArgs,
   projectGraph: ProjectGraph
-): ProjectGraphProjectNode[] {
+): Promise<ProjectGraphProjectNode[]> {
   let affectedGraph = nxArgs.all
     ? projectGraph
-    : filterAffected(
+    : await filterAffected(
         projectGraph,
         calculateFileChanges(
           parseFiles(nxArgs).files,

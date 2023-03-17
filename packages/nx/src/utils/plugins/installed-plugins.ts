@@ -65,15 +65,15 @@ function getDependenciesFromNxJson(): string[] {
   return ['nx', ...Object.keys(installation.plugins || {})];
 }
 
-export function getInstalledPluginsAndCapabilities(
+export async function getInstalledPluginsAndCapabilities(
   workspaceRoot: string
-): Map<string, PluginCapabilities> {
+): Promise<Map<string, PluginCapabilities>> {
   const plugins = findInstalledPlugins().map((p) => p.name);
 
   const result = new Map<string, PluginCapabilities>();
   for (const plugin of Array.from(plugins).sort()) {
     try {
-      const capabilities = getPluginCapabilities(workspaceRoot, plugin);
+      const capabilities = await getPluginCapabilities(workspaceRoot, plugin);
       if (
         capabilities &&
         (capabilities.executors ||

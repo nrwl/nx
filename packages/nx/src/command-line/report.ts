@@ -178,11 +178,10 @@ export async function getReportData(): Promise<ReportData> {
 async function findLocalPlugins() {
   try {
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    return Array.from(
-      getLocalWorkspacePlugins(
-        readProjectsConfigurationFromProjectGraph(projectGraph)
-      ).keys()
+    const localPlugins = await getLocalWorkspacePlugins(
+      readProjectsConfigurationFromProjectGraph(projectGraph)
     );
+    return Array.from(localPlugins.keys());
   } catch {
     return [];
   }

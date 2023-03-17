@@ -33,7 +33,7 @@ export interface ListArgs {
  */
 export async function listHandler(args: ListArgs): Promise<void> {
   if (args.plugin) {
-    listPluginCapabilities(args.plugin);
+    await listPluginCapabilities(args.plugin);
   } else {
     const corePlugins = fetchCorePlugins();
     const communityPlugins = await fetchCommunityPlugins().catch(() => {
@@ -46,10 +46,12 @@ export async function listHandler(args: ListArgs): Promise<void> {
     });
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
 
-    const localPlugins = getLocalWorkspacePlugins(
+    const localPlugins = await getLocalWorkspacePlugins(
       readProjectsConfigurationFromProjectGraph(projectGraph)
     );
-    const installedPlugins = getInstalledPluginsAndCapabilities(workspaceRoot);
+    const installedPlugins = await getInstalledPluginsAndCapabilities(
+      workspaceRoot
+    );
 
     if (localPlugins.size) {
       listLocalWorkspacePlugins(localPlugins);

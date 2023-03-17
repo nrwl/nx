@@ -105,7 +105,7 @@ async function getPatternsFromApps(
   projectGraph: ProjectGraph
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync({ exitOnError: true });
-  const affectedGraph = filterAffected(
+  const affectedGraph = await filterAffected(
     graph,
     calculateFileChanges(affectedFiles, allWorkspaceFiles)
   );

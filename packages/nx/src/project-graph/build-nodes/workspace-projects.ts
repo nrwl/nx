@@ -19,7 +19,7 @@ import {
   readTargetDefaultsForTarget,
 } from '../../config/workspaces';
 
-export function buildWorkspaceProjectNodes(
+export async function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
   builder: ProjectGraphBuilder,
   nxJson: NxJsonConfiguration
@@ -66,7 +66,7 @@ export function buildWorkspaceProjectNodes(
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,
       p.targets,
-      loadNxPlugins(ctx.workspace.plugins)
+      await loadNxPlugins(ctx.workspace.plugins)
     );
 
     p.targets = normalizeProjectTargets(p, nxJson.targetDefaults, key);

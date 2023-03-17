@@ -197,7 +197,7 @@ async function buildProjectGraphUsingContext(
   const builder = new ProjectGraphBuilder(partialGraph);
   builder.setVersion(projectGraphVersion);
 
-  buildWorkspaceProjectNodes(ctx, builder, nxJson);
+  await buildWorkspaceProjectNodes(ctx, builder, nxJson);
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
   const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
@@ -474,9 +474,9 @@ async function updateProjectGraphWithPlugins(
   context: ProjectGraphProcessorContext,
   initProjectGraph: ProjectGraph
 ) {
-  const plugins = loadNxPlugins(context.workspace.plugins).filter(
-    (x) => !!x.processProjectGraph
-  );
+  const plugins = (
+    await loadNxPlugins(context.nxJsonConfiguration.plugins)
+  ).filter((x) => !!x.processProjectGraph);
   let graph = initProjectGraph;
   for (const plugin of plugins) {
     try {

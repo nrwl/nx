@@ -19,5 +19,5 @@ export interface TouchedProjectLocator<T extends Change = Change> {
     nxJson?: NxJsonConfiguration<any>,
     packageJson?: any,
     projectGraph?: ProjectGraph
-  ): string[];
+  ): string[] | Promise<string[]>;
 }

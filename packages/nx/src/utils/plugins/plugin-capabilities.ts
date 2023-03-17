@@ -6,7 +6,11 @@ import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
 import { getPackageManagerCommand } from '../package-manager';
-import { loadNxPlugin, NxPlugin, readPluginPackageJson } from '../nx-plugin';
+import {
+  loadNxPluginAsync,
+  NxPlugin,
+  readPluginPackageJson,
+} from '../nx-plugin';
 import { getNxRequirePaths } from '../installation-directory';
 
 function tryGetCollection<T extends object>(
@@ -26,10 +30,10 @@ function tryGetCollection<T extends object>(
   }
 }
 
-export function getPluginCapabilities(
+export async function getPluginCapabilities(
   workspaceRoot: string,
   pluginName: string
-): PluginCapabilities | null {
+): Promise<PluginCapabilities | null> {
   try {
     const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
       pluginName,
@@ -41,7 +45,7 @@ export function getPluginCapabilities(
       packageJson['nx-migrations'] ??
       packageJson['schematics'] ??
       packageJson['builders']
-        ? loadNxPlugin(
+        ? await loadNxPluginAsync(
             pluginName,
             getNxRequirePaths(workspaceRoot),
             workspaceRoot
@@ -81,8 +85,8 @@ export function getPluginCapabilities(
   }
 }
 
-export function listPluginCapabilities(pluginName: string) {
-  const plugin = getPluginCapabilities(workspaceRoot, pluginName);
+export async function listPluginCapabilities(pluginName: string) {
+  const plugin = await getPluginCapabilities(workspaceRoot, pluginName);
 
   if (!plugin) {
     const pmc = getPackageManagerCommand();
