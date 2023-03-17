@@ -7,9 +7,9 @@ Array [
   "tsconfig.app.json",
   "tsconfig.editor.json",
   "tsconfig.json",
-  "tsconfig.spec.json",
   ".eslintrc.json",
   "jest.config.ts",
+  "tsconfig.spec.json",
 ]
 `;
 

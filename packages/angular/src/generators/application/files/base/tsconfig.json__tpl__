@@ -8,12 +8,6 @@
   "references": [
     {
       "path": "./tsconfig.app.json"
-    },
-    <% if(unitTesting) { %>{
-      "path": "./tsconfig.spec.json"
-    },<% } %>
-    {
-      "path": "./tsconfig.editor.json"
     }
   ],
   "extends": "<%= rootTsConfig %>"

@@ -107,27 +107,14 @@ describe('app', () => {
         appTree.read('apps/my-app/src/app/app.module.ts', 'utf-8')
       ).toContain('class AppModule');
 
-      const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');
-      expect(tsconfig.references).toContainEqual({
-        path: './tsconfig.app.json',
-      });
-      expect(tsconfig.references).toContainEqual({
-        path: './tsconfig.spec.json',
-      });
-      expect(tsconfig.references).toContainEqual({
-        path: './tsconfig.editor.json',
-      });
+      expect(readJson(appTree, 'apps/my-app/tsconfig.json')).toMatchSnapshot(
+        'tsconfig.json'
+      );
 
       const tsconfigApp = parseJson(
         appTree.read('apps/my-app/tsconfig.app.json', 'utf-8')
       );
-      expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
-      expect(tsconfigApp.extends).toEqual('./tsconfig.json');
-      expect(tsconfigApp.exclude).toEqual([
-        'jest.config.ts',
-        'src/**/*.test.ts',
-        'src/**/*.spec.ts',
-      ]);
+      expect(tsconfigApp).toMatchSnapshot('tsconfig.app.json');
 
       const eslintrcJson = parseJson(
         appTree.read('apps/my-app/.eslintrc.json', 'utf-8')
@@ -138,7 +125,7 @@ describe('app', () => {
       const tsconfigE2E = parseJson(
         appTree.read('apps/my-app-e2e/tsconfig.json', 'utf-8')
       );
-      expect(tsconfigE2E).toMatchSnapshot();
+      expect(tsconfigE2E).toMatchSnapshot('e2e tsconfig.json');
     });
 
     it('should setup jest with serializers', async () => {
@@ -586,6 +573,15 @@ describe('app', () => {
           `'jest-preset-angular/build/serializers/html-comment'`
         );
       });
+
+      it('should add reference to tsconfig.spec.json to tsconfig.json', async () => {
+        await generateApp(appTree);
+
+        const { references } = readJson(appTree, 'apps/my-app/tsconfig.json');
+        expect(
+          references.find((r) => r.path.includes('tsconfig.spec.json'))
+        ).toBeTruthy();
+      });
     });
 
     describe('none', () => {
@@ -604,6 +600,11 @@ describe('app', () => {
         expect(
           readProjectConfiguration(appTree, 'my-app').targets.test
         ).toBeUndefined();
+        // check tsconfig.spec.json is not referenced
+        const { references } = readJson(appTree, 'apps/my-app/tsconfig.json');
+        expect(
+          references.every((r) => !r.path.includes('tsconfig.spec.json'))
+        ).toBe(true);
       });
     });
   });
