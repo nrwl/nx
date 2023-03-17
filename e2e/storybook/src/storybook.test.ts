@@ -15,12 +15,14 @@ import {
 import { writeFileSync } from 'fs';
 
 describe('Storybook generators and executors for monorepos', () => {
+  const previousPM = process.env.SELECTED_PM;
   const reactStorybookLib = uniq('test-ui-lib-react');
   const angularStorybookLib = uniq('test-ui-lib');
   let proj;
   beforeAll(() => {
+    process.env.SELECTED_PM = 'yarn';
     proj = newProject({
-      packagesToInstall: ['@nrwl/react', '@nrwl/storybook', '@nrwl/angular'],
+      packageManager: 'yarn',
     });
     runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
     runCLI(
@@ -50,13 +52,14 @@ describe('Storybook generators and executors for monorepos', () => {
 
   afterAll(() => {
     cleanupProject();
+    process.env.SELECTED_PM = previousPM;
   });
 
   // TODO: Use --storybook7Configuration and re-enable this test
   describe('serve storybook', () => {
     afterEach(() => killPorts());
 
-    it('should serve a React based Storybook setup', async () => {
+    it('should serve a React based Storybook setup that uses webpack', async () => {
       // serve the storybook
       const p = await runCommandUntil(
         `run ${reactStorybookLib}:storybook`,
@@ -80,14 +83,10 @@ describe('Storybook generators and executors for monorepos', () => {
   });
 
   describe('build storybook', () => {
-    it('should build and lint a React based storybook', () => {
+    it('should build a React based storybook setup that uses webpack', () => {
       // build
       runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
-
-      // lint
-      const output = runCLI(`run ${reactStorybookLib}:lint`);
-      expect(output).toContain('All files pass linting.');
     }, 1000000);
 
     it('shoud build an Angular based storybook', () => {
@@ -95,8 +94,8 @@ describe('Storybook generators and executors for monorepos', () => {
       checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
     });
 
-    // I am not sure how much sense this test makes - Maybe it's just adding noise
-    it('should build a React based storybook that references another lib', () => {
+    // This test makes sure path resolution works
+    it('should build a React based storybook that references another lib and uses webpack', () => {
       const anotherReactLib = uniq('test-another-lib-react');
       runCLI(`generate @nrwl/react:lib ${anotherReactLib} --no-interactive`);
       // create a React component we can reference

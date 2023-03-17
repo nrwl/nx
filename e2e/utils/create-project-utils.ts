@@ -38,7 +38,6 @@ let projName: string;
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
-  packagesToInstall = [],
 } = {}): string {
   try {
     const projScope = 'proj';
@@ -58,29 +57,27 @@ export function newProject({
       }
 
       // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
-      const packages = packagesToInstall?.length
-        ? packagesToInstall
-        : [
-            `@nrwl/angular`,
-            `@nrwl/eslint-plugin-nx`,
-            `@nrwl/express`,
-            `@nrwl/esbuild`,
-            `@nrwl/jest`,
-            `@nrwl/js`,
-            `@nrwl/linter`,
-            `@nrwl/nest`,
-            `@nrwl/next`,
-            `@nrwl/node`,
-            `@nrwl/nx-plugin`,
-            `@nrwl/rollup`,
-            `@nrwl/react`,
-            `@nrwl/storybook`,
-            `@nrwl/vite`,
-            `@nrwl/web`,
-            `@nrwl/webpack`,
-            `@nrwl/react-native`,
-            `@nrwl/expo`,
-          ];
+      const packages = [
+        `@nrwl/angular`,
+        `@nrwl/eslint-plugin-nx`,
+        `@nrwl/express`,
+        `@nrwl/esbuild`,
+        `@nrwl/jest`,
+        `@nrwl/js`,
+        `@nrwl/linter`,
+        `@nrwl/nest`,
+        `@nrwl/next`,
+        `@nrwl/node`,
+        `@nrwl/nx-plugin`,
+        `@nrwl/rollup`,
+        `@nrwl/react`,
+        `@nrwl/storybook`,
+        `@nrwl/vite`,
+        `@nrwl/web`,
+        `@nrwl/webpack`,
+        `@nrwl/react-native`,
+        `@nrwl/expo`,
+      ];
       packageInstall(packages.join(` `), projScope);
 
       // stop the daemon

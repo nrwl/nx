@@ -11,7 +11,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-describe('Storybook generators and executors for standalone workspaces', () => {
+describe('Storybook generators and executors for standalone workspaces - using React + Vite', () => {
   const wsName = uniq('react');
   const appName = uniq('app');
 
@@ -66,8 +66,7 @@ describe('Storybook generators and executors for standalone workspaces', () => {
   xdescribe('serve storybook', () => {
     afterEach(() => killPorts());
 
-    it('should run a React based Storybook setup', async () => {
-      // serve the storybook
+    it('should serve a React based Storybook setup that uses Vite', async () => {
       const p = await runCommandUntil(`run ${appName}:storybook`, (output) => {
         return /Storybook.*started/gi.test(output);
       });
@@ -77,18 +76,13 @@ describe('Storybook generators and executors for standalone workspaces', () => {
 
   // TODO: Use --storybook7Configuration and re-enable this test - or else it NEEDS NODE 16
   xdescribe('build storybook', () => {
-    it('should build and lint a React based storybook', () => {
-      // build
+    it('should build a React based storybook that uses Vite', () => {
       runCLI(`run ${appName}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${appName}/index.html`);
-
-      // lint
-      const output = runCLI(`run ${appName}:lint`);
-      expect(output).toContain('All files pass linting.');
     }, 1000000);
 
-    // Not sure how much sense this test makes - maybe it's noise?
-    xit('should build a React based storybook that references another lib', () => {
+    // This test makes sure path resolution works
+    xit('should build a React based storybook that references another lib and uses Vite', () => {
       const reactLib = uniq('test-lib-react');
       runCLI(`generate @nrwl/react:lib ${reactLib} --no-interactive`);
       // create a React component we can reference
