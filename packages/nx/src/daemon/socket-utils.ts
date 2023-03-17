@@ -1,7 +1,9 @@
 import { unlinkSync } from 'fs';
 import { platform } from 'os';
-import { resolve } from 'path';
+import { relative, resolve } from 'path';
 import { DAEMON_SOCKET_PATH } from './tmp-dir';
+import { ProjectGraph } from '../config/project-graph';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export const isWindows = platform() === 'win32';
 
@@ -10,10 +12,12 @@ export const isWindows = platform() === 'win32';
  *
  * See https://nodejs.org/dist/latest-v14.x/docs/api/net.html#net_identifying_paths_for_ipc_connections for a full breakdown
  * of OS differences between Unix domain sockets and named pipes.
+ *
+ * Updated non-windows platforms to use relative paths allowing for workspaces that exist in long paths.
  */
 export const FULL_OS_SOCKET_PATH = isWindows
   ? '\\\\.\\pipe\\nx\\' + resolve(DAEMON_SOCKET_PATH)
-  : resolve(DAEMON_SOCKET_PATH);
+  : relative(workspaceRoot, resolve(DAEMON_SOCKET_PATH));
 
 export function killSocketOrPath(): void {
   try {
