@@ -21,6 +21,7 @@ describe('Storybook generators and executors for monorepos', () => {
   beforeAll(() => {
     proj = newProject({
       packagesToInstall: ['@nrwl/react', '@nrwl/storybook', '@nrwl/angular'],
+      packageManager: 'yarn',
     });
     runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
     runCLI(

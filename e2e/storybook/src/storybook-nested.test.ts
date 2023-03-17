@@ -62,7 +62,7 @@ describe('Storybook generators and executors for standalone workspaces', () => {
     });
   });
 
-  // TODO: Use --storybook7Configuration and re-enable this test
+  // TODO: Use --storybook7Configuration and re-enable this test - or else it NEEDS NODE 16
   xdescribe('serve storybook', () => {
     afterEach(() => killPorts());
 
@@ -75,7 +75,7 @@ describe('Storybook generators and executors for standalone workspaces', () => {
     }, 1000000);
   });
 
-  // TODO: Use --storybook7Configuration and re-enable this test
+  // TODO: Use --storybook7Configuration and re-enable this test - or else it NEEDS NODE 16
   xdescribe('build storybook', () => {
     it('should build and lint a React based storybook', () => {
       // build
