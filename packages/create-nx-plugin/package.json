@@ -30,7 +30,9 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "create-nx-workspace": "file:../create-nx-workspace",
-    "yargs-parser": "21.1.1"
+    "chalk": "^4.1.0",
+    "enquirer": "~2.3.6",
+    "yargs": "^17.6.2"
   },
   "publishConfig": {
     "access": "public"

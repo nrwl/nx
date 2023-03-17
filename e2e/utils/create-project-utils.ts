@@ -235,7 +235,7 @@ export function runCreatePlugin(
   } create-nx-plugin@${getPublishedVersion()} ${name}`;
 
   if (pluginName) {
-    command += ` --pluginName=${pluginName}`;
+    command += ` --pluginName=${pluginName} --no-nxCloud`;
   }
 
   if (packageManager && !useDetectedPm) {

@@ -107,11 +107,11 @@
       "@nrwl/workspace": ["packages/workspace"],
       "@nrwl/workspace/*": ["packages/workspace/*"],
       "@nrwl/workspace/testing": ["packages/workspace/testing"],
+      "create-nx-workspace": ["packages/create-nx-workspace/index.ts"],
+      "create-nx-workspace/*": ["packages/create-nx-workspace/*"],
       "nx": ["packages/nx"],
       "nx-dev/ui-primitives": ["nx-dev/ui-primitives/src/index.ts"],
-      "nx/*": ["packages/nx/*"],
-      "create-nx-workspace": ["packages/create-nx-workspace/index.ts"],
-      "create-nx-workspace/*": ["packages/create-nx-workspace/*"]
+      "nx/*": ["packages/nx/*"]
     }
   }
 }

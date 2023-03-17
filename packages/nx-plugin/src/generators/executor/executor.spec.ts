@@ -107,7 +107,7 @@ describe('NxPlugin Executor Generator', () => {
 
     expect(() => tree.exists(`${libConfig.root}/executors.json`)).not.toThrow();
     expect(readJson(tree, `${libConfig.root}/package.json`).executors).toBe(
-      'executors.json'
+      './executors.json'
     );
   });
 

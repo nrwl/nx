@@ -77,10 +77,16 @@ export function createPackageJson(
       );
       // for standalone projects we don't want to include all the root dependencies
       if (graph.nodes[projectName].data.root === '.') {
-        packageJson = {
-          name: packageJson.name,
-          version: packageJson.version,
-        };
+        // TODO: We should probably think more on this - Nx can't always
+        // detect all external dependencies, and there's not a way currently
+        // to tell Nx that we need one of these deps. For non-standalone projects
+        // we tell people to add it to the package.json of the project, and we
+        // merge it. For standalone, this pattern doesn't work because of this piece of code.
+        // It breaks expectations, but also, I don't know another way around it currently.
+        // If Nx doesn't pick up a dep, say some css lib that is only imported in a .scss file,
+        // we need to be able to tell it to keep that dep in the generated package.json.
+        delete packageJson.dependencies;
+        delete packageJson.devDependencies;
       }
     } catch (e) {}
   }

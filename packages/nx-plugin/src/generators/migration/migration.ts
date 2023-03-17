@@ -15,7 +15,12 @@ import type { Schema } from './schema';
 import * as path from 'path';
 import { addMigrationJsonChecks } from '../lint-checks/generator';
 import type { Linter as EsLint } from 'eslint';
-import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
+import {
+  NxMigrationsConfiguration,
+  PackageJson,
+  PackageJsonTargetConfiguration,
+  readNxMigrateConfig,
+} from 'nx/src/utils/package-json';
 interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectSourceRoot: string;
@@ -98,19 +103,25 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
 }
 
 function updatePackageJson(host: Tree, options: NormalizedSchema) {
-  updateJson(host, path.join(options.projectRoot, 'package.json'), (json) => {
-    if (!json['nx-migrations'] || !json['nx-migrations'].migrations) {
-      if (json['nx-migrations']) {
-        json['nx-migrations'].migrations = './migrations.json';
-      } else {
-        json['nx-migrations'] = {
+  updateJson<PackageJson>(
+    host,
+    path.join(options.projectRoot, 'package.json'),
+    (json) => {
+      const migrationKey = json['ng-update'] ? 'ng-update' : 'nx-migrations';
+      const preexistingValue = json[migrationKey];
+      if (typeof preexistingValue === 'string') {
+        return json;
+      } else if (!json[migrationKey]) {
+        json[migrationKey] = {
           migrations: './migrations.json',
         };
+      } else if (preexistingValue.migrations) {
+        preexistingValue.migrations = './migrations.json';
       }
-    }
 
-    return json;
-  });
+      return json;
+    }
+  );
 }
 
 function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {

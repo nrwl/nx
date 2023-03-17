@@ -1964,6 +1964,15 @@
         "originalFilePath": "/packages/nx-plugin/src/generators/lint-checks/schema.json",
         "path": "/packages/nx-plugin/generators/plugin-lint-checks",
         "type": "generator"
+      },
+      "/packages/nx-plugin/generators/preset": {
+        "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nrwl/nx-plugin`.",
+        "file": "generated/packages/nx-plugin/generators/preset.json",
+        "hidden": true,
+        "name": "preset",
+        "originalFilePath": "/packages/nx-plugin/src/generators/preset/schema.json",
+        "path": "/packages/nx-plugin/generators/preset",
+        "type": "generator"
       }
     },
     "path": "/packages/nx-plugin"

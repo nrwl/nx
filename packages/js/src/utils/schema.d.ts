@@ -32,6 +32,7 @@ export interface LibraryGeneratorSchema {
   bundler?: Bundler;
   skipTypeCheck?: boolean;
   minimal?: boolean;
+  rootProject?: boolean;
 }
 
 export interface ExecutorOptions {

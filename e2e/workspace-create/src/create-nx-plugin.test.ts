@@ -6,6 +6,7 @@ import {
   uniq,
   runCreatePlugin,
   cleanupProject,
+  tmpProjPath,
 } from '@nrwl/e2e/utils';
 
 describe('create-nx-plugin', () => {
@@ -25,10 +26,11 @@ describe('create-nx-plugin', () => {
     checkFilesExist(
       'package.json',
       packageManagerLockFile[packageManager],
-      `packages/${pluginName}/package.json`,
-      `packages/${pluginName}/project.json`
+      `project.json`,
+      `generators.json`,
+      `executors.json`
     );
 
-    expect(() => runCLI(`e2e ${pluginName}-e2e`)).not.toThrow();
+    expect(() => runCLI(`e2e e2e`)).not.toThrow();
   });
 });

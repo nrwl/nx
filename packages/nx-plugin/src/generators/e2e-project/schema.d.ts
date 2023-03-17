@@ -9,4 +9,5 @@ export interface Schema {
   minimal?: boolean;
   linter?: Linter;
   skipFormat?: boolean;
+  rootProject?: boolean;
 }

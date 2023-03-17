@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import chalk = require('chalk');
 import enquirer = require('enquirer');
 import yargs = require('yargs');
@@ -16,11 +17,10 @@ import {
   withOptions,
   withPackageManager,
 } from 'create-nx-workspace/src/internal-utils/yargs-options';
-import { createWorkspace } from 'create-nx-workspace';
+import { createWorkspace, CreateWorkspaceOptions } from 'create-nx-workspace';
 import { output } from 'create-nx-workspace/src/utils/output';
 import { CI } from 'create-nx-workspace/src/utils/ci/ci-list';
-import { CreateWorkspaceOptions } from 'create-nx-workspace/src/create-workspace-options';
-import { PackageManager } from 'create-nx-workspace/src/utils/package-manager';
+import type { PackageManager } from 'create-nx-workspace/src/utils/package-manager';
 
 export const yargsDecorator = {
   'Options:': `${chalk.green`Options`}:`,
@@ -38,8 +38,8 @@ export const yargsDecorator = {
 const nxVersion = require('../package.json').version;
 
 function determinePluginName(parsedArgs: CreateNxPluginArguments) {
-  if (parsedArgs.name) {
-    return Promise.resolve(parsedArgs.name);
+  if (parsedArgs.pluginName) {
+    return Promise.resolve(parsedArgs.pluginName);
   }
 
   return enquirer
@@ -64,8 +64,7 @@ function determinePluginName(parsedArgs: CreateNxPluginArguments) {
 }
 
 interface CreateNxPluginArguments {
-  name: string;
-  importPath: string;
+  pluginName: string;
   packageManager: PackageManager;
   ci: CI;
   allPrompts: boolean;
@@ -82,19 +81,19 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
     // this is the default and only command
     '$0 [name] [options]',
     'Create a new Nx plugin workspace',
-    withOptions(
-      (yargs) =>
-        yargs.option('name', {
+    (yargs) =>
+      withOptions(
+        yargs.positional('pluginName', {
           describe: chalk.dim`Plugin name`,
           type: 'string',
-          alias: ['pluginName'],
+          alias: ['name'],
         }),
-      withNxCloud,
-      withCI,
-      withAllPrompts,
-      withPackageManager,
-      withGitOptions
-    ),
+        withNxCloud,
+        withCI,
+        withAllPrompts,
+        withPackageManager,
+        withGitOptions
+      ),
     async (argv: yargs.ArgumentsCamelCase<CreateNxPluginArguments>) => {
       await main(argv).catch((error) => {
         const { version } = require('../package.json');
@@ -117,11 +116,11 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
 async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
   const populatedArguments: CreateNxPluginArguments & CreateWorkspaceOptions = {
     ...parsedArgs,
+    name: parsedArgs.pluginName.includes('/')
+      ? parsedArgs.pluginName.split('/')[1]
+      : parsedArgs.pluginName,
   };
-  await createWorkspace<CreateNxPluginArguments>(
-    '@nrwl/nx-plugin',
-    populatedArguments
-  );
+  await createWorkspace('@nrwl/nx-plugin', populatedArguments);
 }
 
 /**
@@ -152,3 +151,6 @@ async function normalizeArgsMiddleware(
     process.exit(1);
   }
 }
+
+// Trigger Yargs
+commandsObject.argv;

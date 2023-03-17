@@ -35,10 +35,13 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const { npmScope, appsDir: defaultAppsDir } = getWorkspaceLayout(host);
   const appsDir = layoutDirectory ?? defaultAppsDir;
 
-  const projectName = `${options.pluginName}-e2e`;
-  const projectRoot = projectDirectory
-    ? joinPathFragments(appsDir, `${projectDirectory}-e2e`)
-    : joinPathFragments(appsDir, projectName);
+  const projectName = options.rootProject ? 'e2e' : `${options.pluginName}-e2e`;
+  const projectRoot =
+    projectDirectory && !options.rootProject
+      ? joinPathFragments(appsDir, `${projectDirectory}-e2e`)
+      : options.rootProject
+      ? projectName
+      : joinPathFragments(appsDir, projectName);
   const pluginPropertyName = names(options.pluginName).propertyName;
 
   return {

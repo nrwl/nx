@@ -111,7 +111,7 @@ describe('NxPlugin Generator Generator', () => {
       tree.exists(`${libConfig.root}/generators.json`)
     ).not.toThrow();
     expect(readJson(tree, `${libConfig.root}/package.json`).generators).toBe(
-      'generators.json'
+      './generators.json'
     );
   });
 
