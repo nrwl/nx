@@ -2,7 +2,6 @@ import {
   cleanupProject,
   expectTestsPass,
   newProject,
-  readJson,
   runCLI,
   runCLIAsync,
   uniq,
@@ -19,30 +18,12 @@ describe('Angular Config', () => {
 
     // update the angular.json, first reset to v1 config
     updateFile(`angular.json`, angularV1Json(myapp));
-    const workspaceJson = readJson(`angular.json`);
-    workspaceJson.version = 2;
-    workspaceJson.projects[myapp].targets = updateConfig(
-      workspaceJson.projects[myapp].architect
-    );
-    workspaceJson.generators = workspaceJson.schematics;
-    delete workspaceJson.schematics;
-    updateFile('angular.json', JSON.stringify(workspaceJson, null, 2));
 
     const myapp2 = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp2} --no-interactive`);
     expectTestsPass(await runCLIAsync(`test ${myapp2} --no-watch`));
   }, 1000000);
 });
-
-function updateConfig(targets: any) {
-  const res = {};
-  Object.entries(targets).forEach(([name, t]: any) => {
-    t.executor = t.builder;
-    delete t.builder;
-    res[name] = t;
-  });
-  return res;
-}
 
 const angularV1Json = (appName: string) => `{
     "version": 1,

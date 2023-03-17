@@ -373,7 +373,8 @@ exports[`lib --standalone should generate a library with a standalone component 
 "import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-    {path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.myLibRoutes)},];"
+    {path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.myLibRoutes)},];
+"
 `;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child 1`] = `
@@ -395,7 +396,8 @@ exports[`lib --standalone should generate a library with a standalone component 
 import { myLibRoutes } from '@proj/my-lib';
 
 export const appRoutes: Route[] = [
-    { path: 'my-lib', children: myLibRoutes },];"
+    { path: 'my-lib', children: myLibRoutes },];
+"
 `;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent routes as a lazy child 1`] = `

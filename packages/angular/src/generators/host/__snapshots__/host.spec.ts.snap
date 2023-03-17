@@ -3,25 +3,21 @@
 exports[`Host App Generator --ssr should generate the correct files 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
 import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
 import { appRoutes } from './app.routes';
+import { NxWelcomeComponent } from './nx-welcome.component';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    NxWelcomeComponent
-  ],
+  declarations: [AppComponent, NxWelcomeComponent],
   imports: [
     BrowserModule.withServerTransition({ appId: 'serverApp' }),
-    RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'})
+    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
 "
 `;
 
@@ -151,7 +147,8 @@ export const appRoutes: Route[] = [
     {
       path: '',
       component: NxWelcomeComponent
-    },];"
+    },];
+"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 9`] = `
@@ -219,13 +216,17 @@ module.exports = withModuleFederation(config);"
 
 exports[`Host App Generator should generate a host with remotes using standalone components 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
-import { AppComponent } from './app/app.component';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
 import { appRoutes } from './app/app.routes';
+import { AppComponent } from './app/app.component';
 
 bootstrapApplication(AppComponent, {
   providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
-}).catch((err) => console.error(err));"
+}).catch((err) => console.error(err));
+"
 `;
 
 exports[`Host App Generator should generate a host with remotes using standalone components 2`] = `
@@ -234,20 +235,21 @@ declare module 'remote1/Routes';"
 `;
 
 exports[`Host App Generator should generate a host with remotes using standalone components 3`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { Component } from '@angular/core';
+import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
   standalone: true,
   imports: [NxWelcomeComponent, RouterModule],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
   title = 'host';
-}"
+}
+"
 `;
 
 exports[`Host App Generator should generate the correct app component spec file 1`] = `

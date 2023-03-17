@@ -25,7 +25,8 @@ export const appRoutes: Route[] = [
     {
       path: '',
       component: NxWelcomeComponent
-    },];"
+    },];
+"
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
@@ -55,7 +56,8 @@ export const appRoutes: Route[] = [
     {
       path: '',
       component: NxWelcomeComponent
-    },];"
+    },];
+"
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 1`] = `

@@ -3,55 +3,58 @@
 exports[`app --minimal should skip Nx specific \`nx-welcome.component.ts\` file creation 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-
 import { AppComponent } from './app.component';
 
 @NgModule({
-  declarations: [
-    AppComponent
-  ],
+  declarations: [AppComponent],
   imports: [
-    BrowserModule
+    BrowserModule,
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
 "
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
-import { AppComponent } from './app/app.component';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
 import { appRoutes } from './app/app.routes';
+import { AppComponent } from './app/app.component';
 
 bootstrapApplication(AppComponent, {
   providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
-}).catch((err) => console.error(err));"
+}).catch((err) => console.error(err));
+"
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
 "import { Route } from '@angular/router';
 
-export const appRoutes: Route[] = [];"
+export const appRoutes: Route[] = [];
+"
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 3`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { Component } from '@angular/core';
+import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
   standalone: true,
   imports: [NxWelcomeComponent, RouterModule],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
   title = 'standalone';
-}"
+}
+"
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 4`] = `
@@ -62,13 +65,16 @@ import { RouterTestingModule } from '@angular/router/testing';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({imports: [AppComponent, NxWelcomeComponent, RouterTestingModule] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [AppComponent, NxWelcomeComponent, RouterTestingModule],
+    }).compileComponents();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+  it('should render title', () => {
+      const fixture = TestBed.createComponent(AppComponent);
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.querySelector('h1')?.textContent).toContain('Welcome standalone');
   });
 
   it(\`should have as title 'standalone'\`, () => {
@@ -76,39 +82,35 @@ describe('AppComponent', () => {
     const app = fixture.componentInstance;
     expect(app.title).toEqual('standalone');
   });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Welcome standalone');
-  });
 });
 "
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 1`] = `
-"import { bootstrapApplication } from '@angular/platform-browser';;
+"import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 
-
-bootstrapApplication(AppComponent).catch((err) => console.error(err));"
+bootstrapApplication(AppComponent, {
+  providers: [],
+}).catch((err) => console.error(err));
+"
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 2`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
-import { Component } from '@angular/core';
+"import { Component } from '@angular/core';
+import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
   standalone: true,
-  imports: [NxWelcomeComponent],
+  imports: [NxWelcomeComponent, ],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
   title = 'standalone';
-}"
+}
+"
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 3`] = `
@@ -118,26 +120,22 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({imports: [AppComponent, NxWelcomeComponent]}).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [AppComponent, NxWelcomeComponent],
+    }).compileComponents();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+  it('should render title', () => {
+      const fixture = TestBed.createComponent(AppComponent);
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.querySelector('h1')?.textContent).toContain('Welcome standalone');
   });
 
   it(\`should have as title 'standalone'\`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app.title).toEqual('standalone');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Welcome standalone');
   });
 });
 "

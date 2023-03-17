@@ -1469,7 +1469,8 @@ describe('lib', () => {
         import { myLibRoutes } from '@proj/my-lib';
 
         export const appRoutes: Route[] = [
-            { path: 'my-lib', children: myLibRoutes },];"
+            { path: 'my-lib', children: myLibRoutes },];
+        "
       `);
     });
 
@@ -1495,7 +1496,8 @@ describe('lib', () => {
         "import { Route } from '@angular/router';
 
         export const appRoutes: Route[] = [
-            {path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.myLibRoutes)},];"
+            {path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.myLibRoutes)},];
+        "
       `);
     });
 

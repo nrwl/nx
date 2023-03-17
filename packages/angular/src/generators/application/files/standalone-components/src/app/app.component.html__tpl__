@@ -1,0 +1,1 @@
+<% if(minimal) { %><h1>Welcome <%= appName %></h1><% } else { %><<%= nxWelcomeSelector %>></<%= nxWelcomeSelector %>><% } %> <% if(routing) { %><router-outlet></router-outlet><% } %>
