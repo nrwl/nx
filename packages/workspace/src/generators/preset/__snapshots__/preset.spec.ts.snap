@@ -2,12 +2,12 @@
 
 exports[`preset should create files (preset = angular-monorepo) 1`] = `
 Array [
-  "tsconfig.app.json",
-  "tsconfig.spec.json",
-  "src",
   "project.json",
+  "src",
+  "tsconfig.app.json",
   "tsconfig.editor.json",
   "tsconfig.json",
+  "tsconfig.spec.json",
   ".eslintrc.json",
   "jest.config.ts",
 ]
@@ -15,23 +15,23 @@ Array [
 
 exports[`preset should create files (preset = angular-monorepo) 2`] = `
 Array [
+  "assets",
   "favicon.ico",
   "index.html",
-  "main.ts",
   "styles.css",
-  "assets",
   "app",
+  "main.ts",
   "test-setup.ts",
 ]
 `;
 
 exports[`preset should create files (preset = angular-monorepo) 3`] = `
 Array [
-  "app.module.ts",
   "app.component.css",
   "app.component.html",
   "app.component.spec.ts",
   "app.component.ts",
+  "app.module.ts",
   "nx-welcome.component.ts",
 ]
 `;
