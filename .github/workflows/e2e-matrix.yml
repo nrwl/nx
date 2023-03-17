@@ -86,7 +86,6 @@ jobs:
           - e2e-webpack
           - e2e-workspace-create
           - e2e-e2e-workspace-create-npm
-          - e2e-graph-client
         include:
           # os short names
           - os: ubuntu-latest
@@ -152,8 +151,6 @@ jobs:
             codeowners: 'S04SYHYKGNP'
           - project: e2e-e2e-workspace-create-npm
             codeowners: 'S04SYHYKGNP'
-          - project: e2e-graph-client
-            codeowners: 'S04T16QL360'
         exclude:
           # exclude react-native tests from ubuntu
           - os: ubuntu-latest
