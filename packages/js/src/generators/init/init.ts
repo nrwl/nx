@@ -1,6 +1,8 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  ensurePackage,
+  formatFiles,
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -23,6 +25,7 @@ export async function initGenerator(
   tree: Tree,
   schema: InitSchema
 ): Promise<GeneratorCallback> {
+  const tasks: GeneratorCallback[] = [];
   // add tsconfig.base.json
   if (!getRootTsConfigFileName(tree)) {
     generateFiles(tree, joinPathFragments(__dirname, './files'), '.', {
@@ -68,20 +71,30 @@ export async function initGenerator(
   const installTask = !schema.skipPackageJson
     ? addDependenciesToPackageJson(tree, {}, devDependencies)
     : () => {};
+  tasks.push(installTask);
+
+  if (!schema.skipFormat) {
+    try {
+      ensurePackage('prettier', prettierVersion);
+      await formatFiles(tree);
+    } catch (e) {
+      if (!formatTaskAdded) {
+        formatTaskAdded = true;
+        tasks.push(async () => {
+          try {
+            const prettierCli = await import('prettier/cli');
+            await prettierCli.run(['.', '--write']);
+          } catch {
+            // If --skipPackageJson is passed then prettier is not installed.
+          }
+        });
+      }
+    }
+  }
 
   return async () => {
-    await installTask();
-
-    // Run Prettier once on all non-ignored files because some files may not be changed in the tree. e.g. nx.json
-    // TODO(jack): Once we create @nrwl/prettier:init we can move this logic there with --formatExistingFiles option.
-    if (!formatTaskAdded) {
-      formatTaskAdded = true;
-      try {
-        const prettierCli = await import('prettier/cli');
-        await prettierCli.run(['.', '--write']);
-      } catch {
-        // If --skipPackageJson is passed then prettier is not installed.
-      }
+    for (const task of tasks) {
+      await task();
     }
   };
 }
