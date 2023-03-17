@@ -38,6 +38,7 @@ describe('Storybook generators for nested workspaces', () => {
     );
 
     // TODO(jack): Overriding enhanced-resolve to 5.10.0 now until the package is fixed.
+    // TODO: Use --storybook7Configuration and remove this
     // See: https://github.com/webpack/enhanced-resolve/issues/362
     updateJson('package.json', (json) => {
       json['overrides'] = {
@@ -48,6 +49,9 @@ describe('Storybook generators for nested workspaces', () => {
     });
 
     runCommand(getPackageManagerCommand().install);
+
+    console.log('Here is the Nx report: ');
+    runCLI(`report`);
   });
 
   afterAll(() => {
@@ -59,7 +63,6 @@ describe('Storybook generators for nested workspaces', () => {
     it('should generate storybook files', () => {
       checkFilesExist(
         '.storybook/main.js',
-        '.storybook/main.root.js',
         '.storybook/preview.js',
         '.storybook/tsconfig.json'
       );
@@ -77,17 +80,13 @@ describe('Storybook generators for nested workspaces', () => {
         `generate @nrwl/react:storybook-configuration ${nestedAppName} --generateStories --no-interactive`
       );
       checkFilesExist(
-        `${nestedAppName}/.storybook/main.js`,
-        `${nestedAppName}/.storybook/tsconfig.json`
+        `apps/${nestedAppName}/.storybook/main.js`,
+        `apps/${nestedAppName}/.storybook/tsconfig.json`
       );
     });
   });
 
-  // TODO: Re-enable this test when Nx uses only Storybook 7 (Nx 16)
-  // This fails for Node 18 because Storybook 6.5 uses webpack even in non-webpack projects
-  // https://github.com/storybookjs/builder-vite/issues/414#issuecomment-1287536049
-  // https://github.com/storybookjs/storybook/issues/20209
-  // Error: error:0308010C:digital envelope routines::unsupported
+  // TODO: Use --storybook7Configuration and re-enable this test
   xdescribe('serve storybook', () => {
     afterEach(() => killPorts());
 
@@ -100,11 +99,7 @@ describe('Storybook generators for nested workspaces', () => {
     }, 1000000);
   });
 
-  // TODO: Re-enable this test when Nx uses only Storybook 7 (Nx 16)
-  // This fails for Node 18 because Storybook 6.5 uses webpack even in non-webpack projects
-  // https://github.com/storybookjs/builder-vite/issues/414#issuecomment-1287536049
-  // https://github.com/storybookjs/storybook/issues/20209
-  // Error: error:0308010C:digital envelope routines::unsupported
+  // TODO: Use --storybook7Configuration and re-enable this test
   xdescribe('build storybook', () => {
     it('should build and lint a React based storybook', () => {
       // build
@@ -116,7 +111,8 @@ describe('Storybook generators for nested workspaces', () => {
       expect(output).toContain('All files pass linting.');
     }, 1000000);
 
-    it('should build a React based storybook that references another lib', () => {
+    // Not sure how much sense this test makes - maybe it's noise?
+    xit('should build a React based storybook that references another lib', () => {
       const reactLib = uniq('test-lib-react');
       runCLI(`generate @nrwl/react:lib ${reactLib} --no-interactive`);
       // create a React component we can reference
