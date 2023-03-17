@@ -13,8 +13,7 @@ describe('create-nx-plugin', () => {
 
   afterEach(() => cleanupProject());
 
-  // TODO: Re-enable to work with pnpm
-  xit('should be able to create a plugin repo and run plugin e2e', () => {
+  it('should be able to create a plugin repo and run plugin e2e', () => {
     const wsName = uniq('ws-plugin');
     const pluginName = uniq('plugin');
 
