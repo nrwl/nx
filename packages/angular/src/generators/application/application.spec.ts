@@ -657,29 +657,10 @@ describe('app', () => {
     it('should enable strict type checking', async () => {
       await generateApp(appTree, 'my-app', { strict: true });
 
-      // define all the tsconfig files to update
-      const configFiles = [
-        'apps/my-app/tsconfig.json',
-        'apps/my-app-e2e/tsconfig.json',
-      ];
-
-      for (const configFile of configFiles) {
-        const { compilerOptions, angularCompilerOptions } = parseJson(
-          appTree.read(configFile, 'utf-8')
-        );
-
-        // check that the TypeScript compiler options have been updated
-        expect(compilerOptions.forceConsistentCasingInFileNames).toBe(true);
-        expect(compilerOptions.strict).toBe(true);
-        expect(compilerOptions.noImplicitOverride).toBe(true);
-        expect(compilerOptions.noPropertyAccessFromIndexSignature).toBe(true);
-        expect(compilerOptions.noImplicitReturns).toBe(true);
-        expect(compilerOptions.noFallthroughCasesInSwitch).toBe(true);
-
-        // check that the Angular Template options have been updated
-        expect(angularCompilerOptions.strictInjectionParameters).toBe(true);
-        expect(angularCompilerOptions.strictTemplates).toBe(true);
-      }
+      const appTsConfig = readJson(appTree, 'apps/my-app/tsconfig.json');
+      expect(appTsConfig).toMatchSnapshot('app tsconfig.json');
+      const e2eTsConfig = readJson(appTree, 'apps/my-app-e2e/tsconfig.json');
+      expect(e2eTsConfig).toMatchSnapshot('e2e tsconfig.json');
 
       // should not update workspace configuration since --strict=true is the default
       const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
