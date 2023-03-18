@@ -1,6 +1,8 @@
 import type { NxJsonConfiguration } from '@nrwl/devkit';
 import {
   cleanupProject,
+  e2eCwd,
+  getPackageManagerCommand,
   getPublishedVersion,
   isNotWindows,
   newProject,
@@ -15,8 +17,10 @@ import {
   updateFile,
   updateJson,
 } from '@nrwl/e2e/utils';
-import { renameSync } from 'fs';
+import { renameSync, writeFileSync } from 'fs';
+import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
+import { major } from 'semver';
 
 describe('Nx Commands', () => {
   let proj: string;
@@ -566,5 +570,67 @@ describe('migrate', () => {
     });
 
     expect(output).toContain(`Migrations file 'migrations.json' doesn't exist`);
+  });
+});
+
+describe('global installation', () => {
+  // Additionally, installing Nx under e2eCwd like this still acts like a global install,
+  // but is easier to cleanup and doesn't mess with the users PC if running tests locally.
+  const globalsPath = path.join(e2eCwd, 'globals', 'node_modules', '.bin');
+
+  let oldPath: string;
+
+  beforeAll(() => {
+    newProject();
+
+    ensureDirSync(globalsPath);
+    writeFileSync(
+      path.join(path.dirname(path.dirname(globalsPath)), 'package.json'),
+      JSON.stringify(
+        {
+          dependencies: {
+            nx: getPublishedVersion(),
+          },
+        },
+        null,
+        2
+      )
+    );
+
+    runCommand(getPackageManagerCommand().install, {
+      cwd: path.join(e2eCwd, 'globals'),
+    });
+
+    // Update process.path to have access to modules installed in e2ecwd/node_modules/.bin,
+    // this lets commands run things like `nx`. We put it at the beginning so they are found first.
+    oldPath = process.env.PATH;
+    process.env.PATH = globalsPath + path.delimiter + process.env.PATH;
+  });
+
+  afterAll(() => {
+    process.env.PATH = oldPath;
+  });
+
+  it('should invoke Nx commands from local repo', () => {
+    const nxJsContents = readFile('node_modules/nx/bin/nx.js');
+    updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
+    let output: string;
+    expect(() => {
+      output = runCommand(`nx show projects`);
+    }).not.toThrow();
+    expect(output).toContain('local install');
+    updateFile('node_modules/nx/bin/nx.js', nxJsContents);
+  });
+
+  it('should warn if local Nx has higher major version', () => {
+    updateJson('node_modules/nx/package.json', (json) => {
+      json.version = `${major(getPublishedVersion()) + 2}.0.0`;
+      return json;
+    });
+    let output: string;
+    expect(() => {
+      output = runCommand(`nx show projects`);
+    }).not.toThrow();
+    expect(output).toContain('Its time to update Nx');
   });
 });

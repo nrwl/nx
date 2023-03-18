@@ -1434,6 +1434,16 @@
         "isExternal": false,
         "path": "/more-concepts/nx-and-the-wrapper",
         "tags": []
+      },
+      {
+        "id": "global-nx",
+        "name": "Managing your Global Nx Installation",
+        "description": "",
+        "file": "shared/guides/global-nx",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/global-nx",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1638,6 +1648,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/more-concepts/nx-and-the-wrapper",
+    "tags": []
+  },
+  "/more-concepts/global-nx": {
+    "id": "global-nx",
+    "name": "Managing your Global Nx Installation",
+    "description": "",
+    "file": "shared/guides/global-nx",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/global-nx",
     "tags": []
   },
   "/recipes": {

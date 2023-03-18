@@ -120,6 +120,9 @@
         },
         {
           "env": "NX_E2E_CI_CACHE_KEY"
+        },
+        {
+          "env": "CI"
         }
       ],
       "options": {

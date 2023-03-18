@@ -1153,6 +1153,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Managing your Global Nx Installation",
+            "path": "/more-concepts/global-nx",
+            "id": "global-nx",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -1313,6 +1321,14 @@
         "name": "Nx and the Nx Wrapper",
         "path": "/more-concepts/nx-and-the-wrapper",
         "id": "nx-and-the-wrapper",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Managing your Global Nx Installation",
+        "path": "/more-concepts/global-nx",
+        "id": "global-nx",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
