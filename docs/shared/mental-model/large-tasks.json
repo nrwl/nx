@@ -1969,86 +1969,6 @@
       }
     },
     {
-      "name": "e2e-storybook-angular",
-      "type": "app",
-      "data": {
-        "tags": [],
-        "root": "e2e/storybook-angular",
-        "files": [
-          {
-            "file": "e2e/storybook-angular/jest.config.ts",
-            "hash": "f29da5f0b7f58ba5d5ad69ebfc3e81f9bbe64fa0"
-          },
-          {
-            "file": "e2e/storybook-angular/project.json",
-            "hash": "0215ebdd9ed974940c842be82cc2a61ad8af5c46"
-          },
-          {
-            "file": "e2e/storybook-angular/src/storybook-angular.test.ts",
-            "hash": "6b6e047ea3ac78b26f2cc801092c90834c0ee803",
-            "deps": [
-              "e2e-utils",
-              "npm:react",
-              "npm:@storybook/react",
-              "npm:@storybook/angular",
-              "npm:@angular/core"
-            ]
-          },
-          {
-            "file": "e2e/storybook-angular/tsconfig.json",
-            "hash": "6d5abf84832009a8c70e7a910c49f332bf1f0612"
-          },
-          {
-            "file": "e2e/storybook-angular/tsconfig.spec.json",
-            "hash": "1a24bfb0a13536cd17717808ca5609e15def438f"
-          }
-        ],
-        "targets": {
-          "e2e": {
-            "executor": "nx:run-commands",
-            "options": {
-              "commands": [
-                {
-                  "command": "yarn e2e-start-local-registry"
-                },
-                {
-                  "command": "yarn e2e-build-package-publish"
-                },
-                {
-                  "command": "nx run-e2e-tests e2e-storybook-angular"
-                }
-              ],
-              "parallel": false
-            },
-            "inputs": [
-              "default",
-              "^production",
-              {
-                "env": "SELECTED_CLI"
-              },
-              {
-                "env": "NX_E2E_CI_CACHE_KEY"
-              }
-            ]
-          },
-          "run-e2e-tests": {
-            "executor": "@nrwl/jest:jest",
-            "options": {
-              "jestConfig": "e2e/storybook/jest.config.ts",
-              "passWithNoTests": true,
-              "runInBand": true
-            },
-            "outputs": ["{workspaceRoot}/coverage/e2e/storybook-angular"],
-            "inputs": [
-              "default",
-              "^production",
-              "{workspaceRoot}/jest.preset.js"
-            ]
-          }
-        }
-      }
-    },
-    {
       "name": "nx-dev-feature-search",
       "type": "lib",
       "data": {
@@ -30202,33 +30122,6 @@
         }
       },
       "dependencies": { "nx-dev-ui-sponsor-card:test": [] }
-    },
-    "e2e-storybook-angular:e2e": {
-      "roots": ["e2e-storybook-angular:e2e"],
-      "tasks": {
-        "e2e-storybook-angular:e2e": {
-          "id": "e2e-storybook-angular:e2e",
-          "target": { "project": "e2e-storybook-angular", "target": "e2e" },
-          "projectRoot": "e2e/storybook-angular",
-          "overrides": {}
-        }
-      },
-      "dependencies": { "e2e-storybook-angular:e2e": [] }
-    },
-    "e2e-storybook-angular:run-e2e-tests": {
-      "roots": ["e2e-storybook-angular:run-e2e-tests"],
-      "tasks": {
-        "e2e-storybook-angular:run-e2e-tests": {
-          "id": "e2e-storybook-angular:run-e2e-tests",
-          "target": {
-            "project": "e2e-storybook-angular",
-            "target": "run-e2e-tests"
-          },
-          "projectRoot": "e2e/storybook-angular",
-          "overrides": {}
-        }
-      },
-      "dependencies": { "e2e-storybook-angular:run-e2e-tests": [] }
     },
     "nx-dev-feature-search:lint": {
       "roots": ["nx-dev-feature-search:lint"],
