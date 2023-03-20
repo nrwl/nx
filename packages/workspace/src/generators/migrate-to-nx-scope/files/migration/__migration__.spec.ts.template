@@ -1,0 +1,31 @@
+import { Tree, readJson, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import replacePackage from './<%= migration %>';
+
+describe('<%= migration %>', () => {
+  let tree: Tree;
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace();
+
+    updateJson(tree, 'package.json', json => {
+      json.devDependencies['<%=oldPackageName %>'] = '16.0.0';
+      return json;
+    });
+  });
+
+  it('should remove the dependency on <%= oldPackageName %>', async () => {
+    await replacePackage(tree);
+
+    expect(readJson(tree, 'package.json').dependencies['<%= oldPackageName %>']).not.toBeDefined();
+    expect(readJson(tree, 'package.json').devDependencies['<%= oldPackageName %>']).not.toBeDefined();
+  });
+
+  it('should add a dependency on <%= newPackageName %>', async () => {
+    await replacePackage(tree);
+
+    const packageJson = readJson(tree, 'package.json');
+    const newDependencyVersion = packageJson.devDependencies['<%= newPackageName %>'] ?? packageJson.dependencies['<%= newPackageName %>'];
+
+    expect(newDependencyVersion).toBeDefined();
+  });
+});

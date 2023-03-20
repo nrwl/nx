@@ -154,7 +154,9 @@ export async function migrationGenerator(host: Tree, schema: Schema) {
     );
   }
 
-  await formatFiles(host);
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default migrationGenerator;

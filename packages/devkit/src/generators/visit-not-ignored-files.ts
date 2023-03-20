@@ -13,6 +13,7 @@ export function visitNotIgnoredFiles(
   let ig: Ignore;
   if (tree.exists('.gitignore')) {
     ig = ignore();
+    ig.add('.git');
     ig.add(tree.read('.gitignore', 'utf-8'));
   }
   dirPath = normalizePathRelativeToRoot(dirPath, tree.root);
