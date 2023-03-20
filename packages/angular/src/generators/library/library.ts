@@ -3,7 +3,6 @@ import {
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
-  moveFilesToNewDirectory,
   removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
@@ -27,9 +26,10 @@ import {
 import { normalizeOptions } from './lib/normalize-options';
 import { NormalizedSchema } from './lib/normalized-schema';
 import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
-import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
+import { createFiles } from './lib/create-files';
+import { addProject } from './lib/add-project';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -68,31 +68,9 @@ export async function libraryGenerator(
     e2eTestRunner: E2eTestRunner.None,
   });
 
-  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
-  const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'library'
-  );
-  await runAngularLibrarySchematic(tree, {
-    name: libraryOptions.name,
-    prefix: libraryOptions.prefix,
-    entryFile: 'index',
-    skipPackageJson:
-      libraryOptions.skipPackageJson ||
-      !(libraryOptions.publishable || libraryOptions.buildable),
-    skipTsConfig: true,
-  });
+  const project = addProject(tree, libraryOptions);
 
-  if (libraryOptions.ngCliSchematicLibRoot !== libraryOptions.projectRoot) {
-    moveFilesToNewDirectory(
-      tree,
-      libraryOptions.ngCliSchematicLibRoot,
-      libraryOptions.projectRoot
-    );
-  }
-
-  const { updateProject } = await import('./lib/update-project');
-  await updateProject(tree, libraryOptions);
+  createFiles(tree, options, project);
   updateTsConfig(tree, libraryOptions);
   await addUnitTestRunner(tree, libraryOptions);
   updateNpmScopeIfBuildableOrPublishable(tree, libraryOptions);
