@@ -338,8 +338,8 @@ describe('app', () => {
       expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();
 
       expect(readJson(tree, 'my-frontend/proxy.conf.json')).toEqual({
-        '/api': { target: 'http://localhost:3000', secure: false },
-        '/billing-api': { target: 'http://localhost:3000', secure: false },
+        '/api': { target: 'http://localhost:3333', secure: false },
+        '/billing-api': { target: 'http://localhost:3333', secure: false },
       });
     });
 
