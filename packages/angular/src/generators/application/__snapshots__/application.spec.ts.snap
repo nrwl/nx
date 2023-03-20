@@ -502,7 +502,7 @@ Object {
 }
 `;
 
-exports[`app not nested should generate files 1`] = `
+exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
 Object {
   "compilerOptions": Object {
     "allowJs": true,
@@ -524,6 +524,62 @@ Object {
     "src/**/*.ts",
     "src/**/*.js",
     "cypress.config.ts",
+  ],
+}
+`;
+
+exports[`app not nested should generate files: tsconfig.app.json 1`] = `
+Object {
+  "compilerOptions": Object {
+    "outDir": "../../dist/out-tsc",
+    "types": Array [],
+  },
+  "exclude": Array [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+  ],
+  "extends": "./tsconfig.json",
+  "files": Array [
+    "src/main.ts",
+  ],
+  "include": Array [
+    "src/**/*.d.ts",
+  ],
+}
+`;
+
+exports[`app not nested should generate files: tsconfig.json 1`] = `
+Object {
+  "angularCompilerOptions": Object {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+  },
+  "compilerOptions": Object {
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "strict": true,
+    "target": "es2022",
+    "useDefineForClassFields": false,
+  },
+  "extends": "../../tsconfig.base.json",
+  "files": Array [],
+  "include": Array [],
+  "references": Array [
+    Object {
+      "path": "./tsconfig.app.json",
+    },
+    Object {
+      "path": "./tsconfig.spec.json",
+    },
+    Object {
+      "path": "./tsconfig.editor.json",
+    },
   ],
 }
 `;

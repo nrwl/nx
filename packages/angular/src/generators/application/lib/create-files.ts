@@ -110,12 +110,6 @@ export async function createFiles(
     );
   }
 
-  if (options.unitTestRunner === UnitTestRunner.None) {
-    tree.delete(
-      joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json')
-    );
-  }
-
   if (options.inlineTemplate) {
     tree.delete(
       joinPathFragments(options.appProjectRoot, '/src/app/app.component.html')
