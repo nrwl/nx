@@ -80,8 +80,8 @@ describe('Storybook generators for nested workspaces', () => {
         `generate @nrwl/react:storybook-configuration ${nestedAppName} --generateStories --no-interactive`
       );
       checkFilesExist(
-        `apps/${nestedAppName}/.storybook/main.js`,
-        `apps/${nestedAppName}/.storybook/tsconfig.json`
+        `${nestedAppName}/.storybook/main.js`,
+        `${nestedAppName}/.storybook/tsconfig.json`
       );
     });
   });
