@@ -29,6 +29,12 @@
       "schema": "./src/generators/setup-docker/schema.json",
       "description": "Set up Docker configuration for a project.",
       "hidden": false
+    },
+    "setup-serverless": {
+      "factory": "./src/generators/setup-serverless/setup-serverless",
+      "schema": "./src/generators/setup-serverless/schema.json",
+      "description": "Sets up a Serverless configuration for a project.",
+      "hidden": false
     }
   },
   "schematics": {
@@ -54,9 +60,14 @@
       "description": "Create a node library."
     },
     "setup-docker": {
-      "factory": "./src/generators/setup-docker/setup-docker#setupDockerGenerator",
+      "factory": "./src/generators/setup-docker/setup-docker#setupDockerSchematic",
       "schema": "./src/generators/setup-docker/schema.json",
       "description": "Set up Docker configuration for a project."
+    },
+    "setup-serverless": {
+      "factory": "./src/generators/setup-serverless/setup-serverless#setupServerlessSchematic",
+      "schema": "./src/generators/setup-serverless/schema.json",
+      "description": "Sets up a Serverless configuration for a project."
     }
   }
 }

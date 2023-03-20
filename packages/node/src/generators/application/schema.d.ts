@@ -1,4 +1,5 @@
 import { Linter } from '@nrwl/linter';
+import { ServerlessPlatforms } from '../setup-serverless/schema';
 
 export interface Schema {
   name: string;
@@ -20,6 +21,8 @@ export interface Schema {
   port?: number;
   rootProject?: boolean;
   docker?: boolean;
+  platform?: ServerlessPlatforms;
+  site?: string;
   isNest?: boolean;
 }
 

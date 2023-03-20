@@ -1548,6 +1548,15 @@
         "originalFilePath": "/packages/node/src/generators/setup-docker/schema.json",
         "path": "/packages/node/generators/setup-docker",
         "type": "generator"
+      },
+      "/packages/node/generators/setup-serverless": {
+        "description": "Sets up a Serverless configuration for a project.",
+        "file": "generated/packages/node/generators/setup-serverless.json",
+        "hidden": false,
+        "name": "setup-serverless",
+        "originalFilePath": "/packages/node/src/generators/setup-serverless/schema.json",
+        "path": "/packages/node/generators/setup-serverless",
+        "type": "generator"
       }
     },
     "path": "/packages/node"

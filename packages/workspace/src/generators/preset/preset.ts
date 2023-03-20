@@ -139,6 +139,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
       framework: options.framework,
+      platform: options.platform,
       docker: options.docker,
       rootProject: true,
     });

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "SchematicsNxSetupServerless",
+  "title": "Nx Node Setup Serverless Function Schema",
+  "description": "Nx Node Setup Serverless Function Schema.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "description": "The name of the project",
+      "$default": {
+        "$source": "projectName"
+      },
+      "type": "string",
+      "x-prompt": "What project would you like to add a serverless functions to?",
+      "x-priority": "important"
+    },
+    "platform": {
+      "description": "The name of the platform where the serverless functions should be published",
+      "type": "string",
+      "enum": ["netlify", "none"]
+    },
+    "buildTarget": {
+      "description": "The name of the build target",
+      "type": "string",
+      "default": "build"
+    },
+    "deployTarget": {
+      "description": "The name of the deploy target",
+      "type": "string",
+      "default": "deploy"
+    },
+    "skipFormat": {
+      "description": "Skips formatting the workspace after the generator completes.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "site": {
+      "description": "The site where the serverless function will be deployed",
+      "type": "string"
+    }
+  }
+}

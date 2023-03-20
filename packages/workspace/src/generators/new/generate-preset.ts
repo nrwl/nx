@@ -76,6 +76,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.preset ? `--preset=${opts.preset}` : null,
       opts.bundler ? `--bundler=${opts.bundler}` : null,
       opts.framework ? `--framework=${opts.framework}` : null,
+      opts.platform ? `--platform=${opts.platform}` : null,
       opts.docker ? `--docker=${opts.docker}` : null,
       opts.packageManager ? `--packageManager=${opts.packageManager}` : null,
       opts.standaloneApi !== undefined

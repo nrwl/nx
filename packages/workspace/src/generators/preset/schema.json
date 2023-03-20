@@ -87,6 +87,11 @@
       "description": "Generate a Dockerfile",
       "type": "boolean",
       "default": false
+    },
+    "platform": {
+      "description": "Generate serverless a function and configuration for the given platform",
+      "type": "string",
+      "enum": ["netlify", "none"]
     }
   }
 }

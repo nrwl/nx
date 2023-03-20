@@ -24,6 +24,12 @@
       "description": "The name of the build target",
       "type": "string",
       "default": "build"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
     }
   }
 }

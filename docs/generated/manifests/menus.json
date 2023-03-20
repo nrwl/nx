@@ -5128,6 +5128,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "setup-serverless",
+                "path": "/packages/node/generators/setup-serverless",
+                "name": "setup-serverless",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

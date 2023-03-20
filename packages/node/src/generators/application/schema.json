@@ -117,6 +117,15 @@
     "docker": {
       "type": "boolean",
       "description": "Add a docker build target"
+    },
+    "platform": {
+      "description": "The name of the platform where the serverless functions should be published",
+      "type": "string",
+      "enum": ["netlify", "none"]
+    },
+    "site": {
+      "description": "The site where the serverless function will be deployed",
+      "type": "string"
     }
   },
   "required": ["name"]

@@ -23,12 +23,14 @@ import { yargsDecorator } from './decorator';
 import { getThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
 import { Framework, frameworkList } from './types/framework-list';
 import { Bundler, bundlerList } from './types/bundler-list';
+import { ServerlessPlatform } from './types/serverless-platform-list';
 
 interface Arguments extends CreateWorkspaceOptions {
   preset: string;
   appName: string;
   style: string;
   framework: Framework;
+  platform: ServerlessPlatform;
   standaloneApi: boolean;
   docker: boolean;
   routing: boolean;
@@ -184,6 +186,7 @@ async function normalizeArgsMiddleware(
       style,
       preset,
       framework,
+      platform,
       bundler,
       docker,
       routing,
@@ -243,6 +246,7 @@ async function normalizeArgsMiddleware(
         if (preset === Preset.NodeServer) {
           framework = await determineFramework(argv);
           docker = await determineDockerfile(argv);
+          platform = argv.platform;
         }
 
         if (preset === Preset.ReactStandalone) {
@@ -289,6 +293,7 @@ async function normalizeArgsMiddleware(
       standaloneApi,
       routing,
       framework,
+      platform,
       nxCloud,
       packageManager,
       defaultBase,

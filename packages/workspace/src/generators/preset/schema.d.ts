@@ -9,6 +9,7 @@ export interface Schema {
   preset: Preset;
   standaloneConfig?: boolean;
   framework?: string;
+  platform?: 'netlify' | 'none';
   packageManager?: PackageManager;
   bundler?: 'vite' | 'webpack';
   docker?: boolean;

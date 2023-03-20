@@ -1,0 +1,26 @@
+[build]
+  # netlify requires a publish directory even if we only care about the functions
+  publish = "<%= outputPath %>"
+
+[functions]
+  # Directory with serverless functions, including background
+  # functions, to deploy. This is relative to the base directory
+  # if one has been set, or the root directory if
+  # a base hasn’t been set.
+  directory = "<%= outputPath %>"
+
+  # Specifies `esbuild` for functions bundling, esbuild is the default for TS
+  # node_bundler = "esbuild"
+
+  # Flags "package-1" as an external node module for all functions
+  # list of Node.js modules that are copied to the bundled artifact without adjusting their source or references during the bundling process; 
+  # only applies when node_bundler is set to esbuild. 
+  # This property helps handle dependencies that can’t be inlined, such as modules with native add-ons.
+  # external_node_modules = ["package-1"]
+
+  # Includes all Markdown files inside the "files/" directory.
+  # lets you specify additional files or directories and reference them dynamically in function code. 
+  # staticly referenced files are automatically included in the bundle
+  # You can use * to match any character or prefix an entry with ! to exclude files. 
+  # Paths are relative to the base directory.
+  # included_files = ["files/*.md"]

@@ -1,12 +1,9 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getPackageManagerCommand,
   newProject,
   runCLI,
-  runCommand,
   uniq,
-  updateJson,
 } from '@nrwl/e2e/utils';
 
 describe('Next.js Applications', () => {

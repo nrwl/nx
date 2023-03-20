@@ -46,6 +46,7 @@ import { setupDockerGenerator } from '../setup-docker/setup-docker';
 
 import { Schema } from './schema';
 import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
+import { setupServerlessGenerator } from '../setup-serverless/setup-serverless';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -438,6 +439,15 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     });
 
     tasks.push(dockerTask);
+  }
+
+  if (options.platform && options.platform !== 'none') {
+    const serverlessTask = await setupServerlessGenerator(tree, {
+      ...options,
+      project: options.name,
+    });
+
+    tasks.push(serverlessTask);
   }
 
   if (!options.skipFormat) {
