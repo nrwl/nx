@@ -19,6 +19,13 @@ import { from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { getRootTsConfigPath } from 'nx/src/utils/typescript';
 
+type BuildTargetOptions = {
+  tsConfig: string;
+  buildLibsFromSource?: boolean;
+  customWebpackConfig?: { path?: string };
+  indexFileTransformer?: string;
+};
+
 export function executeWebpackDevServerBuilder(
   rawOptions: Schema,
   context: import('@angular-devkit/architect').BuilderContext
@@ -38,7 +45,7 @@ export function executeWebpackDevServerBuilder(
   const buildTarget =
     browserTargetProjectConfiguration.targets[parsedBrowserTarget.target];
 
-  const buildTargetOptions = {
+  const buildTargetOptions: BuildTargetOptions = {
     ...buildTarget.options,
     ...(parsedBrowserTarget.configuration
       ? buildTarget.configurations[parsedBrowserTarget.configuration]
@@ -83,13 +90,9 @@ export function executeWebpackDevServerBuilder(
   let dependencies: DependentBuildableProjectNode[];
   if (!buildLibsFromSource) {
     const { tsConfigPath, dependencies: foundDependencies } =
-      createTmpTsConfigForBuildableLibs(
-        buildTargetOptions.buildTargetTsConfigPath,
-        context,
-        {
-          target: parsedBrowserTarget.target,
-        }
-      );
+      createTmpTsConfigForBuildableLibs(buildTargetOptions.tsConfig, context, {
+        target: parsedBrowserTarget.target,
+      });
     dependencies = foundDependencies;
 
     // We can't just pass the tsconfig path in memory to the angular builder
