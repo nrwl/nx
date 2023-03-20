@@ -1,5 +1,6 @@
 import {
   createProjectGraphAsync,
+  formatFiles,
   getProjects,
   joinPathFragments,
   Tree,
@@ -40,6 +41,8 @@ export async function updateTestingTsconfigForJest(tree: Tree) {
       }
     }
   );
+
+  await formatFiles(tree);
 }
 
 function isJestPresetAngular(tree: Tree, jestConfigPath: string) {
