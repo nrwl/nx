@@ -127,6 +127,14 @@ export class FsTree implements Tree {
     };
   } = {};
 
+  /**
+   * Signifies if operations on the tree instance
+   * are allowed. Set to false after changes are written
+   * to disk, to prevent someone trying to use the tree to update
+   * files when the tree is no longer effective.
+   */
+  private locked = false;
+
   constructor(readonly root: string, private readonly isVerbose: boolean) {}
 
   read(filePath: string): Buffer | null;
@@ -155,6 +163,7 @@ export class FsTree implements Tree {
     content: Buffer | string,
     options?: TreeWriteOptions
   ): void {
+    this.assertUnlocked();
     filePath = this.normalize(filePath);
     if (
       this.fsExists(this.rp(filePath)) &&
@@ -187,6 +196,7 @@ export class FsTree implements Tree {
   }
 
   delete(filePath: string): void {
+    this.assertUnlocked();
     filePath = this.normalize(filePath);
     if (this.filesForDir(this.rp(filePath)).length > 0) {
       this.filesForDir(this.rp(filePath)).forEach(
@@ -220,6 +230,7 @@ export class FsTree implements Tree {
   }
 
   rename(from: string, to: string): void {
+    this.assertUnlocked();
     from = this.normalize(from);
     to = this.normalize(to);
     if (from === to) {
@@ -292,6 +303,7 @@ export class FsTree implements Tree {
   }
 
   changePermissions(filePath: string, mode: Mode): void {
+    this.assertUnlocked();
     filePath = this.normalize(filePath);
     const filePathChangeKey = this.rp(filePath);
     if (this.recordedChanges[filePathChangeKey]) {
@@ -317,6 +329,19 @@ export class FsTree implements Tree {
         isDeleted: false,
         options: { mode },
       };
+    }
+  }
+
+  // Marks FsTree as final.
+  lock() {
+    this.locked = true;
+  }
+
+  private assertUnlocked() {
+    if (this.locked) {
+      throw new Error(
+        'The tree has already been committed to disk. It can no longer be modified. Do not modify the tree during a GeneratorCallback and ensure that Promises have resolved before the generator returns or resolves.'
+      );
     }
   }
 
