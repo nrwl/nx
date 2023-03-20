@@ -76,6 +76,21 @@ describe('getTouchedProjects', () => {
       getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
     ).toEqual(['b']);
   });
+
+  it('should return projects with the package.json changed', () => {
+    const fileChanges = getFileChanges([
+      'libs/a/package.json',
+      'libs/c/package.json',
+    ]);
+    const projects = {
+      a: { root: 'libs/a' },
+      b: { root: 'libs/b' },
+      c: { root: 'libs/c' },
+    };
+    expect(
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+    ).toEqual(['a', 'c']);
+  });
 });
 
 describe('getImplicitlyTouchedProjects', () => {
@@ -194,6 +209,60 @@ describe('getImplicitlyTouchedProjects', () => {
 
     fileChanges = getFileChanges(['styles.css']);
     expect(getImplicitlyTouchedProjects(fileChanges, null, nxJson)).toEqual([]);
+  });
+
+  describe('lockfile change handling', () => {
+    const graph = buildProjectGraphNodes({
+      a: {
+        root: 'a',
+      },
+      b: {
+        root: 'b',
+      },
+      c: {
+        root: 'c',
+      },
+    });
+
+    beforeEach(() => {
+      nxJson.implicitDependencies = {};
+    });
+
+    it('should not return all packages when the lockfile changed without changes to the root package.json', () => {
+      let fileChanges = getFileChanges(['a/package.json', 'package-lock.json']);
+      expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual(
+        []
+      );
+
+      fileChanges = getFileChanges(['b/package.json', 'yarn.lock']);
+      expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual(
+        []
+      );
+
+      fileChanges = getFileChanges(['c/package.json', 'pnpm-lock.yaml']);
+      expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual(
+        []
+      );
+    });
+
+    it('should return all packages when the lockfile and the root package.json were changed', () => {
+      const allPackages = ['a', 'b', 'c'];
+
+      let fileChanges = getFileChanges(['package.json', 'package-lock.json']);
+      expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual(
+        allPackages
+      );
+
+      fileChanges = getFileChanges(['package.json', 'yarn.lock']);
+      expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual(
+        allPackages
+      );
+
+      fileChanges = getFileChanges(['package.json', 'pnpm-lock.yaml']);
+      expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual(
+        allPackages
+      );
+    });
   });
 });
 
