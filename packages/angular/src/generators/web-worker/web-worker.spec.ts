@@ -58,4 +58,42 @@ describe('webWorker generator', () => {
 
     expect(devkit.formatFiles).not.toHaveBeenCalled();
   });
+
+  it('should add the snippet correctly', async () => {
+    // ARRANGE
+    tree.write(`apps/${appName}/src/app/test-worker.ts`, ``);
+
+    // ACT
+    await webWorkerGenerator(tree, {
+      name: 'test-worker',
+      project: appName,
+      snippet: true,
+    });
+
+    // ASSERT
+    expect(tree.read(`apps/${appName}/src/app/test-worker.ts`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "if (typeof Worker !== 'undefined') {
+      // Create a new
+      const worker = new Worker(new URL('./test-worker.worker', import.meta.url));
+      worker.onmessage = ({ data }) => {
+      console.log(\`page got message \${data}\`);
+      };
+      worker.postMessage('hello');
+      } else {
+      // Web Workers are not supported in this environment.
+      // You should add a fallback so that your program still executes correctly.
+      }"
+    `);
+    expect(tree.read(`apps/${appName}/src/app/test-worker.worker.ts`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "/// <reference lib=\\"webworker\\" />
+
+      addEventListener('message', ({ data }) => {
+        const response = \`worker response to \${data}\`;
+        postMessage(response);
+      });
+      "
+    `);
+  });
 });
