@@ -23,7 +23,11 @@ export const useRouteConstructor = (): ((
       return {
         ...to,
         pathname,
-        search: retainSearchParams ? searchParams.toString() : '',
+        search: to.search
+          ? to.search.toString()
+          : retainSearchParams
+          ? searchParams.toString()
+          : '',
       };
     } else if (typeof to === 'string') {
       if (environment === 'dev') {
