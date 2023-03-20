@@ -55,7 +55,6 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
     outputPath: joinPathFragments('dist', project.root),
     outputFileName: 'main.js',
     tsConfig,
-    project: `${project.root}/package.json`,
     assets: [],
     platform: options.platform,
   };

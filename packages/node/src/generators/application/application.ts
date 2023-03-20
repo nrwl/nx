@@ -110,6 +110,7 @@ function getEsBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
+      generatePackageJson: true,
       esbuildOptions: {
         sourcemap: true,
         // Generate CJS files as .js so imports can be './foo' rather than './foo.cjs'.
