@@ -11,7 +11,7 @@ export function normalizeOptions(
   options: WebWorkerGeneratorOptions
 ): WebWorkerGeneratorOptions {
   if (!getProjects(tree).has(options.project)) {
-    throw new Error(`Project '${options.project} does not exist!`);
+    throw new Error(`Project '${options.project}' does not exist!`);
   }
 
   const { projectType, sourceRoot, root } = readProjectConfiguration(
