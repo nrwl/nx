@@ -1,12 +1,13 @@
 import { getTempTailwindPath } from '../../utils/ct-helpers';
-import { stripIndents } from '@nrwl/devkit';
+import { ExecutorContext, stripIndents } from '@nrwl/devkit';
 import * as path from 'path';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import cypressExecutor, { CypressExecutorOptions } from './cypress.impl';
 
 jest.mock('@nrwl/devkit');
 let devkit = require('@nrwl/devkit');
-
+jest.mock('detect-port', () => jest.fn().mockResolvedValue(4200));
+import * as detectPort from 'detect-port';
 jest.mock('../../utils/cypress-version');
 jest.mock('../../utils/ct-helpers');
 const Cypress = require('cypress');
@@ -25,11 +26,23 @@ describe('Cypress builder', () => {
     watch: false,
     skipServe: false,
   };
-  let mockContext;
+  let mockContext: ExecutorContext;
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as any;
-  mockContext = { root: '/root', workspace: { projects: {} } } as any;
+  mockContext = {
+    root: '/root',
+    workspace: { projects: {} },
+    projectsConfigurations: {
+      projects: {
+        'my-app': {
+          targets: {
+            serve: { executor: '@nrwl/webpack:webpack', options: {} },
+          },
+        },
+      },
+    },
+  } as any;
   (devkit as any).readTargetOptions = jest.fn().mockReturnValue({
     watch: true,
   });
@@ -44,6 +57,9 @@ describe('Cypress builder', () => {
         baseUrl: 'http://localhost:4200',
       },
     ]);
+    (devkit as any).Workspaces = jest.fn().mockReturnValue({
+      readExecutor: () => ({ schema: { properties: {} } }),
+    });
     (devkit as any).stripIndents = (s) => s;
     (devkit as any).parseTargetString = (s) => {
       const [project, target, configuration] = s.split(':');
@@ -154,7 +170,7 @@ describe('Cypress builder', () => {
     );
     const deprecatedMessage = stripIndents`
 NOTE:
-Support for Cypress versions < 10 is deprecated. Please upgrade to at least Cypress version 10. 
+Support for Cypress versions < 10 is deprecated. Please upgrade to at least Cypress version 10.
 A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v10-migration-guide
 `;
 
@@ -375,6 +391,19 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
       })
     );
     expect(Object.keys(runExecutor.mock.calls[0][1])).not.toContain('watch');
+  });
+
+  it('should try to detectPort when a port option is provided', async () => {
+    (devkit as any).readTargetOptions = jest
+      .fn()
+      .mockReturnValue({ port: 4200 });
+
+    const { success } = await cypressExecutor(
+      { ...cypressOptions, port: 'cypress-auto' },
+      mockContext
+    );
+    expect(success).toEqual(true);
+    expect(detectPort).toHaveBeenCalledWith(4200);
   });
 
   it('should forward watch option to devServerTarget when supported', async () => {
