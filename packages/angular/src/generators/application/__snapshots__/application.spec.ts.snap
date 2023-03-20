@@ -141,6 +141,67 @@ describe('AppComponent', () => {
 "
 `;
 
+exports[`app --strict should enable strict type checking: app tsconfig.json 1`] = `
+Object {
+  "angularCompilerOptions": Object {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+  },
+  "compilerOptions": Object {
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "strict": true,
+    "target": "es2022",
+    "useDefineForClassFields": false,
+  },
+  "extends": "../../tsconfig.base.json",
+  "files": Array [],
+  "include": Array [],
+  "references": Array [
+    Object {
+      "path": "./tsconfig.app.json",
+    },
+    Object {
+      "path": "./tsconfig.spec.json",
+    },
+    Object {
+      "path": "./tsconfig.editor.json",
+    },
+  ],
+}
+`;
+
+exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] = `
+Object {
+  "compilerOptions": Object {
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
+    "strict": true,
+    "types": Array [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": Array [
+    "src/**/*.ts",
+    "src/**/*.js",
+    "cypress.config.ts",
+  ],
+}
+`;
+
 exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
 
 exports[`app nested should create project configs 1`] = `
@@ -443,12 +504,6 @@ Object {
 
 exports[`app not nested should generate files 1`] = `
 Object {
-  "angularCompilerOptions": Object {
-    "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true,
-  },
   "compilerOptions": Object {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
