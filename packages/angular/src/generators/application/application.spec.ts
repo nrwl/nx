@@ -886,15 +886,82 @@ describe('app', () => {
   });
 
   describe('--minimal', () => {
-    it('should skip Nx specific `nx-welcome.component.ts` file creation', async () => {
+    it('should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing', async () => {
       await generateApp(appTree, 'plain', { minimal: true });
 
+      expect(
+        appTree.exists('apps/plain/src/app/nx-welcome.component.ts')
+      ).toBeFalsy();
       expect(
         appTree.read('apps/plain/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
+        appTree.read('apps/plain/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/plain/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/plain/src/app/app.component.html', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing', async () => {
+      await generateApp(appTree, 'plain', { minimal: true, routing: true });
+
+      expect(
         appTree.exists('apps/plain/src/app/nx-welcome.component.ts')
       ).toBeFalsy();
+      expect(
+        appTree.read('apps/plain/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/plain/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/plain/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/plain/src/app/app.component.html', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should skip "nx-welcome.component.ts" file and references for standalone apps without routing', async () => {
+      await generateApp(appTree, 'plain', { minimal: true, standalone: true });
+
+      expect(
+        appTree.exists('apps/plain/src/app/nx-welcome.component.ts')
+      ).toBeFalsy();
+      expect(
+        appTree.read('apps/plain/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/plain/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/plain/src/app/app.component.html', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should skip "nx-welcome.component.ts" file and references for standalone apps with routing', async () => {
+      await generateApp(appTree, 'plain', {
+        minimal: true,
+        standalone: true,
+        routing: true,
+      });
+
+      expect(
+        appTree.exists('apps/plain/src/app/nx-welcome.component.ts')
+      ).toBeFalsy();
+      expect(
+        appTree.read('apps/plain/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/plain/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/plain/src/app/app.component.html', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 });
