@@ -281,7 +281,7 @@ jobs:
         with:
           script: |
             const combined = JSON.parse(${{ steps.combine-json.outputs.combined }});
-            const failedProjects = combined.filter(c => c.status === 'failure');
+            const failedProjects = combined.filter(c => c.status === 'failure').sort((a, b) => a.project.localeCompare(b.project));
 
             // codeowners
             const codeowners = new Set();
@@ -291,12 +291,16 @@ jobs:
             core.setOutput('CODEOWNERS', Array.from(codeowners).join(','));
 
             // message
+            let lastProject;
             let result = `
+              **Node** v16
               \`\`\`
-               | Failed project                 | Node | PM   | OS    |
-               |--------------------------------|------|------|-------|`;
+              | Failed project                 | PM   | OS    |
+              |--------------------------------|------|-------|`;
             failedProjects.forEach(matrix => {
-              result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.padEnd(3)} | ${matrix.package_manager.padEnd(4)} | ${matrix.os_name} |`
+              const project = matrix.project !== lastProject ? matrix.project : '...';
+              result += `\n| ${project.padEnd(30)} | ${matrix.package_manager.padEnd(4)} | ${matrix.os_name} |`
+              lastProject = matrix.project;
             });
             result += `\`\`\``;
             const message = result.split('\n').map(l => l.trim()).join('\n');
