@@ -1,6 +1,7 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ChildProcess, spawn } from 'child_process';
 import { openSync, readFileSync, statSync } from 'fs';
+import { FileHandle, open } from 'fs/promises';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
 import { join } from 'path';
@@ -48,6 +49,8 @@ export class DaemonClient {
 
   private _enabled: boolean | undefined;
   private _connected: boolean;
+  private _out: FileHandle = null;
+  private _err: FileHandle = null;
 
   enabled() {
     if (this._enabled === undefined) {
@@ -86,12 +89,19 @@ export class DaemonClient {
   }
 
   reset() {
+    this.socketMessenger?.close();
     this.socketMessenger = null;
     this.queue = new PromisedBasedQueue();
     this.currentMessage = null;
     this.currentResolve = null;
     this.currentReject = null;
     this._enabled = undefined;
+
+    this._out?.close();
+    this._err?.close();
+    this._out = null;
+    this._err = null;
+
     this._connected = false;
   }
 
@@ -312,14 +322,15 @@ export class DaemonClient {
     ensureDirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
     ensureFileSync(DAEMON_OUTPUT_LOG_FILE);
 
-    const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
-    const err = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
+    this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
+    this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
+
     const backgroundProcess = spawn(
       process.execPath,
       [join(__dirname, '../server/start.js')],
       {
         cwd: workspaceRoot,
-        stdio: ['ignore', out, err],
+        stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
         windowsHide: true,
         shell: false,

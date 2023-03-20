@@ -50,7 +50,7 @@ export function isDaemonDisabled() {
 
 function socketDirName() {
   const hasher = createHash('sha256');
-  hasher.update(workspaceRoot);
+  hasher.update(workspaceRoot.toLowerCase());
   const unique = hasher.digest('hex').substring(0, 20);
   return join(tmpdir, unique);
 }
