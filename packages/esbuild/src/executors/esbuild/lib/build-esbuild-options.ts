@@ -39,6 +39,7 @@ export function buildEsbuildOptions(
     target: options.target,
     metafile: options.metafile,
     tsconfig: options.tsConfig,
+    sourcemap: options.sourcemap,
     format,
     outExtension: {
       '.js': outExtension,
