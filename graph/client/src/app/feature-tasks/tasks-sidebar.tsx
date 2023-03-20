@@ -141,14 +141,15 @@ export function TasksSidebar() {
 
   function hideAllProjects() {
     searchParams.delete('projects');
-    navigate({
-      pathname: isAllRoute
-        ? '.'
-        : params['selectedTarget']
-        ? undefined
-        : `./${encodeURIComponent(selectedTarget)}`,
-      search: searchParams.toString(),
-    });
+    navigate(
+      createRoute(
+        {
+          pathname: `/tasks/${encodeURIComponent(selectedTarget)}`,
+          search: searchParams.toString(),
+        },
+        false
+      )
+    );
   }
 
   useEffect(() => {

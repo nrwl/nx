@@ -129,7 +129,7 @@ Type: `number`
 
 Bind the project graph server to a specific port.
 
-### target
+### targets
 
 Type: `string`
 

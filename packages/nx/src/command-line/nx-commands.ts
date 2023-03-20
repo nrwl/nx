@@ -629,9 +629,10 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
       default: 'projects',
       choices: ['projects', 'tasks'],
     })
-    .option('target', {
+    .option('targets', {
       describe: 'The target to show tasks for in the task graph',
       type: 'string',
+      coerce: parseCSV,
     })
     .option('focus', {
       describe:

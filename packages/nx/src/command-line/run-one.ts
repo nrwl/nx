@@ -69,10 +69,10 @@ export async function runOne(
 
     return await generateGraph(
       {
-        watch: true,
+        watch: false,
         open: true,
         view: 'tasks',
-        target: nxArgs.targets[0],
+        targets: nxArgs.targets,
         projects: projectNames,
       },
       projectNames

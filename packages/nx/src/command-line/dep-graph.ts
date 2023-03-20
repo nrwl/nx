@@ -181,12 +181,17 @@ export async function generateGraph(
     view: 'projects' | 'tasks';
     projects?: string[];
     all?: boolean;
-    target?: string;
+    targets?: string[];
     focus?: string;
     exclude?: string[];
   },
   affectedProjects: string[]
 ): Promise<void> {
+  // TODO: Graph Client should support multiple targets
+  const target = Array.isArray(args.targets && args.targets.length >= 1)
+    ? args.targets[0]
+    : args.targets;
+
   let graph = pruneExternalNodes(
     await createProjectGraphAsync({ exitOnError: true })
   );
@@ -320,8 +325,8 @@ export async function generateGraph(
       url.pathname += '/' + args.focus;
     }
 
-    if (args.target) {
-      url.pathname += '/' + args.target;
+    if (target) {
+      url.pathname += '/' + target;
     }
     if (args.all) {
       url.pathname += '/all';
