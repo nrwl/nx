@@ -187,6 +187,15 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
+  if (Array.isArray(args.targets) && args.targets.length > 1) {
+    output.warn({
+      title: 'Showing Multiple Targets is not supported yet',
+      bodyLines: [
+        `Only the task graph for "${args.targets[0]}" tasks will be shown`,
+      ],
+    });
+  }
+
   // TODO: Graph Client should support multiple targets
   const target = Array.isArray(args.targets && args.targets.length >= 1)
     ? args.targets[0]
@@ -342,7 +351,7 @@ export async function generateGraph(
       url.searchParams.append('groupByFolder', 'true');
     }
 
-    output.note({
+    output.success({
       title: `Project graph started at ${url.toString()}`,
     });
 
