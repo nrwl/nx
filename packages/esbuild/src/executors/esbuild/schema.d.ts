@@ -12,6 +12,7 @@ export interface EsBuildExecutorOptions {
   esbuildOptions?: Record<string, any>;
   external?: string[];
   format?: Array<'esm' | 'cjs'>;
+  generatePackageJson?: boolean;
   main: string;
   metafile?: boolean;
   minify?: boolean;
@@ -20,6 +21,7 @@ export interface EsBuildExecutorOptions {
   outputPath: string;
   platform?: 'node' | 'browser' | 'neutral';
   project: string;
+  sourcemap?: boolean | 'linked' | 'inline' | 'external' | 'both';
   skipTypeCheck?: boolean;
   target?: string;
   thirdParty?: boolean;

@@ -92,7 +92,10 @@
       "default": false
     },
     "sourcemap": {
-      "type": "boolean",
+      "oneOf": [
+        { "type": "string", "enum": ["linked", "inline", "external", "both"] },
+        { "type": "boolean" }
+      ],
       "alias": "sourceMap",
       "description": "Generate sourcemap.",
       "default": false

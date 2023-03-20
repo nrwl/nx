@@ -356,4 +356,39 @@ describe('buildEsbuildOptions', () => {
       },
     });
   });
+
+  it('should set sourcemap', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: false,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          project: 'apps/myapp/package.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          sourcemap: true,
+          external: [],
+        },
+        context
+      )
+    ).toEqual({
+      bundle: false,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outdir: 'dist/apps/myapp',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: undefined,
+      sourcemap: true,
+      outExtension: {
+        '.js': '.js',
+      },
+    });
+  });
 });
