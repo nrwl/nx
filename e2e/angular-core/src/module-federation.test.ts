@@ -205,7 +205,8 @@ describe('Angular Projects', () => {
     }
   }, 10_000_000);
 
-  it('should scaffold a ssr MF setup successfully', async () => {
+  // TODO(colum): enable when this issue is resolved https://github.com/module-federation/universe/issues/604
+  xit('should scaffold a ssr MF setup successfully', async () => {
     // ARRANGE
     const remoteApp1 = uniq('remote1');
     const remoteApp2 = uniq('remote2');
