@@ -48,7 +48,7 @@ export function TasksSidebar() {
   const allProjectsWithTargetAndNoErrors = projects.filter(
     (project) =>
       project.data.targets?.hasOwnProperty(selectedTarget) &&
-      !errors.hasOwnProperty(createTaskName(project.name, selectedTarget))
+      !errors?.hasOwnProperty(createTaskName(project.name, selectedTarget))
   );
 
   const selectedProjects = useMemo(
