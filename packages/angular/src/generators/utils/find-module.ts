@@ -13,7 +13,7 @@ let tsModule: typeof import('typescript');
 export function findModule(tree: Tree, path: string, module?: string) {
   let modulePath = '';
   let pathToSearch = path;
-  while (pathToSearch !== '/') {
+  while (pathToSearch !== '.' && pathToSearch !== '/') {
     if (module) {
       const pathToModule = joinPathFragments(pathToSearch, module);
       if (tree.exists(pathToModule)) {
@@ -34,6 +34,10 @@ export function findModule(tree: Tree, path: string, module?: string) {
       }
     }
     pathToSearch = dirname(pathToSearch);
+  }
+
+  if (modulePath === '') {
+    throw new Error('Could not find a declaring module file.');
   }
 
   const moduleContents = tree.read(modulePath, 'utf-8');

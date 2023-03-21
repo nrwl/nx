@@ -4,13 +4,11 @@ exports[`component Generator --flat should create the component correctly and ex
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'example',
+  selector: 'proj-example',
   templateUrl: './example.component.html',
   styleUrls: ['./example.component.css']
 })
-export class ExampleComponent {
-
-}
+export class ExampleComponent {}
 "
 `;
 
@@ -18,13 +16,11 @@ exports[`component Generator --flat should create the component correctly and no
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'example',
+  selector: 'proj-example',
   templateUrl: './example.component.html',
   styleUrls: ['./example.component.css']
 })
-export class ExampleComponent {
-
-}
+export class ExampleComponent {}
 "
 `;
 
@@ -32,13 +28,11 @@ exports[`component Generator --path should create the component correctly and ex
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'example',
+  selector: 'proj-example',
   templateUrl: './example.component.html',
   styleUrls: ['./example.component.css']
 })
-export class ExampleComponent {
-
-}
+export class ExampleComponent {}
 "
 `;
 
@@ -46,13 +40,11 @@ exports[`component Generator secondary entry points should create the component 
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'example',
+  selector: 'proj-example',
   templateUrl: './example.component.html',
   styleUrls: ['./example.component.css']
 })
-export class ExampleComponent {
-
-}
+export class ExampleComponent {}
 "
 `;
 
@@ -65,13 +57,11 @@ exports[`component Generator should create the component correctly and export it
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'example',
+  selector: 'proj-example',
   templateUrl: './example.component.html',
   styleUrls: ['./example.component.css']
 })
-export class ExampleComponent {
-
-}
+export class ExampleComponent {}
 "
 `;
 
@@ -85,15 +75,13 @@ exports[`component Generator should create the component correctly and export it
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'example',
+  selector: 'proj-example',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './example.component.html',
   styleUrls: ['./example.component.css']
 })
-export class ExampleComponent {
-
-}
+export class ExampleComponent {}
 "
 `;
 
@@ -101,13 +89,11 @@ exports[`component Generator should create the component correctly and not expor
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'example',
+  selector: 'proj-example',
   templateUrl: './example.component.html',
   styleUrls: ['./example.component.css']
 })
-export class ExampleComponent {
-
-}
+export class ExampleComponent {}
 "
 `;
 
@@ -116,15 +102,13 @@ exports[`component Generator should create the component correctly and not expor
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'example',
+  selector: 'proj-example',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './example.component.html',
   styleUrls: ['./example.component.css']
 })
-export class ExampleComponent {
-
-}
+export class ExampleComponent {}
 "
 `;
 
@@ -132,13 +116,11 @@ exports[`component Generator should create the component correctly and not expor
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'example',
+  selector: 'proj-example',
   templateUrl: './example.component.html',
   styleUrls: ['./example.component.css']
 })
-export class ExampleComponent {
-
-}
+export class ExampleComponent {}
 "
 `;
 
@@ -146,12 +128,10 @@ exports[`component Generator should create the component correctly but not expor
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'example',
+  selector: 'proj-example',
   templateUrl: './example.component.html',
   styleUrls: ['./example.component.css']
 })
-export class ExampleComponent {
-
-}
+export class ExampleComponent {}
 "
 `;

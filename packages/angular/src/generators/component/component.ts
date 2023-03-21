@@ -1,11 +1,20 @@
 import type { Tree } from '@nrwl/devkit';
-import { formatFiles, stripIndents } from '@nrwl/devkit';
+import {
+  formatFiles,
+  generateFiles,
+  joinPathFragments,
+  names,
+  readNxJson,
+  stripIndents,
+} from '@nrwl/devkit';
 import { lt } from 'semver';
 import { checkPathUnderProjectRoot } from '../utils/path';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { exportComponentInEntryPoint } from './lib/component';
 import { normalizeOptions } from './lib/normalize-options';
 import type { Schema } from './schema';
+import { addToNgModule } from '../utils';
+import { findModuleFromOptions } from './lib/module';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
@@ -19,20 +28,105 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   }
 
   const options = await normalizeOptions(tree, rawOptions);
-  const { projectSourceRoot, ...schematicOptions } = options;
 
   checkPathUnderProjectRoot(tree, options.project, options.path);
 
-  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
-  const angularComponentSchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'component'
-  );
-  await angularComponentSchematic(tree, schematicOptions);
+  const pathToGenerate = options.flat
+    ? joinPathFragments(__dirname, './files/__fileName__')
+    : joinPathFragments(__dirname, './files');
+
+  const componentNames = names(options.name);
+  const typeNames = names(options.type);
+
+  const selector =
+    options.selector ||
+    buildSelector(tree, componentNames.fileName, options.prefix);
+
+  generateFiles(tree, pathToGenerate, options.path, {
+    fileName: componentNames.fileName,
+    className: componentNames.className,
+    type: typeNames.fileName,
+    typeClassName: typeNames.className,
+    style: options.style,
+    inlineStyle: options.inlineStyle,
+    inlineTemplate: options.inlineTemplate,
+    standalone: options.standalone,
+    skipSelector: options.skipSelector,
+    changeDetection: options.changeDetection,
+    viewEncapsulation: options.viewEncapsulation,
+    displayBlock: options.displayBlock,
+    selector,
+    tpl: '',
+  });
+
+  if (options.skipTests) {
+    const pathToSpecFile = joinPathFragments(
+      options.path,
+      `${!options.flat ? `${componentNames.fileName}/` : ``}${
+        componentNames.fileName
+      }.${typeNames.fileName}.spec.ts`
+    );
+
+    tree.delete(pathToSpecFile);
+  }
+
+  if (options.inlineTemplate) {
+    const pathToTemplateFile = joinPathFragments(
+      options.path,
+      `${!options.flat ? `${componentNames.fileName}/` : ``}${
+        componentNames.fileName
+      }.${typeNames.fileName}.html`
+    );
+
+    tree.delete(pathToTemplateFile);
+  }
+
+  if (options.inlineStyle) {
+    const pathToStyleFile = joinPathFragments(
+      options.path,
+      `${!options.flat ? `${componentNames.fileName}/` : ``}${
+        componentNames.fileName
+      }.${typeNames.fileName}.${options.style}`
+    );
+
+    tree.delete(pathToStyleFile);
+  }
+
+  if (!options.skipImport && !options.standalone) {
+    const modulePath = findModuleFromOptions(
+      tree,
+      options,
+      options.projectRoot
+    );
+    addToNgModule(
+      tree,
+      options.path,
+      modulePath,
+      componentNames.fileName,
+      `${componentNames.className}${typeNames.className}`,
+      options.flat
+        ? `${componentNames.fileName}.${typeNames.fileName}`
+        : joinPathFragments(
+            componentNames.fileName,
+            `${componentNames.fileName}.${typeNames.fileName}`
+          ),
+      'declarations',
+      options.flat,
+      options.export
+    );
+  }
 
   exportComponentInEntryPoint(tree, options);
 
   await formatFiles(tree);
+}
+
+function buildSelector(tree: Tree, name: string, prefix: string) {
+  const selectorPrefix = names(
+    prefix ?? readNxJson(tree).npmScope ?? 'app'
+  ).fileName;
+
+  return names(`${selectorPrefix}-${name}`).fileName;
 }
 
 export default componentGenerator;
