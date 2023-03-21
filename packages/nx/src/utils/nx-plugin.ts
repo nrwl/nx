@@ -24,6 +24,9 @@ import {
 import { normalizePath } from './path';
 import { join } from 'path';
 import { getNxRequirePaths } from './installation-directory';
+import { readTsConfig } from './typescript';
+
+import type * as ts from 'typescript';
 
 export type ProjectTargetConfigurator = (
   file: string
@@ -197,17 +200,25 @@ export function registerPluginTSTranspiler() {
   if (!tsNodeAndPathsRegistered) {
     // nx-ignore-next-line
     const ts: typeof import('typescript') = require('typescript');
+    const tsConfigName = existsSync('tsconfig.base.json')
+      ? 'tsconfig.base.json'
+      : existsSync('tsconfig.json')
+      ? 'tsconfig.json'
+      : null;
+    const tsConfig: Partial<ts.ParsedCommandLine> = tsConfigName
+      ? readTsConfig(tsConfigName)
+      : {};
 
     registerTsConfigPaths(join(workspaceRoot, 'tsconfig.base.json'));
     registerTranspiler({
+      experimentalDecorators: true,
+      emitDecoratorMetadata: true,
+      ...tsConfig.options,
       lib: ['es2021'],
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2021,
       inlineSourceMap: true,
-      esModuleInterop: true,
       skipLibCheck: true,
-      experimentalDecorators: true,
-      emitDecoratorMetadata: true,
     });
   }
   tsNodeAndPathsRegistered = true;

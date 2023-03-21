@@ -1,5 +1,5 @@
 import { dirname, join } from 'path';
-import type { CompilerOptions } from 'typescript';
+import type { CompilerOptions, ModuleResolutionKind } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from './logger';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
@@ -178,9 +178,9 @@ export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
     ts = require('typescript');
   }
 
-  const flagMap: Partial<
-    Record<keyof RemoveIndex<CompilerOptions>, keyof typeof ts>
-  > = {
+  const flagMap: Partial<{
+    [key in keyof RemoveIndex<CompilerOptions>]: keyof typeof ts;
+  }> = {
     module: 'ModuleKind',
     target: 'ScriptTarget',
     moduleDetection: 'ModuleDetectionKind',
@@ -189,12 +189,23 @@ export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
     importsNotUsedAsValues: 'ImportsNotUsedAsValues',
   };
 
-  const result = { ...compilerOptions };
+  const result: { [key in keyof CompilerOptions]: any } = {
+    ...compilerOptions,
+  };
 
   for (const flag in flagMap) {
     if (compilerOptions[flag]) {
       result[flag] = ts[flagMap[flag]][compilerOptions[flag]];
     }
+  }
+
+  delete result.pathsBasePath;
+  delete result.configFilePath;
+  if (result.moduleResolution) {
+    result.moduleResolution =
+      result.moduleResolution === 'NodeJs'
+        ? 'node'
+        : result.moduleResolution.toLowerCase();
   }
 
   return result;

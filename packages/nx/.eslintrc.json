@@ -8,8 +8,22 @@
       "rules": {}
     },
     {
-      "files": ["*.ts", "*.tsx"],
-      "rules": {}
+      "files": ["*.ts"],
+      "excludedFiles": ["*.spec.ts"],
+      "rules": {
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "typescript",
+                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "allowTypeImports": true
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "files": ["*.js", "*.jsx"],

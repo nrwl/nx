@@ -13,7 +13,7 @@
     "Nx",
     "CLI"
   ],
-  "main": "./index.js",
+  "main": "./index",
   "types": "./index.d.ts",
   "author": "Nrwl",
   "license": "MIT",
