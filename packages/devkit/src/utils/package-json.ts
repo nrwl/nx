@@ -446,9 +446,11 @@ export function ensurePackage<T extends any = any>(
   }
 
   const tempDir = dirSync().name;
+
+  console.log(`Fetching ${pkg}...`);
   execSync(`${getPackageManagerCommand().addDev} ${pkg}@${requiredVersion}`, {
     cwd: tempDir,
-    stdio: [0, 1, 2],
+    stdio: 'ignore',
   });
 
   addToNodePath(join(workspaceRoot, 'node_modules'));
