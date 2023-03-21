@@ -376,7 +376,6 @@ export class DaemonClient {
     }
 
     removeSocketDir();
-    output.log({ title: 'Daemon Server - Stopped' });
   }
 }
 
