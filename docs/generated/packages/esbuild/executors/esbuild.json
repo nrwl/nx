@@ -147,6 +147,11 @@
         "default": false,
         "x-priority": "internal"
       },
+      "generatePackageJson": {
+        "type": "boolean",
+        "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.",
+        "default": false
+      },
       "thirdParty": {
         "type": "boolean",
         "description": "Includes third-party packages in the bundle (i.e. npm packages).",

@@ -163,6 +163,10 @@ function addProject(
       },
     };
 
+    if (options.bundler === 'esbuild') {
+      projectConfiguration.targets.build.options.generatePackageJson = true;
+    }
+
     if (options.bundler === 'rollup') {
       projectConfiguration.targets.build.options.project = `${options.projectRoot}/package.json`;
       projectConfiguration.targets.build.options.compiler = 'swc';
