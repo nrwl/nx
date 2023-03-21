@@ -45,10 +45,14 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
     const nextLib = uniq('nextlib');
     const jsLib = uniq('tslib');
+    const buildableLib = uniq('buildablelib');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
     runCLI(`generate @nrwl/next:lib ${nextLib} --no-interactive`);
     runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
+    runCLI(
+      `generate @nrwl/js:lib ${buildableLib} --no-interactive --bundler=vite`
+    );
 
     // Create file in public that should be copied to dist
     updateFile(`apps/${appName}/public/a/b.txt`, `Hello World!`);
@@ -77,14 +81,23 @@ describe('Next.js Applications', () => {
     updateFile(
       `libs/${jsLib}/src/lib/${jsLib}.ts`,
       `
-          export function testFn(): string {
+          export function jsLib(): string {
             return 'Hello Nx';
           };
 
           // testing whether async-await code in Node / Next.js api routes works as expected
-          export async function testAsyncFn() {
+          export async function jsLibAsync() {
             return await Promise.resolve('hell0');
           }
+          `
+    );
+
+    updateFile(
+      `libs/${buildableLib}/src/lib/${buildableLib}.ts`,
+      `
+          export function buildableLib(): string {
+            return 'Hello Buildable';
+          };
           `
     );
 
@@ -94,10 +107,10 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/pages/api/hello.ts`,
       `
-          import { testAsyncFn } from '@${proj}/${jsLib}';
+          import { jsLibAsync } from '@${proj}/${jsLib}';
 
           export default async function handler(_, res) {
-            const value = await testAsyncFn();
+            const value = await jsLibAsync();
             res.send(value);
           }
         `
@@ -106,7 +119,8 @@ describe('Next.js Applications', () => {
     updateFile(
       mainPath,
       `
-          import { testFn } from '@${proj}/${jsLib}';
+          import { jsLib } from '@${proj}/${jsLib}';
+          import { buildableLib } from '@${proj}/${buildableLib}';
           /* eslint-disable */
           import dynamic from 'next/dynamic';
 
@@ -119,7 +133,8 @@ describe('Next.js Applications', () => {
             `</h2>`,
             `</h2>
                 <div>
-                  {testFn()}
+                  {jsLib()}
+                  {buildableLib()}
                   <TestComponent />
                 </div>
               `
@@ -194,7 +209,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `libs/${jsLib}/src/lib/${jsLib}.ts`,
       `
-          export function testFn(): string {
+          export function jsLib(): string {
             return process.env.NX_CUSTOM_VAR;
           };
           `
@@ -204,11 +219,11 @@ describe('Next.js Applications', () => {
       `apps/${appName}/pages/index.tsx`,
       `
         import React from 'react';
-        import { testFn } from '@${proj}/${jsLib}';
+        import { jsLib } from '@${proj}/${jsLib}';
 
         export const Index = ({ greeting }: any) => {
           return (
-            <p>{testFn()}</p>
+            <p>{jsLib()}</p>
           );
         };
         export default Index;
