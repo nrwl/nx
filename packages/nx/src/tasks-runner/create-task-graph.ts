@@ -1,11 +1,12 @@
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { getDependencyConfigs, interpolate } from './utils';
 import {
-  projectHasTarget,
   projectHasTargetAndConfiguration,
+  projectHasTargetAndOptionalConfiguration,
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencies } from '../config/nx-json';
+import { splitTarget } from '../utils/split-target';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
@@ -116,15 +117,31 @@ export class ProcessTasks {
           // this is to handle external dependencies
           if (!depProject) continue;
 
-          if (projectHasTarget(depProject, dependencyConfig.target)) {
+          const [, targetName, depProjectInlineConfiguration] = splitTarget(
+            `${depProject.name}:${dependencyConfig.target}`,
+            this.projectGraph
+          );
+
+          // configuration that is specified on the target takes precedence
+          const currentOrParentConfiguration =
+            depProjectInlineConfiguration ?? configuration;
+
+          if (
+            projectHasTargetAndOptionalConfiguration(
+              depProject,
+              targetName,
+              // configuration should be taken into account only if it's specified explicitly
+              depProjectInlineConfiguration
+            )
+          ) {
             const resolvedConfiguration = this.resolveConfiguration(
               depProject,
-              dependencyConfig.target,
-              configuration
+              targetName,
+              currentOrParentConfiguration
             );
             const depTargetId = this.getId(
               depProject.name,
-              dependencyConfig.target,
+              targetName,
               resolvedConfiguration
             );
 
@@ -135,7 +152,7 @@ export class ProcessTasks {
               const newTask = this.createTask(
                 depTargetId,
                 depProject,
-                dependencyConfig.target,
+                targetName,
                 resolvedConfiguration,
                 taskOverrides
               );
@@ -145,7 +162,7 @@ export class ProcessTasks {
               this.processTask(
                 newTask,
                 newTask.target.project,
-                configuration,
+                currentOrParentConfiguration,
                 overrides
               );
             }
@@ -158,15 +175,31 @@ export class ProcessTasks {
           task.target.project
         ] as ProjectGraphProjectNode;
 
-        if (projectHasTarget(selfProject, dependencyConfig.target)) {
+        const [, targetName, depProjectInlineConfiguration] = splitTarget(
+          `${selfProject.name}:${dependencyConfig.target}`,
+          this.projectGraph
+        );
+
+        // configuration that is specified on the target takes precedence
+        const currentOrParentConfiguration =
+          depProjectInlineConfiguration ?? configuration;
+
+        if (
+          projectHasTargetAndOptionalConfiguration(
+            selfProject,
+            targetName,
+            // configuration should be taken into account only if it's specified explicitly
+            depProjectInlineConfiguration
+          )
+        ) {
           const resolvedConfiguration = this.resolveConfiguration(
             selfProject,
-            dependencyConfig.target,
-            configuration
+            targetName,
+            currentOrParentConfiguration
           );
           const selfTaskId = this.getId(
             selfProject.name,
-            dependencyConfig.target,
+            targetName,
             resolvedConfiguration
           );
           if (task.id !== selfTaskId) {
@@ -176,7 +209,7 @@ export class ProcessTasks {
             const newTask = this.createTask(
               selfTaskId,
               selfProject,
-              dependencyConfig.target,
+              targetName,
               resolvedConfiguration,
               taskOverrides
             );
@@ -185,7 +218,7 @@ export class ProcessTasks {
             this.processTask(
               newTask,
               newTask.target.project,
-              configuration,
+              currentOrParentConfiguration,
               overrides
             );
           }

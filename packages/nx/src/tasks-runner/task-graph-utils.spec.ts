@@ -1,4 +1,8 @@
-import { findCycle, makeAcyclic } from './task-graph-utils';
+import {
+  findAmbiguousTargets,
+  findCycle,
+  makeAcyclic,
+} from './task-graph-utils';
 
 describe('task graph utils', () => {
   describe('findCycles', () => {
@@ -55,6 +59,46 @@ describe('task graph utils', () => {
         e: [],
       });
       expect(graph.roots).toEqual(['d', 'e']);
+    });
+  });
+
+  describe('findAmbiguousTargets', () => {
+    it('should find ambiguous targets', () => {
+      const graph = {
+        tasks: {
+          'app1:build': {
+            target: {
+              project: 'app1',
+              target: 'build',
+            },
+          },
+          'lib1:build:production': {
+            target: {
+              project: 'lib1',
+              target: 'build',
+              configuration: 'production',
+            },
+          },
+          'lib3:build:production': {
+            target: {
+              project: 'lib3',
+              target: 'build',
+              configuration: 'production',
+            },
+          },
+          'lib3:build:ci': {
+            target: {
+              project: 'lib3',
+              target: 'build',
+              configuration: 'ci',
+            },
+          },
+        },
+      } as any;
+
+      expect(findAmbiguousTargets(graph)).toEqual([
+        ['lib3:build:production', 'lib3:build:ci'],
+      ]);
     });
   });
 });

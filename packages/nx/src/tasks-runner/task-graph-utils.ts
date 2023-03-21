@@ -63,3 +63,25 @@ export function makeAcyclic(taskGraph: TaskGraph): void {
     (t) => taskGraph.dependencies[t].length === 0
   );
 }
+
+/** Finds targets that are included more than once with different configurations */
+export function findAmbiguousTargets(taskGraph: TaskGraph): string[][] {
+  const sameTaskVariations = Object.values(taskGraph.tasks).reduce(
+    (variations, { target }) => {
+      const inlineTarget = `${target.project}:${target.target}`;
+      let inlineTargetWithConfig = inlineTarget;
+      if (target.configuration) {
+        inlineTargetWithConfig = inlineTarget + `:${target.configuration}`;
+      }
+
+      (variations[inlineTarget] ??= []).push(inlineTargetWithConfig);
+
+      return variations;
+    },
+    {} as Record<string, string[]>
+  );
+
+  return Object.values(sameTaskVariations).filter(
+    (variation) => variation.length > 1
+  );
+}

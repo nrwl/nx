@@ -21,7 +21,11 @@ import {
 } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
 import { createTaskGraph } from './create-task-graph';
-import { findCycle, makeAcyclic } from './task-graph-utils';
+import {
+  findAmbiguousTargets,
+  findCycle,
+  makeAcyclic,
+} from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
 import { Workspaces } from '../config/workspaces';
@@ -111,7 +115,7 @@ async function hashTasksThatDontDependOnOtherTasks(
   return Promise.all(res);
 }
 
-function createTaskGraphAndValidateCycles(
+function createTaskGraphAndValidate(
   projectGraph: ProjectGraph,
   defaultDependencyConfigs: TargetDependencies,
   projectNames: string[],
@@ -149,6 +153,29 @@ function createTaskGraphAndValidateCycles(
     }
   }
 
+  const ambiguousTargets = findAmbiguousTargets(taskGraph);
+  if (ambiguousTargets.length) {
+    const bodyLines = ['Targets:'].concat(
+      ambiguousTargets.map((variation) => variation.join(', '))
+    );
+    if (nxArgs.nxAcceptSameTargetVariations) {
+      output.warn({
+        title: `The task graph has targets included more than once with different configurations`,
+        bodyLines,
+      });
+    } else {
+      bodyLines.push(
+        '',
+        'Rerun the command with "--nxAcceptSameTargetVariations" flag if this behavior is intended.'
+      );
+      output.error({
+        title: `Could not execute command because the task graph has targets included more than once with different configurations`,
+        bodyLines,
+      });
+      process.exit(1);
+    }
+  }
+
   return taskGraph;
 }
 
@@ -171,7 +198,7 @@ export async function runCommand(
       );
       const projectNames = projectsToRun.map((t) => t.name);
 
-      const taskGraph = createTaskGraphAndValidateCycles(
+      const taskGraph = createTaskGraphAndValidate(
         projectGraph,
         defaultDependencyConfigs,
         projectNames,

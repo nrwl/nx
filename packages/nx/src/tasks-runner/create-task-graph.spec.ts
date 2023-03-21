@@ -316,6 +316,374 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should correctly set default configuration from dependsOn', () => {
+    const projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            files: [],
+            targets: {
+              prebuild: {
+                executor: 'nx:run-commands',
+                configurations: {
+                  ci: {},
+                  production: {},
+                },
+              },
+              build: {
+                executor: 'my-executor',
+                configurations: {
+                  ci: {},
+                },
+                dependsOn: [
+                  {
+                    projects: 'dependencies',
+                    target: 'build:development',
+                  },
+                  {
+                    projects: 'self',
+                    target: 'prebuild:production',
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'my-executor',
+                configurations: {
+                  libDefault: {},
+                  development: {},
+                },
+                defaultConfiguration: 'libDefault',
+                dependsOn: [
+                  {
+                    projects: 'dependencies',
+                    target: 'process:development',
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            files: [],
+            targets: {
+              preprocess: {
+                executor: 'my-executor',
+              },
+              process: {
+                executor: 'my-executor',
+                configurations: {
+                  development: {},
+                },
+                dependsOn: [
+                  {
+                    projects: 'self',
+                    target: 'preprocess:invalid',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'lib1', type: 'static' }],
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [],
+      },
+    } as any;
+
+    const buildLib = createTaskGraph(
+      projectGraph,
+      {},
+      ['lib1'],
+      ['build'],
+      null,
+      {}
+    );
+
+    expect(buildLib).toEqual({
+      roots: ['lib2:process:development'],
+      tasks: {
+        'lib1:build:libDefault': {
+          id: 'lib1:build:libDefault',
+          target: {
+            project: 'lib1',
+            target: 'build',
+            configuration: 'libDefault',
+          },
+          overrides: {},
+          projectRoot: 'lib1-root',
+        },
+        'lib2:process:development': {
+          id: 'lib2:process:development',
+          target: {
+            project: 'lib2',
+            target: 'process',
+            configuration: 'development',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+        },
+      },
+      dependencies: {
+        'lib1:build:libDefault': ['lib2:process:development'],
+        'lib2:process:development': [],
+      },
+    });
+
+    const buildApp = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'ci',
+      {}
+    );
+
+    expect(buildApp).toEqual({
+      roots: ['lib2:process:development', 'app1:prebuild:production'],
+      tasks: {
+        'app1:prebuild:production': {
+          id: 'app1:prebuild:production',
+          target: {
+            project: 'app1',
+            target: 'prebuild',
+            configuration: 'production',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+        },
+        'app1:build:ci': {
+          id: 'app1:build:ci',
+          target: {
+            project: 'app1',
+            target: 'build',
+            configuration: 'ci',
+          },
+          overrides: {},
+          projectRoot: 'app1-root',
+        },
+        'lib1:build:development': {
+          id: 'lib1:build:development',
+          target: {
+            project: 'lib1',
+            target: 'build',
+            configuration: 'development',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+        },
+        'lib2:process:development': {
+          id: 'lib2:process:development',
+          target: {
+            project: 'lib2',
+            target: 'process',
+            configuration: 'development',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+        },
+      },
+      dependencies: {
+        'app1:prebuild:production': [],
+        'app1:build:ci': ['lib1:build:development', 'app1:prebuild:production'],
+        'lib1:build:development': ['lib2:process:development'],
+        'lib2:process:development': [],
+      },
+    });
+  });
+  it('should include the same dependency with different configurations', () => {
+    const projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'my-executor',
+                dependsOn: [
+                  {
+                    projects: 'dependencies',
+                    target: 'build:production',
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'my-executor',
+                configurations: {
+                  production: {},
+                },
+                dependsOn: [
+                  {
+                    projects: 'dependencies',
+                    target: 'build:ci',
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            files: [],
+            targets: {},
+          },
+        },
+        lib3: {
+          name: 'lib3',
+          type: 'lib',
+          data: {
+            root: 'lib3-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'my-executor',
+                configurations: {
+                  production: {},
+                  ci: {},
+                },
+              },
+            },
+          },
+        },
+        // "lib4" has no "production" configuration and depends only on the "app1", thus shouldn't be included
+        lib4: {
+          name: 'lib4',
+          type: 'lib',
+          data: {
+            root: 'lib4-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'my-executor',
+                configurations: {
+                  ci: {},
+                },
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [
+          { source: 'app1', target: 'lib1', type: 'static' },
+          { source: 'app1', target: 'lib2', type: 'static' },
+          { source: 'app1', target: 'lib4', type: 'static' },
+        ],
+        lib1: [{ source: 'lib1', target: 'lib3', type: 'static' }],
+        lib2: [{ source: 'lib2', target: 'lib3', type: 'static' }],
+        lib3: [],
+        lib4: [],
+      },
+    } as any;
+
+    const buildApp = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      null,
+      {}
+    );
+
+    expect(buildApp).toEqual({
+      dependencies: {
+        'app1:build': ['lib1:build:production', 'lib3:build:production'],
+        'lib1:build:production': ['lib3:build:ci'],
+        'lib3:build:ci': [],
+        'lib3:build:production': [],
+      },
+      roots: ['lib3:build:ci', 'lib3:build:production'],
+      tasks: {
+        'app1:build': {
+          id: 'app1:build',
+          overrides: {},
+          projectRoot: 'app1-root',
+          target: {
+            project: 'app1',
+            target: 'build',
+          },
+        },
+        'lib1:build:production': {
+          id: 'lib1:build:production',
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+          target: {
+            project: 'lib1',
+            target: 'build',
+            configuration: 'production',
+          },
+        },
+        'lib3:build:production': {
+          id: 'lib3:build:production',
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib3-root',
+          target: {
+            project: 'lib3',
+            target: 'build',
+            configuration: 'production',
+          },
+        },
+        'lib3:build:ci': {
+          id: 'lib3:build:ci',
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib3-root',
+          target: {
+            project: 'lib3',
+            target: 'build',
+            configuration: 'ci',
+          },
+        },
+      },
+    });
+  });
   it('should not duplicate dependencies', () => {
     const projectGraph = {
       nodes: {
