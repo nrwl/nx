@@ -754,6 +754,11 @@ function withGenerateOptions(yargs: yargs.Argv) {
       type: 'boolean',
       default: false,
     })
+    .option('quiet', {
+      describe: 'Hides logs from tree operations (e.g. `CREATE package.json`)',
+      type: 'boolean',
+      default: false,
+    })
     .middleware((args) => {
       if (process.env.NX_INTERACTIVE === 'false') {
         args.interactive = false;
@@ -764,6 +769,11 @@ function withGenerateOptions(yargs: yargs.Argv) {
         args.dryRun = true;
       } else {
         process.env.NX_DRY_RUN = `${args.dryRun}`;
+      }
+      if (process.env.NX_GENERATE_QUIET === 'true') {
+        args.quiet = true;
+      } else {
+        process.env.NX_GENERATE_QUIET = `${args.quiet}`;
       }
     });
 

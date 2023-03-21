@@ -260,4 +260,12 @@ describe('Extra Nx Misc Tests', () => {
       checkFilesExist(`${folder}/dummy.txt`);
     }, 120000);
   });
+
+  describe('generate --quiet', () => {
+    it('should not log tree operations or install tasks', () => {
+      const output = runCLI('generate @nrwl/react:app --quiet test-project');
+      expect(output).not.toContain('CREATE');
+      expect(output).not.toContain('Installed');
+    });
+  });
 });

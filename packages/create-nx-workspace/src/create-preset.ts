@@ -38,7 +38,7 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
     }
   }
 
-  const command = `g ${preset}:preset ${args}`;
+  const command = `g ${preset}:preset --quiet ${args}`;
 
   try {
     const [exec, ...args] = pmc.exec.split(' ');

@@ -31,6 +31,7 @@ export interface GenerateOptions {
   dryRun: boolean;
   interactive: boolean;
   defaults: boolean;
+  quiet: boolean;
 }
 
 export function printChanges(fileChanges: FileChange[]) {
@@ -245,6 +246,7 @@ async function convertToGenerateOptions(
     dryRun: generatorOptions.dryRun as boolean,
     interactive,
     defaults: generatorOptions.defaults as boolean,
+    quiet: generatorOptions.quiet,
   };
 
   delete generatorOptions.d;
@@ -257,6 +259,7 @@ async function convertToGenerateOptions(
   delete generatorOptions.generator;
   delete generatorOptions['--'];
   delete generatorOptions['$0'];
+  delete generatorOptions.quiet;
 
   return res;
 }
@@ -376,7 +379,9 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
 
       const changes = host.listChanges();
 
-      printChanges(changes);
+      if (!opts.quiet) {
+        printChanges(changes);
+      }
       if (!opts.dryRun) {
         flushChanges(workspaceRoot, changes);
         if (task) {

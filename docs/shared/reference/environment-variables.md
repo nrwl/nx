@@ -20,6 +20,7 @@ The following environment variables are ones that you can set to change the beha
 | NX_VERBOSE_LOGGING               | boolean | If set to `true`, will print debug information useful for troubleshooting                                                                                                                                                    |
 | NX_DRY_RUN                       | boolean | If set to `true`, will perform a dry run of the generator. No files will be created and no packages will be installed.                                                                                                       |
 | NX_INTERACTIVE                   | boolean | If set to `true`, will allow Nx to prompt you in the terminal to answer some further questions when running generators.                                                                                                      |
+| NX_GENERATE_QUIET                | boolean | If set to `true`, will prevent Nx logging file operations during generate                                                                                                                                                    |
 
 Nx will set the following environment variables so they can be accessible within the process even outside of executors and generators
 
