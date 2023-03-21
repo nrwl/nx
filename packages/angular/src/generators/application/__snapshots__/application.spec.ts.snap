@@ -322,67 +322,6 @@ describe('AppComponent', () => {
 "
 `;
 
-exports[`app --strict should enable strict type checking: app tsconfig.json 1`] = `
-Object {
-  "angularCompilerOptions": Object {
-    "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true,
-  },
-  "compilerOptions": Object {
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "strict": true,
-    "target": "es2022",
-    "useDefineForClassFields": false,
-  },
-  "extends": "../../tsconfig.base.json",
-  "files": Array [],
-  "include": Array [],
-  "references": Array [
-    Object {
-      "path": "./tsconfig.app.json",
-    },
-    Object {
-      "path": "./tsconfig.spec.json",
-    },
-    Object {
-      "path": "./tsconfig.editor.json",
-    },
-  ],
-}
-`;
-
-exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] = `
-Object {
-  "compilerOptions": Object {
-    "allowJs": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "outDir": "../../dist/out-tsc",
-    "sourceMap": false,
-    "strict": true,
-    "types": Array [
-      "cypress",
-      "node",
-    ],
-  },
-  "extends": "../../tsconfig.base.json",
-  "include": Array [
-    "src/**/*.ts",
-    "src/**/*.js",
-    "cypress.config.ts",
-  ],
-}
-`;
-
 exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
 
 exports[`app nested should create project configs 1`] = `
@@ -474,6 +413,21 @@ Object {
       "defaultConfiguration": "development",
       "executor": "@angular-devkit/build-angular:dev-server",
     },
+    "serve-static": Object {
+      "configurations": Object {
+        "development": Object {
+          "buildTarget": "my-dir-my-app:build:development",
+        },
+        "production": Object {
+          "buildTarget": "my-dir-my-app:build:production",
+        },
+      },
+      "defaultConfiguration": "development",
+      "executor": "@nrwl/angular:file-server",
+      "options": Object {
+        "buildTarget": "my-dir-my-app:build",
+      },
+    },
     "test": Object {
       "configurations": Object {
         "ci": Object {
@@ -509,13 +463,13 @@ Object {
     "e2e": Object {
       "configurations": Object {
         "production": Object {
-          "devServerTarget": "my-dir-my-app:serve:production",
+          "devServerTarget": "my-dir-my-app:serve-static:production",
         },
       },
       "executor": "@nrwl/cypress:cypress",
       "options": Object {
         "cypressConfig": "apps/my-dir/my-app-e2e/cypress.config.ts",
-        "devServerTarget": "my-dir-my-app:serve:development",
+        "devServerTarget": "my-dir-my-app:serve-static:development",
         "testingType": "e2e",
       },
     },
@@ -623,6 +577,21 @@ Object {
       "defaultConfiguration": "development",
       "executor": "@angular-devkit/build-angular:dev-server",
     },
+    "serve-static": Object {
+      "configurations": Object {
+        "development": Object {
+          "buildTarget": "my-app:build:development",
+        },
+        "production": Object {
+          "buildTarget": "my-app:build:production",
+        },
+      },
+      "defaultConfiguration": "development",
+      "executor": "@nrwl/angular:file-server",
+      "options": Object {
+        "buildTarget": "my-app:build",
+      },
+    },
     "test": Object {
       "configurations": Object {
         "ci": Object {
@@ -658,13 +627,13 @@ Object {
     "e2e": Object {
       "configurations": Object {
         "production": Object {
-          "devServerTarget": "my-app:serve:production",
+          "devServerTarget": "my-app:serve-static:production",
         },
       },
       "executor": "@nrwl/cypress:cypress",
       "options": Object {
         "cypressConfig": "apps/my-app-e2e/cypress.config.ts",
-        "devServerTarget": "my-app:serve:development",
+        "devServerTarget": "my-app:serve-static:development",
         "testingType": "e2e",
       },
     },
@@ -680,87 +649,5 @@ Object {
       ],
     },
   },
-}
-`;
-
-exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
-Object {
-  "compilerOptions": Object {
-    "allowJs": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "outDir": "../../dist/out-tsc",
-    "sourceMap": false,
-    "strict": true,
-    "types": Array [
-      "cypress",
-      "node",
-    ],
-  },
-  "extends": "../../tsconfig.base.json",
-  "include": Array [
-    "src/**/*.ts",
-    "src/**/*.js",
-    "cypress.config.ts",
-  ],
-}
-`;
-
-exports[`app not nested should generate files: tsconfig.app.json 1`] = `
-Object {
-  "compilerOptions": Object {
-    "outDir": "../../dist/out-tsc",
-    "types": Array [],
-  },
-  "exclude": Array [
-    "jest.config.ts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-  ],
-  "extends": "./tsconfig.json",
-  "files": Array [
-    "src/main.ts",
-  ],
-  "include": Array [
-    "src/**/*.d.ts",
-  ],
-}
-`;
-
-exports[`app not nested should generate files: tsconfig.json 1`] = `
-Object {
-  "angularCompilerOptions": Object {
-    "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true,
-  },
-  "compilerOptions": Object {
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "strict": true,
-    "target": "es2022",
-    "useDefineForClassFields": false,
-  },
-  "extends": "../../tsconfig.base.json",
-  "files": Array [],
-  "include": Array [],
-  "references": Array [
-    Object {
-      "path": "./tsconfig.app.json",
-    },
-    Object {
-      "path": "./tsconfig.spec.json",
-    },
-    Object {
-      "path": "./tsconfig.editor.json",
-    },
-  ],
 }
 `;

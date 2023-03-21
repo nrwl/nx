@@ -39,6 +39,13 @@ describe('Cypress Project', () => {
             production: {},
           },
         },
+        'static-serve': {
+          executor: 'static-serve-executor',
+          options: {},
+          configurations: {
+            production: {},
+          },
+        },
       },
     });
 
@@ -353,6 +360,27 @@ describe('Cypress Project', () => {
         'apps/one/two/other-e2e/cypress.config.ts',
         'apps/one/two/other-e2e/src/e2e/app.cy.ts',
       ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
+    });
+
+    describe('--devServerTarget', () => {
+      it('should configure Cypress with custom target', async () => {
+        await cypressProjectGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-app-e2e',
+          project: 'my-app',
+          devServerTarget: 'serve-static',
+        });
+
+        const projectConfig = readProjectConfiguration(tree, 'my-app-e2e');
+        expect(projectConfig.targets.e2e).toMatchObject({
+          options: {
+            devServerTarget: 'my-app:serve-static',
+          },
+          configurations: {
+            production: { devServerTarget: 'my-app:serve-static:production' },
+          },
+        });
+      });
     });
   });
 

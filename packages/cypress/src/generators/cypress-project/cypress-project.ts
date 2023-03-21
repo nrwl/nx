@@ -126,9 +126,12 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
       `);
     }
     const devServerTarget =
-      project.targets?.serve && project.targets?.serve?.defaultConfiguration
-        ? `${options.project}:serve:${project.targets.serve.defaultConfiguration}`
-        : `${options.project}:serve`;
+      project.targets?.[options.devServerTarget] &&
+      project.targets?.[options.devServerTarget]?.defaultConfiguration
+        ? `${options.project}:${options.devServerTarget}:${
+            project.targets[options.devServerTarget].defaultConfiguration
+          }`
+        : `${options.project}:${options.devServerTarget}`;
     e2eProjectConfig = {
       root: options.projectRoot,
       sourceRoot: joinPathFragments(options.projectRoot, 'src'),
@@ -146,7 +149,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
           },
           configurations: {
             production: {
-              devServerTarget: `${options.project}:serve:production`,
+              devServerTarget: `${options.project}:${options.devServerTarget}:production`,
             },
           },
         },
@@ -340,6 +343,7 @@ function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
     rootProject: isRootProject,
     projectName,
     projectRoot,
+    devServerTarget: options.devServerTarget ?? 'serve',
   };
 }
 

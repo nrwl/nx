@@ -71,6 +71,11 @@
         "hidden": true,
         "x-priority": "internal"
       },
+      "devServerTarget": {
+        "description": "The target name to run the server to test against.",
+        "type": "string",
+        "default": "serve"
+      },
       "bundler": {
         "description": "The Cypress bundler to use.",
         "type": "string",
