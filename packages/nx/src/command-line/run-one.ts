@@ -17,7 +17,7 @@ import {
 } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
-import { generateGraph } from 'nx/src/command-line/dep-graph';
+import { generateGraph } from './dep-graph';
 
 export async function runOne(
   cwd: string,
