@@ -503,6 +503,77 @@
     "path": "/recipes/adopting-nx/manual",
     "tags": []
   },
+  "/recipes/adopting-nx-angular": {
+    "id": "adopting-nx-angular",
+    "name": "Adopting Nx From Angular CLI",
+    "description": "Advanced guides to adopt Nx coming from the Angular CLI",
+    "file": "",
+    "itemList": [
+      {
+        "id": "angular-integrated",
+        "name": "From Angular CLI to Integrated",
+        "description": "",
+        "file": "shared/migration/angular-integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/angular-integrated",
+        "tags": []
+      },
+      {
+        "id": "angular-manual",
+        "name": "From Angular CLI Manually",
+        "description": "",
+        "file": "shared/migration/angular-manual",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/angular-manual",
+        "tags": []
+      },
+      {
+        "id": "angular-multiple",
+        "name": "From Multiple Angular CLI Repos",
+        "description": "",
+        "file": "shared/migration/angular-multiple",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/angular-multiple",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/angular-integrated": {
+    "id": "angular-integrated",
+    "name": "From Angular CLI to Integrated",
+    "description": "",
+    "file": "shared/migration/angular-integrated",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/angular-integrated",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/angular-manual": {
+    "id": "angular-manual",
+    "name": "From Angular CLI Manually",
+    "description": "",
+    "file": "shared/migration/angular-manual",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/angular-manual",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/angular-multiple": {
+    "id": "angular-multiple",
+    "name": "From Multiple Angular CLI Repos",
+    "description": "",
+    "file": "shared/migration/angular-multiple",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/angular-multiple",
+    "tags": []
+  },
   "/recipes/executors": {
     "id": "executors",
     "name": "Executors",

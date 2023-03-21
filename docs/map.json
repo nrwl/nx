@@ -860,6 +860,28 @@
           ]
         },
         {
+          "name": "Adopting Nx From Angular CLI",
+          "id": "adopting-nx-angular",
+          "description": "Advanced guides to adopt Nx coming from the Angular CLI",
+          "itemList": [
+            {
+              "name": "From Angular CLI to Integrated",
+              "id": "angular-integrated",
+              "file": "shared/migration/angular-integrated"
+            },
+            {
+              "name": "From Angular CLI Manually",
+              "id": "angular-manual",
+              "file": "shared/migration/angular-manual"
+            },
+            {
+              "name": "From Multiple Angular CLI Repos",
+              "id": "angular-multiple",
+              "file": "shared/migration/angular-multiple"
+            }
+          ]
+        },
+        {
           "name": "Executors",
           "id": "executors",
           "description": "Use, extend and compose executors.",
