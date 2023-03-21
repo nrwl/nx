@@ -9,8 +9,10 @@ import {
 } from 'fs-extra';
 import type { Mode } from 'fs';
 import { logger } from '../utils/logger';
+import { output } from '../utils/output';
 import { dirname, join, relative, sep } from 'path';
 import * as chalk from 'chalk';
+import { gt } from 'semver';
 
 /**
  * Options to set when writing a file in the Virtual file system tree.
@@ -339,9 +341,20 @@ export class FsTree implements Tree {
 
   private assertUnlocked() {
     if (this.locked) {
-      throw new Error(
-        'The tree has already been committed to disk. It can no longer be modified. Do not modify the tree during a GeneratorCallback and ensure that Promises have resolved before the generator returns or resolves.'
-      );
+      // TODO (v17): Remove condition
+      if (gt(require('../../package.json').version, '17.0.0')) {
+        throw new Error(
+          'The tree has already been committed to disk. It can no longer be modified. Do not modify the tree during a GeneratorCallback and ensure that Promises have resolved before the generator returns or resolves.'
+        );
+      } else {
+        output.warn({
+          title: 'Tree modified after commit to disk.',
+          bodyLines: [
+            'The tree has already been committed to disk. It can no longer be modified. Do not modify the tree during a GeneratorCallback and ensure that Promises have resolved before the generator returns or resolves.',
+            `This will be an error in version 16. Please open an issue on the Nx repo if experiencing this with a first-party plugin, or the plugin's repo if using a community plugin.`,
+          ],
+        });
+      }
     }
   }
 
