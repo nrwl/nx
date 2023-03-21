@@ -14,8 +14,8 @@ export const reactDomVersion = '18.2.0';
 export const reactTestRendererVersion = '18.2.0';
 export const typesReactVersion = '18.0.28';
 
-export const reactNativeVersion = '0.71.3';
-export const typesReactNativeVersion = '0.71.3';
+export const reactNativeVersion = '0.71.4';
+export const typesReactNativeVersion = '0.71.4';
 export const reactNativeWebVersion = '~0.18.12';
 
 export const reactNativeSvgTransformerVersion = '1.0.0';
