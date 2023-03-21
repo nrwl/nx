@@ -9,6 +9,7 @@ export async function resetHandler() {
     bodyLines: [`This might take a few minutes.`],
   });
   await daemonClient.stop();
+  output.log({ title: 'Daemon Server - Stopped' });
   removeSync(cacheDir);
   if (projectGraphCacheDirectory !== cacheDir) {
     removeSync(projectGraphCacheDirectory);

@@ -17,7 +17,8 @@ export async function daemonHandler(args: Arguments) {
     });
   } else if (args.stop) {
     const { daemonClient } = await import('../daemon/client/client');
-    daemonClient.stop();
+    await daemonClient.stop();
+    output.log({ title: 'Daemon Server - Stopped' });
   } else {
     console.log(generateDaemonHelpOutput());
   }
