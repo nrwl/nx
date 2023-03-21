@@ -134,7 +134,7 @@ export function withNx(
     } = getNxContext(graph, originalTarget);
     const projectDirectory = projectNode.data.root;
 
-    if (!options.buildLibsFromSource && targetName) {
+    if (options.buildLibsFromSource === false && targetName) {
       const result = calculateProjectDependencies(
         graph,
         workspaceRoot,
