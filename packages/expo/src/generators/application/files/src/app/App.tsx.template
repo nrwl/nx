@@ -280,7 +280,7 @@ export const App = () => {
               </TouchableOpacity>
             </View>
           </View>
-          <View style={styles.section}>
+          <View style={[styles.section, styles.shadowBox]}>
             <TouchableOpacity
               onPress={() =>
                 Linking.openURL(
@@ -288,7 +288,7 @@ export const App = () => {
                 )
               }
             >
-              <View style={[styles.listItem, styles.shadowBox]}>
+              <View style={[styles.listItem, styles.learning]}>
                 <Svg
                   width={48}
                   height={48}
@@ -305,10 +305,42 @@ export const App = () => {
                       styles.marginBottomSm,
                     ]}
                   >
-                    Install Nx Console
+                    Install Nx Console for VSCode
                   </Text>
                   <Text style={[styles.textXS, styles.textLight]}>
-                    Plugin for VSCode
+                    The official VSCode plugin for Nx.
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                Linking.openURL(
+                  'https://plugins.jetbrains.com/plugin/21060-nx-console'
+                )
+              }
+            >
+              <View style={[styles.listItem, styles.learning]}>
+                <Svg
+                  width={48}
+                  height={48}
+                  fill="rgba(0, 122, 204, 1)"
+                  viewBox="0 0 24 24"
+                >
+                  <Path d="M0 0v24h24V0zm3.723 3.111h5v1.834h-1.39v6.277h1.39v1.834h-5v-1.834h1.444V4.945H3.723zm11.055 0H17v6.5c0 .612-.055 1.111-.222 1.556-.167.444-.39.777-.723 1.11-.277.279-.666.557-1.11.668a3.933 3.933 0 0 1-1.445.278c-.778 0-1.444-.167-1.944-.445a4.81 4.81 0 0 1-1.279-1.056l1.39-1.555c.277.334.555.555.833.722.277.167.611.278.945.278.389 0 .721-.111 1-.389.221-.278.333-.667.333-1.278zM2.222 19.5h9V21h-9z" />
+                </Svg>
+                <View style={styles.listItemTextContainer}>
+                  <Text
+                    style={[
+                      styles.textMd,
+                      styles.textBold,
+                      styles.marginBottomSm,
+                    ]}
+                  >
+                    Install Nx Console for JetBrains
+                  </Text>
+                  <Text style={[styles.textXS, styles.textLight]}>
+                    Available for WebStorm, Intellij IDEA Ultimate and more!
                   </Text>
                 </View>
               </View>
@@ -461,9 +493,7 @@ export const App = () => {
                 </View>
               </View>
               <View style={[styles.codeBlock, styles.marginBottomLg]}>
-                <Text style={[styles.textXS, styles.monospace]}>
-                  nx graph
-                </Text>
+                <Text style={[styles.textXS, styles.monospace]}>nx graph</Text>
               </View>
               <View style={styles.listItem}>
                 <Svg
@@ -495,7 +525,7 @@ export const App = () => {
                     styles.marginBottomMd,
                   ]}
                 >
-                  nx affected:dep-graph
+                  nx affected:graph
                 </Text>
                 <Text style={[styles.textXS, styles.monospace, styles.comment]}>
                   # run tests for current changes
