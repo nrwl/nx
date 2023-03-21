@@ -11,6 +11,7 @@ import { readNxJson } from '../config/configuration';
 import { output } from '../utils/output';
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
+import { generateGraph } from './dep-graph';
 
 export async function runMany(
   args: { [k: string]: any },
@@ -41,16 +42,31 @@ export async function runMany(
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projects = projectsToRun(nxArgs, projectGraph);
 
-  await runCommand(
-    projects,
-    projectGraph,
-    { nxJson },
-    nxArgs,
-    overrides,
-    null,
-    extraTargetDependencies,
-    extraOptions
-  );
+  if (nxArgs.graph) {
+    const projectNames = projects.map((t) => t.name);
+    return await generateGraph(
+      {
+        watch: false,
+        open: true,
+        view: 'tasks',
+        all: nxArgs.all,
+        targets: nxArgs.targets,
+        projects: projectNames,
+      },
+      projectNames
+    );
+  } else {
+    await runCommand(
+      projects,
+      projectGraph,
+      { nxJson },
+      nxArgs,
+      overrides,
+      null,
+      extraTargetDependencies,
+      extraOptions
+    );
+  }
 }
 
 export function projectsToRun(
