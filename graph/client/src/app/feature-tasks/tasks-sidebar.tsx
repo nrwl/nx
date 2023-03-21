@@ -45,16 +45,18 @@ export function TasksSidebar() {
   const isAllRoute =
     currentRoute.currentPath === `/tasks/${selectedTarget}/all`;
 
-  const allProjectsWithTarget = projects.filter((project) =>
-    project.data.targets?.hasOwnProperty(selectedTarget)
+  const allProjectsWithTargetAndNoErrors = projects.filter(
+    (project) =>
+      project.data.targets?.hasOwnProperty(selectedTarget) &&
+      !errors.hasOwnProperty(createTaskName(project.name, selectedTarget))
   );
 
   const selectedProjects = useMemo(
     () =>
       isAllRoute
-        ? allProjectsWithTarget.map(({ name }) => name)
+        ? allProjectsWithTargetAndNoErrors.map(({ name }) => name)
         : searchParams.get('projects')?.split(' ') ?? [],
-    [allProjectsWithTarget, searchParams, isAllRoute]
+    [allProjectsWithTargetAndNoErrors, searchParams, isAllRoute]
   );
 
   function selectTarget(target: string) {
@@ -86,7 +88,7 @@ export function TasksSidebar() {
   function selectProject(project: string) {
     const newSelectedProjects = [...selectedProjects, project];
     const allProjectsSelected =
-      newSelectedProjects.length === allProjectsWithTarget.length;
+      newSelectedProjects.length === allProjectsWithTargetAndNoErrors.length;
     if (allProjectsSelected) {
       searchParams.delete('projects');
     } else {
