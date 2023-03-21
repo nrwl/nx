@@ -14,11 +14,16 @@ export async function configurationGenerator(
   options: ConfigurationSchema
 ) {
   const task = await rspackInitGenerator(tree, options);
+
+  const { targets } = readProjectConfiguration(tree, options.project);
+  const foundStylePreprocessorOptions: { includePaths?: string[] } | undefined =
+    targets?.build?.options?.stylePreprocessorOptions;
+
   addBuildTarget(tree, options);
   if (options.uiFramework !== 'none' || options.devServer) {
     addServeTarget(tree, options);
   }
-  writeRspackConfigFile(tree, options);
+  writeRspackConfigFile(tree, options, foundStylePreprocessorOptions);
   await formatFiles(tree);
   return task;
 }
@@ -112,12 +117,16 @@ function addServeTarget(tree: Tree, options: ConfigurationSchema) {
   });
 }
 
-function writeRspackConfigFile(tree: Tree, options: ConfigurationSchema) {
+function writeRspackConfigFile(
+  tree: Tree,
+  options: ConfigurationSchema,
+  stylePreprocessorOptions?: { includePaths?: string[] }
+) {
   const project = readProjectConfiguration(tree, options.project);
 
   tree.write(
     joinPathFragments(project.root, 'rspack.config.js'),
-    createConfig(options)
+    createConfig(options, stylePreprocessorOptions)
   );
 
   // Remove previous webpack config if they exist
@@ -127,12 +136,23 @@ function writeRspackConfigFile(tree: Tree, options: ConfigurationSchema) {
     tree.delete(joinPathFragments(project.root, 'webpack.config.ts'));
 }
 
-function createConfig(options: ConfigurationSchema) {
+function createConfig(
+  options: ConfigurationSchema,
+  stylePreprocessorOptions?: { includePaths?: string[] }
+) {
   if (options.uiFramework === 'react') {
     return `
       const { composePlugins, withNx, withReact } = require('@nrwl/rspack');
 
-      module.exports = composePlugins(withNx(), withReact(), (config) => {
+      module.exports = composePlugins(withNx(), withReact(${
+        stylePreprocessorOptions
+          ? `
+        {
+          stylePreprocessorOptions: ${JSON.stringify(stylePreprocessorOptions)},
+        }
+        `
+          : ''
+      }), (config) => {
         return config;
       });
     `;
@@ -140,15 +160,32 @@ function createConfig(options: ConfigurationSchema) {
     return `
       const { composePlugins, withNx, withWeb } = require('@nrwl/rspack');
 
-      module.exports = composePlugins(withNx(), withWeb(), (config) => {
+      module.exports = composePlugins(withNx(), withWeb(${
+        stylePreprocessorOptions
+          ? `
+        {
+          stylePreprocessorOptions: ${JSON.stringify(stylePreprocessorOptions)},
+        }
+        `
+          : ''
+      }), (config) => {
         return config;
       });
     `;
   } else {
     return `
-      const { composePlugins, withNx } = require('@nrwl/rspack');
+      const { composePlugins, withNx${
+        stylePreprocessorOptions ? ', withWeb' : ''
+      } } = require('@nrwl/rspack');
 
-      module.exports = composePlugins(withNx(), (config) => {
+      module.exports = composePlugins(withNx()${
+        stylePreprocessorOptions
+          ? `,
+        withWeb({
+          stylePreprocessorOptions: ${JSON.stringify(stylePreprocessorOptions)},
+        })`
+          : ''
+      }, (config) => {
         return config;
       });
     `;
