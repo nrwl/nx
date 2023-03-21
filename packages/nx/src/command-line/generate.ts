@@ -372,6 +372,8 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       }
 
       const task = await implementation(host, combinedOpts);
+      host.lock();
+
       const changes = host.listChanges();
 
       printChanges(changes);

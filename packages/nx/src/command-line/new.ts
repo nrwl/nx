@@ -35,6 +35,7 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
     const implementation = implementationFactory();
     const task = await implementation(host, combinedOpts);
     flushChanges(cwd, host.listChanges());
+    host.lock();
     if (task) {
       await task();
     }
