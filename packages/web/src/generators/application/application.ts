@@ -1,5 +1,4 @@
 import { join } from 'path';
-import { cypressProjectGenerator } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -21,9 +20,8 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { jestProjectGenerator } from '@nrwl/jest';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import type { Linter } from '@nrwl/linter';
 
 import { getRelativePathToRootTsConfig } from '@nrwl/js';
 
@@ -247,20 +245,30 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     );
   }
 
-  const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
-    project: options.projectName,
-    tsConfigPaths: [
-      joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-    ],
-    unitTestRunner: options.unitTestRunner,
-    eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
-    skipFormat: true,
-    setParserOptionsProject: options.setParserOptionsProject,
-  });
-  tasks.push(lintTask);
+  if (options.linter === 'eslint') {
+    const { lintProjectGenerator } = await ensurePackage(
+      '@nrwl/linter',
+      nxVersion
+    );
+    const lintTask = await lintProjectGenerator(host, {
+      linter: options.linter,
+      project: options.projectName,
+      tsConfigPaths: [
+        joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      ],
+      unitTestRunner: options.unitTestRunner,
+      eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
+      skipFormat: true,
+      setParserOptionsProject: options.setParserOptionsProject,
+    });
+    tasks.push(lintTask);
+  }
 
   if (options.e2eTestRunner === 'cypress') {
+    const { cypressProjectGenerator } = await ensurePackage(
+      '@nrwl/cypress',
+      nxVersion
+    );
     const cypressTask = await cypressProjectGenerator(host, {
       ...options,
       name: `${options.name}-e2e`,
@@ -270,6 +278,10 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     tasks.push(cypressTask);
   }
   if (options.unitTestRunner === 'jest') {
+    const { jestProjectGenerator } = await ensurePackage(
+      '@nrwl/jest',
+      nxVersion
+    );
     const jestTask = await jestProjectGenerator(host, {
       project: options.projectName,
       skipSerializers: true,
@@ -323,7 +335,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   }
 
   options.style = options.style || 'css';
-  options.linter = options.linter || Linter.EsLint;
+  options.linter = options.linter || ('eslint' as Linter.EsLint);
   options.unitTestRunner = options.unitTestRunner || 'jest';
   options.e2eTestRunner = options.e2eTestRunner || 'cypress';
 
