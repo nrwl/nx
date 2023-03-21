@@ -23,7 +23,7 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "index.js",
+  "main": "./index",
   "types": "index.d.ts",
   "dependencies": {
     "@nrwl/detox": "file:../detox",
