@@ -119,3 +119,9 @@ export function getSize(filePath: string): number {
 export function tmpBackupProjPath(path?: string) {
   return path ? `${e2eCwd}/proj-backup/${path}` : `${e2eCwd}/proj-backup`;
 }
+
+export function tmpBackupNgCliProjPath(path?: string) {
+  return path
+    ? `${e2eCwd}/ng-cli-proj-backup/${path}`
+    : `${e2eCwd}/ng-cli-proj-backup`;
+}
