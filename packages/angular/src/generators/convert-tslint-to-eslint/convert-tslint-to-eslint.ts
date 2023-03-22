@@ -6,6 +6,7 @@ import {
   logger,
   Tree,
 } from '@nrwl/devkit';
+import { warnForSchematicUsage } from '../utils/warn-for-schematic-usage';
 import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nrwl/linter';
 import type { Linter } from 'eslint';
 import { addLintingGenerator } from '../add-linting/add-linting';
@@ -137,7 +138,9 @@ export async function conversionGenerator(
   };
 }
 
-export const conversionSchematic = convertNxGenerator(conversionGenerator);
+export const conversionSchematic = warnForSchematicUsage(
+  convertNxGenerator(conversionGenerator)
+);
 
 /**
  * In the case of Angular lint rules, we need to apply them to correct override depending upon whether

@@ -1,4 +1,7 @@
 import { convertNxGenerator } from '@nrwl/devkit';
+import { warnForSchematicUsage } from '../utils/warn-for-schematic-usage';
 import { componentCypressSpecGenerator } from './component-cypress-spec';
 
-export default convertNxGenerator(componentCypressSpecGenerator);
+export default warnForSchematicUsage(
+  convertNxGenerator(componentCypressSpecGenerator)
+);
