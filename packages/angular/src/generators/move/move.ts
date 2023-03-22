@@ -1,4 +1,5 @@
 import { convertNxGenerator, formatFiles, Tree } from '@nrwl/devkit';
+import { warnForSchematicUsage } from '../utils/warn-for-schematic-usage';
 import { moveGenerator } from '@nrwl/workspace/generators';
 import { updateModuleName } from './lib/update-module-name';
 import { updateNgPackage } from './lib/update-ng-package';
@@ -24,4 +25,6 @@ export async function angularMoveGenerator(
   }
 }
 
-export const angularMoveSchematic = convertNxGenerator(angularMoveGenerator);
+export const angularMoveSchematic = warnForSchematicUsage(
+  convertNxGenerator(angularMoveGenerator)
+);
