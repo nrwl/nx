@@ -1,13 +1,12 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  ensurePackage,
   GeneratorCallback,
   runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
 
-import { jestInitGenerator } from '@nrwl/jest';
-import { cypressInitGenerator } from '@nrwl/cypress';
 import { reactDomVersion, reactVersion } from '@nrwl/react/src/utils/versions';
 import reactInitGenerator from '@nrwl/react/src/generators/init/init';
 import { initGenerator as jsInitGenerator } from '@nrwl/js';
@@ -48,10 +47,17 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   );
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
+    const { jestInitGenerator } = ensurePackage<typeof import('@nrwl/jest')>(
+      '@nrwl/jest',
+      nxVersion
+    );
     const jestTask = await jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
+    const { cypressInitGenerator } = ensurePackage<
+      typeof import('@nrwl/cypress')
+    >('@nrwl/cypress', nxVersion);
     const cypressTask = await cypressInitGenerator(host, {});
     tasks.push(cypressTask);
   }
