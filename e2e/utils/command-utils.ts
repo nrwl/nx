@@ -21,6 +21,7 @@ export interface RunCmdOpts {
   env?: Record<string, string | undefined>;
   cwd?: string;
   silent?: boolean;
+  verbose?: boolean;
 }
 
 /**
@@ -295,7 +296,7 @@ export function runNgAdd(
 
     const r = stripConsoleColors(result);
 
-    if (isVerboseE2ERun()) {
+    if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
         title: `Original command: ${fullCommand}`,
         bodyLines: [result as string],
@@ -319,12 +320,15 @@ export function runCLI(
   opts: RunCmdOpts = {
     silenceError: false,
     env: undefined,
+    verbose: undefined,
   }
 ): string {
   try {
     const pm = getPackageManagerCommand();
     const logs = execSync(
-      `${pm.runNx} ${command} ${isVerboseE2ERun() ? ' --verbose' : ''}`,
+      `${pm.runNx} ${command} ${
+        opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
+      }`,
       {
         cwd: opts.cwd || tmpProjPath(),
         env: {
@@ -338,7 +342,7 @@ export function runCLI(
       }
     );
 
-    if (isVerboseE2ERun()) {
+    if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
         title: `Original command: ${command}`,
         bodyLines: [logs as string],
@@ -384,7 +388,7 @@ export function runLernaCLI(
       maxBuffer: 50 * 1024 * 1024,
     });
 
-    if (isVerboseE2ERun()) {
+    if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
         title: `Original command: ${fullCommand}`,
         bodyLines: [logs as string],

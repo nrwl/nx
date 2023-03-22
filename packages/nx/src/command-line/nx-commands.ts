@@ -510,7 +510,6 @@ function withRunOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       describe:
         'Prints additional information about the commands (e.g., stack traces)',
-      default: false,
     })
     .option('nx-bail', {
       describe: 'Stop command execution after the first failed task',
@@ -752,12 +751,11 @@ function withGenerateOptions(yargs: yargs.Argv) {
       describe:
         'Prints additional information about the commands (e.g., stack traces)',
       type: 'boolean',
-      default: false,
     })
     .option('quiet', {
       describe: 'Hides logs from tree operations (e.g. `CREATE package.json`)',
       type: 'boolean',
-      default: false,
+      conflicts: ['verbose'],
     })
     .middleware((args) => {
       if (process.env.NX_INTERACTIVE === 'false') {
