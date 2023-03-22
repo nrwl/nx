@@ -1,4 +1,4 @@
-# Migrating an Angular app manually
+# Migrating an Angular application manually
 
 {% callout type="note" title="Older Angular Versions" %}
 If you are using older versions of Angular (version 13 or lower), make sure to use the appropriate version of Nx that matches your version of Angular. See the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) to find the correct version. The generated files will also be slightly different.

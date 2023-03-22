@@ -865,6 +865,11 @@
           "description": "Advanced guides to adopt Nx coming from the Angular CLI",
           "itemList": [
             {
+              "name": "From Angular CLI",
+              "id": "migration-angular",
+              "file": "shared/migration/migration-angular"
+            },
+            {
               "name": "From Angular CLI to Integrated",
               "id": "angular-integrated",
               "file": "shared/migration/angular-integrated"

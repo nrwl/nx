@@ -2185,6 +2185,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "From Angular CLI",
+            "path": "/recipes/adopting-nx-angular/migration-angular",
+            "id": "migration-angular",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "From Angular CLI to Integrated",
             "path": "/recipes/adopting-nx-angular/angular-integrated",
             "id": "angular-integrated",
@@ -2209,6 +2217,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "From Angular CLI",
+        "path": "/recipes/adopting-nx-angular/migration-angular",
+        "id": "migration-angular",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {

@@ -6,42 +6,9 @@ To take advantage of Nx's monorepo features provided by Nx and the Nx Angular pl
 ng add @nrwl/angular@<version_number>
 ```
 
-**Note**: To migrate to legacy versions of Nx prior to Nx 13.10, run the command:
-
-```shell
-ng add @nrwl/workspace@<version_number>
-```
-
-**Note**: Refer to the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) for matching Angular and Nx versions.
-
-**Note**: Support for workspaces with multiple applications and libraries was added in Nx v14.1.0. If you are migrating using an older version of Nx, your workspace can only contain one application and no libraries in order to use the automated migration, otherwise, you can still [migrate manually](#transitioning-manually).
-
-> The automated migration supports Angular CLI workspaces with a standard structure, configurations and features. If your workspace has deviated from what the Angular CLI generates, you might not be able to use the automated migration and you will need to [manually migrate your workspace](#transitioning-manually).
->
-> Currently, the automated migration supports workspaces using the following executors (builders):
->
-> - `@angular-devkit/build-angular:browser`
-> - `@angular-devkit/build-angular:dev-server`
-> - `@angular-devkit/build-angular:extract-i18n`
-> - `@angular-devkit/build-angular:karma`
-> - `@angular-devkit/build-angular:ng-packagr`
-> - `@angular-devkit/build-angular:protractor`
-> - `@angular-devkit/build-angular:server`
-> - `@angular-eslint/builder:lint`
-> - `@cypress/schematic:cypress`
-> - `@nguniversal/builders:prerender`
-> - `@nguniversal/builders:ssr-dev-server`
->
-> Support for other executors may be added in the future.
-
 This installs the `@nrwl/angular` (or `@nrwl/workspace`) package into your workspace and runs a generator (or schematic) to transform your workspace. The generator applies the following changes to your workspace:
 
 - Installs the `nx` and `@nrwl/workspace` packages.
-- Creates an `nx.json` file in the root of your workspace.
-- Creates configuration files for Prettier.
-- Creates an `apps` folder for generating applications.
-- Creates a `libs` folder for generating libraries.
-- Creates a `tools` folder that includes files for custom workspace tooling, such as workspace-specific generators and scripts.
 - Moves your applications into the `apps` folder, and updates the relevant file paths in your configuration files.
 - Moves your e2e suites into the `apps/<app name>-e2e` folder, and updates the relevant file paths in your configuration files.
 - Moves your libraries into the `libs` folder, and updates the relevant file paths in your configuration files.
@@ -88,12 +55,46 @@ After the changes are applied, your workspace file structure should look similar
 
 Your workspace is now powered by Nx! You can verify that your application still runs as intended:
 
-- To serve, run `ng serve <app name>` (or `nx serve <app name>`).
-- To build, run `ng build <app name>` (or `nx build <app name>`).
-- To run unit tests, run `ng test <app name>` (or `nx test <app name>`).
+- To serve, run `nx serve <app name>`.
+- To build, run `nx build <app name>`.
+- To run unit tests, run `nx test <app name>`.
 - To see your project graph, run `nx graph`.
 
 > Your project graph will grow as you add and use more applications and libraries. You can add the `--watch` flag to `nx graph` to see the changes in-browser as you add them.
+
+## Older Versions of Angular
+
+To migrate to legacy versions of Nx prior to Nx 13.10, run the command:
+
+```shell
+ng add @nrwl/workspace@<version_number>
+```
+
+Refer to the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) for matching Angular and Nx versions.
+
+Support for workspaces with multiple applications and libraries was added in Nx v14.1.0. If you are migrating using an older version of Nx, your workspace can only contain one application and no libraries in order to use the automated migration, otherwise, you can still [migrate manually](/recipes/adopting-nx-angular/angular-manual).
+
+## Modified Folder Structure
+
+The automated migration supports Angular CLI workspaces with a standard structure, configurations and features. If your workspace has deviated from what the Angular CLI generates, you might not be able to use the automated migration and you will need to [manually migrate your workspace](/recipes/adopting-nx-angular/angular-manual).
+
+Currently, the automated migration supports workspaces using the following executors (builders):
+
+- `@angular-devkit/build-angular:browser`
+- `@angular-devkit/build-angular:dev-server`
+- `@angular-devkit/build-angular:extract-i18n`
+- `@angular-devkit/build-angular:karma`
+- `@angular-devkit/build-angular:ng-packagr`
+- `@angular-devkit/build-angular:protractor`
+- `@angular-devkit/build-angular:server`
+- `@angular-eslint/builder:lint`
+- `@cypress/schematic:cypress`
+- `@nguniversal/builders:prerender`
+- `@nguniversal/builders:ssr-dev-server`
+
+Support for other executors may be added in the future.
+
+## Learn More
 
 Learn more about the advantages of Nx in the following guides:
 
@@ -101,3 +102,5 @@ Learn more about the advantages of Nx in the following guides:
 - [Using Jest for unit tests](/packages/jest)
 - [Computation Caching](/concepts/how-caching-works)
 - [Rebuilding and Retesting What is Affected](/concepts/affected)
+- [Integrate with Editors](/core-features/integrate-with-editors)
+- [Advanced Angular Micro Frontends with Dynamic Module Federation](/recipes/module-federation/dynamic-module-federation-with-angular)

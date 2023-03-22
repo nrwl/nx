@@ -510,6 +510,16 @@
     "file": "",
     "itemList": [
       {
+        "id": "migration-angular",
+        "name": "From Angular CLI",
+        "description": "",
+        "file": "shared/migration/migration-angular",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/migration-angular",
+        "tags": []
+      },
+      {
         "id": "angular-integrated",
         "name": "From Angular CLI to Integrated",
         "description": "",
@@ -542,6 +552,16 @@
     ],
     "isExternal": false,
     "path": "/recipes/adopting-nx-angular",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/migration-angular": {
+    "id": "migration-angular",
+    "name": "From Angular CLI",
+    "description": "",
+    "file": "shared/migration/migration-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/migration-angular",
     "tags": []
   },
   "/recipes/adopting-nx-angular/angular-integrated": {
