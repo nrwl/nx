@@ -24,6 +24,10 @@ export interface WithNxOptions extends NextConfig {
   };
 }
 
+export interface NextConfigFn {
+  (phase: string): Promise<NextConfig>;
+}
+
 export interface WithNxContext {
   workspaceRoot: string;
   libsDir: string;
@@ -114,7 +118,7 @@ function getNxContext(
 export function withNx(
   _nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
-): (phase: string) => Promise<NextConfig> {
+): NextConfigFn {
   return async (phase: string) => {
     if (phase === PHASE_PRODUCTION_SERVER) {
       // If we are running an already built production server, just return the configuration.
