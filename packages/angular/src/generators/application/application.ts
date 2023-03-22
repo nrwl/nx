@@ -8,13 +8,9 @@ import {
   Tree,
   updateNxJson,
 } from '@nrwl/devkit';
-import { join } from 'path';
 import { angularInitGenerator } from '../init/init';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
-import {
-  getGeneratorDirectoryForInstalledAngularVersion,
-  getInstalledAngularVersionInfo,
-} from '../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
   addE2e,
   addLinting,
@@ -52,15 +48,6 @@ export async function applicationGenerator(
       message: 'Would you like to use Standalone Components?',
       type: 'confirm',
     }).then((a) => a['standalone-components']);
-  }
-
-  const generatorDirectory =
-    getGeneratorDirectoryForInstalledAngularVersion(tree);
-  if (generatorDirectory) {
-    let previousGenerator = await import(
-      join(__dirname, generatorDirectory, 'application')
-    );
-    return await previousGenerator.default(tree, schema);
   }
 
   const options = normalizeOptions(tree, schema);
