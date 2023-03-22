@@ -13,8 +13,6 @@ import {
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { initGenerator as jsInitGenerator } from '@nrwl/js';
-
-import { join } from 'path';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   angularDevkitVersion,
@@ -26,25 +24,17 @@ import {
 } from '../../utils/versions';
 import {
   addDependenciesToPackageJsonIfDontExist,
-  getGeneratorDirectoryForInstalledAngularVersion,
+  getInstalledAngularVersionInfo,
   getInstalledPackageVersion,
 } from '../utils/version-utils';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { Schema } from './schema';
 
 export async function angularInitGenerator(
   tree: Tree,
   rawOptions: Schema
 ): Promise<GeneratorCallback> {
-  const generatorDirectory =
-    getGeneratorDirectoryForInstalledAngularVersion(tree);
-  if (generatorDirectory) {
-    let previousGenerator = await import(
-      join(__dirname, generatorDirectory, 'init')
-    );
-    await previousGenerator.default(tree, rawOptions);
-    return;
-  }
-
+  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
   const tasks: GeneratorCallback[] = [];
   const options = normalizeOptions(rawOptions);
 
@@ -60,7 +50,9 @@ export async function angularInitGenerator(
     if (!packageVersion) {
       devkitVersion ??=
         getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
-        angularDevkitVersion;
+        (installedAngularVersionInfo.major === 14
+          ? backwardCompatibleVersions.angularV14.angularDevkitVersion
+          : angularDevkitVersion);
 
       try {
         ensurePackage(pkg, devkitVersion);
@@ -86,9 +78,13 @@ export async function angularInitGenerator(
   tasks.push(jsTask);
 
   if (!options.skipPackageJson) {
-    tasks.push(updateDependencies(tree));
+    tasks.push(updateDependencies(tree, installedAngularVersionInfo.major));
   }
-  const unitTestTask = await addUnitTestRunner(tree, options);
+  const unitTestTask = await addUnitTestRunner(
+    tree,
+    options,
+    installedAngularVersionInfo.major
+  );
   tasks.push(unitTestTask);
   const e2eTask = await addE2ETestRunner(tree, options);
   tasks.push(e2eTask);
@@ -139,12 +135,20 @@ function setDefaults(host: Tree, options: Schema) {
   updateNxJson(host, nxJson);
 }
 
-function updateDependencies(tree: Tree): GeneratorCallback {
+function updateDependencies(
+  tree: Tree,
+  angularMajorVersion: number
+): GeneratorCallback {
   const angularVersionToInstall =
-    getInstalledPackageVersion(tree, '@angular/core') ?? angularVersion;
+    getInstalledPackageVersion(tree, '@angular/core') ??
+    (angularMajorVersion === 14
+      ? backwardCompatibleVersions.angularV14.angularVersion
+      : angularVersion);
   const angularDevkitVersionToInstall =
     getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
-    angularDevkitVersion;
+    (angularMajorVersion === 14
+      ? backwardCompatibleVersions.angularV14.angularDevkitVersion
+      : angularDevkitVersion);
 
   return addDependenciesToPackageJsonIfDontExist(
     tree,
@@ -157,9 +161,18 @@ function updateDependencies(tree: Tree): GeneratorCallback {
       '@angular/platform-browser': angularVersionToInstall,
       '@angular/platform-browser-dynamic': angularVersionToInstall,
       '@angular/router': angularVersionToInstall,
-      rxjs: rxjsVersion,
-      tslib: tsLibVersion,
-      'zone.js': zoneJsVersion,
+      rxjs:
+        angularMajorVersion === 14
+          ? backwardCompatibleVersions.angularV14.rxjsVersion
+          : rxjsVersion,
+      tslib:
+        angularMajorVersion === 14
+          ? backwardCompatibleVersions.angularV14.tsLibVersion
+          : tsLibVersion,
+      'zone.js':
+        angularMajorVersion === 14
+          ? backwardCompatibleVersions.angularV14.zoneJsVersion
+          : zoneJsVersion,
     },
     {
       '@angular/cli': angularDevkitVersionToInstall,
@@ -172,7 +185,8 @@ function updateDependencies(tree: Tree): GeneratorCallback {
 
 async function addUnitTestRunner(
   tree: Tree,
-  options: Schema
+  options: Schema,
+  angularMajorVersion: number
 ): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Jest:
@@ -181,7 +195,10 @@ async function addUnitTestRunner(
           tree,
           {},
           {
-            'jest-preset-angular': jestPresetAngularVersion,
+            'jest-preset-angular':
+              angularMajorVersion === 14
+                ? backwardCompatibleVersions.angularV14.jestPresetAngularVersion
+                : jestPresetAngularVersion,
           }
         );
       }
