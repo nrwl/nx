@@ -1154,7 +1154,7 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 ### detectPackageManager
 
-▸ **detectPackageManager**(`dir?`): [`PackageManager`](../../devkit/documents/nrwl_devkit#packagemanager)
+▸ **detectPackageManager**(`dir?`): [`PackageManager`](../../devkit/documents/nrwl_devkit#packagemanager) \| `null`
 
 Detects which package manager is used in the workspace based on the lock file.
 
@@ -1166,7 +1166,7 @@ Detects which package manager is used in the workspace based on the lock file.
 
 #### Returns
 
-[`PackageManager`](../../devkit/documents/nrwl_devkit#packagemanager)
+[`PackageManager`](../../devkit/documents/nrwl_devkit#packagemanager) \| `null`
 
 ---
 
@@ -1352,7 +1352,7 @@ Returns the list of outputs that will be cached.
 
 ### getPackageManagerCommand
 
-▸ **getPackageManagerCommand**(`packageManager?`): `PackageManagerCommands`
+▸ **getPackageManagerCommand**(`packageManager?`): `PackageManagerCommands` \| `null`
 
 Returns commands for the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -1372,7 +1372,7 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 #### Returns
 
-`PackageManagerCommands`
+`PackageManagerCommands` \| `null`
 
 ---
 

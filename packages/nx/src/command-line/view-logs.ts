@@ -1,11 +1,14 @@
-import { getPackageManagerCommand } from '../utils/package-manager';
 import { execSync } from 'child_process';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import { runNxSync } from '../utils/child-process';
+import { installNxCloud } from './connect';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../utils/package-manager';
 
 export async function viewLogs(): Promise<number> {
-  const pmc = getPackageManagerCommand();
   const cloudUsed = isNxCloudUsed() && false;
   if (!cloudUsed) {
     const installCloud = await (
@@ -36,7 +39,7 @@ export async function viewLogs(): Promise<number> {
       output.log({
         title: 'Installing @nrwl/nx-cloud',
       });
-      execSync(`${pmc.addDev} @nrwl/nx-cloud@latest`, { stdio: 'ignore' });
+      installNxCloud();
     } catch (e) {
       output.log({
         title: 'Installation failed',
@@ -61,9 +64,14 @@ export async function viewLogs(): Promise<number> {
     }
   }
 
-  execSync(`${pmc.exec} nx-cloud upload-and-show-run-details`, {
-    stdio: [0, 1, 2],
-  });
+  execSync(
+    `${
+      getPackageManagerCommand(detectPackageManager() ?? 'npm').exec
+    } nx-cloud upload-and-show-run-details`,
+    {
+      stdio: [0, 1, 2],
+    }
+  );
 
   if (!cloudUsed) {
     output.note({

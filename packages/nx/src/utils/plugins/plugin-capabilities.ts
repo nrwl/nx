@@ -12,6 +12,7 @@ import {
   readPluginPackageJson,
 } from '../nx-plugin';
 import { getNxRequirePaths } from '../installation-directory';
+import { existsSync } from 'fs';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -92,10 +93,14 @@ export async function listPluginCapabilities(pluginName: string) {
     const pmc = getPackageManagerCommand();
     output.note({
       title: `${pluginName} is not currently installed`,
-      bodyLines: [
-        `Use "${pmc.addDev} ${pluginName}" to install the plugin.`,
-        `After that, use "${pmc.exec} nx g ${pluginName}:init" to add the required peer deps and initialize the plugin.`,
-      ],
+      bodyLines: existsSync(join(workspaceRoot, 'package.json'))
+        ? [
+            `Use "${pmc.addDev} ${pluginName}" to install the plugin.`,
+            `After that, use "${pmc.exec} nx g ${pluginName}:init" to add the required peer deps and initialize the plugin.`,
+          ]
+        : [
+            `Add ${pluginName} to \`nx.json\` under the \`installation\` key, and the plugin will be installed on running your next Nx command.`,
+          ],
     });
 
     return;

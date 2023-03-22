@@ -9,11 +9,11 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
+import { runNxSync } from '../utils/child-process';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { readJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { PackageJson } from '../utils/package-json';
-import { getPackageManagerCommand } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
 import { calculateDefaultProjectName } from './run-one';
 
@@ -53,12 +53,11 @@ async function runScriptAsNxTarget(argv: string[]) {
   const extraArgs =
     providedArgs.length === argv.length ? [] : argv.slice(providedArgs.length);
 
-  const pm = getPackageManagerCommand();
-  // `targetName` might be an npm script with `:` like: `start:dev`, `start:debug`.
-  let command = `${
-    pm.exec
-  } nx run ${projectName}:\\\"${targetName}\\\" ${extraArgs.join(' ')}`;
-  return execSync(command, { stdio: 'inherit' });
+  return runNxSync(
+    // `targetName` might be an npm script with `:` like: `start:dev`, `start:debug`.
+    `run ${projectName}:\\\"${targetName}\\\" ${extraArgs.join(' ')}`,
+    { stdio: 'inherit' }
+  );
 }
 
 function readScriptArgV(args: Record<string, string[]>) {

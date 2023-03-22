@@ -15,10 +15,11 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { joinPathFragments } from '../utils/path';
 import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
+import { getNxCommand } from '../utils/child-process';
 
-export function getCommandAsString(execCommand: string, task: Task) {
+export function getCommandAsString(task: Task) {
   const args = getPrintableCommandArgsForTask(task);
-  return [execCommand, 'nx', ...args].join(' ').trim();
+  return [getNxCommand(), ...args].join(' ').trim();
 }
 
 export function getDependencyConfigs(

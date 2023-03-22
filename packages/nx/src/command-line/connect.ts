@@ -7,9 +7,6 @@ import {
   getNxCloudUrl,
   isNxCloudUsed,
 } from '../utils/nx-cloud-utils';
-import { existsSync } from 'fs';
-import { join } from 'path';
-import { workspaceRoot } from '../utils/workspace-root';
 import { runNxSync } from '../utils/child-process';
 
 export async function connectToNxCloudIfExplicitlyAsked(opts: {
@@ -54,6 +51,14 @@ export async function connectToNxCloudCommand(
 
   const res = await connectToNxCloudPrompt(promptOverride);
   if (!res) return false;
+  installNxCloud();
+  runNxSync(`g @nrwl/nx-cloud:init`, {
+    stdio: [0, 1, 2],
+  });
+  return true;
+}
+
+export function installNxCloud() {
   const pmc = getPackageManagerCommand();
   if (pmc) {
     execSync(`${pmc.addDev} @nrwl/nx-cloud@latest`);
@@ -66,10 +71,6 @@ export async function connectToNxCloudCommand(
       ).toString();
     }
   }
-  runNxSync(`g @nrwl/nx-cloud:init`, {
-    stdio: [0, 1, 2],
-  });
-  return true;
 }
 
 async function connectToNxCloudPrompt(prompt?: string) {

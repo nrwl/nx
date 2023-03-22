@@ -26,12 +26,14 @@ export interface PackageManagerCommands {
 /**
  * Detects which package manager is used in the workspace based on the lock file.
  */
-export function detectPackageManager(dir: string = ''): PackageManager {
+export function detectPackageManager(dir: string = ''): PackageManager | null {
   return existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'pnpm-lock.yaml'))
     ? 'pnpm'
-    : 'npm';
+    : existsSync(join(dir, 'package.json'))
+    ? 'npm'
+    : null;
 }
 
 /**
@@ -47,7 +49,7 @@ export function detectPackageManager(dir: string = ''): PackageManager {
  */
 export function getPackageManagerCommand(
   packageManager: PackageManager = detectPackageManager()
-): PackageManagerCommands {
+): PackageManagerCommands | null {
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => {
       const yarnVersion = getPackageManagerVersion('yarn');
@@ -102,7 +104,7 @@ export function getPackageManagerCommand(
     },
   };
 
-  return commands[packageManager]();
+  return packageManager ? commands[packageManager]() : null;
 }
 
 /**
@@ -113,7 +115,9 @@ export function getPackageManagerCommand(
 export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager()
 ): string {
-  return execSync(`${packageManager} --version`).toString('utf-8').trim();
+  return packageManager
+    ? execSync(`${packageManager} --version`).toString('utf-8').trim()
+    : '';
 }
 
 /**

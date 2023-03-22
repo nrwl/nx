@@ -10,9 +10,12 @@ import { installPackagesTask } from '../tasks/install-packages-task';
 import { requireNx } from '../../nx';
 import { dirSync } from 'tmp';
 import { join } from 'path';
+import type {
+  PackageManager,
+  PackageManagerCommands,
+} from 'nx/src/utils/package-manager';
 
-const { readJson, updateJson, getPackageManagerCommand, workspaceRoot } =
-  requireNx();
+const { readJson, updateJson, workspaceRoot } = requireNx();
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -487,6 +490,37 @@ function addToNodePath(dir: string) {
 
   // Update the env variable.
   process.env.NODE_PATH = paths.join(delimiter);
+}
+
+const {
+  detectPackageManager: nxDetectPackageManager,
+  getPackageManagerCommand: nxGetPackageManagerCommand,
+} = requireNx();
+
+/**
+ * Detects which package manager is used in the workspace based on the lock file.
+ */
+export function detectPackageManager(dir: string = ''): PackageManager {
+  return nxDetectPackageManager(dir) ?? 'npm';
+}
+
+/**
+ *  Returns commands for the package manager used in the workspace.
+ * By default, the package manager is derived based on the lock file,
+ * but it can also be passed in explicitly.
+ *
+ * Example:
+ *
+ * ```javascript
+ * execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
+ * ```
+ * @param packageManger Which package manager should be used? Defaults to npm if none can be detected.
+ * @returns {PackageManagerCommands} The appropriate commands for the package manager.
+ */
+export function getPackageManagerCommand(
+  packageManger = detectPackageManager()
+): PackageManagerCommands {
+  return nxGetPackageManagerCommand(packageManger);
 }
 
 function getPackageVersion(pkg: string): string {

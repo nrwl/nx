@@ -56,6 +56,8 @@ export {
   ensurePackage,
   removeDependenciesFromPackageJson,
   NX_VERSION,
+  getPackageManagerCommand,
+  detectPackageManager,
 } from './src/utils/package-json';
 
 /**

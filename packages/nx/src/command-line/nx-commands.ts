@@ -5,7 +5,10 @@ import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
 import { workspaceRoot } from '../utils/workspace-root';
-import { getPackageManagerCommand } from '../utils/package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../utils/package-manager';
 import { writeJsonFile } from '../utils/fileutils';
 import { WatchArguments } from './watch';
 import { runNxSync } from '../utils/child-process';
@@ -1138,7 +1141,9 @@ function runMigration() {
 
 function nxCliPath() {
   try {
-    const packageManager = getPackageManagerCommand();
+    const packageManager = getPackageManagerCommand(
+      detectPackageManager() ?? 'npm'
+    );
 
     const { dirSync } = require('tmp');
     const tmpDir = dirSync().name;

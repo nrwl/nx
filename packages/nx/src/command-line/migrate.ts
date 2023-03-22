@@ -55,7 +55,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { isCI } from '../utils/is-ci';
 import { getNxRequirePaths } from '../utils/installation-directory';
 import { readNxJson } from '../config/configuration';
-import { runNxSync } from '../utils/child-process';
+import { runNxSync, getNxCommand } from '../utils/child-process';
 import { daemonClient } from '../daemon/client/client';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
@@ -1231,9 +1231,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     output.log({
       title: 'Next steps:',
       bodyLines: [
-        `- Make sure package.json changes make sense and then run '${pmc.install}',`,
+        ...(pmc
+          ? [
+              `- Make sure package.json changes make sense and then run '${pmc.install}',`,
+            ]
+          : []),
         ...(migrations.length > 0
-          ? [`- Run '${pmc.exec} nx migrate --run-migrations'`]
+          ? [`- Run '${getNxCommand()} nx migrate --run-migrations'`]
           : []),
         `- To learn more go to https://nx.dev/core-features/automate-updating-dependencies`,
         ...(showConnectToCloudMessage()
@@ -1405,7 +1409,8 @@ async function runMigrations(
   shouldCreateCommits = false,
   commitPrefix: string
 ) {
-  if (!process.env.NX_MIGRATE_SKIP_INSTALL) {
+  // Skip install if there is no package manager in the repo - e.g. for .nx
+  if (!process.env.NX_MIGRATE_SKIP_INSTALL || !detectPackageManager(root)) {
     runInstall();
   }
 

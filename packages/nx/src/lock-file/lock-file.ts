@@ -51,7 +51,7 @@ export function lockFileExists(
  * Hashes lock file content
  */
 export function lockFileHash(
-  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+  packageManager: PackageManager = detectPackageManager(workspaceRoot) ?? 'npm'
 ): string {
   let content: string;
   if (packageManager === 'yarn') {
