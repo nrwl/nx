@@ -152,7 +152,7 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /CODEOWNERS @FrozenPandaz @AgentEnder
 
 # Scripts
-/scripts/depcheck @FrozenPandaz @vsavkin
+/scripts/depcheck @FrozenPandaz @vsavkin @jaysoo
 /scripts/documentation @bcabanes @isaacplmann
 /scripts/local-registry @FrozenPandaz @vsavkin
 /scripts/angular-support-upgrades @Coly010 @leosvelperez
