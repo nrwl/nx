@@ -13,8 +13,9 @@ import {
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import type { NextConfig } from 'next';
+import { PHASE_PRODUCTION_SERVER } from 'next/constants';
 
-import path = require('path');
+import * as path from 'path';
 import { createWebpackConfig } from '../src/utils/config';
 import { NextBuildBuilderOptions } from '../src/utils/types';
 export interface WithNxOptions extends NextConfig {
@@ -113,62 +114,69 @@ function getNxContext(
 export function withNx(
   _nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
-): () => Promise<NextConfig> {
-  return async () => {
-    let dependencies: DependentBuildableProjectNode[] = [];
+): (phase: string) => Promise<NextConfig> {
+  return async (phase: string) => {
+    if (phase === PHASE_PRODUCTION_SERVER) {
+      // If we are running an already built production server, just return the configuration.
+      const { nx, ...validNextConfig } = _nextConfig;
+      return { distDir: '.next', ...validNextConfig };
+    } else {
+      // Otherwise, add in webpack and eslint configuration for build or test.
+      let dependencies: DependentBuildableProjectNode[] = [];
 
-    const graph = await createProjectGraphAsync();
+      const graph = await createProjectGraphAsync();
 
-    const originalTarget = {
-      project: process.env.NX_TASK_TARGET_PROJECT,
-      target: process.env.NX_TASK_TARGET_TARGET,
-      configuration: process.env.NX_TASK_TARGET_CONFIGURATION,
-    };
+      const originalTarget = {
+        project: process.env.NX_TASK_TARGET_PROJECT,
+        target: process.env.NX_TASK_TARGET_TARGET,
+        configuration: process.env.NX_TASK_TARGET_CONFIGURATION,
+      };
 
-    const {
-      node: projectNode,
-      options,
-      projectName: project,
-      targetName,
-      configurationName,
-    } = getNxContext(graph, originalTarget);
-    const projectDirectory = projectNode.data.root;
-
-    if (options.buildLibsFromSource === false && targetName) {
-      const result = calculateProjectDependencies(
-        graph,
-        workspaceRoot,
-        project,
+      const {
+        node: projectNode,
+        options,
+        projectName: project,
         targetName,
-        configurationName
-      );
-      dependencies = result.dependencies;
+        configurationName,
+      } = getNxContext(graph, originalTarget);
+      const projectDirectory = projectNode.data.root;
+
+      if (options.buildLibsFromSource === false && targetName) {
+        const result = calculateProjectDependencies(
+          graph,
+          workspaceRoot,
+          project,
+          targetName,
+          configurationName
+        );
+        dependencies = result.dependencies;
+      }
+
+      // Get next config
+      const nextConfig = getNextConfig(_nextConfig, context);
+
+      const outputDir = `${offsetFromRoot(projectDirectory)}${
+        options.outputPath
+      }`;
+      nextConfig.distDir =
+        nextConfig.distDir && nextConfig.distDir !== '.next'
+          ? joinPathFragments(outputDir, nextConfig.distDir)
+          : joinPathFragments(outputDir, '.next');
+
+      const userWebpackConfig = nextConfig.webpack;
+
+      nextConfig.webpack = (a, b) =>
+        createWebpackConfig(
+          workspaceRoot,
+          options.root,
+          options.fileReplacements,
+          options.assets,
+          dependencies,
+          path.join(workspaceRoot, context.libsDir)
+        )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
+
+      return nextConfig;
     }
-
-    // Get next config
-    const nextConfig = getNextConfig(_nextConfig, context);
-
-    const outputDir = `${offsetFromRoot(projectDirectory)}${
-      options.outputPath
-    }`;
-    nextConfig.distDir =
-      nextConfig.distDir && nextConfig.distDir !== '.next'
-        ? joinPathFragments(outputDir, nextConfig.distDir)
-        : joinPathFragments(outputDir, '.next');
-
-    const userWebpackConfig = nextConfig.webpack;
-
-    nextConfig.webpack = (a, b) =>
-      createWebpackConfig(
-        workspaceRoot,
-        options.root,
-        options.fileReplacements,
-        options.assets,
-        dependencies,
-        path.join(workspaceRoot, context.libsDir)
-      )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
-
-    return nextConfig;
   };
 }
 

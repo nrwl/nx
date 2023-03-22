@@ -4,6 +4,7 @@ import {
   cleanupProject,
   getPackageManagerCommand,
   isNotWindows,
+  killPort,
   killPorts,
   newProject,
   packageManagerLockFile,
@@ -20,25 +21,22 @@ import {
 import { stringUtils } from '@nrwl/workspace';
 import * as http from 'http';
 import { checkApp } from './utils';
+import { removeSync } from 'fs-extra';
 
 describe('Next.js Applications', () => {
   let proj: string;
   let originalEnv: string;
   let packageManager;
 
-  beforeAll(() => {
+  beforeEach(() => {
     proj = newProject();
     packageManager = detectPackageManager(tmpProjPath());
-  });
-
-  afterAll(() => cleanupProject());
-
-  beforeEach(() => {
     originalEnv = process.env.NODE_ENV;
   });
 
   afterEach(() => {
     process.env.NODE_ENV = originalEnv;
+    cleanupProject();
   });
 
   it('should generate app + libs', async () => {
@@ -169,6 +167,22 @@ describe('Next.js Applications', () => {
       `dist/apps/${appName}/public/a/b.txt`,
       `dist/apps/${appName}/public/shared/ui/hello.txt`
     );
+
+    // Check that the output is self-contained (i.e. can run with its own package.json + node_modules)
+    const distPath = joinPathFragments(tmpProjPath(), 'dist/apps', appName);
+    const port = 3000;
+    const pmc = getPackageManagerCommand();
+    runCommand(`${pmc.install}`, {
+      cwd: distPath,
+    });
+    runCLI(
+      `generate @nrwl/workspace:run-commands serve-prod --project ${appName} --cwd=dist/apps/${appName} --command="npx next start --port=${port}"`
+    );
+    await runCommandUntil(`run ${appName}:serve-prod`, (output) => {
+      return output.includes(`localhost:${port}`);
+    });
+
+    await killPort(port);
   }, 300_000);
 
   it('should build and install pruned lock file', () => {
@@ -399,17 +413,19 @@ describe('Next.js Applications', () => {
   }, 300_000);
 });
 
-function getData(port: number, path = ''): Promise<any> {
-  return new Promise((resolve) => {
-    http.get(`http://localhost:${port}${path}`, (res) => {
-      expect(res.statusCode).toEqual(200);
-      let data = '';
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-      res.once('end', () => {
-        resolve(data);
-      });
-    });
+function getData(port, path = ''): Promise<any> {
+  return new Promise((resolve, reject) => {
+    http
+      .get(`http://localhost:${port}${path}`, (res) => {
+        expect(res.statusCode).toEqual(200);
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.once('end', () => {
+          resolve(data);
+        });
+      })
+      .on('error', (err) => reject(err));
   });
 }
