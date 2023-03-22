@@ -12,10 +12,12 @@ import { updateRootTsConfig } from '@nrwl/js';
 import { lt } from 'semver';
 import init from '../../generators/init/init';
 import { E2eTestRunner } from '../../utils/test-runners';
-import { getPkgVersionForAngularMajorVersion } from '../../utils/version-utils';
 import addLintingGenerator from '../add-linting/add-linting';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
+import {
+  getInstalledAngularVersionInfo,
+  versions,
+} from '../utils/version-utils';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { addModule } from './lib/add-module';
 import { addStandaloneComponent } from './lib/add-standalone-component';
@@ -62,6 +64,8 @@ export async function libraryGenerator(
   const options = normalizeOptions(tree, schema);
   const { libraryOptions } = options;
 
+  const pkgVersions = versions(tree);
+
   await init(tree, {
     ...libraryOptions,
     skipFormat: true,
@@ -97,10 +101,7 @@ export async function libraryGenerator(
       tree,
       {},
       {
-        'ng-packagr': getPkgVersionForAngularMajorVersion(
-          'ngPackagrVersion',
-          userInstalledAngularVersion.major
-        ),
+        'ng-packagr': pkgVersions.ngPackagrVersion,
       }
     );
     addBuildableLibrariesPostCssDependencies(tree);

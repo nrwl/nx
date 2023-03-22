@@ -15,19 +15,12 @@ import { Linter } from '@nrwl/linter';
 import { initGenerator as jsInitGenerator } from '@nrwl/js';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
-  angularDevkitVersion,
-  angularVersion,
-  jestPresetAngularVersion,
-  rxjsVersion,
-  tsLibVersion,
-  zoneJsVersion,
-} from '../../utils/versions';
-import {
   addDependenciesToPackageJsonIfDontExist,
   getInstalledAngularVersionInfo,
   getInstalledPackageVersion,
+  versions,
 } from '../utils/version-utils';
-import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
+import type { PackageVersions } from '../../utils/backward-compatible-versions';
 import { Schema } from './schema';
 
 export async function angularInitGenerator(
@@ -37,6 +30,8 @@ export async function angularInitGenerator(
   const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
   const tasks: GeneratorCallback[] = [];
   const options = normalizeOptions(rawOptions);
+
+  const pkgVersions = versions(tree);
 
   const peerDepsToInstall = [
     '@angular-devkit/core',
@@ -50,9 +45,7 @@ export async function angularInitGenerator(
     if (!packageVersion) {
       devkitVersion ??=
         getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
-        (installedAngularVersionInfo.major === 14
-          ? backwardCompatibleVersions.angularV14.angularDevkitVersion
-          : angularDevkitVersion);
+        pkgVersions.angularDevkitVersion;
 
       try {
         ensurePackage(pkg, devkitVersion);
@@ -78,12 +71,12 @@ export async function angularInitGenerator(
   tasks.push(jsTask);
 
   if (!options.skipPackageJson) {
-    tasks.push(updateDependencies(tree, installedAngularVersionInfo.major));
+    tasks.push(updateDependencies(tree, pkgVersions));
   }
   const unitTestTask = await addUnitTestRunner(
     tree,
     options,
-    installedAngularVersionInfo.major
+    pkgVersions.jestPresetAngularVersion
   );
   tasks.push(unitTestTask);
   const e2eTask = await addE2ETestRunner(tree, options);
@@ -137,48 +130,41 @@ function setDefaults(host: Tree, options: Schema) {
 
 function updateDependencies(
   tree: Tree,
-  angularMajorVersion: number
+  versions: PackageVersions
 ): GeneratorCallback {
-  const angularVersionToInstall =
+  const angularVersion =
     getInstalledPackageVersion(tree, '@angular/core') ??
-    (angularMajorVersion === 14
-      ? backwardCompatibleVersions.angularV14.angularVersion
-      : angularVersion);
-  const angularDevkitVersionToInstall =
+    versions.angularVersion;
+  const angularDevkitVersion =
     getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
-    (angularMajorVersion === 14
-      ? backwardCompatibleVersions.angularV14.angularDevkitVersion
-      : angularDevkitVersion);
+    versions.angularDevkitVersion;
+  const rxjsVersion =
+    getInstalledPackageVersion(tree, 'rxjs') ?? versions.rxjsVersion;
+  const tsLibVersion =
+    getInstalledPackageVersion(tree, 'tslib') ?? versions.tsLibVersion;
+  const zoneJsVersion =
+    getInstalledPackageVersion(tree, 'zone.js') ?? versions.zoneJsVersion;
 
   return addDependenciesToPackageJsonIfDontExist(
     tree,
     {
-      '@angular/animations': angularVersionToInstall,
-      '@angular/common': angularVersionToInstall,
-      '@angular/compiler': angularVersionToInstall,
-      '@angular/core': angularVersionToInstall,
-      '@angular/forms': angularVersionToInstall,
-      '@angular/platform-browser': angularVersionToInstall,
-      '@angular/platform-browser-dynamic': angularVersionToInstall,
-      '@angular/router': angularVersionToInstall,
-      rxjs:
-        angularMajorVersion === 14
-          ? backwardCompatibleVersions.angularV14.rxjsVersion
-          : rxjsVersion,
-      tslib:
-        angularMajorVersion === 14
-          ? backwardCompatibleVersions.angularV14.tsLibVersion
-          : tsLibVersion,
-      'zone.js':
-        angularMajorVersion === 14
-          ? backwardCompatibleVersions.angularV14.zoneJsVersion
-          : zoneJsVersion,
+      '@angular/animations': angularVersion,
+      '@angular/common': angularVersion,
+      '@angular/compiler': angularVersion,
+      '@angular/core': angularVersion,
+      '@angular/forms': angularVersion,
+      '@angular/platform-browser': angularVersion,
+      '@angular/platform-browser-dynamic': angularVersion,
+      '@angular/router': angularVersion,
+      rxjs: rxjsVersion,
+      tslib: tsLibVersion,
+      'zone.js': zoneJsVersion,
     },
     {
-      '@angular/cli': angularDevkitVersionToInstall,
-      '@angular/compiler-cli': angularVersionToInstall,
-      '@angular/language-service': angularVersionToInstall,
-      '@angular-devkit/build-angular': angularDevkitVersionToInstall,
+      '@angular/cli': angularDevkitVersion,
+      '@angular/compiler-cli': angularVersion,
+      '@angular/language-service': angularVersion,
+      '@angular-devkit/build-angular': angularDevkitVersion,
     }
   );
 }
@@ -186,7 +172,7 @@ function updateDependencies(
 async function addUnitTestRunner(
   tree: Tree,
   options: Schema,
-  angularMajorVersion: number
+  jestPresetAngularVersion: string
 ): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Jest:
@@ -195,10 +181,7 @@ async function addUnitTestRunner(
           tree,
           {},
           {
-            'jest-preset-angular':
-              angularMajorVersion === 14
-                ? backwardCompatibleVersions.angularV14.jestPresetAngularVersion
-                : jestPresetAngularVersion,
+            'jest-preset-angular': jestPresetAngularVersion,
           }
         );
       }
