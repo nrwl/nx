@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2022",
-    "useDefineForClassFields": false,
+    "target": <% if(installedAngularInfo.major === 14) { %>"es2020"<% } else { %>"es2022"<% } %><% if(installedAngularInfo.major === 15) { %>,
+    "useDefineForClassFields": false<% } %>
   },
   "files": [],
   "include": [],
