@@ -65,6 +65,7 @@ export async function storybookConfigurationGenerator(
     standaloneConfig: schema.standaloneConfig,
     tsConfiguration: schema.tsConfiguration,
     configureTestRunner: schema.configureTestRunner,
+    configureStaticServe: schema.configureStaticServe,
     bundler,
     storybook7Configuration: schema.storybook7Configuration,
     storybook7UiFramework:

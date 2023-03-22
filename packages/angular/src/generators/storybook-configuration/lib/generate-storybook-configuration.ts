@@ -19,5 +19,6 @@ export async function generateStorybookConfiguration(
     tsConfiguration: options.tsConfiguration,
     configureTestRunner: options.configureTestRunner,
     storybook7Configuration: options.storybook7Configuration,
+    configureStaticServe: options.configureStaticServe,
   });
 }

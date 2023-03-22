@@ -127,6 +127,8 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@storybook/core',
     '@storybook/core-server',
     '@storybook/types',
+    // lazy installed with ensurePackage
+    '@nrwl/web',
     'rxjs',
   ],
   nx: [

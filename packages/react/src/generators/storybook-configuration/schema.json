@@ -39,6 +39,13 @@
       "default": true,
       "x-priority": "important"
     },
+    "configureStaticServe": {
+      "type": "boolean",
+      "description": "Specifies whether to configure a static file server target for serving storybook. Helpful for speeding up CI build/test times.",
+      "x-prompt": "Configure a static file server for the storybook instance?",
+      "default": true,
+      "x-priority": "important"
+    },
     "cypressDirectory": {
       "type": "string",
       "description": "A directory where the Cypress project will be placed. Placed at the root by default."

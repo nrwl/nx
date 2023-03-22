@@ -67,6 +67,7 @@ describe('testing utilities', () => {
       await runAngularStorybookSchematic(appTree, {
         name: 'test-ui-lib',
         configureCypress: true,
+        configureStaticServe: false,
       });
 
       appTree.write(

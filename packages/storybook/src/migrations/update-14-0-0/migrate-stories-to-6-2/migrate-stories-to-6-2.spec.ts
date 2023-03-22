@@ -74,6 +74,7 @@ describe('migrate-stories-to-6-2 schematic', () => {
       await runAngularStorybookSchematic(appTree, {
         name: 'test-ui-lib',
         configureCypress: true,
+        configureStaticServe: false,
       });
 
       appTree.write(

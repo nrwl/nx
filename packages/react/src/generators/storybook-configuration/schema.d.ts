@@ -13,5 +13,6 @@ export interface StorybookConfigureSchema {
   ignorePaths?: string[];
   bundler?: 'webpack' | 'vite';
   configureTestRunner?: boolean;
+  configureStaticServe?: boolean;
   storybook7Configuration?: boolean;
 }

@@ -2,6 +2,7 @@ import type { Linter } from '@nrwl/linter';
 
 export interface StorybookConfigurationOptions {
   configureCypress: boolean;
+  configureStaticServe?: boolean;
   generateCypressSpecs: boolean;
   generateStories: boolean;
   linter: Linter;

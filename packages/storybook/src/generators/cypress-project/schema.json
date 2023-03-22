@@ -38,6 +38,11 @@
       "type": "boolean",
       "default": true,
       "x-deprecated": "Nx only supports standaloneConfig"
+    },
+    "ciTargetName": {
+      "type": "string",
+      "description": "The name of the devServerTarget to use for the Cypress CI configuration. Used to control if using <storybook-project>:static-storybook:ci or <storybook-project>:storybook:ci",
+      "x-priority": "internal"
     }
   },
   "required": ["name"]

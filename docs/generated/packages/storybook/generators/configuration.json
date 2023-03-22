@@ -67,6 +67,11 @@
         "default": true,
         "x-deprecated": "Nx only supports standaloneConfig"
       },
+      "configureStaticServe": {
+        "type": "boolean",
+        "description": "Add a static-storybook to serve the static storybook built files.",
+        "default": false
+      },
       "configureTestRunner": {
         "type": "boolean",
         "description": "Add a Storybook Test-Runner target."
