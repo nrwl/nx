@@ -28,6 +28,11 @@
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the component?"
       },
+      "prefix": {
+        "type": "string",
+        "description": "The prefix to apply to the generated component selector.",
+        "alias": "p"
+      },
       "displayBlock": {
         "description": "Specifies if the style will contain `:host { display: block; }`.",
         "type": "boolean",
