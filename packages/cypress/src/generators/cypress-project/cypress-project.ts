@@ -154,6 +154,11 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
       tags: [],
       implicitDependencies: options.project ? [options.project] : undefined,
     };
+    if (project.targets?.['serve-static']) {
+      e2eProjectConfig.targets.e2e.configurations.ci = {
+        devServerTarget: `${options.project}:serve-static`,
+      };
+    }
   } else {
     throw new Error(`Either project or baseUrl should be specified.`);
   }

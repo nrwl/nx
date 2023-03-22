@@ -44,8 +44,12 @@ describe('file-server', () => {
     const ngAppName = uniq('ng-app');
     const reactAppName = uniq('react-app');
 
-    runCLI(`generate @nrwl/angular:app ${ngAppName} --no-interactive`);
-    runCLI(`generate @nrwl/react:app ${reactAppName} --no-interactive`);
+    runCLI(
+      `generate @nrwl/angular:app ${ngAppName} --no-interactive --e2eTestRunner=none`
+    );
+    runCLI(
+      `generate @nrwl/react:app ${reactAppName} --no-interactive --e2eTestRunner=none`
+    );
     runCLI(
       `generate @nrwl/web:static-config --buildTarget=${ngAppName}:build --no-interactive`
     );

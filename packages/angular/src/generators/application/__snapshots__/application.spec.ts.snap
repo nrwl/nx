@@ -474,6 +474,12 @@ Object {
       "defaultConfiguration": "development",
       "executor": "@angular-devkit/build-angular:dev-server",
     },
+    "serve-static": Object {
+      "executor": "@nrwl/angular:file-server",
+      "options": Object {
+        "buildTarget": "my-dir-my-app:build",
+      },
+    },
     "test": Object {
       "configurations": Object {
         "ci": Object {
@@ -508,6 +514,9 @@ Object {
   "targets": Object {
     "e2e": Object {
       "configurations": Object {
+        "ci": Object {
+          "devServerTarget": "my-dir-my-app:serve-static",
+        },
         "production": Object {
           "devServerTarget": "my-dir-my-app:serve:production",
         },
@@ -623,6 +632,12 @@ Object {
       "defaultConfiguration": "development",
       "executor": "@angular-devkit/build-angular:dev-server",
     },
+    "serve-static": Object {
+      "executor": "@nrwl/angular:file-server",
+      "options": Object {
+        "buildTarget": "my-app:build",
+      },
+    },
     "test": Object {
       "configurations": Object {
         "ci": Object {
@@ -657,6 +672,9 @@ Object {
   "targets": Object {
     "e2e": Object {
       "configurations": Object {
+        "ci": Object {
+          "devServerTarget": "my-app:serve-static",
+        },
         "production": Object {
           "devServerTarget": "my-app:serve:production",
         },

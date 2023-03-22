@@ -354,6 +354,48 @@ describe('Cypress Project', () => {
         'apps/one/two/other-e2e/src/e2e/app.cy.ts',
       ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
     });
+
+    describe('serve-static', () => {
+      it('should configure Cypress with ci configuration if serve-static is found', async () => {
+        const appConfig = readProjectConfiguration(tree, 'my-app');
+        appConfig.targets['serve-static'] = {
+          executor: 'serve-static-executor',
+          options: {},
+          configurations: {
+            production: {},
+          },
+        };
+        updateProjectConfiguration(tree, 'my-app', appConfig);
+
+        await cypressProjectGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-app-e2e',
+          project: 'my-app',
+        });
+
+        const e2eConfig = readProjectConfiguration(tree, 'my-app-e2e');
+        expect(e2eConfig.targets.e2e).toMatchObject({
+          options: {
+            devServerTarget: 'my-app:serve',
+          },
+          configurations: {
+            production: { devServerTarget: 'my-app:serve:production' },
+            ci: { devServerTarget: 'my-app:serve-static' },
+          },
+        });
+      });
+
+      it('should not configure Cypress with ci configuration if serve-static is not found', async () => {
+        await cypressProjectGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-app-e2e',
+          project: 'my-app',
+        });
+
+        const e2eConfig = readProjectConfiguration(tree, 'my-app-e2e');
+        expect(e2eConfig.targets.e2e.configurations.ci).toBeUndefined();
+      });
+    });
   });
 
   describe('v9 - v7', () => {
