@@ -3,20 +3,17 @@ import {
   GeneratorCallback,
   Tree,
 } from '@nrwl/devkit';
-import {
-  autoprefixerVersion,
-  postcssVersion,
-  tailwindVersion,
-} from '../../../utils/versions';
+import { versions } from '../../utils/version-utils';
 
 export function addTailwindRequiredPackages(tree: Tree): GeneratorCallback {
+  const pkgVersions = versions(tree);
   return addDependenciesToPackageJson(
     tree,
     {},
     {
-      autoprefixer: autoprefixerVersion,
-      postcss: postcssVersion,
-      tailwindcss: tailwindVersion,
+      autoprefixer: pkgVersions.autoprefixerVersion,
+      postcss: pkgVersions.postcssVersion,
+      tailwindcss: pkgVersions.tailwindVersion,
     }
   );
 }

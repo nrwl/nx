@@ -2,9 +2,8 @@ import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import { addDependenciesToPackageJson, readJson } from '@nrwl/devkit';
 import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
 import { gte } from 'semver';
-import { getPkgVersionForAngularMajorVersion } from '../../../utils/version-utils';
 import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions';
-import { getInstalledAngularMajorVersion } from '../../utils/version-utils';
+import { versions } from '../../utils/version-utils';
 
 export function addNgRxToPackageJson(tree: Tree): GeneratorCallback {
   let rxjsVersion: string;
@@ -16,13 +15,9 @@ export function addNgRxToPackageJson(tree: Tree): GeneratorCallback {
   } catch {
     rxjsVersion = checkAndCleanWithSemver('rxjs', defaultRxjsVersion);
   }
-  const jasmineMarblesVersion = gte(rxjsVersion, '7.0.0') ? '~0.9.1' : '~0.8.3';
 
-  const angularMajorVersion = getInstalledAngularMajorVersion(tree);
-  const ngrxVersion = getPkgVersionForAngularMajorVersion(
-    'ngrxVersion',
-    angularMajorVersion
-  );
+  const jasmineMarblesVersion = gte(rxjsVersion, '7.0.0') ? '~0.9.1' : '~0.8.3';
+  const ngrxVersion = versions(tree).ngrxVersion;
 
   return addDependenciesToPackageJson(
     tree,
