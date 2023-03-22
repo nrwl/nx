@@ -5,6 +5,7 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 
+import { lessVersion, stylusVersion } from '@nrwl/react/src/utils/versions';
 import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react/src/utils/styled';
 import {
   babelPluginStyledComponentsVersion,
@@ -40,11 +41,13 @@ export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
   less: {
     dependencies: {},
     devDependencies: {
+      less: lessVersion,
       'less-loader': lessLoader,
     },
   },
   styl: {
     dependencies: {
+      stylus: stylusVersion,
       'stylus-loader': stylusLoader,
     },
     devDependencies: {},
