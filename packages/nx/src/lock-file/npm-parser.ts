@@ -580,10 +580,20 @@ function elevateNestedPaths(
       `${segs.join('/node_modules/')}/node_modules/${packageName}`;
 
     // check if grandparent has the same package
-    while (
-      segments.length > 1 &&
-      !result.has(getNewPath(segments.slice(0, -1)))
-    ) {
+    const shouldElevate = (segs: string[]) => {
+      const newPath = getNewPath(segs.slice(0, -1));
+      if (result.has(newPath)) {
+        const match = result.get(newPath);
+        const source = remappedPackages.get(path);
+        return (
+          match.valueV1?.version === source.valueV1?.version &&
+          match.valueV3?.version === source.valueV3?.version
+        );
+      }
+      return true;
+    };
+
+    while (segments.length > 1 && shouldElevate(segments)) {
       segments.pop();
     }
     const newPath = getNewPath(segments);
