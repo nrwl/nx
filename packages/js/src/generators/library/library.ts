@@ -418,7 +418,7 @@ function normalizeOptions(
     options.bundler = 'none';
   }
 
-  const { Linter } = require('@nrwl/linter');
+  const { Linter } = ensurePackage('@nrwl/linter', nxVersion);
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;

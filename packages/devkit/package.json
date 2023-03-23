@@ -32,14 +32,10 @@
     "ignore": "^5.0.4",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
-    "@phenomnomnominal/tsquery": "4.1.1",
     "semver": "7.3.4"
   },
   "peerDependencies": {
     "nx": ">= 14.1 <= 16"
-  },
-  "nx-migrations": {
-    "migrations": "./migrations.json"
   },
   "publishConfig": {
     "access": "public"

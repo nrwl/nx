@@ -87,12 +87,6 @@
           },
           {
             "command": "node ./scripts/add-dependency-to-build.js workspace nx"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/devkit"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/linter"
           }
         ],
         "parallel": false
