@@ -51,7 +51,8 @@
       "proxyConfig": {
         "type": "string",
         "description": "Path to the proxy configuration file.",
-        "x-completion-type": "file"
+        "x-completion-type": "file",
+        "x-deprecated": "Use the built-in rewrite feature from Next.js. See: https://nextjs.org/docs/api-reference/next.config.js/rewrites"
       },
       "buildLibsFromSource": {
         "type": "boolean",
