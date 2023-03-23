@@ -31,7 +31,6 @@
           "@storybook/vue3",
           "@storybook/svelte"
         ],
-        "x-prompt": "What UI framework plugin should storybook use?",
         "x-priority": "important"
       },
       "configureCypress": {
@@ -80,7 +79,6 @@
         "description": "The Storybook builder to use.",
         "type": "string",
         "enum": ["vite", "webpack"],
-        "x-prompt": "Which Storybook builder do you want to use?",
         "default": "webpack",
         "x-priority": "important"
       },

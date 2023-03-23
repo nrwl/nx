@@ -11,7 +11,7 @@ import {
 import { lte } from 'semver';
 import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
 import { storybookVersion } from '../../../utils/versions';
-import { createProjectStorybookDir } from '../../../generators/configuration/util-functions';
+import { createProjectStorybookDir } from '../../../generators/configuration/lib/util-functions';
 import { StorybookConfigureSchema } from '../../../generators/configuration/schema';
 import { findStorybookAndBuildTargetsAndCompiler } from '../../../utils/utilities';
 

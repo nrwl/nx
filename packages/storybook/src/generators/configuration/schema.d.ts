@@ -3,7 +3,7 @@ import { UiFramework7, UiFramework } from '../../utils/models';
 
 export interface StorybookConfigureSchema {
   name: string;
-  uiFramework: UiFramework; // TODO(katerina): Remove when Storybook 7
+  uiFramework?: UiFramework; // TODO(katerina): Remove when Storybook 7
   configureCypress?: boolean;
   bundler?: 'webpack' | 'vite'; // TODO(katerina): Remove when Storybook 7
   linter?: Linter;
