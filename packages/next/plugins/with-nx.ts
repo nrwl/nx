@@ -18,6 +18,7 @@ import { PHASE_PRODUCTION_SERVER } from 'next/constants';
 import * as path from 'path';
 import { createWebpackConfig } from '../src/utils/config';
 import { NextBuildBuilderOptions } from '../src/utils/types';
+
 export interface WithNxOptions extends NextConfig {
   nx?: {
     svgr?: boolean;
@@ -115,6 +116,31 @@ function getNxContext(
   }
 }
 
+/**
+ * Try to read output dir from project, and default to '.next' if executing outside of Nx (e.g. dist is added to a docker image).
+ */
+async function determineDistDirForProdServer(
+  nextConfig: NextConfig
+): Promise<string> {
+  const project = process.env.NX_TASK_TARGET_PROJECT;
+  const target = process.env.NX_TASK_TARGET_TARGET;
+  const configuration = process.env.NX_TASK_TARGET_CONFIGURATION;
+
+  if (project && target) {
+    const originalTarget = { project, target, configuration };
+    const graph = await createProjectGraphAsync();
+
+    const { options, node: projectNode } = getNxContext(graph, originalTarget);
+    const outputDir = `${offsetFromRoot(projectNode.data.root)}${
+      options.outputPath
+    }`;
+    return nextConfig.distDir && nextConfig.distDir !== '.next'
+      ? joinPathFragments(outputDir, nextConfig.distDir)
+      : joinPathFragments(outputDir, '.next');
+  } else {
+    return '.next';
+  }
+}
 export function withNx(
   _nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
@@ -123,7 +149,10 @@ export function withNx(
     if (phase === PHASE_PRODUCTION_SERVER) {
       // If we are running an already built production server, just return the configuration.
       const { nx, ...validNextConfig } = _nextConfig;
-      return { distDir: '.next', ...validNextConfig };
+      return {
+        ...validNextConfig,
+        distDir: await determineDistDirForProdServer(validNextConfig),
+      };
     } else {
       // Otherwise, add in webpack and eslint configuration for build or test.
       let dependencies: DependentBuildableProjectNode[] = [];
