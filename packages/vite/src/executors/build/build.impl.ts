@@ -76,7 +76,10 @@ export async function* viteBuildExecutor(
     });
     yield* iterable;
   } else {
-    yield { success: true };
+    const output = watcherOrOutput?.['output'] || watcherOrOutput?.[0]?.output;
+    const fileName = output?.[0]?.fileName || 'main.cjs';
+    const outfile = resolve(normalizedOptions.outputPath, fileName);
+    yield { success: true, outfile };
   }
 }
 
