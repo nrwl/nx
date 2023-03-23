@@ -3,12 +3,13 @@ import { checkForTestTarget } from './lib/check-for-test-target';
 import { createFiles } from './lib/create-files';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { updateWorkspace } from './lib/update-workspace';
-import { JestProjectSchema } from './schema';
+import { JestProjectSchema, NormalizedJestProjectSchema } from './schema';
 import {
   formatFiles,
   Tree,
   convertNxGenerator,
   GeneratorCallback,
+  readProjectConfiguration,
 } from '@nrwl/devkit';
 
 const schemaDefaults = {
@@ -17,11 +18,13 @@ const schemaDefaults = {
   supportTsx: false,
   skipSetupFile: false,
   skipSerializers: false,
-  rootProject: false,
   testEnvironment: 'jsdom',
 } as const;
 
-function normalizeOptions(options: JestProjectSchema) {
+function normalizeOptions(
+  tree: Tree,
+  options: JestProjectSchema
+): NormalizedJestProjectSchema {
   if (!options.testEnvironment) {
     options.testEnvironment = 'jsdom';
   }
@@ -39,15 +42,17 @@ function normalizeOptions(options: JestProjectSchema) {
     options.skipSerializers = true;
   }
 
-  if (!options.skipSetupFile) {
-    return options;
+  if (options.skipSetupFile) {
+    // setupFile is always 'none'
+    options.setupFile = schemaDefaults.setupFile;
   }
 
-  // setupFile is always 'none'
-  options.setupFile = schemaDefaults.setupFile;
+  const project = readProjectConfiguration(tree, options.project);
+
   return {
     ...schemaDefaults,
     ...options,
+    rootProject: project.root === '.' || project.root === '',
   };
 }
 
@@ -55,7 +60,7 @@ export async function jestProjectGenerator(
   tree: Tree,
   schema: JestProjectSchema
 ): Promise<GeneratorCallback> {
-  const options = normalizeOptions(schema);
+  const options = normalizeOptions(tree, schema);
   const installTask = await init(tree, options);
 
   checkForTestTarget(tree, options);

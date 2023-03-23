@@ -16,5 +16,8 @@ export interface JestProjectSchema {
   compiler?: 'tsc' | 'babel' | 'swc';
   skipPackageJson?: boolean;
   js?: boolean;
-  rootProject?: boolean;
 }
+
+export type NormalizedJestProjectSchema = JestProjectSchema & {
+  rootProject: boolean;
+};

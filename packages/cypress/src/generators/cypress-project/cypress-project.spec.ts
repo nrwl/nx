@@ -4,7 +4,6 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { cypressProjectGenerator } from './cypress-project';
@@ -264,7 +263,6 @@ describe('Cypress Project', () => {
             name: 'e2e-tests',
             baseUrl: 'http://localhost:1234',
             project: 'root',
-            rootProject: true,
           });
           expect(tree.listChanges().map((c) => c.path)).toEqual(
             expect.arrayContaining([
