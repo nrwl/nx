@@ -168,21 +168,36 @@ describe('Next.js Applications', () => {
       `dist/apps/${appName}/public/shared/ui/hello.txt`
     );
 
+    // Check that `nx serve <app> --prod` works with previous production build (e.g. `nx build <app>`).
+    const prodServePort = 4000;
+    const prodServeProcess = await runCommandUntil(
+      `run ${appName}:serve --prod --port=${prodServePort}`,
+      (output) => {
+        return output.includes(`localhost:${prodServePort}`);
+      }
+    );
+
     // Check that the output is self-contained (i.e. can run with its own package.json + node_modules)
     const distPath = joinPathFragments(tmpProjPath(), 'dist/apps', appName);
-    const port = 3000;
+    const selfContainedPort = 3000;
     const pmc = getPackageManagerCommand();
     runCommand(`${pmc.install}`, {
       cwd: distPath,
     });
     runCLI(
-      `generate @nrwl/workspace:run-commands serve-prod --project ${appName} --cwd=dist/apps/${appName} --command="npx next start --port=${port}"`
+      `generate @nrwl/workspace:run-commands serve-prod --project ${appName} --cwd=dist/apps/${appName} --command="npx next start --port=${selfContainedPort}"`
     );
-    await runCommandUntil(`run ${appName}:serve-prod`, (output) => {
-      return output.includes(`localhost:${port}`);
-    });
+    const selfContainedProcess = await runCommandUntil(
+      `run ${appName}:serve-prod`,
+      (output) => {
+        return output.includes(`localhost:${selfContainedPort}`);
+      }
+    );
 
-    await killPort(port);
+    prodServeProcess.kill();
+    selfContainedProcess.kill();
+    await killPort(prodServePort);
+    await killPort(selfContainedPort);
   }, 300_000);
 
   it('should build and install pruned lock file', () => {
