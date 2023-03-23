@@ -6,7 +6,7 @@ import { ProjectGraph } from '../config/project-graph';
 import { workspaceRoot } from '../utils/workspace-root';
 
 export const isWindows = platform() === 'win32';
-
+export const isLinux = platform() === 'linux';
 /**
  * For IPC with the daemon server we use unix sockets or windows named pipes, depending on the user's operating system.
  *
@@ -17,7 +17,9 @@ export const isWindows = platform() === 'win32';
  */
 export const FULL_OS_SOCKET_PATH = isWindows
   ? '\\\\.\\pipe\\nx\\' + resolve(DAEMON_SOCKET_PATH)
-  : relative(workspaceRoot, resolve(DAEMON_SOCKET_PATH));
+  : isLinux
+  ? relative(workspaceRoot, resolve(DAEMON_SOCKET_PATH))
+  : resolve(DAEMON_SOCKET_PATH);
 
 export function killSocketOrPath(): void {
   try {
