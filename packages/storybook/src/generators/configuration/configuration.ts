@@ -186,23 +186,25 @@ export async function configurationGenerator(
     addStaticTarget(tree, schema);
   }
 
-  const e2eProject = await getE2EProjectName(tree, schema.name);
-  if (schema.configureCypress && !e2eProject) {
-    const cypressTask = await cypressProjectGenerator(tree, {
-      name: schema.name,
-      js: schema.js,
-      linter: schema.linter,
-      directory: schema.cypressDirectory,
-      standaloneConfig: schema.standaloneConfig,
-      ciTargetName: schema.configureStaticServe
-        ? 'static-storybook'
-        : undefined,
-    });
-    tasks.push(cypressTask);
-  } else {
-    logger.warn(
-      `There is already an e2e project setup for ${schema.name}, called ${e2eProject}.`
-    );
+  if (schema.configureCypress) {
+    const e2eProject = await getE2EProjectName(tree, schema.name);
+    if (!e2eProject) {
+      const cypressTask = await cypressProjectGenerator(tree, {
+        name: schema.name,
+        js: schema.js,
+        linter: schema.linter,
+        directory: schema.cypressDirectory,
+        standaloneConfig: schema.standaloneConfig,
+        ciTargetName: schema.configureStaticServe
+          ? 'static-storybook'
+          : undefined,
+      });
+      tasks.push(cypressTask);
+    } else {
+      logger.warn(
+        `There is already an e2e project setup for ${schema.name}, called ${e2eProject}.`
+      );
+    }
   }
 
   const devDeps = {};
