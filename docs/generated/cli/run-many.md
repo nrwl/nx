@@ -149,8 +149,6 @@ Tasks to run for affected projects
 
 Type: `boolean`
 
-Default: `false`
-
 Prints additional information about the commands (e.g., stack traces)
 
 ### version

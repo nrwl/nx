@@ -263,7 +263,9 @@ describe('Extra Nx Misc Tests', () => {
 
   describe('generate --quiet', () => {
     it('should not log tree operations or install tasks', () => {
-      const output = runCLI('generate @nrwl/react:app --quiet test-project');
+      const output = runCLI('generate @nrwl/react:app --quiet test-project', {
+        verbose: false,
+      });
       expect(output).not.toContain('CREATE');
       expect(output).not.toContain('Installed');
     });

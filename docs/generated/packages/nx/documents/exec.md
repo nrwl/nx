@@ -91,8 +91,6 @@ Rerun the tasks even when the results are available in the cache
 
 Type: `boolean`
 
-Default: `false`
-
 Prints additional information about the commands (e.g., stack traces)
 
 ### version
