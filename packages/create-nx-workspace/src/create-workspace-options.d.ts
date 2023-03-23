@@ -6,7 +6,7 @@ export interface CreateWorkspaceOptions {
   nxCloud: boolean; // Enable Nx Cloud
   /**
    * @description Enable interactive mode with presets
-   * @default false
+   * @default true
    */
   interactive?: boolean; // Enable interactive mode with presets
   /**

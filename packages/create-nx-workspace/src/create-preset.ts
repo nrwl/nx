@@ -17,6 +17,7 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
   const { skipGit, ci, commit, nxCloud, ...restArgs } = parsedArgs;
 
   let args = unparse({
+    interactive: true,
     ...restArgs,
   }).join(' ');
 
