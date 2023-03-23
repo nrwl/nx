@@ -26,7 +26,7 @@ import {
   getRootTsConfigPathInTree,
 } from '../../utilities/ts-config';
 import { nxVersion, typescriptVersion } from '../../utils/versions';
-import { Schema } from './schema';
+import type { Schema } from './schema';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -237,7 +237,7 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
   }
 
   if (!options.linter) {
-    const { Linter } = require('@nrwl/linter');
+    const { Linter } = ensurePackage('@nrwl/linter', nxVersion);
     options.linter = Linter.EsLint;
   }
 
