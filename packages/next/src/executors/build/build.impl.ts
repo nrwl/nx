@@ -74,7 +74,9 @@ export default async function buildExecutor(
 
   createNextConfigFile(options, context);
 
-  copySync(join(root, 'public'), join(options.outputPath, 'public'));
+  copySync(join(root, 'public'), join(options.outputPath, 'public'), {
+    dereference: true,
+  });
 
   return { success: true };
 }
