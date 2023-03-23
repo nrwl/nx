@@ -303,7 +303,7 @@ function recursiveUpdateImport(
         if (result === rootParentDir) return matched;
         const importPath = `"${relative(
           dirPath,
-          inlinedDepsDestOutputRecord[result]
+          inlinedDepsDestOutputRecord[result] || ''
         )}"`;
         return normalizePath(importPath);
       });
