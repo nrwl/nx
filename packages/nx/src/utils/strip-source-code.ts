@@ -1,6 +1,29 @@
 import type { Scanner } from 'typescript';
 
 let SyntaxKind: typeof import('typescript').SyntaxKind;
+function shouldRescanSlashToken(
+  lastNonTriviaToken: import('typescript').SyntaxKind
+) {
+  switch (lastNonTriviaToken) {
+    case SyntaxKind.Identifier:
+    case SyntaxKind.StringLiteral:
+    case SyntaxKind.NumericLiteral:
+    case SyntaxKind.BigIntLiteral:
+    case SyntaxKind.RegularExpressionLiteral:
+    case SyntaxKind.ThisKeyword:
+    case SyntaxKind.PlusPlusToken:
+    case SyntaxKind.MinusMinusToken:
+    case SyntaxKind.CloseParenToken:
+    case SyntaxKind.CloseBracketToken:
+    case SyntaxKind.CloseBraceToken:
+    case SyntaxKind.TrueKeyword:
+    case SyntaxKind.FalseKeyword:
+      return false;
+    default:
+      return true;
+  }
+}
+
 export function stripSourceCode(scanner: Scanner, contents: string): string {
   if (!SyntaxKind) {
     SyntaxKind = require('typescript').SyntaxKind;
@@ -12,9 +35,14 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
 
   scanner.setText(contents);
   let token = scanner.scan();
+  let lastNonTriviaToken = SyntaxKind.Unknown;
   const statements = [];
+  const templateStack = [];
+  let ignoringLine = false;
+  let braceDepth = 0;
   let start = null;
   while (token !== SyntaxKind.EndOfFileToken) {
+    const currentToken = token;
     const potentialStart = scanner.getStartPos();
     switch (token) {
       case SyntaxKind.MultiLineCommentTrivia:
@@ -33,21 +61,23 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
           ) {
             token = scanner.scan();
           }
-
-          // ignore next line
-          while (
-            token !== SyntaxKind.NewLineTrivia &&
-            token !== SyntaxKind.EndOfFileToken
-          ) {
-            token = scanner.scan();
-          }
+          ignoringLine = true;
         }
+        break;
+      }
+
+      case SyntaxKind.NewLineTrivia: {
+        ignoringLine = false;
+        token = scanner.scan();
         break;
       }
 
       case SyntaxKind.RequireKeyword:
       case SyntaxKind.ImportKeyword: {
         token = scanner.scan();
+        if (ignoringLine) {
+          break;
+        }
         while (
           token === SyntaxKind.WhitespaceTrivia ||
           token === SyntaxKind.NewLineTrivia
@@ -59,29 +89,44 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
       }
 
       case SyntaxKind.TemplateHead: {
-        while (true) {
-          token = scanner.scan();
+        templateStack.push(braceDepth);
+        braceDepth = 0;
+        token = scanner.scan();
+        break;
+      }
 
-          if (token === SyntaxKind.SlashToken) {
-            token = scanner.reScanSlashToken();
-          }
+      case SyntaxKind.SlashToken: {
+        if (shouldRescanSlashToken(lastNonTriviaToken)) {
+          token = scanner.reScanSlashToken();
+        }
+        token = scanner.scan();
+        break;
+      }
 
-          if (token === SyntaxKind.EndOfFileToken) {
-            // either the template is unterminated, or there
-            // is some other edge case we haven't compensated for
-            break;
-          }
+      case SyntaxKind.OpenBraceToken: {
+        ++braceDepth;
+        token = scanner.scan();
+        break;
+      }
 
-          if (token === SyntaxKind.CloseBraceToken) {
-            token = scanner.reScanTemplateToken(false);
-            break;
+      case SyntaxKind.CloseBraceToken: {
+        if (braceDepth) {
+          --braceDepth;
+        } else if (templateStack.length) {
+          token = scanner.reScanTemplateToken(false);
+          if (token === SyntaxKind.LastTemplateToken) {
+            braceDepth = templateStack.pop();
           }
         }
+        token = scanner.scan();
         break;
       }
 
       case SyntaxKind.ExportKeyword: {
         token = scanner.scan();
+        if (ignoringLine) {
+          break;
+        }
         while (
           token === SyntaxKind.WhitespaceTrivia ||
           token === SyntaxKind.NewLineTrivia
@@ -116,6 +161,10 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
       default: {
         token = scanner.scan();
       }
+    }
+
+    if (currentToken > SyntaxKind.LastTriviaToken) {
+      lastNonTriviaToken = currentToken;
     }
   }
 

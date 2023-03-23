@@ -258,6 +258,20 @@ require('./d')`;
     expect(stripSourceCode(scanner, input)).toEqual(expected);
   });
 
+  it('should find an import after a template literal with a 2 variables in it', () => {
+    const input = `
+      const a = 1;
+      const b = 2;
+      const c = \`a: $\{a}, b: $\{b}\`
+      const d = await import('./d')
+      const e = require('./e')
+    `;
+    const expected = `import('./d')
+require('./e')`;
+
+    expect(stripSourceCode(scanner, input)).toEqual(expected);
+  });
+
   it('finds imports after an escaped character', () => {
     const input = `
       const b = unquotedLiteral.replace(/"/g, '\\\\"')
@@ -279,6 +293,39 @@ require('./d')`;
     `;
     const expected = `import('./c')
 require('./d')`;
+
+    expect(stripSourceCode(scanner, input)).toEqual(expected);
+  });
+
+  it('finds imports in the same line as template literals with division inside', () => {
+    const input = `
+      const a = 1;
+      const b = \`"$\{1 / 2} $\{await import('./b')} $\{await require('./c')}"\`;
+    `;
+    const expected = `import('./b')
+require('./c')`;
+
+    expect(stripSourceCode(scanner, input)).toEqual(expected);
+  });
+
+  it('finds imports in the same line after a regex', () => {
+    const input = `
+      const a = 1;
+      const b = /"/g; const c = await import('./c'); const d = require('./d')
+    `;
+    const expected = `import('./c')
+require('./d')`;
+
+    expect(stripSourceCode(scanner, input)).toEqual(expected);
+  });
+
+  it('finds imports inside template literals', () => {
+    const input = `
+      const a = \`"$\{require('./a')}"\`
+      const b = \`"$\{await import('./b')}"\`
+    `;
+    const expected = `require('./a')
+import('./b')`;
 
     expect(stripSourceCode(scanner, input)).toEqual(expected);
   });
