@@ -5,9 +5,9 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { join } from 'path';
-import { JestProjectSchema } from '../schema';
+import { NormalizedJestProjectSchema } from '../schema';
 
-export function createFiles(tree: Tree, options: JestProjectSchema) {
+export function createFiles(tree: Tree, options: NormalizedJestProjectSchema) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const filesFolder =

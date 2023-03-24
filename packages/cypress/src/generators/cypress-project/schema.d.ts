@@ -11,6 +11,5 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
   skipPackageJson?: boolean;
-  rootProject?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';
 }

@@ -43,6 +43,7 @@ import { Schema } from './schema';
 export interface CypressProjectSchema extends Schema {
   projectName: string;
   projectRoot: string;
+  rootProject: boolean;
 }
 
 function createFiles(tree: Tree, options: CypressProjectSchema) {

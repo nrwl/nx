@@ -1,5 +1,5 @@
 import { findRootJestConfig } from '../../../utils/config/find-root-jest-files';
-import { JestProjectSchema } from '../schema';
+import { NormalizedJestProjectSchema } from '../schema';
 import { addPropertyToJestConfig } from '../../../utils/config/update-config';
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 
@@ -10,7 +10,10 @@ function isUsingUtilityFunction(host: Tree) {
   );
 }
 
-export function updateJestConfig(host: Tree, options: JestProjectSchema) {
+export function updateJestConfig(
+  host: Tree,
+  options: NormalizedJestProjectSchema
+) {
   if (isUsingUtilityFunction(host)) {
     return;
   }
