@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   issues-report:
+    if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
     name: Report status
     steps:
@@ -45,7 +46,7 @@ jobs:
       - name: Collect Issue Data
         id: collect
         run: npx ts-node ./scripts/issues-scraper/index.ts
-        env: 
+        env:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Send GitHub Action trigger data to Slack workflow
