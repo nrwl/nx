@@ -2,7 +2,7 @@ The `@nrwl/nx/enforce-module-boundaries` ESLint rule enables you to define stric
 
 ## Usage
 
-You can use `enforce-module-boundaries` rule by adding it to your ESLint rules configuration:
+You can use the `enforce-module-boundaries` rule by adding it to your ESLint rules configuration:
 
 ```jsonc
 {
@@ -26,16 +26,17 @@ You can use `enforce-module-boundaries` rule by adding it to your ESLint rules c
 
 ## Options
 
-| Property                      | Type            | Default | Description                                                                                                                                                |
-| ----------------------------- | --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| allow                         | _Array<string>_ | _[]_    | List of imports that should be allowed without any checks                                                                                                  |
-| allowCircularSelfDependency   | _boolean_       | _false_ | Disable check for self circular dependency when project imports from itself via alias path                                                                 |
-| banTransitiveDependencies     | _boolean_       | _false_ | Ban import of dependencies that were not specified in the root or project's `package.json`                                                                 |
-| checkNestedExternalImports    | _boolean_       | _false_ | Enable to enforce the check for banned external imports in the nested packages. Check [Dependency constraits](#dependency-constraits) for more information |
-| enforceBuildableLibDependency | _boolean_       | _false_ | Enable to restrict the buildable libs from importing non-buildable libraries                                                                               |
-| depConstraints                | _Array<object>_ | _[]_    | List of dependency constraints between projects                                                                                                            |
+| Property                           | Type            | Default | Description                                                                                                                                                        |
+| ---------------------------------- | --------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| allow                              | _Array<string>_ | _[]_    | List of imports that should be allowed without any checks                                                                                                          |
+| allowCircularSelfDependency        | _boolean_       | _false_ | Disable check for self circular dependency when project imports from itself via alias path                                                                         |
+| banTransitiveDependencies          | _boolean_       | _false_ | Ban import of dependencies that were not specified in the root or project's `package.json`                                                                         |
+| checkDynamicDependenciesExceptions | _Array<string>_ | _[]_    | List of imports that should be skipped for `Imports of lazy-loaded libraries forbidden` checks. E.g. `['@myorg/lazy-project/component/*', '@myorg/other-project']` |
+| checkNestedExternalImports         | _boolean_       | _false_ | Enable to enforce the check for banned external imports in the nested packages. Check [Dependency constraits](#dependency-constraits) for more information         |
+| enforceBuildableLibDependency      | _boolean_       | _false_ | Enable to restrict the buildable libs from importing non-buildable libraries                                                                                       |
+| depConstraints                     | _Array<object>_ | _[]_    | List of dependency constraints between projects                                                                                                                    |
 
-### Dependency constraits
+### Dependency constraints
 
 The `depConstraints` is an array of objects representing the constraints defined between source and target projects. A constraint must include `sourceTag` or `allSourceTags`. The constraints are applied with **AND** logical operation - for given `source` project the resulting constraints would be **all** that match its tags.
 
