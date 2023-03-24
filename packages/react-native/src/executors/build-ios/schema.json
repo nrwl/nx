@@ -1,23 +1,21 @@
 {
-  "version": 2,
-  "outputCapture": "direct-nodejs",
-  "cli": "nx",
-  "$id": "NxReactNativeRunIos",
   "$schema": "http://json-schema.org/schema",
-  "title": "Run iOS application",
-  "description": "Run iOS target options.",
+  "version": 2,
+  "cli": "nx",
+  "title": "React Native Build iOS executor",
+  "description": "Build iOS app.",
   "type": "object",
   "presets": [
     {
-      "name": "Run iOS on a simulator",
+      "name": "Build iOS for a simulator",
       "keys": ["simulator"]
     },
     {
-      "name": "Run iOS on a device",
+      "name": "Build iOS for a device",
       "keys": ["device"]
     },
     {
-      "name": "Run iOS on a device with udid",
+      "name": "Build iOS for a device with udid",
       "keys": ["udid"]
     },
     {
@@ -26,13 +24,6 @@
     }
   ],
   "properties": {
-    "xcodeConfiguration": {
-      "type": "string",
-      "description": "Explicitly set the Xcode configuration to use.",
-      "default": "Debug",
-      "examples": ["Debug", "Release"],
-      "x-deprecated": "Use `mode` instead. Deprecated from @react-native-community/cli. Will be removed in Nx 17."
-    },
     "simulator": {
       "type": "string",
       "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: \"iPhone 6 (10.0)\"",
@@ -79,8 +70,8 @@
     },
     "buildFolder": {
       "type": "string",
-      "description": "Location for iOS build artifacts. Corresponds to Xcode's \"-derivedDataPath\". Relative to ios directory.",
-      "buildFolder": "./build"
+      "description": "Location for iOS build artifacts. Corresponds to Xcode's \"-derivedDataPath\". Relative to ios directory",
+      "default": "./build"
     },
     "interactive": {
       "type": "boolean",
@@ -92,8 +83,7 @@
     },
     "install": {
       "type": "boolean",
-      "description": "Runs `pod install` for native modules before building iOS app.",
-      "default": false
+      "description": "Runs `pod install` for native modules before building iOS app."
     },
     "sync": {
       "type": "boolean",
@@ -109,11 +99,8 @@
       "type": "boolean",
       "description": "Launch packager while building",
       "default": true
-    },
-    "binaryPath": {
-      "type": "string",
-      "description": "Path relative to project root where pre-built .app binary lives."
     }
   },
-  "examplesFile": "../../../docs/run-ios-examples.md"
+  "required": [],
+  "examplesFile": "../../../docs/build-ios-examples.md"
 }

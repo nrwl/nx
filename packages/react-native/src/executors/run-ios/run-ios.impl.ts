@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, logger, names } from '@nrwl/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 import { platform } from 'os';
@@ -11,6 +11,8 @@ import {
 import { podInstall } from '../../utils/pod-install-task';
 import { ReactNativeRunIosOptions } from './schema';
 import { runCliStart } from '../start/start.impl';
+import { getCliOptions } from '../../utils/get-cli-options';
+import { rmdirSync } from 'fs-extra';
 
 export interface ReactNativeRunIosOutput {
   success: boolean;
@@ -39,13 +41,17 @@ export default async function* runIosExecutor(
       )
     );
   }
+
   if (options.install) {
-    await podInstall(join(context.root, projectRoot, 'ios'));
+    await podInstall(
+      join(context.root, projectRoot, 'ios'),
+      options.buildFolder
+    );
   }
 
   try {
     const tasks = [runCliRunIOS(context.root, projectRoot, options)];
-    if (options.packager && options.xcodeConfiguration !== 'Release') {
+    if (options.packager && options.mode !== 'Release') {
       tasks.push(
         runCliStart(context.root, projectRoot, {
           port: options.port,
@@ -101,23 +107,14 @@ function runCliRunIOS(
   });
 }
 
-const nxOrStartOptions = [
-  'sync',
-  'install',
-  'packager',
-  'port',
-  'resetCache',
-  'interactive',
-];
+const nxOptions = ['sync', 'install', 'packager'];
+const startOptions = ['port', 'resetCache'];
+const deprecatedOptions = ['xcodeConfiguration'];
 
-function createRunIOSOptions(options) {
-  return Object.keys(options).reduce((acc, k) => {
-    const v = options[k];
-    if (k === 'xcodeConfiguration') {
-      acc.push('--configuration', v);
-    } else if (v && !nxOrStartOptions.includes(k)) {
-      acc.push(`--${k}`, options[k]);
-    }
-    return acc;
-  }, []);
+function createRunIOSOptions(options: ReactNativeRunIosOptions) {
+  return getCliOptions<ReactNativeRunIosOptions>(
+    options,
+    [...nxOptions, ...startOptions, ...deprecatedOptions],
+    ['buildFolder']
+  );
 }

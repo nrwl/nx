@@ -2,13 +2,18 @@ import {
   checkFilesExist,
   cleanupProject,
   expectTestsPass,
+  isOSX,
+  killPorts,
   newProject,
+  promisifiedTreeKill,
   readJson,
   runCLI,
   runCLIAsync,
+  runCommandUntil,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
+import { ChildProcess } from 'child_process';
 import { join } from 'path';
 
 describe('react native', () => {
@@ -27,7 +32,7 @@ describe('react native', () => {
   });
   afterAll(() => cleanupProject());
 
-  it('should test, create ios and android JS bundles', async () => {
+  it('should test and lint', async () => {
     const componentName = uniq('component');
     runCLI(
       `generate @nrwl/react-native:component ${componentName} --project=${libName} --export --no-interactive`
@@ -46,7 +51,9 @@ describe('react native', () => {
 
     const libLintResults = await runCLIAsync(`lint ${libName}`);
     expect(libLintResults.combinedOutput).toContain('All files pass linting.');
+  });
 
+  it('should bundle-ios', async () => {
     const iosBundleResult = await runCLIAsync(
       `bundle-ios ${appName} --sourcemapOutput=../../dist/apps/${appName}/ios/main.map`
     );
@@ -57,7 +64,9 @@ describe('react native', () => {
       checkFilesExist(`dist/apps/${appName}/ios/main.jsbundle`);
       checkFilesExist(`dist/apps/${appName}/ios/main.map`);
     }).not.toThrow();
+  });
 
+  it('should bundle-android', async () => {
     const androidBundleResult = await runCLIAsync(
       `bundle-android ${appName} --sourcemapOutput=../../dist/apps/${appName}/android/main.map`
     );
@@ -68,7 +77,45 @@ describe('react native', () => {
       checkFilesExist(`dist/apps/${appName}/android/main.jsbundle`);
       checkFilesExist(`dist/apps/${appName}/android/main.map`);
     }).not.toThrow();
-  }, 1000000);
+  });
+
+  it('should start', async () => {
+    let process: ChildProcess;
+    const port = 8081;
+
+    try {
+      process = await runCommandUntil(
+        `start ${appName} --interactive=false --port=${port}`,
+        (output) => {
+          return (
+            output.includes(`Packager is ready at http://localhost::${port}`) ||
+            output.includes('Starting JS server...')
+          );
+        }
+      );
+    } catch (err) {
+      console.error(err);
+    }
+
+    // port and process cleanup
+    try {
+      if (process && process.pid) {
+        await promisifiedTreeKill(process.pid, 'SIGKILL');
+        await killPorts(port);
+      }
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  });
+
+  if (isOSX()) {
+    it('should pod install', async () => {
+      expect(async () => {
+        await runCLIAsync(`pod-install ${appName}`);
+        checkFilesExist(`apps/${appName}/ios/Podfile.lock`);
+      }).not.toThrow();
+    });
+  }
 
   it('should create storybook with application', async () => {
     runCLI(

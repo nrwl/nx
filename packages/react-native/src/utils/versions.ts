@@ -7,8 +7,8 @@ export const typesNodeVersion = '18.14.4';
 
 export const metroVersion = '0.74.1';
 
-export const reactNativeCommunityCli = '10.2.0';
-export const reactNativeCommunityCliIos = '10.2.0';
+export const reactNativeCommunityCli = '10.2.1';
+export const reactNativeCommunityCliIos = '10.2.1';
 export const reactNativeCommunityCliAndroid = '10.2.0';
 
 export const reactVersion = '18.2.0';

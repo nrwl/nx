@@ -2213,6 +2213,15 @@
         "path": "/packages/react-native/executors/build-android",
         "type": "executor"
       },
+      "/packages/react-native/executors/build-ios": {
+        "description": "Build iOS app",
+        "file": "generated/packages/react-native/executors/build-ios.json",
+        "hidden": false,
+        "name": "build-ios",
+        "originalFilePath": "/packages/react-native/src/executors/build-ios/schema.json",
+        "path": "/packages/react-native/executors/build-ios",
+        "type": "executor"
+      },
       "/packages/react-native/executors/start": {
         "description": "Starts the Javascript server that communicates with connected devices.",
         "file": "generated/packages/react-native/executors/start.json",
@@ -2247,6 +2256,15 @@
         "name": "storybook",
         "originalFilePath": "/packages/react-native/src/executors/storybook/schema.json",
         "path": "/packages/react-native/executors/storybook",
+        "type": "executor"
+      },
+      "/packages/react-native/executors/pod-install": {
+        "description": "Run `pod install` in the `ios` directory.",
+        "file": "generated/packages/react-native/executors/pod-install.json",
+        "hidden": false,
+        "name": "pod-install",
+        "originalFilePath": "/packages/react-native/src/executors/pod-install/schema.json",
+        "path": "/packages/react-native/executors/pod-install",
         "type": "executor"
       }
     },

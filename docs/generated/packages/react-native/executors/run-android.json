@@ -12,9 +12,14 @@
     "type": "object",
     "presets": [
       {
-        "name": "Run Android without cache",
-        "keys": ["variant", "sync", "port", "packager", "resetCache"]
-      }
+        "name": "Run Android for the current device architecture",
+        "keys": ["activeArchOnly"]
+      },
+      {
+        "name": "Lists all available Android devices and simulators",
+        "keys": ["listDevices"]
+      },
+      { "name": "Run Android without metro cache", "keys": ["resetCache"] }
     ],
     "properties": {
       "variant": {
@@ -22,7 +27,12 @@
         "description": "Specify your app's build variant (e.g. `debug`, `release`).",
         "default": "debug",
         "examples": ["debug", "release"],
-        "x-priority": "important"
+        "x-deprecated": "Deprecated from @react-native-community/cli, use mode instead, e.g. mode=debug. Will be remove in Nx 17."
+      },
+      "jetifier": {
+        "type": "boolean",
+        "description": "Run Jetifier – the AndroidX transition tool. By default it runs before Gradle to ease working with libraries that don't support AndroidX yet.",
+        "x-deprecated": "Deprecated from @react-native-community/cli. Will be remove in Nx 17."
       },
       "appId": {
         "type": "string",
@@ -41,18 +51,25 @@
         "type": "string",
         "description": "Builds your app and starts it on a specific device/simulator with the given device id (listed by running `adb devices` on the command line)."
       },
-      "tasks": {
+      "listDevices": {
+        "type": "boolean",
+        "description": "Lists all available Android devices and simulators and let you choose one to run the app",
+        "default": false
+      },
+      "binaryPath": {
         "type": "string",
-        "description": "Run custom Gradle tasks. If this argument is provided, then `--variant` option is ignored. Example: `yarn react-native run-android --tasks clean,installDebug`."
+        "description": "Path relative to project root where pre-built .apk binary lives."
       },
-      "jetifier": {
-        "type": "boolean",
-        "description": "Run Jetifier – the AndroidX transition tool. By default it runs before Gradle to ease working with libraries that don't support AndroidX yet.",
-        "default": true
+      "mode": {
+        "type": "string",
+        "description": "Specify your app's build variant",
+        "default": "debug",
+        "examples": ["debug", "release"],
+        "x-priority": "important"
       },
-      "sync": {
+      "packager": {
         "type": "boolean",
-        "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
+        "description": "Launch packager while building",
         "default": true
       },
       "port": {
@@ -60,32 +77,45 @@
         "description": "The port where the packager server is listening on.",
         "default": 8081
       },
-      "terminal": {
-        "type": "string",
-        "description": "Launches the Metro Bundler in a new window using the specified terminal path."
+      "tasks": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Run custom Gradle tasks. By default it's \"assembleDebug\". Will override passed mode and variant arguments.",
+        "examples": [
+          "assembleDebug",
+          "assembleRelease",
+          "bundleDebug",
+          "bundleRelease",
+          "installDebug",
+          "installRelease"
+        ]
       },
-      "packager": {
+      "activeArchOnly": {
         "type": "boolean",
-        "description": "Starts the packager server.",
+        "description": "Build native libraries only for the current device architecture for debug builds.",
+        "examples": ["x86_64", "arm64-v8a"],
+        "default": false
+      },
+      "extraParams": {
+        "type": "string",
+        "description": "Custom params passed to gradle build command"
+      },
+      "interactive": {
+        "type": "boolean",
+        "description": "Explicitly select build type and flavour to use before running a build"
+      },
+      "sync": {
+        "type": "boolean",
+        "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
         "default": true
       },
       "resetCache": {
         "type": "boolean",
         "description": "Resets metro cache.",
         "default": false
-      },
-      "interactive": {
-        "type": "boolean",
-        "description": "Run packager server in interactive mode.",
-        "default": true
-      },
-      "activeArchOnly": {
-        "type": "boolean",
-        "description": "Builds only for the active architecture (e.g. x86_64, arm64-v8a).",
-        "default": false
       }
     },
-    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a specific device/simulator\" %}\nTo see all the avaiable emulators, run command:\n\n```bash\nemulator -list-avds\n```\n\nThe `deviceId` option allows you to launch your android app in a specific device/simulator:\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {\n        \"deviceId\": \"Pixel_5_API_30\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the debug/release app\" %}\nThe `variant` option allows to specify the build variant, such as `debug` or `release`.\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {\n        \"variant\": \"release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a specific device/simulator\" %}\nTo see all the avaiable emulators, run command:\n\n```bash\nemulator -list-avds\n```\n\nThe `deviceId` option allows you to launch your android app in a specific device/simulator:\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {\n        \"deviceId\": \"Pixel_5_API_30\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the debug/release app\" %}\nThe `mode` option allows to specify the build variant, such as `debug` or `release`.\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {\n        \"mode\": \"release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
   },
   "description": "Runs Android application.",
   "aliases": [],

@@ -1,32 +1,34 @@
 import { ExecutorContext } from '@nrwl/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
+import { platform } from 'os';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import {
   displayNewlyAddedDepsMessage,
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
-import { ReactNativeRunAndroidOptions } from './schema';
+import { podInstall } from '../../utils/pod-install-task';
+import { ReactNativeBuildIosOptions } from './schema';
 import { runCliStart } from '../start/start.impl';
-import { chmodAndroidGradlewFiles } from '../../utils/chmod-android-gradle-files';
 import { getCliOptions } from '../../utils/get-cli-options';
 
-export interface ReactNativeRunAndroidOutput {
+export interface ReactNativeBuildIosOutput {
   success: boolean;
 }
 
 let childProcess: ChildProcess;
 
-export default async function* runAndroidExecutor(
-  options: ReactNativeRunAndroidOptions,
+export default async function* runIosExecutor(
+  options: ReactNativeBuildIosOptions,
   context: ExecutorContext
-): AsyncGenerator<ReactNativeRunAndroidOutput> {
+): AsyncGenerator<ReactNativeBuildIosOutput> {
+  if (platform() !== 'darwin') {
+    throw new Error(`The run-ios build requires Mac to run`);
+  }
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
-  chmodAndroidGradlewFiles(join(projectRoot, 'android'));
-
   if (options.sync) {
     displayNewlyAddedDepsMessage(
       context.projectName,
@@ -39,9 +41,16 @@ export default async function* runAndroidExecutor(
     );
   }
 
+  if (options.install) {
+    await podInstall(
+      join(context.root, projectRoot, 'ios'),
+      options.buildFolder
+    );
+  }
+
   try {
-    const tasks = [runCliRunAndroid(context.root, projectRoot, options)];
-    if (options.packager) {
+    const tasks = [runCliBuildIOS(context.root, projectRoot, options)];
+    if (options.packager && options.mode !== 'Release') {
       tasks.push(
         runCliStart(context.root, projectRoot, {
           port: options.port,
@@ -61,10 +70,10 @@ export default async function* runAndroidExecutor(
   }
 }
 
-function runCliRunAndroid(
+function runCliBuildIOS(
   workspaceRoot: string,
   projectRoot: string,
-  options: ReactNativeRunAndroidOptions
+  options: ReactNativeBuildIosOptions
 ) {
   return new Promise((resolve, reject) => {
     /**
@@ -73,7 +82,7 @@ function runCliRunAndroid(
      */
     childProcess = fork(
       join(workspaceRoot, './node_modules/react-native/cli.js'),
-      ['run-android', ...createRunAndroidOptions(options), '--no-packager'],
+      ['run-ios', ...createBuildIOSOptions(options), '--no-packager'],
       {
         cwd: join(workspaceRoot, projectRoot),
         env: { ...process.env, RCT_METRO_PORT: options.port.toString() },
@@ -97,14 +106,13 @@ function runCliRunAndroid(
   });
 }
 
-const nxOptions = ['sync', 'packager'];
+const nxOptions = ['sync', 'install', 'packager'];
 const startOptions = ['port', 'resetCache'];
-const deprecatedOptions = ['variant', 'jetifier'];
 
-function createRunAndroidOptions(options: ReactNativeRunAndroidOptions) {
-  return getCliOptions<ReactNativeRunAndroidOptions>(
+function createBuildIOSOptions(options: ReactNativeBuildIosOptions) {
+  return getCliOptions<ReactNativeBuildIosOptions>(
     options,
-    [...nxOptions, ...startOptions, ...deprecatedOptions],
-    ['appId', 'appIdSuffix']
+    [...nxOptions, ...startOptions],
+    ['buildFolder']
   );
 }

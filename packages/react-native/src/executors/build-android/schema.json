@@ -7,18 +7,94 @@
   "title": "Release Build for Android",
   "description": "Build target options for Android.",
   "type": "object",
+  "presets": [
+    {
+      "name": "Build Android for current device architecture",
+      "keys": ["activeArchOnly"]
+    },
+    {
+      "name": "Build Android without metro cache",
+      "keys": ["resetCache"]
+    },
+    {
+      "name": "Build Android with specific tasks",
+      "keys": ["tasks"]
+    },
+    {
+      "name": "Build Android with a specific mode",
+      "keys": ["mode"]
+    }
+  ],
   "properties": {
     "apk": {
       "type": "boolean",
-      "description": "Generate apk file(s) rather than a bundle (`.aab`)."
+      "description": "Generate apk file(s) rather than a bundle (`.aab`).",
+      "x-deprecated": "Use `tasks` option instead, e.g. `tasks=['bundleRelease']` to generate aab, `tasks=['assembleDebug']` to generate apk. Will be removed in Nx 17."
     },
     "debug": {
       "type": "boolean",
-      "description": "Generate a debug build instead of a release build."
+      "description": "Generate a debug build instead of a release build.",
+      "x-deprecated": "Use `mode` option instead, e.g. `mode='debug'`. Deprecated from @react-native-community/cli. Will be removed in Nx 17."
     },
     "gradleTask": {
       "type": "string",
-      "description": "Override default gradle task incase of multi build variants"
+      "description": "Override default gradle task incase of multi build variants",
+      "x-deprecated": "Use `tasks` option instead, e.g. `tasks=['assembleDebug']`. Will be removed in Nx 17."
+    },
+    "mode": {
+      "type": "string",
+      "description": "Specify your app's build variant",
+      "default": "debug",
+      "examples": ["debug", "release"],
+      "x-priority": "important"
+    },
+    "packager": {
+      "type": "boolean",
+      "description": "Launch packager while building",
+      "default": true
+    },
+    "port": {
+      "type": "number",
+      "description": "The port where the packager server is listening on.",
+      "default": 8081
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Run custom Gradle tasks. By default it's \"assembleDebug\". Will override passed mode and variant arguments.",
+      "examples": [
+        "assembleDebug",
+        "assembleRelease",
+        "bundleDebug",
+        "bundleRelease",
+        "installDebug",
+        "installRelease"
+      ]
+    },
+    "activeArchOnly": {
+      "type": "boolean",
+      "description": "Build native libraries only for the current device architecture for debug builds.",
+      "default": false
+    },
+    "extraParams": {
+      "type": "string",
+      "description": "Custom params passed to gradle build command"
+    },
+    "interactive": {
+      "type": "boolean",
+      "description": "Explicitly select build type and flavour to use before running a build"
+    },
+    "sync": {
+      "type": "boolean",
+      "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
+      "default": true
+    },
+    "resetCache": {
+      "type": "boolean",
+      "description": "Resets metro cache.",
+      "default": false
     }
   },
   "required": [],
