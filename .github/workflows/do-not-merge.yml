@@ -6,6 +6,7 @@ on:
 
 jobs:
   do-not-merge:
+    if: ${{ github.repository_owner == 'nrwl' }}
     name: Prevent Merging
     runs-on: ubuntu-latest
     steps:
@@ -14,7 +15,7 @@ jobs:
           echo "${{ toJSON(github.event.*.labels.*.name) }}"
           node -e 'const forbidden = ["target: next major version", "PR Status: needs tests", "PR Status: in-progress", "blocked: needs rebase"];
            const match = ${{ toJSON(github.event.*.labels.*.name) }}.find(l => forbidden.includes(l));
-           if (match) { 
+           if (match) {
             console.log("Cannot merge PRs that are labeled with " + match);
-            process.exit(1) 
+            process.exit(1)
            }'
