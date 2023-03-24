@@ -27,7 +27,7 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "bin": {
-    "tao": "./index"
+    "tao": "./index.js"
   },
   "homepage": "https://nx.dev",
   "dependencies": {
