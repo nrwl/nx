@@ -62,8 +62,11 @@ You can see that three targets are defined here: `build`, `test` and `lint`.
 The properties inside each of these these targets is defined as follows:
 
 - `executor` - which Nx executor to run. The syntax here is: `<plugin name>:<executor name>`
-- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Task Pipelines](/angular-standalone-tutorial/4-task-pipelines)).
-- `options` - this is an object defining which executor options to use for the given target. Every Nx executor allows for options as a way to parameterize it's functionality.
+- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save
+  for it's caching mechanisms you'll learn about in [4 - Task Pipelines](/angular-standalone-tutorial/4-task-pipelines))
+  .
+- `options` - this is an object defining which executor options to use for the given target. Every Nx executor allows
+  for options as a way to parameterize it's functionality.
 
 ## Running Tasks
 
@@ -105,6 +108,35 @@ All files pass linting.
 ———————————————————————————————————————————————————————————————————————————————————————————————————
 
  >  NX   Successfully ran target lint for project shared-ui (2s)
+```
+
+Also, by running the `serve` target for your `store` application, you can run local web server during development that
+will allow you to manually check the changes you've made:
+
+```{% command="npx nx serve store" path="~/store" %}
+
+> nx run store:serve:development
+
+✔ Browser application bundle generation complete.
+
+Initial Chunk Files   | Names         |  Raw Size
+vendor.js             | vendor        |   2.04 MB |
+polyfills.js          | polyfills     | 316.06 kB |
+styles.css, styles.js | styles        | 211.31 kB |
+main.js               | main          |  47.60 kB |
+runtime.js            | runtime       |  12.61 kB |
+
+                      | Initial Total |   2.62 MB
+
+Lazy Chunk Files      | Names         |  Raw Size
+cart_src_index_ts.js  | store-cart    |   4.93 kB |
+
+Build at: 2023-03-24T10:13:24.014Z - Hash: e52a884fc7a311e1 - Time: 8609ms
+
+** Angular Live Development Server is listening on localhost:4200, open your browser on http://localhost:4200/ **
+
+
+✔ Compiled successfully.
 ```
 
 ## What's Next
