@@ -36,7 +36,6 @@ export async function angularInitGenerator(
   const peerDepsToInstall = [
     '@angular-devkit/core',
     '@angular-devkit/schematics',
-    '@schematics/angular',
   ];
   let devkitVersion: string;
   peerDepsToInstall.forEach((pkg) => {
@@ -165,6 +164,7 @@ function updateDependencies(
       '@angular/compiler-cli': angularVersion,
       '@angular/language-service': angularVersion,
       '@angular-devkit/build-angular': angularDevkitVersion,
+      '@schematics/angular': angularDevkitVersion,
     }
   );
 }

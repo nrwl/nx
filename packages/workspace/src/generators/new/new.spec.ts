@@ -4,7 +4,6 @@ import { Linter } from '../../utils/lint';
 import {
   angularCliVersion,
   nxVersion,
-  prettierVersion,
   typescriptVersion,
 } from '../../utils/versions';
 import { Preset } from '../utils/presets';
@@ -92,7 +91,6 @@ describe('new', () => {
         '@angular-devkit/core': angularCliVersion,
         '@angular-devkit/schematics': angularCliVersion,
         '@nrwl/workspace': nxVersion,
-        '@schematics/angular': angularCliVersion,
         nx: nxVersion,
         typescript: typescriptVersion,
       });
