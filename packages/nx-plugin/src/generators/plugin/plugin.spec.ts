@@ -30,7 +30,7 @@ describe('NxPlugin Plugin Generator', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should update the workspace.json file', async () => {
+  it('should update the project.json file', async () => {
     await pluginGenerator(tree, getSchema());
     const project = readProjectConfiguration(tree, 'my-plugin');
     expect(project.root).toEqual('libs/my-plugin');

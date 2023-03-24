@@ -1,4 +1,5 @@
 import { PackageManager } from './utils/package-manager';
+import { CI } from './utils/ci/ci-list';
 
 export interface CreateWorkspaceOptions {
   name: string; // Workspace name (e.g. org name)

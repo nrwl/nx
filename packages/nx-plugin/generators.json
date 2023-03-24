@@ -8,6 +8,11 @@
       "schema": "./src/generators/plugin/schema.json",
       "description": "Create a Nx Plugin."
     },
+    "create-package": {
+      "factory": "./src/generators/create-package/create-package",
+      "schema": "./src/generators/create-package/schema.json",
+      "description": "Create a framework package that uses Nx CLI"
+    },
     "e2e-project": {
       "factory": "./src/generators/e2e-project/e2e",
       "schema": "./src/generators/e2e-project/schema.json",
@@ -40,6 +45,11 @@
       "factory": "./src/generators/plugin/plugin#pluginSchematic",
       "schema": "./src/generators/plugin/schema.json",
       "description": "Create a Nx Plugin."
+    },
+    "create-package": {
+      "factory": "./src/generators/create-package/create-package#createPackageSchematic",
+      "schema": "./src/generators/create-package/schema.json",
+      "description": "Create a framework package that uses Nx CLI"
     },
     "e2e-project": {
       "factory": "./src/generators/e2e-project/e2e#e2eProjectSchematic",

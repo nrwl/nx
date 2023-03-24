@@ -53,7 +53,7 @@ async function addFiles(host: Tree, options: NormalizedSchema) {
   });
 }
 
-function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
+function updateProjectJson(host: Tree, options: NormalizedSchema) {
   const project = readProjectConfiguration(host, options.name);
 
   if (project.targets.build) {
@@ -114,7 +114,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
   addSwcDependencies(host);
 
   await addFiles(host, options);
-  updateWorkspaceJson(host, options);
+  updateProjectJson(host, options);
 
   if (options.e2eTestRunner !== 'none') {
     await e2eProjectGenerator(host, {

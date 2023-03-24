@@ -2,7 +2,6 @@ import { ProjectConfiguration } from '@nrwl/devkit';
 import {
   checkFilesExist,
   expectTestsPass,
-  isNotWindows,
   killPorts,
   newProject,
   readJson,
@@ -12,8 +11,6 @@ import {
   uniq,
   updateFile,
   createFile,
-  readFile,
-  removeFile,
   cleanupProject,
   runCommand,
   getPackageManagerCommand,
@@ -410,5 +407,23 @@ describe('Nx Plugin', () => {
       const pluginProject = readProjectConfig(plugin);
       expect(pluginProject.tags).toEqual(['e2etag', 'e2ePackage']);
     }, 90000);
+  });
+
+  it('should be able to generate a create-package plugin ', async () => {
+    const plugin = uniq('plugin');
+    const createAppName = `create-${plugin}-app`;
+    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin}`);
+    runCLI(
+      `generate @nrwl/nx-plugin:create-package ${createAppName} --project=${plugin}`
+    );
+
+    const buildResults = runCLI(`build ${createAppName}`);
+    expect(buildResults).toContain('Done compiling TypeScript files');
+
+    checkFilesExist(
+      `libs/${plugin}/src/generators/preset`,
+      `libs/${createAppName}`,
+      `dist/libs/${createAppName}/bin/index.js`
+    );
   });
 });

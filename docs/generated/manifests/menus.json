@@ -5449,6 +5449,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "create-package",
+                "path": "/packages/nx-plugin/generators/create-package",
+                "name": "create-package",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "e2e-project",
                 "path": "/packages/nx-plugin/generators/e2e-project",
                 "name": "e2e-project",

@@ -1920,6 +1920,15 @@
         "path": "/packages/nx-plugin/generators/plugin",
         "type": "generator"
       },
+      "/packages/nx-plugin/generators/create-package": {
+        "description": "Create a framework package that uses Nx CLI",
+        "file": "generated/packages/nx-plugin/generators/create-package.json",
+        "hidden": false,
+        "name": "create-package",
+        "originalFilePath": "/packages/nx-plugin/src/generators/create-package/schema.json",
+        "path": "/packages/nx-plugin/generators/create-package",
+        "type": "generator"
+      },
       "/packages/nx-plugin/generators/e2e-project": {
         "description": "Create a E2E application for a Nx Plugin.",
         "file": "generated/packages/nx-plugin/generators/e2e-project.json",

@@ -1,0 +1,5 @@
+#!/usr/bin/env node
+
+import { commandsObject } from './<%= name %>';
+
+commandsObject.argv;
