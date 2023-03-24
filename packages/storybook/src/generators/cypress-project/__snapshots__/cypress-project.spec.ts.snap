@@ -5,7 +5,7 @@ exports[`@nrwl/storybook:cypress-project should generate files 1`] = `
 import { nxE2EStorybookPreset } from '@nrwl/storybook/presets/cypress';
 
 export default defineConfig({
-  e2e: nxE2EStorybookPreset(__dirname)
+  e2e: nxE2EStorybookPreset(__dirname),
 });
 "
 `;

@@ -62,6 +62,19 @@ describe('app', () => {
     expect(appTree.exists('apps/my-app/.eslintrc.json')).toBe(true);
   });
 
+  it('should generate targets', async () => {
+    await reactNativeApplicationGenerator(appTree, {
+      name: 'myApp',
+      displayName: 'myApp',
+      linter: Linter.EsLint,
+      e2eTestRunner: 'none',
+      install: false,
+    });
+    const targets = readProjectConfiguration(appTree, 'my-app').targets;
+    console.log(targets.test);
+    expect(targets.test).toBeDefined();
+  });
+
   it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
     appTree.rename('tsconfig.base.json', 'tsconfig.json');
 
@@ -184,7 +197,7 @@ describe('app', () => {
 
   describe('--skipPackageJson', () => {
     it('should not add or update dependencies when true', async () => {
-      const packageJsonBefore = appTree.read('package.json', 'utf-8');
+      const packageJsonBefore = readJson(appTree, 'package.json');
 
       await reactNativeApplicationGenerator(appTree, {
         name: 'myApp',
@@ -195,7 +208,7 @@ describe('app', () => {
         skipPackageJson: true,
       });
 
-      expect(appTree.read('package.json', 'utf-8')).toEqual(packageJsonBefore);
+      expect(readJson(appTree, 'package.json')).toEqual(packageJsonBefore);
     });
   });
 });

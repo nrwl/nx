@@ -44,9 +44,8 @@ describe('Cypress e2e configuration', () => {
 
         export default defineConfig({
           e2e: nxE2EPreset(__dirname, {
-            cypressDir: \\"src\\",
-          
-          })
+            cypressDir: 'src',
+          }),
         });
         "
       `);
@@ -105,9 +104,8 @@ describe('Cypress e2e configuration', () => {
 
         export default defineConfig({
           e2e: nxE2EPreset(__dirname, {
-            cypressDir: \\"cypress\\",
-          
-          })
+            cypressDir: 'cypress',
+          }),
         });
         "
       `);

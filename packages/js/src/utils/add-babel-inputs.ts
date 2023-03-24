@@ -7,7 +7,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 
-export async function addBabelInputs(tree: Tree) {
+export function addBabelInputs(tree: Tree) {
   const nxJson = readNxJson(tree);
   let globalBabelFile = ['babel.config.js', 'babel.config.json'].find((file) =>
     tree.exists(file)
@@ -29,6 +29,4 @@ export async function addBabelInputs(tree: Tree) {
   }
 
   updateNxJson(tree, nxJson);
-
-  await formatFiles(tree);
 }

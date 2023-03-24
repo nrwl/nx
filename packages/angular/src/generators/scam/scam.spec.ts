@@ -31,18 +31,17 @@ describe('SCAM Generator', () => {
       @Component({
         selector: 'example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css']
+        styleUrls: ['./example.component.css'],
       })
-      export class ExampleComponent {
-
-      }
+      export class ExampleComponent {}
 
       @NgModule({
         imports: [CommonModule],
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -77,7 +76,8 @@ describe('SCAM Generator', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -118,15 +118,17 @@ describe('SCAM Generator', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
     const secondaryEntryPointSource = tree.read(
       `libs/lib1/feature/src/index.ts`,
       'utf-8'
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
-      "export * from \\"./lib/example/example.component\\";
-      export * from \\"./lib/example/example.module\\";"
+      "export * from './lib/example/example.component';
+      export * from './lib/example/example.module';
+      "
     `);
   });
 
@@ -160,18 +162,17 @@ describe('SCAM Generator', () => {
         @Component({
           selector: 'example',
           templateUrl: './example.component.html',
-          styleUrls: ['./example.component.css']
+          styleUrls: ['./example.component.css'],
         })
-        export class ExampleComponent {
-
-        }
+        export class ExampleComponent {}
 
         @NgModule({
           imports: [CommonModule],
           declarations: [ExampleComponent],
           exports: [ExampleComponent],
         })
-        export class ExampleComponentModule {}"
+        export class ExampleComponentModule {}
+        "
       `);
     });
 
@@ -204,18 +205,17 @@ describe('SCAM Generator', () => {
         @Component({
           selector: 'example',
           templateUrl: './example.component.html',
-          styleUrls: ['./example.component.css']
+          styleUrls: ['./example.component.css'],
         })
-        export class ExampleComponent {
-
-        }
+        export class ExampleComponent {}
 
         @NgModule({
           imports: [CommonModule],
           declarations: [ExampleComponent],
           exports: [ExampleComponent],
         })
-        export class ExampleComponentModule {}"
+        export class ExampleComponentModule {}
+        "
       `);
     });
 

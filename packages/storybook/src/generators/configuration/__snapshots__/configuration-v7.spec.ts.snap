@@ -4,28 +4,19 @@ exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities sh
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
-  stories: [
-    
-    '../**/*.stories.@(js|jsx|ts|tsx|mdx)' ],
-  addons: ['@storybook/addon-essentials' 
-    
-  ],
+  stories: ['../**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/angular',
-    options: {
-      
-    },
+    options: {},
   },
 };
 
 export default config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -107,10 +98,9 @@ exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities sh
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
     \\"emitDecoratorMetadata\\": true
-    
   },
-  
-  \\"exclude\\": [\\"../**/*.spec.ts\\" ],
+
+  \\"exclude\\": [\\"../**/*.spec.ts\\"],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
@@ -118,7 +108,8 @@ exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities sh
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -127,28 +118,19 @@ exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities sh
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
-  stories: [
-    
-    '../**/*.stories.@(js|jsx|ts|tsx|mdx)' ],
-  addons: ['@storybook/addon-essentials' 
-    
-  ],
+  stories: ['../**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/angular',
-    options: {
-      
-    },
+    options: {},
   },
 };
 
 export default config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -156,53 +138,49 @@ exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities sh
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 1`] = `
 "const config = {
-  stories: [
-    
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-  ],
-  addons: ['@storybook/addon-essentials' 
-    
-  ],
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/react-vite',
     options: {
-      
       builder: {
         viteConfigPath: 'apps/main-vite/vite.config.ts',
       },
-      
     },
   },
 };
 
 export default config;
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -212,22 +190,28 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -236,31 +220,21 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
-  stories: [
-    
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-  ],
-  addons: ['@storybook/addon-essentials' 
-    
-  ],
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/react-vite',
     options: {
-      
       builder: {
         viteConfigPath: 'apps/main-vite-ts/vite.config.custom.ts',
       },
-      
     },
   },
 };
 
 export default config;
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -270,15 +244,20 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
@@ -286,36 +265,27 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 1`] = `
 "const config = {
-  stories: [
-    
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-  ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-  ],
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
   framework: {
     name: '@storybook/react-webpack5',
-    options: {
-      
-    },
+    options: {},
   },
 };
 
 export default config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -323,51 +293,47 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 1`] = `
 "const config = {
-  stories: [
-    
-    '../components/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-  ],
-  addons: ['@storybook/addon-essentials' 
-    
-  ],
+  stories: ['../components/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/nextjs',
-    options: {
-      
-    },
+    options: {},
   },
 };
 
 export default config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -376,46 +342,40 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
     \\"emitDecoratorMetadata\\": true
-    
   },
-  
-  \\"exclude\\": [\\"../**/*.spec.ts\\" ],
+
+  \\"exclude\\": [\\"../**/*.spec.ts\\"],
   \\"include\\": [
     \\"../components/**/*.stories.ts\\",
     \\"../components/**/*.stories.js\\",
     \\"../components/**/*.stories.jsx\\",
     \\"../components/**/*.stories.tsx\\",
     \\"../components/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 1`] = `
 "const config = {
-  stories: [
-    
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-  ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    , 'storybook-addon-swc' 
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: [
+    '@storybook/addon-essentials',
+    '@nrwl/react/plugins/storybook',
+    'storybook-addon-swc',
   ],
   framework: {
     name: '@storybook/react-webpack5',
-    options: {
-      
-    },
+    options: {},
   },
 };
 
 export default config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -423,53 +383,49 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 1`] = `
 "const config = {
-  stories: [
-    
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-  ],
-  addons: ['@storybook/addon-essentials' 
-    
-  ],
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/react-vite',
     options: {
-      
       builder: {
         viteConfigPath: 'apps/reapp/vite.config.ts',
       },
-      
     },
   },
 };
 
 export default config;
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -479,51 +435,47 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 1`] = `
 "const config = {
-  stories: [
-    
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-  ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-  ],
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
   framework: {
     name: '@storybook/react-webpack5',
-    options: {
-      
-    },
+    options: {},
   },
 };
 
 export default config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -531,53 +483,49 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
 "const config = {
-  stories: [
-    
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-  ],
-  addons: ['@storybook/addon-essentials' 
-    
-  ],
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/web-components-vite',
     options: {
-      
       builder: {
         viteConfigPath: 'apps/wv1/vite.config.custom.ts',
       },
-      
     },
   },
 };
 
 export default config;
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -588,46 +536,36 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
     \\"emitDecoratorMetadata\\": true
-    
   },
-  
-  \\"exclude\\": [\\"../**/*.spec.ts\\" ],
+
+  \\"exclude\\": [\\"../**/*.spec.ts\\"],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/ww1/.storybook/" 1`] = `
 "const config = {
-  stories: [
-    
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-  ],
-  addons: ['@storybook/addon-essentials' 
-    
-  ],
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/web-components-webpack5',
-    options: {
-      
-    },
+    options: {},
   },
 };
 
 export default config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -636,46 +574,36 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
     \\"emitDecoratorMetadata\\": true
-    
   },
-  
-  \\"exclude\\": [\\"../**/*.spec.ts\\" ],
+
+  \\"exclude\\": [\\"../**/*.spec.ts\\"],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 1`] = `
 "const config = {
-  stories: [
-    
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-  ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-  ],
+  stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
   framework: {
     name: '@storybook/react-webpack5',
-    options: {
-      
-    },
+    options: {},
   },
 };
 
 export default config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -683,53 +611,49 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 1`] = `
 "const config = {
-  stories: [
-    
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-  ],
-  addons: ['@storybook/addon-essentials' 
-    
-  ],
+  stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/react-vite',
     options: {
-      
       builder: {
         viteConfigPath: 'libs/react-vite/vite.config.ts',
       },
-      
     },
   },
 };
 
 export default config;
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -739,22 +663,28 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;

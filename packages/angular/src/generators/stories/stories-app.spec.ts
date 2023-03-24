@@ -25,8 +25,8 @@ describe('angularStories generator: applications', () => {
     });
   });
 
-  it('should generate stories file', () => {
-    angularStoriesGenerator(tree, { name: appName });
+  it('should generate stories file', async () => {
+    await angularStoriesGenerator(tree, { name: appName });
 
     expect(
       tree.exists(`apps/${appName}/src/app/app.component.stories.ts`)
@@ -36,7 +36,7 @@ describe('angularStories generator: applications', () => {
   it('should generate stories file for scam component', async () => {
     await scamGenerator(tree, { name: 'my-scam', project: appName });
 
-    angularStoriesGenerator(tree, { name: appName });
+    await angularStoriesGenerator(tree, { name: appName });
 
     expect(
       tree.exists(
@@ -48,7 +48,7 @@ describe('angularStories generator: applications', () => {
   it('should ignore paths', async () => {
     await scamGenerator(tree, { name: 'my-scam', project: appName });
 
-    angularStoriesGenerator(tree, {
+    await angularStoriesGenerator(tree, {
       name: appName,
       ignorePaths: [`apps/${appName}/src/app/my-scam/**`],
     });
@@ -63,7 +63,7 @@ describe('angularStories generator: applications', () => {
   it('should ignore paths when full path to component is provided', async () => {
     await scamGenerator(tree, { name: 'my-scam', project: appName });
 
-    angularStoriesGenerator(tree, {
+    await angularStoriesGenerator(tree, {
       name: appName,
       ignorePaths: [`apps/${appName}/src/app/my-scam/my-scam.component.ts`],
     });
@@ -82,7 +82,7 @@ describe('angularStories generator: applications', () => {
       project: appName,
     });
 
-    angularStoriesGenerator(tree, {
+    await angularStoriesGenerator(tree, {
       name: appName,
       ignorePaths: [
         `apps/${appName}/src/app/component-a/component-a.component.ts`,
@@ -90,9 +90,11 @@ describe('angularStories generator: applications', () => {
     });
 
     expect(
-      tree.read(
-        `apps/${appName}/src/app/component-a/component-b/component-b.component.stories.ts`
-      )
+      tree
+        .read(
+          `apps/${appName}/src/app/component-a/component-b/component-b.component.stories.ts`
+        )
+        .toString()
     ).toMatchSnapshot();
     expect(
       tree.exists(
@@ -108,15 +110,17 @@ describe('angularStories generator: applications', () => {
       inlineScam: true,
     });
 
-    angularStoriesGenerator(tree, { name: appName });
+    await angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree.read(`apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`)
+      tree
+        .read(`apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`)
+        .toString()
     ).toMatchSnapshot();
   });
 
-  it('should generate cypress spec file', () => {
-    angularStoriesGenerator(tree, {
+  it('should generate cypress spec file', async () => {
+    await angularStoriesGenerator(tree, {
       name: appName,
       generateCypressSpecs: true,
     });

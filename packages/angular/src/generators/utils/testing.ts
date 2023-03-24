@@ -6,6 +6,7 @@ import { UnitTestRunner } from '../../utils/test-runners';
 import { angularDevkitVersion } from '../../utils/versions';
 import { applicationGenerator } from '../application/application';
 import type { Schema as ApplicationOptions } from '../application/schema';
+import { componentGenerator } from '../component/component';
 import { host } from '../host/host';
 import type { Schema as HostOptions } from '../host/schema';
 import { libraryGenerator } from '../library/library';
@@ -60,10 +61,6 @@ export async function createStorybookTestWorkspaceForLib(
   const moduleGenerator = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'module'
-  );
-  const componentGenerator = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'component'
   );
 
   await libraryGenerator(tree, {

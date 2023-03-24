@@ -5,7 +5,7 @@ import type * as Prettier from 'prettier';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 import { requireNx } from '../../nx';
 
-const { updateJson } = requireNx();
+const { updateJson, readJson } = requireNx();
 
 /**
  * Formats all the created or updated files using Prettier
@@ -28,19 +28,20 @@ export async function formatFiles(tree: Tree): Promise<void> {
   await Promise.all(
     Array.from(files).map(async (file) => {
       const systemPath = path.join(tree.root, file.path);
-      let options: any = {
-        filepath: systemPath,
-      };
 
       const resolvedOptions = await prettier.resolveConfig(systemPath, {
         editorconfig: true,
       });
+
+      let optionsFromTree;
       if (!resolvedOptions) {
-        return;
+        try {
+          optionsFromTree = readJson(tree, '.prettierrc');
+        } catch {}
       }
-      options = {
-        ...options,
-        ...resolvedOptions,
+      const options: any = {
+        filepath: systemPath,
+        ...(resolvedOptions ?? optionsFromTree),
       };
 
       if (file.path.endsWith('.swcrc')) {

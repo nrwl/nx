@@ -6,10 +6,10 @@ export default {
   displayName: 'my-lib',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }]
+    '^.+\\\\\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/libs/my-lib'
+  coverageDirectory: '../../coverage/libs/my-lib',
 };
 "
 `;
@@ -21,10 +21,10 @@ export default {
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
-    '^.+\\\\\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }]
+    '^.+\\\\\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/libs/my-lib'
+  coverageDirectory: '../../coverage/libs/my-lib',
 };
 "
 `;
@@ -83,9 +83,9 @@ exports[`lib not nested should add the @Global decorator 1`] = `
 
 @Global()
 @Module({
-	controllers: [],
-	providers: [],
-	exports: [],
+  controllers: [],
+  providers: [],
+  exports: [],
 })
 export class MyLibModule {}
 "
@@ -152,9 +152,9 @@ import { MyLibController } from './my-lib.controller';
 import { MyLibService } from './my-lib.service';
 
 @Module({
-	controllers: [MyLibController],
-	providers: [MyLibService],
-	exports: [MyLibService],
+  controllers: [MyLibController],
+  providers: [MyLibService],
+  exports: [MyLibService],
 })
 export class MyLibModule {}
 "
@@ -175,6 +175,5 @@ exports[`lib not nested should provide the controller and service 3`] = `
 "export * from './lib/my-lib.controller';
 export * from './lib/my-lib.service';
 export * from './lib/my-lib.module';
-
 "
 `;

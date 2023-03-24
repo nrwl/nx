@@ -87,34 +87,37 @@ describe(`Migration to karma builder main file (test.ts)`, () => {
   it(`should remove 'declare const require' and 'require.context' usages`, async () => {
     await updateKarmaMainFile(tree);
 
-    expect(tree.read('test.ts', 'utf-8')).toBe(stripIndents`
-      import { getTestBed } from '@angular/core/testing';
+    expect(tree.read('test.ts', 'utf-8')).toMatchInlineSnapshot(`
+      "import { getTestBed } from '@angular/core/testing';
       import {
         BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting
+        platformBrowserDynamicTesting,
       } from '@angular/platform-browser-dynamic/testing';
       // First, initialize the Angular testing environment.
       getTestBed().initTestEnvironment(
         BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting(),
+        platformBrowserDynamicTesting()
       );
+      "
     `);
   });
 
   it(`should remove multiple 'require.context' usages`, async () => {
     await updateKarmaMainFile(tree);
 
-    expect(tree.read('test-multiple-context.ts', 'utf-8')).toBe(stripIndents`
-      import { getTestBed } from '@angular/core/testing';
+    expect(tree.read('test-multiple-context.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { getTestBed } from '@angular/core/testing';
       import {
         BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting
+        platformBrowserDynamicTesting,
       } from '@angular/platform-browser-dynamic/testing';
       // First, initialize the Angular testing environment.
       getTestBed().initTestEnvironment(
         BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting(),
+        platformBrowserDynamicTesting()
       );
+      "
     `);
   });
 });

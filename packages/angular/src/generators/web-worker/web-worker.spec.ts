@@ -74,16 +74,17 @@ describe('webWorker generator', () => {
     expect(tree.read(`apps/${appName}/src/app/test-worker.ts`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "if (typeof Worker !== 'undefined') {
-      // Create a new
-      const worker = new Worker(new URL('./test-worker.worker', import.meta.url));
-      worker.onmessage = ({ data }) => {
-      console.log(\`page got message \${data}\`);
-      };
-      worker.postMessage('hello');
+        // Create a new
+        const worker = new Worker(new URL('./test-worker.worker', import.meta.url));
+        worker.onmessage = ({ data }) => {
+          console.log(\`page got message \${data}\`);
+        };
+        worker.postMessage('hello');
       } else {
-      // Web Workers are not supported in this environment.
-      // You should add a fallback so that your program still executes correctly.
-      }"
+        // Web Workers are not supported in this environment.
+        // You should add a fallback so that your program still executes correctly.
+      }
+      "
     `);
     expect(tree.read(`apps/${appName}/src/app/test-worker.worker.ts`, 'utf-8'))
       .toMatchInlineSnapshot(`

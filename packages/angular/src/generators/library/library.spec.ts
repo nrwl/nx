@@ -158,10 +158,7 @@ describe('lib', () => {
       );
       expect(moduleFileExists).toBeFalsy();
       const indexApi = tree.read('libs/my-lib/src/index.ts', 'utf-8');
-      expect(indexApi).toMatchInlineSnapshot(`
-        "
-        "
-      `);
+      expect(indexApi).toMatchInlineSnapshot(`""`);
     });
 
     it('should remove "build" target from project.json when a library is not publishable', async () => {
@@ -739,10 +736,7 @@ describe('lib', () => {
         );
 
         // ASSERT
-        expect(moduleContents).toContain('RouterModule.forRoot([');
-        expect(moduleContents).toContain(
-          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}`
-        );
+        expect(moduleContents).toMatchSnapshot();
 
         expect(tsConfigLibJson.exclude).toEqual([
           'src/**/*.spec.ts',
@@ -751,13 +745,33 @@ describe('lib', () => {
           'src/**/*.test.ts',
         ]);
 
-        expect(moduleContents2).toContain('RouterModule.forRoot([');
-        expect(moduleContents2).toContain(
-          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}`
-        );
-        expect(moduleContents2).toContain(
-          `{path: 'my-lib2', loadChildren: () => import('@proj/my-dir/my-lib2').then(m => m.MyLib2Module)}`
-        );
+        expect(moduleContents2).toMatchInlineSnapshot(`
+          "import { NgModule } from '@angular/core';
+          import { BrowserModule } from '@angular/platform-browser';
+          import { RouterModule } from '@angular/router';
+          import { AppComponent } from './app.component';
+          @NgModule({
+            imports: [
+              BrowserModule,
+              RouterModule.forRoot([
+                {
+                  path: 'my-dir-my-lib',
+                  loadChildren: () =>
+                    import('@proj/my-dir/my-lib').then((m) => m.MyDirMyLibModule),
+                },
+                {
+                  path: 'my-lib2',
+                  loadChildren: () =>
+                    import('@proj/my-dir/my-lib2').then((m) => m.MyLib2Module),
+                },
+              ]),
+            ],
+            declarations: [AppComponent],
+            bootstrap: [AppComponent],
+          })
+          export class AppModule {}
+          "
+        `);
 
         expect(tsConfigLibJson2.exclude).toEqual([
           'src/**/*.spec.ts',
@@ -766,16 +780,7 @@ describe('lib', () => {
           'src/**/*.test.ts',
         ]);
 
-        expect(moduleContents3).toContain('RouterModule.forRoot([');
-        expect(moduleContents3).toContain(
-          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}`
-        );
-        expect(moduleContents3).toContain(
-          `{path: 'my-lib2', loadChildren: () => import('@proj/my-dir/my-lib2').then(m => m.MyLib2Module)}`
-        );
-        expect(moduleContents3).toContain(
-          `{path: 'my-lib3', loadChildren: () => import('@proj/my-dir/my-lib3').then(m => m.MyLib3Module)}`
-        );
+        expect(moduleContents3).toMatchSnapshot();
 
         expect(tsConfigLibJson3.exclude).toEqual([
           'src/**/*.spec.ts',
@@ -820,10 +825,7 @@ describe('lib', () => {
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
 
-        expect(moduleContents).toContain('RouterModule.forRoot(routes)');
-        expect(moduleContents).toContain(
-          `const routes = [{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}];`
-        );
+        expect(moduleContents).toMatchSnapshot();
       });
     });
 
@@ -1472,8 +1474,7 @@ describe('lib', () => {
         "import { Route } from '@angular/router';
         import { myLibRoutes } from '@proj/my-lib';
 
-        export const appRoutes: Route[] = [
-            { path: 'my-lib', children: myLibRoutes },];
+        export const appRoutes: Route[] = [{ path: 'my-lib', children: myLibRoutes }];
         "
       `);
     });
@@ -1500,7 +1501,11 @@ describe('lib', () => {
         "import { Route } from '@angular/router';
 
         export const appRoutes: Route[] = [
-            {path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.myLibRoutes)},];
+          {
+            path: 'my-lib',
+            loadChildren: () => import('@proj/my-lib').then((m) => m.myLibRoutes),
+          },
+        ];
         "
       `);
     });

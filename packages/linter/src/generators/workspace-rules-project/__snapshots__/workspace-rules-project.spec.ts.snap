@@ -3,14 +3,14 @@
 exports[`@nrwl/linter:workspace-rules-project should generate the required files 1`] = `
 "/**
  * Import your custom workspace rules at the top of this file.
- * 
+ *
  * For example:
- * 
+ *
  * import { RULE_NAME as myCustomRuleName, rule as myCustomRule } from './rules/my-custom-rule';
- * 
+ *
  * In order to quickly get started with writing rules you can use the
  * following generator command and provide your desired rule name:
- * 
+ *
  * \`\`\`sh
  * npx nx g @nrwl/linter:workspace-rule {{ NEW_RULE_NAME }}
  * \`\`\`
@@ -19,14 +19,14 @@ exports[`@nrwl/linter:workspace-rules-project should generate the required files
 module.exports = {
   /**
    * Apply the imported custom rules here.
-   * 
+   *
    * For example (using the example import above):
-   * 
+   *
    * rules: {
    *  [myCustomRuleName]: myCustomRule
    * }
    */
-  rules: {}
+  rules: {},
 };
 "
 `;
@@ -70,17 +70,9 @@ exports[`@nrwl/linter:workspace-rules-project should generate the required files
   \\"compilerOptions\\": {
     \\"outDir\\": \\"../../dist/out-tsc\\",
     \\"module\\": \\"commonjs\\",
-    \\"types\\": [
-      \\"jest\\",
-      \\"node\\"
-    ]
+    \\"types\\": [\\"jest\\", \\"node\\"]
   },
-  \\"include\\": [
-    \\"jest.config.ts\\",
-    \\"**/*.test.ts\\",
-    \\"**/*.spec.ts\\",
-    \\"**/*.d.ts\\"
-  ]
+  \\"include\\": [\\"jest.config.ts\\", \\"**/*.test.ts\\", \\"**/*.spec.ts\\", \\"**/*.d.ts\\"]
 }
 "
 `;
@@ -91,10 +83,13 @@ export default {
   displayName: 'eslint-rules',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }]
+    '^.+\\\\\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/tools/eslint-rules',\\"moduleNameMapper\\": {\\"@eslint/eslintrc\\":\\"@eslint/eslintrc/dist/eslintrc-universal.cjs\\"}
+  coverageDirectory: '../../coverage/tools/eslint-rules',
+  moduleNameMapper: {
+    '@eslint/eslintrc': '@eslint/eslintrc/dist/eslintrc-universal.cjs',
+  },
 };
 "
 `;

@@ -7,18 +7,27 @@ import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
 
 @NgModule({
- declarations: [AppComponent],
- imports: [
-   BrowserModule.withServerTransition({ appId: 'serverApp' }),
-   RouterModule.forRoot([{
-     path: '',
-     loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule)
-   }], { initialNavigation: 'enabledBlocking' }),
- ],
- providers: [],
- bootstrap: [AppComponent],
+  declarations: [AppComponent],
+  imports: [
+    BrowserModule.withServerTransition({ appId: 'serverApp' }),
+    RouterModule.forRoot(
+      [
+        {
+          path: '',
+          loadChildren: () =>
+            import('./remote-entry/entry.module').then(
+              (m) => m.RemoteEntryModule
+            ),
+        },
+      ],
+      { initialNavigation: 'enabledBlocking' }
+    ),
+  ],
+  providers: [],
+  bootstrap: [AppComponent],
 })
-export class AppModule {}"
+export class AppModule {}
+"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 2`] = `
@@ -42,7 +51,8 @@ exports[`MF Remote App Generator --ssr should generate the correct files 3`] = `
 import '@angular/platform-server/init';
 
 export { AppServerModule } from './app/app.server.module';
-export { renderModule } from '@angular/platform-server';"
+export { renderModule } from '@angular/platform-server';
+"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 4`] = `
@@ -79,7 +89,6 @@ export function app(): express.Express {
   server.set('view engine', 'html');
   server.set('views', browserBundles);
 
-
   // Example Express Rest API endpoints
   // server.get('/api/**', (req, res) => { });
   // Serve static files from /browser
@@ -89,7 +98,6 @@ export function app(): express.Express {
 
   // All regular routes use the Universal engine
   server.get('*', (req, res) => {
-
     res.render(indexHtml, {
       req,
       providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }],
@@ -123,7 +131,10 @@ export * from './bootstrap.server';
 "
 `;
 
-exports[`MF Remote App Generator --ssr should generate the correct files 5`] = `"import('./src/main.server');"`;
+exports[`MF Remote App Generator --ssr should generate the correct files 5`] = `
+"import('./src/main.server');
+"
+`;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 6`] = `
 "module.exports = {
@@ -131,13 +142,17 @@ exports[`MF Remote App Generator --ssr should generate the correct files 6`] = `
   exposes: {
     './Module': 'apps/test/src/app/remote-entry/entry.module.ts',
   },
-}"
+};
+"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 7`] = `
-"const { withModuleFederationForSSR } = require('@nrwl/angular/module-federation');
+"const {
+  withModuleFederationForSSR,
+} = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederationForSSR(config)"
+module.exports = withModuleFederationForSSR(config);
+"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 8`] = `
@@ -145,7 +160,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 8`] = `
 
 @Component({
   selector: 'proj-test-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`
+  template: \`<proj-nx-welcome></proj-nx-welcome>\`,
 })
 export class RemoteEntryComponent {}
 "
@@ -155,7 +170,12 @@ exports[`MF Remote App Generator --ssr should generate the correct files 9`] = `
 "import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-    {path: '', loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule)},];
+  {
+    path: '',
+    loadChildren: () =>
+      import('./remote-entry/entry.module').then((m) => m.RemoteEntryModule),
+  },
+];
 "
 `;
 
@@ -163,7 +183,10 @@ exports[`MF Remote App Generator --ssr should generate the correct files 10`] = 
 "import { Route } from '@angular/router';
 import { RemoteEntryComponent } from './entry.component';
 
-export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
+export const remoteRoutes: Route[] = [
+  { path: '', component: RemoteEntryComponent },
+];
+"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 11`] = `
@@ -198,7 +221,10 @@ exports[`MF Remote App Generator --ssr should generate the correct files 12`] = 
 "import { Route } from '@angular/router';
 import { RemoteEntryComponent } from './entry.component';
 
-export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
+export const remoteRoutes: Route[] = [
+  { path: '', component: RemoteEntryComponent },
+];
+"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 13`] = `
@@ -217,35 +243,39 @@ Object {
 exports[`MF Remote App Generator should generate a remote mf app with a host 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);"
+module.exports = withModuleFederation(config);
+"
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host 2`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);"
+module.exports = withModuleFederation(config);
+"
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with no host 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);"
+module.exports = withModuleFederation(config);
+"
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 1`] = `
-"import {importProvidersFrom} from \\"@angular/core\\";
-import {bootstrapApplication} from \\"@angular/platform-browser\\";
-import {RouterModule} from \\"@angular/router\\";
-import {RemoteEntryComponent} from \\"./app/remote-entry/entry.component\\";
-import {appRoutes} from \\"./app/app.routes\\";
+"import { importProvidersFrom } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
+import { RemoteEntryComponent } from './app/remote-entry/entry.component';
+import { appRoutes } from './app/app.routes';
 
 bootstrapApplication(RemoteEntryComponent, {
   providers: [
     importProvidersFrom(
-      RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'})
-    )
-  ]
-});"
+      RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' })
+    ),
+  ],
+});
+"
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 2`] = `
@@ -254,7 +284,8 @@ exports[`MF Remote App Generator should generate the a remote setup for standalo
   exposes: {
     './Routes': 'apps/test/src/app/remote-entry/entry.routes.ts',
   },
-}"
+};
+"
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 3`] = `
@@ -266,7 +297,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   standalone: true,
   imports: [CommonModule, NxWelcomeComponent],
   selector: 'proj-test-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`
+  template: \`<proj-nx-welcome></proj-nx-welcome>\`,
 })
 export class RemoteEntryComponent {}
 "
@@ -276,7 +307,12 @@ exports[`MF Remote App Generator should generate the a remote setup for standalo
 "import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-    {path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)},];
+  {
+    path: '',
+    loadChildren: () =>
+      import('./remote-entry/entry.routes').then((m) => m.remoteRoutes),
+  },
+];
 "
 `;
 
@@ -284,5 +320,8 @@ exports[`MF Remote App Generator should generate the a remote setup for standalo
 "import { Route } from '@angular/router';
 import { RemoteEntryComponent } from './entry.component';
 
-export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
+export const remoteRoutes: Route[] = [
+  { path: '', component: RemoteEntryComponent },
+];
+"
 `;

@@ -109,7 +109,7 @@ describe('react:stories for applications', () => {
     expect(
       appTree.read('apps/test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
     ).toEqual(
-      `import { ComponentStory, ComponentMeta } from '@storybook/react'`
+      `import { ComponentStory, ComponentMeta } from '@storybook/react';\n`
     );
   });
 

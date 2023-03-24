@@ -2,11 +2,16 @@
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate cypress spec files 1`] = `
 "describe('test-ui-lib', () => {
-  beforeEach(() => cy.visit('/iframe.html?id=testbuttoncomponent--primary&args=buttonType:button;style:default;age;isOn:false;'));
+  beforeEach(() =>
+    cy.visit(
+      '/iframe.html?id=testbuttoncomponent--primary&args=buttonType:button;style:default;age;isOn:false;'
+    )
+  );
   it('should render the component', () => {
     cy.get('proj-test-button').should('exist');
   });
-});"
+});
+"
 `;
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 1`] = `
@@ -15,16 +20,16 @@ import { StandaloneComponent } from './standalone.component';
 
 export default {
   title: 'StandaloneComponent',
-  component: StandaloneComponent
+  component: StandaloneComponent,
 } as Meta<StandaloneComponent>;
 
 export const Primary = {
   render: (args: StandaloneComponent) => ({
     props: args,
   }),
-  args: {
-  },
-};"
+  args: {},
+};
+"
 `;
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 2`] = `
@@ -33,16 +38,16 @@ import { SecondaryStandaloneComponent } from './secondary-standalone.component';
 
 export default {
   title: 'SecondaryStandaloneComponent',
-  component: SecondaryStandaloneComponent
+  component: SecondaryStandaloneComponent,
 } as Meta<SecondaryStandaloneComponent>;
 
 export const Primary = {
   render: (args: SecondaryStandaloneComponent) => ({
     props: args,
   }),
-  args: {
-  },
-};"
+  args: {},
+};
+"
 `;
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories.ts files 1`] = `
@@ -51,7 +56,7 @@ import { TestButtonComponent } from './test-button.component';
 
 export default {
   title: 'TestButtonComponent',
-  component: TestButtonComponent
+  component: TestButtonComponent,
 } as Meta<TestButtonComponent>;
 
 export const Primary = {
@@ -59,12 +64,13 @@ export const Primary = {
     props: args,
   }),
   args: {
-    buttonType:  'button',
-    style:  'default',
-    age:  0,
-    isOn:  false,
+    buttonType: 'button',
+    style: 'default',
+    age: 0,
+    isOn: false,
   },
-};"
+};
+"
 `;
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should ignore paths 1`] = `
@@ -73,7 +79,7 @@ import { TestButtonComponent } from './test-button.component';
 
 export default {
   title: 'TestButtonComponent',
-  component: TestButtonComponent
+  component: TestButtonComponent,
 } as Meta<TestButtonComponent>;
 
 export const Primary = {
@@ -81,10 +87,11 @@ export const Primary = {
     props: args,
   }),
   args: {
-    buttonType:  'button',
-    style:  'default',
-    age:  0,
-    isOn:  false,
+    buttonType: 'button',
+    style: 'default',
+    age: 0,
+    isOn: false,
   },
-};"
+};
+"
 `;

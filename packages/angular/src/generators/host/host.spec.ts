@@ -61,14 +61,13 @@ describe('Host App Generator', () => {
     expect(tree.exists('apps/remote2/project.json')).toBeTruthy();
     expect(
       tree.read('apps/host-app/module-federation.config.js', 'utf-8')
-    ).toContain(`'remote1','remote2'`);
+    ).toContain(`'remote1', 'remote2'`);
     expect(tree.read('apps/host-app/src/app/app.component.html', 'utf-8'))
       .toMatchInlineSnapshot(`
       "<ul class=\\"remote-menu\\">
-      <li><a routerLink='/'>Home</a></li>
-
-      <li><a routerLink='remote1'>Remote1</a></li>
-      <li><a routerLink='remote2'>Remote2</a></li>
+        <li><a routerLink=\\"/\\">Home</a></li>
+        <li><a routerLink=\\"remote1\\">Remote1</a></li>
+        <li><a routerLink=\\"remote2\\">Remote2</a></li>
       </ul>
       <router-outlet></router-outlet>
       "
@@ -94,7 +93,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('apps/remote3/project.json')).toBeTruthy();
     expect(
       tree.read('apps/host-app/module-federation.config.js', 'utf-8')
-    ).toContain(`'remote1','remote2','remote3'`);
+    ).toContain(`'remote1', 'remote2', 'remote3'`);
   });
 
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory', async () => {
@@ -117,7 +116,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('apps/foo/remote3/project.json')).toBeTruthy();
     expect(
       tree.read('apps/foo/host-app/module-federation.config.js', 'utf-8')
-    ).toContain(`'remote1','foo-remote2','foo-remote3'`);
+    ).toContain(`'remote1', 'foo-remote2', 'foo-remote3'`);
   });
 
   it('should generate a host with remotes using standalone components', async () => {

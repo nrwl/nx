@@ -94,7 +94,7 @@ exports[`update cy.mount usage should update angular react18 test file 1`] = `
 `;
 
 exports[`update cy.mount usage should work 1`] = `
-"import { mount } from 'cypress/angular'
+"import { mount } from 'cypress/angular';
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare global {
@@ -112,57 +112,57 @@ declare global {
 Cypress.Commands.add('login', (email, password) => {
   console.log('Custom command example: Login', email, password);
 });
-Cypress.Commands.add('mount', mount);"
+Cypress.Commands.add('mount', mount);
+"
 `;
 
 exports[`update cy.mount usage should work 2`] = `
 "import { MountConfig } from 'cypress/angular';
 
-    describe('MyComponent', () => {
-      it('should work', () => {
-        cy.mount(<MyComponent />);
-      });
+describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(<MyComponent />);
+  });
 
-      it('should work with config', () => {
-        cy.mount(<MyComponent title={\\"blah\\"}/>,);
-      });
-    });
-    "
+  it('should work with config', () => {
+    cy.mount(<MyComponent title={'blah'} />);
+  });
+});
+"
 `;
 
 exports[`update cy.mount usage should work 3`] = `
 "import { MountConfig } from 'cypress/angular';
 
-    describe('MyComponent', () => {
-      it('should work', () => {
-        cy.mount(<MyComponent />);
-      });
+describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(<MyComponent />);
+  });
 
-      it('should work with config', () => {
-        cy.mount(<MyComponent title={\\"blah\\"}/>,);
-      });
-    });
-    "
+  it('should work with config', () => {
+    cy.mount(<MyComponent title={'blah'} />);
+  });
+});
+"
 `;
 
 exports[`update cy.mount usage should work 4`] = `
 "import { MountConfig } from 'cypress/angular';
 
-    describe('MyComponent', () => {
-      it('should work', () => {
-        cy.mount(MyComponent);
-      });
+describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(MyComponent);
+  });
 
-      it('should work with config', () => {
-        cy.mount(MyComponent, {...config, componentProperties: {foo: 'bar'}});
-      });
-    });
-    "
+  it('should work with config', () => {
+    cy.mount(MyComponent, { ...config, componentProperties: { foo: 'bar' } });
+  });
+});
+"
 `;
 
 exports[`update cy.mount usage should work 5`] = `
-"
-// eslint-disable-next-line @typescript-eslint/no-namespace
+"// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace Cypress {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface Chainable<Subject> {
@@ -182,46 +182,40 @@ Cypress.Commands.add('mount', (any) => {
 `;
 
 exports[`update cy.mount usage should work 6`] = `
-" 
+"describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(<MyComponent />);
+  });
 
-    describe('MyComponent', () => {
-      it('should work', () => {
-        cy.mount(<MyComponent />);
-      });
-
-      it('should work with config', () => {
-        cy.mount(<MyComponent title={\\"blah\\"}/>,);
-      });
-    });
-    "
+  it('should work with config', () => {
+    cy.mount(<MyComponent title={'blah'} />);
+  });
+});
+"
 `;
 
 exports[`update cy.mount usage should work 7`] = `
-" 
+"describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(<MyComponent />);
+  });
 
-    describe('MyComponent', () => {
-      it('should work', () => {
-        cy.mount(<MyComponent />);
-      });
-
-      it('should work with config', () => {
-        cy.mount(<MyComponent title={\\"blah\\"}/>,);
-      });
-    });
-    "
+  it('should work with config', () => {
+    cy.mount(<MyComponent title={'blah'} />);
+  });
+});
+"
 `;
 
 exports[`update cy.mount usage should work 8`] = `
-" 
+"describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(MyComponent);
+  });
 
-    describe('MyComponent', () => {
-      it('should work', () => {
-        cy.mount(MyComponent);
-      });
-
-      it('should work with config', () => {
-        cy.mount(MyComponent, {...config, componentProperties: {foo: 'bar'}});
-      });
-    });
-    "
+  it('should work with config', () => {
+    cy.mount(MyComponent, { ...config, componentProperties: { foo: 'bar' } });
+  });
+});
+"
 `;
