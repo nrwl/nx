@@ -403,7 +403,17 @@ function getValueFromSchema(
   target: Target,
   property: string
 ): [hasPropertyOpt: boolean, value?: unknown] {
-  const targetOpts = readTargetOptions(target, context);
+  let targetOpts: any;
+  try {
+    targetOpts = readTargetOptions(target, context);
+  } catch (e) {
+    throw new Error(`Unable to read the target options for  ${targetToTargetString(
+      target
+    )}.
+Are you sure this is a valid target?
+Was trying to read the target for the property: '${property}', but got the following error: 
+${e.message || e}`);
+  }
   let targetHasOpt = Object.keys(targetOpts).includes(property);
 
   if (!targetHasOpt) {

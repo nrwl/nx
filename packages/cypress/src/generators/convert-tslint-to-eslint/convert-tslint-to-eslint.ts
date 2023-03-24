@@ -4,12 +4,13 @@ import {
   GeneratorCallback,
   Tree,
 } from '@nrwl/devkit';
-import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nrwl/linter';
-import type { Linter } from 'eslint';
 import {
-  addLinter,
-  CypressProjectSchema,
-} from '../cypress-project/cypress-project';
+  ConvertTSLintToESLintSchema,
+  Linter,
+  ProjectConverter,
+} from '@nrwl/linter';
+import { addLinterToCyProject } from '../../utils/add-linter';
+import type { Linter as ESLinter } from 'eslint';
 
 export async function conversionGenerator(
   host: Tree,
@@ -30,18 +31,18 @@ export async function conversionGenerator(
     projectName: options.project,
     ignoreExistingTslintConfig: options.ignoreExistingTslintConfig,
     eslintInitializer: async ({ projectName, projectConfig }) => {
-      await addLinter(host, {
-        linter: 'eslint',
-        projectName,
-        projectRoot: projectConfig.root,
+      await addLinterToCyProject(host, {
+        linter: Linter.EsLint,
+        project: projectName,
         /**
          * We set the parserOptions.project config just in case the converted config uses
          * rules which require type-checking. Later in the conversion we check if it actually
          * does and remove the config again if it doesn't, so that it is most efficient.
          */
         setParserOptionsProject: true,
-        skipFormat: options.skipFormat,
-      } as CypressProjectSchema);
+        cypressDir: 'src',
+        overwriteExisting: true,
+      });
     },
   });
 
@@ -115,7 +116,7 @@ export const conversionSchematic = convertNxGenerator(conversionGenerator);
  * Remove any @angular-eslint rules that were applied as a result of converting prior codelyzer
  * rules, because they are only relevant for Angular projects.
  */
-function removeCodelyzerRelatedRules(json: Linter.Config): Linter.Config {
+function removeCodelyzerRelatedRules(json: ESLinter.Config): ESLinter.Config {
   for (const ruleName of Object.keys(json.rules)) {
     if (ruleName.startsWith('@angular-eslint')) {
       delete json.rules[ruleName];

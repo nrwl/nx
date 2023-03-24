@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxCypressE2EConfigGenerator",
+  "cli": "nx",
+  "title": "Add a Cypress Configuration.",
+  "description": "Add a Cypress configuration to an existing project.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to add a Cypress configuration to",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-priority": "important",
+      "x-prompt": "What project do you want to add Cypress to?"
+    },
+    "devServerTarget": {
+      "type": "string",
+      "description": "A devServerTarget,'<projectName>:<targetName>[:<configName>], that will be used to run tests against. This is usually the app this project will be used in. Pass --baseUrl if you wish to not use a devServerTarget.",
+      "x-priority": "important"
+    },
+    "port": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["cypress-auto"]
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "description": "Set the 'port' option on the e2e target. It's recommend to set a different port so you can run tests e2e targets in parallel. Most dev servers support using '0' to automatically find a free port. The value 'cypress-auto' can be used if the underlying dev server does not support automatically finding a free port.",
+      "x-priority": "important"
+    },
+    "baseUrl": {
+      "type": "string",
+      "description": "The address (with the port) which your application is running on. If you wish to start your application when running the e2e target, then use --devServerTarget instead."
+    },
+    "directory": {
+      "type": "string",
+      "description": "A directory where the project is placed relative from the project root",
+      "x-priority": "important",
+      "default": "cypress"
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "none"],
+      "default": "eslint"
+    },
+    "js": {
+      "description": "Generate JavaScript files rather than TypeScript files.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "setParserOptionsProject": {
+      "type": "boolean",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+      "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "rootProject": {
+      "description": "Create a application at the root of the workspace",
+      "type": "boolean",
+      "default": false,
+      "hidden": true,
+      "x-priority": "internal"
+    },
+    "bundler": {
+      "description": "The Cypress bundler to use.",
+      "type": "string",
+      "enum": ["vite", "webpack", "none"],
+      "x-prompt": "Which Cypress bundler do you want to use?",
+      "default": "webpack"
+    }
+  },
+  "required": ["project"],
+  "examplesFile": "../../../docs/cypress-e2e-config-examples.md"
+}
