@@ -568,10 +568,11 @@ function elevateNestedPaths(
 
   sortedPaths.forEach((path) => {
     const segments = path.split('/node_modules/');
+    const mappedPackage = remappedPackages.get(path);
 
     // we keep hoisted packages intact
     if (segments.length === 1) {
-      result.set(path, remappedPackages.get(path));
+      result.set(path, mappedPackage);
       return;
     }
 
@@ -581,13 +582,12 @@ function elevateNestedPaths(
 
     // check if grandparent has the same package
     const shouldElevate = (segs: string[]) => {
-      const newPath = getNewPath(segs.slice(0, -1));
-      if (result.has(newPath)) {
-        const match = result.get(newPath);
-        const source = remappedPackages.get(path);
+      const elevatedPath = getNewPath(segs.slice(0, -1));
+      if (result.has(elevatedPath)) {
+        const match = result.get(elevatedPath);
         return (
-          match.valueV1?.version === source.valueV1?.version &&
-          match.valueV3?.version === source.valueV3?.version
+          match.valueV1?.version === mappedPackage.valueV1?.version &&
+          match.valueV3?.version === mappedPackage.valueV3?.version
         );
       }
       return true;
@@ -598,12 +598,12 @@ function elevateNestedPaths(
     }
     const newPath = getNewPath(segments);
     if (path !== newPath) {
-      result.set(newPath, {
-        ...remappedPackages.get(path),
-        path: newPath,
-      });
+      if (!result.has(newPath)) {
+        mappedPackage.path = newPath;
+        result.set(newPath, mappedPackage);
+      }
     } else {
-      result.set(path, remappedPackages.get(path));
+      result.set(path, mappedPackage);
     }
   });
 
