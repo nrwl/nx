@@ -17,7 +17,21 @@
     },
     "devServerTarget": {
       "type": "string",
-      "description": "A devServerTarget,'<projectName>:<targetName>[:<configName>], that will be used to run tests against. This is usually the app this project will be used in. Pass --baseUrl if you wish to not use a devServerTarget."
+      "description": "A devServerTarget,'<projectName>:<targetName>[:<configName>], that will be used to run tests against. This is usually the app this project will be used in. Pass --baseUrl if you wish to not use a devServerTarget.",
+      "x-priority": "important"
+    },
+    "port": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["cypress-auto"]
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "description": "Set the 'port' option on the e2e target. It's recommend to set a different port so you can run tests e2e targets in parallel. Most dev servers support using '0' to automatically find a free port. The value 'cypress-auto' can be used if the underlying dev server does not support automatically finding a free port.",
+      "x-priority": "important"
     },
     "baseUrl": {
       "type": "string",

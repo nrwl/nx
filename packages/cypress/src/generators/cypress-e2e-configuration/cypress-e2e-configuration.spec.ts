@@ -298,6 +298,55 @@ describe('Cypress e2e configuration', () => {
         }
       `);
     });
+
+    it('should set --port', async () => {
+      addProject(tree, { name: 'my-app', type: 'apps' });
+      await cypressE2EConfigurationGenerator(tree, {
+        project: 'my-app',
+        port: 0,
+      });
+
+      expect(readProjectConfiguration(tree, 'my-app').targets['e2e'].options)
+        .toMatchInlineSnapshot(`
+        Object {
+          "cypressConfig": "apps/my-app/cypress.config.ts",
+          "devServerTarget": "my-app:serve",
+          "port": 0,
+          "testingType": "e2e",
+        }
+      `);
+    });
+
+    it('should throw if cypress config already exists', async () => {
+      addProject(tree, { name: 'my-lib', type: 'libs' });
+      tree.write('libs/my-lib/cypress.config.ts', 'some content');
+      await expect(async () => {
+        await cypressE2EConfigurationGenerator(tree, {
+          project: 'my-lib',
+          baseUrl: 'http://localhost:4200',
+        });
+      }).rejects.toThrowErrorMatchingInlineSnapshot(`
+        "The project, my-lib, already has a 'cypress.config.ts' file.
+        This means that Cypress is already setup in this project.
+        If you want to re-add Cypress to this project, remove the 'libs/my-lib/cypress.config.ts' file and try again."
+      `);
+    });
+    it('should not overwrite --directory', async () => {
+      addProject(tree, { name: 'my-lib', type: 'libs' });
+      tree.write('libs/my-lib/cypress.config.ts', 'some content');
+      tree.write('libs/my-lib/cypress/e2e/app.cy.ts', 'some content');
+      await expect(async () => {
+        await cypressE2EConfigurationGenerator(tree, {
+          project: 'my-lib',
+          baseUrl: 'http://localhost:4200',
+          directory: 'cypress',
+        });
+      }).rejects.toThrowErrorMatchingInlineSnapshot(`
+        "The project, my-lib, already has a 'cypress' directory.
+        This most likely means you already have Cypress setup in this project.
+        Make sure Cypress is not already setup in this project and try again."
+      `);
+    });
   });
 });
 

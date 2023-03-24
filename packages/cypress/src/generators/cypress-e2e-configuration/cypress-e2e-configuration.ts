@@ -33,6 +33,7 @@ export interface CypressE2EConfigSchema {
   bundler?: 'webpack' | 'vite' | 'none';
   devServerTarget?: string;
   linter?: Linter;
+  port?: number | 'cypress-auto';
 }
 type NormalizedSchema = ReturnType<typeof normalizeOptions>;
 
@@ -78,9 +79,31 @@ Rename or remove the existing e2e target.`);
 In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:<configName>]', or a baseUrl option`);
   }
 
+  options.directory ??= 'src';
+
+  if (tree.exists(joinPathFragments(projectConfig.root, options.directory))) {
+    throw new Error(`The project, ${options.project}, already has a '${options.directory}' directory.
+This most likely means you already have Cypress setup in this project.
+Make sure Cypress is not already setup in this project and try again.`);
+  }
+
+  const cyVersion = installedCypressVersion();
+  const cyFile =
+    cyVersion && cyVersion < 10 ? 'cypress.json' : 'cypress.config.ts';
+
+  if (tree.exists(joinPathFragments(projectConfig.root, cyFile))) {
+    throw new Error(`The project, ${
+      options.project
+    }, already has a '${cyFile}' file.
+This means that Cypress is already setup in this project.
+If you want to re-add Cypress to this project, remove the '${joinPathFragments(
+      projectConfig.root,
+      cyFile
+    )}' file and try again.`);
+  }
+
   return {
     ...options,
-    directory: options.directory ?? 'src',
     bundler: options.bundler ?? 'webpack',
     rootProject: projectConfig.root === '.',
     linter: options.linter ?? Linter.EsLint,
@@ -171,6 +194,7 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
     projectConfig.targets.e2e.options = {
       ...projectConfig.targets.e2e.options,
       devServerTarget: opts.devServerTarget,
+      port: opts.port,
     };
 
     projectConfig.targets.e2e.configurations = {
