@@ -38,19 +38,19 @@ lint:
   stage: test
   extends: .distributed
   script:
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint --parallel=3
 
 test:
   stage: test
   extends: .distributed
   script:
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --configuration=ci
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t test --parallel=3 --configuration=ci
 
 build:
   stage: build
   extends: .distributed
   script:
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t build --parallel=3
 ```
 
 The `build` and `test` jobs implement the CI workflow using `.distributed` as a template to keep the CI configuration file more readable.
@@ -59,9 +59,7 @@ The `build` and `test` jobs implement the CI workflow using `.distributed` as a 
 
 ## Distributed CI with Nx Cloud
 
-To use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
-
-Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci/ci-setup#distributed-ci-with-nx-cloud).
+Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
 
 ```yaml
 image: node:18
@@ -109,7 +107,7 @@ nx-dte:
   script:
     - yarn nx-cloud start-ci-run --stop-agents-after="build"
     - yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --configuration=ci & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t test --parallel=3 --configuration=ci & yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t e2e --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t build --parallel=3
 
 # Create as many agents as you want
 nx-dte-agent1:

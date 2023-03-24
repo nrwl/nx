@@ -24,9 +24,9 @@ jobs:
       - run: npm ci
 
       - run: npx nx format:check
-      - run: npx nx affected --target=lint --parallel=3
-      - run: npx nx affected --target=test --parallel=3 --configuration=ci
-      - run: npx nx affected --target=build --parallel=3
+      - run: npx nx affected -t lint --parallel=3
+      - run: npx nx affected -t test --parallel=3 --configuration=ci
+      - run: npx nx affected -t build --parallel=3
 ```
 
 The `pr` and `main` jobs implement the CI workflow. Setting `timeout-minutes` is needed only if you have very slow tasks.
@@ -41,9 +41,7 @@ If you're using this action in the context of a branch you may need to add `run:
 
 ## Distributed CI with Nx Cloud
 
-To use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
-
-Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci/ci-setup#distributed-ci-with-nx-cloud).
+Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
 
 ```yaml
 name: CI
@@ -62,7 +60,7 @@ jobs:
       parallel-commands: |
         npx nx-cloud record -- npx nx format:check
       parallel-commands-on-agents: |
-        npx nx affected --target=lint --parallel=3 & npx nx affected --target=test --parallel=3 --configuration=ci & npx nx affected --target=build --parallel=3
+        npx nx affected -t lint --parallel=3 & npx nx affected -t test --parallel=3 --configuration=ci & npx nx affected -t build --parallel=3
 
   agents:
     name: Nx Cloud - Agents
