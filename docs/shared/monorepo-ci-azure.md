@@ -32,9 +32,9 @@ jobs:
 
       - script: npx nx format:check
 
-      - script: npx nx affected --base=$(BASE_SHA) --target=lint --parallel=3
-      - script: npx nx affected --base=$(BASE_SHA) --target=test --parallel=3 --configuration=ci
-      - script: npx nx affected --base=$(BASE_SHA) --target=build --parallel=3
+      - script: npx nx affected --base=$(BASE_SHA) -t lint --parallel=3
+      - script: npx nx affected --base=$(BASE_SHA) -t test --parallel=3 --configuration=ci
+      - script: npx nx affected --base=$(BASE_SHA) -t build --parallel=3
 ```
 
 The `main` job implements the CI workflow.
@@ -43,9 +43,7 @@ The `main` job implements the CI workflow.
 
 ## Distributed CI with Nx Cloud
 
-To use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
-
-Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci/ci-setup#distributed-ci-with-nx-cloud).
+Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
 
 ```yaml
 trigger:
@@ -84,7 +82,7 @@ jobs:
       - script: npx nx-cloud start-ci-run --stop-agents-after="build"
 
       - script: npx nx-cloud record -- npx nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3 & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --configuration=ci & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint --parallel=3 & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t test --parallel=3 --configuration=ci & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t build --parallel=3
 ```
 
 You can also use our [ci-workflow generator](/packages/workspace/generators/ci-workflow) to generate the pipeline file.
