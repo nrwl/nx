@@ -20,6 +20,18 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
+        node_version:
+          - '19'
+          - '18'
+          - '16'
+        exclude:
+          # run just node v18 on macos
+          - os: macos-latest
+            node_version: '19'
+          - os: macos-latest
+            node_version: '16'
+
+    name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -27,14 +39,14 @@ jobs:
       - name: Set node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: ${{ matrix.node_version }}
 
       - name: Cache node_modules
         id: cache-modules
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
@@ -44,13 +56,16 @@ jobs:
     needs: preinstall
     permissions:
       contents: read
+
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os:
-          - ubuntu-latest
-          - macos-latest
+          - 'ubuntu-latest'
+          - 'macos-latest'
         node_version:
+          - '19'
+          - '18'
           - '16'
         package_manager:
           - npm
@@ -85,7 +100,7 @@ jobs:
           - e2e-vite
           - e2e-webpack
           - e2e-workspace-create
-          - e2e-e2e-workspace-create-npm
+          - e2e-workspace-create-npm
         include:
           # os short names
           - os: ubuntu-latest
@@ -159,14 +174,123 @@ jobs:
             project: e2e-detox
           - os: ubuntu-latest
             project: e2e-expo
-          # run just npm v16 on macos
+          # exclude non-CNW/Lerna tests from non-LTS node versions
+          - node_version: 16
+            project: e2e-add-nx-to-monorepo
+          - node_version: 16
+            project: e2e-angular-core
+          - node_version: 16
+            project: e2e-angular-extensions
+          - node_version: 16
+            project: e2e-cra-to-nx
+          - node_version: 16
+            project: e2e-cypress
+          - node_version: 16
+            project: e2e-detox
+          - node_version: 16
+            project: e2e-esbuild
+          - node_version: 16
+            project: e2e-expo
+          - node_version: 16
+            project: e2e-jest
+          - node_version: 16
+            project: e2e-js
+          - node_version: 16
+            project: e2e-linter
+          - node_version: 16
+            project: e2e-make-angular-cli-faster
+          - node_version: 16
+            project: e2e-next
+          - node_version: 16
+            project: e2e-node
+          - node_version: 16
+            project: e2e-nx-init
+          - node_version: 16
+            project: e2e-nx-misc
+          - node_version: 16
+            project: e2e-nx-plugin
+          - node_version: 16
+            project: e2e-nx-run
+          - node_version: 16
+            project: e2e-react
+          - node_version: 16
+            project: e2e-react-native
+          - node_version: 16
+            project: e2e-web
+          - node_version: 16
+            project: e2e-rollup
+          - node_version: 16
+            project: e2e-storybook
+          - node_version: 16
+            project: e2e-storybook-angular
+          - node_version: 16
+            project: e2e-vite
+          - node_version: 16
+            project: e2e-webpack
+          - node_version: 19
+            project: e2e-add-nx-to-monorepo
+          - node_version: 19
+            project: e2e-angular-core
+          - node_version: 19
+            project: e2e-angular-extensions
+          - node_version: 19
+            project: e2e-cra-to-nx
+          - node_version: 19
+            project: e2e-cypress
+          - node_version: 19
+            project: e2e-detox
+          - node_version: 19
+            project: e2e-esbuild
+          - node_version: 19
+            project: e2e-expo
+          - node_version: 19
+            project: e2e-jest
+          - node_version: 19
+            project: e2e-js
+          - node_version: 19
+            project: e2e-linter
+          - node_version: 19
+            project: e2e-make-angular-cli-faster
+          - node_version: 19
+            project: e2e-next
+          - node_version: 19
+            project: e2e-node
+          - node_version: 19
+            project: e2e-nx-init
+          - node_version: 19
+            project: e2e-nx-misc
+          - node_version: 19
+            project: e2e-nx-plugin
+          - node_version: 19
+            project: e2e-nx-run
+          - node_version: 19
+            project: e2e-react
+          - node_version: 19
+            project: e2e-react-native
+          - node_version: 19
+            project: e2e-web
+          - node_version: 19
+            project: e2e-rollup
+          - node_version: 19
+            project: e2e-storybook
+          - node_version: 19
+            project: e2e-storybook-angular
+          - node_version: 19
+            project: e2e-vite
+          - node_version: 19
+            project: e2e-webpack
+          # run just npm v18 on macos
           - os: macos-latest
             package_manager: yarn
           - os: macos-latest
             package_manager: pnpm
+          - os: macos-latest
+            node_version: 16
+          - os: macos-latest
+            node_version: 19
       fail-fast: false
 
-    name: ${{ matrix.os_name }}/${{ matrix.package_manager }} ${{ join(matrix.project) }}
+    name: ${{ matrix.os_name }}/${{ matrix.package_manager }}/${{ matrix.node_version }} ${{ join(matrix.project) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -191,7 +315,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
