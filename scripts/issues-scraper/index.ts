@@ -1,5 +1,5 @@
-import { readJsonSync, writeJsonSync } from 'fs-extra';
-import { join } from 'path';
+import { ensureDirSync, readJsonSync, writeJsonSync } from 'fs-extra';
+import { dirname, join } from 'path';
 import { ReportData, ScopeData } from './model';
 import { getScopeLabels, scrapeIssues } from './scrape-issues';
 import { formatGhReport, getSlackMessageJson } from './format-slack-message';
@@ -49,6 +49,7 @@ function getTrendData(newData: ReportData, oldData: ReportData): ReportData {
 
 function saveCacheData(report: ReportData) {
   if (isCI) {
+    ensureDirSync(dirname(CACHE_FILE));
     writeJsonSync(CACHE_FILE, report);
   }
 }
