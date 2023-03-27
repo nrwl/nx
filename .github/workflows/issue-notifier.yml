@@ -41,6 +41,7 @@ jobs:
         with:
           name: cached-issue-data
           path: ./scripts/isses-scraper/cached
+          if_no_artifact_found: ignore
 
       - name: Collect Issue Data
         id: collect
