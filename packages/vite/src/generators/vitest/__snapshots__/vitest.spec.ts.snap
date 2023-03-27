@@ -1,135 +1,116 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`vitest generator insourceTests should add the insourceSource option in the vite config 1`] = `
-"
-      /// <reference types=\\"vitest\\" />
-      import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import viteTsConfigPaths from 'vite-tsconfig-paths';
-      
-      
-      export default defineConfig({
-        cacheDir: '../../node_modules/.vite/my-test-react-app',
-        
-        
-        
-    plugins: [
-      
-      react(),
-      viteTsConfigPaths({
-        root: '../../',
-      }),
-    ],
-    
-        
-    // Uncomment this if you are using workers. 
-    // worker: {
-    //  plugins: [
-    //    viteTsConfigPaths({
-    //      root: '../../',
-    //    }),
-    //  ],
-    // },
-        
-        define: {
-    'import.meta.vitest': undefined
+"/// <reference types=\\"vitest\\" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  cacheDir: '../../node_modules/.vite/my-test-react-app',
+
+  plugins: [
+    react(),
+    viteTsConfigPaths({
+      root: '../../',
+    }),
+  ],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [
+  //    viteTsConfigPaths({
+  //      root: '../../',
+  //    }),
+  //  ],
+  // },
+
+  define: {
+    'import.meta.vitest': undefined,
   },
-        test: {
+  test: {
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest'
+      dir: '../../node_modules/.vitest',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
+    includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
   },
-      });"
+});
+"
 `;
 
 exports[`vitest generator vite.config should create correct vite.config.ts file for apps 1`] = `
-"
-      /// <reference types=\\"vitest\\" />
-      import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import viteTsConfigPaths from 'vite-tsconfig-paths';
-      
-      
-      export default defineConfig({
-        cacheDir: '../../node_modules/.vite/my-test-react-app',
-        
-        
-        
-    plugins: [
-      
-      react(),
-      viteTsConfigPaths({
-        root: '../../',
-      }),
-    ],
-    
-        
-    // Uncomment this if you are using workers. 
-    // worker: {
-    //  plugins: [
-    //    viteTsConfigPaths({
-    //      root: '../../',
-    //    }),
-    //  ],
-    // },
-        
-        
-        test: {
+"/// <reference types=\\"vitest\\" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  cacheDir: '../../node_modules/.vite/my-test-react-app',
+
+  plugins: [
+    react(),
+    viteTsConfigPaths({
+      root: '../../',
+    }),
+  ],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [
+  //    viteTsConfigPaths({
+  //      root: '../../',
+  //    }),
+  //  ],
+  // },
+
+  test: {
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest'
+      dir: '../../node_modules/.vitest',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    
   },
-      });"
+});
+"
 `;
 
 exports[`vitest generator vite.config should create correct vite.config.ts file for non buildable libs 1`] = `
-"
-      /// <reference types=\\"vitest\\" />
-      import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import viteTsConfigPaths from 'vite-tsconfig-paths';
-      
-      
-      export default defineConfig({
-        cacheDir: '../../node_modules/.vite/react-lib-nonb-jest',
-        
-        
-        
-    plugins: [
-      
-      react(),
-      viteTsConfigPaths({
-        root: '../../',
-      }),
-    ],
-    
-        
-    // Uncomment this if you are using workers. 
-    // worker: {
-    //  plugins: [
-    //    viteTsConfigPaths({
-    //      root: '../../',
-    //    }),
-    //  ],
-    // },
-        
-        
-        test: {
+"/// <reference types=\\"vitest\\" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  cacheDir: '../../node_modules/.vite/react-lib-nonb-jest',
+
+  plugins: [
+    react(),
+    viteTsConfigPaths({
+      root: '../../',
+    }),
+  ],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [
+  //    viteTsConfigPaths({
+  //      root: '../../',
+  //    }),
+  //  ],
+  // },
+
+  test: {
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest'
+      dir: '../../node_modules/.vitest',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    
   },
-      });"
+});
+"
 `;

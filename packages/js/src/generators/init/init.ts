@@ -73,23 +73,9 @@ export async function initGenerator(
     : () => {};
   tasks.push(installTask);
 
+  ensurePackage('prettier', prettierVersion);
   if (!schema.skipFormat) {
-    try {
-      ensurePackage('prettier', prettierVersion);
-      await formatFiles(tree);
-    } catch (e) {
-      if (!formatTaskAdded) {
-        formatTaskAdded = true;
-        tasks.push(async () => {
-          try {
-            const prettierCli = await import('prettier/cli');
-            await prettierCli.run(['.', '--write']);
-          } catch {
-            // If --skipPackageJson is passed then prettier is not installed.
-          }
-        });
-      }
-    }
+    await formatFiles(tree);
   }
 
   return async () => {

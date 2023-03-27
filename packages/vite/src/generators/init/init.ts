@@ -3,10 +3,13 @@ import {
   convertNxGenerator,
   readJson,
   readNxJson,
+  runTasksInSerial,
   Tree,
   updateJson,
   updateNxJson,
 } from '@nrwl/devkit';
+
+import { initGenerator as jsInitGenerator } from '@nrwl/js';
 
 import {
   jsdomVersion,
@@ -85,11 +88,20 @@ export function createVitestConfig(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-export function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
+export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   moveToDevDependencies(tree);
   createVitestConfig(tree);
-  const installTask = checkDependenciesInstalled(tree, schema);
-  return installTask;
+  const tasks = [];
+
+  tasks.push(
+    await jsInitGenerator(tree, {
+      ...schema,
+      skipFormat: true,
+    })
+  );
+
+  tasks.push(checkDependenciesInstalled(tree, schema));
+  return runTasksInSerial(...tasks);
 }
 
 export default initGenerator;

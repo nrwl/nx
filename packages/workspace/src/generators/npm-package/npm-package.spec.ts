@@ -69,7 +69,7 @@ describe('@nrwl/workspace:npm-package', () => {
         },
       };
 
-      const existingIndex = `export * from './src'`;
+      const existingIndex = `export * from './src';\n`;
       writeJson(tree, 'packages/my-package/package.json', existingPackageJson);
       tree.write('packages/my-package/index.ts', existingIndex);
 

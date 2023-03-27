@@ -9,14 +9,10 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 const config: StorybookConfig = {
   core: { builder: '@storybook/builder-vite' },
   stories: [
-    
     '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' 
-    
-    
-  ],
+  addons: ['@storybook/addon-essentials'],
   async viteFinal(config: any) {
     return mergeConfig(config, {
       plugins: [
@@ -30,10 +26,7 @@ const config: StorybookConfig = {
 
 module.exports = config;
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -43,15 +36,20 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
@@ -59,7 +57,8 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -69,30 +68,20 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
 exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 4`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
-
-
-
 const config: StorybookConfig = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-    
-  ]
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
 
 module.exports = config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -100,15 +89,20 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
@@ -116,7 +110,8 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;

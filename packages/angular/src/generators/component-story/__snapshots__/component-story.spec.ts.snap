@@ -6,7 +6,7 @@ import { TestButtonComponent } from './test-button.component';
 
 export default {
   title: 'TestButtonComponent',
-  component: TestButtonComponent
+  component: TestButtonComponent,
 } as Meta<TestButtonComponent>;
 
 export const Primary = {
@@ -14,10 +14,11 @@ export const Primary = {
     props: args,
   }),
   args: {
-    buttonType:  'button',
-    style:  'default',
-    age:  0,
-    isOn:  false,
+    buttonType: 'button',
+    style: 'default',
+    age: 0,
+    isOn: false,
   },
-};"
+};
+"
 `;

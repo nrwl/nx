@@ -1,4 +1,4 @@
-import { getProjects, Tree } from '@nrwl/devkit';
+import { formatFiles, getProjects, Tree } from '@nrwl/devkit';
 import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
 
 export default async function update(tree: Tree) {
@@ -18,4 +18,6 @@ export default async function update(tree: Tree) {
   if (hasReactNaiveProject) {
     addBabelInputs(tree);
   }
+
+  await formatFiles(tree);
 }

@@ -31,26 +31,25 @@ describe('scam-to-standalone', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-          standalone: true,
-          imports: [CommonModule],
+        standalone: true,
+        imports: [CommonModule],
         selector: 'proj-bar',
         templateUrl: './bar.component.html',
-        styleUrls: ['./bar.component.css']
+        styleUrls: ['./bar.component.css'],
       })
-      export class BarComponent {
-
-      }
+      export class BarComponent {}
       "
     `);
 
     expect(tree.read('apps/foo/src/app/mymodule.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { BarComponent } from './bar/bar.component';
-            
-            @NgModule({
-              imports: [BarComponent]
-            })
-            export class MyModule {}"
+
+      @NgModule({
+        imports: [BarComponent],
+      })
+      export class MyModule {}
+      "
     `);
 
     expect(tree.read('apps/foo/src/app/bar/bar.component.spec.ts', 'utf-8'))
@@ -65,9 +64,8 @@ describe('scam-to-standalone', () => {
 
         beforeEach(async () => {
           await TestBed.configureTestingModule({
-            imports: [ BarComponent ]
-          })
-          .compileComponents();
+            imports: [BarComponent],
+          }).compileComponents();
 
           fixture = TestBed.createComponent(BarComponent);
           component = fixture.componentInstance;

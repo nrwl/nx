@@ -40,7 +40,8 @@ describe('setupSSR', () => {
       import '@angular/platform-server/init';
 
       export { AppServerModule } from './app/app.server.module';
-      export { renderModule } from '@angular/platform-server';"
+      export { renderModule } from '@angular/platform-server';
+      "
     `);
     expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
@@ -49,16 +50,16 @@ describe('setupSSR', () => {
 
       function bootstrap() {
         platformBrowserDynamic()
-        .bootstrapModule(AppModule)
-        .catch((err) => console.error(err));
-      };
+          .bootstrapModule(AppModule)
+          .catch((err) => console.error(err));
+      }
 
-
-       if (document.readyState !== 'loading') {
-         bootstrap();
-       } else {
-         document.addEventListener('DOMContentLoaded', bootstrap);
-       }"
+      if (document.readyState !== 'loading') {
+        bootstrap();
+      } else {
+        document.addEventListener('DOMContentLoaded', bootstrap);
+      }
+      "
     `);
     expect(tree.read('apps/app1/tsconfig.server.json', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -68,15 +69,11 @@ describe('setupSSR', () => {
         \\"compilerOptions\\": {
           \\"outDir\\": \\"../../out-tsc/server\\",
           \\"target\\": \\"es2019\\",
-          \\"types\\": [
-            \\"node\\"
-          ]
+          \\"types\\": [\\"node\\"]
         },
-        \\"files\\": [
-          \\"src/main.server.ts\\",
-          \\"server.ts\\",
-        ]
-      }"
+        \\"files\\": [\\"src/main.server.ts\\", \\"server.ts\\"]
+      }
+      "
     `);
     expect(tree.read('apps/app1/src/app/app.server.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -87,13 +84,11 @@ describe('setupSSR', () => {
       import { AppComponent } from './app.component';
 
       @NgModule({
-        imports: [
-          AppModule,
-          ServerModule,
-        ],
+        imports: [AppModule, ServerModule],
         bootstrap: [AppComponent],
       })
-      export class AppServerModule {}"
+      export class AppServerModule {}
+      "
     `);
     expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -104,9 +99,7 @@ describe('setupSSR', () => {
 
       @NgModule({
         declarations: [AppComponent, NxWelcomeComponent],
-        imports: [
-          BrowserModule.withServerTransition({ appId: 'serverApp' }),
-        ],
+        imports: [BrowserModule.withServerTransition({ appId: 'serverApp' })],
         providers: [],
         bootstrap: [AppComponent],
       })

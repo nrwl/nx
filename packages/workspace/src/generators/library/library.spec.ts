@@ -147,10 +147,10 @@ describe('lib', () => {
           displayName: 'my-lib',
           preset: '../../jest.preset.js',
           transform: {
-            '^.+\\\\\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }]
+            '^.+\\\\\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
           },
           moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-          coverageDirectory: '../../coverage/libs/my-lib'
+          coverageDirectory: '../../coverage/libs/my-lib',
         };
         "
       `);
@@ -169,16 +169,16 @@ describe('lib', () => {
         ...defaultOptions,
         name: 'myLib',
       });
-      const expectedRootJestConfig = `
+
+      expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(
+        `
         "import { getJestProjects } from '@nrwl/jest';
 
         export default {
-        projects: getJestProjects()
-        };"
-      `;
-
-      expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(
-        expectedRootJestConfig
+          projects: getJestProjects(),
+        };
+        "
+      `
       );
       await libraryGenerator(tree, {
         ...defaultOptions,
@@ -186,7 +186,14 @@ describe('lib', () => {
       });
 
       expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(
-        expectedRootJestConfig
+        `
+        "import { getJestProjects } from '@nrwl/jest';
+
+        export default {
+          projects: getJestProjects(),
+        };
+        "
+      `
       );
     });
   });
@@ -716,10 +723,10 @@ describe('lib', () => {
           displayName: 'my-lib',
           preset: '../../jest.preset.js',
           transform: {
-            '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
+            '^.+\\\\\\\\.[tj]sx?$': 'babel-jest',
           },
           moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-          coverageDirectory: '../../coverage/libs/my-lib'
+          coverageDirectory: '../../coverage/libs/my-lib',
         };
         "
       `);

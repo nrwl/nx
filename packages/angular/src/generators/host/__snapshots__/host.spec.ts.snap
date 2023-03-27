@@ -28,16 +28,16 @@ import { AppModule } from './app/app.module';
 
 function bootstrap() {
   platformBrowserDynamic()
-  .bootstrapModule(AppModule)
-  .catch((err) => console.error(err));
-};
+    .bootstrapModule(AppModule)
+    .catch((err) => console.error(err));
+}
 
-
- if (document.readyState !== 'loading') {
-   bootstrap();
- } else {
-   document.addEventListener('DOMContentLoaded', bootstrap);
- }"
+if (document.readyState !== 'loading') {
+  bootstrap();
+} else {
+  document.addEventListener('DOMContentLoaded', bootstrap);
+}
+"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 3`] = `
@@ -51,7 +51,8 @@ exports[`Host App Generator --ssr should generate the correct files 3`] = `
 import '@angular/platform-server/init';
 
 export { AppServerModule } from './app/app.server.module';
-export { renderModule } from '@angular/platform-server';"
+export { renderModule } from '@angular/platform-server';
+"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 4`] = `
@@ -124,30 +125,38 @@ export * from './bootstrap.server';
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 5`] = `"import('./src/main.server');"`;
+exports[`Host App Generator --ssr should generate the correct files 5`] = `
+"import('./src/main.server');
+"
+`;
 
 exports[`Host App Generator --ssr should generate the correct files 6`] = `
 "module.exports = {
   name: 'test',
-  remotes: []
-}"
+  remotes: [],
+};
+"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 7`] = `
-"const { withModuleFederationForSSR } = require('@nrwl/angular/module-federation');
+"const {
+  withModuleFederationForSSR,
+} = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederationForSSR(config)"
+module.exports = withModuleFederationForSSR(config);
+"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 8`] = `
 "import { NxWelcomeComponent } from './nx-welcome.component';
-    import { Route } from '@angular/router';
+import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-    {
-      path: '',
-      component: NxWelcomeComponent
-    },];
+  {
+    path: '',
+    component: NxWelcomeComponent,
+  },
+];
 "
 `;
 
@@ -199,19 +208,22 @@ Object {
 exports[`Host App Generator should generate a host app with a remote 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);"
+module.exports = withModuleFederation(config);
+"
 `;
 
 exports[`Host App Generator should generate a host app with a remote 2`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);"
+module.exports = withModuleFederation(config);
+"
 `;
 
 exports[`Host App Generator should generate a host app with no remotes 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);"
+module.exports = withModuleFederation(config);
+"
 `;
 
 exports[`Host App Generator should generate a host with remotes using standalone components 1`] = `
@@ -230,8 +242,8 @@ bootstrapApplication(AppComponent, {
 `;
 
 exports[`Host App Generator should generate a host with remotes using standalone components 2`] = `
+"declare module 'remote1/Routes';
 "
-declare module 'remote1/Routes';"
 `;
 
 exports[`Host App Generator should generate a host with remotes using standalone components 3`] = `
@@ -292,7 +304,8 @@ describe('AppComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain('Welcome host');
   }));
-});"
+});
+"
 `;
 
 exports[`Host App Generator should generate the correct app component spec file with a directory 1`] = `
@@ -333,7 +346,10 @@ describe('AppComponent', () => {
     tick();
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Welcome test-dashboard');
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome test-dashboard'
+    );
   }));
-});"
+});
+"
 `;

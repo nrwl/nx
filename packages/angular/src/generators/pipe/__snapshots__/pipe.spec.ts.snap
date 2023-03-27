@@ -4,14 +4,12 @@ exports[`pipe generator should export the pipe correctly when flat=false and pat
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test'
+  name: 'test',
 })
 export class TestPipe implements PipeTransform {
-
   transform(value: unknown, ...args: unknown[]): unknown {
     return null;
   }
-
 }
 "
 `;
@@ -29,28 +27,27 @@ describe('TestPipe', () => {
 `;
 
 exports[`pipe generator should export the pipe correctly when flat=false and path is nested deeper 3`] = `
-"import {NgModule} from \\"@angular/core\\";
+"import { NgModule } from '@angular/core';
 import { TestPipe } from './my-pipes/test/test.pipe';
-    @NgModule({
-      imports: [],
-      declarations: [, TestPipe],
-      exports: [, TestPipe]
-    })
-    export class TestModule {}"
+@NgModule({
+  imports: [],
+  declarations: [, TestPipe],
+  exports: [, TestPipe],
+})
+export class TestModule {}
+"
 `;
 
 exports[`pipe generator should generate a pipe with test files and attach to the NgModule automatically 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test'
+  name: 'test',
 })
 export class TestPipe implements PipeTransform {
-
   transform(value: unknown, ...args: unknown[]): unknown {
     return null;
   }
-
 }
 "
 `;
@@ -68,28 +65,27 @@ describe('TestPipe', () => {
 `;
 
 exports[`pipe generator should generate a pipe with test files and attach to the NgModule automatically 3`] = `
-"import {NgModule} from \\"@angular/core\\";
+"import { NgModule } from '@angular/core';
 import { TestPipe } from './test.pipe';
-    @NgModule({
-      imports: [],
-      declarations: [, TestPipe],
-      exports: []
-    })
-    export class TestModule {}"
+@NgModule({
+  imports: [],
+  declarations: [, TestPipe],
+  exports: [],
+})
+export class TestModule {}
+"
 `;
 
 exports[`pipe generator should import the pipe correctly when flat=false 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test'
+  name: 'test',
 })
 export class TestPipe implements PipeTransform {
-
   transform(value: unknown, ...args: unknown[]): unknown {
     return null;
   }
-
 }
 "
 `;
@@ -107,28 +103,27 @@ describe('TestPipe', () => {
 `;
 
 exports[`pipe generator should import the pipe correctly when flat=false 3`] = `
-"import {NgModule} from \\"@angular/core\\";
+"import { NgModule } from '@angular/core';
 import { TestPipe } from './test/test.pipe';
-    @NgModule({
-      imports: [],
-      declarations: [, TestPipe],
-      exports: []
-    })
-    export class TestModule {}"
+@NgModule({
+  imports: [],
+  declarations: [, TestPipe],
+  exports: [],
+})
+export class TestModule {}
+"
 `;
 
 exports[`pipe generator should import the pipe correctly when flat=false and path is nested deeper 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test'
+  name: 'test',
 })
 export class TestPipe implements PipeTransform {
-
   transform(value: unknown, ...args: unknown[]): unknown {
     return null;
   }
-
 }
 "
 `;
@@ -146,55 +141,53 @@ describe('TestPipe', () => {
 `;
 
 exports[`pipe generator should import the pipe correctly when flat=false and path is nested deeper 3`] = `
-"import {NgModule} from \\"@angular/core\\";
+"import { NgModule } from '@angular/core';
 import { TestPipe } from './my-pipes/test/test.pipe';
-    @NgModule({
-      imports: [],
-      declarations: [, TestPipe],
-      exports: []
-    })
-    export class TestModule {}"
+@NgModule({
+  imports: [],
+  declarations: [, TestPipe],
+  exports: [],
+})
+export class TestModule {}
+"
 `;
 
 exports[`pipe generator should not generate test file when skipTests=true 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test'
+  name: 'test',
 })
 export class TestPipe implements PipeTransform {
-
   transform(value: unknown, ...args: unknown[]): unknown {
     return null;
   }
-
 }
 "
 `;
 
 exports[`pipe generator should not generate test file when skipTests=true 2`] = `
-"import {NgModule} from \\"@angular/core\\";
+"import { NgModule } from '@angular/core';
 import { TestPipe } from './my-pipes/test/test.pipe';
-    @NgModule({
-      imports: [],
-      declarations: [, TestPipe],
-      exports: []
-    })
-    export class TestModule {}"
+@NgModule({
+  imports: [],
+  declarations: [, TestPipe],
+  exports: [],
+})
+export class TestModule {}
+"
 `;
 
 exports[`pipe generator should not import the pipe when skipImport=true 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test'
+  name: 'test',
 })
 export class TestPipe implements PipeTransform {
-
   transform(value: unknown, ...args: unknown[]): unknown {
     return null;
   }
-
 }
 "
 `;
@@ -212,13 +205,14 @@ describe('TestPipe', () => {
 `;
 
 exports[`pipe generator should not import the pipe when skipImport=true 3`] = `
-"import {NgModule} from \\"@angular/core\\";
-    @NgModule({
-      imports: [],
-      declarations: [],
-      exports: []
-    })
-    export class TestModule {}"
+"import { NgModule } from '@angular/core';
+@NgModule({
+  imports: [],
+  declarations: [],
+  exports: [],
+})
+export class TestModule {}
+"
 `;
 
 exports[`pipe generator should not import the pipe when standalone=true 1`] = `
@@ -226,14 +220,12 @@ exports[`pipe generator should not import the pipe when standalone=true 1`] = `
 
 @Pipe({
   name: 'test',
-  standalone: true
+  standalone: true,
 })
 export class TestPipe implements PipeTransform {
-
   transform(value: unknown, ...args: unknown[]): unknown {
     return null;
   }
-
 }
 "
 `;
@@ -251,11 +243,12 @@ describe('TestPipe', () => {
 `;
 
 exports[`pipe generator should not import the pipe when standalone=true 3`] = `
-"import {NgModule} from \\"@angular/core\\";
-    @NgModule({
-      imports: [],
-      declarations: [],
-      exports: []
-    })
-    export class TestModule {}"
+"import { NgModule } from '@angular/core';
+@NgModule({
+  imports: [],
+  declarations: [],
+  exports: [],
+})
+export class TestModule {}
+"
 `;

@@ -174,10 +174,10 @@ describe('MF Remote App Generator', () => {
 
       @Component({
         selector: 'proj-root',
-        template: '<router-outlet></router-outlet>'
-
+        template: '<router-outlet></router-outlet>',
       })
-      export class AppComponent {}"
+      export class AppComponent {}
+      "
     `);
   });
 

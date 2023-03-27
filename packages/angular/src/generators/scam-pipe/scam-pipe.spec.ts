@@ -30,14 +30,12 @@ describe('SCAM Pipe Generator', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example'
+        name: 'example',
       })
       export class ExamplePipe implements PipeTransform {
-
         transform(value: unknown, ...args: unknown[]): unknown {
           return null;
         }
-
       }
 
       @NgModule({
@@ -45,7 +43,8 @@ describe('SCAM Pipe Generator', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
   });
 
@@ -81,7 +80,8 @@ describe('SCAM Pipe Generator', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
   });
 
@@ -122,15 +122,17 @@ describe('SCAM Pipe Generator', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
     const secondaryEntryPointSource = tree.read(
       `libs/lib1/feature/src/index.ts`,
       'utf-8'
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
-      "export * from \\"./lib/example.pipe\\";
-      export * from \\"./lib/example.module\\";"
+      "export * from './lib/example.pipe';
+      export * from './lib/example.module';
+      "
     `);
   });
 
@@ -163,14 +165,12 @@ describe('SCAM Pipe Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Pipe({
-          name: 'example'
+          name: 'example',
         })
         export class ExamplePipe implements PipeTransform {
-
           transform(value: unknown, ...args: unknown[]): unknown {
             return null;
           }
-
         }
 
         @NgModule({
@@ -178,7 +178,8 @@ describe('SCAM Pipe Generator', () => {
           declarations: [ExamplePipe],
           exports: [ExamplePipe],
         })
-        export class ExamplePipeModule {}"
+        export class ExamplePipeModule {}
+        "
       `);
     });
 
@@ -210,14 +211,12 @@ describe('SCAM Pipe Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Pipe({
-          name: 'example'
+          name: 'example',
         })
         export class ExamplePipe implements PipeTransform {
-
           transform(value: unknown, ...args: unknown[]): unknown {
             return null;
           }
-
         }
 
         @NgModule({
@@ -225,7 +224,8 @@ describe('SCAM Pipe Generator', () => {
           declarations: [ExamplePipe],
           exports: [ExamplePipe],
         })
-        export class ExamplePipeModule {}"
+        export class ExamplePipeModule {}
+        "
       `);
     });
 

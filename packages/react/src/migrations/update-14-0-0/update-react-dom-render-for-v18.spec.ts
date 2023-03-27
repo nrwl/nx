@@ -68,24 +68,9 @@ describe('React update for Nx 14', () => {
 
     await update(tree);
 
-    expect(tree.read(`apps/example/src/main.${ext}`).toString()).toEqual(
-      stripIndents`
-        import { Strict } from 'react';
-        import * as ReactDOM from 'react-dom/client';
-        import App from './app/app';
-        
-        const root = ReactDOM.createRoot(
-          document.getElementById('root')${
-            ext === 'tsx' ? ' as HTMLElement' : ''
-          }
-        );
-        root.render(
-          <Strict>
-            <App/>
-          </Strict>
-        );
-      `
-    );
+    expect(
+      tree.read(`apps/example/src/main.${ext}`).toString()
+    ).toMatchSnapshot();
   });
 
   it('should skip update if main file does not contain react-dom', async () => {
@@ -120,13 +105,13 @@ describe('React update for Nx 14', () => {
 
     await update(tree);
 
-    expect(tree.read(`apps/example/src/main.tsx`).toString()).toEqual(
-      stripIndents`
-        import { AppRegistry } from 'react-native';
-        import App from './app/App';
+    expect(tree.read(`apps/example/src/main.tsx`).toString())
+      .toMatchInlineSnapshot(`
+      "import { AppRegistry } from 'react-native';
+      import App from './app/App';
 
-        AppRegistry.registerComponent('main', () => App);
-      `
-    );
+      AppRegistry.registerComponent('main', () => App);
+      "
+    `);
   });
 });

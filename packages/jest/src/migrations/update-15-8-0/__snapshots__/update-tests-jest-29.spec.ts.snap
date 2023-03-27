@@ -1,10 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Jest Migration - jest 29 mocked usage in tests should be idempotent 1`] = `
-"
-import{ Mocked, MockedShallow } from 'jest-mock';
-import {expect, jest, test} from '@jest/globals';
-import {song} from './song';
+"import { Mocked, MockedShallow } from 'jest-mock';
+import { expect, jest, test } from '@jest/globals';
+import { song } from './song';
 
 jest.mock('./song');
 jest.spyOn(console, 'log');
@@ -27,16 +26,17 @@ test('direct usage', () => {
 
   console.log('one more time');
 
-  expect(jest.mocked(console.log, {shallow: true}).mock.calls).toHaveLength(1);
+  expect(jest.mocked(console.log, { shallow: true }).mock.calls).toHaveLength(
+    1
+  );
 });
-  "
+"
 `;
 
 exports[`Jest Migration - jest 29 mocked usage in tests should be idempotent 2`] = `
-"
-const { Mocked, MockedShallow } = require('jest-mock');
-const {expect, jest, test} = require('@jest/globals');
-const {song} = require('./song');
+"const { Mocked, MockedShallow } = require('jest-mock');
+const { expect, jest, test } = require('@jest/globals');
+const { song } = require('./song');
 
 jest.mock('./song');
 jest.spyOn(console, 'log');
@@ -59,16 +59,17 @@ test('direct usage', () => {
 
   console.log('one more time');
 
-  expect(jest.mocked(console.log, {shallow: true}).mock.calls).toHaveLength(1);
+  expect(jest.mocked(console.log, { shallow: true }).mock.calls).toHaveLength(
+    1
+  );
 });
 "
 `;
 
 exports[`Jest Migration - jest 29 mocked usage in tests should be idempotent 3`] = `
-"
-import{ Mocked, MockedShallow } from 'jest-mock';
-import {expect, jest, test} from '@jest/globals';
-import {song} from './song';
+"import { Mocked, MockedShallow } from 'jest-mock';
+import { expect, jest, test } from '@jest/globals';
+import { song } from './song';
 
 jest.mock('./song');
 jest.spyOn(console, 'log');
@@ -91,16 +92,17 @@ test('direct usage', () => {
 
   console.log('one more time');
 
-  expect(jest.mocked(console.log, {shallow: true}).mock.calls).toHaveLength(1);
+  expect(jest.mocked(console.log, { shallow: true }).mock.calls).toHaveLength(
+    1
+  );
 });
-  "
+"
 `;
 
 exports[`Jest Migration - jest 29 mocked usage in tests should be idempotent 4`] = `
-"
-const { Mocked, MockedShallow } = require('jest-mock');
-const {expect, jest, test} = require('@jest/globals');
-const {song} = require('./song');
+"const { Mocked, MockedShallow } = require('jest-mock');
+const { expect, jest, test } = require('@jest/globals');
+const { song } = require('./song');
 
 jest.mock('./song');
 jest.spyOn(console, 'log');
@@ -123,16 +125,17 @@ test('direct usage', () => {
 
   console.log('one more time');
 
-  expect(jest.mocked(console.log, {shallow: true}).mock.calls).toHaveLength(1);
+  expect(jest.mocked(console.log, { shallow: true }).mock.calls).toHaveLength(
+    1
+  );
 });
 "
 `;
 
 exports[`Jest Migration - jest 29 mocked usage in tests should not update anything if there are no tests 1`] = `
-"
-import{ Mocked, MockedShallow } from 'jest-mock';
-import {expect, jest, test} from '@jest/globals';
-import {song} from './song';
+"import { Mocked, MockedShallow } from 'jest-mock';
+import { expect, jest, test } from '@jest/globals';
+import { song } from './song';
 
 jest.mock('./song');
 jest.spyOn(console, 'log');
@@ -155,16 +158,17 @@ test('direct usage', () => {
 
   console.log('one more time');
 
-  expect(jest.mocked(console.log, {shallow: true}).mock.calls).toHaveLength(1);
+  expect(jest.mocked(console.log, { shallow: true }).mock.calls).toHaveLength(
+    1
+  );
 });
-  "
+"
 `;
 
 exports[`Jest Migration - jest 29 mocked usage in tests should not update anything if there are no tests 2`] = `
-"
-const { Mocked, MockedShallow } = require('jest-mock');
-const {expect, jest, test} = require('@jest/globals');
-const {song} = require('./song');
+"const { Mocked, MockedShallow } = require('jest-mock');
+const { expect, jest, test } = require('@jest/globals');
+const { song } = require('./song');
 
 jest.mock('./song');
 jest.spyOn(console, 'log');
@@ -187,7 +191,9 @@ test('direct usage', () => {
 
   console.log('one more time');
 
-  expect(jest.mocked(console.log, {shallow: true}).mock.calls).toHaveLength(1);
+  expect(jest.mocked(console.log, { shallow: true }).mock.calls).toHaveLength(
+    1
+  );
 });
 "
 `;

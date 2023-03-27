@@ -6,10 +6,13 @@ export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': ['@swc/jest', { jsc: { transform: { react: { runtime: 'automatic' } } } }]
+    '^.+\\\\\\\\.[tj]sx?$': [
+      '@swc/jest',
+      { jsc: { transform: { react: { runtime: 'automatic' } } } },
+    ],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib1'
+  coverageDirectory: '../../coverage/libs/lib1',
 };
 "
 `;
@@ -20,10 +23,10 @@ export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
+    '^.+\\\\\\\\.[tj]sx?$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib1'
+  coverageDirectory: '../../coverage/libs/lib1',
 };
 "
 `;
@@ -34,10 +37,10 @@ export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]s$': 'babel-jest'
+    '^.+\\\\\\\\.[tj]s$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/libs/lib1'
+  coverageDirectory: '../../coverage/libs/lib1',
 };
 "
 `;
@@ -63,7 +66,7 @@ export default {
     'jest-preset-angular/build/serializers/no-ng-attributes',
     'jest-preset-angular/build/serializers/ng-snapshot',
     'jest-preset-angular/build/serializers/html-comment',
-  ]
+  ],
 };
 "
 `;
@@ -73,7 +76,7 @@ exports[`jestProject should create a jest.config.ts 1`] = `
 export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
-  coverageDirectory: '../../coverage/libs/lib1'
+  coverageDirectory: '../../coverage/libs/lib1',
 };
 "
 `;
@@ -99,7 +102,7 @@ export default {
     'jest-preset-angular/build/serializers/no-ng-attributes',
     'jest-preset-angular/build/serializers/ng-snapshot',
     'jest-preset-angular/build/serializers/html-comment',
-  ]
+  ],
 };
 "
 `;

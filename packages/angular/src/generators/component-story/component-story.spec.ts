@@ -48,12 +48,12 @@ describe('componentStory generator', () => {
     );
   });
 
-  it('should not generate the component stories file when it already exists', () => {
+  it('should not generate the component stories file when it already exists', async () => {
     jest.spyOn(storybookUtils, 'getComponentProps');
     jest.spyOn(devkit, 'generateFiles');
     tree.write(storyFile, '');
 
-    componentStoryGenerator(tree, {
+    await componentStoryGenerator(tree, {
       componentFileName: 'test-button.component',
       componentName: 'TestButtonComponent',
       componentPath: `src/lib/test-button`,
@@ -65,8 +65,8 @@ describe('componentStory generator', () => {
     expect(tree.read(storyFile, 'utf-8')).toBe('');
   });
 
-  it('should generate the component stories file', () => {
-    componentStoryGenerator(tree, {
+  it('should generate the component stories file', async () => {
+    await componentStoryGenerator(tree, {
       componentFileName: 'test-button.component',
       componentName: 'TestButtonComponent',
       componentPath: `src/lib/test-button`,
@@ -76,8 +76,8 @@ describe('componentStory generator', () => {
     expect(tree.exists(storyFile)).toBe(true);
   });
 
-  it('should generate the right props', () => {
-    componentStoryGenerator(tree, {
+  it('should generate the right props', async () => {
+    await componentStoryGenerator(tree, {
       componentFileName: 'test-button.component',
       componentName: 'TestButtonComponent',
       componentPath: `src/lib/test-button`,

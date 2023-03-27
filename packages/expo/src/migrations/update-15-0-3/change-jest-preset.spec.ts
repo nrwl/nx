@@ -41,7 +41,7 @@ describe('Change expo jest preset', () => {
     await update(tree);
 
     const jestConfig = tree.read('apps/products/jest.config.ts', 'utf-8');
-    expect(jestConfig).toContain(`"preset": "react-native"`);
+    expect(jestConfig).toContain(`preset: 'react-native'`);
   });
 
   it(`should remove transform if the code contains existing preprocessor`, async () => {

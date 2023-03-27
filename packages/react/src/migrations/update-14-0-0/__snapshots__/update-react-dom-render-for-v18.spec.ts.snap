@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`React update for Nx 14 should update react-dom render call if it exists 1`] = `
+"import { Strict } from 'react';
+import * as ReactDOM from 'react-dom/client';
+import App from './app/app';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <Strict>
+    <App />
+  </Strict>
+);
+"
+`;
+
+exports[`React update for Nx 14 should update react-dom render call if it exists 2`] = `
+"import { Strict } from 'react';
+import * as ReactDOM from 'react-dom/client';
+import App from './app/app';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <Strict>
+    <App />
+  </Strict>
+);
+"
+`;
+
+exports[`React update for Nx 14 should update react-dom render call if it exists 3`] = `
+"import { Strict } from 'react';
+import * as ReactDOM from 'react-dom/client';
+import App from './app/app';
+
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+root.render(
+  <Strict>
+    <App />
+  </Strict>
+);
+"
+`;

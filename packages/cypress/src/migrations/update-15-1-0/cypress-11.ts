@@ -157,7 +157,9 @@ export function updateProviderUsage(tree: Tree, filePath: string) {
   tree.write(
     filePath,
     `${
-      isTestBedImported ? '' : "import {TestBed} from '@angular/core/testing;\n"
+      isTestBedImported
+        ? ''
+        : "import {TestBed} from '@angular/core/testing';\n"
     }${updatedProviders}`
   );
 }

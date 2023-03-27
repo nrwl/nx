@@ -67,7 +67,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
     const installTask = updateDependencies(tree, schema);
     tasks.push(installTask);
   }
-  await addBabelInputs(tree);
+  addBabelInputs(tree);
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

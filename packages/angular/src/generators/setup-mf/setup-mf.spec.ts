@@ -102,7 +102,7 @@ describe('Init MF', () => {
       const updatedMainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
 
       expect(updatedMainContents).toEqual(
-        `import('./bootstrap').catch(err => console.error(err))`
+        `import('./bootstrap').catch((err) => console.error(err));\n`
       );
       expect(updatedMainContents).not.toEqual(mainContents);
     }
@@ -343,24 +343,25 @@ describe('Init MF', () => {
     // ASSERT
     expect(tree.read('apps/ng14/src/bootstrap.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import {importProvidersFrom} from \\"@angular/core\\";
-      import {bootstrapApplication} from \\"@angular/platform-browser\\";
-      import {RouterModule} from \\"@angular/router\\";
-      import {RemoteEntryComponent} from \\"./app/remote-entry/entry.component\\";
-      import {appRoutes} from \\"./app/app.routes\\";
-      import {enableProdMode} from '@angular/core';
-      import {environment} from './environments/environment';
-      if(environment.production) {
+      "import { importProvidersFrom } from '@angular/core';
+      import { bootstrapApplication } from '@angular/platform-browser';
+      import { RouterModule } from '@angular/router';
+      import { RemoteEntryComponent } from './app/remote-entry/entry.component';
+      import { appRoutes } from './app/app.routes';
+      import { enableProdMode } from '@angular/core';
+      import { environment } from './environments/environment';
+      if (environment.production) {
         enableProdMode();
       }
 
       bootstrapApplication(RemoteEntryComponent, {
         providers: [
           importProvidersFrom(
-            RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'})
-          )
-        ]
-      });"
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' })
+          ),
+        ],
+      });
+      "
     `);
   });
 
