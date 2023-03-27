@@ -155,6 +155,11 @@ jobs:
         if: steps.cache-modules.outputs.cache-hit != 'true'
         run: yarn install --prefer-offline --frozen-lockfile --non-interactive
 
+      - name: Configure git metadata (needed for lerna smoke tests)
+        run: |
+          git config --global user.email test@test.com
+          git config --global user.name "Test Test"
+
       - name: Run e2e tests
         id: e2e-run
         run: yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1

@@ -230,6 +230,11 @@ jobs:
           HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
           xcrun simctl shutdown all && xcrun simctl erase all
 
+      - name: Configure git metadata (needed for lerna smoke tests)
+        run: |
+          git config --global user.email test@test.com
+          git config --global user.name "Test Test"
+
       - name: Run e2e tests
         id: e2e-run
         run: yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1
