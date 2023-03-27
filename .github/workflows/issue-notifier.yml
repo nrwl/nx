@@ -42,7 +42,8 @@ jobs:
         uses: dawidd6/action-download-artifact@v2 # Needed since we are downloading artifact from a different workflow run, official actions/download-artifact doesn't support this.
         with:
           name: cached-issue-data
-          path: ./scripts/isses-scraper/cached
+          path: ${{ github.workspace }}/scripts/issues-scraper/cached
+          search_artifacts: true
         continue-on-error: true
 
       - name: Collect Issue Data
