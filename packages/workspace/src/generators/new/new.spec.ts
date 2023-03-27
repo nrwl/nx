@@ -89,7 +89,6 @@ describe('new', () => {
       expect(dependencies).toStrictEqual({ '@nrwl/angular': nxVersion });
       expect(devDependencies).toStrictEqual({
         '@angular-devkit/core': angularCliVersion,
-        '@angular-devkit/schematics': angularCliVersion,
         '@nrwl/workspace': nxVersion,
         nx: nxVersion,
         typescript: typescriptVersion,
