@@ -52,7 +52,7 @@ A modern Node server with scaffolding for Express, Fastify or Koa. There's also 
 
 Coming from an existing project and want to adopt Nx? We have a few recipes to help you get started.
 
-{% cards cols="4" %}
+{% cards cols="2" %}
 
 {% card title="Add to Existing Monorepo" description="Add Nx to your existing NPM/YARN/PNPM workspace" type="documentation" url="/recipes/adopting-nx/adding-to-monorepo" /%}
 
