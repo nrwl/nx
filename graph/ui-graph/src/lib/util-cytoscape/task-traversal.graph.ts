@@ -61,6 +61,7 @@ export class TaskTraversalGraph {
     taskIds.forEach((taskId) => {
       this.selectedTasks.add(taskId);
     });
+    this.createElements(Array.from(this.selectedTasks), this.groupByProject);
 
     return this.cy.elements();
   }
