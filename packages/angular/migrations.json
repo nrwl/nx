@@ -158,6 +158,12 @@
       "version": "15.9.0-beta.3",
       "description": "Update the tsconfig.spec.json to use target es2016 for jest-preset-angular v13",
       "factory": "./src/migrations/update-15-9-0/update-testing-tsconfig"
+    },
+    "update-file-server-executor": {
+      "cli": "nx",
+      "version": "15.9.0-beta.9",
+      "description": "Update the file-server executor to use @nrwl/web:file-server",
+      "factory": "./src/migrations/update-15-9-0/update-file-server-executor"
     }
   },
   "packageJsonUpdates": {

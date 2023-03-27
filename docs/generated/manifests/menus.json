@@ -3603,14 +3603,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "file-server",
-                "path": "/packages/angular/executors/file-server",
-                "name": "file-server",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "webpack-browser",
                 "path": "/packages/angular/executors/webpack-browser",
                 "name": "webpack-browser",

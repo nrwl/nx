@@ -1,5 +1,9 @@
 import type { Tree } from '@nrwl/devkit';
-import { formatFiles, readProjectConfiguration } from '@nrwl/devkit';
+import {
+  addDependenciesToPackageJson,
+  formatFiles,
+  readProjectConfiguration,
+} from '@nrwl/devkit';
 import type { Schema } from './schema';
 
 import {
@@ -17,6 +21,7 @@ import {
   updateTsConfigTarget,
 } from './lib';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
+import { nxVersion } from '../../utils/versions';
 import { lt } from 'semver';
 
 export async function setupMf(tree: Tree, options: Schema) {
@@ -36,10 +41,16 @@ export async function setupMf(tree: Tree, options: Schema) {
     updateHostAppRoutes(tree, options);
   }
 
+  let installTask = () => {};
   if (options.mfType === 'remote') {
     addRemoteToHost(tree, options);
     addRemoteEntry(tree, options, projectConfig.root);
     removeDeadCodeFromRemote(tree, options);
+    installTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@nrwl/web': nxVersion }
+    );
   }
 
   const remotesWithPorts = getRemotesWithPorts(tree, options);
@@ -60,6 +71,8 @@ export async function setupMf(tree: Tree, options: Schema) {
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+
+  return installTask;
 }
 
 export default setupMf;
