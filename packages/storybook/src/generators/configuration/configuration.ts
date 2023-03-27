@@ -26,7 +26,7 @@ import {
   getViteConfigFilePath,
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
-} from './util-functions';
+} from './lib/util-functions';
 import { Linter } from '@nrwl/linter';
 import {
   findStorybookAndBuildTargetsAndCompiler,
@@ -40,11 +40,16 @@ import {
   storybookVersion,
   tsNodeVersion,
 } from '../../utils/versions';
+import { getGeneratorConfigurationOptions } from './lib/user-prompts';
 
 export async function configurationGenerator(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
 ) {
+  if (process.env.NX_INTERACTIVE === 'true') {
+    rawSchema = await getGeneratorConfigurationOptions(rawSchema);
+  }
+
   const schema = normalizeSchema(rawSchema);
 
   const tasks: GeneratorCallback[] = [];
@@ -79,10 +84,15 @@ export async function configurationGenerator(
 
   if (viteBuildTarget) {
     if (schema.bundler !== 'vite') {
-      logger.info(
-        `Your project ${schema.name} uses Vite as a bundler. 
-        Nx will configure Storybook for this project to use Vite as well.`
-      );
+      if (!schema.storybook7Configuration) {
+        // The warnings for v7 are handled in the next if statement
+        logger.info(
+          `Your project ${schema.name} uses Vite as a bundler. 
+          Nx will configure Storybook for this project to use Vite as well.`
+        );
+      }
+      // We need this regardless of Storybook version
+      // because we use it in the init task
       schema.bundler = 'vite';
     }
 
