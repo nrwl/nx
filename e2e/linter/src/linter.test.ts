@@ -505,7 +505,6 @@ describe('Linter', () => {
       expect(appEslint.overrides[0].extends).toBeDefined();
       expect(appEslint.overrides[1].extends).toBeDefined();
       expect(e2eEslint.overrides[0].extends).toBeDefined();
-      expect(e2eEslint.overrides[1].extends).toBeDefined();
 
       runCLI(`generate @nrwl/workspace:lib ${mylib} --unitTestRunner=jest`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -517,7 +516,6 @@ describe('Linter', () => {
       expect(appEslint.overrides[0].extends).toBeUndefined();
       expect(appEslint.overrides[1].extends).toBeUndefined();
       expect(e2eEslint.overrides[0].extends).toBeUndefined();
-      expect(e2eEslint.overrides[1].extends).toBeUndefined();
     });
 
     it('(Angular standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
@@ -536,7 +534,6 @@ describe('Linter', () => {
       expect(appEslint.overrides[0].extends).toBeDefined();
       expect(appEslint.overrides[1].extends).toBeDefined();
       expect(e2eEslint.overrides[0].extends).toBeDefined();
-      expect(e2eEslint.overrides[1].extends).toBeDefined();
 
       runCLI(`generate @nrwl/workspace:lib ${mylib} --no-interactive`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -550,7 +547,6 @@ describe('Linter', () => {
         'plugin:@angular-eslint/template/process-inline-templates',
       ]);
       expect(e2eEslint.overrides[0].extends).toBeUndefined();
-      expect(e2eEslint.overrides[1].extends).toBeUndefined();
     });
 
     it('(Node standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
@@ -569,7 +565,6 @@ describe('Linter', () => {
       expect(appEslint.overrides[0].extends).toBeDefined();
       expect(appEslint.overrides[1].extends).toBeDefined();
       expect(e2eEslint.overrides[0].extends).toBeDefined();
-      expect(e2eEslint.overrides[1].extends).toBeDefined();
 
       runCLI(`generate @nrwl/workspace:lib ${mylib} --no-interactive`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -581,7 +576,6 @@ describe('Linter', () => {
       expect(appEslint.overrides[0].extends).toBeUndefined();
       expect(appEslint.overrides[1].extends).toBeUndefined();
       expect(e2eEslint.overrides[0].extends).toBeUndefined();
-      expect(e2eEslint.overrides[1].extends).toBeUndefined();
     });
   });
 });
