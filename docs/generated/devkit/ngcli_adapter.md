@@ -2,7 +2,7 @@
 
 ## Table of contents
 
-### Ng CLI Adapter Classes
+### Classes
 
 - [NxScopedHost](../../devkit/documents/ngcli_adapter#nxscopedhost)
 
@@ -12,7 +12,7 @@
 - [overrideCollectionResolutionForTesting](../../devkit/documents/ngcli_adapter#overridecollectionresolutionfortesting)
 - [wrapAngularDevkitSchematic](../../devkit/documents/ngcli_adapter#wrapangulardevkitschematic)
 
-## Ng CLI Adapter Classes
+## Classes
 
 ### NxScopedHost
 
@@ -91,7 +91,7 @@ overrideCollectionResolutionForTesting({
 
 ### wrapAngularDevkitSchematic
 
-▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: [`Tree`](../../devkit/documents/nrwl_devkit#tree), `generatorOptions`: { [k: string]: `any`; }) => `Promise`<`any`\>
+▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: [`Tree`](../../devkit/documents/nrwl_devkit#tree), `generatorOptions`: { `[k: string]`: `any`; }) => `Promise`<`any`\>
 
 #### Parameters
 

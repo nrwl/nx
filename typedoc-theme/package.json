@@ -1,4 +1,7 @@
 {
   "name": "@nrwl/typedoc-theme",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "keywords": [
+    "typedocplugin"
+  ]
 }

@@ -7,7 +7,7 @@ import { MarkdownTheme } from 'typedoc-plugin-markdown/dist/theme';
  * - markdown specefic components have been added
  */
 
-export default class NrwlMarkdownTheme extends MarkdownTheme {
+export default class NxMarkdownTheme extends MarkdownTheme {
   constructor(renderer) {
     super(renderer);
   }
