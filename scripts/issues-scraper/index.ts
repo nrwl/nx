@@ -6,7 +6,7 @@ import { formatGhReport, getSlackMessageJson } from './format-slack-message';
 import { setOutput } from '@actions/core';
 import isCI from 'is-ci';
 
-const CACHE_FILE = join(__dirname, 'data.json');
+const CACHE_FILE = join(__dirname, 'cached', 'data.json');
 
 async function main() {
   const currentData = await scrapeIssues();

@@ -36,17 +36,21 @@ jobs:
       - name: Install packages
         run: yarn install --prefer-offline --frozen-lockfile --non-interactive
 
-      - name: Retrieve Previous Results
-        uses: actions/cache@v3
+      - uses: actions/download-artifact@v3
         with:
-          path: scripts/issues-scraper/data.json
-          key: 'always-hit'
+          name: cached-issue-data
+          path: ./scripts/isses-scraper/cached
 
       - name: Collect Issue Data
         id: collect
         run: npx ts-node ./scripts/issues-scraper/index.ts
         env: 
           GITHUB_TOKEN: ${{ github.token }}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: cached-issue-data
+          path: ./scripts/issues-scraper/cached/data.json
 
       - name: Send GitHub Action trigger data to Slack workflow
         id: slack
