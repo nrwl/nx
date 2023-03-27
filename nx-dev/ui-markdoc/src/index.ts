@@ -1,4 +1,11 @@
-import { Node, parse, renderers, Tokenizer, transform } from '@markdoc/markdoc';
+import {
+  Node,
+  parse,
+  RenderableTreeNode,
+  renderers,
+  Tokenizer,
+  transform,
+} from '@markdoc/markdoc';
 import { load as yamlLoad } from 'js-yaml';
 import React, { ReactNode } from 'react';
 import { Fence } from './lib/nodes/fence.component';
@@ -92,12 +99,14 @@ export const parseMarkdown: (markdown: string) => Node = (markdown) => {
 export const renderMarkdown: (
   documentContent: string,
   options: { filePath: string }
-) => { metadata: Record<string, any>; node: ReactNode } = (
-  documentContent: string,
-  options: { filePath: string } = { filePath: '' }
-): { metadata: Record<string, any>; node: ReactNode } => {
+) => {
+  metadata: Record<string, any>;
+  node: ReactNode;
+  treeNode: RenderableTreeNode;
+} = (documentContent, options = { filePath: '' }) => {
   const ast = parseMarkdown(documentContent);
   const configuration = getMarkdocCustomConfig(options.filePath);
+  const treeNode = transform(ast, configuration.config);
 
   return {
     metadata: ast.attributes['frontmatter']
@@ -106,5 +115,6 @@ export const renderMarkdown: (
     node: renderers.react(transform(ast, configuration.config), React, {
       components: configuration.components,
     }),
+    treeNode,
   };
 };
