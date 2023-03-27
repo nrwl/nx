@@ -623,6 +623,7 @@ describe('global installation', () => {
   });
 
   it('should warn if local Nx has higher major version', () => {
+    const packageJsonContents = readFile('node_modules/nx/package.json');
     updateJson('node_modules/nx/package.json', (json) => {
       json.version = `${major(getPublishedVersion()) + 2}.0.0`;
       return json;
@@ -632,5 +633,44 @@ describe('global installation', () => {
       output = runCommand(`nx show projects`);
     }).not.toThrow();
     expect(output).toContain('Its time to update Nx');
+    updateFile('node_modules/nx/package.json', packageJsonContents);
+  });
+
+  it('--version should display global installs version', () => {
+    const packageJsonContents = readFile('node_modules/nx/package.json');
+    const localVersion = `${major(getPublishedVersion()) + 2}.0.0`;
+    updateJson('node_modules/nx/package.json', (json) => {
+      json.version = localVersion;
+      return json;
+    });
+    let output: string;
+    expect(() => {
+      output = runCommand(`nx --version`);
+    }).not.toThrow();
+    expect(output).toContain(`- Local: v${localVersion}`);
+    expect(output).toContain(`- Global: v${getPublishedVersion()}`);
+    updateFile('node_modules/nx/package.json', packageJsonContents);
+  });
+
+  it('report should display global installs version', () => {
+    const packageJsonContents = readFile('node_modules/nx/package.json');
+    const localVersion = `${major(getPublishedVersion()) + 2}.0.0`;
+    updateJson('node_modules/nx/package.json', (json) => {
+      json.version = localVersion;
+      return json;
+    });
+    let output: string;
+    expect(() => {
+      output = runCommand(`nx report`);
+    }).not.toThrow();
+    expect(output).toEqual(
+      expect.stringMatching(new RegExp(`nx.*:.*${localVersion}`))
+    );
+    expect(output).toEqual(
+      expect.stringMatching(
+        new RegExp(`nx \\(global\\).*:.*${getPublishedVersion()}`)
+      )
+    );
+    updateFile('node_modules/nx/package.json', packageJsonContents);
   });
 });

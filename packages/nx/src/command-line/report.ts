@@ -1,5 +1,4 @@
 import * as chalk from 'chalk';
-import { workspaceRoot } from '../utils/workspace-root';
 import { output } from '../utils/output';
 import { join } from 'path';
 import {
@@ -27,7 +26,6 @@ const nxPackageJson = readJsonFile<typeof import('../../package.json')>(
 );
 
 export const packagesWeCareAbout = [
-  'nx',
   'lerna',
   ...nxPackageJson['nx-migrations'].packageGroup.map((x) =>
     typeof x === 'string' ? x : x.package
@@ -161,6 +159,16 @@ export async function getReportData(): Promise<ReportData> {
   }
 
   const packageVersionsWeCareAbout = findInstalledPackagesWeCareAbout();
+  packageVersionsWeCareAbout.unshift({
+    package: 'nx',
+    version: nxPackageJson.version,
+  });
+  if (globalThis.GLOBAL_NX_VERSION) {
+    packageVersionsWeCareAbout.unshift({
+      package: 'nx (global)',
+      version: globalThis.GLOBAL_NX_VERSION,
+    });
+  }
 
   const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
 
@@ -248,6 +256,7 @@ export function findInstalledCommunityPlugins(): PackageJson[] {
   const installedPlugins = findInstalledPlugins();
   return installedPlugins.filter(
     (dep) =>
+      dep.name !== 'nx' &&
       !patternsWeIgnoreInCommunityReport.some((pattern) =>
         typeof pattern === 'string'
           ? pattern === dep.name
