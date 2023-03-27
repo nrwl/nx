@@ -1,56 +1,51 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getPackageManagerCommand,
   killPorts,
   newProject,
   runCLI,
-  runCommand,
+  runCommandUntil,
   runCypressTests,
   tmpProjPath,
   uniq,
-  updateJson,
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-describe('Storybook for Angular', () => {
-  const angularStorybookLib = uniq('test-ui-lib');
+describe('Storybook executors for Angular', () => {
+  const angularStorybookLib = uniq('test-ui-ng-lib');
   beforeAll(() => {
     newProject();
     createTestUILib(angularStorybookLib);
     runCLI(
       `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
     );
-
-    // TODO(jack): Overriding enhanced-resolve to 5.10.0 now until the package is fixed.
-    // TODO: Use --storybook7Configuration and remove this
-    // See: https://github.com/webpack/enhanced-resolve/issues/362
-    updateJson('package.json', (json) => {
-      json['overrides'] = {
-        'enhanced-resolve': '5.10.0',
-      };
-
-      return json;
-    });
-    runCommand(getPackageManagerCommand().install);
-
-    console.log('Here is the Nx report: ');
-    runCLI(`report`);
   });
 
   afterAll(() => {
     cleanupProject();
   });
 
-  // TODO: Use --storybook7Configuration and re-enable this
-  xdescribe('Storybook builder', () => {
-    it('shoud build storybook', () => {
+  // TODO: Enable on SB7
+  xdescribe('serve and build storybook', () => {
+    afterAll(() => killPorts());
+
+    it('should serve an Angular based Storybook setup', async () => {
+      const p = await runCommandUntil(
+        `run ${angularStorybookLib}:storybook`,
+        (output) => {
+          return /Storybook.*started/gi.test(output);
+        }
+      );
+      p.kill();
+    }, 200_000);
+
+    it('shoud build an Angular based storybook', () => {
       runCLI(`run ${angularStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
-    });
+    }, 200_000);
   });
 
-  // TODO: Use --storybook7Configuration and re-enable this
+  // However much I increase the timeout, this takes forever?
   xdescribe('run cypress tests using storybook', () => {
     it('should execute e2e tests using Cypress running against Storybook', async () => {
       if (runCypressTests()) {
@@ -83,7 +78,7 @@ describe('Storybook for Angular', () => {
         expect(e2eResults).toContain('All specs passed!');
         expect(await killPorts()).toBeTruthy();
       }
-    }, 1000000);
+    }, 1000_000);
   });
 });
 
@@ -124,8 +119,5 @@ export function createTestUILib(libName: string): void {
     {{ text }}
   </button>
     `
-  );
-  runCLI(
-    `g @nrwl/angular:component test-other --project=${libName} --no-interactive`
   );
 }

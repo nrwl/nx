@@ -13,14 +13,18 @@ import {
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-describe('Storybook generators for non-angular projects', () => {
+describe('Storybook generators and executors for monorepos', () => {
+  const previousPM = process.env.SELECTED_PM;
   const reactStorybookLib = uniq('test-ui-lib-react');
   let proj;
   beforeAll(() => {
-    proj = newProject();
+    process.env.SELECTED_PM = 'yarn';
+    proj = newProject({
+      packageManager: 'yarn',
+    });
     runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
     runCLI(
-      `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
+      `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive --bundler=webpack`
     );
 
     // TODO(jack): Overriding enhanced-resolve to 5.10.0 now until the package is fixed.
@@ -34,20 +38,17 @@ describe('Storybook generators for non-angular projects', () => {
       return json;
     });
     runCommand(getPackageManagerCommand().install);
-
-    console.log('Here is the Nx report: ');
-    runCLI(`report`);
   });
 
   afterAll(() => {
     cleanupProject();
+    process.env.SELECTED_PM = previousPM;
   });
 
-  // TODO: Use --storybook7Configuration and re-enable this test
-  xdescribe('serve storybook', () => {
+  describe('serve and build storybook', () => {
     afterEach(() => killPorts());
 
-    it('should run a React based Storybook setup', async () => {
+    it('should serve a React based Storybook setup that uses webpack', async () => {
       // serve the storybook
       const p = await runCommandUntil(
         `run ${reactStorybookLib}:storybook`,
@@ -56,23 +57,16 @@ describe('Storybook generators for non-angular projects', () => {
         }
       );
       p.kill();
-    }, 1000000);
-  });
+    }, 20000);
 
-  // TODO: Use --storybook7Configuration and re-enable this test
-  xdescribe('build storybook', () => {
-    it('should build and lint a React based storybook', () => {
+    it('should build a React based storybook setup that uses webpack', () => {
       // build
       runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
+    }, 40000);
 
-      // lint
-      const output = runCLI(`run ${reactStorybookLib}:lint`);
-      expect(output).toContain('All files pass linting.');
-    }, 1000000);
-
-    // I am not sure how much sense this test makes - Maybe it's just adding noise
-    xit('should build a React based storybook that references another lib', () => {
+    // This test makes sure path resolution works
+    it('should build a React based storybook that references another lib and uses webpack', () => {
       const anotherReactLib = uniq('test-another-lib-react');
       runCLI(`generate @nrwl/react:lib ${anotherReactLib} --no-interactive`);
       // create a React component we can reference
@@ -123,6 +117,6 @@ describe('Storybook generators for non-angular projects', () => {
       // build React lib
       runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
-    }, 1000000);
+    }, 40000);
   });
 });

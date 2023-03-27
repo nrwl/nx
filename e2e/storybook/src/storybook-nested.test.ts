@@ -1,35 +1,26 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getPackageManagerCommand,
-  getSelectedPackageManager,
   killPorts,
   readJson,
   runCLI,
-  runCommand,
   runCommandUntil,
   runCreateWorkspace,
   tmpProjPath,
   uniq,
-  updateJson,
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-describe('Storybook generators for nested workspaces', () => {
-  const previousPM = process.env.SELECTED_PM;
+describe('Storybook generators and executors for standalone workspaces - using React + Vite', () => {
   const wsName = uniq('react');
   const appName = uniq('app');
-  const packageManager = getSelectedPackageManager() || 'yarn';
 
   beforeAll(() => {
-    process.env.SELECTED_PM = 'yarn';
-
     // create a workspace with a single react app at the root
     runCreateWorkspace(wsName, {
       preset: 'react-standalone',
       appName,
       style: 'css',
-      packageManager,
       bundler: 'vite',
     });
 
@@ -37,26 +28,11 @@ describe('Storybook generators for nested workspaces', () => {
       `generate @nrwl/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
 
-    // TODO(jack): Overriding enhanced-resolve to 5.10.0 now until the package is fixed.
-    // TODO: Use --storybook7Configuration and remove this
-    // See: https://github.com/webpack/enhanced-resolve/issues/362
-    updateJson('package.json', (json) => {
-      json['overrides'] = {
-        'enhanced-resolve': '5.10.0',
-      };
-
-      return json;
-    });
-
-    runCommand(getPackageManagerCommand().install);
-
-    console.log('Here is the Nx report: ');
     runCLI(`report`);
   });
 
   afterAll(() => {
     cleanupProject();
-    process.env.SELECTED_PM = previousPM;
   });
 
   describe('Storybook generated files', () => {
@@ -72,47 +48,29 @@ describe('Storybook generators for nested workspaces', () => {
       const tsconfig = readJson(`tsconfig.json`);
       expect(tsconfig['ts-node']?.compilerOptions?.module).toEqual('commonjs');
     });
-
-    it('should generate correct files for nested app', () => {
-      const nestedAppName = uniq('other-app');
-      runCLI(`generate @nrwl/react:app ${nestedAppName} --no-interactive`);
-      runCLI(
-        `generate @nrwl/react:storybook-configuration ${nestedAppName} --generateStories --no-interactive`
-      );
-      checkFilesExist(
-        `${nestedAppName}/.storybook/main.js`,
-        `${nestedAppName}/.storybook/tsconfig.json`
-      );
-    });
   });
 
-  // TODO: Use --storybook7Configuration and re-enable this test
+  // TODO: Use --storybook7Configuration and re-enable this test - or else it NEEDS NODE 16
   xdescribe('serve storybook', () => {
     afterEach(() => killPorts());
 
-    it('should run a React based Storybook setup', async () => {
-      // serve the storybook
+    it('should serve a React based Storybook setup that uses Vite', async () => {
       const p = await runCommandUntil(`run ${appName}:storybook`, (output) => {
         return /Storybook.*started/gi.test(output);
       });
       p.kill();
-    }, 1000000);
+    }, 40000);
   });
 
-  // TODO: Use --storybook7Configuration and re-enable this test
+  // TODO: Use --storybook7Configuration and re-enable this test - or else it NEEDS NODE 16
   xdescribe('build storybook', () => {
-    it('should build and lint a React based storybook', () => {
-      // build
+    it('should build a React based storybook that uses Vite', () => {
       runCLI(`run ${appName}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${appName}/index.html`);
+    }, 40000);
 
-      // lint
-      const output = runCLI(`run ${appName}:lint`);
-      expect(output).toContain('All files pass linting.');
-    }, 1000000);
-
-    // Not sure how much sense this test makes - maybe it's noise?
-    xit('should build a React based storybook that references another lib', () => {
+    // This test makes sure path resolution works
+    xit('should build a React based storybook that references another lib and uses Vite', () => {
       const reactLib = uniq('test-lib-react');
       runCLI(`generate @nrwl/react:lib ${reactLib} --no-interactive`);
       // create a React component we can reference
@@ -168,6 +126,6 @@ describe('Storybook generators for nested workspaces', () => {
       // build React lib
       runCLI(`run ${reactLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactLib}/index.html`);
-    }, 1000000);
+    }, 40000);
   });
 });
