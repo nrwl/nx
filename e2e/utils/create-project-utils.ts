@@ -2,6 +2,7 @@ import { copySync, ensureDirSync, moveSync, removeSync } from 'fs-extra';
 import {
   createFile,
   directoryExists,
+  tmpBackupNgCliProjPath,
   tmpBackupProjPath,
   updateFile,
   updateJson,
@@ -9,10 +10,10 @@ import {
 import {
   e2eCwd,
   getLatestLernaVersion,
-  getNpmMajorVersion,
   getPublishedVersion,
   getSelectedPackageManager,
   isVerbose,
+  isVerboseE2ERun,
 } from './get-env-info';
 import * as isCI from 'is-ci';
 
@@ -28,6 +29,8 @@ import {
   runCommand,
 } from './command-utils';
 import { output } from '@nrwl/devkit';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 let projName: string;
 
@@ -311,24 +314,51 @@ export function packageInstall(
   }
 }
 
+/**
+ * Creates a new Angular CLI workspace or restores a cached one if exists.
+ * @returns the workspace name
+ */
 export function runNgNew(
-  projectName: string,
   packageManager = getSelectedPackageManager(),
   angularCliVersion = defaultAngularCliVersion
 ): string {
-  projName = projectName;
+  const pmc = getPackageManagerCommand({ packageManager });
 
-  const npmMajorVersion = getNpmMajorVersion();
-  const command = `npx ${
-    +npmMajorVersion >= 7 ? '--yes' : ''
-  } @angular/cli@${angularCliVersion} new ${projectName} --package-manager=${packageManager}`;
+  if (directoryExists(tmpBackupNgCliProjPath())) {
+    const angularJson = JSON.parse(
+      readFileSync(join(tmpBackupNgCliProjPath(), 'angular.json'), 'utf-8')
+    );
+    // the name of the workspace matches the name of the generated default app,
+    // we need to reuse the same name that's cached in order to avoid issues
+    // with tests relying on a different name
+    projName = Object.keys(angularJson.projects)[0];
+    copySync(tmpBackupNgCliProjPath(), tmpProjPath());
 
-  return execSync(command, {
+    if (isVerboseE2ERun()) {
+      logInfo(
+        `NX`,
+        `E2E restored an Angular CLI project from cache: ${tmpProjPath()}`
+      );
+    }
+
+    return projName;
+  }
+
+  projName = uniq('ng-proj');
+  const command = `${pmc.runUninstalledPackage} @angular/cli@${angularCliVersion} new ${projName} --package-manager=${packageManager}`;
+  execSync(command, {
     cwd: e2eCwd,
     stdio: isVerbose() ? 'inherit' : 'pipe',
     env: process.env,
     encoding: 'utf-8',
   });
+  copySync(tmpProjPath(), tmpBackupNgCliProjPath());
+
+  if (isVerboseE2ERun()) {
+    logInfo(`NX`, `E2E created an Angular CLI project: ${tmpProjPath()}`);
+  }
+
+  return projName;
 }
 
 export function newLernaWorkspace({
