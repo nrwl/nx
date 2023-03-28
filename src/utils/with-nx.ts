@@ -1,4 +1,4 @@
-import { Configuration } from '@rspack/core';
+import { Configuration, ExternalItem } from '@rspack/core';
 import * as path from 'path';
 import { getCopyPatterns } from './get-copy-patterns';
 import { SharedConfigContext } from './model';
@@ -11,12 +11,7 @@ export function withNx(_opts = {}) {
   ): Configuration {
     const isProd =
       process.env.NODE_ENV === 'production' || options.mode === 'production';
-    const isDev =
-      process.env.NODE_ENV === 'development' || options.mode === 'development';
-    const projectRoot = path.join(
-      context.root,
-      context.projectGraph.nodes[context.projectName].data.root
-    );
+
     const sourceRoot = path.join(
       context.root,
       context.projectGraph.nodes[context.projectName].data.sourceRoot
@@ -29,6 +24,20 @@ export function withNx(_opts = {}) {
       acc[k] = path.join(context.root, paths[k][0]);
       return acc;
     }, {});
+
+    const externals: ExternalItem = {};
+    if (options.target === 'node') {
+      const projectDeps =
+        context.projectGraph.dependencies[context.projectName];
+      for (const dep of Object.values(projectDeps)) {
+        const externalNode = context.projectGraph.externalNodes[dep.target];
+        if (externalNode) {
+          externals[
+            externalNode.data.packageName
+          ] = `"${externalNode.data.packageName}"`;
+        }
+      }
+    }
 
     const updated: Configuration = {
       ...config,
@@ -49,7 +58,10 @@ export function withNx(_opts = {}) {
       output: {
         path: path.join(context.root, options.outputPath),
         publicPath: '/',
-        filename: isProd ? '[name].[contenthash:8][ext]' : '[name][ext]',
+        filename:
+          isProd && options.target !== 'node'
+            ? '[name].[contenthash:8][ext]'
+            : '[name][ext]',
       },
       devServer: {
         port: 4200,
@@ -80,24 +92,9 @@ export function withNx(_opts = {}) {
             normalizeAssets(options.assets, context.root, sourceRoot)
           ),
         },
-        html: [
-          {
-            template: options.indexHtml
-              ? path.join(context.root, options.indexHtml)
-              : path.join(projectRoot, 'src/index.html'),
-          },
-        ],
-        define: {
-          'process.env.NODE_ENV': isProd ? "'production'" : "'development'",
-        },
         progress: {},
-        // TODO(jack): This should go to withReact.
-        react: {
-          runtime: 'automatic',
-          development: isDev,
-          refresh: isDev,
-        },
       },
+      externals,
       stats: {
         colors: true,
         preset: 'normal',
