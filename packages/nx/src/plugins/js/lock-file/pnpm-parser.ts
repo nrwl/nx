@@ -1,6 +1,7 @@
 import type {
   PackageSnapshot,
   Lockfile,
+  LockfileV6,
   ProjectSnapshot,
   PackageSnapshots,
 } from '@pnpm/lockfile-types';
@@ -157,10 +158,14 @@ export function stringifyPnpmLockfile(
   packageJson: NormalizedPackageJson
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
-  const hasV5Separator = data.lockfileVersion.toString().startsWith('5');
+  const lockfileVersion: string =
+    typeof data.lockfileVersion === 'number'
+      ? data.lockfileVersion.toFixed(1)
+      : data.lockfileVersion;
+  const hasV5Separator = lockfileVersion.startsWith('5');
 
-  const output: Lockfile = {
-    lockfileVersion: data.lockfileVersion,
+  const output: Lockfile | LockfileV6 = {
+    lockfileVersion,
     importers: {
       '.': mapRootSnapshot(
         packageJson,
