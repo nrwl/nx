@@ -12,7 +12,8 @@ on:
         default: false
 
 env:
-  CYPRESS_CACHE_FOLDER: '.cypress'
+  CYPRESS_CACHE_FOLDER: '${HOME}/.cypress'
+
 
 permissions: {}
 jobs:
@@ -55,6 +56,17 @@ jobs:
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
         run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+
+      - name: Cache Cypress
+        id: cache-cypress
+        uses: actions/cache@v3
+        with:
+          path: '.cypress'
+          key: ${{ runner.os }}-cypress
+
+      - name: Install Cypress
+        if: steps.cache-cypress.outputs.cache-hit != 'true'
+        run: npx cypress install
 
   e2e:
     needs: preinstall
@@ -356,6 +368,10 @@ jobs:
         with:
           path: '.cypress'
           key: ${{ runner.os }}-cypress
+
+      - name: Install Cypress
+        if: steps.cache-cypress.outputs.cache-hit != 'true'
+        run: npx cypress install
 
       - name: Install applesimutils, reset ios simulators
         if: ${{ matrix.os == 'macos-latest' }}
