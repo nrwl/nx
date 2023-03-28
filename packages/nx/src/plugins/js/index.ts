@@ -18,7 +18,10 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { ensureDirSync } from 'fs-extra';
 import { removeNpmNodes } from 'nx/src/plugins/js/lock-file/remove-npm-nodes';
 
-export const processProjectGraph: ProjectGraphProcessor = (graph, context) => {
+export const processProjectGraph: ProjectGraphProcessor = async (
+  graph,
+  context
+) => {
   const builder = new ProjectGraphBuilder(graph);
 
   const lockHash = lockFileHash() ?? 'n/a';
@@ -33,7 +36,11 @@ export const processProjectGraph: ProjectGraphProcessor = (graph, context) => {
 
   buildNpmPackageNodes(builder);
 
-  buildExplicitDependencies(jsPluginConfig(readNxJson()), context, builder);
+  await buildExplicitDependencies(
+    jsPluginConfig(readNxJson()),
+    context,
+    builder
+  );
 
   return builder.getUpdatedProjectGraph();
 };
