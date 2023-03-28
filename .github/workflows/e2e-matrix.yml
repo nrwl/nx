@@ -11,6 +11,9 @@ on:
         required: false
         default: false
 
+env:
+  CYPRESS_CACHE_FOLDER: '.cypress'
+
 permissions: {}
 jobs:
   preinstall:
@@ -222,6 +225,13 @@ jobs:
           key: brew-${{ matrix.node_version }}
           restore-keys: |
             brew-
+
+      - name: Cache Cypress
+        id: cache-cypress
+        uses: actions/cache@v3
+        with:
+          path: '.cypress'
+          key: ${{ runner.os }}-cypress
 
       - name: Install applesimutils, reset ios simulators
         if: ${{ matrix.os == 'macos-latest' }}
