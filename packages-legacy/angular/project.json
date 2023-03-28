@@ -4,7 +4,16 @@
   "sourceRoot": "packages-legacy/angular",
   "projectType": "library",
   "targets": {
-    "build": {
+    "build-ng": {
+      "dependsOn": ["^build", "build-base"],
+      "executor": "@nrwl/angular:package",
+      "options": {
+        "project": "packages-legacy/angular/ng-package.json",
+        "tsConfig": "packages-legacy/angular/tsconfig.json"
+      },
+      "outputs": ["build/packages/angular-legacy"]
+    },
+    "build-base": {
       "executor": "@nrwl/js:tsc",
       "dependsOn": ["^build"],
       "options": {
@@ -30,6 +39,13 @@
             "output": "/"
           }
         ]
+      }
+    },
+    "build": {
+      "dependsOn": ["build-ng", "build-base", "^build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'Built angular-legacy'"
       }
     }
   },

@@ -5294,6 +5294,33 @@
     read-package-json-fast "^3.0.0"
     which "^3.0.0"
 
+"@nrwl/angular@16.0.0-beta.0":
+  version "16.0.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@nrwl/angular/-/angular-16.0.0-beta.0.tgz#91e396ecc2e5c280984ab307dd5db6a99b557001"
+  integrity sha512-wz5Ots/Zsp7LWWXw9Zg3c79QZBUikOa7pHwxzLhxrMVDXW5Gb8OH5P4LRDLJXvmMhFJDQWMdMNqURx3vcegXeg==
+  dependencies:
+    "@nrwl/cypress" "16.0.0-beta.0"
+    "@nrwl/devkit" "16.0.0-beta.0"
+    "@nrwl/jest" "16.0.0-beta.0"
+    "@nrwl/js" "16.0.0-beta.0"
+    "@nrwl/linter" "16.0.0-beta.0"
+    "@nrwl/webpack" "16.0.0-beta.0"
+    "@nrwl/workspace" "16.0.0-beta.0"
+    "@phenomnomnominal/tsquery" "~5.0.1"
+    chalk "^4.1.0"
+    chokidar "^3.5.1"
+    enquirer "^2.3.6"
+    http-server "^14.1.0"
+    ignore "^5.0.4"
+    magic-string "~0.26.2"
+    minimatch "3.0.5"
+    semver "7.3.4"
+    ts-node "10.9.1"
+    tsconfig-paths "^4.1.2"
+    tslib "^2.3.0"
+    webpack "^5.75.0"
+    webpack-merge "5.7.3"
+
 "@nrwl/cli@15.0.3":
   version "15.0.3"
   resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-15.0.3.tgz#31cd05f775930f23623c64bebcf45889865fc83b"
@@ -26134,6 +26161,14 @@ webpack-log@^2.0.0:
   dependencies:
     ansi-colors "^3.0.0"
     uuid "^3.3.2"
+
+webpack-merge@5.7.3:
+  version "5.7.3"
+  resolved "https://registry.yarnpkg.com/webpack-merge/-/webpack-merge-5.7.3.tgz#2a0754e1877a25a8bbab3d2475ca70a052708213"
+  integrity sha512-6/JUQv0ELQ1igjGDzHkXbVDRxkfA57Zw7PfiupdLFJYrgFqY5ZP8xxbpp2lU3EPwYx89ht5Z/aDkD40hFCm5AA==
+  dependencies:
+    clone-deep "^4.0.1"
+    wildcard "^2.0.0"
 
 webpack-merge@5.8.0, webpack-merge@^5.8.0:
   version "5.8.0"

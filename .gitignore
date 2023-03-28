@@ -26,6 +26,9 @@ CHANGELOG.md
 # Next.js
 .next
 
+# Angular Cache
+.angular
+
 # Local dev files
 .env
 

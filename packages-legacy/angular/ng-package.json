@@ -3,7 +3,7 @@
   "lib": {
     "entryFile": "index.ts"
   },
-  "dest": "../../build/packages/angular",
+  "dest": "../../build/packages/angular-legacy",
   "deleteDestPath": false,
   "allowedNonPeerDependencies": [
     "@nx/",

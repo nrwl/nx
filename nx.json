@@ -12,6 +12,7 @@
           "build",
           "lint-base",
           "lint",
+          "build-ng",
           "build-base",
           "build-native",
           "e2e",
