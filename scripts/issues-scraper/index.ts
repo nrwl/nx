@@ -5,6 +5,7 @@ import { getScopeLabels, scrapeIssues } from './scrape-issues';
 import { formatGhReport, getSlackMessageJson } from './format-slack-message';
 import { setOutput } from '@actions/core';
 import isCI from 'is-ci';
+import { readdirSync } from 'fs';
 
 const CACHE_FILE = join(__dirname, 'cached', 'data.json');
 
@@ -56,8 +57,10 @@ function saveCacheData(report: ReportData) {
 
 function getOldData(): ReportData {
   try {
+    console.log('DIR CONTENTS:', readdirSync(dirname(CACHE_FILE)));
     return readJsonSync(CACHE_FILE);
-  } catch {
+  } catch (e) {
+    console.log(e);
     return {
       scopes: {},
       totalBugCount: 0,
