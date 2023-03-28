@@ -16,7 +16,6 @@ import { initGenerator as jsInitGenerator } from '@nrwl/js';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   addDependenciesToPackageJsonIfDontExist,
-  getInstalledAngularVersionInfo,
   getInstalledPackageVersion,
   versions,
 } from '../utils/version-utils';
@@ -27,7 +26,6 @@ export async function angularInitGenerator(
   tree: Tree,
   rawOptions: Schema
 ): Promise<GeneratorCallback> {
-  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
   const tasks: GeneratorCallback[] = [];
   const options = normalizeOptions(rawOptions);
 
@@ -82,7 +80,7 @@ export async function angularInitGenerator(
   const e2eTask = await addE2ETestRunner(tree, options);
   tasks.push(e2eTask);
 
-  addGitIgnoreEntry(tree, '.angular');
+  ignoreAngularCacheDirectory(tree);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -208,18 +206,42 @@ async function addE2ETestRunner(
   }
 }
 
-function addGitIgnoreEntry(host: Tree, entry: string) {
-  if (host.exists('.gitignore')) {
-    let content = host.read('.gitignore', 'utf-8');
+function ignoreAngularCacheDirectory(tree: Tree): void {
+  const { cli } = readNxJson(tree);
+  // angular-specific cli config is supported though is not included in the
+  // NxJsonConfiguration type
+  const angularCacheDir = (cli as any)?.cache?.path ?? '.angular';
+
+  addGitIgnoreEntry(tree, angularCacheDir);
+  addPrettierIgnoreEntry(tree, angularCacheDir);
+}
+
+function addGitIgnoreEntry(tree: Tree, entry: string): void {
+  if (tree.exists('.gitignore')) {
+    let content = tree.read('.gitignore', 'utf-8');
     if (/^\.angular$/gm.test(content)) {
       return;
     }
 
     content = `${content}\n${entry}\n`;
-    host.write('.gitignore', content);
+    tree.write('.gitignore', content);
   } else {
     logger.warn(`Couldn't find .gitignore file to update`);
   }
+}
+
+function addPrettierIgnoreEntry(tree: Tree, entry: string): void {
+  if (!tree.exists('.prettierignore')) {
+    return;
+  }
+
+  let content = tree.read('.prettierignore', 'utf-8');
+  if (/^\.angular$/gm.test(content)) {
+    return;
+  }
+
+  content = `${content}\n${entry}\n`;
+  tree.write('.prettierignore', content);
 }
 
 export default angularInitGenerator;

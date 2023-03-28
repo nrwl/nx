@@ -4,7 +4,14 @@ jest.mock('@nrwl/devkit', () => ({
   // and be able to test with different versions
   ensurePackage: jest.fn(),
 }));
-import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nrwl/devkit';
+import {
+  NxJsonConfiguration,
+  readJson,
+  readNxJson,
+  Tree,
+  updateJson,
+  updateNxJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
@@ -238,41 +245,103 @@ describe('init', () => {
     });
   });
 
-  it('should add .angular to gitignore', async () => {
-    tree.write('.gitignore', '');
+  describe('angular cache dir', () => {
+    it('should add .angular to .gitignore', async () => {
+      tree.write('.gitignore', '');
 
-    await init(tree, {
-      unitTestRunner: UnitTestRunner.Jest,
-      e2eTestRunner: E2eTestRunner.Cypress,
-      linter: Linter.EsLint,
-      skipFormat: false,
+      await init(tree, {
+        unitTestRunner: UnitTestRunner.Jest,
+        e2eTestRunner: E2eTestRunner.Cypress,
+        linter: Linter.EsLint,
+        skipFormat: false,
+      });
+
+      expect(tree.read('.gitignore', 'utf-8')).toContain('.angular');
     });
 
-    expect(tree.read('.gitignore', 'utf-8')).toContain('.angular');
-  });
-
-  it('should not add .angular to gitignore when it already exists', async () => {
-    tree.write(
-      '.gitignore',
-      `foo
+    it('should not add .angular to .gitignore when it already exists', async () => {
+      tree.write(
+        '.gitignore',
+        `foo
 bar
 
 .angular
 
 `
-    );
+      );
 
-    await init(tree, {
-      unitTestRunner: UnitTestRunner.Jest,
-      e2eTestRunner: E2eTestRunner.Cypress,
-      linter: Linter.EsLint,
-      skipFormat: false,
+      await init(tree, {
+        unitTestRunner: UnitTestRunner.Jest,
+        e2eTestRunner: E2eTestRunner.Cypress,
+        linter: Linter.EsLint,
+        skipFormat: false,
+      });
+
+      const angularEntries = tree
+        .read('.gitignore', 'utf-8')
+        .match(/^.angular$/gm);
+      expect(angularEntries).toHaveLength(1);
     });
 
-    const angularEntries = tree
-      .read('.gitignore', 'utf-8')
-      .match(/^.angular$/gm);
-    expect(angularEntries).toHaveLength(1);
+    it('should add .angular to .prettierignore', async () => {
+      tree.write('.prettierignore', '');
+
+      await init(tree, {
+        unitTestRunner: UnitTestRunner.Jest,
+        e2eTestRunner: E2eTestRunner.Cypress,
+        linter: Linter.EsLint,
+        skipFormat: false,
+      });
+
+      expect(tree.read('.prettierignore', 'utf-8')).toContain('.angular');
+    });
+
+    it('should not add .angular to .prettierignore when it already exists', async () => {
+      tree.write(
+        '.prettierignore',
+        `/coverage
+/dist
+
+.angular
+
+`
+      );
+
+      await init(tree, {
+        unitTestRunner: UnitTestRunner.Jest,
+        e2eTestRunner: E2eTestRunner.Cypress,
+        linter: Linter.EsLint,
+        skipFormat: false,
+      });
+
+      const angularEntries = tree
+        .read('.prettierignore', 'utf-8')
+        .match(/^.angular$/gm);
+      expect(angularEntries).toHaveLength(1);
+    });
+
+    it('should add configured angular cache dir to .gitignore and .prettierignore', async () => {
+      tree.write('.gitignore', '');
+      const nxJson = readNxJson(tree);
+      updateNxJson(tree, {
+        ...nxJson,
+        cli: { cache: { path: 'node_modules/.cache/angular' } },
+      } as any);
+
+      await init(tree, {
+        unitTestRunner: UnitTestRunner.Jest,
+        e2eTestRunner: E2eTestRunner.Cypress,
+        linter: Linter.EsLint,
+        skipFormat: false,
+      });
+
+      expect(tree.read('.gitignore', 'utf-8')).toContain(
+        'node_modules/.cache/angular'
+      );
+      expect(tree.read('.prettierignore', 'utf-8')).toContain(
+        'node_modules/.cache/angular'
+      );
+    });
   });
 
   describe('v14 support', () => {
@@ -532,41 +601,103 @@ bar
       });
     });
 
-    it('should add .angular to gitignore', async () => {
-      tree.write('.gitignore', '');
+    describe('angular cache dir', () => {
+      it('should add .angular to .gitignore', async () => {
+        tree.write('.gitignore', '');
 
-      await init(tree, {
-        unitTestRunner: UnitTestRunner.Jest,
-        e2eTestRunner: E2eTestRunner.Cypress,
-        linter: Linter.EsLint,
-        skipFormat: false,
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.Jest,
+          e2eTestRunner: E2eTestRunner.Cypress,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        expect(tree.read('.gitignore', 'utf-8')).toContain('.angular');
       });
 
-      expect(tree.read('.gitignore', 'utf-8')).toContain('.angular');
-    });
-
-    it('should not add .angular to gitignore when it already exists', async () => {
-      tree.write(
-        '.gitignore',
-        `foo
+      it('should not add .angular to .gitignore when it already exists', async () => {
+        tree.write(
+          '.gitignore',
+          `foo
 bar
 
 .angular
 
 `
-      );
+        );
 
-      await init(tree, {
-        unitTestRunner: UnitTestRunner.Jest,
-        e2eTestRunner: E2eTestRunner.Cypress,
-        linter: Linter.EsLint,
-        skipFormat: false,
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.Jest,
+          e2eTestRunner: E2eTestRunner.Cypress,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const angularEntries = tree
+          .read('.gitignore', 'utf-8')
+          .match(/^.angular$/gm);
+        expect(angularEntries).toHaveLength(1);
       });
 
-      const angularEntries = tree
-        .read('.gitignore', 'utf-8')
-        .match(/^.angular$/gm);
-      expect(angularEntries).toHaveLength(1);
+      it('should add .angular to .prettierignore', async () => {
+        tree.write('.prettierignore', '');
+
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.Jest,
+          e2eTestRunner: E2eTestRunner.Cypress,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        expect(tree.read('.prettierignore', 'utf-8')).toContain('.angular');
+      });
+
+      it('should not add .angular to .prettierignore when it already exists', async () => {
+        tree.write(
+          '.prettierignore',
+          `/coverage
+/dist
+
+.angular
+
+`
+        );
+
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.Jest,
+          e2eTestRunner: E2eTestRunner.Cypress,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const angularEntries = tree
+          .read('.prettierignore', 'utf-8')
+          .match(/^.angular$/gm);
+        expect(angularEntries).toHaveLength(1);
+      });
+
+      it('should add configured angular cache dir to .gitignore and .prettierignore', async () => {
+        tree.write('.gitignore', '');
+        const nxJson = readNxJson(tree);
+        updateNxJson(tree, {
+          ...nxJson,
+          cli: { cache: { path: 'node_modules/.cache/angular' } },
+        } as any);
+
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.Jest,
+          e2eTestRunner: E2eTestRunner.Cypress,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        expect(tree.read('.gitignore', 'utf-8')).toContain(
+          'node_modules/.cache/angular'
+        );
+        expect(tree.read('.prettierignore', 'utf-8')).toContain(
+          'node_modules/.cache/angular'
+        );
+      });
     });
   });
 });
