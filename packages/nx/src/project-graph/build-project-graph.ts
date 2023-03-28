@@ -11,13 +11,8 @@ import {
   shouldRecomputeWholeGraph,
   writeCache,
 } from './nx-deps-cache';
-import {
-  buildImplicitProjectDependencies,
-  ExplicitDependency,
-} from './build-dependencies';
+import { buildImplicitProjectDependencies } from './build-dependencies';
 import { buildWorkspaceProjectNodes } from './build-nodes';
-import * as os from 'os';
-import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
 import { loadNxPlugins } from '../utils/nx-plugin';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { createProjectFileMap } from './file-map-utils';
@@ -28,7 +23,7 @@ import {
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { NrwlJsPluginConfig, NxJsonConfiguration } from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {
@@ -36,11 +31,6 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
-import {
-  lockFileExists,
-  lockFileHash,
-  parseLockFile,
-} from '../lock-file/lock-file';
 import { Workspaces } from '../config/workspaces';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
@@ -102,17 +92,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     filesToProcess = projectFileMap;
     cachedFileData = {};
   }
-  let partialGraph: ProjectGraph;
-  let lockHash = 'n/a';
-  // during the create-nx-workspace lock file might not exists yet
-  if (lockFileExists()) {
-    lockHash = lockFileHash();
-    if (cache && cache.lockFileHash === lockHash) {
-      partialGraph = isolatePartialGraphFromCache(cache);
-    } else {
-      partialGraph = parseLockFile();
-    }
-  }
+
   const context = createContext(
     projectsConfigurations,
     nxJson,
@@ -124,15 +104,13 @@ export async function buildProjectGraphUsingProjectFileMap(
     context,
     cachedFileData,
     projectGraphVersion,
-    partialGraph,
-    packageJsonDeps
+    cache
   );
   const projectGraphCache = createCache(
     nxJson,
     packageJsonDeps,
     projectGraph,
-    rootTsConfig,
-    lockHash
+    rootTsConfig
   );
   if (shouldWriteCache) {
     writeCache(projectGraphCache);
@@ -168,33 +146,24 @@ function readCombinedDeps() {
   };
 }
 
-// extract only external nodes and their dependencies
-function isolatePartialGraphFromCache(cache: ProjectGraphCache): ProjectGraph {
-  const dependencies = {};
-  Object.keys(cache.dependencies).forEach((k) => {
-    if (cache.externalNodes[k]) {
-      dependencies[k] = cache.dependencies[k];
-    }
-  });
-
-  return {
-    nodes: {},
-    dependencies,
-    externalNodes: cache.externalNodes,
-  };
-}
-
 async function buildProjectGraphUsingContext(
   nxJson: NxJsonConfiguration,
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   projectGraphVersion: string,
-  partialGraph: ProjectGraph,
-  packageJsonDeps: Record<string, string>
+  cache: ProjectGraphCache | null
 ) {
   performance.mark('build project graph:start');
 
-  const builder = new ProjectGraphBuilder(partialGraph);
+  const builder = new ProjectGraphBuilder(
+    cache
+      ? {
+          nodes: cache.nodes,
+          externalNodes: cache.externalNodes,
+          dependencies: cache.dependencies,
+        }
+      : null
+  );
   builder.setVersion(projectGraphVersion);
 
   await buildWorkspaceProjectNodes(ctx, builder, nxJson);
@@ -212,12 +181,6 @@ async function buildProjectGraphUsingContext(
     }
   }
 
-  await buildExplicitDependencies(
-    jsPluginConfig(nxJson, packageJsonDeps),
-    ctx,
-    updatedBuilder
-  );
-
   buildImplicitProjectDependencies(ctx, updatedBuilder);
 
   const finalGraph = updatedBuilder.getUpdatedProjectGraph();
@@ -230,216 +193,6 @@ async function buildProjectGraphUsingContext(
   );
 
   return finalGraph;
-}
-
-function jsPluginConfig(
-  nxJson: NxJsonConfiguration,
-  packageJsonDeps: { [packageName: string]: string }
-): NrwlJsPluginConfig {
-  if (nxJson?.pluginsConfig?.['@nrwl/js']) {
-    return nxJson?.pluginsConfig?.['@nrwl/js'];
-  }
-  if (
-    packageJsonDeps['@nrwl/workspace'] ||
-    packageJsonDeps['@nrwl/js'] ||
-    packageJsonDeps['@nrwl/node'] ||
-    packageJsonDeps['@nrwl/next'] ||
-    packageJsonDeps['@nrwl/react'] ||
-    packageJsonDeps['@nrwl/angular'] ||
-    packageJsonDeps['@nrwl/web']
-  ) {
-    return { analyzePackageJson: true, analyzeSourceFiles: true };
-  } else {
-    return { analyzePackageJson: true, analyzeSourceFiles: false };
-  }
-}
-
-function buildExplicitDependencies(
-  jsPluginConfig: {
-    analyzeSourceFiles?: boolean;
-    analyzePackageJson?: boolean;
-  },
-  ctx: ProjectGraphProcessorContext,
-  builder: ProjectGraphBuilder
-) {
-  let totalNumOfFilesToProcess = totalNumberOfFilesToProcess(ctx);
-  // using workers has an overhead, so we only do it when the number of
-  // files we need to process is >= 100 and there are more than 2 CPUs
-  // to be able to use at least 2 workers (1 worker per CPU and
-  // 1 CPU for the main thread)
-  if (totalNumOfFilesToProcess < 100 || getNumberOfWorkers() <= 2) {
-    return buildExplicitDependenciesWithoutWorkers(
-      jsPluginConfig,
-      ctx,
-      builder
-    );
-  } else {
-    return buildExplicitDependenciesUsingWorkers(
-      jsPluginConfig,
-      ctx,
-      totalNumOfFilesToProcess,
-      builder
-    );
-  }
-}
-
-function totalNumberOfFilesToProcess(ctx: ProjectGraphProcessorContext) {
-  let totalNumOfFilesToProcess = 0;
-  Object.values(ctx.filesToProcess).forEach(
-    (t) => (totalNumOfFilesToProcess += t.length)
-  );
-  return totalNumOfFilesToProcess;
-}
-
-function splitFilesIntoBins(
-  ctx: ProjectGraphProcessorContext,
-  totalNumOfFilesToProcess: number,
-  numberOfWorkers: number
-) {
-  // we want to have numberOfWorkers * 5 bins
-  const filesPerBin =
-    Math.round(totalNumOfFilesToProcess / numberOfWorkers / 5) + 1;
-  const bins: ProjectFileMap[] = [];
-  let currentProjectFileMap = {};
-  let currentNumberOfFiles = 0;
-  for (const source of Object.keys(ctx.filesToProcess)) {
-    for (const f of Object.values(ctx.filesToProcess[source])) {
-      if (!currentProjectFileMap[source]) currentProjectFileMap[source] = [];
-      currentProjectFileMap[source].push(f);
-      currentNumberOfFiles++;
-
-      if (currentNumberOfFiles >= filesPerBin) {
-        bins.push(currentProjectFileMap);
-        currentProjectFileMap = {};
-        currentNumberOfFiles = 0;
-      }
-    }
-  }
-  bins.push(currentProjectFileMap);
-  return bins;
-}
-
-function createWorkerPool(numberOfWorkers: number) {
-  const res = [];
-  for (let i = 0; i < numberOfWorkers; ++i) {
-    res.push(
-      new (require('worker_threads').Worker)(
-        join(__dirname, './project-graph-worker.js'),
-        {
-          env: process.env,
-        }
-      )
-    );
-  }
-  return res;
-}
-
-function buildExplicitDependenciesWithoutWorkers(
-  jsPluginConfig: {
-    analyzeSourceFiles?: boolean;
-    analyzePackageJson?: boolean;
-  },
-  ctx: ProjectGraphProcessorContext,
-  builder: ProjectGraphBuilder
-) {
-  buildExplicitTypescriptAndPackageJsonDependencies(
-    jsPluginConfig,
-    ctx.nxJsonConfiguration,
-    ctx.projectsConfigurations,
-    builder.graph,
-    ctx.filesToProcess
-  ).forEach((r) => {
-    if (r.type === 'static') {
-      builder.addStaticDependency(
-        r.sourceProjectName,
-        r.targetProjectName,
-        r.sourceProjectFile
-      );
-    } else {
-      builder.addDynamicDependency(
-        r.sourceProjectName,
-        r.targetProjectName,
-        r.sourceProjectFile
-      );
-    }
-  });
-}
-
-function buildExplicitDependenciesUsingWorkers(
-  jsPluginConfig: {
-    analyzeSourceFiles?: boolean;
-    analyzePackageJson?: boolean;
-  },
-  ctx: ProjectGraphProcessorContext,
-  totalNumOfFilesToProcess: number,
-  builder: ProjectGraphBuilder
-) {
-  const numberOfWorkers = Math.min(
-    totalNumOfFilesToProcess,
-    getNumberOfWorkers()
-  );
-  const bins = splitFilesIntoBins(
-    ctx,
-    totalNumOfFilesToProcess,
-    numberOfWorkers
-  );
-  const workers = createWorkerPool(numberOfWorkers);
-  let numberOfExpectedResponses = bins.length;
-
-  return new Promise((res, reject) => {
-    for (let w of workers) {
-      w.on('message', (explicitDependencies) => {
-        explicitDependencies.forEach((r: ExplicitDependency) => {
-          if (r.type === 'static') {
-            builder.addStaticDependency(
-              r.sourceProjectName,
-              r.targetProjectName,
-              r.sourceProjectFile
-            );
-          } else {
-            builder.addDynamicDependency(
-              r.sourceProjectName,
-              r.targetProjectName,
-              r.sourceProjectFile
-            );
-          }
-        });
-        if (bins.length > 0) {
-          w.postMessage({ filesToProcess: bins.shift() });
-        }
-        // we processed all the bins
-        if (--numberOfExpectedResponses === 0) {
-          for (let w of workers) {
-            w.terminate();
-          }
-          res(null);
-        }
-      });
-      w.on('error', reject);
-      w.on('exit', (code) => {
-        if (code !== 0) {
-          reject(
-            new Error(
-              `Unable to complete project graph creation. Worker stopped with exit code: ${code}`
-            )
-          );
-        }
-      });
-      w.postMessage({
-        nxJsonConfiguration: ctx.nxJsonConfiguration,
-        projectsConfigurations: ctx.projectsConfigurations,
-        projectGraph: builder.graph,
-        jsPluginConfig,
-      });
-      w.postMessage({ filesToProcess: bins.shift() });
-    }
-  });
-}
-
-function getNumberOfWorkers(): number {
-  return process.env.NX_PROJECT_GRAPH_MAX_WORKERS
-    ? +process.env.NX_PROJECT_GRAPH_MAX_WORKERS
-    : Math.min(os.cpus().length - 1, 8); // This is capped for cases in CI where `os.cpus()` returns way more CPUs than the resources that are allocated
 }
 
 function createContext(

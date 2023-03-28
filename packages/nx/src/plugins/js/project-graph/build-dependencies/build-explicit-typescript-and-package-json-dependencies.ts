@@ -3,9 +3,9 @@ import {
   ExplicitDependency,
 } from './explicit-project-dependencies';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
-import { ProjectFileMap, ProjectGraph } from '../../config/project-graph';
-import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { ProjectFileMap, ProjectGraph } from '../../../../config/project-graph';
+import { ProjectsConfigurations } from '../../../../config/workspace-json-project-json';
+import { NxJsonConfiguration } from '../../../../config/nx-json';
 
 export function buildExplicitTypescriptAndPackageJsonDependencies(
   jsPluginConfig: {

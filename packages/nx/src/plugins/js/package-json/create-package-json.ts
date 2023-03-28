@@ -1,11 +1,17 @@
-import { readJsonFile } from './fileutils';
-import { sortObjectByKeys } from './object-sort';
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { PackageJson } from './package-json';
+import { readJsonFile } from '../../../utils/fileutils';
+import { sortObjectByKeys } from '../../../utils/object-sort';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../../../config/project-graph';
+import { PackageJson } from '../../../utils/package-json';
 import { existsSync } from 'fs';
-import { workspaceRoot } from './workspace-root';
-import { filterUsingGlobPatterns, getTargetInputs } from '../hasher/hasher';
-import { readNxJson } from '../config/configuration';
+import { workspaceRoot } from '../../../utils/workspace-root';
+import {
+  filterUsingGlobPatterns,
+  getTargetInputs,
+} from '../../../hasher/hasher';
+import { readNxJson } from '../../../config/configuration';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;

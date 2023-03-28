@@ -10,7 +10,7 @@ import {
   HelperDependency,
   readTsConfig,
 } from '@nrwl/js';
-import { getLockFileName } from 'nx/src/lock-file/lock-file';
+import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 

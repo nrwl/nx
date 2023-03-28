@@ -9,7 +9,7 @@ import { DependencyType } from '@nrwl/devkit';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';
-import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/plugins/js/project-graph/build-dependencies/target-project-locator';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';

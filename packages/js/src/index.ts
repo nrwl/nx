@@ -11,5 +11,5 @@ export * from './utils/assets';
 export * from './utils/package-json/update-package-json';
 export { libraryGenerator } from './generators/library/library';
 export { initGenerator } from './generators/init/init';
-export { createLockFile } from 'nx/src/lock-file/lock-file';
-export { createPackageJson } from 'nx/src/utils/create-package-json';
+export { createLockFile } from 'nx/src/plugins/js/lock-file/lock-file';
+export { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';

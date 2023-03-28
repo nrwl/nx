@@ -1,16 +1,19 @@
-import { getRootTsConfigFileName, resolveModuleByImport } from './typescript';
-import { isRelativePath, readJsonFile } from './fileutils';
+import {
+  getRootTsConfigFileName,
+  resolveModuleByImport,
+} from '../../../../utils/typescript';
+import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
 import { dirname, join, posix } from 'path';
-import { workspaceRoot } from './workspace-root';
+import { workspaceRoot } from '../../../../utils/workspace-root';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
-} from '../config/project-graph';
+} from '../../../../config/project-graph';
+import { builtinModules } from 'module';
 import {
   createProjectRootMappings,
   findProjectForPath,
-} from '../project-graph/utils/find-project-for-path';
-import { builtinModules } from 'module';
+} from '../../../../project-graph/utils/find-project-for-path';
 
 const builtInModuleSet = new Set<string>([
   ...builtinModules,

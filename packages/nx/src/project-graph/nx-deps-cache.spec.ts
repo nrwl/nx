@@ -298,8 +298,7 @@ describe('nx deps utils', () => {
         createNxJson({}),
         createPackageJsonDeps({}),
         createCache({}) as ProjectGraph,
-        {},
-        'abcd1234'
+        {}
       );
     });
 
@@ -308,8 +307,7 @@ describe('nx deps utils', () => {
         createNxJson({}),
         createPackageJsonDeps({}),
         createCache({}) as ProjectGraph,
-        undefined,
-        'abcd1234'
+        undefined
       );
 
       expect(result).toBeDefined();
@@ -323,7 +321,6 @@ describe('nx deps utils', () => {
         '@nrwl/workspace': '12.0.0',
         plugin: '1.0.0',
       },
-      lockFileHash: 'abcd1234',
       pathMappings: {
         mylib: ['libs/mylib/index.ts'],
       },

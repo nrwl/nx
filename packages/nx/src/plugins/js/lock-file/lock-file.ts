@@ -6,18 +6,22 @@
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-import { detectPackageManager, PackageManager } from '../utils/package-manager';
-import { workspaceRoot } from '../utils/workspace-root';
-import { ProjectGraph } from '../config/project-graph';
-import { PackageJson } from '../utils/package-json';
-import { defaultHashing } from '../hasher/hashing-impl';
+import {
+  detectPackageManager,
+  PackageManager,
+} from '../../../utils/package-manager';
+import { workspaceRoot } from '../../../utils/workspace-root';
+import { ProjectGraph } from '../../../config/project-graph';
+import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
+import { PackageJson } from '../../../utils/package-json';
+import { defaultHashing } from '../../../hasher/hashing-impl';
+import { output } from '../../../utils/output';
 
 import { parseNpmLockfile, stringifyNpmLockfile } from './npm-parser';
 import { parsePnpmLockfile, stringifyPnpmLockfile } from './pnpm-parser';
 import { parseYarnLockfile, stringifyYarnLockfile } from './yarn-parser';
 import { pruneProjectGraph } from './project-graph-pruning';
 import { normalizePackageJson } from './utils/package-json';
-import { output } from '../utils/output';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
@@ -76,20 +80,24 @@ export function lockFileHash(
  * Parses lock file and maps dependencies and metadata to {@link LockFileGraph}
  */
 export function parseLockFile(
+  builder: ProjectGraphBuilder,
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): ProjectGraph {
   try {
     if (packageManager === 'yarn') {
       const content = readFileSync(YARN_LOCK_PATH, 'utf8');
-      return parseYarnLockfile(content);
+      parseYarnLockfile(content, builder);
+      return builder.getUpdatedProjectGraph();
     }
     if (packageManager === 'pnpm') {
       const content = readFileSync(PNPM_LOCK_PATH, 'utf8');
-      return parsePnpmLockfile(content);
+      parsePnpmLockfile(content, builder);
+      return builder.getUpdatedProjectGraph();
     }
     if (packageManager === 'npm') {
       const content = readFileSync(NPM_LOCK_PATH, 'utf8');
-      return parseNpmLockfile(content);
+      parseNpmLockfile(content, builder);
+      return builder.getUpdatedProjectGraph();
     }
   } catch (e) {
     if (!isPostInstallProcess()) {
@@ -138,19 +146,26 @@ export function createLockFile(
   const normalizedPackageJson = normalizePackageJson(packageJson);
   const content = readFileSync(getLockFileName(packageManager), 'utf8');
 
+  const builder = new ProjectGraphBuilder();
+
   try {
     if (packageManager === 'yarn') {
-      const graph = parseYarnLockfile(content);
+      parseYarnLockfile(content, builder);
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'pnpm') {
-      const graph = parsePnpmLockfile(content);
+      parsePnpmLockfile(content, builder);
+
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyPnpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'npm') {
-      const graph = parseNpmLockfile(content);
+      parseNpmLockfile(content, builder);
+
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
     }

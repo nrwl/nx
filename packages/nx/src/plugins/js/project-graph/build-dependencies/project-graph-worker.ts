@@ -1,8 +1,8 @@
 import { parentPort } from 'worker_threads';
-import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
-import { ProjectGraph } from '../config/project-graph';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-explicit-typescript-and-package-json-dependencies';
+import { NxJsonConfiguration } from '../../../../config/nx-json';
+import { ProjectsConfigurations } from '../../../../config/workspace-json-project-json';
+import { ProjectGraph } from '../../../../config/project-graph';
 
 let nxJsonConfiguration: NxJsonConfiguration | null;
 let projectsConfigurations: ProjectsConfigurations | null;

@@ -11,7 +11,7 @@
       "dependencies": {
         "@nrwl/devkit": "15.0.13",
         "eslint-plugin-disable-autofix": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
-        "postgres": "charsleysa/postgres#fix-errors-compiled",
+        "postgres": "git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
         "yargs": "17.6.2"
       },
       "devDependencies": {
@@ -1103,9 +1103,7 @@
       "integrity": "sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==",
       "hasInstallScript": true,
       "optional": true,
-      "os": [
-        "darwin"
-      ],
+      "os": ["darwin"],
       "peer": true,
       "engines": {
         "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
