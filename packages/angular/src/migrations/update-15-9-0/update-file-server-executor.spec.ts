@@ -64,4 +64,22 @@ describe('updateFileServerExecutor', () => {
       '@nrwl/web:file-server'
     );
   });
+
+  it('should handle projects with no targets', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    const project = {
+      name: 'test',
+      root: '/',
+      sourceRoot: '/src',
+    };
+
+    addProjectConfiguration(tree, 'test', project);
+
+    // ACT
+    expect(async () => {
+      await updateFileServerExecutor(tree);
+    }).not.toThrow();
+  });
 });
