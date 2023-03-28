@@ -133,12 +133,14 @@ Examples:
 - same as `{fileset: "{workspaceRoot}/jest.config.ts}`
 
 {% callout type="note" title="inputs syntax" %}
+
 The `inputs` and `namedInputs` are parsed with the following rules:
 
 1. `{projectRoot}` and `{workspaceRoot}` are replaced with the appropriate path
 2. A `^` character at the beginning of the string means this entry applies to the project dependencies of the project, not the project itself.
 3. Everything else is processed with the [minimatch](https://github.com/isaacs/minimatch) library
-   {% /callout %}
+
+{% /callout %}
 
 _Runtime Inputs_
 
