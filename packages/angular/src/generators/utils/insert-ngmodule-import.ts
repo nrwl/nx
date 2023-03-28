@@ -108,7 +108,7 @@ export function insertNgModuleProperty(
       let text = `${property}: [${name}]`;
       if (ngModuleOptions.properties.hasTrailingComma) {
         text = `${text},`;
-      } else {
+      } else if (ngModuleOptions.properties.length) {
         text = `, ${text}`;
       }
       const newContents = applyChangesToString(contents, [
@@ -129,8 +129,10 @@ export function insertNgModuleProperty(
       let text: string;
       if (typeProperty.initializer.elements.hasTrailingComma) {
         text = `${name},`;
-      } else {
+      } else if (typeProperty.initializer.elements.length) {
         text = `, ${name}`;
+      } else {
+        text = name;
       }
       const newContents = applyChangesToString(contents, [
         {
