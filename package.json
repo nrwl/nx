@@ -74,6 +74,7 @@
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@pnpm/lockfile-types": "^5.0.0",
+    "@pnpm/lockfile-file": "^8.0.0",
     "@reduxjs/toolkit": "1.9.0",
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-commonjs": "^20.0.0",
