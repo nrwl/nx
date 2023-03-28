@@ -70,15 +70,6 @@
         "path": "/packages/angular/executors/package",
         "type": "executor"
       },
-      "/packages/angular/executors/file-server": {
-        "description": "Serves a static web application from a folder.",
-        "file": "generated/packages/angular/executors/file-server.json",
-        "hidden": false,
-        "name": "file-server",
-        "originalFilePath": "/packages/angular/src/executors/file-server/schema.json",
-        "path": "/packages/angular/executors/file-server",
-        "type": "executor"
-      },
       "/packages/angular/executors/webpack-browser": {
         "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
         "file": "generated/packages/angular/executors/webpack-browser.json",
@@ -496,6 +487,15 @@
         "name": "cypress-project",
         "originalFilePath": "/packages/cypress/src/generators/cypress-project/schema.json",
         "path": "/packages/cypress/generators/cypress-project",
+        "type": "generator"
+      },
+      "/packages/cypress/generators/cypress-e2e-configuration": {
+        "description": "Add a Cypress E2E Configuration to an existing project.",
+        "file": "generated/packages/cypress/generators/cypress-e2e-configuration.json",
+        "hidden": false,
+        "name": "cypress-e2e-configuration",
+        "originalFilePath": "/packages/cypress/src/generators/cypress-e2e-configuration/schema.json",
+        "path": "/packages/cypress/generators/cypress-e2e-configuration",
         "type": "generator"
       },
       "/packages/cypress/generators/cypress-component-project": {
@@ -2213,6 +2213,15 @@
         "path": "/packages/react-native/executors/build-android",
         "type": "executor"
       },
+      "/packages/react-native/executors/build-ios": {
+        "description": "Build iOS app",
+        "file": "generated/packages/react-native/executors/build-ios.json",
+        "hidden": false,
+        "name": "build-ios",
+        "originalFilePath": "/packages/react-native/src/executors/build-ios/schema.json",
+        "path": "/packages/react-native/executors/build-ios",
+        "type": "executor"
+      },
       "/packages/react-native/executors/start": {
         "description": "Starts the Javascript server that communicates with connected devices.",
         "file": "generated/packages/react-native/executors/start.json",
@@ -2247,6 +2256,15 @@
         "name": "storybook",
         "originalFilePath": "/packages/react-native/src/executors/storybook/schema.json",
         "path": "/packages/react-native/executors/storybook",
+        "type": "executor"
+      },
+      "/packages/react-native/executors/pod-install": {
+        "description": "Run `pod install` in the `ios` directory.",
+        "file": "generated/packages/react-native/executors/pod-install.json",
+        "hidden": false,
+        "name": "pod-install",
+        "originalFilePath": "/packages/react-native/src/executors/pod-install/schema.json",
+        "path": "/packages/react-native/executors/pod-install",
         "type": "executor"
       }
     },

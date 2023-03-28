@@ -4,7 +4,7 @@ import { readProjectConfiguration } from '@nrwl/devkit';
 import { angularStoriesGenerator } from '../../stories/stories';
 import type { StorybookConfigurationOptions } from '../schema';
 
-export function generateStories(
+export async function generateStories(
   tree: Tree,
   options: StorybookConfigurationOptions
 ) {
@@ -15,7 +15,7 @@ export function generateStories(
     options.cypressDirectory
   );
 
-  angularStoriesGenerator(tree, {
+  await angularStoriesGenerator(tree, {
     name: options.name,
     generateCypressSpecs:
       options.configureCypress && options.generateCypressSpecs,

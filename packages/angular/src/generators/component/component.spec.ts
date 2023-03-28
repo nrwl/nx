@@ -84,9 +84,10 @@ describe('component Generator', () => {
     expect(componentSource).toMatchSnapshot();
 
     const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
-    expect(indexSource).toMatchInlineSnapshot(
-      `"export * from \\"./lib/example/example.component\\";"`
-    );
+    expect(indexSource).toMatchInlineSnapshot(`
+      "export * from './lib/example/example.component';
+      "
+    `);
   });
 
   it('should create the component correctly and not export it in the entry point when "export=false"', async () => {
@@ -322,7 +323,7 @@ describe('component Generator', () => {
       expect(componentSource).toMatchSnapshot();
 
       const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
-      expect(indexSource).toContain(`export * from "./lib/example.component";`);
+      expect(indexSource).toContain(`export * from './lib/example.component';`);
     });
 
     it('should create the component correctly and not export it when "export=false"', async () => {
@@ -407,7 +408,7 @@ describe('component Generator', () => {
 
       const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
       expect(indexSource).toContain(
-        `export * from "./lib/mycomp/example/example.component";`
+        `export * from './lib/mycomp/example/example.component';`
       );
     });
 
@@ -489,7 +490,7 @@ describe('component Generator', () => {
         // ASSERT
         const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
         expect(indexSource).toContain(
-          `export * from "./lib/example/example.component";`
+          `export * from './lib/example/example.component';`
         );
       }
     );
@@ -536,9 +537,10 @@ describe('component Generator', () => {
 
       // ASSERT
       const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
-      expect(indexSource).toMatchInlineSnapshot(
-        `"export * from \\"./lib/lib.module\\";"`
-      );
+      expect(indexSource).toMatchInlineSnapshot(`
+        "export * from './lib/lib.module';
+        "
+      `);
     });
   });
 

@@ -792,6 +792,7 @@ export function wrapAngularDevkitSchematic(
       generatorName,
       force: false,
       defaults: false,
+      quiet: false,
     };
     const workflow = createWorkflow(fsHost, host.root, options);
 

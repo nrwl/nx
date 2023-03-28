@@ -68,7 +68,7 @@ definitions:
         name: Agent
         script:
           - export NX_BRANCH=$BITBUCKET_PR_ID
-          
+
           - yarn install --frozen-lockfile
           - yarn nx-cloud start-agent
 
@@ -80,7 +80,7 @@ pipelines:
               name: CI
               script:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
-                
+
                 - yarn install --frozen-lockfile
                 - yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
                 - yarn nx-cloud record -- yarn nx format:check
@@ -236,7 +236,6 @@ variables:
 .dte-agent:
   interruptible: true
   script:
-    
     - yarn install --frozen-lockfile
     - yarn nx-cloud start-agent
 
@@ -247,7 +246,6 @@ variables:
     - main
     - merge_requests
   before_script:
-    
     - yarn install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}

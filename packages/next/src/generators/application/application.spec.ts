@@ -194,7 +194,7 @@ describe('app', () => {
 
       const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
 
-      expect(indexContent).toMatch(/<style jsx>{`.page {}`}<\/style>/);
+      expect(indexContent).toMatchSnapshot();
       expect(
         tree.exists('apps/my-app/pages/index.module.styled-jsx')
       ).toBeFalsy();

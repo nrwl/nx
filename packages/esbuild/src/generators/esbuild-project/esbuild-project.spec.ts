@@ -36,7 +36,6 @@ describe('esbuildProjectGenerator', () => {
       main: `libs/mypkg/src/${main}`,
       outputFileName: 'main.js',
       outputPath: 'dist/libs/mypkg',
-      project: 'libs/mypkg/package.json',
       tsConfig: `libs/mypkg/${tsConfig}`,
     });
   });

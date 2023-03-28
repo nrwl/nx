@@ -8,9 +8,11 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import * as enquirer from 'enquirer';
 
 import { Linter } from '@nrwl/linter';
 import { libraryGenerator } from '@nrwl/workspace/generators';
+import { nxVersion } from '../../utils/versions';
 import { TsConfig } from '../../utils/utilities';
 import configurationGenerator from './configuration';
 import * as workspaceConfiguration from './test-configs/workspace-conifiguration.json';
@@ -22,8 +24,18 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
+jest.mock('enquirer');
+// @ts-ignore
+enquirer.prompt = jest.fn();
 
 describe('@nrwl/storybook:configuration', () => {
+  beforeAll(() => {
+    process.env.NX_INTERACTIVE = 'true';
+  });
+  afterAll(() => {
+    // cleanup
+    delete process.env.NX_INTERACTIVE;
+  });
   describe('basic functionalities', () => {
     let tree: Tree;
 
@@ -42,6 +54,7 @@ describe('@nrwl/storybook:configuration', () => {
         devDependencies: {
           '@storybook/addon-essentials': '~6.2.9',
           '@storybook/react': '~6.2.9',
+          '@nrwl/web': nxVersion,
         },
       });
     });
@@ -108,12 +121,18 @@ describe('@nrwl/storybook:configuration', () => {
     });
 
     it('should update workspace file for react libs', async () => {
+      // @ts-ignore
+      enquirer.prompt = jest
+        .fn()
+        .mockReturnValue(Promise.resolve({ bundler: 'vite' }));
+
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib');
 
+      expect(enquirer.prompt).toHaveBeenCalled();
       expect(project.targets.storybook).toEqual({
         executor: '@nrwl/storybook:storybook',
         configurations: {
@@ -210,6 +229,11 @@ describe('@nrwl/storybook:configuration', () => {
     });
 
     it('should update `tsconfig.lib.json` file', async () => {
+      // @ts-ignore
+      enquirer.prompt = jest
+        .fn()
+        .mockReturnValue(Promise.resolve({ bundler: 'vite' }));
+
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
@@ -219,6 +243,7 @@ describe('@nrwl/storybook:configuration', () => {
         'libs/test-ui-lib/tsconfig.lib.json'
       ) as Required<TsConfig>;
 
+      expect(enquirer.prompt).toHaveBeenCalled();
       expect(tsconfigJson.exclude).toContain('**/*.stories.ts');
       expect(tsconfigJson.exclude).toContain('**/*.stories.js');
       expect(tsconfigJson.exclude).toContain('**/*.stories.jsx');
@@ -226,6 +251,11 @@ describe('@nrwl/storybook:configuration', () => {
     });
 
     it('should update `tsconfig.json` file', async () => {
+      // @ts-ignore
+      enquirer.prompt = jest
+        .fn()
+        .mockReturnValue(Promise.resolve({ bundler: 'vite' }));
+
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
@@ -235,6 +265,7 @@ describe('@nrwl/storybook:configuration', () => {
         'libs/test-ui-lib/tsconfig.json'
       );
 
+      expect(enquirer.prompt).toHaveBeenCalled();
       expect(tsconfigJson.references).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -251,6 +282,11 @@ describe('@nrwl/storybook:configuration', () => {
     });
 
     it("should update the project's .eslintrc.json if config exists", async () => {
+      // @ts-ignore
+      enquirer.prompt = jest
+        .fn()
+        .mockReturnValue(Promise.resolve({ bundler: 'vite' }));
+
       await libraryGenerator(tree, {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
@@ -268,6 +304,7 @@ describe('@nrwl/storybook:configuration', () => {
         uiFramework: '@storybook/react',
       });
 
+      expect(enquirer.prompt).toHaveBeenCalled();
       expect(readJson(tree, 'libs/test-ui-lib2/.eslintrc.json').parserOptions)
         .toMatchInlineSnapshot(`
       Object {
@@ -279,6 +316,11 @@ describe('@nrwl/storybook:configuration', () => {
     });
 
     it('should have the proper typings', async () => {
+      // @ts-ignore
+      enquirer.prompt = jest
+        .fn()
+        .mockReturnValue(Promise.resolve({ bundler: 'vite' }));
+
       await libraryGenerator(tree, {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
@@ -289,6 +331,7 @@ describe('@nrwl/storybook:configuration', () => {
         uiFramework: '@storybook/react',
       });
 
+      expect(enquirer.prompt).toHaveBeenCalled();
       expect(
         readJson(tree, 'libs/test-ui-lib2/.storybook/tsconfig.json').files
       ).toMatchSnapshot();
@@ -309,12 +352,18 @@ describe('@nrwl/storybook:configuration', () => {
     });
 
     it('should add test-storybook target', async () => {
+      // @ts-ignore
+      enquirer.prompt = jest
+        .fn()
+        .mockReturnValue(Promise.resolve({ bundler: 'vite' }));
+
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
         configureTestRunner: true,
       });
 
+      expect(enquirer.prompt).toHaveBeenCalled();
       expect(
         readJson(tree, 'package.json').devDependencies['@storybook/test-runner']
       ).toBeTruthy();
@@ -327,6 +376,84 @@ describe('@nrwl/storybook:configuration', () => {
             'test-storybook -c libs/test-ui-lib/.storybook --url=http://localhost:4400',
         },
       });
+    });
+
+    it('should add static-storybook target', async () => {
+      await configurationGenerator(tree, {
+        name: 'test-ui-lib',
+        uiFramework: '@storybook/react',
+        configureStaticServe: true,
+        bundler: 'webpack',
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'test-ui-lib').targets[
+          'static-storybook'
+        ]
+      ).toMatchInlineSnapshot(`
+        Object {
+          "configurations": Object {
+            "ci": Object {
+              "buildTarget": "test-ui-lib:build-storybook:ci",
+            },
+          },
+          "executor": "@nrwl/web:file-server",
+          "options": Object {
+            "buildTarget": "test-ui-lib:build-storybook",
+            "staticFilePath": "dist/storybook/test-ui-lib",
+          },
+        }
+      `);
+      expect(
+        readJson(tree, 'package.json').devDependencies['@nrwl/web']
+      ).toBeTruthy();
+    });
+    it('should use static-storybook:ci in cypress project', async () => {
+      await configurationGenerator(tree, {
+        name: 'test-ui-lib',
+        uiFramework: '@storybook/react',
+        configureStaticServe: true,
+        bundler: 'webpack',
+        configureCypress: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'test-ui-lib').targets[
+          'static-storybook'
+        ]
+      ).toMatchInlineSnapshot(`
+        Object {
+          "configurations": Object {
+            "ci": Object {
+              "buildTarget": "test-ui-lib:build-storybook:ci",
+            },
+          },
+          "executor": "@nrwl/web:file-server",
+          "options": Object {
+            "buildTarget": "test-ui-lib:build-storybook",
+            "staticFilePath": "dist/storybook/test-ui-lib",
+          },
+        }
+      `);
+      expect(readProjectConfiguration(tree, 'test-ui-lib-e2e').targets.e2e)
+        .toMatchInlineSnapshot(`
+        Object {
+          "configurations": Object {
+            "ci": Object {
+              "devServerTarget": "test-ui-lib:static-storybook:ci",
+            },
+          },
+          "executor": "@nrwl/cypress:cypress",
+          "options": Object {
+            "cypressConfig": "apps/test-ui-lib-e2e/cypress.config.ts",
+            "devServerTarget": "test-ui-lib:storybook",
+            "testingType": "e2e",
+          },
+        }
+      `);
+      expect(
+        readJson(tree, 'package.json').devDependencies['@nrwl/web']
+      ).toBeTruthy();
     });
   });
 
@@ -345,26 +472,32 @@ describe('@nrwl/storybook:configuration', () => {
         await configurationGenerator(tree, {
           name: 'nxapp',
           uiFramework: '@storybook/react',
+          bundler: 'webpack',
         });
         await configurationGenerator(tree, {
           name: 'reapp',
           uiFramework: '@storybook/react',
+          bundler: 'webpack',
         });
         await configurationGenerator(tree, {
           name: 'nxlib',
           uiFramework: '@storybook/react',
+          bundler: 'webpack',
         });
         await configurationGenerator(tree, {
           name: 'nxlib-buildable',
           uiFramework: '@storybook/react',
+          bundler: 'webpack',
         });
         await configurationGenerator(tree, {
           name: 'relib-buildable',
           uiFramework: '@storybook/react',
+          bundler: 'webpack',
         });
         await configurationGenerator(tree, {
           name: 'reapp-swc',
           uiFramework: '@storybook/react',
+          bundler: 'webpack',
         });
       });
 
@@ -444,31 +577,37 @@ describe('@nrwl/storybook:configuration', () => {
           name: 'nxapp',
           uiFramework: '@storybook/react',
           tsConfiguration: true,
+          bundler: 'webpack',
         });
         await configurationGenerator(tree, {
           name: 'reapp',
           uiFramework: '@storybook/react',
           tsConfiguration: true,
+          bundler: 'webpack',
         });
         await configurationGenerator(tree, {
           name: 'nxlib',
           uiFramework: '@storybook/react',
           tsConfiguration: true,
+          bundler: 'webpack',
         });
         await configurationGenerator(tree, {
           name: 'nxlib-buildable',
           uiFramework: '@storybook/react',
           tsConfiguration: true,
+          bundler: 'webpack',
         });
         await configurationGenerator(tree, {
           name: 'relib-buildable',
           uiFramework: '@storybook/react',
           tsConfiguration: true,
+          bundler: 'webpack',
         });
         await configurationGenerator(tree, {
           name: 'reapp-swc',
           uiFramework: '@storybook/react',
           tsConfiguration: true,
+          bundler: 'webpack',
         });
       });
 

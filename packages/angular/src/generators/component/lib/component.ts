@@ -11,7 +11,7 @@ export function exportComponentInEntryPoint(
   tree: Tree,
   schema: NormalizedSchema
 ): void {
-  if (!schema.export || (schema.skipImport && !schema.standalone)) {
+  if (!schema.export || schema.skipImport) {
     return;
   }
 

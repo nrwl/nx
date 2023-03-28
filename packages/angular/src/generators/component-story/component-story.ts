@@ -3,10 +3,10 @@ import { formatFiles, generateFiles, joinPathFragments } from '@nrwl/devkit';
 import { getComponentProps } from '../utils/storybook-ast/storybook-inputs';
 import type { ComponentStoryGeneratorOptions } from './schema';
 
-export function componentStoryGenerator(
+export async function componentStoryGenerator(
   tree: Tree,
   options: ComponentStoryGeneratorOptions
-): void {
+): Promise<void> {
   const { componentFileName, componentName, componentPath, projectPath } =
     options;
 
@@ -34,7 +34,7 @@ export function componentStoryGenerator(
   });
 
   if (!options.skipFormat) {
-    formatFiles(tree);
+    await formatFiles(tree);
   }
 }
 

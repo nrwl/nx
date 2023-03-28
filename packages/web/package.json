@@ -15,7 +15,7 @@
     "Cypress",
     "CLI"
   ],
-  "main": "./index.js",
+  "main": "./index",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -30,12 +30,8 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/cypress": "file:../cypress",
     "@nrwl/devkit": "file:../devkit",
-    "@nrwl/jest": "file:../jest",
     "@nrwl/js": "file:../js",
-    "@nrwl/linter": "file:../linter",
-    "@nrwl/rollup": "file:../rollup",
     "@nrwl/workspace": "file:../workspace",
     "chalk": "^4.1.0",
     "chokidar": "^3.5.1",

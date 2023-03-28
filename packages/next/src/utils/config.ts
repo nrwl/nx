@@ -2,7 +2,7 @@ import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration, RuleSetRule } from 'webpack';
 import { FileReplacement } from './types';
-import { createCopyPlugin, normalizeAssets } from '@nrwl/webpack';
+import { createCopyPlugin } from './create-copy-plugin';
 import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
@@ -77,14 +77,7 @@ export function createWebpackConfig(
 
     // Copy (shared) assets to `public` folder during client-side compilation
     if (!isServer && Array.isArray(assets) && assets.length > 0) {
-      config.plugins.push(
-        createCopyPlugin(
-          normalizeAssets(assets, workspaceRoot, projectRoot).map((asset) => ({
-            ...asset,
-            output: join('../public', asset.output),
-          }))
-        )
-      );
+      config.plugins.push(createCopyPlugin(assets, workspaceRoot, projectRoot));
     }
 
     return config;

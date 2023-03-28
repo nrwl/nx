@@ -28,7 +28,7 @@ describe('component', () => {
       skipFormat: true,
     };
 
-    expoApplicationGenerator(appTree, {
+    await expoApplicationGenerator(appTree, {
       name: 'my-app',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
@@ -36,7 +36,7 @@ describe('component', () => {
       js: true,
       unitTestRunner: 'jest',
     });
-    expoLibraryGenerator(appTree, {
+    await expoLibraryGenerator(appTree, {
       name: projectName,
       linter: Linter.EsLint,
       skipFormat: false,

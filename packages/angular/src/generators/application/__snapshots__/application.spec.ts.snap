@@ -41,7 +41,7 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RouterTestingModule],
-      declarations: [AppComponent]
+      declarations: [AppComponent],
     }).compileComponents();
   });
 
@@ -49,14 +49,17 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Welcome plain');
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome plain'
+    );
   });
 });
 "
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 4`] = `
-"<h1>Welcome plain</h1> <router-outlet></router-outlet>
+"<h1>Welcome plain</h1>
+<router-outlet></router-outlet>
 "
 `;
 
@@ -67,9 +70,7 @@ import { AppComponent } from './app.component';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [
-    BrowserModule,
-  ],
+  imports: [BrowserModule],
   providers: [],
   bootstrap: [AppComponent],
 })
@@ -97,7 +98,7 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [],
-      declarations: [AppComponent]
+      declarations: [AppComponent],
     }).compileComponents();
   });
 
@@ -105,14 +106,16 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Welcome plain');
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome plain'
+    );
   });
 });
 "
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing 4`] = `
-"<h1>Welcome plain</h1> 
+"<h1>Welcome plain</h1>
 "
 `;
 
@@ -144,17 +147,20 @@ describe('AppComponent', () => {
   });
 
   it('should render title', () => {
-      const fixture = TestBed.createComponent(AppComponent);
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement as HTMLElement;
-      expect(compiled.querySelector('h1')?.textContent).toContain('Welcome plain');
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome plain'
+    );
   });
 });
 "
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps with routing 3`] = `
-"<h1>Welcome plain</h1> <router-outlet></router-outlet>
+"<h1>Welcome plain</h1>
+<router-outlet></router-outlet>
 "
 `;
 
@@ -184,17 +190,19 @@ describe('AppComponent', () => {
   });
 
   it('should render title', () => {
-      const fixture = TestBed.createComponent(AppComponent);
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement as HTMLElement;
-      expect(compiled.querySelector('h1')?.textContent).toContain('Welcome plain');
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome plain'
+    );
   });
 });
 "
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps without routing 3`] = `
-"<h1>Welcome plain</h1> 
+"<h1>Welcome plain</h1>
 "
 `;
 
@@ -252,10 +260,12 @@ describe('AppComponent', () => {
   });
 
   it('should render title', () => {
-      const fixture = TestBed.createComponent(AppComponent);
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement as HTMLElement;
-      expect(compiled.querySelector('h1')?.textContent).toContain('Welcome standalone');
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome standalone'
+    );
   });
 
   it(\`should have as title 'standalone'\`, () => {
@@ -283,7 +293,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
   standalone: true,
-  imports: [NxWelcomeComponent, ],
+  imports: [NxWelcomeComponent],
   selector: 'proj-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
@@ -307,10 +317,12 @@ describe('AppComponent', () => {
   });
 
   it('should render title', () => {
-      const fixture = TestBed.createComponent(AppComponent);
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement as HTMLElement;
-      expect(compiled.querySelector('h1')?.textContent).toContain('Welcome standalone');
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome standalone'
+    );
   });
 
   it(\`should have as title 'standalone'\`, () => {
@@ -474,6 +486,12 @@ Object {
       "defaultConfiguration": "development",
       "executor": "@angular-devkit/build-angular:dev-server",
     },
+    "serve-static": Object {
+      "executor": "@nrwl/angular:file-server",
+      "options": Object {
+        "buildTarget": "my-dir-my-app:build",
+      },
+    },
     "test": Object {
       "configurations": Object {
         "ci": Object {
@@ -508,6 +526,9 @@ Object {
   "targets": Object {
     "e2e": Object {
       "configurations": Object {
+        "ci": Object {
+          "devServerTarget": "my-dir-my-app:serve-static",
+        },
         "production": Object {
           "devServerTarget": "my-dir-my-app:serve:production",
         },
@@ -623,6 +644,12 @@ Object {
       "defaultConfiguration": "development",
       "executor": "@angular-devkit/build-angular:dev-server",
     },
+    "serve-static": Object {
+      "executor": "@nrwl/angular:file-server",
+      "options": Object {
+        "buildTarget": "my-app:build",
+      },
+    },
     "test": Object {
       "configurations": Object {
         "ci": Object {
@@ -657,6 +684,9 @@ Object {
   "targets": Object {
     "e2e": Object {
       "configurations": Object {
+        "ci": Object {
+          "devServerTarget": "my-app:serve-static",
+        },
         "production": Object {
           "devServerTarget": "my-app:serve:production",
         },

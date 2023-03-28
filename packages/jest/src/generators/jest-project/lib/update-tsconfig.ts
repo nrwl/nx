@@ -1,8 +1,11 @@
 import { join } from 'path';
-import { JestProjectSchema } from '../schema';
+import { NormalizedJestProjectSchema } from '../schema';
 import { readProjectConfiguration, Tree, updateJson } from '@nrwl/devkit';
 
-export function updateTsConfig(host: Tree, options: JestProjectSchema) {
+export function updateTsConfig(
+  host: Tree,
+  options: NormalizedJestProjectSchema
+) {
   const projectConfig = readProjectConfiguration(host, options.project);
   if (!host.exists(join(projectConfig.root, 'tsconfig.json'))) {
     throw new Error(

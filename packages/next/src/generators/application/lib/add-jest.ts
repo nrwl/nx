@@ -1,5 +1,12 @@
-import { joinPathFragments, readJson, Tree, updateJson } from '@nrwl/devkit';
-import { jestProjectGenerator } from '@nrwl/jest';
+import {
+  ensurePackage,
+  joinPathFragments,
+  readJson,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
+
+import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
 
 export async function addJest(host: Tree, options: NormalizedSchema) {
@@ -7,6 +14,10 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
     return () => {};
   }
 
+  const { jestProjectGenerator } = ensurePackage<typeof import('@nrwl/jest')>(
+    '@nrwl/jest',
+    nxVersion
+  );
   const jestTask = await jestProjectGenerator(host, {
     ...options,
     project: options.projectName,
@@ -14,6 +25,7 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
     skipSerializers: true,
     setupFile: 'none',
     compiler: 'babel',
+    skipFormat: true,
   });
 
   const tsConfigSpecJson = readJson(

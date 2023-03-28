@@ -10,10 +10,10 @@ import { getArgsDefaultValue } from './lib/get-args-default-value';
 import { getComponentSelector } from './lib/get-component-selector';
 import type { ComponentCypressSpecGeneratorOptions } from './schema';
 
-export function componentCypressSpecGenerator(
+export async function componentCypressSpecGenerator(
   tree: Tree,
   options: ComponentCypressSpecGeneratorOptions
-): void {
+): Promise<void> {
   const {
     cypressProject,
     projectName,
@@ -65,7 +65,7 @@ export function componentCypressSpecGenerator(
   });
 
   if (!options.skipFormat) {
-    formatFiles(tree);
+    await formatFiles(tree);
   }
 }
 

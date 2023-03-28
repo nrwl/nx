@@ -68,6 +68,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         .option('interactive', {
           describe: chalk.dim`Enable interactive mode with presets`,
           type: 'boolean',
+          default: true,
         })
         .option('style', {
           describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,

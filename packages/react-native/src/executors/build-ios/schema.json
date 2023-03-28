@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "version": 2,
+  "cli": "nx",
+  "title": "React Native Build iOS executor",
+  "description": "Build iOS app.",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Build iOS for a simulator",
+      "keys": ["simulator"]
+    },
+    {
+      "name": "Build iOS for a device",
+      "keys": ["device"]
+    },
+    {
+      "name": "Build iOS for a device with udid",
+      "keys": ["udid"]
+    },
+    {
+      "name": "Run `pod install` before building iOS app",
+      "keys": ["install"]
+    }
+  ],
+  "properties": {
+    "simulator": {
+      "type": "string",
+      "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: \"iPhone 6 (10.0)\"",
+      "examples": [
+        "iPhone 14",
+        "iPhone 13",
+        "iPhone 12",
+        "iPhone 11",
+        "iPhone X"
+      ],
+      "x-priority": "important"
+    },
+    "mode": {
+      "type": "string",
+      "description": "Explicitly set the scheme configuration to use",
+      "default": "Debug",
+      "examples": ["Debug", "Release"],
+      "x-priority": "important"
+    },
+    "schema": {
+      "type": "string",
+      "description": "Explicitly set Xcode scheme to use"
+    },
+    "device": {
+      "type": "string",
+      "description": "Explicitly set device to use by name. The value is not required if you have a single device connected."
+    },
+    "udid": {
+      "type": "string",
+      "description": "Explicitly set device to use by udid"
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Do not use xcbeautify or xcpretty even if installed"
+    },
+    "port": {
+      "type": "number",
+      "description": "The port where the packager server is listening on.",
+      "default": 8081
+    },
+    "xcconfig": {
+      "type": "string",
+      "description": "Explicitly set xcconfig to use"
+    },
+    "buildFolder": {
+      "type": "string",
+      "description": "Location for iOS build artifacts. Corresponds to Xcode's \"-derivedDataPath\". Relative to ios directory",
+      "default": "./build"
+    },
+    "interactive": {
+      "type": "boolean",
+      "description": "Explicitly select which scheme and configuration to use before running a build"
+    },
+    "extraParams": {
+      "type": "string",
+      "description": "Custom params that will be passed to xcodebuild command."
+    },
+    "install": {
+      "type": "boolean",
+      "description": "Runs `pod install` for native modules before building iOS app."
+    },
+    "sync": {
+      "type": "boolean",
+      "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
+      "default": true
+    },
+    "resetCache": {
+      "type": "boolean",
+      "description": "Resets metro cache.",
+      "default": false
+    },
+    "packager": {
+      "type": "boolean",
+      "description": "Launch packager while building",
+      "default": true
+    }
+  },
+  "required": [],
+  "examplesFile": "../../../docs/build-ios-examples.md"
+}

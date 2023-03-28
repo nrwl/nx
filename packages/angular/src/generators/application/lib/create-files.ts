@@ -7,83 +7,60 @@ import {
 } from '@nrwl/js';
 import { createTsConfig } from '../../utils/create-ts-config';
 import { UnitTestRunner } from '../../../utils/test-runners';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export async function createFiles(
   tree: Tree,
   options: NormalizedSchema,
   rootOffset: string
 ) {
-  await generateFiles(
+  const installedAngularInfo = getInstalledAngularVersionInfo(tree);
+  const substitutions = {
+    rootSelector: `${options.prefix}-root`,
+    appName: options.name,
+    inlineStyle: options.inlineStyle,
+    inlineTemplate: options.inlineTemplate,
+    style: options.style,
+    viewEncapsulation: options.viewEncapsulation,
+    unitTesting: options.unitTestRunner !== UnitTestRunner.None,
+    routing: options.routing,
+    minimal: options.minimal,
+    nxWelcomeSelector: `${options.prefix}-nx-welcome`,
+    rootTsConfig: joinPathFragments(rootOffset, getRootTsConfigFileName(tree)),
+    installedAngularInfo,
+    rootOffset,
+    tpl: '',
+  };
+
+  generateFiles(
     tree,
     joinPathFragments(__dirname, '../files/base'),
     options.appProjectRoot,
-    {
-      rootSelector: `${options.prefix}-root`,
-      appName: options.name,
-      inlineStyle: options.inlineStyle,
-      inlineTemplate: options.inlineTemplate,
-      style: options.style,
-      viewEncapsulation: options.viewEncapsulation,
-      unitTesting: options.unitTestRunner !== UnitTestRunner.None,
-      routing: options.routing,
-      minimal: options.minimal,
-      nxWelcomeSelector: `${options.prefix}-nx-welcome`,
-      rootTsConfig: joinPathFragments(
-        rootOffset,
-        getRootTsConfigFileName(tree)
-      ),
-      rootOffset,
-      tpl: '',
-    }
+    substitutions
   );
 
+  if (installedAngularInfo.major === 14) {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, '../files/v14'),
+      options.appProjectRoot,
+      substitutions
+    );
+  }
+
   if (options.standalone) {
-    await generateFiles(
+    generateFiles(
       tree,
       joinPathFragments(__dirname, '../files/standalone-components'),
       options.appProjectRoot,
-      {
-        rootSelector: `${options.prefix}-root`,
-        appName: options.name,
-        inlineStyle: options.inlineStyle,
-        inlineTemplate: options.inlineTemplate,
-        style: options.style,
-        viewEncapsulation: options.viewEncapsulation,
-        unitTesting: options.unitTestRunner !== UnitTestRunner.None,
-        routing: options.routing,
-        minimal: options.minimal,
-        nxWelcomeSelector: `${options.prefix}-nx-welcome`,
-        rootTsConfig: joinPathFragments(
-          rootOffset,
-          getRootTsConfigFileName(tree)
-        ),
-        rootOffset,
-        tpl: '',
-      }
+      substitutions
     );
   } else {
     await generateFiles(
       tree,
       joinPathFragments(__dirname, '../files/ng-module'),
       options.appProjectRoot,
-      {
-        rootSelector: `${options.prefix}-root`,
-        appName: options.name,
-        inlineStyle: options.inlineStyle,
-        inlineTemplate: options.inlineTemplate,
-        style: options.style,
-        viewEncapsulation: options.viewEncapsulation,
-        unitTesting: options.unitTestRunner !== UnitTestRunner.None,
-        routing: options.routing,
-        minimal: options.minimal,
-        nxWelcomeSelector: `${options.prefix}-nx-welcome`,
-        rootTsConfig: joinPathFragments(
-          rootOffset,
-          getRootTsConfigFileName(tree)
-        ),
-        rootOffset,
-        tpl: '',
-      }
+      substitutions
     );
   }
 

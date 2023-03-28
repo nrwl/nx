@@ -41,7 +41,7 @@ export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
   context: ExecutorContext
 ) {
-  const options = normalizeOptions(_options);
+  const options = normalizeOptions(_options, context);
   if (options.deleteOutputPath) removeSync(options.outputPath);
 
   const assetsResult = await copyAssets(options, context);
@@ -70,23 +70,26 @@ export async function* esbuildExecutor(
     }
   }
 
-  const cpjOptions: CopyPackageJsonOptions = {
-    ...options,
-    // TODO(jack): make types generate with esbuild
-    skipTypings: true,
-    outputFileExtensionForCjs: getOutExtension('cjs', options),
-    excludeLibsInPackageJson: !options.thirdParty,
-    updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
-  };
+  let packageJsonResult;
+  if (options.generatePackageJson) {
+    const cpjOptions: CopyPackageJsonOptions = {
+      ...options,
+      // TODO(jack): make types generate with esbuild
+      skipTypings: true,
+      outputFileExtensionForCjs: getOutExtension('cjs', options),
+      excludeLibsInPackageJson: !options.thirdParty,
+      updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
+    };
 
-  // If we're bundling third-party packages, then any extra deps from external should be the only deps in package.json
-  if (options.thirdParty && externalDependencies.length > 0) {
-    cpjOptions.overrideDependencies = externalDependencies;
-  } else {
-    cpjOptions.extraDependencies = externalDependencies;
+    // If we're bundling third-party packages, then any extra deps from external should be the only deps in package.json
+    if (options.thirdParty && externalDependencies.length > 0) {
+      cpjOptions.overrideDependencies = externalDependencies;
+    } else {
+      cpjOptions.extraDependencies = externalDependencies;
+    }
+
+    packageJsonResult = await copyPackageJson(cpjOptions, context);
   }
-
-  const packageJsonResult = await copyPackageJson(cpjOptions, context);
 
   if ('context' in esbuild) {
     // 0.17.0+ adds esbuild.context and context.watch()

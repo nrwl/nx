@@ -17,5 +17,6 @@ export async function addDetox(host: Tree, options: NormalizedSchema) {
     appDisplayName: options.displayName,
     appName: options.name,
     framework: 'react-native',
+    skipFormat: true,
   });
 }

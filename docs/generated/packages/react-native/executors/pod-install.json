@@ -1,0 +1,28 @@
+{
+  "name": "pod-install",
+  "implementation": "/packages/react-native/src/executors/pod-install/pod-install.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxReactNativePodInstall",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Run Pod Install for React Native iOS Project",
+    "description": "Run `pod install` for React Native iOS Project.",
+    "type": "object",
+    "properties": {
+      "buildFolder": {
+        "description": "Location for iOS build artifacts. Corresponds to Xcode's \"-derivedDataPath\". Relative to ios directory",
+        "type": "string",
+        "default": "./build"
+      }
+    },
+    "required": ["buildFolder"],
+    "presets": []
+  },
+  "description": "Run `pod install` in the `ios` directory.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native/src/executors/pod-install/schema.json",
+  "type": "executor"
+}

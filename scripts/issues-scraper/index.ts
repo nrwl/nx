@@ -1,12 +1,12 @@
-import { readJsonSync, writeJsonSync } from 'fs-extra';
-import { join } from 'path';
+import { ensureDirSync, readJsonSync, writeJsonSync } from 'fs-extra';
+import { dirname, join } from 'path';
 import { ReportData, ScopeData } from './model';
 import { getScopeLabels, scrapeIssues } from './scrape-issues';
 import { formatGhReport, getSlackMessageJson } from './format-slack-message';
 import { setOutput } from '@actions/core';
 import isCI from 'is-ci';
 
-const CACHE_FILE = join(__dirname, 'data.json');
+const CACHE_FILE = join(__dirname, 'cached', 'data.json');
 
 async function main() {
   const currentData = await scrapeIssues();
@@ -49,6 +49,7 @@ function getTrendData(newData: ReportData, oldData: ReportData): ReportData {
 
 function saveCacheData(report: ReportData) {
   if (isCI) {
+    ensureDirSync(dirname(CACHE_FILE));
     writeJsonSync(CACHE_FILE, report);
   }
 }

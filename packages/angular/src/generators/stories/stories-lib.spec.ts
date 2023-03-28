@@ -35,11 +35,12 @@ describe('angularStories generator: libraries', () => {
     });
 
     it('should not fail on empty NgModule declarations', () => {
-      expect(() =>
-        angularStoriesGenerator(tree, {
-          name: libName,
-          generateCypressSpecs: false,
-        })
+      expect(
+        async () =>
+          await angularStoriesGenerator(tree, {
+            name: libName,
+            generateCypressSpecs: false,
+          })
       ).not.toThrow();
     });
   });
@@ -69,7 +70,7 @@ describe('angularStories generator: libraries', () => {
         path: `libs/${libName}/secondary-entry-point/src/lib`,
       });
 
-      angularStoriesGenerator(tree, { name: libName });
+      await angularStoriesGenerator(tree, { name: libName });
 
       expect(
         tree.exists(
@@ -110,7 +111,7 @@ describe('angularStories generator: libraries', () => {
         name: libName,
       });
 
-      angularStoriesGenerator(tree, {
+      await angularStoriesGenerator(tree, {
         name: libName,
         generateCypressSpecs: true,
       });
@@ -150,8 +151,8 @@ describe('angularStories generator: libraries', () => {
       });
 
       try {
-        angularStoriesGenerator(tree, { name: libName });
-        angularStoriesGenerator(tree, {
+        await angularStoriesGenerator(tree, { name: libName });
+        await angularStoriesGenerator(tree, {
           name: libName,
           generateCypressSpecs: true,
         });
@@ -166,7 +167,7 @@ describe('angularStories generator: libraries', () => {
         name: libName,
       });
 
-      angularStoriesGenerator(tree, {
+      await angularStoriesGenerator(tree, {
         name: libName,
         generateCypressSpecs: true,
       });
@@ -199,7 +200,7 @@ describe('angularStories generator: libraries', () => {
         name: libName,
       });
 
-      angularStoriesGenerator(tree, {
+      await angularStoriesGenerator(tree, {
         name: libName,
         generateCypressSpecs: true,
       });
@@ -243,7 +244,7 @@ describe('angularStories generator: libraries', () => {
         name: libName,
       });
 
-      angularStoriesGenerator(tree, {
+      await angularStoriesGenerator(tree, {
         name: libName,
         generateCypressSpecs: true,
       });
@@ -269,7 +270,7 @@ describe('angularStories generator: libraries', () => {
     it('should generate stories file for scam component', async () => {
       await scamGenerator(tree, { name: 'my-scam', project: libName });
 
-      angularStoriesGenerator(tree, { name: libName });
+      await angularStoriesGenerator(tree, { name: libName });
 
       expect(
         tree.exists(
@@ -285,7 +286,7 @@ describe('angularStories generator: libraries', () => {
         inlineScam: true,
       });
 
-      angularStoriesGenerator(tree, { name: libName });
+      await angularStoriesGenerator(tree, { name: libName });
 
       expect(
         tree.exists(
@@ -315,7 +316,7 @@ describe('angularStories generator: libraries', () => {
         standalone: true,
       });
 
-      angularStoriesGenerator(tree, { name: libName });
+      await angularStoriesGenerator(tree, { name: libName });
 
       expect(
         tree.exists(
@@ -355,7 +356,7 @@ describe('angularStories generator: libraries', () => {
         path: `libs/${libName}/secondary-entry-point/src/lib`,
       });
 
-      angularStoriesGenerator(tree, {
+      await angularStoriesGenerator(tree, {
         name: libName,
         ignorePaths: [
           `libs/${libName}/src/lib/barrel/**`,

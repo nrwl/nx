@@ -61,22 +61,24 @@ describe('eslint8Updates()', () => {
 
     expect(tree.read('tools/eslint-rules/jest.config.js').toString('utf-8'))
       .toMatchInlineSnapshot(`
+      "module.exports = {
+        displayName: 'eslint-rules',
+        preset: '../../jest.preset.js',
+        globals: {
+          'ts-jest': {
+            tsconfig: '<rootDir>/tsconfig.spec.json',
+          },
+        },
+        transform: {
+          '^.+.[tj]s$': 'ts-jest',
+        },
+        moduleFileExtensions: ['ts', 'js', 'html'],
+        coverageDirectory: '../../coverage/tools/eslint-rules',
+        moduleNameMapper: {
+          '@eslint/eslintrc': '@eslint/eslintrc/dist/eslintrc-universal.cjs',
+        },
+      };
       "
-              module.exports = {
-                displayName: 'eslint-rules',
-                preset: '../../jest.preset.js',
-                globals: {
-                  'ts-jest': {
-                    tsconfig: '<rootDir>/tsconfig.spec.json',
-                  },
-                },
-                transform: {
-                  '^.+\\\\.[tj]s$': 'ts-jest',
-                },
-                moduleFileExtensions: ['ts', 'js', 'html'],
-                coverageDirectory: '../../coverage/tools/eslint-rules',\\"moduleNameMapper\\": {\\"@eslint/eslintrc\\":\\"@eslint/eslintrc/dist/eslintrc-universal.cjs\\"}
-              };
-            "
     `);
   });
 
@@ -86,29 +88,28 @@ describe('eslint8Updates()', () => {
     expect(
       tree.read(`tools/eslint-rules/rules/existing-rule.ts`).toString('utf-8')
     ).toMatchInlineSnapshot(`
+      "import { ESLintUtils } from '@typescript-eslint/experimental-utils';
+
+      // NOTE: The rule will be available in ESLint configs as \\"@nrwl/nx/workspace/existing-rule\\"
+      export const RULE_NAME = 'existing-rule';
+
+      export const rule = ESLintUtils.RuleCreator(() => __filename)({
+        name: RULE_NAME,
+        meta: {
+          type: 'problem',
+          docs: {
+            description: \`\`,
+            recommended: 'error',
+          },
+          schema: [],
+          messages: {},
+        },
+        defaultOptions: [],
+        create(context) {
+          return {};
+        },
+      });
       "
-              import { ESLintUtils } from '@typescript-eslint/experimental-utils';
-              
-              // NOTE: The rule will be available in ESLint configs as \\"@nrwl/nx/workspace/existing-rule\\"
-              export const RULE_NAME = 'existing-rule';
-              
-              export const rule = ESLintUtils.RuleCreator(() => __filename)({
-                name: RULE_NAME,
-                meta: {
-                  type: 'problem',
-                  docs: {
-                    description: \`\`,
-                    recommended: 'error',
-                  },
-                  schema: [],
-                  messages: {},
-                },
-                defaultOptions: [],
-                create(context) {
-                  return {};
-                },
-              });
-            "
     `);
   });
 });

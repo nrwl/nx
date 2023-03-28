@@ -1,5 +1,12 @@
 {
-  "generators": {},
+  "generators": {
+    "set-generate-package-json": {
+      "cli": "nx",
+      "version": "15.8.7-beta.0",
+      "description": "Set generatePackageJson to true to maintain existing behavior of generating package.json in output path.",
+      "factory": "./src/migrations/update-15-8-7/set-generate-package-json"
+    }
+  },
   "packageJsonUpdates": {
     "15.7.0": {
       "version": "15.7.0-beta.0",

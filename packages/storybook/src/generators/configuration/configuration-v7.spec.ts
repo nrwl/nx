@@ -10,6 +10,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import * as enquirer from 'enquirer';
 
 import { Linter } from '@nrwl/linter';
 import { libraryGenerator } from '@nrwl/workspace/generators';
@@ -25,6 +26,9 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
+jest.mock('enquirer');
+// @ts-ignore
+enquirer.prompt = jest.fn();
 
 describe('@nrwl/storybook:configuration for Storybook v7', () => {
   describe('basic functionalities', () => {
@@ -53,7 +57,6 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
     it('should generate TypeScript Configuration files', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
-        uiFramework: '@storybook/react', // it's wrong on purpose to verify that it's being ignored
         standaloneConfig: false,
         tsConfiguration: true,
         storybook7Configuration: true,
@@ -77,7 +80,6 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
     it('should update `tsconfig.lib.json` file', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
-        uiFramework: '@storybook/angular', // it's wrong on purpose to verify that it's being ignored
         standaloneConfig: false,
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
@@ -96,7 +98,6 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
     it('should update `tsconfig.json` file', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
-        uiFramework: '@storybook/react',
         standaloneConfig: false,
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
@@ -137,7 +138,6 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
 
       await configurationGenerator(tree, {
         name: 'test-ui-lib2',
-        uiFramework: '@storybook/angular', // it's wrong on purpose to verify that it's being ignored
         standaloneConfig: false,
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
@@ -162,7 +162,6 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
 
       await configurationGenerator(tree, {
         name: 'test-ui-lib2',
-        uiFramework: '@storybook/react',
         standaloneConfig: false,
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
@@ -176,7 +175,6 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
     it('should generate TS config for project if tsConfiguration true', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
-        uiFramework: '@storybook/angular',
         standaloneConfig: false,
         tsConfiguration: true,
         storybook7Configuration: true,
@@ -196,7 +194,6 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
     it('should add test-storybook target', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
-        uiFramework: '@storybook/react',
         configureTestRunner: true,
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
@@ -254,74 +251,63 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
       await configurationGenerator(tree, {
         name: 'reapp',
         tsConfiguration: false,
-        uiFramework: '@storybook/react',
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-vite',
       });
       await configurationGenerator(tree, {
         name: 'main-vite',
         tsConfiguration: false,
-        uiFramework: '@storybook/react',
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-vite',
       });
       await configurationGenerator(tree, {
         name: 'main-vite-ts',
         tsConfiguration: true,
-        uiFramework: '@storybook/react',
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-vite',
       });
       await configurationGenerator(tree, {
         name: 'main-webpack',
-        uiFramework: '@storybook/react',
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
       await configurationGenerator(tree, {
         name: 'reappw',
-        uiFramework: '@storybook/react',
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
       await configurationGenerator(tree, {
         name: 'react-rollup',
-        uiFramework: '@storybook/react',
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
 
       await configurationGenerator(tree, {
         name: 'react-vite',
-        uiFramework: '@storybook/react',
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-vite',
       });
 
       await configurationGenerator(tree, {
         name: 'nextapp',
-        uiFramework: '@storybook/react',
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/nextjs',
       });
 
       await configurationGenerator(tree, {
         name: 'react-swc',
-        uiFramework: '@storybook/react',
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
 
       await configurationGenerator(tree, {
         name: 'wv1',
-        uiFramework: '@storybook/react',
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/web-components-vite',
       });
 
       await configurationGenerator(tree, {
         name: 'ww1',
-        uiFramework: '@storybook/react',
         storybook7Configuration: true,
         storybook7UiFramework: '@storybook/web-components-webpack5',
       });

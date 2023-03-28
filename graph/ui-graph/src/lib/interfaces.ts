@@ -100,7 +100,8 @@ export type TaskGraphRenderEvents =
   | {
       type: 'setGroupByProject';
       groupByProject: boolean;
-    };
+    }
+  | { type: 'notifyTaskGraphSetTasks'; taskIds: string[] };
 
 export type TooltipEvent =
   | {

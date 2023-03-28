@@ -20,29 +20,23 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { Linter } from '@nrwl/linter';
 
 import { getRelativePathToRootTsConfig } from '@nrwl/js';
-import {
-  globalJavaScriptOverrides,
-  globalTypeScriptOverrides,
-} from '@nrwl/linter/src/generators/init/global-eslint-config';
 
 import { join } from 'path';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import { filePathPrefix } from '../../utils/project-name';
-import {
-  cypressVersion,
-  eslintPluginCypressVersion,
-  viteVersion,
-} from '../../utils/versions';
+import { cypressVersion, viteVersion } from '../../utils/versions';
 import { cypressInitGenerator } from '../init/init';
 // app
 import { Schema } from './schema';
+import { addLinterToCyProject } from '../../utils/add-linter';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
   projectRoot: string;
+  rootProject: boolean;
 }
 
 function createFiles(tree: Tree, options: CypressProjectSchema) {
@@ -154,6 +148,11 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
       tags: [],
       implicitDependencies: options.project ? [options.project] : undefined,
     };
+    if (project.targets?.['serve-static']) {
+      e2eProjectConfig.targets.e2e.configurations.ci = {
+        devServerTarget: `${options.project}:serve-static`,
+      };
+    }
   } else {
     throw new Error(`Either project or baseUrl should be specified.`);
   }
@@ -167,100 +166,9 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
   addProjectConfiguration(tree, options.projectName, e2eProjectConfig);
 }
 
-export async function addLinter(host: Tree, options: CypressProjectSchema) {
-  if (options.linter === Linter.None) {
-    return () => {};
-  }
-
-  const installTask = await lintProjectGenerator(host, {
-    project: options.projectName,
-    linter: options.linter,
-    skipFormat: true,
-    tsConfigPaths: [joinPathFragments(options.projectRoot, 'tsconfig.json')],
-    eslintFilePatterns: [
-      `${options.projectRoot}/**/*.${options.js ? 'js' : '{js,ts}'}`,
-    ],
-    setParserOptionsProject: options.setParserOptionsProject,
-    skipPackageJson: options.skipPackageJson,
-    rootProject: options.rootProject,
-  });
-
-  if (!options.linter || options.linter !== Linter.EsLint) {
-    return installTask;
-  }
-
-  const installTask2 = !options.skipPackageJson
-    ? addDependenciesToPackageJson(
-        host,
-        {},
-        { 'eslint-plugin-cypress': eslintPluginCypressVersion }
-      )
-    : () => {};
-
-  updateJson(host, join(options.projectRoot, '.eslintrc.json'), (json) => {
-    if (options.rootProject) {
-      json.plugins = ['@nrwl/nx'];
-      json.extends = ['plugin:cypress/recommended'];
-    } else {
-      json.extends = ['plugin:cypress/recommended', ...json.extends];
-    }
-    json.overrides = [
-      ...(options.rootProject
-        ? [globalTypeScriptOverrides, globalJavaScriptOverrides]
-        : []),
-      /**
-       * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs
-       * behind the scenes during lint runs, we need to make sure the project is configured to use its
-       * own specific tsconfigs, and not fall back to the ones in the root of the workspace.
-       */
-      {
-        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-        /**
-         * NOTE: We no longer set parserOptions.project by default when creating new projects.
-         *
-         * We have observed that users rarely add rules requiring type-checking to their Nx workspaces, and therefore
-         * do not actually need the capabilites which parserOptions.project provides. When specifying parserOptions.project,
-         * typescript-eslint needs to create full TypeScript Programs for you. When omitting it, it can perform a simple
-         * parse (and AST tranformation) of the source files it encounters during a lint run, which is much faster and much
-         * less memory intensive.
-         *
-         * In the rare case that users attempt to add rules requiring type-checking to their setup later on (and haven't set
-         * parserOptions.project), the executor will attempt to look for the particular error typescript-eslint gives you
-         * and provide feedback to the user.
-         */
-        parserOptions: !options.setParserOptionsProject
-          ? undefined
-          : {
-              project: `${options.projectRoot}/tsconfig.*?.json`,
-            },
-        /**
-         * Having an empty rules object present makes it more obvious to the user where they would
-         * extend things from if they needed to
-         */
-        rules: {},
-      },
-    ];
-
-    if (installedCypressVersion() < 7) {
-      /**
-       * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.
-       * That however leads to issues with the CommonJS Cypress plugin file.
-       */
-      json.overrides.push({
-        files: ['src/plugins/index.js'],
-        rules: {
-          '@typescript-eslint/no-var-requires': 'off',
-          'no-undef': 'off',
-        },
-      });
-    }
-
-    return json;
-  });
-
-  return runTasksInSerial(installTask, installTask2);
-}
-
+/**
+ * @deprecated use cypressE2EConfigurationGenerator instead
+ **/
 export async function cypressProjectGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
   const tasks: GeneratorCallback[] = [];
@@ -285,7 +193,13 @@ export async function cypressProjectGenerator(host: Tree, schema: Schema) {
 
   createFiles(host, options);
   addProject(host, options);
-  const installTask = await addLinter(host, options);
+  const installTask = await addLinterToCyProject(host, {
+    ...options,
+    cypressDir: 'src',
+    linter: schema.linter,
+    project: options.projectName,
+    overwriteExisting: true,
+  });
   tasks.push(installTask);
   if (!options.skipFormat) {
     await formatFiles(host);

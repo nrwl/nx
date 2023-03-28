@@ -163,6 +163,10 @@ function addProject(
       },
     };
 
+    if (options.bundler === 'esbuild') {
+      projectConfiguration.targets.build.options.generatePackageJson = true;
+    }
+
     if (options.bundler === 'rollup') {
       projectConfiguration.targets.build.options.project = `${options.projectRoot}/package.json`;
       projectConfiguration.targets.build.options.compiler = 'swc';
@@ -414,7 +418,7 @@ function normalizeOptions(
     options.bundler = 'none';
   }
 
-  const { Linter } = require('@nrwl/linter');
+  const { Linter } = ensurePackage('@nrwl/linter', nxVersion);
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;

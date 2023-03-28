@@ -99,6 +99,8 @@ Show help
 
 Type: `boolean`
 
+Default: `true`
+
 Enable interactive mode with presets
 
 ### name

@@ -501,11 +501,15 @@ function withRunOptions(yargs: yargs.Argv): yargs.Argv {
       default: false,
       hidden: true,
     })
+    .option('graph', {
+      type: 'boolean',
+      describe: 'Show the task graph of the command',
+      default: false,
+    })
     .option('verbose', {
       type: 'boolean',
       describe:
         'Prints additional information about the commands (e.g., stack traces)',
-      default: false,
     })
     .option('nx-bail', {
       describe: 'Stop command execution after the first failed task',
@@ -617,6 +621,17 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
       describe:
         'Output file (e.g. --file=output.json or --file=dep-graph.html)',
       type: 'string',
+    })
+    .option('view', {
+      describe: 'Choose whether to view the projects or task graph',
+      type: 'string',
+      default: 'projects',
+      choices: ['projects', 'tasks'],
+    })
+    .option('targets', {
+      describe: 'The target to show tasks for in the task graph',
+      type: 'string',
+      coerce: parseCSV,
     })
     .option('focus', {
       describe:
@@ -736,7 +751,11 @@ function withGenerateOptions(yargs: yargs.Argv) {
       describe:
         'Prints additional information about the commands (e.g., stack traces)',
       type: 'boolean',
-      default: false,
+    })
+    .option('quiet', {
+      describe: 'Hides logs from tree operations (e.g. `CREATE package.json`)',
+      type: 'boolean',
+      conflicts: ['verbose'],
     })
     .middleware((args) => {
       if (process.env.NX_INTERACTIVE === 'false') {
@@ -748,6 +767,11 @@ function withGenerateOptions(yargs: yargs.Argv) {
         args.dryRun = true;
       } else {
         process.env.NX_DRY_RUN = `${args.dryRun}`;
+      }
+      if (process.env.NX_GENERATE_QUIET === 'true') {
+        args.quiet = true;
+      } else {
+        process.env.NX_GENERATE_QUIET = `${args.quiet}`;
       }
     });
 

@@ -18,7 +18,7 @@ export async function storybookConfigurationGenerator(
   );
 
   if (options.generateStories) {
-    generateStories(tree, { ...options, skipFormat: false });
+    await generateStories(tree, { ...options, skipFormat: true });
   }
 
   if (!options.skipFormat) {

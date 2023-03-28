@@ -13,40 +13,23 @@ import {
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { initGenerator as jsInitGenerator } from '@nrwl/js';
-
-import { join } from 'path';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
-  angularDevkitVersion,
-  angularVersion,
-  jestPresetAngularVersion,
-  rxjsVersion,
-  tsLibVersion,
-  zoneJsVersion,
-} from '../../utils/versions';
-import {
   addDependenciesToPackageJsonIfDontExist,
-  getGeneratorDirectoryForInstalledAngularVersion,
   getInstalledPackageVersion,
+  versions,
 } from '../utils/version-utils';
+import type { PackageVersions } from '../../utils/backward-compatible-versions';
 import { Schema } from './schema';
 
 export async function angularInitGenerator(
   tree: Tree,
   rawOptions: Schema
 ): Promise<GeneratorCallback> {
-  const generatorDirectory =
-    getGeneratorDirectoryForInstalledAngularVersion(tree);
-  if (generatorDirectory) {
-    let previousGenerator = await import(
-      join(__dirname, generatorDirectory, 'init')
-    );
-    await previousGenerator.default(tree, rawOptions);
-    return;
-  }
-
   const tasks: GeneratorCallback[] = [];
   const options = normalizeOptions(rawOptions);
+
+  const pkgVersions = versions(tree);
 
   const peerDepsToInstall = [
     '@angular-devkit/core',
@@ -60,7 +43,7 @@ export async function angularInitGenerator(
     if (!packageVersion) {
       devkitVersion ??=
         getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
-        angularDevkitVersion;
+        pkgVersions.angularDevkitVersion;
 
       try {
         ensurePackage(pkg, devkitVersion);
@@ -86,14 +69,18 @@ export async function angularInitGenerator(
   tasks.push(jsTask);
 
   if (!options.skipPackageJson) {
-    tasks.push(updateDependencies(tree));
+    tasks.push(updateDependencies(tree, pkgVersions));
   }
-  const unitTestTask = await addUnitTestRunner(tree, options);
+  const unitTestTask = await addUnitTestRunner(
+    tree,
+    options,
+    pkgVersions.jestPresetAngularVersion
+  );
   tasks.push(unitTestTask);
   const e2eTask = await addE2ETestRunner(tree, options);
   tasks.push(e2eTask);
 
-  addGitIgnoreEntry(tree, '.angular');
+  ignoreAngularCacheDirectory(tree);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -139,40 +126,51 @@ function setDefaults(host: Tree, options: Schema) {
   updateNxJson(host, nxJson);
 }
 
-function updateDependencies(tree: Tree): GeneratorCallback {
-  const angularVersionToInstall =
-    getInstalledPackageVersion(tree, '@angular/core') ?? angularVersion;
-  const angularDevkitVersionToInstall =
+function updateDependencies(
+  tree: Tree,
+  versions: PackageVersions
+): GeneratorCallback {
+  const angularVersion =
+    getInstalledPackageVersion(tree, '@angular/core') ??
+    versions.angularVersion;
+  const angularDevkitVersion =
     getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
-    angularDevkitVersion;
+    versions.angularDevkitVersion;
+  const rxjsVersion =
+    getInstalledPackageVersion(tree, 'rxjs') ?? versions.rxjsVersion;
+  const tsLibVersion =
+    getInstalledPackageVersion(tree, 'tslib') ?? versions.tsLibVersion;
+  const zoneJsVersion =
+    getInstalledPackageVersion(tree, 'zone.js') ?? versions.zoneJsVersion;
 
   return addDependenciesToPackageJsonIfDontExist(
     tree,
     {
-      '@angular/animations': angularVersionToInstall,
-      '@angular/common': angularVersionToInstall,
-      '@angular/compiler': angularVersionToInstall,
-      '@angular/core': angularVersionToInstall,
-      '@angular/forms': angularVersionToInstall,
-      '@angular/platform-browser': angularVersionToInstall,
-      '@angular/platform-browser-dynamic': angularVersionToInstall,
-      '@angular/router': angularVersionToInstall,
+      '@angular/animations': angularVersion,
+      '@angular/common': angularVersion,
+      '@angular/compiler': angularVersion,
+      '@angular/core': angularVersion,
+      '@angular/forms': angularVersion,
+      '@angular/platform-browser': angularVersion,
+      '@angular/platform-browser-dynamic': angularVersion,
+      '@angular/router': angularVersion,
       rxjs: rxjsVersion,
       tslib: tsLibVersion,
       'zone.js': zoneJsVersion,
     },
     {
-      '@angular/cli': angularDevkitVersionToInstall,
-      '@angular/compiler-cli': angularVersionToInstall,
-      '@angular/language-service': angularVersionToInstall,
-      '@angular-devkit/build-angular': angularDevkitVersionToInstall,
+      '@angular/cli': angularDevkitVersion,
+      '@angular/compiler-cli': angularVersion,
+      '@angular/language-service': angularVersion,
+      '@angular-devkit/build-angular': angularDevkitVersion,
     }
   );
 }
 
 async function addUnitTestRunner(
   tree: Tree,
-  options: Schema
+  options: Schema,
+  jestPresetAngularVersion: string
 ): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Jest:
@@ -208,18 +206,42 @@ async function addE2ETestRunner(
   }
 }
 
-function addGitIgnoreEntry(host: Tree, entry: string) {
-  if (host.exists('.gitignore')) {
-    let content = host.read('.gitignore', 'utf-8');
+function ignoreAngularCacheDirectory(tree: Tree): void {
+  const { cli } = readNxJson(tree);
+  // angular-specific cli config is supported though is not included in the
+  // NxJsonConfiguration type
+  const angularCacheDir = (cli as any)?.cache?.path ?? '.angular';
+
+  addGitIgnoreEntry(tree, angularCacheDir);
+  addPrettierIgnoreEntry(tree, angularCacheDir);
+}
+
+function addGitIgnoreEntry(tree: Tree, entry: string): void {
+  if (tree.exists('.gitignore')) {
+    let content = tree.read('.gitignore', 'utf-8');
     if (/^\.angular$/gm.test(content)) {
       return;
     }
 
     content = `${content}\n${entry}\n`;
-    host.write('.gitignore', content);
+    tree.write('.gitignore', content);
   } else {
     logger.warn(`Couldn't find .gitignore file to update`);
   }
+}
+
+function addPrettierIgnoreEntry(tree: Tree, entry: string): void {
+  if (!tree.exists('.prettierignore')) {
+    return;
+  }
+
+  let content = tree.read('.prettierignore', 'utf-8');
+  if (/^\.angular$/gm.test(content)) {
+    return;
+  }
+
+  content = `${content}\n${entry}\n`;
+  tree.write('.prettierignore', content);
 }
 
 export default angularInitGenerator;

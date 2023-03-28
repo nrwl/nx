@@ -1540,6 +1540,7 @@ async function runNxMigration(root: string, packageName: string, name: string) {
   const fn = require(implPath).default;
   const host = new FsTree(root, false);
   await fn(host, {});
+  host.lock();
   const changes = host.listChanges();
   flushChanges(root, changes);
   return changes;

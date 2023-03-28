@@ -1,0 +1,10 @@
+{
+  "extends": "<%= tsConfigPath %>",
+  "compilerOptions": {
+    "sourceMap": false,
+    "outDir": "<%= offsetFromRoot %>dist/out-tsc",
+    "allowJs": true,
+    "types": ["cypress", "node"]
+  },
+  "include": ["<%= dir %>/**/*.ts", "<%= dir %>/**/*.js", "cypress.config.ts"]
+}

@@ -1,0 +1,21 @@
+name: Unmergable Labels Check
+
+on:
+  pull_request:
+    types: [synchronize, opened, reopened, labeled, unlabeled]
+
+jobs:
+  do-not-merge:
+    if: ${{ github.repository_owner == 'nrwl' }}
+    name: Prevent Merging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for label
+        run: |
+          echo "${{ toJSON(github.event.*.labels.*.name) }}"
+          node -e 'const forbidden = ["target: next major version", "PR Status: needs tests", "PR Status: in-progress", "blocked: needs rebase"];
+           const match = ${{ toJSON(github.event.*.labels.*.name) }}.find(l => forbidden.includes(l));
+           if (match) {
+            console.log("Cannot merge PRs that are labeled with " + match);
+            process.exit(1)
+           }'

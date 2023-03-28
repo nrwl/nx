@@ -1,61 +1,58 @@
+import { names } from '@nrwl/devkit';
 import {
   cleanupProject,
-  killPort,
+  killProcessAndPorts,
   newProject,
-  promisifiedTreeKill,
   readProjectConfig,
   runCLI,
   runCommandUntil,
   uniq,
   updateFile,
-  updateProjectConfig,
 } from '@nrwl/e2e/utils';
-import { ChildProcess } from 'child_process';
 
-import { names } from '@nrwl/devkit';
-
-describe('Angular Projects', () => {
+describe('Angular Module Federation', () => {
   let proj: string;
-  let oldValue;
+  let oldVerboseLoggingValue: string;
 
   beforeAll(() => {
     proj = newProject();
-    oldValue = process.env.NX_E2E_VERBOSE_LOGGING;
+    oldVerboseLoggingValue = process.env.NX_E2E_VERBOSE_LOGGING;
     process.env.NX_E2E_VERBOSE_LOGGING = 'true';
   });
   afterAll(() => {
     cleanupProject();
-    process.env.NX_E2E_VERBOSE_LOGGING = oldValue;
+    process.env.NX_E2E_VERBOSE_LOGGING = oldVerboseLoggingValue;
   });
 
-  it('should serve the host and remote apps successfully, even with a shared library with a secondary entry point between them', async () => {
-    // ACT + ASSERT
-    const port1 = 4200;
-    const port2 = 4206;
+  it('should generate valid host and remote apps', async () => {
     const hostApp = uniq('app');
     const remoteApp1 = uniq('remote');
     const sharedLib = uniq('shared-lib');
     const secondaryEntry = uniq('secondary');
+    const hostPort = 4300;
+    const remotePort = 4301;
 
     // generate host app
     runCLI(
       `generate @nrwl/angular:host ${hostApp} --style=css --no-interactive`
     );
-
-    // generate remote apps
+    // generate remote app
     runCLI(
-      `generate @nrwl/angular:remote ${remoteApp1} --host=${hostApp} --port=${port2} --style=css --no-interactive`
+      `generate @nrwl/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-interactive`
     );
 
-    // generate a shared lib
+    // check default generated host is built successfully
+    const buildOutput = runCLI(`build ${hostApp}`);
+    expect(buildOutput).toContain('Successfully ran target build');
+
+    // generate a shared lib with a seconary entry point
     runCLI(
       `generate @nrwl/angular:library ${sharedLib} --buildable --no-interactive`
     );
     runCLI(
       `generate @nrwl/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
     );
-
-    // update the files to use shared library
+    // update host & remote files to use shared library
     updateFile(
       `apps/${hostApp}/src/app/app.module.ts`,
       `import { NgModule } from '@angular/core';
@@ -123,168 +120,79 @@ describe('Angular Projects', () => {
     `
     );
 
-    let process: ChildProcess;
-
-    try {
-      process = await runCommandUntil(
-        `serve ${hostApp} --dev-remotes=${remoteApp1}`,
-        (output) => {
-          return (
-            output.includes(`listening on localhost:${port2}`) &&
-            output.includes(`listening on localhost:${port1}`)
-          );
-        }
-      );
-    } catch (err) {
-      console.error(err);
-    }
-
-    // port and process cleanup
-    try {
-      if (process && process.pid) {
-        await promisifiedTreeKill(process.pid, 'SIGKILL');
-      }
-      await killPort(port1);
-      await killPort(port2);
-    } catch (err) {
-      expect(err).toBeFalsy();
-    }
-  }, 300000);
-
-  it('should build the host app successfully', async () => {
-    // ARRANGE
-    const hostApp = uniq('app');
-    const remoteApp1 = uniq('remote');
-
-    // generate host app
-    runCLI(`generate @nrwl/angular:host ${hostApp} --no-interactive`);
-
-    // generate remote apps
-    runCLI(
-      `generate @nrwl/angular:remote ${remoteApp1} --host=${hostApp} --no-interactive`
-    );
-
-    // ACT
-    const buildOutput = runCLI(`build ${hostApp}`);
-
-    // ASSERT
-    expect(buildOutput).toContain('Successfully ran target build');
-  }, 300000);
-
-  it('should serve a ssr remote app successfully', async () => {
-    // ARRANGE
-    const remoteApp1 = uniq('remote');
-    // generate remote apps
-    runCLI(
-      `generate @nrwl/angular:remote ${remoteApp1} --ssr --no-interactive`
-    );
-
-    const port = 4301;
-
-    let process = await runCommandUntil(
-      `serve-ssr ${remoteApp1} --port=${port}`,
-      (output) => {
-        return (
-          output.includes(`Browser application bundle generation complete.`) &&
-          output.includes(`Server application bundle generation complete.`) &&
-          output.includes(
-            `Angular Universal Live Development Server is listening`
-          )
-        );
-      }
+    const process = await runCommandUntil(
+      `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp1}`,
+      (output) =>
+        output.includes(`listening on localhost:${remotePort}`) &&
+        output.includes(`listening on localhost:${hostPort}`)
     );
 
     // port and process cleanup
-    try {
-      if (process && process.pid) {
-        await promisifiedTreeKill(process.pid, 'SIGKILL');
-      }
-      await killPort(port);
-    } catch (err) {
-      expect(err).toBeFalsy();
-    }
-  }, 10_000_000);
+    await killProcessAndPorts(process.pid, hostPort, remotePort);
+  }, 300000);
 
-  it('should scaffold a ssr MF setup successfully', async () => {
-    // ARRANGE
-    const remoteApp1 = uniq('remote1');
-    const remoteApp2 = uniq('remote2');
-    const hostApp = uniq('host1');
+  it('should convert apps to MF successfully', async () => {
+    const app1 = uniq('app1');
+    const app2 = uniq('app2');
+    const app1Port = 4400;
+    const app2Port = 4401;
+
+    // generate apps
+    runCLI(
+      `generate @nrwl/angular:application ${app1} --routing --no-interactive`
+    );
+    runCLI(`generate @nrwl/angular:application ${app2} --no-interactive`);
+
+    // convert apps
+    runCLI(
+      `generate @nrwl/angular:setup-mf ${app1} --mfType=host --port=${app1Port} --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:setup-mf ${app2} --mfType=remote --host=${app1} --port=${app2Port} --no-interactive`
+    );
+
+    const process = await runCommandUntil(
+      `serve ${app1} --dev-remotes=${app2}`,
+      (output) =>
+        output.includes(`listening on localhost:${app1Port}`) &&
+        output.includes(`listening on localhost:${app2Port}`)
+    );
+
+    // port and process cleanup
+    await killProcessAndPorts(process.pid, app1Port, app2Port);
+  }, 20_000_000);
+
+  // TODO(colum): enable when this issue is resolved https://github.com/module-federation/universe/issues/604
+  xit('should scaffold MF + SSR setup successfully', async () => {
+    const host = uniq('host');
+    const remote1 = uniq('remote1');
+    const remote2 = uniq('remote2');
+
     // generate remote apps
     runCLI(
-      `generate @nrwl/angular:host ${hostApp} --ssr --remotes=${remoteApp1},${remoteApp2} --no-interactive`
+      `generate @nrwl/angular:host ${host} --ssr --remotes=${remote1},${remote2} --no-interactive`
     );
 
     // ports
-    const remoteApp1Port =
-      readProjectConfig(remoteApp1).targets.serve.options.port;
-    const remoteApp2Port =
-      readProjectConfig(remoteApp2).targets.serve.options.port;
+    const hostPort = 4500;
+    const remote1Port = readProjectConfig(remote1).targets.serve.options.port;
+    const remote2Port = readProjectConfig(remote2).targets.serve.options.port;
 
-    const port = 4401;
-
-    let process = await runCommandUntil(
-      `serve-ssr ${hostApp} --port=${port}`,
-      (output) => {
-        return (
-          output.includes(
-            `Node Express server listening on http://localhost:${remoteApp1Port}`
-          ) &&
-          output.includes(
-            `Node Express server listening on http://localhost:${remoteApp2Port}`
-          ) &&
-          output.includes(
-            `Angular Universal Live Development Server is listening`
-          )
-        );
-      }
+    const process = await runCommandUntil(
+      `serve-ssr ${host} --port=${hostPort}`,
+      (output) =>
+        output.includes(
+          `Node Express server listening on http://localhost:${remote1Port}`
+        ) &&
+        output.includes(
+          `Node Express server listening on http://localhost:${remote2Port}`
+        ) &&
+        output.includes(
+          `Angular Universal Live Development Server is listening`
+        )
     );
 
     // port and process cleanup
-    try {
-      if (process && process.pid) {
-        await promisifiedTreeKill(process.pid, 'SIGKILL');
-      }
-      await killPort(port);
-      await killPort(remoteApp1Port);
-      await killPort(remoteApp2Port);
-    } catch (err) {
-      expect(err).toBeFalsy();
-    }
+    await killProcessAndPorts(process.pid, hostPort, remote1Port, remote2Port);
   }, 20_000_000);
-
-  it('Custom Webpack Config for SSR - should serve the app correctly', async () => {
-    // ARRANGE
-    const ssrApp = uniq('app');
-
-    runCLI(`generate @nrwl/angular:app ${ssrApp} --no-interactive`);
-    runCLI(`generate @nrwl/angular:setup-ssr ${ssrApp} --no-interactive`);
-
-    updateProjectConfig(ssrApp, (project) => {
-      project.targets.server.executor = '@nrwl/angular:webpack-server';
-      return project;
-    });
-
-    const port = 4501;
-
-    // ACT
-    let process = await runCommandUntil(
-      `serve-ssr ${ssrApp} --port=${port}`,
-      (output) => {
-        return output.includes(
-          `Angular Universal Live Development Server is listening on http://localhost:${port}`
-        );
-      }
-    );
-
-    // port and process cleanup
-    try {
-      if (process && process.pid) {
-        await promisifiedTreeKill(process.pid, 'SIGKILL');
-      }
-      await killPort(port);
-    } catch (err) {
-      expect(err).toBeFalsy();
-    }
-  }, 300000);
 });

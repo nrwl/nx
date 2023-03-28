@@ -1,10 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Nx Plugin Migration - jest 29 mocked usage in tests should be idempotent 1`] = `
-"
-import{ MaybeMockedDeep, MaybeMocked } from 'jest-mock';
-import {expect, jest, test} from '@jest/globals';
-import {song} from './song';
+"import { MaybeMockedDeep, MaybeMocked } from 'jest-mock';
+import { expect, jest, test } from '@jest/globals';
+import { song } from './song';
 
 jest.mock('./song');
 jest.spyOn(console, 'log');
@@ -29,14 +28,13 @@ test('direct usage', () => {
 
   expect(jest.mocked(console.log, false).mock.calls).toHaveLength(1);
 });
-  "
+"
 `;
 
 exports[`Nx Plugin Migration - jest 29 mocked usage in tests should be idempotent 2`] = `
-"
-const { MaybeMockedDeep, MaybeMocked } = require('jest-mock');
-const {expect, jest, test} = require('@jest/globals');
-const {song} = require('./song');
+"const { MaybeMockedDeep, MaybeMocked } = require('jest-mock');
+const { expect, jest, test } = require('@jest/globals');
+const { song } = require('./song');
 
 jest.mock('./song');
 jest.spyOn(console, 'log');
@@ -65,10 +63,9 @@ test('direct usage', () => {
 `;
 
 exports[`Nx Plugin Migration - jest 29 mocked usage in tests should be idempotent 3`] = `
-"
-import{ MaybeMockedDeep, MaybeMocked } from 'jest-mock';
-import {expect, jest, test} from '@jest/globals';
-import {song} from './song';
+"import { MaybeMockedDeep, MaybeMocked } from 'jest-mock';
+import { expect, jest, test } from '@jest/globals';
+import { song } from './song';
 
 jest.mock('./song');
 jest.spyOn(console, 'log');
@@ -93,14 +90,13 @@ test('direct usage', () => {
 
   expect(jest.mocked(console.log, false).mock.calls).toHaveLength(1);
 });
-  "
+"
 `;
 
 exports[`Nx Plugin Migration - jest 29 mocked usage in tests should be idempotent 4`] = `
-"
-const { MaybeMockedDeep, MaybeMocked } = require('jest-mock');
-const {expect, jest, test} = require('@jest/globals');
-const {song} = require('./song');
+"const { MaybeMockedDeep, MaybeMocked } = require('jest-mock');
+const { expect, jest, test } = require('@jest/globals');
+const { song } = require('./song');
 
 jest.mock('./song');
 jest.spyOn(console, 'log');
@@ -129,10 +125,9 @@ test('direct usage', () => {
 `;
 
 exports[`Nx Plugin Migration - jest 29 mocked usage in tests should not update anything if there are no tests 1`] = `
-"
-import{ MaybeMockedDeep, MaybeMocked } from 'jest-mock';
-import {expect, jest, test} from '@jest/globals';
-import {song} from './song';
+"import { MaybeMockedDeep, MaybeMocked } from 'jest-mock';
+import { expect, jest, test } from '@jest/globals';
+import { song } from './song';
 
 jest.mock('./song');
 jest.spyOn(console, 'log');
@@ -157,14 +152,13 @@ test('direct usage', () => {
 
   expect(jest.mocked(console.log, false).mock.calls).toHaveLength(1);
 });
-  "
+"
 `;
 
 exports[`Nx Plugin Migration - jest 29 mocked usage in tests should not update anything if there are no tests 2`] = `
-"
-const { MaybeMockedDeep, MaybeMocked } = require('jest-mock');
-const {expect, jest, test} = require('@jest/globals');
-const {song} = require('./song');
+"const { MaybeMockedDeep, MaybeMocked } = require('jest-mock');
+const { expect, jest, test } = require('@jest/globals');
+const { song } = require('./song');
 
 jest.mock('./song');
 jest.spyOn(console, 'log');

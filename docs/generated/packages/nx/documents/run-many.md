@@ -75,6 +75,14 @@ Type: `string`
 
 Exclude certain projects from being processed
 
+### graph
+
+Type: `boolean`
+
+Default: `false`
+
+Show the task graph of the command
+
 ### help
 
 Type: `boolean`
@@ -140,8 +148,6 @@ Tasks to run for affected projects
 ### verbose
 
 Type: `boolean`
-
-Default: `false`
 
 Prints additional information about the commands (e.g., stack traces)
 

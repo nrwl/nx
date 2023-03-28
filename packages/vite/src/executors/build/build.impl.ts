@@ -11,13 +11,18 @@ import { existsSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
 
+import { registerTsConfigPaths } from 'nx/src/utils/register';
+
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
-  const normalizedOptions = normalizeOptions(options);
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
+
+  registerTsConfigPaths(resolve(projectRoot, 'tsconfig.json'));
+
+  const normalizedOptions = normalizeOptions(options);
 
   const buildConfig = mergeConfig(
     getViteSharedConfig(normalizedOptions, false, context),
@@ -71,7 +76,10 @@ export async function* viteBuildExecutor(
     });
     yield* iterable;
   } else {
-    yield { success: true };
+    const output = watcherOrOutput?.['output'] || watcherOrOutput?.[0]?.output;
+    const fileName = output?.[0]?.fileName || 'main.cjs';
+    const outfile = resolve(normalizedOptions.outputPath, fileName);
+    yield { success: true, outfile };
   }
 }
 

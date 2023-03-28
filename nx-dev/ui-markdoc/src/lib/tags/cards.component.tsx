@@ -21,7 +21,7 @@ export function Cards({
   };
 
   return (
-    <div className={`mt-8 grid grid-cols-1 gap-6 ${gridColums[cols]}`}>
+    <div className={`mt-8 grid grid-cols-1 gap-4 ${gridColums[cols]}`}>
       {children}
     </div>
   );
@@ -39,9 +39,9 @@ export function Card({
   url: string;
 }) {
   const iconMap = {
-    documentation: <DocumentIcon className="mr-3 h-5 w-5" />,
-    external: <ArrowTopRightOnSquareIcon className="mr-3 h-5 w-5" />,
-    video: <PlayCircleIcon className="mr-3 h-5 w-5" />,
+    documentation: <DocumentIcon className="mr-3 h-5 w-5 shrink-0" />,
+    external: <ArrowTopRightOnSquareIcon className="mr-3 h-5 w-5 shrink-0" />,
+    video: <PlayCircleIcon className="mr-3 h-5 w-5 shrink-0" />,
   };
   const youtubeRegex =
     /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/gi.exec(
@@ -56,7 +56,7 @@ export function Card({
     >
       {!!hasYoutubeId && (
         <img
-          className="!m-0 aspect-video rounded-l-md"
+          className="!m-0 rounded-l-md bg-black object-contain"
           alt="Youtube Link"
           src={`https://img.youtube.com/vi/${hasYoutubeId}/default.jpg`}
         />

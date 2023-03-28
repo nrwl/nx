@@ -52,7 +52,7 @@ yarn add --dev @nrwl/react-native
 To create additional React Native apps run:
 
 ```shell
-nx g @nrwl/react-native:app your-app-name
+nx g @nrwl/react-native:app <your-app-name>
 ```
 
 ### Generating Libraries
@@ -60,7 +60,7 @@ nx g @nrwl/react-native:app your-app-name
 To generate a new library run:
 
 ```shell
-npx nx g @nrwl/react-native:lib your-lib-name
+nx g @nrwl/react-native:lib your-lib-name
 ```
 
 ### Generating Components
@@ -68,20 +68,78 @@ npx nx g @nrwl/react-native:lib your-lib-name
 To generate a new component inside library run:
 
 ```shell
-npx nx g @nrwl/react-native:component your-component-name --project=your-lib-name --export
+nx g @nrwl/react-native:component your-component-name --project=your-lib-name --export
 ```
 
 Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`
 
-## Using React Native
+### Upgrade React Native
 
-- [run-ios](/packages/react-native/executors/run-ios) - Builds your app and starts it on iOS simulator or device
-- [run-android](/packages/react-native/executors/run-android) - Builds your app and starts it on a connected Android emulator or device
-- [build-android](/packages/react-native/executors/build-android) - Release Build for Android
-- [start](/packages/react-native/executors/start) - Starts the server that communicates with connected devices
-- [bundle](/packages/react-native/executors/bundle) - Builds the JavaScript bundle for offline use
-- [sync-deps](/packages/react-native/executors/sync-deps) - Syncs dependencies to package.json (required for autolinking)
-- [ensure-symlink](/packages/react-native/executors/ensure-symlink) - Ensure workspace node_modules is symlink under app's node_modules folder
+The Nx CLI provides the [`migrate` command](/core-features/automate-updating-dependencies) to help you stay up to date with the latest version of Nx.
+
+#### Use upgrade-native Generator
+
+To upgrade native iOS and Android code to latest, you can use the [upgrade-native](/packages/react-native/generators/upgrade-native) generator:
+
+```shell
+nx generate @nrwl/react-native:upgrade-native <your-app-name>
+```
+
+This is a command that will replace the iOS and Android native code folder entirely.
+
+#### Upgrade Manually
+
+You can also upgrade React Native iOS and Android code using the [rn-diff-purge](https://react-native-community.github.io/upgrade-helper/) project.
+
+### Start Metro Server
+
+To start the server that communicates with connected devices:
+
+```shell
+nx start <your-app-name>
+```
+
+### Run iOS
+
+To build your app and start it on iOS simulator or device:
+
+```shell
+nx run-ios <your-app-name>
+```
+
+### Run Android
+
+To build your app and start it on a connected Android emulator or device:
+
+```shell
+nx run-android <your-app-name>
+```
+
+### Build iOS
+
+To build an iOS app:
+
+```shell
+nx build-ios <your-app-name>
+```
+
+The build artifacts will be located under `<your app folder>/ios/build`.
+
+You can specify the build folder by setting the `buildFolder` option:
+
+```shell
+nx build ios <your-app-name> --buildFolder="./build"
+```
+
+### Build Android
+
+To build an Android app, run:
+
+```shell
+nx build-android <your app name>
+```
+
+The build artifacts will be located under `<your app folder>/android/app/build`.
 
 ## More Documentation
 

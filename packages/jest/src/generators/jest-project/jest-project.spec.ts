@@ -379,7 +379,6 @@ describe('jestProject', () => {
       await jestProjectGenerator(tree, {
         ...defaultOptions,
         project: 'my-project',
-        rootProject: true,
       });
       expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
         "/* eslint-disable */
@@ -411,7 +410,6 @@ describe('jestProject', () => {
       await jestProjectGenerator(tree, {
         ...defaultOptions,
         project: 'my-project',
-        rootProject: true,
         js: true,
       });
       expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`

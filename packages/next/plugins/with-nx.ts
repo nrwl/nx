@@ -13,14 +13,20 @@ import {
   DependentBuildableProjectNode,
 } from '@nrwl/js/src/utils/buildable-libs-utils';
 import type { NextConfig } from 'next';
+import { PHASE_PRODUCTION_SERVER } from 'next/constants';
 
-import path = require('path');
+import * as path from 'path';
 import { createWebpackConfig } from '../src/utils/config';
 import { NextBuildBuilderOptions } from '../src/utils/types';
+
 export interface WithNxOptions extends NextConfig {
   nx?: {
     svgr?: boolean;
   };
+}
+
+export interface NextConfigFn {
+  (phase: string): Promise<NextConfig>;
 }
 
 export interface WithNxContext {
@@ -110,65 +116,100 @@ function getNxContext(
   }
 }
 
+/**
+ * Try to read output dir from project, and default to '.next' if executing outside of Nx (e.g. dist is added to a docker image).
+ */
+async function determineDistDirForProdServer(
+  nextConfig: NextConfig
+): Promise<string> {
+  const project = process.env.NX_TASK_TARGET_PROJECT;
+  const target = process.env.NX_TASK_TARGET_TARGET;
+  const configuration = process.env.NX_TASK_TARGET_CONFIGURATION;
+
+  if (project && target) {
+    const originalTarget = { project, target, configuration };
+    const graph = await createProjectGraphAsync();
+
+    const { options, node: projectNode } = getNxContext(graph, originalTarget);
+    const outputDir = `${offsetFromRoot(projectNode.data.root)}${
+      options.outputPath
+    }`;
+    return nextConfig.distDir && nextConfig.distDir !== '.next'
+      ? joinPathFragments(outputDir, nextConfig.distDir)
+      : joinPathFragments(outputDir, '.next');
+  } else {
+    return '.next';
+  }
+}
 export function withNx(
   _nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
-): () => Promise<NextConfig> {
-  return async () => {
-    let dependencies: DependentBuildableProjectNode[] = [];
+): NextConfigFn {
+  return async (phase: string) => {
+    if (phase === PHASE_PRODUCTION_SERVER) {
+      // If we are running an already built production server, just return the configuration.
+      const { nx, ...validNextConfig } = _nextConfig;
+      return {
+        ...validNextConfig,
+        distDir: await determineDistDirForProdServer(validNextConfig),
+      };
+    } else {
+      // Otherwise, add in webpack and eslint configuration for build or test.
+      let dependencies: DependentBuildableProjectNode[] = [];
 
-    const graph = await createProjectGraphAsync();
+      const graph = await createProjectGraphAsync();
 
-    const originalTarget = {
-      project: process.env.NX_TASK_TARGET_PROJECT,
-      target: process.env.NX_TASK_TARGET_TARGET,
-      configuration: process.env.NX_TASK_TARGET_CONFIGURATION,
-    };
+      const originalTarget = {
+        project: process.env.NX_TASK_TARGET_PROJECT,
+        target: process.env.NX_TASK_TARGET_TARGET,
+        configuration: process.env.NX_TASK_TARGET_CONFIGURATION,
+      };
 
-    const {
-      node: projectNode,
-      options,
-      projectName: project,
-      targetName,
-      configurationName,
-    } = getNxContext(graph, originalTarget);
-    const projectDirectory = projectNode.data.root;
-
-    if (!options.buildLibsFromSource && targetName) {
-      const result = calculateProjectDependencies(
-        graph,
-        workspaceRoot,
-        project,
+      const {
+        node: projectNode,
+        options,
+        projectName: project,
         targetName,
-        configurationName
-      );
-      dependencies = result.dependencies;
+        configurationName,
+      } = getNxContext(graph, originalTarget);
+      const projectDirectory = projectNode.data.root;
+
+      if (options.buildLibsFromSource === false && targetName) {
+        const result = calculateProjectDependencies(
+          graph,
+          workspaceRoot,
+          project,
+          targetName,
+          configurationName
+        );
+        dependencies = result.dependencies;
+      }
+
+      // Get next config
+      const nextConfig = getNextConfig(_nextConfig, context);
+
+      const outputDir = `${offsetFromRoot(projectDirectory)}${
+        options.outputPath
+      }`;
+      nextConfig.distDir =
+        nextConfig.distDir && nextConfig.distDir !== '.next'
+          ? joinPathFragments(outputDir, nextConfig.distDir)
+          : joinPathFragments(outputDir, '.next');
+
+      const userWebpackConfig = nextConfig.webpack;
+
+      nextConfig.webpack = (a, b) =>
+        createWebpackConfig(
+          workspaceRoot,
+          options.root,
+          options.fileReplacements,
+          options.assets,
+          dependencies,
+          path.join(workspaceRoot, context.libsDir)
+        )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
+
+      return nextConfig;
     }
-
-    // Get next config
-    const nextConfig = getNextConfig(_nextConfig, context);
-
-    const outputDir = `${offsetFromRoot(projectDirectory)}${
-      options.outputPath
-    }`;
-    nextConfig.distDir =
-      nextConfig.distDir && nextConfig.distDir !== '.next'
-        ? joinPathFragments(outputDir, nextConfig.distDir)
-        : joinPathFragments(outputDir, '.next');
-
-    const userWebpackConfig = nextConfig.webpack;
-
-    nextConfig.webpack = (a, b) =>
-      createWebpackConfig(
-        workspaceRoot,
-        options.root,
-        options.fileReplacements,
-        options.assets,
-        dependencies,
-        path.join(workspaceRoot, context.libsDir)
-      )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
-
-    return nextConfig;
   };
 }
 

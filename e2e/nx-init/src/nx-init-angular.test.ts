@@ -9,7 +9,6 @@ import {
   runCLI,
   runCommand,
   runNgNew,
-  uniq,
 } from '../../utils';
 
 describe('nx init (Angular CLI)', () => {
@@ -18,11 +17,11 @@ describe('nx init (Angular CLI)', () => {
   let pmc: ReturnType<typeof getPackageManagerCommand>;
 
   beforeEach(() => {
-    project = uniq('proj');
     packageManager = getSelectedPackageManager();
     // TODO: solve issues with pnpm and remove this fallback
     packageManager = packageManager === 'pnpm' ? 'yarn' : packageManager;
     pmc = getPackageManagerCommand({ packageManager });
+    project = runNgNew(packageManager);
   });
 
   afterEach(() => {
@@ -30,8 +29,6 @@ describe('nx init (Angular CLI)', () => {
   });
 
   it('should successfully convert an Angular CLI workspace to an Nx workspace', () => {
-    runNgNew(project, packageManager);
-
     const output = runCommand(
       `${pmc.runUninstalledPackage} nx@${getPublishedVersion()} init -y`
     );

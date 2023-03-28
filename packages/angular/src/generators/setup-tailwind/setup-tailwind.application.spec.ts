@@ -195,7 +195,10 @@ describe('setupTailwind generator', () => {
         @tailwind components;
         @tailwind utilities;
 
-        p { margin: 0; }"
+        p {
+          margin: 0;
+        }
+        "
       `);
     });
 
@@ -211,13 +214,7 @@ describe('setupTailwind generator', () => {
 
         await setupTailwindGenerator(tree, { project });
 
-        expect(tree.read(stylesEntryPoint, 'utf-8')).toMatchInlineSnapshot(`
-                  "@tailwind base;
-                  @tailwind components;
-                  @tailwind utilities;
-
-                  p { margin: 0; }"
-              `);
+        expect(tree.read(stylesEntryPoint, 'utf-8')).toMatchSnapshot();
       }
     );
 
@@ -242,7 +239,10 @@ describe('setupTailwind generator', () => {
         @tailwind components;
         @tailwind utilities;
 
-        p { margin: 0; }"
+        p {
+          margin: 0;
+        }
+        "
       `);
     });
 
@@ -273,7 +273,10 @@ describe('setupTailwind generator', () => {
         @tailwind components;
         @tailwind utilities;
 
-        p { margin: 0; }"
+        p {
+          margin: 0;
+        }
+        "
       `);
     });
 
@@ -305,7 +308,10 @@ describe('setupTailwind generator', () => {
         @tailwind components;
         @tailwind utilities;
 
-        p { margin: 0; }"
+        p {
+          margin: 0;
+        }
+        "
       `);
     });
 
@@ -609,12 +615,15 @@ describe('setupTailwind generator', () => {
         await setupTailwindGenerator(tree, { project, stylesEntryPoint });
 
         expect(tree.read(stylesEntryPoint, 'utf-8')).toMatchInlineSnapshot(`
-        "@tailwind base;
-        @tailwind components;
-        @tailwind utilities;
+          "@tailwind base;
+          @tailwind components;
+          @tailwind utilities;
 
-        p { margin: 0; }"
-      `);
+          p {
+            margin: 0;
+          }
+          "
+        `);
       });
 
       it.each([
@@ -629,13 +638,7 @@ describe('setupTailwind generator', () => {
 
           await setupTailwindGenerator(tree, { project });
 
-          expect(tree.read(stylesEntryPoint, 'utf-8')).toMatchInlineSnapshot(`
-                  "@tailwind base;
-                  @tailwind components;
-                  @tailwind utilities;
-
-                  p { margin: 0; }"
-              `);
+          expect(tree.read(stylesEntryPoint, 'utf-8')).toMatchSnapshot();
         }
       );
 
@@ -656,12 +659,15 @@ describe('setupTailwind generator', () => {
         await setupTailwindGenerator(tree, { project });
 
         expect(tree.read(stylesEntryPoint, 'utf-8')).toMatchInlineSnapshot(`
-        "@tailwind base;
-        @tailwind components;
-        @tailwind utilities;
+          "@tailwind base;
+          @tailwind components;
+          @tailwind utilities;
 
-        p { margin: 0; }"
-      `);
+          p {
+            margin: 0;
+          }
+          "
+        `);
       });
 
       it('should add tailwind styles to the first style inside the project root specified in the build config as an object when inject is not specified', async () => {
@@ -687,12 +693,15 @@ describe('setupTailwind generator', () => {
         await setupTailwindGenerator(tree, { project });
 
         expect(tree.read(stylesEntryPoint, 'utf-8')).toMatchInlineSnapshot(`
-        "@tailwind base;
-        @tailwind components;
-        @tailwind utilities;
+          "@tailwind base;
+          @tailwind components;
+          @tailwind utilities;
 
-        p { margin: 0; }"
-      `);
+          p {
+            margin: 0;
+          }
+          "
+        `);
       });
 
       it('should add tailwind styles to the first style inside the project root specified in the build config as an object when "inject: true"', async () => {
@@ -719,12 +728,15 @@ describe('setupTailwind generator', () => {
         await setupTailwindGenerator(tree, { project });
 
         expect(tree.read(stylesEntryPoint, 'utf-8')).toMatchInlineSnapshot(`
-        "@tailwind base;
-        @tailwind components;
-        @tailwind utilities;
+          "@tailwind base;
+          @tailwind components;
+          @tailwind utilities;
 
-        p { margin: 0; }"
-      `);
+          p {
+            margin: 0;
+          }
+          "
+        `);
       });
 
       it('should add required packages', async () => {
@@ -747,22 +759,22 @@ describe('setupTailwind generator', () => {
 
         expect(tree.read(`apps/${project}/tailwind.config.js`, 'utf-8'))
           .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
-        const { join } = require('path');
+                  "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+                  const { join } = require('path');
 
-        /** @type {import('tailwindcss').Config} */
-        module.exports = {
-          content: [
-            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-            ...createGlobPatternsForDependencies(__dirname),
-          ],
-          theme: {
-            extend: {},
-          },
-          plugins: [],
-        };
-        "
-      `);
+                  /** @type {import('tailwindcss').Config} */
+                  module.exports = {
+                    content: [
+                      join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+                      ...createGlobPatternsForDependencies(__dirname),
+                    ],
+                    theme: {
+                      extend: {},
+                    },
+                    plugins: [],
+                  };
+                  "
+              `);
       });
 
       it('should generate the tailwind.config.js file in the project root with the config for v3 when a version greater than 3 is installed', async () => {
@@ -777,22 +789,22 @@ describe('setupTailwind generator', () => {
 
         expect(tree.read(`apps/${project}/tailwind.config.js`, 'utf-8'))
           .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
-        const { join } = require('path');
+                  "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+                  const { join } = require('path');
 
-        /** @type {import('tailwindcss').Config} */
-        module.exports = {
-          content: [
-            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-            ...createGlobPatternsForDependencies(__dirname),
-          ],
-          theme: {
-            extend: {},
-          },
-          plugins: [],
-        };
-        "
-      `);
+                  /** @type {import('tailwindcss').Config} */
+                  module.exports = {
+                    content: [
+                      join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+                      ...createGlobPatternsForDependencies(__dirname),
+                    ],
+                    theme: {
+                      extend: {},
+                    },
+                    plugins: [],
+                  };
+                  "
+              `);
       });
 
       it('should generate the tailwind.config.js file in the project root with the config for v2 when a version greater than 2 and lower than 3 is installed', async () => {
@@ -807,26 +819,26 @@ describe('setupTailwind generator', () => {
 
         expect(tree.read(`apps/${project}/tailwind.config.js`, 'utf-8'))
           .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
-        const { join } = require('path');
+                  "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+                  const { join } = require('path');
 
-        module.exports = {
-          mode: 'jit',
-          purge: [
-            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-            ...createGlobPatternsForDependencies(__dirname),
-          ],
-          darkMode: false, // or 'media' or 'class'
-          theme: {
-            extend: {},
-          },
-          variants: {
-            extend: {},
-          },
-          plugins: [],
-        };
-        "
-      `);
+                  module.exports = {
+                    mode: 'jit',
+                    purge: [
+                      join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+                      ...createGlobPatternsForDependencies(__dirname),
+                    ],
+                    darkMode: false, // or 'media' or 'class'
+                    theme: {
+                      extend: {},
+                    },
+                    variants: {
+                      extend: {},
+                    },
+                    plugins: [],
+                  };
+                  "
+              `);
       });
 
       it('should format files', async () => {

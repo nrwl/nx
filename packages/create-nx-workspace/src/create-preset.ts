@@ -16,7 +16,8 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
 ): Promise<void> {
   const { skipGit, ci, commit, nxCloud, ...restArgs } = parsedArgs;
 
-  const args = unparse({
+  let args = unparse({
+    interactive: true,
     ...restArgs,
   }).join(' ');
 
@@ -38,6 +39,9 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
     }
   }
 
+  if (process.env.NX_VERBOSE_LOGGING !== 'true') {
+    args = '--quiet ' + args;
+  }
   const command = `g ${preset}:preset ${args}`;
 
   try {

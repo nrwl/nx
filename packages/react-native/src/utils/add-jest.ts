@@ -21,6 +21,7 @@ export async function addJest(
     setupFile: 'none',
     compiler: 'babel',
     skipPackageJson,
+    skipFormat: true,
   });
 
   // overwrite the jest.config.ts file because react native needs to have special transform property

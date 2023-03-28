@@ -40,7 +40,7 @@ export function installPackagesTask(
     const pmc = getPackageManagerCommand(packageManager);
     execSync(pmc.install, {
       cwd: join(tree.root, cwd),
-      stdio: [0, 1, 2],
+      stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
     });
   }
 }

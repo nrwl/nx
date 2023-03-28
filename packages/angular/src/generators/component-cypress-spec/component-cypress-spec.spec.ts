@@ -52,13 +52,13 @@ export class TestButtonComponent {
     );
   });
 
-  it('should not generate the component spec file when it already exists', () => {
+  it('should not generate the component spec file when it already exists', async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     jest.spyOn(storybookUtils, 'getComponentProps');
     jest.spyOn(devkit, 'generateFiles');
     tree.write(specFile, '');
 
-    componentCypressSpecGenerator(tree, {
+    await componentCypressSpecGenerator(tree, {
       componentFileName: 'test-button.component',
       componentName: 'TestButtonComponent',
       componentPath: `test-button`,
@@ -71,9 +71,9 @@ export class TestButtonComponent {
     expect(tree.read(specFile).toString()).toBe('');
   });
 
-  it('should generate the component spec file', () => {
+  it('should generate the component spec file', async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
-    componentCypressSpecGenerator(tree, {
+    await componentCypressSpecGenerator(tree, {
       componentFileName: 'test-button.component',
       componentName: 'TestButtonComponent',
       componentPath: `test-button`,
@@ -86,13 +86,13 @@ export class TestButtonComponent {
     expect(specFileContent).toMatchSnapshot();
   });
 
-  it('should generate .spec.ts when using cypress.json', () => {
+  it('should generate .spec.ts when using cypress.json', async () => {
     mockedInstalledCypressVersion.mockReturnValue(9);
     const v9SpecFile = `apps/${appName}-e2e/src/integration/test-button/test-button.component.spec.ts`;
     tree.delete(`apps/${appName}-e2e/cypress.config.ts`);
     tree.write(`apps/${appName}-e2e/cypress.json`, `{}`);
 
-    componentCypressSpecGenerator(tree, {
+    await componentCypressSpecGenerator(tree, {
       componentFileName: 'test-button.component',
       componentName: 'TestButtonComponent',
       componentPath: `test-button`,

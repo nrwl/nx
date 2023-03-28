@@ -53,6 +53,12 @@
       "version": "14.5.3-beta.0",
       "description": "Update development outputPath to the project root.",
       "factory": "./src/migrations/update-14-5-3/update-dev-output-path"
+    },
+    "add-style-packages": {
+      "cli": "nx",
+      "version": "15.8.8-beta.0",
+      "description": "Add less and stylus packages if used.",
+      "factory": "./src/migrations/update-15-8-8/add-style-packages"
     }
   },
   "packageJsonUpdates": {

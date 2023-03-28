@@ -129,6 +129,12 @@ Type: `number`
 
 Bind the project graph server to a specific port.
 
+### targets
+
+Type: `string`
+
+The target to show tasks for in the task graph
+
 ### uncommitted
 
 Type: `boolean`
@@ -146,6 +152,16 @@ Untracked changes
 Type: `boolean`
 
 Show version number
+
+### view
+
+Type: `string`
+
+Choices: [projects, tasks]
+
+Default: `projects`
+
+Choose whether to view the projects or task graph
 
 ### watch
 

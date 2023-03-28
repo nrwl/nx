@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import type { Linter } from '@nrwl/linter';
 
 export interface Schema {
   name: string;

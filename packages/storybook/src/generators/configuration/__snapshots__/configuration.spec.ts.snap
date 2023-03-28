@@ -1,28 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`@nrwl/storybook:configuration basic functionalities should generate a webpackFinal into the main.js and reference a potential global webpackFinal definition 1`] = `
-"
-
-
-
-module.exports = {
+"module.exports = {
   core: { builder: 'webpack5' },
-  stories: [
-    
-    '../**/*.stories.mdx',
-    '../**/*.stories.@(js|jsx|ts|tsx)' ],
-  addons: ['@storybook/addon-essentials' 
-    
-    
-  ]
+  stories: ['../**/*.stories.mdx', '../**/*.stories.@(js|jsx|ts|tsx)'],
+  addons: ['@storybook/addon-essentials'],
 };
-
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -101,18 +88,13 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "const { mergeConfig } = require('vite');
 const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 
-
 module.exports = {
   core: { builder: '@storybook/builder-vite' },
   stories: [
-    
     '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' 
-    
-    
-  ],
+  addons: ['@storybook/addon-essentials'],
   async viteFinal(config, { configType }) {
     return mergeConfig(config, {
       plugins: [
@@ -124,10 +106,7 @@ module.exports = {
   },
 };
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -137,22 +116,28 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -161,18 +146,13 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "const { mergeConfig } = require('vite');
 const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 
-
 module.exports = {
   core: { builder: '@storybook/builder-vite' },
   stories: [
-    
     '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' 
-    , 'storybook-addon-swc' 
-    
-  ],
+  addons: ['@storybook/addon-essentials', 'storybook-addon-swc'],
   async viteFinal(config, { configType }) {
     return mergeConfig(config, {
       plugins: [
@@ -184,10 +164,7 @@ module.exports = {
   },
 };
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -197,22 +174,28 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -221,18 +204,13 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "const { mergeConfig } = require('vite');
 const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 
-
 module.exports = {
   core: { builder: '@storybook/builder-vite' },
   stories: [
-    
     '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' 
-    
-    
-  ],
+  addons: ['@storybook/addon-essentials'],
   async viteFinal(config, { configType }) {
     return mergeConfig(config, {
       plugins: [
@@ -244,10 +222,7 @@ module.exports = {
   },
 };
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -257,22 +232,28 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -286,14 +267,10 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 const config: StorybookConfig = {
   core: { builder: '@storybook/builder-vite' },
   stories: [
-    
     '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' 
-    
-    
-  ],
+  addons: ['@storybook/addon-essentials'],
   async viteFinal(config: any) {
     return mergeConfig(config, {
       plugins: [
@@ -307,10 +284,7 @@ const config: StorybookConfig = {
 
 module.exports = config;
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -320,15 +294,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
@@ -336,7 +315,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -350,20 +330,19 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 const config: StorybookConfig = {
   core: { builder: '@storybook/builder-vite' },
   stories: [
-    
     '../components/**/*.stories.mdx',
-    '../components/**/*.stories.@(js|jsx|ts|tsx)'
+    '../components/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' 
-    
-    , 'storybook-addon-swc', 
-        {
+  addons: [
+    '@storybook/addon-essentials',
+
+    'storybook-addon-swc',
+    {
       name: 'storybook-addon-next',
       options: {
         nextConfigPath: path.resolve(__dirname, '../next.config.js'),
       },
-    }
-     
+    },
   ],
   async viteFinal(config: any) {
     return mergeConfig(config, {
@@ -378,10 +357,7 @@ const config: StorybookConfig = {
 
 module.exports = config;
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -391,15 +367,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../components/**/*.stories.ts\\",
     \\"../components/**/*.stories.js\\",
@@ -407,7 +388,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../components/**/*.stories.tsx\\",
     \\"../components/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -421,14 +403,10 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 const config: StorybookConfig = {
   core: { builder: '@storybook/builder-vite' },
   stories: [
-    
     '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' 
-    
-    
-  ],
+  addons: ['@storybook/addon-essentials'],
   async viteFinal(config: any) {
     return mergeConfig(config, {
       plugins: [
@@ -442,10 +420,7 @@ const config: StorybookConfig = {
 
 module.exports = config;
 
-
-
-
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
@@ -455,15 +430,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
@@ -471,7 +451,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -479,30 +460,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS buildable libs 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
-
-
-
 const config: StorybookConfig = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-    
-  ]
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
 
 module.exports = config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -510,15 +481,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
@@ -526,7 +502,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -534,30 +511,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS libs 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
-
-
-
 const config: StorybookConfig = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-    
-  ]
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
 
 module.exports = config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -565,15 +532,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
@@ -581,7 +553,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -590,36 +563,31 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "import type { StorybookConfig } from '@storybook/core-common';
 import path from 'path';
 
-
-
 const config: StorybookConfig = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../components/**/*.stories.mdx',
-    '../components/**/*.stories.@(js|jsx|ts|tsx)'
+    '../components/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-    , 'storybook-addon-swc', 
-        {
+  addons: [
+    '@storybook/addon-essentials',
+    '@nrwl/react/plugins/storybook',
+
+    'storybook-addon-swc',
+    {
       name: 'storybook-addon-next',
       options: {
         nextConfigPath: path.resolve(__dirname, '../next.config.js'),
       },
-    }
-     
-  ]
+    },
+  ],
 };
 
 module.exports = config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -627,15 +595,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../components/**/*.stories.ts\\",
     \\"../components/**/*.stories.js\\",
@@ -643,7 +616,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../components/**/*.stories.tsx\\",
     \\"../components/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -651,30 +625,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
-
-
-
 const config: StorybookConfig = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-    
-  ]
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
 
 module.exports = config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -682,15 +646,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
@@ -698,7 +667,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -706,30 +676,24 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps using the swc compiler 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
-
-
-
 const config: StorybookConfig = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    , 'storybook-addon-swc' 
-    
-  ]
+  addons: [
+    '@storybook/addon-essentials',
+    '@nrwl/react/plugins/storybook',
+    'storybook-addon-swc',
+  ],
 };
 
 module.exports = config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -737,15 +701,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
@@ -753,7 +722,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
@@ -761,30 +731,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React buildable libs 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
-
-
-
 const config: StorybookConfig = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-    
-  ]
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
 
 module.exports = config;
 
-
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -792,15 +752,20 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
@@ -808,35 +773,25 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS buildable libs 1`] = `
-"
-
-
-
-module.exports = {
+"module.exports = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-    
-  ]
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
-
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -844,50 +799,45 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS libs 1`] = `
-"
-
-
-
-module.exports = {
+"module.exports = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-    
-  ]
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
-
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -895,57 +845,58 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJs apps 1`] = `
-"
-
-const path = require('path');
+"const path = require('path');
 
 module.exports = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../components/**/*.stories.mdx',
-    '../components/**/*.stories.@(js|jsx|ts|tsx)'
+    '../components/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-    , 'storybook-addon-swc', 
-        {
+  addons: [
+    '@storybook/addon-essentials',
+    '@nrwl/react/plugins/storybook',
+
+    'storybook-addon-swc',
+    {
       name: 'storybook-addon-next',
       options: {
         nextConfigPath: path.resolve(__dirname, '../next.config.js'),
       },
-    }
-     
-  ]
+    },
+  ],
 };
-
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -953,50 +904,45 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../components/**/*.stories.ts\\",
     \\"../components/**/*.stories.js\\",
     \\"../components/**/*.stories.jsx\\",
     \\"../components/**/*.stories.tsx\\",
     \\"../components/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps 1`] = `
-"
-
-
-
-module.exports = {
+"module.exports = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-    
-  ]
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
-
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -1004,50 +950,49 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps using the swc compiler 1`] = `
-"
-
-
-
-module.exports = {
+"module.exports = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    , 'storybook-addon-swc' 
-    
-  ]
+  addons: [
+    '@storybook/addon-essentials',
+    '@nrwl/react/plugins/storybook',
+    'storybook-addon-swc',
+  ],
 };
-
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -1055,50 +1000,45 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React buildable libs 1`] = `
-"
-
-
-
-module.exports = {
+"module.exports = {
   core: { builder: 'webpack5' },
   stories: [
-    
     '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
-    
-    
-  ]
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
-
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
 "
 `;
 
@@ -1106,22 +1046,28 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
-    , \\"outDir\\": \\"\\" 
+    \\"emitDecoratorMetadata\\": true,
+    \\"outDir\\": \\"\\"
   },
   \\"files\\": [
     \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [
+    \\"../**/*.spec.ts\\",
+    \\"../**/*.spec.js\\",
+    \\"../**/*.spec.tsx\\",
+    \\"../**/*.spec.jsx\\"
+  ],
   \\"include\\": [
     \\"../src/**/*.stories.ts\\",
     \\"../src/**/*.stories.js\\",
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"]
+    \\"*.js\\"
+  ]
 }
 "
 `;

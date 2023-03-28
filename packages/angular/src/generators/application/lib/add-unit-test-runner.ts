@@ -13,7 +13,6 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
       supportTsx: false,
       skipSerializers: false,
       skipPackageJson: options.skipPackageJson,
-      rootProject: options.rootProject,
     });
   }
 }

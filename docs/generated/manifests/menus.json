@@ -3603,14 +3603,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "file-server",
-                "path": "/packages/angular/executors/file-server",
-                "name": "file-server",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "webpack-browser",
                 "path": "/packages/angular/executors/webpack-browser",
                 "name": "webpack-browser",
@@ -3995,6 +3987,14 @@
                 "id": "cypress-project",
                 "path": "/packages/cypress/generators/cypress-project",
                 "name": "cypress-project",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "cypress-e2e-configuration",
+                "path": "/packages/cypress/generators/cypress-e2e-configuration",
+                "name": "cypress-e2e-configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -5744,6 +5744,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "build-ios",
+                "path": "/packages/react-native/executors/build-ios",
+                "name": "build-ios",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "start",
                 "path": "/packages/react-native/executors/start",
                 "name": "start",
@@ -5771,6 +5779,14 @@
                 "id": "storybook",
                 "path": "/packages/react-native/executors/storybook",
                 "name": "storybook",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "pod-install",
+                "path": "/packages/react-native/executors/pod-install",
+                "name": "pod-install",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

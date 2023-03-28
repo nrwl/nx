@@ -30,6 +30,7 @@ export interface CypressConfigureSchema {
   directory?: string;
   linter: Linter;
   standaloneConfig?: boolean;
+  ciTargetName?: string;
 }
 
 export async function cypressProjectGenerator(
@@ -65,7 +66,11 @@ export async function cypressProjectGenerator(
   );
   removeUnneededFiles(tree, generatedCypressProjectName, schema.js);
   addBaseUrlToCypressConfig(tree, generatedCypressProjectName);
-  updateAngularJsonBuilder(tree, generatedCypressProjectName, schema.name);
+  updateAngularJsonBuilder(tree, {
+    e2eProjectName: generatedCypressProjectName,
+    targetProjectName: schema.name,
+    ciTargetName: schema.ciTargetName,
+  });
 
   await formatFiles(tree);
 
@@ -107,24 +112,29 @@ function addBaseUrlToCypressConfig(tree: Tree, projectName: string) {
 
 function updateAngularJsonBuilder(
   tree: Tree,
-  e2eProjectName: string,
-  targetProjectName: string
+  opts: {
+    e2eProjectName: string;
+    targetProjectName: string;
+    ciTargetName?: string;
+  }
 ) {
-  const project = readProjectConfiguration(tree, e2eProjectName);
+  const project = readProjectConfiguration(tree, opts.e2eProjectName);
   const e2eTarget = project.targets.e2e;
   project.targets.e2e = {
     ...e2eTarget,
     options: <any>{
       ...e2eTarget.options,
-      devServerTarget: `${targetProjectName}:storybook`,
+      devServerTarget: `${opts.targetProjectName}:storybook`,
     },
     configurations: {
       ci: {
-        devServerTarget: `${targetProjectName}:storybook:ci`,
+        devServerTarget: opts.ciTargetName
+          ? `${opts.targetProjectName}:${opts.ciTargetName}:ci`
+          : `${opts.targetProjectName}:storybook:ci`,
       },
     },
   };
-  updateProjectConfiguration(tree, e2eProjectName, project);
+  updateProjectConfiguration(tree, opts.e2eProjectName, project);
 }
 
 function projectAlreadyHasCypress(tree: Tree): boolean {

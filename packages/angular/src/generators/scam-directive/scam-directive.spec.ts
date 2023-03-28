@@ -30,12 +30,10 @@ describe('SCAM Directive Generator', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[projExample]'
+        selector: '[projExample]',
       })
       export class ExampleDirective {
-
-        constructor() { }
-
+        constructor() {}
       }
 
       @NgModule({
@@ -43,7 +41,8 @@ describe('SCAM Directive Generator', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -79,7 +78,8 @@ describe('SCAM Directive Generator', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -120,15 +120,17 @@ describe('SCAM Directive Generator', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
     const secondaryEntryPointSource = tree.read(
       `libs/lib1/feature/src/index.ts`,
       'utf-8'
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
-      "export * from \\"./lib/example.directive\\";
-      export * from \\"./lib/example.module\\";"
+      "export * from './lib/example.directive';
+      export * from './lib/example.module';
+      "
     `);
   });
 
@@ -161,12 +163,10 @@ describe('SCAM Directive Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Directive({
-          selector: '[projExample]'
+          selector: '[projExample]',
         })
         export class ExampleDirective {
-
-          constructor() { }
-
+          constructor() {}
         }
 
         @NgModule({
@@ -174,7 +174,8 @@ describe('SCAM Directive Generator', () => {
           declarations: [ExampleDirective],
           exports: [ExampleDirective],
         })
-        export class ExampleDirectiveModule {}"
+        export class ExampleDirectiveModule {}
+        "
       `);
     });
 
@@ -206,12 +207,10 @@ describe('SCAM Directive Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Directive({
-          selector: '[projExample]'
+          selector: '[projExample]',
         })
         export class ExampleDirective {
-
-          constructor() { }
-
+          constructor() {}
         }
 
         @NgModule({
@@ -219,7 +218,8 @@ describe('SCAM Directive Generator', () => {
           declarations: [ExampleDirective],
           exports: [ExampleDirective],
         })
-        export class ExampleDirectiveModule {}"
+        export class ExampleDirectiveModule {}
+        "
       `);
     });
 

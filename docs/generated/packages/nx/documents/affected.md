@@ -97,6 +97,14 @@ Type: `string`
 
 Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces
 
+### graph
+
+Type: `boolean`
+
+Default: `false`
+
+Show the task graph of the command
+
 ### head
 
 Type: `string`
@@ -174,8 +182,6 @@ Untracked changes
 ### verbose
 
 Type: `boolean`
-
-Default: `false`
 
 Prints additional information about the commands (e.g., stack traces)
 

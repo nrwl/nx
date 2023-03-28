@@ -30,7 +30,7 @@ describe('Change from main tag to className tag', () => {
     await update(tree);
 
     expect(tree.read('apps/products/src/main.tsx', 'utf-8')).toEqual(
-      `AppRegistry.registerComponent('Products', () => App);`
+      `AppRegistry.registerComponent('Products', () => App);\n`
     );
   });
 

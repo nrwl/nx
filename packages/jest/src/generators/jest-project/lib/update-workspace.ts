@@ -1,4 +1,4 @@
-import { JestProjectSchema } from '../schema';
+import { NormalizedJestProjectSchema } from '../schema';
 import {
   readProjectConfiguration,
   Tree,
@@ -7,7 +7,10 @@ import {
   normalizePath,
 } from '@nrwl/devkit';
 
-export function updateWorkspace(tree: Tree, options: JestProjectSchema) {
+export function updateWorkspace(
+  tree: Tree,
+  options: NormalizedJestProjectSchema
+) {
   const projectConfig = readProjectConfiguration(tree, options.project);
   projectConfig.targets.test = {
     executor: '@nrwl/jest:jest',

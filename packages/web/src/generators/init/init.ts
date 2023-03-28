@@ -1,14 +1,13 @@
-import { cypressInitGenerator } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  ensurePackage,
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
-import { jestInitGenerator } from '@nrwl/jest';
 
 import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
 import { initGenerator as jsInitGenerator } from '@nrwl/js';
@@ -48,12 +47,17 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
   tasks.push(jsInitTask);
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
+    const { jestInitGenerator } = await ensurePackage('@nrwl/jest', nxVersion);
     const jestTask = await jestInitGenerator(tree, {
       skipPackageJson: schema.skipPackageJson,
     });
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
+    const { cypressInitGenerator } = await ensurePackage(
+      '@nrwl/cypress',
+      nxVersion
+    );
     const cypressTask = await cypressInitGenerator(tree, {
       skipPackageJson: schema.skipPackageJson,
     });
@@ -63,7 +67,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
     const installTask = updateDependencies(tree, schema);
     tasks.push(installTask);
   }
-  await addBabelInputs(tree);
+  addBabelInputs(tree);
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

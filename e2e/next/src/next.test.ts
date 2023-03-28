@@ -5,6 +5,7 @@ import {
   cleanupProject,
   getPackageManagerCommand,
   isNotWindows,
+  killPort,
   killPorts,
   newProject,
   packageManagerLockFile,
@@ -20,35 +21,36 @@ import {
 } from '@nrwl/e2e/utils';
 import * as http from 'http';
 import { checkApp } from './utils';
+import { removeSync } from 'fs-extra';
 
 describe('Next.js Applications', () => {
   let proj: string;
   let originalEnv: string;
   let packageManager;
 
-  beforeAll(() => {
+  beforeEach(() => {
     proj = newProject();
     packageManager = detectPackageManager(tmpProjPath());
-  });
-
-  afterAll(() => cleanupProject());
-
-  beforeEach(() => {
     originalEnv = process.env.NODE_ENV;
   });
 
   afterEach(() => {
     process.env.NODE_ENV = originalEnv;
+    cleanupProject();
   });
 
   it('should generate app + libs', async () => {
     const appName = uniq('app');
     const nextLib = uniq('nextlib');
     const jsLib = uniq('tslib');
+    const buildableLib = uniq('buildablelib');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
     runCLI(`generate @nrwl/next:lib ${nextLib} --no-interactive`);
     runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
+    runCLI(
+      `generate @nrwl/js:lib ${buildableLib} --no-interactive --bundler=vite`
+    );
 
     // Create file in public that should be copied to dist
     updateFile(`apps/${appName}/public/a/b.txt`, `Hello World!`);
@@ -77,14 +79,23 @@ describe('Next.js Applications', () => {
     updateFile(
       `libs/${jsLib}/src/lib/${jsLib}.ts`,
       `
-          export function testFn(): string {
+          export function jsLib(): string {
             return 'Hello Nx';
           };
 
           // testing whether async-await code in Node / Next.js api routes works as expected
-          export async function testAsyncFn() {
+          export async function jsLibAsync() {
             return await Promise.resolve('hell0');
           }
+          `
+    );
+
+    updateFile(
+      `libs/${buildableLib}/src/lib/${buildableLib}.ts`,
+      `
+          export function buildableLib(): string {
+            return 'Hello Buildable';
+          };
           `
     );
 
@@ -94,10 +105,10 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/pages/api/hello.ts`,
       `
-          import { testAsyncFn } from '@${proj}/${jsLib}';
+          import { jsLibAsync } from '@${proj}/${jsLib}';
 
           export default async function handler(_, res) {
-            const value = await testAsyncFn();
+            const value = await jsLibAsync();
             res.send(value);
           }
         `
@@ -106,7 +117,8 @@ describe('Next.js Applications', () => {
     updateFile(
       mainPath,
       `
-          import { testFn } from '@${proj}/${jsLib}';
+          import { jsLib } from '@${proj}/${jsLib}';
+          import { buildableLib } from '@${proj}/${buildableLib}';
           /* eslint-disable */
           import dynamic from 'next/dynamic';
 
@@ -119,7 +131,8 @@ describe('Next.js Applications', () => {
             `</h2>`,
             `</h2>
                 <div>
-                  {testFn()}
+                  {jsLib()}
+                  {buildableLib()}
                   <TestComponent />
                 </div>
               `
@@ -154,6 +167,37 @@ describe('Next.js Applications', () => {
       `dist/apps/${appName}/public/a/b.txt`,
       `dist/apps/${appName}/public/shared/ui/hello.txt`
     );
+
+    // Check that `nx serve <app> --prod` works with previous production build (e.g. `nx build <app>`).
+    const prodServePort = 4000;
+    const prodServeProcess = await runCommandUntil(
+      `run ${appName}:serve --prod --port=${prodServePort}`,
+      (output) => {
+        return output.includes(`localhost:${prodServePort}`);
+      }
+    );
+
+    // Check that the output is self-contained (i.e. can run with its own package.json + node_modules)
+    const distPath = joinPathFragments(tmpProjPath(), 'dist/apps', appName);
+    const selfContainedPort = 3000;
+    const pmc = getPackageManagerCommand();
+    runCommand(`${pmc.install}`, {
+      cwd: distPath,
+    });
+    runCLI(
+      `generate @nrwl/workspace:run-commands serve-prod --project ${appName} --cwd=dist/apps/${appName} --command="npx next start --port=${selfContainedPort}"`
+    );
+    const selfContainedProcess = await runCommandUntil(
+      `run ${appName}:serve-prod`,
+      (output) => {
+        return output.includes(`localhost:${selfContainedPort}`);
+      }
+    );
+
+    prodServeProcess.kill();
+    selfContainedProcess.kill();
+    await killPort(prodServePort);
+    await killPort(selfContainedPort);
   }, 300_000);
 
   it('should build and install pruned lock file', () => {
@@ -194,7 +238,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `libs/${jsLib}/src/lib/${jsLib}.ts`,
       `
-          export function testFn(): string {
+          export function jsLib(): string {
             return process.env.NX_CUSTOM_VAR;
           };
           `
@@ -204,11 +248,11 @@ describe('Next.js Applications', () => {
       `apps/${appName}/pages/index.tsx`,
       `
         import React from 'react';
-        import { testFn } from '@${proj}/${jsLib}';
+        import { jsLib } from '@${proj}/${jsLib}';
 
         export const Index = ({ greeting }: any) => {
           return (
-            <p>{testFn()}</p>
+            <p>{jsLib()}</p>
           );
         };
         export default Index;
@@ -384,17 +428,19 @@ describe('Next.js Applications', () => {
   }, 300_000);
 });
 
-function getData(port: number, path = ''): Promise<any> {
-  return new Promise((resolve) => {
-    http.get(`http://localhost:${port}${path}`, (res) => {
-      expect(res.statusCode).toEqual(200);
-      let data = '';
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-      res.once('end', () => {
-        resolve(data);
-      });
-    });
+function getData(port, path = ''): Promise<any> {
+  return new Promise((resolve, reject) => {
+    http
+      .get(`http://localhost:${port}${path}`, (res) => {
+        expect(res.statusCode).toEqual(200);
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.once('end', () => {
+          resolve(data);
+        });
+      })
+      .on('error', (err) => reject(err));
   });
 }

@@ -71,7 +71,7 @@ export function NxTaskGraphViz({
             taskGraphs,
           });
           graph.handleTaskEvent({
-            type: 'notifyTaskGraphTasksSelected',
+            type: 'notifyTaskGraphSetTasks',
             taskIds: [taskId],
           });
           setGraph(graph);

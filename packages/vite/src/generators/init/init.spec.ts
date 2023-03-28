@@ -43,7 +43,7 @@ describe('@nrwl/vite:init', () => {
         return json;
       });
 
-      initGenerator(tree, { uiFramework: 'react' });
+      await initGenerator(tree, { uiFramework: 'react' });
 
       const productionNamedInputs = readJson(tree, 'nx.json').namedInputs
         .production;

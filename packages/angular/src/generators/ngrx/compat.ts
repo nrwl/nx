@@ -1,4 +1,5 @@
 import { convertNxGenerator } from '@nrwl/devkit';
+import { warnForSchematicUsage } from '../utils/warn-for-schematic-usage';
 import { ngrxGenerator } from './ngrx';
 
-export default convertNxGenerator(ngrxGenerator);
+export default warnForSchematicUsage(convertNxGenerator(ngrxGenerator));
