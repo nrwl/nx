@@ -5737,17 +5737,17 @@
     schema-utils "^3.0.0"
     source-map "^0.7.3"
 
-"@pnpm/lockfile-types@^4.3.6":
-  version "4.3.6"
-  resolved "https://registry.yarnpkg.com/@pnpm/lockfile-types/-/lockfile-types-4.3.6.tgz#9d81aa3547a57af9e229572d4763e48268637a83"
-  integrity sha512-5vvdV3tEVOCzzeGv2FXK4590qPUVpZ+5gdqCawFuiNTJavx+4rmmY4aDUjdVXUcKGwqkIBPVKe/SNUBA3A2rtg==
+"@pnpm/lockfile-types@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@pnpm/lockfile-types/-/lockfile-types-5.0.0.tgz#e46944f1b27fedc5490d388b4195857e3aba282d"
+  integrity sha512-2M82hciNNIczVtWmQF3eSXPFVWvGWBvq+vssBkSIP0tZW/izYyvkUf2NN8ktNrB/w0jDCVEzujC6RXiRR9b1bg==
   dependencies:
-    "@pnpm/types" "8.10.0"
+    "@pnpm/types" "9.0.0"
 
-"@pnpm/types@8.10.0":
-  version "8.10.0"
-  resolved "https://registry.yarnpkg.com/@pnpm/types/-/types-8.10.0.tgz#29ebd095bb0653e5eab8283799c9f59fb6cf216f"
-  integrity sha512-A4pcNNvFJdkMXArEjTCOIYNL2VxD4uBynWZ6cBIELXb5qJ0tUzwKsaSz4J953I0rQFqnsFpUYqaWIquI10W1sw==
+"@pnpm/types@9.0.0":
+  version "9.0.0"
+  resolved "https://registry.yarnpkg.com/@pnpm/types/-/types-9.0.0.tgz#f6f403c60af2ee3fa6df4ceb3ee42aa0811ba577"
+  integrity sha512-+nNqpNvqb1u3WW/cHDo7tGjqJBWWe4GAHEdELrz4QMQwGAtG/1GF6NMc0cewdwgU2k67CI3JHGu4quZJnMEUJg==
 
 "@popperjs/core@^2.0.0":
   version "2.11.6"
