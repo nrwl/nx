@@ -158,14 +158,10 @@ export function stringifyPnpmLockfile(
   packageJson: NormalizedPackageJson
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
-  const lockfileVersion: string =
-    typeof data.lockfileVersion === 'number'
-      ? data.lockfileVersion.toFixed(1)
-      : data.lockfileVersion;
-  const hasV5Separator = lockfileVersion.startsWith('5');
+  const hasV5Separator = data.lockfileVersion.toString().startsWith('5');
 
   const output: Lockfile | LockfileV6 = {
-    lockfileVersion,
+    lockfileVersion: data.lockfileVersion,
     importers: {
       '.': mapRootSnapshot(
         packageJson,

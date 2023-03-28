@@ -1,12 +1,10 @@
 export default `lockfileVersion: 5.4
 
-importers:
+specifiers:
+  typescript: 4.8.4
 
-  .:
-    specifiers:
-      typescript: 4.8.4
-    dependencies:
-      typescript: 4.8.4
+dependencies:
+  typescript: 4.8.4
 
 packages:
 

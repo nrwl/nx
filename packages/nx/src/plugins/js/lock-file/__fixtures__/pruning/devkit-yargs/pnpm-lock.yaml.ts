@@ -1,18 +1,16 @@
 export default `lockfileVersion: 5.4
 
-importers:
+specifiers:
+  '@nrwl/devkit': 15.4.5
+  nx: 15.4.5
+  typescript: 4.8.4
+  yargs: 17.6.2
 
-  .:
-    specifiers:
-      '@nrwl/devkit': 15.4.5
-      nx: 15.4.5
-      typescript: 4.8.4
-      yargs: 17.6.2
-    dependencies:
-      '@nrwl/devkit': 15.4.5_nx@15.4.5+typescript@4.8.4
-      nx: 15.4.5
-      typescript: 4.8.4
-      yargs: 17.6.2
+dependencies:
+  '@nrwl/devkit': 15.4.5_nx@15.4.5+typescript@4.8.4
+  nx: 15.4.5
+  typescript: 4.8.4
+  yargs: 17.6.2
 
 packages:
 
