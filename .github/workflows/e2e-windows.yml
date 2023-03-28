@@ -69,6 +69,7 @@ jobs:
           - e2e-web
           - e2e-rollup
           - e2e-storybook
+          - e2e-storybook-7
           - e2e-storybook-angular
           - e2e-vite
           - e2e-webpack
@@ -117,6 +118,8 @@ jobs:
           - project: e2e-rollup
             codeowners: 'S04SJ6PL98X'
           - project: e2e-storybook
+            codeowners: 'S04SVQ8H0G5'
+          - project: e2e-storybook-7
             codeowners: 'S04SVQ8H0G5'
           - project: e2e-storybook-angular
             codeowners: 'S04SVQ8H0G5'

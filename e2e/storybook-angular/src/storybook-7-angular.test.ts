@@ -17,7 +17,7 @@ describe('Storybook executors for Angular', () => {
     newProject();
     createTestUILib(angularStorybookLib);
     runCLI(
-      `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
+      `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --storybook7betaConfiguration --configureCypress --generateStories --generateCypressSpecs --no-interactive  --verbose`
     );
   });
 
@@ -25,12 +25,12 @@ describe('Storybook executors for Angular', () => {
     cleanupProject();
   });
 
-  xdescribe('serve and build storybook', () => {
+  describe('serve and build storybook', () => {
     afterAll(() => killPorts());
 
     it('should serve an Angular based Storybook setup', async () => {
       const p = await runCommandUntil(
-        `run ${angularStorybookLib}:storybook`,
+        `run ${angularStorybookLib}:storybook  --verbose`,
         (output) => {
           return /Storybook.*started/gi.test(output);
         }
@@ -45,7 +45,7 @@ describe('Storybook executors for Angular', () => {
   });
 
   // However much I increase the timeout, this takes forever?
-  xdescribe('run cypress tests using storybook', () => {
+  describe('run cypress tests using storybook', () => {
     it('should execute e2e tests using Cypress running against Storybook', async () => {
       if (runCypressTests()) {
         writeFileSync(
