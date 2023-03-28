@@ -145,7 +145,7 @@ function getPresetDependencies({
         dev: { '@nrwl/web': nxVersion, typescript: typescriptVersion },
       };
 
-    case Preset.NodeServer:
+    case Preset.NodeStandalone:
       return { dependencies: {}, dev: { '@nrwl/node': nxVersion } };
 
     default: {
