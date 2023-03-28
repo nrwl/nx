@@ -171,7 +171,7 @@ jobs:
           - node_version: 16
             project: e2e-nx-plugin
           - node_version: 16
-            project: e2e-nx-run
+            project: e2e-lerna-smoke-tests
           - node_version: 16
             project: e2e-react
           - node_version: 16
@@ -217,7 +217,7 @@ jobs:
           - node_version: 19
             project: e2e-nx-plugin
           - node_version: 19
-            project: e2e-nx-run
+            project: e2e-lerna-smoke-tests
           - node_version: 19
             project: e2e-react
           - node_version: 19
