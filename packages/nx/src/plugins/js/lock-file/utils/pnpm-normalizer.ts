@@ -122,11 +122,13 @@ const INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX = '-inlineSpecifiers';
 function isInlineSpecifierLockfile(
   lockfile: InlineSpecifiersLockfile | Lockfile
 ): lockfile is InlineSpecifiersLockfile {
+  const { lockfileVersion } = lockfile;
   return (
-    typeof lockfile.lockfileVersion === 'string' &&
-    lockfile.lockfileVersion.endsWith(
-      INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX
-    )
+    lockfileVersion.toString().startsWith('6') ||
+    (typeof lockfileVersion === 'string' &&
+      lockfileVersion.endsWith(
+        INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX
+      ))
   );
 }
 

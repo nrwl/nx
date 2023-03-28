@@ -31,16 +31,21 @@ export function parsePnpmLockfile(
   addDependencies(data, builder, keyMap);
 }
 
+const MATCH_ADDITIONAL_VERSION_INFO = /_|\(/;
+
 function addNodes(
   data: Lockfile,
   builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
+  const hasV5Separator = data.lockfileVersion.toString().startsWith('5');
 
   Object.entries(data.packages).forEach(([key, snapshot]) => {
-    const packageName = findPackageName(key, snapshot, data);
-    const version = findVersion(key, packageName).split('_')[0];
+    const packageName = findPackageName(key, snapshot, data, hasV5Separator);
+    const version = findVersion(key, packageName, hasV5Separator).split(
+      MATCH_ADDITIONAL_VERSION_INFO
+    )[0];
 
     // we don't need to keep duplicates, we can just track the keys
     const existingNode = nodes.get(packageName)?.get(version);
@@ -103,7 +108,9 @@ function getHoistedVersion(
       k.startsWith(`/${packageName}/`)
     );
     if (key) {
-      version = key.slice(key.lastIndexOf('/') + 1).split('_')[0];
+      version = key
+        .slice(key.lastIndexOf('/') + 1)
+        .split(MATCH_ADDITIONAL_VERSION_INFO)[0];
     } else {
       // pnpm might not hoist every package
       // similarly those packages will not be available to be used via import
@@ -119,13 +126,18 @@ function addDependencies(
   builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
+  const hasV5Separator = data.lockfileVersion.toString().startsWith('5');
   Object.entries(data.packages).forEach(([key, snapshot]) => {
     const node = keyMap.get(key);
     [snapshot.dependencies, snapshot.optionalDependencies].forEach(
       (section) => {
         if (section) {
           Object.entries(section).forEach(([name, versionRange]) => {
-            const version = findVersion(versionRange, name).split('_')[0];
+            const version = findVersion(
+              versionRange,
+              name,
+              hasV5Separator
+            ).split(MATCH_ADDITIONAL_VERSION_INFO)[0];
             const target =
               builder.graph.externalNodes[`npm:${name}@${version}`] ||
               builder.graph.externalNodes[`npm:${name}`];
@@ -145,14 +157,20 @@ export function stringifyPnpmLockfile(
   packageJson: NormalizedPackageJson
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
+  const hasV5Separator = data.lockfileVersion.toString().startsWith('5');
 
   const output: Lockfile = {
     lockfileVersion: data.lockfileVersion,
     importers: {
-      '.': mapRootSnapshot(packageJson, data.packages, graph.externalNodes),
+      '.': mapRootSnapshot(
+        packageJson,
+        data.packages,
+        hasV5Separator,
+        graph.externalNodes
+      ),
     },
     packages: sortObjectByKeys(
-      mapSnapshots(data.packages, graph.externalNodes)
+      mapSnapshots(data.packages, hasV5Separator, graph.externalNodes)
     ),
   };
 
@@ -161,11 +179,12 @@ export function stringifyPnpmLockfile(
 
 function mapSnapshots(
   packages: PackageSnapshots,
+  hasV5Separator: boolean,
   nodes: Record<string, ProjectGraphExternalNode>
 ): PackageSnapshots {
   const result: PackageSnapshots = {};
   Object.values(nodes).forEach((node) => {
-    const matchedKeys = findOriginalKeys(packages, node, {
+    const matchedKeys = findOriginalKeys(packages, hasV5Separator, node, {
       returnFullKey: true,
     });
     // the package manager doesn't check for types of dependencies
@@ -180,6 +199,7 @@ function mapSnapshots(
 
 function findOriginalKeys(
   packages: PackageSnapshots,
+  hasV5Separator: boolean,
   { data: { packageName, version } }: ProjectGraphExternalNode,
   { returnFullKey }: { returnFullKey?: boolean } = {}
 ): Array<[string, PackageSnapshot]> {
@@ -187,8 +207,14 @@ function findOriginalKeys(
   for (const key of Object.keys(packages)) {
     const snapshot = packages[key];
     // standard package
-    if (key.startsWith(`/${packageName}/${version}`)) {
+    if (key.startsWith(`/${packageName}/${version}`) && hasV5Separator) {
       matchedKeys.push([returnFullKey ? key : key.split('/').pop(), snapshot]);
+    }
+    if (key.startsWith(`/${packageName}@${version}`) && !hasV5Separator) {
+      matchedKeys.push([
+        returnFullKey ? key : key.slice(key.indexOf('@', 2) + 1),
+        snapshot,
+      ]);
     }
     // tarball package
     if (key === version) {
@@ -212,6 +238,7 @@ function findOriginalKeys(
 function mapRootSnapshot(
   packageJson: NormalizedPackageJson,
   packages: PackageSnapshots,
+  hasV5Separator: boolean,
   nodes: Record<string, ProjectGraphExternalNode>
 ): ProjectSnapshot {
   const snapshot: ProjectSnapshot = { specifiers: {} };
@@ -230,7 +257,11 @@ function mapRootSnapshot(
         // peer dependencies are mapped to dependencies
         let section = depType === 'peerDependencies' ? 'dependencies' : depType;
         snapshot[section] = snapshot[section] || {};
-        snapshot[section][packageName] = findOriginalKeys(packages, node)[0][0];
+        snapshot[section][packageName] = findOriginalKeys(
+          packages,
+          hasV5Separator,
+          node
+        )[0][0];
       });
     }
   });
@@ -242,24 +273,38 @@ function mapRootSnapshot(
   return snapshot;
 }
 
-function findVersion(key: string, packageName: string): string {
-  if (key.startsWith(`/${packageName}/`)) {
+function findVersion(
+  key: string,
+  packageName: string,
+  hasV5Separator: boolean
+): string {
+  if (key.startsWith(`/${packageName}/`) && hasV5Separator) {
     return key.slice(key.lastIndexOf('/') + 1);
   }
+  if (key.startsWith(`/${packageName}@`) && !hasV5Separator) {
+    return key.slice(key.indexOf('@', 2) + 1);
+  }
   // for alias packages prepend with "npm:"
-  if (key.startsWith('/')) {
+  if (key.startsWith('/') && hasV5Separator) {
     const aliasName = key.slice(1, key.lastIndexOf('/'));
     const version = key.slice(key.lastIndexOf('/') + 1);
     return `npm:${aliasName}@${version}`;
   }
+  if (key.startsWith('/') && !hasV5Separator) {
+    const aliasName = key.slice(1, key.indexOf('@', 2));
+    const version = key.slice(key.indexOf('@', 2) + 1);
+    return `npm:${aliasName}@${version}`;
+  }
+
   // for tarball package the entire key is the version spec
   return key;
 }
 
 function findPackageName(
   key: string,
-  value: PackageSnapshot,
-  data: Lockfile
+  snapshot: PackageSnapshot,
+  data: Lockfile,
+  hasV5Separator
 ): string {
   const matchPropValue = (record: Record<string, string>): string => {
     if (!record) {
@@ -272,18 +317,18 @@ function findPackageName(
   };
 
   const matchedDependencyName = (
-    snapshot: Partial<PackageSnapshot>
+    importer: Partial<PackageSnapshot>
   ): string => {
     return (
-      matchPropValue(snapshot.dependencies) ||
-      matchPropValue(snapshot.optionalDependencies) ||
-      matchPropValue(snapshot.peerDependencies)
+      matchPropValue(importer.dependencies) ||
+      matchPropValue(importer.optionalDependencies) ||
+      matchPropValue(importer.peerDependencies)
     );
   };
 
   // snapshot already has a name
-  if (value.name) {
-    return value.name;
+  if (snapshot.name) {
+    return snapshot.name;
   }
   // it'a a root dependency
   const rootDependencyName =
@@ -296,12 +341,22 @@ function findPackageName(
   // find a snapshot that has a dependency that points to this snapshot
   const snapshots = Object.values(data.packages);
   for (let i = 0; i < snapshots.length; i++) {
-    const snapshot = snapshots[i];
-    const dependencyName = matchedDependencyName(snapshot);
+    const dependencyName = matchedDependencyName(snapshots[i]);
     if (dependencyName) {
       return dependencyName;
     }
   }
   // otherwise, it's a standard package
-  return key.startsWith('/') ? key.slice(1, key.lastIndexOf('/')) : key;
+  if (key.startsWith('/')) {
+    if (data.lockfileVersion.toString().startsWith('6')) {
+      return key.slice(1, key.indexOf('@', 2));
+    }
+    if (hasV5Separator) {
+      return key.slice(1, key.lastIndexOf('/'));
+    } else {
+      return key.slice(1, key.indexOf('@', 2));
+    }
+  } else {
+    return key;
+  }
 }
