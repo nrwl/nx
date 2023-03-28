@@ -29,8 +29,8 @@ exports[`directive generator should export the directive correctly when flat=fal
 import { TestDirective } from './my-directives/test/test.directive';
 @NgModule({
   imports: [],
-  declarations: [, TestDirective],
-  exports: [, TestDirective],
+  declarations: [TestDirective],
+  exports: [TestDirective],
 })
 export class TestModule {}
 "
@@ -65,7 +65,7 @@ exports[`directive generator should generate a directive with test files and att
 import { TestDirective } from './test.directive';
 @NgModule({
   imports: [],
-  declarations: [, TestDirective],
+  declarations: [TestDirective],
   exports: [],
 })
 export class TestModule {}
@@ -101,7 +101,7 @@ exports[`directive generator should import the directive correctly when flat=fal
 import { TestDirective } from './test/test.directive';
 @NgModule({
   imports: [],
-  declarations: [, TestDirective],
+  declarations: [TestDirective],
   exports: [],
 })
 export class TestModule {}
@@ -137,7 +137,7 @@ exports[`directive generator should import the directive correctly when flat=fal
 import { TestDirective } from './my-directives/test/test.directive';
 @NgModule({
   imports: [],
-  declarations: [, TestDirective],
+  declarations: [TestDirective],
   exports: [],
 })
 export class TestModule {}
@@ -161,7 +161,7 @@ exports[`directive generator should not generate test file when skipTests=true 2
 import { TestDirective } from './my-directives/test/test.directive';
 @NgModule({
   imports: [],
-  declarations: [, TestDirective],
+  declarations: [TestDirective],
   exports: [],
 })
 export class TestModule {}
