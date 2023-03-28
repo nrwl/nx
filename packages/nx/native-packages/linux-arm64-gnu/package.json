@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/nx-linux-arm64-gnu",
+  "name": "@nx/nx-linux-arm64-gnu",
   "version": "0.0.0",
   "os": [
     "linux"
