@@ -86,7 +86,7 @@ function addBuildTarget(tree: Tree, options: ConfigurationSchema) {
           },
           production: {
             mode: 'production',
-            optimization: true,
+            optimization: options.target === 'web' ? true : undefined,
             sourceMap: false,
           },
         },
