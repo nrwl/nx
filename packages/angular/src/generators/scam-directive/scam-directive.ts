@@ -22,6 +22,7 @@ export async function scamDirectiveGenerator(tree: Tree, rawOptions: Schema) {
     skipImport: true,
     export: false,
     standalone: false,
+    skipFormat: true,
   });
 
   const pipeFileInfo = getDirectiveFileInfo(tree, options);

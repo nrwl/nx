@@ -1,4 +1,5 @@
 import {
+  formatFiles,
   GeneratorCallback,
   joinPathFragments,
   runTasksInSerial,
@@ -41,8 +42,12 @@ export async function addLintingGenerator(
   );
 
   if (!options.skipPackageJson) {
-    const installTask = await addAngularEsLintDependencies(tree);
+    const installTask = addAngularEsLintDependencies(tree);
     tasks.push(installTask);
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 
   return runTasksInSerial(...tasks);

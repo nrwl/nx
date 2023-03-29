@@ -40,7 +40,7 @@ export async function conversionGenerator(
          * does and remove the config again if it doesn't, so that it is most efficient.
          */
         setParserOptionsProject: true,
-        skipFormat: options.skipFormat,
+        skipFormat: true,
       });
     },
   });
@@ -105,7 +105,7 @@ export async function conversionGenerator(
          * step of this parent generator, if applicable
          */
         removeTSLintIfNoMoreTSLintTargets: false,
-        skipFormat: options.skipFormat,
+        skipFormat: true,
       });
     } catch {
       logger.warn(
