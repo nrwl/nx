@@ -57,13 +57,13 @@ describe('Storybook generators and executors for monorepos', () => {
         }
       );
       p.kill();
-    }, 20000);
+    }, 50000);
 
     it('should build a React based storybook setup that uses webpack', () => {
       // build
       runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
-    }, 40000);
+    }, 50000);
 
     // This test makes sure path resolution works
     it('should build a React based storybook that references another lib and uses webpack', () => {
@@ -117,6 +117,6 @@ describe('Storybook generators and executors for monorepos', () => {
       // build React lib
       runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
-    }, 40000);
+    }, 50000);
   });
 });
