@@ -338,7 +338,7 @@ export function runCLI(
         },
         encoding: 'utf-8',
         stdio: 'pipe',
-        maxBuffer: 50 * 1024 * 1024,
+        maxBuffer: 100 * 1024 * 1024,
       }
     );
 
@@ -385,7 +385,7 @@ export function runLernaCLI(
       },
       encoding: 'utf-8',
       stdio: 'pipe',
-      maxBuffer: 50 * 1024 * 1024,
+      maxBuffer: 100 * 1024 * 1024,
     });
 
     if (opts.verbose ?? isVerboseE2ERun()) {
