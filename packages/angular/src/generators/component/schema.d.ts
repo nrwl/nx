@@ -18,6 +18,7 @@ export interface Schema {
   skipSelector?: boolean;
   export?: boolean;
   prefix?: string;
+  skipFormat?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

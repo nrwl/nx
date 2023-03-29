@@ -15,6 +15,7 @@ export async function addStandaloneComponent(
     export: true,
     project: libraryOptions.name,
     flat: componentOptions.flat,
+    skipFormat: true,
   });
 
   if (libraryOptions.routing) {
