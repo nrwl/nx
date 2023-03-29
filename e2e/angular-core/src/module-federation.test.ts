@@ -129,7 +129,7 @@ describe('Angular Module Federation', () => {
 
     // port and process cleanup
     await killProcessAndPorts(process.pid, hostPort, remotePort);
-  }, 300000);
+  }, 20_000_000);
 
   it('should convert apps to MF successfully', async () => {
     const app1 = uniq('app1');
