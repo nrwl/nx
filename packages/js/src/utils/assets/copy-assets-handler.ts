@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fse from 'fs-extra';
 import ignore, { Ignore } from 'ignore';
 import * as fg from 'fast-glob';
-import { AssetGlob } from '@nrwl/workspace/src/utilities/assets';
+import { AssetGlob } from './assets';
 import { logger } from '@nrwl/devkit';
 import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
 

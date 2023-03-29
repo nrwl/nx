@@ -1,9 +1,6 @@
 // nx-ignore-next-line
 const { Linter } = require('@nrwl/linter'); // use require to import to avoid circular dependency
-import type {
-  AssetGlob,
-  FileInputOutput,
-} from '@nrwl/workspace/src/utilities/assets';
+import type { AssetGlob, FileInputOutput } from './assets/assets';
 import { TransformerEntry } from './typescript/types';
 
 export type Compiler = 'tsc' | 'swc';

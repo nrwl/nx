@@ -1,8 +1,5 @@
 import { ExecutorContext, readJsonFile, writeJsonFile } from '@nrwl/devkit';
-import {
-  assetGlobsToFiles,
-  FileInputOutput,
-} from '@nrwl/workspace/src/utilities/assets';
+import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
 import { removeSync } from 'fs-extra';
 import { dirname, join, relative, resolve } from 'path';
 import { copyAssets } from '../../utils/assets';

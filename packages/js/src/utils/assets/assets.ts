@@ -1,4 +1,4 @@
-import * as glob from 'glob';
+import * as fastGlob from 'fast-glob';
 import { basename, join } from 'path';
 
 export type FileInputOutput = {
@@ -24,9 +24,9 @@ export function assetGlobsToFiles(
     ignore: string[] = [],
     dot: boolean = false
   ) => {
-    return glob.sync(pattern, {
+    return fastGlob.sync(pattern, {
       cwd: input,
-      nodir: true,
+      onlyFiles: true,
       dot,
       ignore,
     });

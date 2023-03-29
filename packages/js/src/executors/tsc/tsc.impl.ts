@@ -1,8 +1,5 @@
 import { ExecutorContext } from '@nrwl/devkit';
-import {
-  assetGlobsToFiles,
-  FileInputOutput,
-} from '@nrwl/workspace/src/utilities/assets';
+import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
 import type { TypeScriptCompilationOptions } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import { join, resolve } from 'path';
 import {
