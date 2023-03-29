@@ -129,7 +129,7 @@ Package manager to use
 
 Type: `string`
 
-Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "react-native", "expo", "next", "nest", "express", "react", "angular", "node-server"]. To build your own see https://nx.dev/packages/nx-plugin#preset
+Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "react-native", "expo", "next", "nest", "express", "react", "angular", "node-standalone"]. To build your own see https://nx.dev/packages/nx-plugin#preset
 
 ### routing
 

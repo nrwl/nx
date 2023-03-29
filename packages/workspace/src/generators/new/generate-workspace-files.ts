@@ -67,7 +67,7 @@ function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
   } else if (
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
-    options.preset === Preset.NodeServer ||
+    options.preset === Preset.NodeStandalone ||
     options.isCustomPreset
   ) {
     // don't generate any folders
@@ -127,7 +127,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
   const filesDirName =
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
-    options.preset === Preset.NodeServer
+    options.preset === Preset.NodeStandalone
       ? './files-root-app'
       : options.preset === Preset.NPM || options.preset === Preset.Core
       ? './files-package-based-repo'
@@ -178,7 +178,7 @@ function addNpmScripts(tree: Tree, options: NormalizedSchema) {
   if (
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
-    options.preset === Preset.NodeServer
+    options.preset === Preset.NodeStandalone
   ) {
     updateJson(tree, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {
