@@ -32,7 +32,9 @@ describe('Nx Commands', () => {
     it('should show the list of projects', () => {
       const app1 = uniq('myapp');
       const app2 = uniq('myapp');
-      expect(runCLI('show projects')).toEqual('');
+      expect(
+        runCLI('show projects').replace(/.*nx show projects( --verbose)?\n/, '')
+      ).toEqual('');
 
       runCLI(`generate @nrwl/web:app ${app1}`);
       runCLI(`generate @nrwl/web:app ${app2}`);
