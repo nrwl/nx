@@ -268,7 +268,7 @@ jobs:
         with:
           path: '.cypress'
           key: ${{ runner.os }}-cypress
-          
+
       - name: Configure git metadata (needed for lerna smoke tests)
         run: |
           git config --global user.email test@test.com
@@ -365,7 +365,7 @@ jobs:
               | Failed project                 | Node |
               |--------------------------------|------|`;
             failedProjects.forEach(matrix => {
-              result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.pad(3)} |`
+              result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.toString().padEnd(3)} |`
             });
             result += `\`\`\``;
             const message = result.split('\n').map(l => l.trim()).join('\n');

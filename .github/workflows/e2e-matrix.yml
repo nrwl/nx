@@ -457,7 +457,7 @@ jobs:
               |--------------------------------|------|-------|------|`;
             failedProjects.forEach(matrix => {
               const project = matrix.project !== lastProject ? matrix.project : '...';
-              result += `\n| ${project.padEnd(30)} | ${matrix.package_manager.padEnd(4)} | ${matrix.os_name} | v${matrix.node_version.pad(3)} |`
+              result += `\n| ${project.padEnd(30)} | ${matrix.package_manager.padEnd(4)} | ${matrix.os_name} | v${matrix.node_version.toString().padEnd(3)} |`
               lastProject = matrix.project;
             });
             result += `\`\`\``;
