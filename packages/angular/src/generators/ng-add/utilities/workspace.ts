@@ -264,7 +264,7 @@ export function cleanupEsLintPackages(tree: Tree): void {
 export async function createWorkspaceFiles(tree: Tree): Promise<void> {
   updateVsCodeRecommendedExtensions(tree);
 
-  await jsInitGenerator(tree, {});
+  await jsInitGenerator(tree, { skipFormat: true });
 
   generateFiles(tree, joinPathFragments(__dirname, '../files/root'), '.', {
     tmpl: '',

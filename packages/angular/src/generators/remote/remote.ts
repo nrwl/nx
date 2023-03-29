@@ -38,6 +38,7 @@ export async function remote(tree: Tree, options: Schema) {
     standalone: options.standalone ?? false,
     routing: true,
     port,
+    skipFormat: true,
   });
 
   const skipE2E =

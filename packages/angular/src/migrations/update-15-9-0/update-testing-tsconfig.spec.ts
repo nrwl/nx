@@ -6,8 +6,10 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
-import applicationGenerator from '../../generators/application/application';
-import libraryGenerator from '../../generators/library/library';
+import {
+  generateTestApplication,
+  generateTestLibrary,
+} from '../../generators/utils/testing';
 import { updateTestingTsconfigForJest } from './update-testing-tsconfig';
 
 let projectGraph: ProjectGraph;
@@ -68,7 +70,7 @@ describe('Jest+Ng - 15.9.0 - tsconfig updates', () => {
 });
 
 async function setup(tree: Tree, name: string) {
-  await applicationGenerator(tree, {
+  await generateTestApplication(tree, {
     name,
     skipPackageJson: true,
   });
@@ -79,7 +81,7 @@ async function setup(tree: Tree, name: string) {
     return json;
   });
 
-  await libraryGenerator(tree, {
+  await generateTestLibrary(tree, {
     name: `${name}-lib`,
   });
 
