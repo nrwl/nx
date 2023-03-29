@@ -712,6 +712,21 @@ describe('lib', () => {
     });
   });
 
+  describe('--setParserOptionsProject', () => {
+    it('should set the parserOptions.project in the eslintrc.json file', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        setParserOptionsProject: true,
+      });
+
+      const eslintConfig = readJson(tree, 'libs/my-lib/.eslintrc.json');
+
+      expect(eslintConfig.overrides[0].parserOptions.project).toEqual([
+        'libs/my-lib/tsconfig.*?.json',
+      ]);
+    });
+  });
+
   it.each`
     style
     ${'styled-components'}
