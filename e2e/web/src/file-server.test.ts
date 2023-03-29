@@ -57,30 +57,32 @@ describe('file-server', () => {
       `generate @nrwl/web:static-config --buildTarget=${reactAppName}:build --targetName=custom-serve-static --no-interactive`
     );
 
+    const port = 6200;
+
     const ngServe = await runCommandUntil(
-      `serve-static ${ngAppName}`,
+      `serve-static ${ngAppName} --port=${port}`,
       (output) => {
-        return output.indexOf('localhost:4200') > -1;
+        return output.indexOf(`localhost:${port}`) > -1;
       }
     );
 
     try {
       await promisifiedTreeKill(ngServe.pid, 'SIGKILL');
-      await killPorts(4200);
+      await killPorts(port);
     } catch {
       // ignore
     }
 
     const reactServe = await runCommandUntil(
-      `custom-serve-static ${reactAppName}`,
+      `custom-serve-static ${reactAppName} --port=${port + 1}`,
       (output) => {
-        return output.indexOf('localhost:4200') > -1;
+        return output.indexOf(`localhost:${port + 1}`) > -1;
       }
     );
 
     try {
       await promisifiedTreeKill(reactServe.pid, 'SIGKILL');
-      await killPorts(4200);
+      await killPorts(port + 1);
     } catch {
       // ignore
     }
