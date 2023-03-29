@@ -102,7 +102,6 @@ function getPresetDependencies({
         dependencies: { '@nrwl/angular': nxVersion },
         dev: {
           '@angular-devkit/core': angularCliVersion,
-          '@angular-devkit/schematics': angularCliVersion,
           typescript: typescriptVersion,
         },
       };
