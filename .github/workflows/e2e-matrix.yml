@@ -61,6 +61,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
     strategy:
       matrix:
         os:
@@ -110,6 +111,11 @@ jobs:
             os_name: 'Linux'
           - os: macos-latest
             os_name: 'MacOS'
+          # test timeouts
+          - os: ubuntu-latest
+            os_timeout: 30
+          - os: macos-latest
+            os_timeout: 60
           # codeowner groups
           - project: e2e-add-nx-to-monorepo
             codeowners: 'S04SYHYKGNP'
@@ -372,6 +378,7 @@ jobs:
       - name: Run e2e tests
         id: e2e-run
         run: yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1
+        timeout-minutes: ${{ matrix.os_timeout }}
         env:
           GIT_AUTHOR_EMAIL: test@test.com
           GIT_AUTHOR_NAME: Test
