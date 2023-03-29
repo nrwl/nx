@@ -390,6 +390,26 @@ describe('@nrwl/storybook:init', () => {
         nxJson.tasksRunnerOptions.default.options.cacheableOperations
       ).toContain('build-storybook');
     });
+
+    it('should not add any framework specific dependencies when no framework is specified', async () => {
+      await initGenerator(tree, { uiFramework: undefined });
+
+      // get the updated package.json
+      const packageJson = readJson(tree, 'package.json');
+
+      // check that only the following dependencies have been added
+      expect(Object.keys(packageJson.devDependencies)).toEqual([
+        '@nrwl/js',
+        '@nrwl/storybook',
+        '@storybook/addon-essentials',
+        '@storybook/builder-webpack5',
+        '@storybook/core-server',
+        '@storybook/manager-webpack5',
+        'html-webpack-plugin',
+        'prettier',
+        'typescript',
+      ]);
+    });
   });
 
   describe('update root tsconfig.json', () => {
