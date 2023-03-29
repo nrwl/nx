@@ -103,7 +103,6 @@ function getPresetDependencies({
         dev: {
           '@angular-devkit/core': angularCliVersion,
           '@angular-devkit/schematics': angularCliVersion,
-          '@schematics/angular': angularCliVersion,
           typescript: typescriptVersion,
         },
       };
