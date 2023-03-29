@@ -39,8 +39,12 @@ const ROOT_KEYS_ORDER = {
   packages: 16,
 };
 
+export function isV5Lockfile(data: InlineSpecifiersLockfile | Lockfile) {
+  return data.lockfileVersion.toString().startsWith('5.');
+}
+
 export function stringifyToPnpmYaml(lockfile: Lockfile): string {
-  const isLockfileV6 = lockfile.lockfileVersion.toString().startsWith('6.');
+  const isLockfileV6 = !isV5Lockfile(lockfile);
   const adaptedLockfile = isLockfileV6
     ? convertToInlineSpecifiersFormat(lockfile)
     : lockfile;
@@ -152,7 +156,7 @@ function isInlineSpecifierLockfile(
 ): lockfile is InlineSpecifiersLockfile {
   const { lockfileVersion } = lockfile;
   return (
-    lockfileVersion.toString().startsWith('6') ||
+    !isV5Lockfile(lockfile) ||
     (typeof lockfileVersion === 'string' &&
       lockfileVersion.endsWith(
         INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX
@@ -161,10 +165,10 @@ function isInlineSpecifierLockfile(
 }
 
 function revertFromInlineSpecifiersFormatIfNecessary(
-  lockFile: InlineSpecifiersLockfile | Lockfile
+  lockfile: InlineSpecifiersLockfile | Lockfile
 ): Lockfile {
-  if (isInlineSpecifierLockfile(lockFile)) {
-    const { lockfileVersion, importers, ...rest } = lockFile;
+  if (isInlineSpecifierLockfile(lockfile)) {
+    const { lockfileVersion, importers, ...rest } = lockfile;
 
     const originalVersionStr = lockfileVersion.replace(
       INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX,
@@ -177,18 +181,95 @@ function revertFromInlineSpecifiersFormatIfNecessary(
       );
     }
 
-    const mappedImporters: Record<string, ProjectSnapshot> = {};
-    Object.entries(importers).forEach(([key, value]) => {
-      mappedImporters[key] = revertProjectSnapshot(value);
-    });
-
-    return {
+    let revertedImporters = mapValues(importers, revertProjectSnapshot);
+    let packages = lockfile.packages;
+    if (originalVersion === 6) {
+      revertedImporters = Object.fromEntries(
+        Object.entries(revertedImporters ?? {}).map(
+          ([importerId, pkgSnapshot]: [string, ProjectSnapshot]) => {
+            const newSnapshot = { ...pkgSnapshot };
+            if (newSnapshot.dependencies != null) {
+              newSnapshot.dependencies = mapValues(
+                newSnapshot.dependencies,
+                convertNewRefToOldRef
+              );
+            }
+            if (newSnapshot.optionalDependencies != null) {
+              newSnapshot.optionalDependencies = mapValues(
+                newSnapshot.optionalDependencies,
+                convertNewRefToOldRef
+              );
+            }
+            if (newSnapshot.devDependencies != null) {
+              newSnapshot.devDependencies = mapValues(
+                newSnapshot.devDependencies,
+                convertNewRefToOldRef
+              );
+            }
+            return [importerId, newSnapshot];
+          }
+        )
+      );
+      packages = Object.fromEntries(
+        Object.entries(lockfile.packages ?? {}).map(
+          ([depPath, pkgSnapshot]) => {
+            const newSnapshot = { ...pkgSnapshot };
+            if (newSnapshot.dependencies != null) {
+              newSnapshot.dependencies = mapValues(
+                newSnapshot.dependencies,
+                convertNewRefToOldRef
+              );
+            }
+            if (newSnapshot.optionalDependencies != null) {
+              newSnapshot.optionalDependencies = mapValues(
+                newSnapshot.optionalDependencies,
+                convertNewRefToOldRef
+              );
+            }
+            return [convertNewDepPathToOldDepPath(depPath), newSnapshot];
+          }
+        )
+      );
+    }
+    const newLockfile = {
       ...rest,
-      lockfileVersion: originalVersion,
-      importers: mappedImporters,
+      lockfileVersion: lockfileVersion.endsWith(
+        INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX
+      )
+        ? originalVersion
+        : lockfileVersion,
+      packages,
+      importers: revertedImporters,
     };
+    if (originalVersion === 6 && newLockfile.time) {
+      newLockfile.time = Object.fromEntries(
+        Object.entries(newLockfile.time).map(([depPath, time]) => [
+          convertNewDepPathToOldDepPath(depPath),
+          time,
+        ])
+      );
+    }
+    return newLockfile;
   }
-  return lockFile;
+  return lockfile;
+}
+
+function convertNewDepPathToOldDepPath(oldDepPath: string) {
+  if (!oldDepPath.includes('@', 2)) return oldDepPath;
+  const index = oldDepPath.indexOf('@', oldDepPath.indexOf('/@') + 2);
+  if (oldDepPath.includes('(') && index > oldDepPath.indexOf('('))
+    return oldDepPath;
+  return `${oldDepPath.substring(0, index)}/${oldDepPath.substring(index + 1)}`;
+}
+
+function convertNewRefToOldRef(oldRef: string) {
+  if (oldRef.startsWith('link:') || oldRef.startsWith('file:')) {
+    return oldRef;
+  }
+  if (oldRef.includes('@')) {
+    return convertNewDepPathToOldDepPath(oldRef);
+  }
+  return oldRef;
 }
 
 function revertProjectSnapshot(
@@ -394,7 +475,7 @@ function convertToInlineSpecifiersFormat(
 ): InlineSpecifiersLockfile {
   let importers = lockfile.importers;
   let packages = lockfile.packages;
-  if (lockfile.lockfileVersion.toString().startsWith('6.')) {
+  if (!isV5Lockfile(lockfile)) {
     importers = Object.fromEntries(
       Object.entries(lockfile.importers ?? {}).map(
         ([importerId, pkgSnapshot]: [string, ProjectSnapshot]) => {
@@ -443,7 +524,7 @@ function convertToInlineSpecifiersFormat(
   const newLockfile = {
     ...lockfile,
     packages,
-    lockfileVersion: lockfile.lockfileVersion.toString().startsWith('6.')
+    lockfileVersion: !isV5Lockfile(lockfile)
       ? lockfile.lockfileVersion.toString()
       : lockfile.lockfileVersion
           .toString()
@@ -455,10 +536,7 @@ function convertToInlineSpecifiersFormat(
       convertProjectSnapshotToInlineSpecifiersFormat
     ),
   };
-  if (
-    lockfile.lockfileVersion.toString().startsWith('6.') &&
-    newLockfile.time
-  ) {
+  if (!isV5Lockfile(lockfile) && newLockfile.time) {
     newLockfile.time = Object.fromEntries(
       Object.entries(newLockfile.time).map(([depPath, time]) => [
         convertOldDepPathToNewDepPath(depPath),

@@ -6,6 +6,7 @@ import type {
   PackageSnapshots,
 } from '@pnpm/lockfile-types';
 import {
+  isV5Lockfile,
   loadPnpmHoistedDepsDefinition,
   parseAndNormalizePnpmLockfile,
   stringifyToPnpmYaml,
@@ -40,7 +41,7 @@ function addNodes(
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
-  const hasV5Separator = data.lockfileVersion.toString().startsWith('5');
+  const hasV5Separator = isV5Lockfile(data);
 
   Object.entries(data.packages).forEach(([key, snapshot]) => {
     const packageName = findPackageName(key, snapshot, data, hasV5Separator);
@@ -127,7 +128,7 @@ function addDependencies(
   builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
-  const hasV5Separator = data.lockfileVersion.toString().startsWith('5');
+  const hasV5Separator = isV5Lockfile(data);
   Object.entries(data.packages).forEach(([key, snapshot]) => {
     const node = keyMap.get(key);
     [snapshot.dependencies, snapshot.optionalDependencies].forEach(
@@ -158,10 +159,10 @@ export function stringifyPnpmLockfile(
   packageJson: NormalizedPackageJson
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
-  const hasV5Separator = data.lockfileVersion.toString().startsWith('5');
+  const hasV5Separator = isV5Lockfile(data);
 
   const output: Lockfile | LockfileV6 = {
-    lockfileVersion: data.lockfileVersion,
+    lockfileVersion: normalizeLockfileVersion(data.lockfileVersion),
     importers: {
       '.': mapRootSnapshot(
         packageJson,
@@ -176,6 +177,13 @@ export function stringifyPnpmLockfile(
   };
 
   return stringifyToPnpmYaml(output);
+}
+
+function normalizeLockfileVersion(version: string | number) {
+  if (typeof version === 'string' || version !== Math.floor(version)) {
+    return version;
+  }
+  return version.toFixed(1);
 }
 
 function mapSnapshots(
@@ -349,9 +357,6 @@ function findPackageName(
   }
   // otherwise, it's a standard package
   if (key.startsWith('/')) {
-    if (data.lockfileVersion.toString().startsWith('6')) {
-      return key.slice(1, key.indexOf('@', 2));
-    }
     if (hasV5Separator) {
       return key.slice(1, key.lastIndexOf('/'));
     } else {
