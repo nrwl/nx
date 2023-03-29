@@ -118,7 +118,9 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
 
   exportComponentInEntryPoint(tree, options);
 
-  await formatFiles(tree);
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
 }
 
 function buildSelector(tree: Tree, name: string, prefix: string) {
