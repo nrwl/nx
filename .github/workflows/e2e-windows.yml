@@ -12,7 +12,7 @@ on:
         default: false
 
 env:
-  CYPRESS_CACHE_FOLDER: '.cypress'
+  CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
 
 permissions: {}
 jobs:
@@ -45,6 +45,18 @@ jobs:
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
         run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+
+      - name: Cache Cypress
+        id: cache-cypress
+        uses: actions/cache@v3
+        with:
+          lookup-only: true
+          path: '${{ github.workspace }}/.cypress'
+          key: windows-cypress
+
+      - name: Install Cypress
+        if: steps.cache-cypress.outputs.cache-hit != 'true'
+        run: npx cypress install
 
   e2e:
     needs: preinstall
@@ -266,9 +278,13 @@ jobs:
         id: cache-cypress
         uses: actions/cache@v3
         with:
-          path: '.cypress'
+          path: '${{ github.workspace }}/.cypress'
           key: ${{ runner.os }}-cypress
           
+      - name: Install Cypress
+        if: steps.cache-cypress.outputs.cache-hit != 'true'
+        run: npx cypress install
+
       - name: Configure git metadata (needed for lerna smoke tests)
         run: |
           git config --global user.email test@test.com
