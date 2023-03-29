@@ -95,6 +95,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     config: 'project',
     bundler: options.bundler,
     importPath: options.npmPackageName,
+    skipFormat: true,
   });
 
   addDependenciesToPackageJson(
@@ -123,6 +124,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       pluginOutputPath: `dist/${options.libsDir}/${options.projectDirectory}`,
       npmPackageName: options.npmPackageName,
       minimal: options.minimal ?? false,
+      skipFormat: true,
     });
   }
 

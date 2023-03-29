@@ -5,4 +5,5 @@ export interface VitestGeneratorSchema {
   inSourceTests?: boolean;
   skipViteConfig?: boolean;
   testTarget?: string;
+  skipFormat?: boolean;
 }

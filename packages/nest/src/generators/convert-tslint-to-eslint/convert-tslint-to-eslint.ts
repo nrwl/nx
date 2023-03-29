@@ -68,7 +68,7 @@ export async function conversionGenerator(
           projectDirectory: '',
           fileName: '',
           parsedTags: [],
-          skipFormat: options.skipFormat,
+          skipFormat: true,
         } as AddLintForLibrarySchema);
       }
     },

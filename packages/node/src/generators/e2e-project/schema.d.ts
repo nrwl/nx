@@ -5,7 +5,7 @@ export interface Schema {
   name?: string;
   port?: number;
   linter?: 'eslint' | 'none';
-  formatFile?: boolean;
   rootProject?: boolean;
   isNest?: boolean;
+  skipFormat?: boolean;
 }

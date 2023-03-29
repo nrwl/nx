@@ -18,7 +18,10 @@ export async function rollupProjectGenerator(
   tree: Tree,
   options: RollupProjectSchema
 ) {
-  const task = await rollupInitGenerator(tree, options);
+  const task = await rollupInitGenerator(tree, {
+    ...options,
+    skipFormat: true,
+  });
   checkForTargetConflicts(tree, options);
   addBuildTarget(tree, options);
   await formatFiles(tree);

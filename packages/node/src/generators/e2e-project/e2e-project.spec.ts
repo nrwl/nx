@@ -56,14 +56,13 @@ describe('e2eProjectGenerator', () => {
 
       describe('CLI tests', () => {
         it('should print a message', () => {
-          const cliPath = join(process.cwd(), \\"dist/api\\");
+          const cliPath = join(process.cwd(), 'dist/api');
 
           const output = execSync(\`node \${cliPath}\`).toString();
 
           expect(output).toMatch(/Hello World/);
         });
       });
-
       "
     `);
   });

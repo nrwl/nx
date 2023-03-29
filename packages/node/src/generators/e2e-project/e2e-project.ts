@@ -139,7 +139,7 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
     });
   }
 
-  if (options.formatFile) {
+  if (!options.skipFormat) {
     await formatFiles(host);
   }
 

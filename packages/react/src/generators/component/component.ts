@@ -47,7 +47,9 @@ export async function componentGenerator(host: Tree, schema: Schema) {
     tasks.push(routingTask);
   }
 
-  await formatFiles(host);
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 
   return runTasksInSerial(...tasks);
 }

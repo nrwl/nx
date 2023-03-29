@@ -8,4 +8,5 @@ export interface Schema {
   jestConfig?: string;
   minimal?: boolean;
   linter?: Linter;
+  skipFormat?: boolean;
 }

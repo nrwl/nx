@@ -178,11 +178,14 @@ export async function viteConfigurationGenerator(
       coverageProvider: 'c8',
       skipViteConfig: true,
       testTarget: testTargetName,
+      skipFormat: true,
     });
     tasks.push(vitestTask);
   }
 
-  await formatFiles(tree);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return runTasksInSerial(...tasks);
 }

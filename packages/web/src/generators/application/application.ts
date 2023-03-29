@@ -88,6 +88,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
         options.appProjectRoot,
         'webpack.config.js'
       ),
+      skipFormat: true,
     });
     const project = readProjectConfiguration(tree, options.projectName);
     const prodConfig = project.targets.build.configurations.production;
@@ -201,10 +202,9 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   await addProject(host, options);
 
   if (options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage(
-      '@nrwl/vite',
-      nxVersion
-    );
+    const { viteConfigurationGenerator } = ensurePackage<
+      typeof import('@nrwl/vite')
+    >('@nrwl/vite', nxVersion);
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     if (
@@ -221,17 +221,22 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       newProject: true,
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
+      skipFormat: true,
     });
     tasks.push(viteTask);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { vitestGenerator } = ensurePackage('@nrwl/vite', nxVersion);
+    const { vitestGenerator } = ensurePackage<typeof import('@nrwl/vite')>(
+      '@nrwl/vite',
+      nxVersion
+    );
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
       coverageProvider: 'c8',
       inSourceTests: options.inSourceTests,
+      skipFormat: true,
     });
     tasks.push(vitestTask);
   }
@@ -265,34 +270,34 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   }
 
   if (options.e2eTestRunner === 'cypress') {
-    const { cypressProjectGenerator } = await ensurePackage(
-      '@nrwl/cypress',
-      nxVersion
-    );
+    const { cypressProjectGenerator } = await ensurePackage<
+      typeof import('@nrwl/cypress')
+    >('@nrwl/cypress', nxVersion);
     const cypressTask = await cypressProjectGenerator(host, {
       ...options,
       name: `${options.name}-e2e`,
       directory: options.directory,
       project: options.projectName,
+      skipFormat: true,
     });
     tasks.push(cypressTask);
   }
   if (options.unitTestRunner === 'jest') {
-    const { jestProjectGenerator } = await ensurePackage(
-      '@nrwl/jest',
-      nxVersion
-    );
+    const { jestProjectGenerator } = await ensurePackage<
+      typeof import('@nrwl/jest')
+    >('@nrwl/jest', nxVersion);
     const jestTask = await jestProjectGenerator(host, {
       project: options.projectName,
       skipSerializers: true,
       setupFile: 'web-components',
       compiler: options.compiler,
+      skipFormat: true,
     });
     tasks.push(jestTask);
   }
 
   if (options.compiler === 'swc') {
-    const installTask = await addDependenciesToPackageJson(
+    const installTask = addDependenciesToPackageJson(
       host,
       {},
       { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }

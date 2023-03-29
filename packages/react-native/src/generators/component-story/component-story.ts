@@ -174,7 +174,10 @@ export async function componentStoryGenerator(
   schema: CreateComponentStoriesFileSchema
 ) {
   createComponentStoriesFile(host, schema);
-  await formatFiles(host);
+
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default componentStoryGenerator;

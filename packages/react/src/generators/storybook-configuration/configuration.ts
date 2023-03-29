@@ -27,6 +27,7 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
     js: schema.js,
     cypressProject,
     ignorePaths: schema.ignorePaths,
+    skipFormat: true,
   });
 }
 
@@ -34,10 +35,9 @@ export async function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
-  const { configurationGenerator } = ensurePackage(
-    '@nrwl/storybook',
-    nxVersion
-  );
+  const { configurationGenerator } = ensurePackage<
+    typeof import('@nrwl/storybook')
+  >('@nrwl/storybook', nxVersion);
 
   let bundler = schema.bundler ?? 'webpack';
   const projectConfig = readProjectConfiguration(host, schema.name);
@@ -72,6 +72,7 @@ export async function storybookConfigurationGenerator(
       bundler === 'vite'
         ? '@storybook/react-vite'
         : '@storybook/react-webpack5',
+    skipFormat: true,
   });
 
   if (schema.generateStories) {

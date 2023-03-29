@@ -18,5 +18,6 @@ export async function addDetox(host: Tree, options: NormalizedSchema) {
     appName: options.name,
     framework: 'expo',
     setParserOptionsProject: options.setParserOptionsProject,
+    skipFormat: true,
   });
 }

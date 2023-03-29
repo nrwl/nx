@@ -15,4 +15,5 @@ export interface StorybookConfigureSchema {
   configureStaticServe?: boolean;
   storybook7Configuration?: boolean; // TODO(katerina): Change when Storybook 7
   storybook7UiFramework?: UiFramework7; // TODO(katerina): Change when Storybook 7
+  skipFormat?: boolean;
 }

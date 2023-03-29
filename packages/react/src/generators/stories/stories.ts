@@ -6,6 +6,7 @@ import {
 } from '../../utils/ast-utils';
 import {
   convertNxGenerator,
+  formatFiles,
   getProjects,
   joinPathFragments,
   logger,
@@ -25,6 +26,7 @@ export interface StorybookStoriesSchema {
   js?: boolean;
   cypressProject?: string;
   ignorePaths?: string[];
+  skipFormat?: boolean;
 }
 
 export async function projectRootPath(
@@ -141,6 +143,7 @@ export async function createAllStories(
       await componentStoryGenerator(tree, {
         componentPath: relativeCmpDir,
         project: projectName,
+        skipFormat: true,
       });
 
       if (generateCypressSpecs && e2eProject) {
@@ -149,6 +152,7 @@ export async function createAllStories(
           componentPath: relativeCmpDir,
           js,
           cypressProject,
+          skipFormat: true,
         });
       }
     })
@@ -167,6 +171,10 @@ export async function storiesGenerator(
     schema.cypressProject,
     schema.ignorePaths
   );
+
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default storiesGenerator;

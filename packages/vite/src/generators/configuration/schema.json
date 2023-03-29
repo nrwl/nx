@@ -49,6 +49,12 @@
     "testTarget": {
       "type": "string",
       "description": "The test target of the project to be transformed to use the @nrwl/vite:test executor."
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "examplesFile": "../../../docs/configuration-examples.md"

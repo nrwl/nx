@@ -13,14 +13,16 @@ export async function addCypress(host: Tree, options: NormalizedSchema) {
     targetName: 'serve-static',
   });
 
-  const { cypressProjectGenerator } = ensurePackage('@nrwl/cypress', nxVersion);
+  const { cypressProjectGenerator } = ensurePackage<
+    typeof import('@nrwl/cypress')
+  >('@nrwl/cypress', nxVersion);
 
   return await cypressProjectGenerator(host, {
     ...options,
     name: options.e2eProjectName,
     directory: options.directory,
     project: options.projectName,
-    rootProject: options.rootProject,
     bundler: options.bundler,
+    skipFormat: true,
   });
 }

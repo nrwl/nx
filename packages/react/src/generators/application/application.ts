@@ -106,10 +106,9 @@ export async function applicationGenerator(
   addProject(host, options);
 
   if (options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage(
-      '@nrwl/vite',
-      nxVersion
-    );
+    const { viteConfigurationGenerator } = ensurePackage<
+      typeof import('@nrwl/vite')
+    >('@nrwl/vite', nxVersion);
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     if (
@@ -126,24 +125,32 @@ export async function applicationGenerator(
       newProject: true,
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
+      skipFormat: true,
     });
     tasks.push(viteTask);
   } else if (options.bundler === 'webpack') {
-    const { webpackInitGenerator } = ensurePackage('@nrwl/webpack', nxVersion);
+    const { webpackInitGenerator } = ensurePackage<
+      typeof import('@nrwl/webpack')
+    >('@nrwl/webpack', nxVersion);
     const webpackInitTask = await webpackInitGenerator(host, {
       uiFramework: 'react',
+      skipFormat: true,
     });
     tasks.push(webpackInitTask);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { vitestGenerator } = ensurePackage('@nrwl/vite', nxVersion);
+    const { vitestGenerator } = ensurePackage<typeof import('@nrwl/vite')>(
+      '@nrwl/vite',
+      nxVersion
+    );
 
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
       coverageProvider: 'c8',
       project: options.projectName,
       inSourceTests: options.inSourceTests,
+      skipFormat: true,
     });
     tasks.push(vitestTask);
   }

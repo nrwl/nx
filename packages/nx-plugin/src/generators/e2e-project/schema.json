@@ -45,6 +45,12 @@
       "type": "boolean",
       "description": "Generate the e2e project with a minimal setup. This would involve not generating tests for a default executor and generator.",
       "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "required": ["pluginName", "npmPackageName"]

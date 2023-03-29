@@ -25,7 +25,8 @@ export async function lintWorkspaceRuleGenerator(
 ) {
   // Ensure that the workspace rules project has been created
   const projectGeneratorCallback = await lintWorkspaceRulesProjectGenerator(
-    tree
+    tree,
+    { skipFormat: true }
   );
 
   const ruleDir = joinPathFragments(

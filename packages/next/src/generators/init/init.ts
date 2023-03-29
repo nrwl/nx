@@ -62,7 +62,10 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
     tasks.push(cypressTask);
   }
 
-  const reactTask = await reactInitGenerator(host, schema);
+  const reactTask = await reactInitGenerator(host, {
+    ...schema,
+    skipFormat: true,
+  });
   tasks.push(reactTask);
 
   if (!schema.skipPackageJson) {

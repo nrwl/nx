@@ -8,4 +8,5 @@ export interface ViteConfigurationGeneratorSchema {
   buildTarget?: string;
   serveTarget?: string;
   testTarget?: string;
+  skipFormat?: boolean;
 }

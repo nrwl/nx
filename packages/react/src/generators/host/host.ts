@@ -30,6 +30,7 @@ export async function hostGenerator(host: Tree, schema: Schema) {
     routing: true,
     // Only webpack works with module federation for now.
     bundler: 'webpack',
+    skipFormat: true,
   });
   tasks.push(initTask);
 
@@ -43,12 +44,12 @@ export async function hostGenerator(host: Tree, schema: Schema) {
         name: remote,
         directory: options.directory,
         style: options.style,
-        skipFormat: options.skipFormat,
         unitTestRunner: options.unitTestRunner,
         e2eTestRunner: options.e2eTestRunner,
         linter: options.linter,
         devServerPort: remotePort,
         ssr: options.ssr,
+        skipFormat: true,
       });
       remotePort++;
     }
@@ -62,6 +63,7 @@ export async function hostGenerator(host: Tree, schema: Schema) {
     const setupSsrTask = await setupSsrGenerator(host, {
       project: options.projectName,
       serverPort: options.devServerPort,
+      skipFormat: true,
     });
     tasks.push(setupSsrTask);
 
