@@ -54,7 +54,7 @@ export function pointToTutorialAndCourse(preset: Preset) {
       });
       break;
     case Preset.Express:
-    case Preset.NodeServer:
+    case Preset.NodeStandalone:
       output.addVerticalSeparator();
       output.note({
         title,

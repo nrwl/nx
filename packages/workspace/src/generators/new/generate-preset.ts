@@ -102,8 +102,6 @@ function getPresetDependencies({
         dependencies: { '@nrwl/angular': nxVersion },
         dev: {
           '@angular-devkit/core': angularCliVersion,
-          '@angular-devkit/schematics': angularCliVersion,
-          '@schematics/angular': angularCliVersion,
           typescript: typescriptVersion,
         },
       };
@@ -145,7 +143,7 @@ function getPresetDependencies({
         dev: { '@nrwl/web': nxVersion, typescript: typescriptVersion },
       };
 
-    case Preset.NodeServer:
+    case Preset.NodeStandalone:
       return { dependencies: {}, dev: { '@nrwl/node': nxVersion } };
 
     default: {

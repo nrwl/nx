@@ -4,7 +4,6 @@ import { Linter } from '../../utils/lint';
 import {
   angularCliVersion,
   nxVersion,
-  prettierVersion,
   typescriptVersion,
 } from '../../utils/versions';
 import { Preset } from '../utils/presets';
@@ -90,9 +89,7 @@ describe('new', () => {
       expect(dependencies).toStrictEqual({ '@nrwl/angular': nxVersion });
       expect(devDependencies).toStrictEqual({
         '@angular-devkit/core': angularCliVersion,
-        '@angular-devkit/schematics': angularCliVersion,
         '@nrwl/workspace': nxVersion,
-        '@schematics/angular': angularCliVersion,
         nx: nxVersion,
         typescript: typescriptVersion,
       });

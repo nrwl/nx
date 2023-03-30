@@ -131,7 +131,7 @@ async function createPreset(tree: Tree, options: Schema) {
     };
     updateNxJson(tree, c);
     return initGenerator(tree, {});
-  } else if (options.preset === Preset.NodeServer) {
+  } else if (options.preset === Preset.NodeStandalone) {
     const { applicationGenerator: nodeApplicationGenerator } = require('@nrwl' +
       '/node');
     return nodeApplicationGenerator(tree, {

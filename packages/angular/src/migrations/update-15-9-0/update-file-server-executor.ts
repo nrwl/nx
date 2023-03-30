@@ -35,7 +35,7 @@ export default async function updateFileServerExecutor(tree: Tree) {
   for (const [projectName, project] of projects.entries()) {
     let projectChanged = false;
 
-    for (const [targetName, target] of Object.entries(project.targets)) {
+    for (const [targetName, target] of Object.entries(project.targets ?? {})) {
       if (target.executor === oldExecutor) {
         project.targets[targetName].executor = newExecutor;
         projectChanged = true;

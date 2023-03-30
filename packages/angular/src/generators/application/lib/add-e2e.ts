@@ -20,9 +20,9 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       directory: options.directory,
       project: options.name,
       linter: options.linter,
-      skipFormat: options.skipFormat,
       standaloneConfig: options.standaloneConfig,
       skipPackageJson: options.skipPackageJson,
+      skipFormat: true,
     });
   }
 }

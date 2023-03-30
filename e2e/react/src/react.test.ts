@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  ensureCypressInstallation,
   killPorts,
   newProject,
   readFile,
@@ -20,7 +21,10 @@ import { join } from 'path';
 describe('React Applications', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
+  beforeEach(() => {
+    proj = newProject();
+    ensureCypressInstallation();
+  });
 
   afterEach(() => cleanupProject());
 
@@ -70,7 +74,7 @@ describe('React Applications', () => {
             </>
           );
         }
-        
+
         export default App;
       `
     );

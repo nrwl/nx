@@ -22,6 +22,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
+      setParserOptionsProject: options.setParserOptionsProject,
     });
 
     updateJson(

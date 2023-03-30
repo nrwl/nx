@@ -219,8 +219,8 @@ async function normalizeArgsMiddleware(
           preset = Preset.ReactStandalone;
         } else if (monorepoStyle === 'angular') {
           preset = Preset.AngularStandalone;
-        } else if (monorepoStyle === 'node-server') {
-          preset = Preset.NodeServer;
+        } else if (monorepoStyle === 'node-standalone') {
+          preset = Preset.NodeStandalone;
         } else {
           preset = await determinePreset(argv);
         }
@@ -235,15 +235,17 @@ async function normalizeArgsMiddleware(
       if (
         preset === Preset.ReactStandalone ||
         preset === Preset.AngularStandalone ||
-        preset === Preset.NodeServer
+        preset === Preset.NodeStandalone
       ) {
         appName =
           argv.appName ?? argv.name ?? (await determineAppName(preset, argv));
         name = argv.name ?? appName;
 
-        if (preset === Preset.NodeServer) {
+        if (preset === Preset.NodeStandalone) {
           framework = await determineFramework(argv);
-          docker = await determineDockerfile(argv);
+          if (framework !== 'none') {
+            docker = await determineDockerfile(argv);
+          }
         }
 
         if (preset === Preset.ReactStandalone) {
@@ -368,27 +370,27 @@ async function determineMonorepoStyle(): Promise<string> {
         {
           name: 'package-based',
           message:
-            'Package-based monorepo:     Nx makes it fast, but lets you run things your way.',
+            'Package-based monorepo: Nx makes it fast, but lets you run things your way.',
         },
         {
           name: 'integrated',
           message:
-            'Integrated monorepo:        Nx configures your favorite frameworks and lets you focus on shipping features.',
+            'Integrated monorepo:    Nx configures your favorite frameworks and lets you focus on shipping features.',
         },
         {
           name: 'react',
           message:
-            'Standalone React app:       Nx configures Vite (or Webpack), ESLint, and Cypress.',
+            'Standalone React app:   Nx configures Vite (or Webpack), ESLint, and Cypress.',
         },
         {
           name: 'angular',
           message:
-            'Standalone Angular app:     Nx configures Jest, ESLint and Cypress.',
+            'Standalone Angular app: Nx configures Jest, ESLint and Cypress.',
         },
         {
-          name: 'node-server',
+          name: 'node-standalone',
           message:
-            'Standalone Node Server app: Nx configures a framework (ex. Express), esbuild, ESlint and Jest.',
+            'Standalone Node app:    Nx configures a framework (ex. Express), esbuild, ESlint and Jest.',
         },
       ],
     },
@@ -561,6 +563,10 @@ async function determineFramework(
       name: 'nest',
       message: 'NestJs  [https://nestjs.com/]',
     },
+    {
+      name: 'none',
+      message: 'None',
+    },
   ];
 
   if (!parsedArgs.framework) {
@@ -668,7 +674,7 @@ async function determineStyle(
     preset === Preset.Express ||
     preset === Preset.ReactNative ||
     preset === Preset.Expo ||
-    preset === Preset.NodeServer
+    preset === Preset.NodeStandalone
   ) {
     return Promise.resolve(null);
   }

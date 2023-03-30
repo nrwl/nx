@@ -16,7 +16,7 @@ export enum Preset {
   Express = 'express',
   React = 'react',
   Angular = 'angular',
-  NodeServer = 'node-server',
+  NodeStandalone = 'node-standalone',
 }
 
 /**

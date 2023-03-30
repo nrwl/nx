@@ -80,7 +80,7 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
       options.e2eProjectRoot,
       {
         ...options,
-        ...names(options.rootProject ? 'server' : options.project),
+        ...names(options.rootProject ? 'cli' : options.project),
         mainFile,
         offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
         tmpl: '',

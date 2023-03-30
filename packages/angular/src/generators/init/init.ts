@@ -31,11 +31,7 @@ export async function angularInitGenerator(
 
   const pkgVersions = versions(tree);
 
-  const peerDepsToInstall = [
-    '@angular-devkit/core',
-    '@angular-devkit/schematics',
-    '@schematics/angular',
-  ];
+  const peerDepsToInstall = ['@angular-devkit/core'];
   let devkitVersion: string;
   peerDepsToInstall.forEach((pkg) => {
     const packageVersion = getInstalledPackageVersion(tree, pkg);
@@ -163,6 +159,8 @@ function updateDependencies(
       '@angular/compiler-cli': angularVersion,
       '@angular/language-service': angularVersion,
       '@angular-devkit/build-angular': angularDevkitVersion,
+      '@angular-devkit/schematics': angularDevkitVersion,
+      '@schematics/angular': angularDevkitVersion,
     }
   );
 }

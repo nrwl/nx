@@ -1,6 +1,7 @@
 import {
   cleanupProject,
   createFile,
+  ensureCypressInstallation,
   newProject,
   runCLI,
   uniq,
@@ -17,6 +18,7 @@ describe('React Cypress Component Tests', () => {
 
   beforeAll(() => {
     projectName = newProject({ name: uniq('cy-react') });
+    ensureCypressInstallation();
 
     runCLI(
       `generate @nrwl/react:app ${appName} --bundler=webpack --no-interactive`
@@ -224,7 +226,7 @@ ${content}`;
       `
         const { composePlugins, withNx } = require('@nrwl/webpack');
         const { withReact } = require('@nrwl/react');
-        
+
         module.exports = composePlugins(
           withNx(),
           withReact(),

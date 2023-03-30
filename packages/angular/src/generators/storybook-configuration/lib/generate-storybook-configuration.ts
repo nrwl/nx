@@ -20,5 +20,6 @@ export async function generateStorybookConfiguration(
     configureTestRunner: options.configureTestRunner,
     storybook7Configuration: options.storybook7Configuration,
     configureStaticServe: options.configureStaticServe,
+    skipFormat: true,
   });
 }
