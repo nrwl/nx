@@ -277,7 +277,12 @@ describe('Nx Affected and Graph Tests', () => {
 
       const affectedProjects = runCLI(
         'print-affected --uncommitted --select projects'
-      ).split(', ');
+      )
+        .replace(
+          /.*nx print-affected --uncommitted --select projects( --verbose)?\n/,
+          ''
+        )
+        .split(', ');
 
       expect(affectedProjects).toContain(myapp);
       expect(affectedProjects).toContain(myapp2);
