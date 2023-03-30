@@ -1,39 +1,45 @@
 import { isCI } from '../ci/is-ci';
 
+const messageOptions = {
+  nxCloudCreation: [
+    {
+      code: 'set-up-distributed-caching-ci',
+      message: `Enable distributed caching to make your CI faster`,
+    },
+  ],
+  nxCloudMigration: [
+    {
+      code: 'make-ci-faster',
+      message: `Enable distributed caching to make your CI faster?`,
+    },
+  ],
+} as const;
+
+type MessageKey = keyof typeof messageOptions;
+
 export class PromptMessages {
-  private messages = {
-    nxCloudCreation: [
-      {
-        code: 'set-up-distributed-caching-ci',
-        message: `Enable distributed caching to make your CI faster`,
-      },
-    ],
-    nxCloudMigration: [
-      {
-        code: 'make-ci-faster',
-        message: `Enable distributed caching to make your CI faster?`,
-      },
-    ],
-  };
+  private selectedMessages: { [key in MessageKey]?: number } = {};
 
-  private selectedMessages = {};
-
-  getPromptMessage(key: string): string {
+  getPromptMessage(key: MessageKey): string {
     if (this.selectedMessages[key] === undefined) {
       if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
         this.selectedMessages[key] = 0;
       } else {
         this.selectedMessages[key] = Math.floor(
-          Math.random() * this.messages[key].length
+          Math.random() * messageOptions[key].length
         );
       }
     }
-    return this.messages[key][this.selectedMessages[key]].message;
+    return messageOptions[key][this.selectedMessages[key]!].message;
   }
 
-  codeOfSelectedPromptMessage(key: string): string {
-    if (this.selectedMessages[key] === undefined) return null;
-    return this.messages[key][this.selectedMessages[key]].code;
+  codeOfSelectedPromptMessage(key: MessageKey): string {
+    const selected = this.selectedMessages[key];
+    if (selected === undefined) {
+      return messageOptions[key][0].code;
+    } else {
+      return messageOptions[key][selected].code;
+    }
   }
 }
 

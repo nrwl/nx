@@ -2,9 +2,10 @@ import * as ora from 'ora';
 import { join } from 'path';
 
 import { execAndWait } from '../child-process-utils';
+import { mapErrorToBodyLines } from '../error-utils';
 import { output } from '../output';
 import { getPackageManagerCommand, PackageManager } from '../package-manager';
-import { getFileName, mapErrorToBodyLines } from '../string-utils';
+import { getFileName } from '../string-utils';
 
 export async function setupCI(
   name: string,
@@ -32,11 +33,14 @@ export async function setupCI(
     return res;
   } catch (e) {
     ciSpinner.fail();
-
-    output.error({
-      title: `Nx failed to generate CI workflow`,
-      bodyLines: mapErrorToBodyLines(e),
-    });
+    if (e instanceof Error) {
+      output.error({
+        title: `Nx failed to generate CI workflow`,
+        bodyLines: mapErrorToBodyLines(e),
+      });
+    } else {
+      console.error(e);
+    }
 
     process.exit(1);
   } finally {

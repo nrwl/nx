@@ -10,8 +10,8 @@ import {
 } from './utils/package-manager';
 import { execAndWait } from './utils/child-process-utils';
 import { output } from './utils/output';
-import { mapErrorToBodyLines } from './utils/string-utils';
 import { nxVersion } from './utils/nx/nx-version';
+import { mapErrorToBodyLines } from './utils/error-utils';
 
 /**
  * Creates a temporary directory and installs Nx in it.
@@ -44,10 +44,14 @@ export async function createSandbox(packageManager: PackageManager) {
     installSpinner.succeed();
   } catch (e) {
     installSpinner.fail();
-    output.error({
-      title: `Nx failed to install dependencies`,
-      bodyLines: mapErrorToBodyLines(e),
-    });
+    if (e instanceof Error) {
+      output.error({
+        title: `Nx failed to install dependencies`,
+        bodyLines: mapErrorToBodyLines(e),
+      });
+    } else {
+      console.error(e);
+    }
     process.exit(1);
   } finally {
     installSpinner.stop();

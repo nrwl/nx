@@ -2,13 +2,14 @@ import * as ora from 'ora';
 import { join } from 'path';
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { execAndWait } from './utils/child-process-utils';
+import { mapErrorToBodyLines } from './utils/error-utils';
 import { output } from './utils/output';
 import {
   getPackageManagerCommand,
   getPackageManagerVersion,
   PackageManager,
 } from './utils/package-manager';
-import { getFileName, mapErrorToBodyLines } from './utils/string-utils';
+import { getFileName } from './utils/string-utils';
 import { unparse } from './utils/unparse';
 
 /**
@@ -67,10 +68,14 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     );
   } catch (e) {
     workspaceSetupSpinner.fail();
-    output.error({
-      title: `Nx failed to create a workspace.`,
-      bodyLines: mapErrorToBodyLines(e),
-    });
+    if (e instanceof Error) {
+      output.error({
+        title: `Nx failed to create a workspace.`,
+        bodyLines: mapErrorToBodyLines(e),
+      });
+    } else {
+      console.error(e);
+    }
     process.exit(1);
   } finally {
     workspaceSetupSpinner.stop();

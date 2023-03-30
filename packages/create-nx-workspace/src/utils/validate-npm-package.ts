@@ -14,8 +14,8 @@ export interface ValidateNpmResult {
 }
 
 export function validateNpmPackage(name: string): ValidateNpmResult {
-  let warnings = [];
-  let errors = [];
+  let warnings: string[] = [];
+  let errors: string[] = [];
 
   if (name === null) {
     errors.push('name cannot be null');
