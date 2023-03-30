@@ -242,11 +242,13 @@ function generateOptionsOutput(schema: Schema): string {
         : ''
     }`;
 
-    optionsToRender.set(optionName, {
-      renderedFlagAndAlias,
-      renderedDescription,
-      renderedTypesAndDefault,
-    });
+    optionConfig.hidden ??= optionConfig.visible === false;
+    if (!optionConfig.hidden)
+      optionsToRender.set(optionName, {
+        renderedFlagAndAlias,
+        renderedDescription,
+        renderedTypesAndDefault,
+      });
   }
 
   ui.div({

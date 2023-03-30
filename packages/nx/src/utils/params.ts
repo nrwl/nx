@@ -20,6 +20,7 @@ type PropertyDescription = {
   description?: string;
   format?: string;
   visible?: boolean;
+  hidden?: boolean;
   default?:
     | string
     | number
