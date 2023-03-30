@@ -199,7 +199,10 @@ function findOriginalKeys(
     const snapshot = packages[key];
     // standard package
     if (key.startsWith(`/${packageName}/${version}`)) {
-      matchedKeys.push([returnFullKey ? key : key.split('/').pop(), snapshot]);
+      matchedKeys.push([
+        returnFullKey ? key : key.slice(packageName.length + 2),
+        snapshot,
+      ]);
     }
     // tarball package
     if (key === version) {
@@ -209,8 +212,8 @@ function findOriginalKeys(
     if (
       version.startsWith('npm:') &&
       key.startsWith(
-        `/${version.slice(4, version.lastIndexOf('@'))}/${version.slice(
-          version.lastIndexOf('@') + 1
+        `/${version.slice(4, version.indexOf('@', 6))}/${version.slice(
+          version.indexOf('@', 6) + 1
         )}`
       )
     ) {
