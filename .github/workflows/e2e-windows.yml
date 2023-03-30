@@ -293,6 +293,7 @@ jobs:
       - name: Run e2e tests
         id: e2e-run
         run: yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1
+        timeout-minutes: 120
         env:
           GIT_AUTHOR_EMAIL: test@test.com
           GIT_AUTHOR_NAME: Test
@@ -381,7 +382,7 @@ jobs:
               | Failed project                 | Node |
               |--------------------------------|------|`;
             failedProjects.forEach(matrix => {
-              result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.pad(3)} |`
+              result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.toString().padEnd(3)} |`
             });
             result += `\`\`\``;
             const message = result.split('\n').map(l => l.trim()).join('\n');
