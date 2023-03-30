@@ -39,12 +39,12 @@ const ROOT_KEYS_ORDER = {
   packages: 16,
 };
 
-export function isV5Lockfile(data: InlineSpecifiersLockfile | Lockfile) {
-  return data.lockfileVersion.toString().startsWith('5.');
+function isV6Lockfile(data: InlineSpecifiersLockfile | Lockfile) {
+  return data.lockfileVersion.toString().startsWith('6.');
 }
 
 export function stringifyToPnpmYaml(lockfile: Lockfile): string {
-  const isLockfileV6 = !isV5Lockfile(lockfile);
+  const isLockfileV6 = isV6Lockfile(lockfile);
   const adaptedLockfile = isLockfileV6
     ? convertToInlineSpecifiersFormat(lockfile)
     : lockfile;
@@ -156,7 +156,7 @@ function isInlineSpecifierLockfile(
 ): lockfile is InlineSpecifiersLockfile {
   const { lockfileVersion } = lockfile;
   return (
-    !isV5Lockfile(lockfile) ||
+    isV6Lockfile(lockfile) ||
     (typeof lockfileVersion === 'string' &&
       lockfileVersion.endsWith(
         INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX
@@ -475,7 +475,7 @@ function convertToInlineSpecifiersFormat(
 ): InlineSpecifiersLockfile {
   let importers = lockfile.importers;
   let packages = lockfile.packages;
-  if (!isV5Lockfile(lockfile)) {
+  if (isV6Lockfile(lockfile)) {
     importers = Object.fromEntries(
       Object.entries(lockfile.importers ?? {}).map(
         ([importerId, pkgSnapshot]: [string, ProjectSnapshot]) => {
@@ -524,7 +524,7 @@ function convertToInlineSpecifiersFormat(
   const newLockfile = {
     ...lockfile,
     packages,
-    lockfileVersion: !isV5Lockfile(lockfile)
+    lockfileVersion: isV6Lockfile(lockfile)
       ? lockfile.lockfileVersion.toString()
       : lockfile.lockfileVersion
           .toString()
@@ -536,7 +536,7 @@ function convertToInlineSpecifiersFormat(
       convertProjectSnapshotToInlineSpecifiersFormat
     ),
   };
-  if (!isV5Lockfile(lockfile) && newLockfile.time) {
+  if (isV6Lockfile(lockfile) && newLockfile.time) {
     newLockfile.time = Object.fromEntries(
       Object.entries(newLockfile.time).map(([depPath, time]) => [
         convertOldDepPathToNewDepPath(depPath),
