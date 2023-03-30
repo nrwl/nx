@@ -18,6 +18,11 @@ export const schema = {
         type: 'number',
         description: 'The port to for the dev-server to listen on.',
       },
+      mode: {
+        type: 'string',
+        description: 'Mode to run the server in.',
+        enum: ['development', 'production', 'none'],
+      },
     },
     required: ['buildTarget'],
     presets: [],
