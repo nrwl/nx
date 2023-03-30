@@ -64,7 +64,7 @@ In `nx.json`, locate the `taskRunnerOptions` property. It will look something li
 }
 ```
 
-Under the options property, you can add an additional property called `encryptionKey`. This is what will be used to encrypt your artifacts.
+Under the "options" property, you can add another property called `encryptionKey`. This is what will be used to encrypt your artifacts.
 
 To instead use an environment variable to provide your secret key, run any Nx command as follows:
 
