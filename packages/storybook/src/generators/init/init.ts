@@ -82,7 +82,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     // TODO(katerina): Remove when Storybook v7
     if (schema.uiFramework === '@storybook/react-native') {
       devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
-    } else {
+    } else if (schema.uiFramework !== undefined) {
       devDependencies[schema.uiFramework] = storybookVersion;
     }
 
