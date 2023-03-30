@@ -40,7 +40,6 @@ import {
 import { getNxRequirePaths } from '../utils/installation-directory';
 import { getIgnoredGlobs } from '../utils/ignore';
 import {
-  createProjectRootMappings,
   findProjectForPath,
   normalizeProjectRoot,
 } from '../project-graph/utils/find-project-for-path';
@@ -183,7 +182,10 @@ export class Workspaces {
       const { executorsFilePath, executorConfig, isNgCompat } =
         this.readExecutorsJson(nodeModule, executor);
       const executorsDir = path.dirname(executorsFilePath);
-      const schemaPath = path.join(executorsDir, executorConfig.schema || '');
+      const schemaPath = this.resolveSchema(
+        executorConfig.schema,
+        executorsDir
+      );
       const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
 
       const implementationFactory = this.getImplementationFactory<Executor>(
@@ -246,7 +248,10 @@ export class Workspaces {
         generatorsJson.generators?.[normalizedGeneratorName] ||
         generatorsJson.schematics?.[normalizedGeneratorName];
       const isNgCompat = !generatorsJson.generators?.[normalizedGeneratorName];
-      const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
+      const schemaPath = this.resolveSchema(
+        generatorConfig.schema,
+        generatorsDir
+      );
       const schema = readJsonFile(schemaPath);
       if (!schema.properties || typeof schema.properties !== 'object') {
         schema.properties = {};
@@ -346,11 +351,10 @@ export class Workspaces {
     const [implementationModulePath, implementationExportName] =
       implementation.split('#');
     return () => {
-      const possibleModulePath = path.join(directory, implementationModulePath);
-      const validImplementations = ['', '.js', '.ts'].map(
-        (x) => possibleModulePath + x
+      const modulePath = this.resolveImplementation(
+        implementationModulePath,
+        directory
       );
-      const modulePath = validImplementations.find((f) => existsSync(f));
       if (extname(modulePath) === '.ts') {
         registerPluginTSTranspiler();
       }
@@ -359,6 +363,43 @@ export class Workspaces {
         ? module[implementationExportName]
         : module.default ?? module;
     };
+  }
+
+  private resolveSchema(schemaPath: string, directory: string): string {
+    const maybeSchemaPath = join(directory, schemaPath);
+    if (existsSync(maybeSchemaPath)) {
+      return maybeSchemaPath;
+    }
+
+    return require.resolve(schemaPath, {
+      paths: [directory],
+    });
+  }
+
+  private resolveImplementation(
+    implementationModulePath: string,
+    directory: string
+  ): string {
+    const validImplementations = ['', '.js', '.ts'].map(
+      (x) => implementationModulePath + x
+    );
+
+    for (const maybeImplementation of validImplementations) {
+      const maybeImplementationPath = join(directory, maybeImplementation);
+      if (existsSync(maybeImplementationPath)) {
+        return maybeImplementationPath;
+      }
+
+      try {
+        return require.resolve(maybeImplementation, {
+          paths: [directory],
+        });
+      } catch {}
+    }
+
+    throw new Error(
+      `Could not resolve "${implementationModulePath}" from "${directory}".`
+    );
   }
 
   private readExecutorsJson(nodeModule: string, executor: string) {
