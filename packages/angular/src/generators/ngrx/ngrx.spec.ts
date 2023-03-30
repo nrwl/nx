@@ -803,4 +803,26 @@ describe('ngrx', () => {
       );
     });
   });
+
+  describe('rxjs v6 support', () => {
+    beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, { name: 'myapp' });
+      devkit.updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          rxjs: '~6.6.7',
+        },
+      }));
+    });
+
+    it('should generate the ngrx effects using rxjs operators imported from "rxjs/operators"', async () => {
+      await ngrxGenerator(tree, defaultOptions);
+
+      expect(
+        tree.read('/apps/myapp/src/app/+state/users.effects.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+  });
 });

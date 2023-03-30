@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { createEffect, Actions, ofType } from '@ngrx/effects';
-
+import { createEffect, Actions, ofType } from '@ngrx/effects';<% if (!importFromOperators) { %>
+import { switchMap, catchError, of } from 'rxjs';<% } else { %>
+import { of } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';<% } %>
 import * as <%= className %>Actions from './<%= fileName %>.actions';
 import * as <%= className %>Feature from './<%= fileName %>.reducer';
-
-import {switchMap, catchError, of} from 'rxjs';
 
 @Injectable()
 export class <%= className %>Effects {

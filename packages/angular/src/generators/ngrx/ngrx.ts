@@ -15,7 +15,7 @@ export async function ngrxGenerator(
   schema: NgRxGeneratorOptions
 ): Promise<GeneratorCallback> {
   validateOptions(tree, schema);
-  const options = normalizeOptions(schema);
+  const options = normalizeOptions(tree, schema);
 
   if (!options.minimal || !options.root) {
     generateNgrxFilesFromTemplates(tree, options);
@@ -28,7 +28,7 @@ export async function ngrxGenerator(
 
   let packageInstallationTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {
-    packageInstallationTask = addNgRxToPackageJson(tree);
+    packageInstallationTask = addNgRxToPackageJson(tree, options);
   }
 
   if (!options.skipFormat) {
