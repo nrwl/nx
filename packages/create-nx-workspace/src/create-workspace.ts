@@ -10,6 +10,7 @@ import { messages, recordStat } from './utils/nx/ab-testing';
 import { initializeGitRepo } from './utils/git/git';
 import { nxVersion } from './utils/nx/nx-version';
 import { getThirdPartyPreset } from './utils/preset/get-third-party-preset';
+import { mapErrorToBodyLines } from './utils/error-utils';
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,
@@ -59,23 +60,27 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       name,
       ci,
       packageManager,
-      nxCloud && nxCloudInstallRes.code === 0
+      nxCloud && nxCloudInstallRes?.code === 0
     );
   }
   if (!skipGit) {
     try {
       await initializeGitRepo(directory, { defaultBase, commit });
     } catch (e) {
-      output.error({
-        title: 'Could not initialize git repository',
-        bodyLines: [e.message],
-      });
+      if (e instanceof Error) {
+        output.error({
+          title: 'Could not initialize git repository',
+          bodyLines: mapErrorToBodyLines(e),
+        });
+      } else {
+        console.error(e);
+      }
     }
   }
 
   showNxWarning(name);
 
-  if (nxCloud && nxCloudInstallRes.code === 0) {
+  if (nxCloud && nxCloudInstallRes?.code === 0) {
     printNxCloudSuccessMessage(nxCloudInstallRes.stdout);
   }
 

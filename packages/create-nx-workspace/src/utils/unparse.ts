@@ -1,9 +1,9 @@
 import { flatten } from 'flat';
 
 export function unparse(options: Object): string[] {
-  const unparsed = [];
+  const unparsed: string[] = [];
   for (const key of Object.keys(options)) {
-    const value = options[key];
+    const value = options[key as keyof typeof options];
     unparseOption(key, value, unparsed);
   }
 

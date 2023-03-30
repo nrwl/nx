@@ -41,7 +41,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     'strip-dashed': true,
     'dot-notation': true,
   })
-  .command(
+  .command<Arguments>(
     // this is the default and only command
     '$0 [name] [options]',
     'Create a new Nx workspace',
@@ -152,7 +152,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         throw error;
       });
     },
-    [normalizeArgsMiddleware]
+    [normalizeArgsMiddleware as yargs.MiddlewareFunction<{}>]
   )
   .help('help', chalk.dim`Show help`)
   .updateLocale(yargsDecorator)
@@ -195,7 +195,7 @@ async function normalizeArgsMiddleware(
         "Let's create a new workspace [https://nx.dev/getting-started/intro]",
     });
 
-    let thirdPartyPreset: string;
+    let thirdPartyPreset: string | null;
     try {
       thirdPartyPreset = await getThirdPartyPreset(argv.preset);
     } catch (e) {
@@ -262,7 +262,7 @@ async function normalizeArgsMiddleware(
         }
       } else {
         name = await determineRepoName(argv);
-        appName = await determineAppName(preset, argv);
+        appName = await determineAppName(preset as Preset, argv);
         if (preset === Preset.ReactMonorepo) {
           bundler = await determineBundler(argv);
         }
@@ -276,7 +276,7 @@ async function normalizeArgsMiddleware(
             (argv.interactive ? await determineRouting(argv) : true);
         }
       }
-      style = await determineStyle(preset, argv);
+      style = await determineStyle(preset as Preset, argv);
     }
 
     const packageManager = await determinePackageManager(argv);
@@ -439,7 +439,7 @@ async function determinePackageManager(
           ],
         },
       ])
-      .then((a: { packageManager }) => a.packageManager);
+      .then((a) => a.packageManager);
   }
 
   return Promise.resolve(detectInvokedPackageManager());
@@ -453,7 +453,7 @@ async function determineDefaultBase(
   }
   if (parsedArgs.allPrompts) {
     return enquirer
-      .prompt([
+      .prompt<{ DefaultBase: string }>([
         {
           name: 'DefaultBase',
           message: `Main branch name                   `,
@@ -461,7 +461,7 @@ async function determineDefaultBase(
           type: 'input',
         },
       ])
-      .then((a: { DefaultBase: string }) => {
+      .then((a) => {
         if (!a.DefaultBase) {
           output.error({
             title: 'Invalid branch name',
@@ -524,14 +524,14 @@ async function determineAppName(
   }
 
   return enquirer
-    .prompt([
+    .prompt<{ AppName: string }>([
       {
         name: 'AppName',
         message: `Application name                     `,
         type: 'input',
       },
     ])
-    .then((a: { AppName: string }) => {
+    .then((a) => {
       if (!a.AppName) {
         output.error({
           title: 'Invalid name',
@@ -571,7 +571,7 @@ async function determineFramework(
 
   if (!parsedArgs.framework) {
     return enquirer
-      .prompt([
+      .prompt<{ framework: Framework }>([
         {
           message: 'What framework should be used?',
           type: 'autocomplete',
@@ -579,7 +579,7 @@ async function determineFramework(
           choices: frameworkChoices,
         },
       ])
-      .then((a: { framework: string }) => a.framework);
+      .then((a) => a.framework);
   }
 
   const foundFramework = frameworkChoices
@@ -607,7 +607,7 @@ async function determineStandaloneApi(
 ): Promise<boolean> {
   if (parsedArgs.standaloneApi === undefined) {
     return enquirer
-      .prompt([
+      .prompt<{ standaloneApi: 'Yes' | 'No' }>([
         {
           name: 'standaloneApi',
           message:
@@ -625,7 +625,7 @@ async function determineStandaloneApi(
           initial: 'No' as any,
         },
       ])
-      .then((a: { standaloneApi: 'Yes' | 'No' }) => a.standaloneApi === 'Yes');
+      .then((a) => a.standaloneApi === 'Yes');
   }
 
   return parsedArgs.standaloneApi;
@@ -636,7 +636,7 @@ async function determineDockerfile(
 ): Promise<boolean> {
   if (parsedArgs.docker === undefined) {
     return enquirer
-      .prompt([
+      .prompt<{ docker: 'Yes' | 'No' }>([
         {
           name: 'docker',
           message:
@@ -654,7 +654,7 @@ async function determineDockerfile(
           initial: 'No' as any,
         },
       ])
-      .then((a: { docker: 'Yes' | 'No' }) => a.docker === 'Yes');
+      .then((a) => a.docker === 'Yes');
   } else {
     return Promise.resolve(parsedArgs.docker);
   }
@@ -663,7 +663,7 @@ async function determineDockerfile(
 async function determineStyle(
   preset: Preset,
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<string> {
+): Promise<string | null> {
   if (
     preset === Preset.Apps ||
     preset === Preset.Core ||
@@ -727,7 +727,7 @@ async function determineStyle(
 
   if (!parsedArgs.style) {
     return enquirer
-      .prompt([
+      .prompt<{ style: string }>([
         {
           name: 'style',
           message: `Default stylesheet format            `,
@@ -762,7 +762,7 @@ async function determineRouting(
 ): Promise<boolean> {
   if (!parsedArgs.routing) {
     return enquirer
-      .prompt([
+      .prompt<{ routing: 'Yes' | 'No' }>([
         {
           name: 'routing',
           message: 'Would you like to add routing?',
@@ -779,7 +779,7 @@ async function determineRouting(
           initial: 'Yes' as any,
         },
       ])
-      .then((a: { routing: 'Yes' | 'No' }) => a.routing === 'Yes');
+      .then((a) => a.routing === 'Yes');
   }
 
   return parsedArgs.routing;
@@ -801,7 +801,7 @@ async function determineBundler(
 
   if (!parsedArgs.bundler) {
     return enquirer
-      .prompt([
+      .prompt<{ bundler: Bundler }>([
         {
           name: 'bundler',
           message: `Bundler to be used to build the application`,
@@ -810,7 +810,7 @@ async function determineBundler(
           choices: choices,
         },
       ])
-      .then((a: { bundler: 'vite' | 'webpack' }) => a.bundler);
+      .then((a) => a.bundler);
   }
 
   const foundBundler = choices.find(
@@ -838,7 +838,7 @@ async function determineNxCloud(
 ): Promise<boolean> {
   if (parsedArgs.nxCloud === undefined) {
     return enquirer
-      .prompt([
+      .prompt<{ NxCloud: 'Yes' | 'No' }>([
         {
           name: 'NxCloud',
           message: messages.getPromptMessage('nxCloudCreation'),
@@ -856,7 +856,7 @@ async function determineNxCloud(
           initial: 'Yes' as any,
         },
       ])
-      .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
+      .then((a) => a.NxCloud === 'Yes');
   } else {
     return parsedArgs.nxCloud;
   }
@@ -886,7 +886,7 @@ async function determineCI(
   if (parsedArgs.allPrompts) {
     return (
       enquirer
-        .prompt([
+        .prompt<{ CI: string }>([
           {
             name: 'CI',
             message: `CI workflow file to generate?      `,

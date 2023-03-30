@@ -3,7 +3,8 @@ import { join } from 'path';
 import { execAndWait } from '../child-process-utils';
 import { output } from '../output';
 import { getPackageManagerCommand, PackageManager } from '../package-manager';
-import { getFileName, mapErrorToBodyLines } from '../string-utils';
+import { getFileName } from '../string-utils';
+import { mapErrorToBodyLines } from '../error-utils';
 
 export async function setupNxCloud(
   name: string,
@@ -21,10 +22,14 @@ export async function setupNxCloud(
   } catch (e) {
     nxCloudSpinner.fail();
 
-    output.error({
-      title: `Nx failed to setup NxCloud`,
-      bodyLines: mapErrorToBodyLines(e),
-    });
+    if (e instanceof Error) {
+      output.error({
+        title: `Nx failed to setup NxCloud`,
+        bodyLines: mapErrorToBodyLines(e),
+      });
+    } else {
+      console.error(e);
+    }
 
     process.exit(1);
   } finally {

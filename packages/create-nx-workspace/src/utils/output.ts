@@ -95,10 +95,10 @@ class CLIOutput {
 
   applyNxPrefix(color = 'cyan', text: string): string {
     let nxPrefix = '';
-    if (chalk[color]) {
-      nxPrefix = `${chalk[color]('>')} ${chalk.reset.inverse.bold[color](
-        ' NX '
-      )}`;
+    if ((chalk as any)[color]) {
+      nxPrefix = `${(chalk as any)[color]('>')} ${(
+        chalk as any
+      ).reset.inverse.bold[color](' NX ')}`;
     } else {
       nxPrefix = `${chalk.keyword(color)(
         '>'
@@ -119,7 +119,9 @@ class CLIOutput {
 
   addVerticalSeparatorWithoutNewLines(color = 'gray') {
     this.writeToStdOut(
-      `${this.X_PADDING}${chalk.dim[color](this.VERTICAL_SEPARATOR)}${EOL}`
+      `${this.X_PADDING}${(chalk as any).dim[color](
+        this.VERTICAL_SEPARATOR
+      )}${EOL}`
     );
   }
 
@@ -217,7 +219,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: 'cyan',
-      title: color ? chalk[color](title) : title,
+      title: color ? (chalk as any)[color](title) : title,
     });
 
     this.writeOptionalOutputBody(bodyLines);

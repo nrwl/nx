@@ -24,7 +24,7 @@ export async function getThirdPartyPreset(
         bodyLines: [
           `There was an error with the preset npm package you provided:`,
           '',
-          ...validateResult.errors,
+          ...(validateResult.errors ?? []),
         ],
       });
       throw new Error('Invalid preset npm package');

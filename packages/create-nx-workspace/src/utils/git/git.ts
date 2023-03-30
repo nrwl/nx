@@ -2,10 +2,10 @@ import { execSync, spawn, SpawnOptions } from 'child_process';
 import { deduceDefaultBase } from './default-base';
 import { output } from '../output';
 
-export function checkGitVersion(): string | null {
+export function checkGitVersion(): string | null | undefined {
   try {
     let gitVersionOutput = execSync('git --version').toString().trim();
-    return gitVersionOutput.match(/[0-9]+\.[0-9]+\.+[0-9]+/)[0];
+    return gitVersionOutput.match(/[0-9]+\.[0-9]+\.+[0-9]+/)?.[0];
   } catch {
     return null;
   }
@@ -15,7 +15,7 @@ export async function initializeGitRepo(
   directory: string,
   options: {
     defaultBase: string;
-    commit: { message: string; name: string; email: string };
+    commit?: { message: string; name: string; email: string };
   }
 ) {
   const execute = (args: ReadonlyArray<string>, ignoreErrorStream = false) => {
@@ -27,13 +27,13 @@ export async function initializeGitRepo(
       cwd: directory,
       env: {
         ...process.env,
-        ...(options.commit.name
+        ...(options.commit?.name
           ? {
               GIT_AUTHOR_NAME: options.commit.name,
               GIT_COMMITTER_NAME: options.commit.name,
             }
           : {}),
-        ...(options.commit.email
+        ...(options.commit?.email
           ? {
               GIT_AUTHOR_EMAIL: options.commit.email,
               GIT_COMMITTER_EMAIL: options.commit.email,
