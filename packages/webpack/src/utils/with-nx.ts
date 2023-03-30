@@ -211,12 +211,13 @@ export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
                   keep_classnames: true,
                   ecma: 2020,
                   safari10: true,
-                  output: {
+                  format: {
                     ascii_only: true,
                     comments: false,
                     webkit: true,
                   },
                 },
+                extractComments: false,
               })
             : new TerserPlugin({
                 minify: TerserPlugin.swcMinify,
