@@ -9,6 +9,7 @@ import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from '../utils/fileutils';
 import { WatchArguments } from './watch';
 import { runNxSync } from '../utils/child-process';
+import { stripIndents } from '../utils/strip-indents';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -411,7 +412,10 @@ export const commandsObject = yargs
   })
   .scriptName('nx')
   .help()
-  .version(nxVersion);
+  // NOTE: we handle --version in nx.ts, this just tells yargs that the option exists
+  // so that it shows up in help. The default yargs implementation of --version is not
+  // hit, as the implementation in nx.ts is hit first and calls process.exit(0).
+  .version();
 
 function withShowOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs.positional('object', {

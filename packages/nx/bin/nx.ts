@@ -12,6 +12,7 @@ import {
 } from '../src/utils/installation-directory';
 import { major } from 'semver';
 import { readJsonFile } from '../src/utils/fileutils';
+import { stripIndents } from '../src/utils/strip-indents';
 import { execSync } from 'child_process';
 
 function main() {
@@ -60,21 +61,36 @@ function main() {
     try {
       localNx = resolveNx(workspace);
     } catch {
-      // If we can't resolve a local copy of Nx, we must be global.
-      warnIfUsingOutdatedGlobalInstall();
-      output.error({
-        title: `Could not find Nx modules in this workspace.`,
-        bodyLines: [`Have you run ${chalk.bold.white(`npm/yarn install`)}?`],
-      });
-      process.exit(1);
+      localNx = null;
+    }
+
+    const isLocalInstall = localNx === resolveNx(null);
+    const LOCAL_NX_VERSION: string | null = localNx
+      ? getLocalNxVersion(workspace)
+      : null;
+    const GLOBAL_NX_VERSION: string | null = isLocalInstall
+      ? null
+      : require('../package.json').version;
+
+    globalThis.GLOBAL_NX_VERSION ??= GLOBAL_NX_VERSION;
+
+    if (process.argv[2] === '--version') {
+      console.log(stripIndents`Nx Version:
+      - Local: v${LOCAL_NX_VERSION ?? 'Not found'}
+      - Global: v${GLOBAL_NX_VERSION ?? 'Not found'}`);
+      process.exit(0);
+    }
+
+    if (!localNx) {
+      handleMissingLocalInstallation();
     }
 
     // this file is already in the local workspace
-    if (localNx === resolveNx(null)) {
+    if (isLocalInstall) {
       initLocal(workspace);
     } else {
       // Nx is being run from globally installed CLI - hand off to the local
-      warnIfUsingOutdatedGlobalInstall(getLocalNxVersion(workspace));
+      warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
       if (localNx.includes('.nx')) {
         const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
         require(nxWrapperPath);
@@ -106,24 +122,34 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   }
 }
 
+function handleMissingLocalInstallation() {
+  output.error({
+    title: `Could not find Nx modules in this workspace.`,
+    bodyLines: [`Have you run ${chalk.bold.white(`npm/yarn install`)}?`],
+  });
+  process.exit(1);
+}
+
 /**
  * Assumes currently running Nx is global install.
  * Warns if out of date by 1 major version or more.
  */
-function warnIfUsingOutdatedGlobalInstall(localNxVersion?: string) {
-  const globalVersion = require('../package.json').version;
+function warnIfUsingOutdatedGlobalInstall(
+  globalNxVersion: string,
+  localNxVersion?: string
+) {
   const isOutdatedGlobalInstall =
-    globalVersion &&
-    ((localNxVersion && major(globalVersion) < major(localNxVersion)) ||
+    globalNxVersion &&
+    ((localNxVersion && major(globalNxVersion) < major(localNxVersion)) ||
       (!localNxVersion &&
         getLatestVersionOfNx() &&
-        major(globalVersion) < major(getLatestVersionOfNx())));
+        major(globalNxVersion) < major(getLatestVersionOfNx())));
 
   // Using a global Nx Install
   if (isOutdatedGlobalInstall) {
     const bodyLines = localNxVersion
       ? [
-          `Your repository uses a higher version of Nx (${localNxVersion}) than your global CLI version (${globalVersion})`,
+          `Your repository uses a higher version of Nx (${localNxVersion}) than your global CLI version (${globalNxVersion})`,
         ]
       : [];
 
