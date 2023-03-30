@@ -36,7 +36,9 @@
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "4.1.1",
+    "@svgr/webpack": "^6.1.2",
     "chalk": "^4.1.0",
+    "file-loader": "^6.2.0",
     "minimatch": "3.0.5"
   },
   "publishConfig": {
