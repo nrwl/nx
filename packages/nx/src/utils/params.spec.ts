@@ -881,7 +881,7 @@ describe('params', () => {
       expect(() =>
         validateOptsAgainstSchema(
           {
-            a: true
+            a: true,
           },
 
           {
