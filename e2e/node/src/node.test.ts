@@ -27,7 +27,7 @@ import {
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
-import { satisfies } from 'semver';
+import * as semver from 'semver';
 
 function getData(port, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
@@ -46,6 +46,12 @@ function getData(port, path = '/api'): Promise<any> {
       });
     });
   });
+}
+
+function satisfies(version: string, range: string) {
+  if (!semver.satisfies(version, range)) {
+    throw new Error(`${version} does not satisfy ${range}`);
+  }
 }
 
 describe('Node Applications', () => {
