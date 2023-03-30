@@ -60,7 +60,7 @@ export async function getModuleFederationConfig(
 
   if (mfConfig.shared) {
     dependencies.workspaceLibraries = dependencies.workspaceLibraries.filter(
-      (lib) => mfConfig.shared(lib.name, {})
+      (lib) => mfConfig.shared(lib.importKey, {})
     );
     dependencies.npmPackages = dependencies.npmPackages.filter((pkg) =>
       mfConfig.shared(pkg, {})
