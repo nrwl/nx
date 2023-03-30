@@ -58,8 +58,8 @@ function addNodes(
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
   Object.entries(dependencies).forEach(([keys, snapshot]) => {
-    // ignore workspace projects
-    if (snapshot.linkType === 'soft') {
+    // ignore workspace projects & patches
+    if (snapshot.linkType === 'soft' || keys.includes('@patch:')) {
       return;
     }
     const packageName = keys.slice(0, keys.indexOf('@', 1));
@@ -313,13 +313,28 @@ function mapSnapshots(
         snapshotMap.get(snapshot).add(requestedKey);
       }
     }
+
+    if (isBerry) {
+      // look for patched versions
+      const patch = findPatchedKeys(groupedDependencies, node);
+      if (patch) {
+        const [matchedKeys, snapshot] = patch;
+        snapshotMap.set(snapshot, new Set(matchedKeys));
+      }
+    }
   });
 
   // remove keys that match version ranges that have been pruned away
   snapshotMap.forEach((keysSet) => {
     for (const key of keysSet.values()) {
       const packageName = key.slice(0, key.indexOf('@', 1));
-      if (!existingKeys.get(packageName).has(key)) {
+      let normalizedKey = key;
+      if (isBerry && key.includes('@patch:') && key.includes('#')) {
+        normalizedKey = key
+          .slice(0, key.indexOf('#'))
+          .replace(`@patch:${packageName}@`, '@npm:');
+      }
+      if (!existingKeys.get(packageName).has(normalizedKey)) {
         keysSet.delete(key);
       }
     }
@@ -409,6 +424,22 @@ function findOriginalKeys(
       snapshot.resolved === node.data.version ||
       snapshot.resolution === `${node.data.packageName}@${node.data.version}`
     ) {
+      return [keys, snapshot];
+    }
+  }
+}
+
+function findPatchedKeys(
+  dependencies: Record<string, YarnDependency>,
+  node: ProjectGraphExternalNode
+): [string[], YarnDependency] | void {
+  for (const keyExpr of Object.keys(dependencies)) {
+    const snapshot = dependencies[keyExpr];
+    const keys = keyExpr.split(', ');
+    if (!keys[0].startsWith(`${node.data.packageName}@patch:`)) {
+      continue;
+    }
+    if (snapshot.version === node.data.version) {
       return [keys, snapshot];
     }
   }
