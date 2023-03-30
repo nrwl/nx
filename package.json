@@ -21,6 +21,7 @@
   "dependencies": {
     "@nrwl/linter": "^15.8.1",
     "@nrwl/devkit": "^15.8.1",
+    "@phenomnomnominal/tsquery": "4.1.1",
     "ajv": "^8.12.0",
     "ajv-keywords": "5.1.0",
     "less-loader": "11.1.0",
