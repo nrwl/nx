@@ -33,7 +33,7 @@ nx g @nrwl/web:app my-app --directory=my-dir
 
 {% tab label="Add tags" %}
 
-Add tags to the application (used for linting).
+Add tags to the application.
 
 ```bash
 nx g @nrwl/web:app my-app --tags=scope:admin,type:ui

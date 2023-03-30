@@ -5,7 +5,10 @@ import {
   loadNxPlugins,
   mergePluginTargetsWithNxTargets,
 } from '../../utils/nx-plugin';
-import { ProjectGraphProcessorContext } from '../../config/project-graph';
+import {
+  ProjectGraphProcessorContext,
+  ProjectGraphProjectNode,
+} from '../../config/project-graph';
 import { mergeNpmScriptsWithTargets } from '../../utils/project-graph-utils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 import { PackageJson } from '../../utils/package-json';
@@ -26,7 +29,18 @@ export async function buildWorkspaceProjectNodes(
 ) {
   const toAdd = [];
   const projects = Object.keys(ctx.workspace.projects);
-  const projectsSet = new Set(projects);
+  const projectsGraph = projects.reduce((graph, project) => {
+    const projectConfiguration = ctx.workspace.projects[project];
+    graph[project] = {
+      name: project,
+      type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
+      data: {
+        ...projectConfiguration,
+        files: [], // missing files
+      },
+    };
+    return graph;
+  }, {} as Record<string, ProjectGraphProjectNode>);
 
   for (const key of projects) {
     const p = ctx.workspace.projects[key];
@@ -59,8 +73,7 @@ export async function buildWorkspaceProjectNodes(
     p.implicitDependencies = normalizeImplicitDependencies(
       key,
       p.implicitDependencies,
-      projects,
-      projectsSet
+      projectsGraph
     );
 
     p.targets = mergePluginTargetsWithNxTargets(
@@ -157,17 +170,12 @@ function normalizeProjectTargets(
 export function normalizeImplicitDependencies(
   source: string,
   implicitDependencies: ProjectConfiguration['implicitDependencies'],
-  projectNames: string[],
-  projectsSet: Set<string>
+  projects: Record<string, ProjectGraphProjectNode>
 ) {
   if (!implicitDependencies?.length) {
     return implicitDependencies ?? [];
   }
-  const matches = findMatchingProjects(
-    implicitDependencies,
-    projectNames,
-    projectsSet
-  );
+  const matches = findMatchingProjects(implicitDependencies, projects);
   return (
     matches
       .filter((x) => x !== source)

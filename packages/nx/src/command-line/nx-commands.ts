@@ -481,7 +481,6 @@ function withExcludeOption(yargs: yargs.Argv): yargs.Argv {
     describe: 'Exclude certain projects from being processed',
     type: 'string',
     coerce: parseCSV,
-    default: '',
   });
 }
 

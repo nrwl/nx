@@ -16,7 +16,7 @@
     },
     "tags": {
       "type": "string",
-      "description": "Add tags to the project (used for linting)",
+      "description": "Add tags to the project",
       "alias": "t"
     }, 
     "directory": {

@@ -44,7 +44,13 @@ Test proj1 and proj2 in sequence:
 Test all projects ending with `*-app` except `excluded-app`. Note: your shell may require you to escape the `*` like this: `\*`:
 
 ```shell
- nx run-many --target=test --projects=*-app --exclude excluded-app
+ nx run-many --target=test --projects=*-app --exclude=excluded-app
+```
+
+Test all projects with tags starting with `api-*`. Note: your shell may require you to escape the `*` like this: `\*`:
+
+```shell
+ nx run-many --target=test --projects=tag:api-*
 ```
 
 Run lint, test, and build targets for all projects. Requires Nx v15.4+:

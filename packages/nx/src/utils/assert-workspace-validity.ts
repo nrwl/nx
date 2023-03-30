@@ -1,14 +1,26 @@
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { findMatchingProjects } from './find-matching-projects';
-import { output } from './output';
+import {output} from './output';
+import { ProjectGraphProjectNode } from '../config/project-graph';
 
 export function assertWorkspaceValidity(
-  projectsConfigurations,
+  projectsConfigurations: ProjectsConfigurations,
   nxJson: NxJsonConfiguration
 ) {
   const projectNames = Object.keys(projectsConfigurations.projects);
-  const projectNameSet = new Set(projectNames);
+  const projectsGraph = projectNames.reduce((graph, project) => {
+    const projectConfiguration = projectsConfigurations.projects[project];
+    graph[project] = {
+      name: project,
+      type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
+      data: {
+        ...projectConfiguration,
+        files: [], // missing files
+      },
+    };
+    return graph;
+  }, {} as Record<string, ProjectGraphProjectNode>);
 
   const projects = {
     ...projectsConfigurations.projects,
@@ -39,8 +51,7 @@ export function assertWorkspaceValidity(
         projectName,
         project.implicitDependencies,
         projects,
-        projectNames,
-        projectNameSet
+        projectsGraph
       );
       return map;
     }, invalidImplicitDependencies);
@@ -66,8 +77,7 @@ function detectAndSetInvalidProjectGlobValues(
   sourceName: string,
   desiredImplicitDeps: string[],
   projectConfigurations: ProjectsConfigurations['projects'],
-  projectNames: string[],
-  projectNameSet: Set<string>
+  projects: Record<string, ProjectGraphProjectNode>
 ) {
   const invalidProjectsOrGlobs = desiredImplicitDeps.filter((implicit) => {
     const projectName = implicit.startsWith('!')
@@ -76,7 +86,7 @@ function detectAndSetInvalidProjectGlobValues(
 
     return !(
       projectConfigurations[projectName] ||
-      findMatchingProjects([implicit], projectNames, projectNameSet).length
+      findMatchingProjects([implicit], projects).length
     );
   });
 

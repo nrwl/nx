@@ -39,10 +39,7 @@
         "description": "Test runner to use for unit tests.",
         "default": "jest"
       },
-      "tags": {
-        "type": "string",
-        "description": "Add tags to the library (used for linting)."
-      },
+      "tags": { "type": "string", "description": "Add tags to the library." },
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",

@@ -45,7 +45,7 @@
       },
       "tags": {
         "type": "string",
-        "description": "Add tags to the library (used for linting).",
+        "description": "Add tags to the library.",
         "alias": "t"
       },
       "skipFormat": {

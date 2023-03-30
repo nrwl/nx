@@ -53,7 +53,7 @@
       },
       "tags": {
         "type": "string",
-        "description": "Add tags to the application (used for linting).",
+        "description": "Add tags to the application.",
         "alias": "t"
       },
       "js": {
