@@ -67,6 +67,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.js',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
   });
 
@@ -103,6 +107,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.js',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
   });
 
@@ -138,6 +146,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.cjs',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
   });
 
@@ -170,6 +182,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.cjs',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
   });
 
@@ -207,6 +223,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.mjs',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
 
     expect(
@@ -242,6 +262,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.js',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
 
     // ESM cannot be mapped to .cjs so ignore
@@ -278,6 +302,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.js',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
   });
 
@@ -313,6 +341,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.js',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
   });
 
@@ -344,6 +376,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.js',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
   });
 
@@ -378,10 +414,13 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.js',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
     });
   });
 
-  it('should set sourcemap', () => {
+  it('should default to false for sourcemap', () => {
     expect(
       buildEsbuildOptions(
         'esm',
@@ -394,6 +433,84 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           assets: [],
           singleEntry: true,
+          external: [],
+        },
+        context
+      )
+    ).toEqual({
+      bundle: false,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outdir: 'dist/apps/myapp',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: undefined,
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
+      outExtension: {
+        '.js': '.js',
+      },
+    });
+  });
+
+  it('should set sourcemap when passed via the esbuildOptions', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: false,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          esbuildOptions: {
+            sourcemap: true,
+          },
+          external: [],
+        },
+        context
+      )
+    ).toEqual({
+      bundle: false,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outdir: 'dist/apps/myapp',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: undefined,
+      sourcemap: true,
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      outExtension: {
+        '.js': '.js',
+      },
+    });
+  });
+
+  it('the base options sourcemap property should supercede the one passed via the esbuildOptions', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: false,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          esbuildOptions: {
+            sourcemap: false,
+          },
           sourcemap: true,
           external: [],
         },
@@ -409,6 +526,9 @@ describe('buildEsbuildOptions', () => {
       tsconfig: 'apps/myapp/tsconfig.app.json',
       external: undefined,
       sourcemap: true,
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
       outExtension: {
         '.js': '.js',
       },

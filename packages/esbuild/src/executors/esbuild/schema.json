@@ -97,8 +97,7 @@
         { "type": "boolean" }
       ],
       "alias": "sourceMap",
-      "description": "Generate sourcemap.",
-      "default": false
+      "description": "Generate sourcemap."
     },
     "minify": {
       "type": "boolean",
