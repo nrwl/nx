@@ -13,6 +13,15 @@ describe('application generator', () => {
     jest.clearAllMocks();
   });
 
+  it('should generate project configurations', async () => {
+    await applicationGenerator(tree, { name: appName });
+
+    const projectConfigurations = devkit.getProjects(tree);
+
+    expect(projectConfigurations.get(appDirectory)).toBeTruthy();
+    expect(projectConfigurations.get(`${appDirectory}-e2e`)).toBeTruthy();
+  });
+
   it('should generate files', async () => {
     await applicationGenerator(tree, { name: appName });
 
@@ -65,6 +74,19 @@ describe('application generator', () => {
       await applicationGenerator(tree, { name: appName, skipFormat: true });
 
       expect(devkit.formatFiles).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('--e2e-test-runner none', () => {
+    it('should not generate e2e test project', async () => {
+      await applicationGenerator(tree, {
+        name: appName,
+        e2eTestRunner: 'none',
+      });
+
+      const projectConfigurations = devkit.getProjects(tree);
+
+      expect(projectConfigurations.get(`${appDirectory}-e2e`)).toBeUndefined();
     });
   });
 });
