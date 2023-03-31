@@ -26,7 +26,7 @@ export function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/getting-started/react-standalone-tutorial`],
+        bodyLines: [`https://nx.dev/tutorials/react-standalone-tutorial`],
       });
       break;
     case Preset.ReactMonorepo:
@@ -41,9 +41,7 @@ export function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [
-          `https://nx.dev/getting-started/angular-standalone-tutorial`,
-        ],
+        bodyLines: [`https://nx.dev/tutorials/angular-standalone-tutorial`],
       });
       break;
     case Preset.AngularMonorepo:

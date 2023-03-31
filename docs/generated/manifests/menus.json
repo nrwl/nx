@@ -3,13 +3,13 @@
     "id": "nx",
     "menu": [
       {
-        "name": "Getting Started",
+        "name": "Start Here",
         "path": "/getting-started",
         "id": "getting-started",
         "isExternal": false,
         "children": [
           {
-            "name": "Intro to Nx",
+            "name": "Getting Started",
             "path": "/getting-started/intro",
             "id": "intro",
             "isExternal": false,
@@ -17,40 +17,89 @@
             "disableCollapsible": false
           },
           {
-            "name": "Package-Based Repo Tutorial",
-            "path": "/getting-started/package-based-repo-tutorial",
+            "name": "Installation",
+            "path": "/getting-started/installation",
+            "id": "installation",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Why Nx?",
+            "path": "/getting-started/why-nx",
+            "id": "why-nx",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Getting Started",
+        "path": "/getting-started/intro",
+        "id": "intro",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Installation",
+        "path": "/getting-started/installation",
+        "id": "installation",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Why Nx?",
+        "path": "/getting-started/why-nx",
+        "id": "why-nx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "5 min Tutorials",
+        "path": "/tutorials",
+        "id": "tutorials",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Package-Based Monorepo",
+            "path": "/tutorials/package-based-repo-tutorial",
             "id": "package-based-repo-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Integrated Repo Tutorial",
-            "path": "/getting-started/integrated-repo-tutorial",
+            "name": "Integrated Monorepo",
+            "path": "/tutorials/integrated-repo-tutorial",
             "id": "integrated-repo-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "React Standalone Tutorial",
-            "path": "/getting-started/react-standalone-tutorial",
+            "name": "React Standalone",
+            "path": "/tutorials/react-standalone-tutorial",
             "id": "react-standalone-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Angular Standalone Tutorial",
-            "path": "/getting-started/angular-standalone-tutorial",
+            "name": "Angular Standalone",
+            "path": "/tutorials/angular-standalone-tutorial",
             "id": "angular-standalone-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Node Server Tutorial",
-            "path": "/getting-started/node-server-tutorial",
+            "name": "Node Standalone",
+            "path": "/tutorials/node-server-tutorial",
             "id": "node-server-tutorial",
             "isExternal": false,
             "children": [],
@@ -60,48 +109,40 @@
         "disableCollapsible": false
       },
       {
-        "name": "Intro to Nx",
-        "path": "/getting-started/intro",
-        "id": "intro",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Package-Based Repo Tutorial",
-        "path": "/getting-started/package-based-repo-tutorial",
+        "name": "Package-Based Monorepo",
+        "path": "/tutorials/package-based-repo-tutorial",
         "id": "package-based-repo-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Integrated Repo Tutorial",
-        "path": "/getting-started/integrated-repo-tutorial",
+        "name": "Integrated Monorepo",
+        "path": "/tutorials/integrated-repo-tutorial",
         "id": "integrated-repo-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "React Standalone Tutorial",
-        "path": "/getting-started/react-standalone-tutorial",
+        "name": "React Standalone",
+        "path": "/tutorials/react-standalone-tutorial",
         "id": "react-standalone-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Angular Standalone Tutorial",
-        "path": "/getting-started/angular-standalone-tutorial",
+        "name": "Angular Standalone",
+        "path": "/tutorials/angular-standalone-tutorial",
         "id": "angular-standalone-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Node Server Tutorial",
-        "path": "/getting-started/node-server-tutorial",
+        "name": "Node Standalone",
+        "path": "/tutorials/node-server-tutorial",
         "id": "node-server-tutorial",
         "isExternal": false,
         "children": [],

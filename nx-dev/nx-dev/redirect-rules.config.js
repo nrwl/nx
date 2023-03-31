@@ -342,7 +342,7 @@ const tutorialBaseUrls = {
   '/(l|latest)/(a|angular)/tutorial/1-code-generation':
     '/angular-tutorial/1-code-generation',
   '/(l|latest)/(a|node)/tutorial/1-code-generation':
-    '/getting-started/node-server-tutorial',
+    '/tutorials/node-server-tutorial',
   '/(l|latest)/(r|react)/tutorial/1-code-generation':
     '/react-tutorial/1-code-generation',
 };
@@ -378,7 +378,7 @@ const oldNodeTutorialPaths = [
 ];
 
 const extraNodeRedirects = {
-  '/getting-started/node-tutorial': '/getting-started/node-server-tutorial',
+  '/getting-started/node-tutorial': '/tutorials/node-server-tutorial',
   '/node-tutorial/1-code-generation': '/node-server-tutorial/1-code-generation',
   '/node-tutorial/2-project-graph': '/node-server-tutorial/2-project-graph',
   '/node-tutorial/3-task-running': '/node-server-tutorial/3-task-running',
@@ -386,11 +386,12 @@ const extraNodeRedirects = {
   '/node-tutorial/5-docker-target': '/node-server-tutorial/5-docker-target',
   '/node-tutorial/6-summary': '/node-server-tutorial/6-summary',
 };
-const nodeRedirectDestination = '/getting-started/node-server-tutorial';
+const nodeRedirectDestination = '/tutorials/node-server-tutorial';
 const nodeTutorialRedirects = oldNodeTutorialPaths.reduce((acc, path) => {
   acc[path] = nodeRedirectDestination;
   return acc;
 }, {});
+
 const tutorialRedirects = Object.assign(
   tutorialBaseUrls,
   reactTutorialRedirects,
@@ -508,6 +509,22 @@ const packagesDocuments = {
 };
 
 /**
+ * Concept documents Updates (updated 2023-03-31)
+ */
+const conceptUrls = {
+  '/more-concepts/global-nx':
+    '/getting-started/installation#installing-nx-globally',
+  '/getting-started/package-based-repo-tutorial':
+    '/tutorials/package-based-repo-tutorial',
+  '/getting-started/integrated-repo-tutorial':
+    '/tutorials/integrated-repo-tutorial',
+  '/getting-started/react-standalone-tutorial':
+    '/tutorials/react-standalone-tutorial',
+  '/getting-started/angular-standalone-tutorial':
+    '/tutorials/angular-standalone-tutorial',
+};
+
+/**
  * Public export API
  */
 module.exports = {
@@ -521,4 +538,5 @@ module.exports = {
   tutorialRedirects,
   packagesIndexes,
   packagesDocuments,
+  conceptUrls,
 };

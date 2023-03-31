@@ -9,37 +9,54 @@
       "description": "Nx documentation for you to discover!",
       "itemList": [
         {
-          "name": "Getting Started",
+          "name": "Start Here",
           "id": "getting-started",
           "description": "Get started with basic information, concepts and tutorials.",
           "itemList": [
             {
-              "name": "Intro to Nx",
+              "name": "Getting Started",
               "id": "intro",
               "file": "shared/getting-started/intro"
             },
             {
-              "name": "Package-Based Repo Tutorial",
+              "name": "Installation",
+              "id": "installation",
+              "file": "shared/getting-started/installation"
+            },
+            {
+              "name": "Why Nx?",
+              "id": "why-nx",
+              "file": "shared/getting-started/why-nx"
+            }
+          ]
+        },
+        {
+          "name": "5 min Tutorials",
+          "id": "tutorials",
+          "description": "Get started with basic information, concepts and tutorials.",
+          "itemList": [
+            {
+              "name": "Package-Based Monorepo",
               "id": "package-based-repo-tutorial",
               "file": "shared/npm-tutorial/package-based"
             },
             {
-              "name": "Integrated Repo Tutorial",
+              "name": "Integrated Monorepo",
               "id": "integrated-repo-tutorial",
               "file": "shared/npm-tutorial/integrated"
             },
             {
-              "name": "React Standalone Tutorial",
+              "name": "React Standalone",
               "id": "react-standalone-tutorial",
               "file": "shared/react-standalone-tutorial/1-code-generation"
             },
             {
-              "name": "Angular Standalone Tutorial",
+              "name": "Angular Standalone",
               "id": "angular-standalone-tutorial",
               "file": "shared/angular-standalone-tutorial/1-code-generation"
             },
             {
-              "name": "Node Server Tutorial",
+              "name": "Node Standalone",
               "id": "node-server-tutorial",
               "file": "shared/node-server-tutorial/1-code-generation"
             }
