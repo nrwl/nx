@@ -319,7 +319,7 @@ describe('create-nx-workspace', () => {
   it('should return error when ci workflow is selected but no cloud is set up', () => {
     const wsName = uniq('github');
     runCreateWorkspace(wsName, {
-      preset: 'empty',
+      preset: 'apps',
       packageManager,
       ci: 'circleci',
     });
@@ -387,7 +387,7 @@ describe('create-nx-workspace custom parent folder', () => {
     mkdirSync(tmpDir, { recursive: true });
 
     runCreateWorkspace(wsName, {
-      preset: 'empty',
+      preset: 'apps',
       packageManager,
       cwd: tmpDir,
     });
