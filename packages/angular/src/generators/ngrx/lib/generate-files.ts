@@ -16,11 +16,12 @@ export function generateNgrxFilesFromTemplates(
 
   generateFiles(
     tree,
-    joinPathFragments(__dirname, '..', 'files', 'latest'),
+    joinPathFragments(__dirname, '..', 'files', 'base'),
     options.parentDirectory,
     {
       ...options,
       ...projectNames,
+      importFromOperators: lt(options.rxjsVersion, '7.2.0'),
       tmpl: '',
     }
   );
