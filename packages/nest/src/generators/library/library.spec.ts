@@ -351,13 +351,39 @@ describe('lib', () => {
 
   describe('--simpleName', () => {
     it('should generate a library with a simple name', async () => {
-      await libraryGenerator(tree, { name: libName, simpleName: true });
+      await libraryGenerator(tree, {
+        name: libName,
+        simpleName: true,
+        directory: 'api',
+        service: true,
+        controller: true,
+      });
 
-      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toContain(
-        `export * from './lib/my-lib.module';`
-      );
-      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
+      const indexFile = tree.read('libs/api/my-lib/src/index.ts', 'utf-8');
+
+      expect(indexFile).toContain(`export * from './lib/my-lib.module';`);
+      expect(indexFile).toContain(`export * from './lib/my-lib.service';`);
+      expect(indexFile).toContain(`export * from './lib/my-lib.controller';`);
+
+      expect(
+        tree.exists('libs/api/my-lib/src/lib/my-lib.module.ts')
+      ).toBeTruthy();
+
+      expect(
+        tree.exists('libs/api/my-lib/src/lib/my-lib.service.ts')
+      ).toBeTruthy();
+
+      expect(
+        tree.exists('libs/api/my-lib/src/lib/my-lib.service.spec.ts')
+      ).toBeTruthy();
+
+      expect(
+        tree.exists('libs/api/my-lib/src/lib/my-lib.controller.ts')
+      ).toBeTruthy();
+
+      expect(
+        tree.exists('libs/api/my-lib/src/lib/my-lib.controller.spec.ts')
+      ).toBeTruthy();
     });
   });
 });

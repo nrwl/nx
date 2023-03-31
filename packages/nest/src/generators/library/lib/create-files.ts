@@ -13,6 +13,7 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
     ...names(options.projectName),
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
+    fileName: options.fileName,
   };
   generateFiles(
     tree,
