@@ -204,6 +204,7 @@ function getPnpmResolver(extensions: string[]) {
       useSyncFileSystemCalls: true,
       modules: [join(workspaceRoot, 'node_modules'), 'node_modules'],
       conditionNames: ['native', 'browser', 'require', 'default'],
+      mainFields: ['react-native', 'browser', 'main'],
     });
   }
   return resolver;
