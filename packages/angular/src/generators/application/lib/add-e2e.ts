@@ -1,18 +1,19 @@
+import { cypressProjectGenerator } from '@nrwl/cypress';
 import type { Tree } from '@nrwl/devkit';
-import type { NormalizedSchema } from './normalized-schema';
-
 import {
+  addDependenciesToPackageJson,
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { cypressProjectGenerator } from '@nrwl/cypress';
+import { nxVersion } from '../../../utils/versions';
+import type { NormalizedSchema } from './normalized-schema';
 import { removeScaffoldedE2e } from './remove-scaffolded-e2e';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
   removeScaffoldedE2e(tree, options, options.ngCliSchematicE2ERoot);
 
   if (options.e2eTestRunner === 'cypress') {
-    // TODO: This can call `@nrwl/web:static-config` generator once we merge `@nrwl/angular:file-server` into `@nrwl/web:file-server`.
+    // TODO: This can call `@nrwl/web:static-config` generator when ready
     addFileServerTarget(tree, options, 'serve-static');
 
     await cypressProjectGenerator(tree, {
@@ -32,9 +33,11 @@ function addFileServerTarget(
   options: NormalizedSchema,
   targetName: string
 ) {
+  addDependenciesToPackageJson(tree, {}, { '@nrwl/web': nxVersion });
+
   const projectConfig = readProjectConfiguration(tree, options.name);
   projectConfig.targets[targetName] = {
-    executor: '@nrwl/angular:file-server',
+    executor: '@nrwl/web:file-server',
     options: {
       buildTarget: `${options.name}:build`,
       port: options.port,
