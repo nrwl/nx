@@ -15,6 +15,5 @@ export async function addCypress(host: Tree, options: NormalizedSchema) {
     ...options,
     name: options.rootProject ? `e2e` : `${options.name}-e2e`,
     project: options.name,
-    rootProject: options.rootProject,
   });
 }
