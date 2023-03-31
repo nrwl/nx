@@ -1,4 +1,5 @@
-import { ReportData } from './model';
+import { ReportData, TrendData } from './model';
+import { table } from 'markdown-factory';
 
 export function getSlackMessageJson(body: string) {
   return {
@@ -17,7 +18,7 @@ export function getSlackMessageJson(body: string) {
 
 export function formatGhReport(
   currentData: ReportData,
-  trendData: ReportData,
+  trendData: TrendData,
   prevData: ReportData,
   unlabeledIssuesUrl: string
 ): string {
@@ -38,68 +39,50 @@ Totals, Issues: ${currentData.totalIssueCount} ${formattedIssueDelta} Bugs: ${cu
     `Untriaged: ${currentData.untriagedIssueCount} ${formatDelta(
       trendData.untriagedIssueCount
     )}`,
+    `Closed since last report: ${currentData.totalClosed} ${formatDelta(
+      trendData.totalClosed
+    )}`,
   ];
 
-  const sorted = Object.entries(currentData.scopes).sort(
-    ([, a], [, b]) => b.count - a.count
-  );
-
-  const { bugPadding, issuePadding, scopePadding } = getPaddingValues(
-    currentData,
-    trendData
-  );
+  const sorted = Object.entries(currentData.scopes)
+    .sort(([, a], [, b]) => b.count - a.count)
+    .map(([scope, x]) => ({
+      ...x,
+      scope,
+    }));
 
   bodyLines.push(
-    `| ${'Scope'.padEnd(scopePadding)} | ${'Issues'.padEnd(
-      issuePadding
-    )} | ${'Bugs'.padEnd(bugPadding)} |`
+    table(sorted, [
+      {
+        field: 'scope',
+        label: 'Scope',
+      },
+      {
+        label: 'Issues',
+        mapFn: (el) =>
+          `${el.count} ${formatDelta(trendData.scopes[el.scope].count)}`,
+      },
+      {
+        label: 'Bugs',
+        mapFn: (el) =>
+          `${el.bugCount} ${formatDelta(trendData.scopes[el.scope].bugCount)}`,
+      },
+      {
+        label: 'Closed',
+        mapFn: (el) =>
+          `${el.closed} ${formatDelta(trendData.scopes[el.scope].closed)}`,
+      },
+    ])
   );
-  bodyLines.push('='.repeat(scopePadding + issuePadding + bugPadding + 10));
-  for (const [scope, data] of sorted) {
-    const formattedIssueDelta = formatDelta(trendData.scopes[scope].count);
-    const formattedBugDelta = formatDelta(trendData.scopes[scope].bugCount);
-    const issuesCell = `${data.count} ${formattedIssueDelta}`.padEnd(
-      issuePadding
-    );
-    const bugCell = `${data.bugCount} ${formattedBugDelta}`.padEnd(bugPadding);
-    bodyLines.push(
-      `| ${scope.padEnd(scopePadding)} | ${issuesCell} | ${bugCell} |`
-    );
-  }
+
   const footer = '```';
   return header + bodyLines.join('\n') + footer;
 }
 
 function formatDelta(delta: number | null): string {
-  if (delta === null || delta === 0) {
+  if (!delta) {
     return '';
   }
 
   return delta < 0 ? `(${delta})` : `(+${delta})`;
-}
-
-function getPaddingValues(data: ReportData, trendData: ReportData) {
-  const scopes = Object.entries(data.scopes);
-  const scopePadding = Math.max(...scopes.map((x) => x[0].length));
-  const issuePadding =
-    Math.max(
-      ...scopes.map(
-        (x) =>
-          x[1].count.toString().length +
-          formatDelta(trendData.scopes[x[0]].count).length
-      )
-    ) + 2;
-  const bugPadding =
-    Math.max(
-      ...scopes.map(
-        (x) =>
-          x[1].bugCount.toString().length +
-          formatDelta(trendData.scopes[x[0]].bugCount).length
-      )
-    ) + 2;
-  return {
-    scopePadding,
-    issuePadding,
-    bugPadding,
-  };
 }
