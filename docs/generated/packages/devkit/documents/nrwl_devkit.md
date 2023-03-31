@@ -11,130 +11,88 @@ It only uses language primitives and immutable objects
 
 ## Table of contents
 
-### Project Graph Enumerations
-
-- [DependencyType](../../devkit/documents/nrwl_devkit#dependencytype)
-
-### Utils Enumerations
+### Enumerations
 
 - [ChangeType](../../devkit/documents/nrwl_devkit#changetype)
+- [DependencyType](../../devkit/documents/nrwl_devkit#dependencytype)
 
-### Project Graph Classes
-
-- [ProjectGraphBuilder](../../devkit/documents/nrwl_devkit#projectgraphbuilder)
-
-### Utils Classes
+### Classes
 
 - [Hasher](../../devkit/documents/nrwl_devkit#hasher)
-
-### Workspace Classes
-
+- [ProjectGraphBuilder](../../devkit/documents/nrwl_devkit#projectgraphbuilder)
 - [Workspaces](../../devkit/documents/nrwl_devkit#workspaces)
 
-### Commands Interfaces
+### Interfaces
 
-- [Target](../../devkit/documents/nrwl_devkit#target)
-
-### Other Interfaces
-
-- [NxPlugin](../../devkit/documents/nrwl_devkit#nxplugin)
-
-### Project Graph Interfaces
-
+- [DefaultTasksRunnerOptions](../../devkit/documents/nrwl_devkit#defaulttasksrunneroptions)
+- [ExecutorContext](../../devkit/documents/nrwl_devkit#executorcontext)
+- [ExecutorsJson](../../devkit/documents/nrwl_devkit#executorsjson)
+- [FileChange](../../devkit/documents/nrwl_devkit#filechange)
 - [FileData](../../devkit/documents/nrwl_devkit#filedata)
+- [GeneratorsJson](../../devkit/documents/nrwl_devkit#generatorsjson)
+- [Hash](../../devkit/documents/nrwl_devkit#hash)
+- [HasherContext](../../devkit/documents/nrwl_devkit#hashercontext)
+- [ImplicitJsonSubsetDependency](../../devkit/documents/nrwl_devkit#implicitjsonsubsetdependency)
+- [JsonParseOptions](../../devkit/documents/nrwl_devkit#jsonparseoptions)
+- [JsonSerializeOptions](../../devkit/documents/nrwl_devkit#jsonserializeoptions)
+- [MigrationsJson](../../devkit/documents/nrwl_devkit#migrationsjson)
+- [ModuleFederationConfig](../../devkit/documents/nrwl_devkit#modulefederationconfig)
+- [NxAffectedConfig](../../devkit/documents/nrwl_devkit#nxaffectedconfig)
+- [NxJsonConfiguration](../../devkit/documents/nrwl_devkit#nxjsonconfiguration)
+- [NxPlugin](../../devkit/documents/nrwl_devkit#nxplugin)
+- [ProjectConfiguration](../../devkit/documents/nrwl_devkit#projectconfiguration)
 - [ProjectFileMap](../../devkit/documents/nrwl_devkit#projectfilemap)
 - [ProjectGraph](../../devkit/documents/nrwl_devkit#projectgraph)
 - [ProjectGraphDependency](../../devkit/documents/nrwl_devkit#projectgraphdependency)
 - [ProjectGraphExternalNode](../../devkit/documents/nrwl_devkit#projectgraphexternalnode)
 - [ProjectGraphProcessorContext](../../devkit/documents/nrwl_devkit#projectgraphprocessorcontext)
 - [ProjectGraphProjectNode](../../devkit/documents/nrwl_devkit#projectgraphprojectnode)
-
-### Tree Interfaces
-
-- [FileChange](../../devkit/documents/nrwl_devkit#filechange)
-- [Tree](../../devkit/documents/nrwl_devkit#tree)
-
-### Utils Interfaces
-
-- [DefaultTasksRunnerOptions](../../devkit/documents/nrwl_devkit#defaulttasksrunneroptions)
-- [Hash](../../devkit/documents/nrwl_devkit#hash)
-- [JsonParseOptions](../../devkit/documents/nrwl_devkit#jsonparseoptions)
-- [JsonSerializeOptions](../../devkit/documents/nrwl_devkit#jsonserializeoptions)
-- [ModuleFederationConfig](../../devkit/documents/nrwl_devkit#modulefederationconfig)
+- [ProjectsConfigurations](../../devkit/documents/nrwl_devkit#projectsconfigurations)
 - [RemoteCache](../../devkit/documents/nrwl_devkit#remotecache)
 - [SharedLibraryConfig](../../devkit/documents/nrwl_devkit#sharedlibraryconfig)
 - [StringDeletion](../../devkit/documents/nrwl_devkit#stringdeletion)
 - [StringInsertion](../../devkit/documents/nrwl_devkit#stringinsertion)
-
-### Workspace Interfaces
-
-- [ExecutorContext](../../devkit/documents/nrwl_devkit#executorcontext)
-- [ExecutorsJson](../../devkit/documents/nrwl_devkit#executorsjson)
-- [GeneratorsJson](../../devkit/documents/nrwl_devkit#generatorsjson)
-- [HasherContext](../../devkit/documents/nrwl_devkit#hashercontext)
-- [ImplicitJsonSubsetDependency](../../devkit/documents/nrwl_devkit#implicitjsonsubsetdependency)
-- [MigrationsJson](../../devkit/documents/nrwl_devkit#migrationsjson)
-- [NxAffectedConfig](../../devkit/documents/nrwl_devkit#nxaffectedconfig)
-- [NxJsonConfiguration](../../devkit/documents/nrwl_devkit#nxjsonconfiguration)
-- [ProjectConfiguration](../../devkit/documents/nrwl_devkit#projectconfiguration)
-- [ProjectsConfigurations](../../devkit/documents/nrwl_devkit#projectsconfigurations)
+- [Target](../../devkit/documents/nrwl_devkit#target)
 - [TargetConfiguration](../../devkit/documents/nrwl_devkit#targetconfiguration)
 - [TargetDependencyConfig](../../devkit/documents/nrwl_devkit#targetdependencyconfig)
 - [Task](../../devkit/documents/nrwl_devkit#task)
 - [TaskGraph](../../devkit/documents/nrwl_devkit#taskgraph)
+- [Tree](../../devkit/documents/nrwl_devkit#tree)
 - [Workspace](../../devkit/documents/nrwl_devkit#workspace)
 
-### Generators Type aliases
-
-- [WorkspaceConfiguration](../../devkit/documents/nrwl_devkit#workspaceconfiguration)
-
-### Other Type aliases
-
-- [ProjectTargetConfigurator](../../devkit/documents/nrwl_devkit#projecttargetconfigurator)
-
-### Package Manager Type aliases
-
-- [PackageManager](../../devkit/documents/nrwl_devkit#packagemanager)
-
-### Project Graph Type aliases
-
-- [ProjectGraphNode](../../devkit/documents/nrwl_devkit#projectgraphnode)
-
-### Utils Type aliases
+### Type Aliases
 
 - [AdditionalSharedConfig](../../devkit/documents/nrwl_devkit#additionalsharedconfig)
-- [ModuleFederationLibrary](../../devkit/documents/nrwl_devkit#modulefederationlibrary)
-- [Remotes](../../devkit/documents/nrwl_devkit#remotes)
-- [SharedFunction](../../devkit/documents/nrwl_devkit#sharedfunction)
-- [SharedWorkspaceLibraryConfig](../../devkit/documents/nrwl_devkit#sharedworkspacelibraryconfig)
-- [StringChange](../../devkit/documents/nrwl_devkit#stringchange)
-- [WorkspaceLibrary](../../devkit/documents/nrwl_devkit#workspacelibrary)
-- [WorkspaceLibrarySecondaryEntryPoint](../../devkit/documents/nrwl_devkit#workspacelibrarysecondaryentrypoint)
-
-### Workspace Type aliases
-
 - [CustomHasher](../../devkit/documents/nrwl_devkit#customhasher)
 - [Executor](../../devkit/documents/nrwl_devkit#executor)
 - [Generator](../../devkit/documents/nrwl_devkit#generator)
 - [GeneratorCallback](../../devkit/documents/nrwl_devkit#generatorcallback)
 - [ImplicitDependencyEntry](../../devkit/documents/nrwl_devkit#implicitdependencyentry)
+- [ModuleFederationLibrary](../../devkit/documents/nrwl_devkit#modulefederationlibrary)
+- [PackageManager](../../devkit/documents/nrwl_devkit#packagemanager)
+- [ProjectGraphNode](../../devkit/documents/nrwl_devkit#projectgraphnode)
+- [ProjectTargetConfigurator](../../devkit/documents/nrwl_devkit#projecttargetconfigurator)
 - [ProjectType](../../devkit/documents/nrwl_devkit#projecttype)
+- [Remotes](../../devkit/documents/nrwl_devkit#remotes)
+- [SharedFunction](../../devkit/documents/nrwl_devkit#sharedfunction)
+- [SharedWorkspaceLibraryConfig](../../devkit/documents/nrwl_devkit#sharedworkspacelibraryconfig)
+- [StringChange](../../devkit/documents/nrwl_devkit#stringchange)
 - [TaskGraphExecutor](../../devkit/documents/nrwl_devkit#taskgraphexecutor)
+- [WorkspaceConfiguration](../../devkit/documents/nrwl_devkit#workspaceconfiguration)
 - [WorkspaceJsonConfiguration](../../devkit/documents/nrwl_devkit#workspacejsonconfiguration)
+- [WorkspaceLibrary](../../devkit/documents/nrwl_devkit#workspacelibrary)
+- [WorkspaceLibrarySecondaryEntryPoint](../../devkit/documents/nrwl_devkit#workspacelibrarysecondaryentrypoint)
 
-### Logger Variables
-
-- [logger](../../devkit/documents/nrwl_devkit#logger)
-
-### Utils Variables
+### Variables
 
 - [NX_VERSION](../../devkit/documents/nrwl_devkit#nx_version)
 - [appRootPath](../../devkit/documents/nrwl_devkit#approotpath)
 - [cacheDir](../../devkit/documents/nrwl_devkit#cachedir)
+- [logger](../../devkit/documents/nrwl_devkit#logger)
 - [output](../../devkit/documents/nrwl_devkit#output)
 - [workspaceRoot](../../devkit/documents/nrwl_devkit#workspaceroot)
 
-### Other Functions
+### Functions
 
 - [addDependenciesToPackageJson](../../devkit/documents/nrwl_devkit#adddependenciestopackagejson)
 - [addProjectConfiguration](../../devkit/documents/nrwl_devkit#addprojectconfiguration)
@@ -149,6 +107,7 @@ It only uses language primitives and immutable objects
 - [defaultTasksRunner](../../devkit/documents/nrwl_devkit#defaulttasksrunner)
 - [detectPackageManager](../../devkit/documents/nrwl_devkit#detectpackagemanager)
 - [detectWorkspaceScope](../../devkit/documents/nrwl_devkit#detectworkspacescope)
+- [ensurePackage](../../devkit/documents/nrwl_devkit#ensurepackage)
 - [extractLayoutDirectory](../../devkit/documents/nrwl_devkit#extractlayoutdirectory)
 - [formatFiles](../../devkit/documents/nrwl_devkit#formatfiles)
 - [generateFiles](../../devkit/documents/nrwl_devkit#generatefiles)
@@ -203,25 +162,29 @@ It only uses language primitives and immutable objects
 - [writeJson](../../devkit/documents/nrwl_devkit#writejson)
 - [writeJsonFile](../../devkit/documents/nrwl_devkit#writejsonfile)
 
-### Utils Functions
-
-- [ensurePackage](../../devkit/documents/nrwl_devkit#ensurepackage)
-
-## Project Graph Enumerations
-
-### DependencyType
-
-• **DependencyType**: `Object`
-
----
-
-## Utils Enumerations
+## Enumerations
 
 ### ChangeType
 
 • **ChangeType**: `Object`
 
-## Project Graph Classes
+---
+
+### DependencyType
+
+• **DependencyType**: `Object`
+
+Type of dependency between projects
+
+## Classes
+
+### Hasher
+
+• **Hasher**: `Object`
+
+The default hasher used by executors.
+
+---
 
 ### ProjectGraphBuilder
 
@@ -229,97 +192,11 @@ It only uses language primitives and immutable objects
 
 ---
 
-## Utils Classes
-
-### Hasher
-
-• **Hasher**: `Object`
-
----
-
-## Workspace Classes
-
 ### Workspaces
 
 • **Workspaces**: `Object`
 
-## Commands Interfaces
-
-### Target
-
-• **Target**: `Object`
-
----
-
-## Other Interfaces
-
-### NxPlugin
-
-• **NxPlugin**: `Object`
-
-A plugin for Nx
-
----
-
-## Project Graph Interfaces
-
-### FileData
-
-• **FileData**: `Object`
-
----
-
-### ProjectFileMap
-
-• **ProjectFileMap**: `Object`
-
----
-
-### ProjectGraph
-
-• **ProjectGraph**: `Object`
-
----
-
-### ProjectGraphDependency
-
-• **ProjectGraphDependency**: `Object`
-
----
-
-### ProjectGraphExternalNode
-
-• **ProjectGraphExternalNode**: `Object`
-
----
-
-### ProjectGraphProcessorContext
-
-• **ProjectGraphProcessorContext**: `Object`
-
----
-
-### ProjectGraphProjectNode
-
-• **ProjectGraphProjectNode**: `Object`
-
----
-
-## Tree Interfaces
-
-### FileChange
-
-• **FileChange**: `Object`
-
----
-
-### Tree
-
-• **Tree**: `Object`
-
----
-
-## Utils Interfaces
+## Interfaces
 
 ### DefaultTasksRunnerOptions
 
@@ -327,9 +204,65 @@ A plugin for Nx
 
 ---
 
+### ExecutorContext
+
+• **ExecutorContext**: `Object`
+
+Context that is passed into an executor
+
+---
+
+### ExecutorsJson
+
+• **ExecutorsJson**: `Object`
+
+---
+
+### FileChange
+
+• **FileChange**: `Object`
+
+Description of a file change in the Nx virtual file system/
+
+---
+
+### FileData
+
+• **FileData**: `Object`
+
+Some metadata about a file
+
+---
+
+### GeneratorsJson
+
+• **GeneratorsJson**: `Object`
+
+---
+
 ### Hash
 
 • **Hash**: `Object`
+
+A data structure returned by the default hasher.
+
+---
+
+### HasherContext
+
+• **HasherContext**: `Object`
+
+---
+
+### ImplicitJsonSubsetDependency
+
+• **ImplicitJsonSubsetDependency**<`T`\>: `Object`
+
+#### Type parameters
+
+| Name | Type                |
+| :--- | :------------------ |
+| `T`  | `"*"` \| `string`[] |
 
 ---
 
@@ -345,9 +278,119 @@ A plugin for Nx
 
 ---
 
+### MigrationsJson
+
+• **MigrationsJson**: `Object`
+
+---
+
 ### ModuleFederationConfig
 
 • **ModuleFederationConfig**: `Object`
+
+---
+
+### NxAffectedConfig
+
+• **NxAffectedConfig**: `Object`
+
+---
+
+### NxJsonConfiguration
+
+• **NxJsonConfiguration**<`T`\>: `Object`
+
+Nx.json configuration
+
+@note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
+
+#### Type parameters
+
+| Name | Type                |
+| :--- | :------------------ |
+| `T`  | `"*"` \| `string`[] |
+
+---
+
+### NxPlugin
+
+• **NxPlugin**: `Object`
+
+A plugin for Nx
+
+---
+
+### ProjectConfiguration
+
+• **ProjectConfiguration**: `Object`
+
+Project configuration
+
+@note: when adding properties here add them to `allowedProjectExtensions` in adapter/compat.ts
+
+---
+
+### ProjectFileMap
+
+• **ProjectFileMap**: `Object`
+
+A list of files separated by the project they belong to
+
+---
+
+### ProjectGraph
+
+• **ProjectGraph**: `Object`
+
+A Graph of projects in the workspace and dependencies between them
+
+---
+
+### ProjectGraphDependency
+
+• **ProjectGraphDependency**: `Object`
+
+A dependency between two projects
+
+---
+
+### ProjectGraphExternalNode
+
+• **ProjectGraphExternalNode**: `Object`
+
+A node describing an external dependency
+`name` has as form of:
+
+- `npm:packageName` for root dependencies or
+- `npm:packageName@version` for nested transitive dependencies
+
+This is vital for our node discovery to always point to root dependencies,
+while allowing tracking of the full tree of different nested versions
+
+---
+
+### ProjectGraphProcessorContext
+
+• **ProjectGraphProcessorContext**: `Object`
+
+Additional information to be used to process a project graph
+
+---
+
+### ProjectGraphProjectNode
+
+• **ProjectGraphProjectNode**: `Object`
+
+A node describing a project in a workspace
+
+---
+
+### ProjectsConfigurations
+
+• **ProjectsConfigurations**: `Object`
+
+Projects Configurations
+@note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
 
 ---
 
@@ -375,83 +418,17 @@ A plugin for Nx
 
 ---
 
-## Workspace Interfaces
+### Target
 
-### ExecutorContext
-
-• **ExecutorContext**: `Object`
-
----
-
-### ExecutorsJson
-
-• **ExecutorsJson**: `Object`
-
----
-
-### GeneratorsJson
-
-• **GeneratorsJson**: `Object`
-
----
-
-### HasherContext
-
-• **HasherContext**: `Object`
-
----
-
-### ImplicitJsonSubsetDependency
-
-• **ImplicitJsonSubsetDependency**<`T`\>: `Object`
-
-#### Type parameters
-
-| Name | Type                |
-| :--- | :------------------ |
-| `T`  | `"*"` \| `string`[] |
-
----
-
-### MigrationsJson
-
-• **MigrationsJson**: `Object`
-
----
-
-### NxAffectedConfig
-
-• **NxAffectedConfig**: `Object`
-
----
-
-### NxJsonConfiguration
-
-• **NxJsonConfiguration**<`T`\>: `Object`
-
-#### Type parameters
-
-| Name | Type                |
-| :--- | :------------------ |
-| `T`  | `"*"` \| `string`[] |
-
----
-
-### ProjectConfiguration
-
-• **ProjectConfiguration**: `Object`
-
----
-
-### ProjectsConfigurations
-
-• **ProjectsConfigurations**: `Object`
+• **Target**: `Object`
 
 ---
 
 ### TargetConfiguration
 
 • **TargetConfiguration**<`T`\>: `Object`
+
+Target's configuration
 
 #### Type parameters
 
@@ -471,11 +448,23 @@ A plugin for Nx
 
 • **Task**: `Object`
 
+A representation of the invocation of an Executor
+
 ---
 
 ### TaskGraph
 
 • **TaskGraph**: `Object`
+
+Graph of Tasks to be executed
+
+---
+
+### Tree
+
+• **Tree**: `Object`
+
+Virtual file system tree.
 
 ---
 
@@ -483,148 +472,17 @@ A plugin for Nx
 
 • **Workspace**: `Object`
 
-## Generators Type aliases
+**`Deprecated`**
 
-### WorkspaceConfiguration
+use ProjectsConfigurations or NxJsonConfiguration
 
-Ƭ **WorkspaceConfiguration**: `Omit`<[`ProjectsConfigurations`](../../devkit/documents/nrwl_devkit#projectsconfigurations), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../devkit/documents/nrwl_devkit#nxjsonconfiguration)\>
-
----
-
-## Other Type aliases
-
-### ProjectTargetConfigurator
-
-Ƭ **ProjectTargetConfigurator**: (`file`: `string`) => `Record`<`string`, [`TargetConfiguration`](../../devkit/documents/nrwl_devkit#targetconfiguration)\>
-
-#### Type declaration
-
-▸ (`file`): `Record`<`string`, [`TargetConfiguration`](../../devkit/documents/nrwl_devkit#targetconfiguration)\>
-
-##### Parameters
-
-| Name   | Type     |
-| :----- | :------- |
-| `file` | `string` |
-
-##### Returns
-
-`Record`<`string`, [`TargetConfiguration`](../../devkit/documents/nrwl_devkit#targetconfiguration)\>
-
----
-
-## Package Manager Type aliases
-
-### PackageManager
-
-Ƭ **PackageManager**: `"yarn"` \| `"pnpm"` \| `"npm"`
-
----
-
-## Project Graph Type aliases
-
-### ProjectGraphNode
-
-Ƭ **ProjectGraphNode**: [`ProjectGraphProjectNode`](../../devkit/documents/nrwl_devkit#projectgraphprojectnode) \| [`ProjectGraphExternalNode`](../../devkit/documents/nrwl_devkit#projectgraphexternalnode)
-
----
-
-## Utils Type aliases
+## Type Aliases
 
 ### AdditionalSharedConfig
 
 Ƭ **AdditionalSharedConfig**: (`string` \| [libraryName: string, sharedConfig: SharedLibraryConfig] \| { `libraryName`: `string` ; `sharedConfig`: [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig) })[]
 
 ---
-
-### ModuleFederationLibrary
-
-Ƭ **ModuleFederationLibrary**: `Object`
-
-#### Type declaration
-
-| Name   | Type     |
-| :----- | :------- |
-| `name` | `string` |
-| `type` | `string` |
-
----
-
-### Remotes
-
-Ƭ **Remotes**: `string`[] \| [remoteName: string, remoteUrl: string][]
-
----
-
-### SharedFunction
-
-Ƭ **SharedFunction**: (`libraryName`: `string`, `sharedConfig`: [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig)) => `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig)
-
-#### Type declaration
-
-▸ (`libraryName`, `sharedConfig`): `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig)
-
-##### Parameters
-
-| Name           | Type                                                                            |
-| :------------- | :------------------------------------------------------------------------------ |
-| `libraryName`  | `string`                                                                        |
-| `sharedConfig` | [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig) |
-
-##### Returns
-
-`undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig)
-
----
-
-### SharedWorkspaceLibraryConfig
-
-Ƭ **SharedWorkspaceLibraryConfig**: `Object`
-
-#### Type declaration
-
-| Name                   | Type                                                                                                                          |
-| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
-| `getAliases`           | () => `Record`<`string`, `string`\>                                                                                           |
-| `getLibraries`         | (`eager?`: `boolean`) => `Record`<`string`, [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig)\> |
-| `getReplacementPlugin` | () => `NormalModuleReplacementPlugin`                                                                                         |
-
----
-
-### StringChange
-
-Ƭ **StringChange**: [`StringInsertion`](../../devkit/documents/nrwl_devkit#stringinsertion) \| [`StringDeletion`](../../devkit/documents/nrwl_devkit#stringdeletion)
-
----
-
-### WorkspaceLibrary
-
-Ƭ **WorkspaceLibrary**: `Object`
-
-#### Type declaration
-
-| Name        | Type                    |
-| :---------- | :---------------------- |
-| `importKey` | `string` \| `undefined` |
-| `name`      | `string`                |
-| `root`      | `string`                |
-
----
-
-### WorkspaceLibrarySecondaryEntryPoint
-
-Ƭ **WorkspaceLibrarySecondaryEntryPoint**: `Object`
-
-#### Type declaration
-
-| Name   | Type     |
-| :----- | :------- |
-| `name` | `string` |
-| `path` | `string` |
-
----
-
-## Workspace Type aliases
 
 ### CustomHasher
 
@@ -649,7 +507,7 @@ A plugin for Nx
 
 ### Executor
 
-Ƭ **Executor**<`T`\>: (`options`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/nrwl_devkit#executorcontext)) => `Promise`<`Object`\> \| `AsyncIterableIterator`<`Object`\>
+Ƭ **Executor**<`T`\>: (`options`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/nrwl_devkit#executorcontext)) => `Promise`<{ `success`: `boolean` }\> \| `AsyncIterableIterator`<{ `success`: `boolean` }\>
 
 #### Type parameters
 
@@ -659,7 +517,7 @@ A plugin for Nx
 
 #### Type declaration
 
-▸ (`options`, `context`): `Promise`<`Object`\> \| `AsyncIterableIterator`<`Object`\>
+▸ (`options`, `context`): `Promise`<{ `success`: `boolean` }\> \| `AsyncIterableIterator`<{ `success`: `boolean` }\>
 
 Implementation of a target of a project
 
@@ -672,7 +530,7 @@ Implementation of a target of a project
 
 ##### Returns
 
-`Promise`<`Object`\> \| `AsyncIterableIterator`<`Object`\>
+`Promise`<{ `success`: `boolean` }\> \| `AsyncIterableIterator`<{ `success`: `boolean` }\>
 
 ---
 
@@ -737,15 +595,115 @@ A callback function that is executed after changes are made to the file system
 
 ---
 
+### ModuleFederationLibrary
+
+Ƭ **ModuleFederationLibrary**: `Object`
+
+#### Type declaration
+
+| Name   | Type     |
+| :----- | :------- |
+| `name` | `string` |
+| `type` | `string` |
+
+---
+
+### PackageManager
+
+Ƭ **PackageManager**: `"yarn"` \| `"pnpm"` \| `"npm"`
+
+---
+
+### ProjectGraphNode
+
+Ƭ **ProjectGraphNode**: [`ProjectGraphProjectNode`](../../devkit/documents/nrwl_devkit#projectgraphprojectnode) \| [`ProjectGraphExternalNode`](../../devkit/documents/nrwl_devkit#projectgraphexternalnode)
+
+**`Deprecated`**
+
+this type will be removed in v16. Use [ProjectGraphProjectNode](../../devkit/documents/nrwl_devkit#projectgraphprojectnode) or [ProjectGraphExternalNode](../../devkit/documents/nrwl_devkit#projectgraphexternalnode) instead
+
+---
+
+### ProjectTargetConfigurator
+
+Ƭ **ProjectTargetConfigurator**: (`file`: `string`) => `Record`<`string`, [`TargetConfiguration`](../../devkit/documents/nrwl_devkit#targetconfiguration)\>
+
+#### Type declaration
+
+▸ (`file`): `Record`<`string`, [`TargetConfiguration`](../../devkit/documents/nrwl_devkit#targetconfiguration)\>
+
+##### Parameters
+
+| Name   | Type     |
+| :----- | :------- |
+| `file` | `string` |
+
+##### Returns
+
+`Record`<`string`, [`TargetConfiguration`](../../devkit/documents/nrwl_devkit#targetconfiguration)\>
+
+---
+
 ### ProjectType
 
 Ƭ **ProjectType**: `"library"` \| `"application"`
+
+Type of project supported
+
+---
+
+### Remotes
+
+Ƭ **Remotes**: `string`[] \| [remoteName: string, remoteUrl: string][]
+
+---
+
+### SharedFunction
+
+Ƭ **SharedFunction**: (`libraryName`: `string`, `sharedConfig`: [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig)) => `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig)
+
+#### Type declaration
+
+▸ (`libraryName`, `sharedConfig`): `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig)
+
+##### Parameters
+
+| Name           | Type                                                                            |
+| :------------- | :------------------------------------------------------------------------------ |
+| `libraryName`  | `string`                                                                        |
+| `sharedConfig` | [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig) |
+
+##### Returns
+
+`undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig)
+
+---
+
+### SharedWorkspaceLibraryConfig
+
+Ƭ **SharedWorkspaceLibraryConfig**: `Object`
+
+#### Type declaration
+
+| Name                   | Type                                                                                                                          |
+| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
+| `getAliases`           | () => `Record`<`string`, `string`\>                                                                                           |
+| `getLibraries`         | (`eager?`: `boolean`) => `Record`<`string`, [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig)\> |
+| `getReplacementPlugin` | () => `NormalModuleReplacementPlugin`                                                                                         |
+
+---
+
+### StringChange
+
+Ƭ **StringChange**: [`StringInsertion`](../../devkit/documents/nrwl_devkit#stringinsertion) \| [`StringDeletion`](../../devkit/documents/nrwl_devkit#stringdeletion)
+
+A change to be made to a string
 
 ---
 
 ### TaskGraphExecutor
 
-Ƭ **TaskGraphExecutor**<`T`\>: (`taskGraph`: [`TaskGraph`](../../devkit/documents/nrwl_devkit#taskgraph), `options`: `Record`<`string`, `T`\>, `overrides`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/nrwl_devkit#executorcontext)) => `Promise`<`Record`<`string`, `Object`\>\>
+Ƭ **TaskGraphExecutor**<`T`\>: (`taskGraph`: [`TaskGraph`](../../devkit/documents/nrwl_devkit#taskgraph), `options`: `Record`<`string`, `T`\>, `overrides`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/nrwl_devkit#executorcontext)) => `Promise`<`Record`<`string`, { `success`: `boolean` ; `terminalOutput`: `string` }\>\>
 
 #### Type parameters
 
@@ -755,7 +713,7 @@ A callback function that is executed after changes are made to the file system
 
 #### Type declaration
 
-▸ (`taskGraph`, `options`, `overrides`, `context`): `Promise`<`Record`<`string`, `Object`\>\>
+▸ (`taskGraph`, `options`, `overrides`, `context`): `Promise`<`Record`<`string`, { `success`: `boolean` ; `terminalOutput`: `string` }\>\>
 
 Implementation of a target of a project that handles multiple projects to be batched
 
@@ -770,7 +728,17 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ##### Returns
 
-`Promise`<`Record`<`string`, `Object`\>\>
+`Promise`<`Record`<`string`, { `success`: `boolean` ; `terminalOutput`: `string` }\>\>
+
+---
+
+### WorkspaceConfiguration
+
+Ƭ **WorkspaceConfiguration**: `Omit`<[`ProjectsConfigurations`](../../devkit/documents/nrwl_devkit#projectsconfigurations), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../devkit/documents/nrwl_devkit#nxjsonconfiguration)\>
+
+**`Deprecated`**
+
+using NxJsonConfiguration
 
 ---
 
@@ -778,11 +746,72 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 Ƭ **WorkspaceJsonConfiguration**: [`ProjectsConfigurations`](../../devkit/documents/nrwl_devkit#projectsconfigurations)
 
-## Logger Variables
+**`Deprecated`**
+
+use ProjectsConfigurations
+
+---
+
+### WorkspaceLibrary
+
+Ƭ **WorkspaceLibrary**: `Object`
+
+#### Type declaration
+
+| Name        | Type                    |
+| :---------- | :---------------------- |
+| `importKey` | `string` \| `undefined` |
+| `name`      | `string`                |
+| `root`      | `string`                |
+
+---
+
+### WorkspaceLibrarySecondaryEntryPoint
+
+Ƭ **WorkspaceLibrarySecondaryEntryPoint**: `Object`
+
+#### Type declaration
+
+| Name   | Type     |
+| :----- | :------- |
+| `name` | `string` |
+| `path` | `string` |
+
+## Variables
+
+### NX_VERSION
+
+• `Const` **NX_VERSION**: `string`
+
+**`Description`**
+
+The version of Nx used by the workspace. Returns null if no version is found.
+
+---
+
+### appRootPath
+
+• `Const` **appRootPath**: `string` = `workspaceRoot`
+
+The root of the workspace.
+
+**`Deprecated`**
+
+use workspaceRoot instead
+
+---
+
+### cacheDir
+
+• `Const` **cacheDir**: `string`
+
+Path to the directory where Nx stores its cache and daemon-related files.
+
+---
 
 ### logger
 
-• **logger**: `Object`
+• `Const` **logger**: `Object`
 
 #### Type declaration
 
@@ -797,37 +826,19 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ---
 
-## Utils Variables
-
-### NX_VERSION
-
-• **NX_VERSION**: `string`
-
----
-
-### appRootPath
-
-• **appRootPath**: `string` = `workspaceRoot`
-
----
-
-### cacheDir
-
-• **cacheDir**: `string`
-
----
-
 ### output
 
-• **output**: `CLIOutput`
+• `Const` **output**: `CLIOutput`
 
 ---
 
 ### workspaceRoot
 
-• **workspaceRoot**: `string`
+• `Const` **workspaceRoot**: `string`
 
-## Other Functions
+The root of the workspace
+
+## Functions
 
 ### addDependenciesToPackageJson
 
@@ -1045,9 +1056,11 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 ### createLockFile
 
-▸ `Const` **createLockFile**(`packageJson`, `packageManager?`): `string`
+▸ **createLockFile**(`packageJson`, `packageManager?`): `string`
 
-**`deprecated`** Import this from @nrwl/js instead
+**`Deprecated`**
+
+Import this from @nrwl/js instead
 
 #### Parameters
 
@@ -1064,9 +1077,11 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 ### createPackageJson
 
-▸ `Const` **createPackageJson**(`projectName`, `graph`, `options?`): `PackageJson`
+▸ **createPackageJson**(`projectName`, `graph`, `options?`): `PackageJson`
 
-**`deprecated`** Import this from @nrwl/js instead
+**`Deprecated`**
+
+Import this from @nrwl/js instead
 
 #### Parameters
 
@@ -1128,7 +1143,10 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 ### defaultTasksRunner
 
-▸ `Const` **defaultTasksRunner**(`tasks`, `options`, `context?`): `any`
+▸ **defaultTasksRunner**(`tasks`, `options`, `context?`): `any`
+
+`any | Promise<{ [id: string]: TaskStatus }>`
+will change to Promise<{ [id: string]: TaskStatus }> after Nx 15 is released.
 
 #### Parameters
 
@@ -1185,6 +1203,69 @@ Detect workspace scope from the package.json name
 #### Returns
 
 `string`
+
+---
+
+### ensurePackage
+
+▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `void`
+
+**`Deprecated`**
+
+Use the other function signature without a Tree
+
+Use a package that has not been installed as a dependency.
+
+For example:
+
+```typescript
+ensurePackage(tree, '@nrwl/jest', nxVersion);
+```
+
+This install the @nrwl/jest@<nxVersion> and return the module
+When running with --dryRun, the function will throw when dependencies are missing.
+
+#### Parameters
+
+| Name                      | Type                                              | Description                                                        |
+| :------------------------ | :------------------------------------------------ | :----------------------------------------------------------------- |
+| `tree`                    | [`Tree`](../../devkit/documents/nrwl_devkit#tree) | the file system tree                                               |
+| `pkg`                     | `string`                                          | the package to check (e.g. @nrwl/jest)                             |
+| `requiredVersion`         | `string`                                          | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
+| `options?`                | `Object`                                          | -                                                                  |
+| `options.dev?`            | `boolean`                                         | -                                                                  |
+| `options.throwOnMissing?` | `boolean`                                         | -                                                                  |
+
+#### Returns
+
+`void`
+
+▸ **ensurePackage**<`T`\>(`pkg`, `version`): `T`
+
+Ensure that dependencies and devDependencies from package.json are installed at the required versions.
+
+For example:
+
+```typescript
+ensurePackage(tree, '@nrwl/jest', nxVersion);
+```
+
+#### Type parameters
+
+| Name | Type                      |
+| :--- | :------------------------ |
+| `T`  | extends `unknown` = `any` |
+
+#### Parameters
+
+| Name      | Type     | Description                                                 |
+| :-------- | :------- | :---------------------------------------------------------- |
+| `pkg`     | `string` | the package to install and require                          |
+| `version` | `string` | the version to install if the package doesn't exist already |
+
+#### Returns
+
+`T`
 
 ---
 
@@ -1452,7 +1533,9 @@ Example:
 
 ▸ **getWorkspacePath**(`tree`): `"angular.json"` \| `"workspace.json"`
 
-**`deprecated`** all projects are configured using project.json
+**`Deprecated`**
+
+all projects are configured using project.json
 
 #### Parameters
 
@@ -1494,7 +1577,9 @@ Runs `npm install` or `yarn install`. It will skip running the install if
 
 Returns if a project has a standalone configuration (project.json).
 
-**`deprecated`** non-standalone projects were deprecated
+**`Deprecated`**
+
+non-standalone projects were deprecated
 
 #### Parameters
 
@@ -1511,7 +1596,7 @@ Returns if a project has a standalone configuration (project.json).
 
 ### joinPathFragments
 
-▸ **joinPathFragments**(...`fragments`): `string`
+▸ **joinPathFragments**(`...fragments`): `string`
 
 Normalized path fragments and joins them
 
@@ -1697,7 +1782,7 @@ Object the JSON content represents
 
 ▸ **parseTargetString**(`targetString`): [`Target`](../../devkit/documents/nrwl_devkit#target)
 
-**`deprecated(v17)`** A project graph should be passed to parseTargetString for best accuracy.
+@deprecated(v17) A project graph should be passed to parseTargetString for best accuracy.
 
 #### Parameters
 
@@ -1739,7 +1824,9 @@ parseTargetString('proj:test:production', graph); // returns { project: "proj", 
 
 TODO(vsavkin): Remove after Nx 16 is out
 
-**`deprecated`** Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
+**`Deprecated`**
+
+Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
 
 #### Returns
 
@@ -1753,7 +1840,9 @@ TODO(vsavkin): Remove after Nx 16 is out
 
 Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
-**`throws`** {Error} if there is no cached ProjectGraph to read from
+**`Throws`**
+
+if there is no cached ProjectGraph to read from
 
 #### Returns
 
@@ -1818,9 +1907,9 @@ Object the JSON content of the file represents
 
 ▸ **readNxJson**(): [`NxJsonConfiguration`](../../devkit/documents/nrwl_devkit#nxjsonconfiguration) \| `null`
 
-Reads nx.json
+**`Deprecated`**
 
-**`deprecated`** You must pass a [Tree](../../devkit/documents/nrwl_devkit#tree)
+You must pass a [Tree](../../devkit/documents/nrwl_devkit#tree)
 
 #### Returns
 
@@ -1848,7 +1937,9 @@ Reads nx.json
 
 Reads a project configuration.
 
-**`throws`** If supplied projectName cannot be found
+**`Throws`**
+
+If supplied projectName cannot be found
 
 #### Parameters
 
@@ -1871,16 +1962,16 @@ Reads a project configuration.
 
 `Object`
 
-| Name               | Type     |
-| :----------------- | :------- |
-| `dependencies?`    | `Object` |
-| `devDependencies?` | `Object` |
+| Name               | Type                           |
+| :----------------- | :----------------------------- |
+| `dependencies?`    | { `[key: string]`: `string`; } |
+| `devDependencies?` | { `[key: string]`: `string`; } |
 
 ---
 
 ### readTargetOptions
 
-▸ **readTargetOptions**<`T`\>(`__namedParameters`, `context`): `T`
+▸ **readTargetOptions**<`T`\>(`«destructured»`, `context`): `T`
 
 Reads and combines options for a given target.
 
@@ -1894,10 +1985,10 @@ Works as if you invoked the target yourself without passing any command lint ove
 
 #### Parameters
 
-| Name                | Type                                                                    |
-| :------------------ | :---------------------------------------------------------------------- |
-| `__namedParameters` | [`Target`](../../devkit/documents/nrwl_devkit#target)                   |
-| `context`           | [`ExecutorContext`](../../devkit/documents/nrwl_devkit#executorcontext) |
+| Name             | Type                                                                    |
+| :--------------- | :---------------------------------------------------------------------- |
+| `«destructured»` | [`Target`](../../devkit/documents/nrwl_devkit#target)                   |
+| `context`        | [`ExecutorContext`](../../devkit/documents/nrwl_devkit#executorcontext) |
 
 #### Returns
 
@@ -1913,7 +2004,9 @@ Read general workspace configuration such as the default project or cli settings
 
 This does _not_ provide projects configuration, use [readProjectConfiguration](../../devkit/documents/nrwl_devkit#readprojectconfiguration) instead.
 
-**`deprecated`** use readNxJson
+**`Deprecated`**
+
+use readNxJson
 
 #### Parameters
 
@@ -2055,7 +2148,7 @@ Note that the return value is a promise of an iterator, so you need to await bef
 
 ### runTasksInSerial
 
-▸ **runTasksInSerial**(...`tasks`): [`GeneratorCallback`](../../devkit/documents/nrwl_devkit#generatorcallback)
+▸ **runTasksInSerial**(`...tasks`): [`GeneratorCallback`](../../devkit/documents/nrwl_devkit#generatorcallback)
 
 Run tasks in serial
 
@@ -2143,7 +2236,7 @@ share Nx Workspace Libraries between Hosts and Remotes.
 
 ### stripIndents
 
-▸ **stripIndents**(`strings`, ...`values`): `string`
+▸ **stripIndents**(`strings`, `...values`): `string`
 
 Removes indents, which is useful for printing warning and messages.
 
@@ -2172,7 +2265,7 @@ stripIndents`
 
 ### stripJsonComments
 
-▸ `Const` **stripJsonComments**(`text`, `replaceCh?`): `string`
+▸ **stripJsonComments**(`text`, `replaceCh?`): `string`
 
 Takes JSON with JavaScript-style comments and remove
 them. Optionally replaces every none-newline character
@@ -2320,7 +2413,9 @@ Update general workspace configuration such as the default project or cli settin
 
 This does _not_ update projects configuration, use [updateProjectConfiguration](../../devkit/documents/nrwl_devkit#updateprojectconfiguration) or [addProjectConfiguration](../../devkit/documents/nrwl_devkit#addprojectconfiguration) instead.
 
-**`deprecated`** use updateNxJson
+**`Deprecated`**
+
+use updateNxJson
 
 #### Parameters
 
@@ -2422,66 +2517,3 @@ Serializes the given data to JSON and writes it to a file.
 #### Returns
 
 `void`
-
----
-
-## Utils Functions
-
-### ensurePackage
-
-▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `void`
-
-**`deprecated`** Use the other function signature without a Tree
-
-Use a package that has not been installed as a dependency.
-
-For example:
-
-```typescript
-ensurePackage(tree, '@nrwl/jest', nxVersion);
-```
-
-This install the @nrwl/jest@<nxVersion> and return the module
-When running with --dryRun, the function will throw when dependencies are missing.
-
-#### Parameters
-
-| Name                      | Type                                              | Description                                                        |
-| :------------------------ | :------------------------------------------------ | :----------------------------------------------------------------- |
-| `tree`                    | [`Tree`](../../devkit/documents/nrwl_devkit#tree) | the file system tree                                               |
-| `pkg`                     | `string`                                          | the package to check (e.g. @nrwl/jest)                             |
-| `requiredVersion`         | `string`                                          | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
-| `options?`                | `Object`                                          | -                                                                  |
-| `options.dev?`            | `boolean`                                         | -                                                                  |
-| `options.throwOnMissing?` | `boolean`                                         | -                                                                  |
-
-#### Returns
-
-`void`
-
-▸ **ensurePackage**<`T`\>(`pkg`, `version`): `T`
-
-Ensure that dependencies and devDependencies from package.json are installed at the required versions.
-
-For example:
-
-```typescript
-ensurePackage(tree, '@nrwl/jest', nxVersion);
-```
-
-#### Type parameters
-
-| Name | Type                      |
-| :--- | :------------------------ |
-| `T`  | extends `unknown` = `any` |
-
-#### Parameters
-
-| Name      | Type     | Description                                                 |
-| :-------- | :------- | :---------------------------------------------------------- |
-| `pkg`     | `string` | the package to install and require                          |
-| `version` | `string` | the version to install if the package doesn't exist already |
-
-#### Returns
-
-`T`

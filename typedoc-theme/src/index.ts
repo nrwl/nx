@@ -1,4 +1,6 @@
-import NrwlMarkdownTheme from './lib/theme';
+import { Application } from 'typedoc';
+import NxMarkdownTheme from './lib/theme';
 
-export * from './lib/theme';
-export default NrwlMarkdownTheme;
+export function load(app: Application) {
+  app.renderer.defineTheme('nx-markdown-theme', NxMarkdownTheme);
+}
