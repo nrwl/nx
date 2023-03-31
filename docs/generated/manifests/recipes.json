@@ -961,7 +961,7 @@
   "/recipes/storybook": {
     "id": "storybook",
     "name": "Storybook",
-    "description": "Storybook how tos",
+    "description": "Storybook how tos.",
     "file": "",
     "itemList": [
       {
@@ -1028,6 +1028,37 @@
     "isExternal": false,
     "path": "/recipes/storybook/one-storybook-with-composition",
     "tags": ["storybook"]
+  },
+  "/recipes/deployment": {
+    "id": "deployment",
+    "name": "Deployment",
+    "description": "Deployment recipes for Node.js and Deno server applications.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "node-server-fly-io",
+        "name": "Deploying a Node.js server to Fly.io",
+        "description": "",
+        "file": "shared/recipes/deployment/node-server-fly-io",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/deployment/node-server-fly-io",
+        "tags": ["deployment", "node"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/deployment",
+    "tags": []
+  },
+  "/recipes/deployment/node-server-fly-io": {
+    "id": "node-server-fly-io",
+    "name": "Deploying a Node.js server to Fly.io",
+    "description": "",
+    "file": "shared/recipes/deployment/node-server-fly-io",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/deployment/node-server-fly-io",
+    "tags": ["deployment", "node"]
   },
   "/recipes/other": {
     "id": "other",

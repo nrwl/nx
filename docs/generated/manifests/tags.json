@@ -821,6 +821,24 @@
       "path": "/recipes/storybook/one-storybook-with-composition"
     }
   ],
+  "deployment": [
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/node-server-fly-io",
+      "id": "node-server-fly-io",
+      "name": "Deploying a Node.js server to Fly.io",
+      "path": "/recipes/deployment/node-server-fly-io"
+    }
+  ],
+  "node": [
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/node-server-fly-io",
+      "id": "node-server-fly-io",
+      "name": "Deploying a Node.js server to Fly.io",
+      "path": "/recipes/deployment/node-server-fly-io"
+    }
+  ],
   "workspace-watching": [
     {
       "description": "",
