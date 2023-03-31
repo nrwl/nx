@@ -2,6 +2,15 @@ import { extractLayoutDirectory, Tree } from '@nx/devkit';
 import { getWorkspaceLayout, joinPathFragments, names } from '@nx/devkit';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/utils/schema';
 import { Linter } from '@nx/linter';
+import {
+  extractLayoutDirectory,
+  getWorkspaceLayout,
+  joinPathFragments,
+  names,
+  Tree,
+} from '@nx/devkit';
+import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/utils/schema';
+import { Linter } from '@nx/linter';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
 
 export function normalizeOptions(
@@ -19,7 +28,7 @@ export function normalizeOptions(
     : name;
 
   const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = projectName;
+  const fileName = options.simpleName ? name : projectName;
   const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
   const parsedTags = options.tags

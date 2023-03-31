@@ -348,4 +348,16 @@ describe('lib', () => {
       ).toMatchSnapshot();
     });
   });
+
+  describe('--simpleName', () => {
+    it('should generate a library with a simple name', async () => {
+      await libraryGenerator(tree, { name: libName, simpleName: true });
+
+      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toContain(
+        `export * from './lib/my-lib.module';`
+      );
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
+    });
+  });
 });
