@@ -28,7 +28,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
   const angularVersion =
     readModulePackageJson('@angular/core').packageJson.version;
   const majorAngularVersion = major(angularVersion);
-  if (majorAngularVersion > minMajorAngularVersionSupported) {
+  if (majorAngularVersion >= minMajorAngularVersionSupported) {
     // non-legacy
     return null;
   }
@@ -51,9 +51,14 @@ export async function getLegacyMigrationFunctionIfApplicable(
     legacyMigrationCommand = `ng g ${pkgName}:ng-add --preserve-angular-cli-layout`;
   } else {
     // use the latest Nx version that supported the Angular version
-    legacyMigrationCommand = `nx@${
+    pkgName = '@nrwl/angular';
+    pkgVersion = await resolvePackageVersion(
+      'nx',
       nxAngularLegacyVersionMap[majorAngularVersion]
-    } init ${process.argv.slice(2).join(' ')}`;
+    );
+    legacyMigrationCommand = `nx@${pkgVersion} init ${process.argv
+      .slice(2)
+      .join(' ')}`;
   }
 
   return async () => {
