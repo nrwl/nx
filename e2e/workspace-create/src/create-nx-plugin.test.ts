@@ -6,6 +6,7 @@ import {
   uniq,
   runCreatePlugin,
   cleanupProject,
+  tmpProjPath,
 } from '@nrwl/e2e/utils';
 
 describe('create-nx-plugin', () => {
@@ -13,8 +14,7 @@ describe('create-nx-plugin', () => {
 
   afterEach(() => cleanupProject());
 
-  // TODO: Re-enable to work with pnpm
-  xit('should be able to create a plugin repo and run plugin e2e', () => {
+  it('should be able to create a plugin repo and run plugin e2e', () => {
     const wsName = uniq('ws-plugin');
     const pluginName = uniq('plugin');
 
@@ -26,10 +26,11 @@ describe('create-nx-plugin', () => {
     checkFilesExist(
       'package.json',
       packageManagerLockFile[packageManager],
-      `packages/${pluginName}/package.json`,
-      `packages/${pluginName}/project.json`
+      `project.json`,
+      `generators.json`,
+      `executors.json`
     );
 
-    expect(() => runCLI(`e2e ${pluginName}-e2e`)).not.toThrow();
+    expect(() => runCLI(`e2e e2e`)).not.toThrow();
   });
 });

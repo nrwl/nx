@@ -29,11 +29,10 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
+    "create-nx-workspace": "file:../create-nx-workspace",
+    "chalk": "^4.1.0",
     "enquirer": "~2.3.6",
-    "nx": "file:../nx",
-    "tmp": "~0.2.1",
-    "yargs-parser": "21.1.1"
+    "yargs": "^17.6.2"
   },
   "publishConfig": {
     "access": "public"

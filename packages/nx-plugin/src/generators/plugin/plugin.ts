@@ -53,7 +53,7 @@ async function addFiles(host: Tree, options: NormalizedSchema) {
   });
 }
 
-function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
+function updatePluginConfig(host: Tree, options: NormalizedSchema) {
   const project = readProjectConfiguration(host, options.name);
 
   if (project.targets.build) {
@@ -100,13 +100,14 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
 
   addDependenciesToPackageJson(
     host,
-    {},
     {
       '@nrwl/devkit': nxVersion,
+      tslib: tsLibVersion,
+    },
+    {
       '@nrwl/jest': nxVersion,
       '@nrwl/js': nxVersion,
       '@swc-node/register': swcNodeVersion,
-      tslib: tsLibVersion,
     }
   );
 
@@ -115,7 +116,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
   addSwcDependencies(host);
 
   await addFiles(host, options);
-  updateWorkspaceJson(host, options);
+  updatePluginConfig(host, options);
 
   if (options.e2eTestRunner !== 'none') {
     await e2eProjectGenerator(host, {
@@ -125,6 +126,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       npmPackageName: options.npmPackageName,
       minimal: options.minimal ?? false,
       skipFormat: true,
+      rootProject: options.rootProject,
     });
   }
 

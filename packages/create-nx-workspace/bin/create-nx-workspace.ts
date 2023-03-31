@@ -2,20 +2,11 @@ import * as enquirer from 'enquirer';
 import * as yargs from 'yargs';
 import * as chalk from 'chalk';
 
-import { ciList } from '../src/utils/ci/ci-list';
 import { CreateWorkspaceOptions } from '../src/create-workspace-options';
 import { createWorkspace } from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
 import { presetOptions } from '../src/utils/preset/preset-options';
-import { messages } from '../src/utils/nx/ab-testing';
 import { output } from '../src/utils/output';
-import { deduceDefaultBase } from '../src/utils/git/default-base';
-import { stringifyCollection } from '../src/utils/string-utils';
-import {
-  detectInvokedPackageManager,
-  PackageManager,
-  packageManagerList,
-} from '../src/utils/package-manager';
 import { nxVersion } from '../src/utils/nx/nx-version';
 import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-and-course';
 
@@ -23,6 +14,20 @@ import { yargsDecorator } from './decorator';
 import { getThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
 import { Framework, frameworkList } from './types/framework-list';
 import { Bundler, bundlerList } from './types/bundler-list';
+import {
+  determineCI,
+  determineDefaultBase,
+  determineNxCloud,
+  determinePackageManager,
+} from '../src/internal-utils/prompts';
+import {
+  withAllPrompts,
+  withCI,
+  withGitOptions,
+  withNxCloud,
+  withOptions,
+  withPackageManager,
+} from '../src/internal-utils/yargs-options';
 
 interface Arguments extends CreateWorkspaceOptions {
   preset: string;
@@ -46,103 +51,64 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     '$0 [name] [options]',
     'Create a new Nx workspace',
     (yargs) =>
-      yargs
-        .option('name', {
-          describe: chalk.dim`Workspace name (e.g. org name)`,
-          type: 'string',
-        })
-        .option('preset', {
-          describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
-            Preset
-          )
-            .map((p) => `"${p}"`)
-            .join(
-              ', '
-            )}]. To build your own see https://nx.dev/packages/nx-plugin#preset`,
-          type: 'string',
-        })
-        .option('appName', {
-          describe: chalk.dim`The name of the application when a preset with pregenerated app is selected`,
-          type: 'string',
-        })
-        .option('interactive', {
-          describe: chalk.dim`Enable interactive mode with presets`,
-          type: 'boolean',
-          default: true,
-        })
-        .option('style', {
-          describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,
-          type: 'string',
-        })
-        .option('standaloneApi', {
-          describe: chalk.dim`Use Standalone Components if generating an Angular app`,
-          type: 'boolean',
-        })
-        .option('routing', {
-          describe: chalk.dim`Add a routing setup when a preset with pregenerated app is selected`,
-          type: 'boolean',
-        })
-        .option('bundler', {
-          describe: chalk.dim`Bundler to be used to build the application`,
-          choices: bundlerList,
-          type: 'string',
-        })
-        .option('framework', {
-          describe: chalk.dim`Framework option to be used when the node-server preset is selected`,
-          choices: frameworkList,
-          type: 'string',
-        })
-        .option('docker', {
-          describe: chalk.dim`Generate a Dockerfile with your node-server`,
-          type: 'boolean',
-        })
-        .option('nxCloud', {
-          describe: chalk.dim(messages.getPromptMessage('nxCloudCreation')),
-          type: 'boolean',
-        })
-        .option('ci', {
-          describe: chalk.dim`Generate a CI workflow file`,
-          choices: ciList,
-          defaultDescription: '',
-          type: 'string',
-        })
-        .option('allPrompts', {
-          alias: 'a',
-          describe: chalk.dim`Show all prompts`,
-          type: 'boolean',
-          default: false,
-        })
-        .option('packageManager', {
-          alias: 'pm',
-          describe: chalk.dim`Package manager to use`,
-          choices: [...packageManagerList].sort(),
-          defaultDescription: 'npm',
-          type: 'string',
-        })
-        .option('defaultBase', {
-          defaultDescription: 'main',
-          describe: chalk.dim`Default base to use for new projects`,
-          type: 'string',
-        })
-        .option('skipGit', {
-          describe: chalk.dim`Skip initializing a git repository`,
-          type: 'boolean',
-          default: false,
-          alias: 'g',
-        })
-        .option('commit.name', {
-          describe: chalk.dim`Name of the committer`,
-          type: 'string',
-        })
-        .option('commit.email', {
-          describe: chalk.dim`E-mail of the committer`,
-          type: 'string',
-        })
-        .option('commit.message', {
-          describe: chalk.dim`Commit message`,
-          type: 'string',
-          default: 'Initial commit',
-        }),
+      withOptions(
+        yargs
+          .option('name', {
+            describe: chalk.dim`Workspace name (e.g. org name)`,
+            type: 'string',
+          })
+          .option('preset', {
+            describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
+              Preset
+            )
+              .map((p) => `"${p}"`)
+              .join(
+                ', '
+              )}]. To build your own see https://nx.dev/packages/nx-plugin#preset`,
+            type: 'string',
+          })
+          .option('appName', {
+            describe: chalk.dim`The name of the application when a preset with pregenerated app is selected`,
+            type: 'string',
+          })
+          .option('interactive', {
+            describe: chalk.dim`Enable interactive mode with presets`,
+            type: 'boolean',
+            default: true,
+          })
+          .option('style', {
+            describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,
+            type: 'string',
+          })
+          .option('standaloneApi', {
+            describe: chalk.dim`Use Standalone Components if generating an Angular app`,
+            type: 'boolean',
+          })
+          .option('routing', {
+            describe: chalk.dim`Add a routing setup when a preset with pregenerated app is selected`,
+            type: 'boolean',
+          })
+          .option('bundler', {
+            describe: chalk.dim`Bundler to be used to build the application`,
+            choices: bundlerList,
+            type: 'string',
+          })
+          .option('framework', {
+            describe: chalk.dim`Framework option to be used when the node-server preset is selected`,
+            choices: frameworkList,
+            type: 'string',
+          })
+          .option('docker', {
+            describe: chalk.dim`Generate a Dockerfile with your node-server`,
+            type: 'boolean',
+          }),
+        withNxCloud,
+        withCI,
+        withAllPrompts,
+        withPackageManager,
+        withGitOptions
+      ),
+
     async (argv: yargs.ArgumentsCamelCase<Arguments>) => {
       await main(argv).catch((error) => {
         const { version } = require('../package.json');
@@ -402,77 +368,6 @@ async function determineMonorepoStyle(): Promise<string> {
     process.exit(1);
   }
   return a.MonorepoStyle;
-}
-
-async function determinePackageManager(
-  parsedArgs: yargs.Arguments<Arguments>
-): Promise<PackageManager> {
-  const packageManager: string = parsedArgs.packageManager;
-
-  if (packageManager) {
-    if (packageManagerList.includes(packageManager as PackageManager)) {
-      return Promise.resolve(packageManager as PackageManager);
-    }
-    output.error({
-      title: 'Invalid package manager',
-      bodyLines: [
-        `Package manager must be one of ${stringifyCollection([
-          ...packageManagerList,
-        ])}`,
-      ],
-    });
-    process.exit(1);
-  }
-
-  if (parsedArgs.allPrompts) {
-    return enquirer
-      .prompt<{ packageManager: PackageManager }>([
-        {
-          name: 'packageManager',
-          message: `Which package manager to use         `,
-          initial: 'npm' as any,
-          type: 'autocomplete',
-          choices: [
-            { name: 'npm', message: 'NPM' },
-            { name: 'yarn', message: 'Yarn' },
-            { name: 'pnpm', message: 'PNPM' },
-          ],
-        },
-      ])
-      .then((a) => a.packageManager);
-  }
-
-  return Promise.resolve(detectInvokedPackageManager());
-}
-
-async function determineDefaultBase(
-  parsedArgs: yargs.Arguments<Arguments>
-): Promise<string> {
-  if (parsedArgs.defaultBase) {
-    return Promise.resolve(parsedArgs.defaultBase);
-  }
-  if (parsedArgs.allPrompts) {
-    return enquirer
-      .prompt<{ DefaultBase: string }>([
-        {
-          name: 'DefaultBase',
-          message: `Main branch name                   `,
-          initial: `main`,
-          type: 'input',
-        },
-      ])
-      .then((a) => {
-        if (!a.DefaultBase) {
-          output.error({
-            title: 'Invalid branch name',
-            bodyLines: [`Branch name cannot be empty`],
-          });
-          process.exit(1);
-        }
-        return a.DefaultBase;
-      });
-  }
-  return Promise.resolve(deduceDefaultBase());
 }
 
 async function determinePreset(parsedArgs: any): Promise<Preset> {
@@ -831,80 +726,4 @@ async function determineBundler(
   }
 
   return Promise.resolve(parsedArgs.bundler);
-}
-
-async function determineNxCloud(
-  parsedArgs: yargs.Arguments<Arguments>
-): Promise<boolean> {
-  if (parsedArgs.nxCloud === undefined) {
-    return enquirer
-      .prompt<{ NxCloud: 'Yes' | 'No' }>([
-        {
-          name: 'NxCloud',
-          message: messages.getPromptMessage('nxCloudCreation'),
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-              hint: 'I want faster builds',
-            },
-
-            {
-              name: 'No',
-            },
-          ],
-          initial: 'Yes' as any,
-        },
-      ])
-      .then((a) => a.NxCloud === 'Yes');
-  } else {
-    return parsedArgs.nxCloud;
-  }
-}
-
-async function determineCI(
-  parsedArgs: yargs.Arguments<Arguments>,
-  nxCloud: boolean
-): Promise<string> {
-  if (!nxCloud) {
-    if (parsedArgs.ci) {
-      output.warn({
-        title: 'Invalid CI value',
-        bodyLines: [
-          `CI option only works when Nx Cloud is enabled.`,
-          `The value provided will be ignored.`,
-        ],
-      });
-    }
-    return '';
-  }
-
-  if (parsedArgs.ci) {
-    return parsedArgs.ci;
-  }
-
-  if (parsedArgs.allPrompts) {
-    return (
-      enquirer
-        .prompt<{ CI: string }>([
-          {
-            name: 'CI',
-            message: `CI workflow file to generate?      `,
-            type: 'autocomplete',
-            initial: '' as any,
-            choices: [
-              { message: 'none', name: '' },
-              { message: 'GitHub Actions', name: 'github' },
-              { message: 'Circle CI', name: 'circleci' },
-              { message: 'Azure DevOps', name: 'azure' },
-            ],
-          },
-        ])
-        // enquirer ignores name and value if they are falsy and takes
-        // first field that has a truthy value, so wee need to explicitly
-        // check for none
-        .then((a: { CI: string }) => (a.CI !== 'none' ? a.CI : ''))
-    );
-  }
-  return '';
 }

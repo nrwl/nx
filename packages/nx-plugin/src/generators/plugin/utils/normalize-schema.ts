@@ -31,9 +31,13 @@ export function normalizeOptions(
   const name = names(options.name).fileName;
   const fullProjectDirectory = projectDirectory
     ? `${names(projectDirectory).fileName}/${name}`
+    : options.rootProject
+    ? '.'
     : name;
 
-  const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
+  const projectName = options.rootProject
+    ? name
+    : fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
   const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 

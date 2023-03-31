@@ -141,19 +141,21 @@ function normalizeOptions(
   options: Options[0]
 ): Options[0] {
   const base = { ...DEFAULT_OPTIONS, ...options };
+  const pathPrefix =
+    sourceProject.data.root !== '.' ? `${sourceProject.data.root}/` : '';
   return {
     ...base,
     executorsJson: base.executorsJson
-      ? `${sourceProject.data.root}/${base.executorsJson}`
+      ? `${pathPrefix}${base.executorsJson}`
       : undefined,
     generatorsJson: base.generatorsJson
-      ? `${sourceProject.data.root}/${base.generatorsJson}`
+      ? `${pathPrefix}${base.generatorsJson}`
       : undefined,
     migrationsJson: base.migrationsJson
-      ? `${sourceProject.data.root}/${base.migrationsJson}`
+      ? `${pathPrefix}${base.migrationsJson}`
       : undefined,
     packageJson: base.packageJson
-      ? `${sourceProject.data.root}/${base.packageJson}`
+      ? `${pathPrefix}${base.packageJson}`
       : undefined,
   };
 }

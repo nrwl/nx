@@ -8,7 +8,8 @@
   "plugins": ["@typescript-eslint", "@nrwl/nx"],
   "extends": [],
   "rules": {
-    "@typescript-eslint/explicit-module-boundary-types": "off"
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "no-restricted-imports": ["error", "create-nx-workspace"]
   },
   "overrides": [
     {

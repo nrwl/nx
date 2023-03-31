@@ -91,7 +91,7 @@ function createGeneratorsJson(host: Tree, options: NormalizedSchema) {
     host,
     joinPathFragments(options.projectRoot, 'package.json'),
     (json) => {
-      json.generators ??= 'generators.json';
+      json.generators ??= './generators.json';
       return json;
     }
   );

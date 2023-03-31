@@ -35,6 +35,7 @@ import {
   typesNodeVersion,
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
+import { PackageJson } from 'nx/src/utils/package-json';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -44,7 +45,9 @@ export async function libraryGenerator(
     schema.directory
   );
   schema.directory = projectDirectory;
-  const libsDir = layoutDirectory ?? getWorkspaceLayout(tree).libsDir;
+  const libsDir = schema.rootProject
+    ? '.'
+    : layoutDirectory ?? getWorkspaceLayout(tree).libsDir;
   return projectGenerator(tree, schema, libsDir, join(__dirname, './files'));
 }
 
@@ -235,6 +238,7 @@ export async function addLint(
       `${options.projectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
     ],
     setParserOptionsProject: options.setParserOptionsProject,
+    rootProject: options.rootProject,
   });
 }
 
@@ -308,7 +312,25 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     toJS(tree);
   }
 
-  const packageJsonPath = join(options.projectRoot, 'package.json');
+  const packageJsonPath = joinPathFragments(
+    options.projectRoot,
+    'package.json'
+  );
+  if (tree.exists(packageJsonPath)) {
+    updateJson(tree, packageJsonPath, (json) => {
+      json.name = options.importPath;
+      json.version = '0.0.1';
+      json.type = 'commonjs';
+      return json;
+    });
+  } else {
+    writeJson<PackageJson>(tree, packageJsonPath, {
+      name: options.importPath,
+      version: '0.0.1',
+      type: 'commonjs',
+    });
+  }
+
   if (options.config === 'npm-scripts') {
     updateJson(tree, packageJsonPath, (json) => {
       json.scripts = {
@@ -317,11 +339,14 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
       };
       return json;
     });
-  } else if (!options.bundler || options.bundler === 'none') {
+  } else if (
+    (!options.bundler || options.bundler === 'none') &&
+    !(options.projectRoot === '.')
+  ) {
     tree.delete(packageJsonPath);
   }
 
-  if (options.minimal) {
+  if (options.minimal && !(options.projectRoot === '.')) {
     tree.delete(join(options.projectRoot, 'README.md'));
   }
 
@@ -437,6 +462,8 @@ function normalizeOptions(
   const name = names(options.name).fileName;
   const projectDirectory = options.directory
     ? `${names(options.directory).fileName}/${name}`
+    : options.rootProject
+    ? '.'
     : name;
 
   if (!options.unitTestRunner && options.bundler === 'vite') {
@@ -449,7 +476,9 @@ function normalizeOptions(
     options.linter = Linter.EsLint;
   }
 
-  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const projectName = options.rootProject
+    ? name
+    : projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = getCaseAwareFileName({
     fileName: options.simpleModuleName ? name : projectName,
     pascalCaseFiles: options.pascalCaseFiles,

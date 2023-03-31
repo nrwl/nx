@@ -138,11 +138,7 @@ describe('NxPlugin Plugin Generator', () => {
   it('should not create generator and executor files for minimal setups', async () => {
     await pluginGenerator(tree, getSchema({ name: 'myPlugin', minimal: true }));
 
-    [
-      'libs/my-plugin/project.json',
-      'libs/my-plugin/generators.json',
-      'libs/my-plugin/executors.json',
-    ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
+    expect(tree.exists('libs/my-plugin/project.json')).toBeTruthy();
 
     [
       'libs/my-plugin/src/generators/my-plugin/schema.d.ts',
@@ -156,25 +152,6 @@ describe('NxPlugin Plugin Generator', () => {
       'libs/my-plugin/src/executors/build/schema.json',
       'libs/my-plugin/src/executors/build/schema.d.ts',
     ].forEach((path) => expect(tree.exists(path)).toBeFalsy());
-
-    expect(tree.read('libs/my-plugin/generators.json', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "{
-        \\"$schema\\": \\"http://json-schema.org/schema\\",
-        \\"name\\": \\"my-plugin\\",
-        \\"version\\": \\"0.0.1\\",
-        \\"generators\\": {}
-      }
-      "
-    `);
-    expect(tree.read('libs/my-plugin/executors.json', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "{
-        \\"$schema\\": \\"http://json-schema.org/schema\\",
-        \\"executors\\": {}
-      }
-      "
-    `);
   });
 
   describe('--unitTestRunner', () => {

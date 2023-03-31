@@ -36,11 +36,12 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const tmpDir = await createSandbox(packageManager);
 
+  // nx new requires preset currently. We should probably make it optional.
   const directory = await createEmptyWorkspace<T>(
     tmpDir,
     name,
     packageManager,
-    options
+    { ...options, preset }
   );
 
   // If the preset is a third-party preset, we need to call createPreset to install it

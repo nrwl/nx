@@ -75,7 +75,7 @@ function createExecutorsJson(host: Tree, options: NormalizedSchema) {
     host,
     joinPathFragments(options.projectRoot, 'package.json'),
     (json) => {
-      json.executors ??= 'executors.json';
+      json.executors ??= './executors.json';
       return json;
     }
   );
