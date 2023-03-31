@@ -71,6 +71,7 @@ export function buildEsbuildOptions(
       context.projectName,
       context,
       {
+        initialTsConfigFileName: options.tsConfig,
         initialEntryPoints: entryPoints,
         recursive: true,
       }
@@ -105,6 +106,7 @@ export function buildEsbuildOptions(
   } else {
     // Otherwise, just transpile the project source files. Any workspace lib will need to be published separately.
     esbuildOptions.entryPoints = getEntryPoints(context.projectName, context, {
+      initialTsConfigFileName: options.tsConfig,
       initialEntryPoints: entryPoints,
       recursive: false,
     });
