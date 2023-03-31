@@ -3,12 +3,13 @@ import { ReportData, ScopeData } from './model';
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-export async function scrapeIssues(): Promise<ReportData> {
+export async function scrapeIssues(prevDate?: Date): Promise<ReportData> {
   const issues = getIssueIterator();
 
   let total = 0;
   let totalBugs = 0;
   let untriagedIssueCount = 0;
+  let totalClosed = 0;
   const scopeLabels = await getScopeLabels();
   const scopes: Record<string, ScopeData> = {};
 
@@ -21,9 +22,20 @@ export async function scrapeIssues(): Promise<ReportData> {
         const bug = issue.labels.some(
           (x) => (typeof x === 'string' ? x : x.name) === 'type: bug'
         );
-        if (bug) {
-          totalBugs += 1;
+        const closed =
+          issue.state === 'closed' &&
+          issue.closed_at &&
+          prevDate &&
+          new Date(issue.closed_at) > prevDate;
+
+        if (closed) {
+          totalClosed += 1;
+        } else if (issue.closed_at === null) {
+          if (bug) {
+            totalBugs += 1;
+          }
         }
+
         let triaged = false;
         for (const scope of scopeLabels) {
           if (
@@ -31,15 +43,19 @@ export async function scrapeIssues(): Promise<ReportData> {
               (x) => x === scope || (typeof x === 'object' && x.name === scope)
             )
           ) {
-            scopes[scope] ??= { bugCount: 0, count: 0 };
-            if (bug) {
-              scopes[scope].bugCount += 1;
+            scopes[scope] ??= { bugCount: 0, count: 0, closed: 0 };
+            if (closed) {
+              scopes[scope].closed += 1;
+            } else if (!issue.closed_at) {
+              if (bug) {
+                scopes[scope].bugCount += 1;
+              }
+              scopes[scope].count += 1;
             }
-            scopes[scope].count += 1;
             triaged = true;
           }
         }
-        if (!triaged) {
+        if (!triaged && !issue.closed_at) {
           untriagedIssueCount += 1;
         }
       }
@@ -50,6 +66,7 @@ export async function scrapeIssues(): Promise<ReportData> {
     scopes: scopes,
     totalBugCount: totalBugs,
     totalIssueCount: total,
+    totalClosed,
     untriagedIssueCount,
     // Format is like: Mar 03 2023
     collectedDate: new Date().toDateString().split(' ').slice(1).join(' '),
@@ -61,6 +78,7 @@ const getIssueIterator = () => {
     owner: 'nrwl',
     repo: 'nx',
     per_page: 100,
+    state: 'all',
   });
 };
 

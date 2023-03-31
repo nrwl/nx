@@ -18363,6 +18363,11 @@ markdown-escapes@^1.0.0:
   resolved "https://registry.yarnpkg.com/markdown-escapes/-/markdown-escapes-1.0.4.tgz#c95415ef451499d7602b91095f3c8e8975f78535"
   integrity sha512-8z4efJYk43E0upd0NbVXwgSTQs6cT3T06etieCMEg7dRbzCbxUCK/GHlX8mhHRDcp+OLlHkPKsvqQTCvsRl2cg==
 
+markdown-factory@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/markdown-factory/-/markdown-factory-0.0.3.tgz#18c9083da275de66097148aff78c6d710d21cfa6"
+  integrity sha512-y7XffnQ61exHdRdFmvp9MeJBGOpUIYJEdiNgj25VCCivA/oXs615ppGqH01lnG8zcZ9cEEPW1jIi1y/Xu4URPA==
+
 marked@4.0.18:
   version "4.0.18"
   resolved "https://registry.yarnpkg.com/marked/-/marked-4.0.18.tgz#cd0ac54b2e5610cfb90e8fd46ccaa8292c9ed569"

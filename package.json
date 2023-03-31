@@ -193,6 +193,7 @@
     "loader-utils": "2.0.3",
     "lockfile-lint": "^4.7.6",
     "magic-string": "~0.26.2",
+    "markdown-factory": "^0.0.3",
     "memfs": "^3.0.1",
     "metro-resolver": "^0.74.1",
     "mini-css-extract-plugin": "~2.4.7",
@@ -337,4 +338,3 @@
     ]
   }
 }
-
