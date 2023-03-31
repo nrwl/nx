@@ -39,7 +39,7 @@ export function reactNativeTestTarget(
   return {
     options: {
       detoxConfiguration: `${platform}.debug`,
-      buildTarget: `${e2eName}:build-${buildPlatform}}`,
+      buildTarget: `${e2eName}:build-${buildPlatform}`,
     },
     configurations: {
       production: {
