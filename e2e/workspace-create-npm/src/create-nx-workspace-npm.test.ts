@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  getSelectedPackageManager,
   packageInstall,
   readJson,
   runCLI,
@@ -10,11 +11,13 @@ import {
 
 describe('create-nx-workspace --preset=npm', () => {
   let wsName;
+  const packageManager = getSelectedPackageManager() || 'pnpm';
 
   beforeEach(() => {
     wsName = uniq('npm');
     runCreateWorkspace(wsName, {
       preset: 'npm',
+      packageManager,
     });
   });
 
