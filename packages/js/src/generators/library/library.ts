@@ -487,7 +487,7 @@ function normalizeOptions(
     ? name
     : projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = getCaseAwareFileName({
-    fileName: options.simpleModuleName ? name : projectName,
+    fileName: options.simpleName ? name : projectName,
     pascalCaseFiles: options.pascalCaseFiles,
   });
 
