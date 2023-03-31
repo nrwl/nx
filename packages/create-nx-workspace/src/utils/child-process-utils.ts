@@ -33,7 +33,8 @@ export function execAndWait(command: string, cwd: string) {
         if (error) {
           const logFile = join(cwd, 'error.log');
           writeFileSync(logFile, `${stdout}\n${stderr}`);
-          rej(new CreateNxWorkspaceError(stderr, error.code, logFile));
+          const message = stderr && stderr.trim().length ? stderr : stdout;
+          rej(new CreateNxWorkspaceError(message, error.code, logFile));
         } else {
           res({ code: 0, stdout });
         }
