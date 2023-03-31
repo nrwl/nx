@@ -1,17 +1,25 @@
-import { Tree, updateJson, updateNxJson, readNxJson } from '@nx/devkit';
+import {
+  Tree,
+  updateJson,
+  updateNxJson,
+  readNxJson,
+  formatFiles,
+  runTasksInSerial,
+} from '@nx/devkit';
 import { Linter } from '@nx/linter';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { pluginGenerator } from '../plugin/plugin';
 import { PresetGeneratorSchema } from './schema';
+import createPackageGenerator from '../create-package/create-package';
 
 export default async function (tree: Tree, options: PresetGeneratorSchema) {
-  const task = await pluginGenerator(tree, {
+  const pluginTask = await pluginGenerator(tree, {
     compiler: 'tsc',
     linter: Linter.EsLint,
     name: options.pluginName.includes('/')
       ? options.pluginName.split('/')[1]
       : options.pluginName,
-    skipFormat: false,
+    skipFormat: true,
     skipLintChecks: false,
     skipTsConfig: false,
     unitTestRunner: 'jest',
@@ -23,12 +31,27 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
   removeNpmScope(tree);
   moveNxPluginToDevDeps(tree);
 
-  return task;
+  const cliTask = await createPackageGenerator(tree, {
+    name: options.cliName ?? `create-${options.pluginName}-package`,
+    project: options.pluginName,
+    skipFormat: true,
+    skipTsConfig: false,
+    unitTestRunner: 'jest',
+    linter: Linter.EsLint,
+    setParserOptionsProject: false,
+    compiler: 'tsc',
+    rootProject: true,
+  });
+
+  await formatFiles(tree);
+
+  return runTasksInSerial(pluginTask, cliTask);
 }
 
 function removeNpmScope(tree: Tree) {
   updateNxJson(tree, { ...readNxJson(tree), npmScope: undefined });
 }
+
 function moveNxPluginToDevDeps(tree: Tree) {
   updateJson<PackageJson>(tree, 'package.json', (json) => {
     const nxPluginEntry = json.dependencies['@nx/nx-plugin'];

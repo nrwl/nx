@@ -10,6 +10,11 @@
       "type": "string",
       "description": "Plugin name",
       "aliases": ["name"]
+    },
+    "cliName": {
+      "type": "string",
+      "description": "Name of cli command to create workspace with plugin",
+      "aliases": ["name"]
     }
   },
   "required": ["pluginName"]

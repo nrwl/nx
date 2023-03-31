@@ -5,18 +5,19 @@ import { isKnownPreset } from './preset';
 /**
  * This function is used to check if a preset is a third party preset.
  * @param preset
- * @returns null if the preset is a known Nx preset or preset does not exist, the normalized preset otherwise.
+ * @returns null if the preset is a known Nx preset or preset does not exist, the package name of preset otherwise.
  */
 export async function getThirdPartyPreset(
   preset?: string
 ): Promise<string | null> {
   if (preset && !isKnownPreset(preset)) {
+    // extract the package name from the preset
     const packageName = preset.match(/.+@/)
       ? preset[0] + preset.substring(1).split('@')[0]
       : preset;
     const validateResult = validateNpmPackage(packageName);
     if (validateResult.validForNewPackages) {
-      return Promise.resolve(preset);
+      return Promise.resolve(packageName);
     } else {
       //! Error here
       output.error({

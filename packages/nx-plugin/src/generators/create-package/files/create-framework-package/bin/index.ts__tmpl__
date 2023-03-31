@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+
+import { createWorkspace } from 'create-nx-workspace';
+
+async function main() {
+  const name = process.argv[2]; // TODO: use libraries like yargs or enquirer to set your workspace name
+  // TODO: update below to customize the workspace
+  await createWorkspace('<%= preset %>', {
+    name, 
+    nxCloud: false,
+    packageManager: 'npm',
+  });
+
+  console.log(`Successfully created the workspace: ${name}.`);
+}
+
+main();

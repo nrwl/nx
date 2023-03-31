@@ -8,7 +8,7 @@ import { execSync } from 'child_process';
 import { dirname } from 'path';
 import { ensureDirSync } from 'fs-extra';
 import { tmpProjPath } from './paths';
-import { cleanup } from './utils';
+import { cleanup, directoryExists } from './utils';
 
 function runNxNewCommand(args?: string, silent?: boolean) {
   const localTmpDir = dirname(tmpProjPath());
@@ -69,7 +69,9 @@ export function newNxProject(
   pluginDistPath: string
 ): void {
   cleanup();
-  runNxNewCommand('', true);
+  if (!directoryExists(tmpProjPath())) {
+    runNxNewCommand('', true);
+  }
   patchPackageJsonForPlugin(npmPackageName, pluginDistPath);
   runPackageManagerInstall();
 }

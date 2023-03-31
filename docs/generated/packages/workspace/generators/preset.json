@@ -87,6 +87,7 @@
         "default": false
       }
     },
+    "required": ["preset", "name"],
     "presets": []
   },
   "description": "Create application in an empty workspace.",

@@ -1,0 +1,84 @@
+{
+  "name": "create-package",
+  "factory": "./src/generators/create-package/create-package",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxPluginCreatePackage",
+    "title": "Create a framework package",
+    "description": "Create a framework package that uses Nx CLI.",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The package name of cli, e.g. `create-framework-package`. Note this must be a valid NPM name to be published.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-priority": "important"
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the generator project.",
+        "alias": "p",
+        "$default": { "$source": "projectName" },
+        "x-prompt": "What is the name of the project for the generator?",
+        "x-priority": "important"
+      },
+      "unitTestRunner": {
+        "type": "string",
+        "enum": ["jest", "none"],
+        "description": "Test runner to use for unit tests.",
+        "default": "jest"
+      },
+      "directory": {
+        "type": "string",
+        "description": "A directory where the app is placed."
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint"],
+        "default": "eslint"
+      },
+      "tags": {
+        "type": "string",
+        "description": "Add tags to the library (used for linting).",
+        "alias": "t"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "skipTsConfig": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not update tsconfig.json for development experience.",
+        "x-priority": "internal"
+      },
+      "setParserOptionsProject": {
+        "type": "boolean",
+        "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+        "default": false
+      },
+      "compiler": {
+        "type": "string",
+        "enum": ["tsc", "swc"],
+        "default": "tsc",
+        "description": "The compiler used by the build and test targets."
+      },
+      "importPath": {
+        "type": "string",
+        "description": "How the plugin will be published, like `create-framework-app`. Note this must be a valid NPM name. Will use name if not provided."
+      }
+    },
+    "required": ["name", "project"],
+    "presets": []
+  },
+  "description": "Create a framework package that uses Nx CLI",
+  "implementation": "/packages/nx-plugin/src/generators/create-package/create-package.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx-plugin/src/generators/create-package/schema.json",
+  "type": "generator"
+}

@@ -59,7 +59,7 @@ async function runTests(
   context: ExecutorContext
 ): Promise<boolean> {
   const { success } = await jestExecutor(
-    { ...jestOptions, watch: false },
+    { ...jestOptions, watch: false, runInBand: true },
     context
   );
 

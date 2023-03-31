@@ -149,12 +149,12 @@ function getPresetDependencies({
       return { dependencies: {}, dev: { '@nx/node': nxVersion } };
 
     default: {
+      presetVersion =
+        presetVersion ?? getNpmPackageVersion(preset) ?? process.env?.[preset]; // read from env variable for e2e testing
       return {
         dev: {},
         dependencies: {
-          [preset]:
-            process.env['NX_E2E_PRESET_VERSION'] ??
-            getNpmPackageVersion(preset, presetVersion),
+          [preset]: presetVersion,
         },
       };
     }

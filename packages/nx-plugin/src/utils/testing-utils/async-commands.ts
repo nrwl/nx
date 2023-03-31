@@ -11,15 +11,16 @@ import { fileExists } from './utils';
  */
 export function runCommandAsync(
   command: string,
-  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv } = {
+  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
     silenceError: false,
+    cwd: tmpProjPath(),
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     exec(
       command,
       {
-        cwd: tmpProjPath(),
+        cwd: opts.cwd,
         env: { ...process.env, ...opts.env },
       },
       (err, stdout, stderr) => {
@@ -39,8 +40,9 @@ export function runCommandAsync(
  */
 export function runNxCommandAsync(
   command: string,
-  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv } = {
+  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
     silenceError: false,
+    cwd: tmpProjPath(),
   }
 ): Promise<{ stdout: string; stderr: string }> {
   if (fileExists(tmpProjPath('package.json'))) {

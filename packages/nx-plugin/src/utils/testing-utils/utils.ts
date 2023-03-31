@@ -125,7 +125,9 @@ export function readFile(path: string): string {
  * Deletes the e2e directory
  */
 export function cleanup(): void {
-  removeSync(tmpProjPath());
+  try {
+    removeSync(tmpProjPath());
+  } catch (e) {}
 }
 
 /**

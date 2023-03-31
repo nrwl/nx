@@ -12,13 +12,14 @@ import { fileExists } from './utils';
  */
 export function runNxCommand(
   command?: string,
-  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv } = {
+  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
     silenceError: false,
+    cwd: tmpProjPath(),
   }
 ): string {
   function _runNxCommand(c) {
     const execSyncOptions: ExecOptions = {
-      cwd: tmpProjPath(),
+      cwd: opts.cwd,
       env: { ...process.env, ...opts.env },
     };
     if (fileExists(tmpProjPath('package.json'))) {
@@ -50,11 +51,11 @@ export function runNxCommand(
 
 export function runCommand(
   command: string,
-  opts?: { env?: NodeJS.ProcessEnv }
+  opts: { env?: NodeJS.ProcessEnv; cwd?: string } = { cwd: tmpProjPath() }
 ): string {
   try {
     return execSync(command, {
-      cwd: tmpProjPath(),
+      cwd: opts.cwd,
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, ...opts?.env },
     }).toString();
