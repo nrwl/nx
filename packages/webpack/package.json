@@ -29,6 +29,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
+    "@babel/core": "^7.15.0",
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/js": "file:../js",
     "@nrwl/workspace": "file:../workspace",
