@@ -5,23 +5,27 @@ import {
   packageInstall,
   readJson,
   runCLI,
+  runCommand,
   runCreateWorkspace,
   uniq,
 } from '@nrwl/e2e/utils';
 
 describe('create-nx-workspace --preset=npm', () => {
-  let wsName;
+  const wsName = uniq('npm');
   const packageManager = getSelectedPackageManager() || 'pnpm';
 
-  beforeEach(() => {
-    wsName = uniq('npm');
+  beforeAll(() => {
     runCreateWorkspace(wsName, {
       preset: 'npm',
       packageManager,
     });
   });
 
-  afterEach(() => cleanupProject());
+  beforeEach(() => {
+    runCommand(`git reset --hard`);
+  });
+
+  afterAll(() => cleanupProject());
 
   it('should add angular application', () => {
     packageInstall('@nrwl/angular', wsName);
