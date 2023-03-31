@@ -53,7 +53,7 @@ interface AppComponentInfo {
 }
 
 export async function setupSsrGenerator(tree: Tree, options: Schema) {
-  await initGenerator(tree, {});
+  await initGenerator(tree, { skipFormat: true });
   const projectConfig = readProjectConfiguration(tree, options.project);
   const projectRoot = projectConfig.root;
   const appImportCandidates: AppComponentInfo[] = [

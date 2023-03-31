@@ -1,5 +1,6 @@
 import {
   convertNxGenerator,
+  formatFiles,
   getProjects,
   runTasksInSerial,
   Tree,
@@ -17,6 +18,7 @@ interface Schema {
   flat?: boolean;
   pascalCaseFiles?: boolean;
   pascalCaseDirectory?: boolean;
+  skipFormat?: boolean;
 }
 
 function getDirectory(host: Tree, options: Schema) {
@@ -40,9 +42,14 @@ export async function componentGenerator(host: Tree, options: Schema) {
     directory: getDirectory(host, options),
     classComponent: false,
     routing: false,
+    skipFormat: true,
   });
 
   const styledInstall = addStyleDependencies(host, options.style);
+
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 
   return runTasksInSerial(styledInstall, componentInstall);
 }

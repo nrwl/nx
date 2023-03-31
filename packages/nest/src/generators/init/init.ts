@@ -16,7 +16,10 @@ export async function initGenerator(
   const options = normalizeOptions(rawOptions);
   const tasks: GeneratorCallback[] = [];
 
-  const nodeInitTask = await nodeInitGenerator(tree, options);
+  const nodeInitTask = await nodeInitGenerator(tree, {
+    ...options,
+    skipFormat: true,
+  });
   tasks.push(nodeInitTask);
 
   if (!options.skipPackageJson) {

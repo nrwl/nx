@@ -9,4 +9,5 @@ export interface Schema {
   withTests?: boolean;
   js?: boolean;
   flat?: boolean;
+  skipFormat?: boolean;
 }

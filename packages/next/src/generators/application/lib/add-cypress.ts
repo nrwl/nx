@@ -18,5 +18,6 @@ export async function addCypress(host: Tree, options: NormalizedSchema) {
     name: `${options.name}-e2e`,
     directory: options.directory,
     project: options.projectName,
+    skipFormat: true,
   });
 }

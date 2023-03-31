@@ -24,6 +24,12 @@
       "examples": ["lib/components"],
       "x-prompt": "What's path of the component relative to the project's lib root?",
       "x-priority": "important"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "required": ["project", "componentPath"]

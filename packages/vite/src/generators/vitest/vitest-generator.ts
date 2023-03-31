@@ -74,7 +74,9 @@ export async function vitestGenerator(
   );
   tasks.push(installCoverageProviderTask);
 
-  await formatFiles(tree);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return runTasksInSerial(...tasks);
 }

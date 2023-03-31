@@ -1,6 +1,7 @@
 import {
   convertNxGenerator,
   ensurePackage,
+  formatFiles,
   getProjects,
   Tree,
   visitNotIgnoredFiles,
@@ -65,6 +66,7 @@ export async function createAllStories(
       await componentStoryGenerator(tree, {
         componentPath: relativeCmpDir,
         project: projectName,
+        skipFormat: true,
       });
     })
   );
@@ -75,6 +77,10 @@ export async function storiesGenerator(
   schema: StorybookStoriesSchema
 ) {
   await createAllStories(host, schema.project, schema.ignorePaths);
+
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default storiesGenerator;

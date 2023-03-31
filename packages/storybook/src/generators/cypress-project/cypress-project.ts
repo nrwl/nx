@@ -31,6 +31,7 @@ export interface CypressConfigureSchema {
   linter: Linter;
   standaloneConfig?: boolean;
   ciTargetName?: string;
+  skipFormat?: boolean;
 }
 
 export async function cypressProjectGenerator(
@@ -56,6 +57,7 @@ export async function cypressProjectGenerator(
     linter: schema.linter,
     directory: schema.directory,
     standaloneConfig: schema.standaloneConfig,
+    skipFormat: true,
   });
   tasks.push(installTask);
 
@@ -72,7 +74,9 @@ export async function cypressProjectGenerator(
     ciTargetName: schema.ciTargetName,
   });
 
-  await formatFiles(tree);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return runTasksInSerial(...tasks);
 }

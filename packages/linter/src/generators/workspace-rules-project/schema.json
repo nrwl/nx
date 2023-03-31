@@ -11,6 +11,13 @@
       "description": "Create the Workspace Lint Rules Project"
     }
   ],
-  "properties": {},
+  "properties": {
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
   "required": []
 }

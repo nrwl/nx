@@ -1,5 +1,6 @@
 import {
   convertNxGenerator,
+  formatFiles,
   GeneratorCallback,
   getWorkspaceLayout,
   joinPathFragments,
@@ -31,6 +32,7 @@ export async function libraryGenerator(host: Tree, options: Schema) {
   const libTask = await reactLibraryGenerator(host, {
     ...options,
     compiler: 'swc',
+    skipFormat: true,
   });
   tasks.push(libTask);
 
@@ -86,6 +88,10 @@ export async function libraryGenerator(host: Tree, options: Schema) {
       return json;
     }
   );
+
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 
   return runTasksInSerial(...tasks);
 }

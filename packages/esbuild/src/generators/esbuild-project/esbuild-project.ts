@@ -18,7 +18,10 @@ export async function esbuildProjectGenerator(
   tree: Tree,
   options: EsBuildProjectSchema
 ) {
-  const task = await esbuildInitGenerator(tree, options);
+  const task = await esbuildInitGenerator(tree, {
+    ...options,
+    skipFormat: true,
+  });
   checkForTargetConflicts(tree, options);
   addBuildTarget(tree, options);
   await formatFiles(tree);

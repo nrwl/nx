@@ -63,10 +63,9 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   // Set up build target
   if (options.buildable && options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage(
-      '@nrwl/vite',
-      nxVersion
-    );
+    const { viteConfigurationGenerator } = ensurePackage<
+      typeof import('@nrwl/vite')
+    >('@nrwl/vite', nxVersion);
     const viteTask = await viteConfigurationGenerator(host, {
       uiFramework: 'react',
       project: options.name,
@@ -74,6 +73,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       includeLib: true,
       inSourceTests: options.inSourceTests,
       includeVitest: options.unitTestRunner === 'vitest',
+      skipFormat: true,
     });
     tasks.push(viteTask);
   } else if (options.buildable && options.bundler === 'rollup') {
@@ -83,7 +83,10 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   // Set up test target
   if (options.unitTestRunner === 'jest') {
-    const { jestProjectGenerator } = ensurePackage('@nrwl/jest', nxVersion);
+    const { jestProjectGenerator } = ensurePackage<typeof import('@nrwl/jest')>(
+      '@nrwl/jest',
+      nxVersion
+    );
 
     const jestTask = await jestProjectGenerator(host, {
       ...options,
@@ -92,6 +95,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       supportTsx: true,
       skipSerializers: true,
       compiler: options.compiler,
+      skipFormat: true,
     });
     tasks.push(jestTask);
     const jestConfigPath = joinPathFragments(
@@ -108,12 +112,16 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // tests are already configured if bundler is vite
   ) {
-    const { vitestGenerator } = ensurePackage('@nrwl/vite', nxVersion);
+    const { vitestGenerator } = ensurePackage<typeof import('@nrwl/vite')>(
+      '@nrwl/vite',
+      nxVersion
+    );
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
       project: options.name,
       coverageProvider: 'c8',
       inSourceTests: options.inSourceTests,
+      skipFormat: true,
     });
     tasks.push(vitestTask);
   }
@@ -132,6 +140,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       js: options.js,
       pascalCaseFiles: options.pascalCaseFiles,
       inSourceTests: options.inSourceTests,
+      skipFormat: true,
     });
     tasks.push(componentTask);
   }

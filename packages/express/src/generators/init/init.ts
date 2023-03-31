@@ -31,7 +31,10 @@ function updateDependencies(tree: Tree) {
 }
 
 export async function initGenerator(tree: Tree, schema: Schema) {
-  const initTask = await nodeInitGenerator(tree, schema);
+  const initTask = await nodeInitGenerator(tree, {
+    ...schema,
+    skipFormat: true,
+  });
   const installTask = updateDependencies(tree);
   if (!schema.skipFormat) {
     await formatFiles(tree);

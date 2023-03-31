@@ -45,6 +45,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     ...options,
     // Only webpack works with module federation for now.
     bundler: 'webpack',
+    skipFormat: true,
   });
   tasks.push(initAppTask);
 
@@ -67,6 +68,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     const setupSsrTask = await setupSsrGenerator(host, {
       project: options.projectName,
       serverPort: options.devServerPort,
+      skipFormat: true,
     });
     tasks.push(setupSsrTask);
 

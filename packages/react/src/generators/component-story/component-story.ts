@@ -20,6 +20,7 @@ let tsModule: typeof import('typescript');
 export interface CreateComponentStoriesFileSchema {
   project: string;
   componentPath: string;
+  skipFormat?: boolean;
 }
 
 export function createComponentStoriesFile(
@@ -142,7 +143,10 @@ export async function componentStoryGenerator(
   schema: CreateComponentStoriesFileSchema
 ) {
   createComponentStoriesFile(host, schema);
-  await formatFiles(host);
+
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default componentStoryGenerator;

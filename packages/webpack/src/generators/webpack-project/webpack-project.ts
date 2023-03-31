@@ -15,13 +15,20 @@ export async function webpackProjectGenerator(
   tree: Tree,
   options: WebpackProjectGeneratorSchema
 ) {
-  const task = await webpackInitGenerator(tree, options);
+  const task = await webpackInitGenerator(tree, {
+    ...options,
+    skipFormat: true,
+  });
   checkForTargetConflicts(tree, options);
   addBuildTarget(tree, options);
   if (options.devServer) {
     addServeTarget(tree, options);
   }
-  await formatFiles(tree);
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
+
   return task;
 }
 

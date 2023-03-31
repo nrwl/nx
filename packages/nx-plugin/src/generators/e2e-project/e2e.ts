@@ -90,6 +90,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
     setupFile: 'none',
     supportTsx: false,
     skipSerializers: true,
+    skipFormat: true,
   });
 
   const project = readProjectConfiguration(host, options.projectName);
@@ -141,7 +142,9 @@ export async function e2eProjectGenerator(host: Tree, schema: Schema) {
     tasks.push(lintTask);
   }
 
-  await formatFiles(host);
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 
   return runTasksInSerial(...tasks);
 }

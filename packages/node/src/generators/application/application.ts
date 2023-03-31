@@ -371,7 +371,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   if (options.framework === 'nest') {
     const { applicationGenerator } = ensurePackage('@nrwl/nest', nxVersion);
-    return await applicationGenerator(tree, options);
+    return await applicationGenerator(tree, { ...options, skipFormat: true });
   }
 
   const initTask = await initGenerator(tree, {
@@ -419,6 +419,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       project: options.name,
       port: options.port,
       isNest: options.isNest,
+      skipFormat: true,
     });
     tasks.push(e2eTask);
   }
@@ -435,6 +436,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     const dockerTask = await setupDockerGenerator(tree, {
       ...options,
       project: options.name,
+      skipFormat: true,
     });
 
     tasks.push(dockerTask);

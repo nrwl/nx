@@ -1,5 +1,6 @@
 import {
   convertNxGenerator,
+  formatFiles,
   generateFiles,
   getProjects,
   joinPathFragments,
@@ -21,13 +22,18 @@ export interface CreateComponentSpecFileSchema {
   componentPath: string;
   js?: boolean;
   cypressProject?: string;
+  skipFormat?: boolean;
 }
 
-export function componentCypressGenerator(
+export async function componentCypressGenerator(
   host: Tree,
   schema: CreateComponentSpecFileSchema
 ) {
   createComponentSpecFile(host, schema);
+
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 // TODO: candidate to refactor with the angular component story

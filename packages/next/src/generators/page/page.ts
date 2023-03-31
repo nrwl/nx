@@ -1,5 +1,10 @@
 import { componentGenerator as reactComponentGenerator } from '@nrwl/react';
-import { convertNxGenerator, runTasksInSerial, Tree } from '@nrwl/devkit';
+import {
+  convertNxGenerator,
+  formatFiles,
+  runTasksInSerial,
+  Tree,
+} from '@nrwl/devkit';
 
 import { addStyleDependencies } from '../../utils/styles';
 import { Schema } from './schema';
@@ -21,9 +26,14 @@ export async function pageGenerator(host: Tree, options: Schema) {
     skipTests: !options.withTests,
     flat: !!options.flat,
     fileName: !options.flat ? 'index' : undefined,
+    skipFormat: true,
   });
 
   const styledTask = addStyleDependencies(host, options.style);
+
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 
   return runTasksInSerial(componentTask, styledTask);
 }

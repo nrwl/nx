@@ -208,6 +208,7 @@ export async function configurationGenerator(
         ciTargetName: schema.configureStaticServe
           ? 'static-storybook'
           : undefined,
+        skipFormat: true,
       });
       tasks.push(cypressTask);
     } else {
@@ -243,7 +244,9 @@ export async function configurationGenerator(
 
   tasks.push(addDependenciesToPackageJson(tree, {}, devDeps));
 
-  await formatFiles(tree);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return runTasksInSerial(...tasks);
 }

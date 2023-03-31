@@ -6,7 +6,10 @@ export async function addJest(
   host: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const { jestProjectGenerator } = ensurePackage('@nrwl/jest', nxVersion);
+  const { jestProjectGenerator } = ensurePackage<typeof import('@nrwl/jest')>(
+    '@nrwl/jest',
+    nxVersion
+  );
 
   if (options.unitTestRunner !== 'jest') {
     return () => {};
@@ -19,6 +22,6 @@ export async function addJest(
     skipSerializers: true,
     setupFile: 'none',
     compiler: options.compiler,
-    rootProject: options.rootProject,
+    skipFormat: true,
   });
 }

@@ -53,10 +53,10 @@
       "hidden": true,
       "x-priority": "internal"
     },
-    "formatFiles": {
-      "description": "Format generated files.",
+    "skipFormat": {
+      "description": "Skip formatting files.",
       "type": "boolean",
-      "default": true,
+      "default": false,
       "hidden": true,
       "x-priority": "internal"
     }
