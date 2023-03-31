@@ -46,7 +46,7 @@ executors:
     <<: *defaults
     resource_class: macos.x86.medium.gen2
     macos:
-      xcode: &_XCODE_VERSION '14.2.0'
+      xcode: &_XCODE_VERSION '13.0.0'
 
 # -------------------------
 #        COMMANDS
