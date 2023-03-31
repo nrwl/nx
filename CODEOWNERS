@@ -1,13 +1,15 @@
 # Any file not covered by a rule below, will default to Jason + Victor and a few select others.
-* @FrozenPandaz @vsavkin
-/packages/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
-/e2e/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
-/scripts/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
-/tools/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
-package.json @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
-yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
+
+- @FrozenPandaz @vsavkin
+  /packages/**/\* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
+  /e2e/**/_ @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
+  /scripts/\*\*/_ @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
+  /tools/\*_/_ @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
+  package.json @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
+  yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 
 # Docs Site + Graph
+
 /docs @bcabanes @isaacplmann @juristr
 /docs/nx-cloud @StalkAltan @rarmatei @isaacplmann @juristr @bcabanes
 /graph/** @philipjfulcher @FrozenPandaz @bcabanes
@@ -18,6 +20,7 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 # Plugin Verticals
 
 ## Angular
+
 /docs/generated/packages/angular/** @Coly010 @leosvelperez
 /docs/shared/packages/angular/** @Coly010 @leosvelperez @isaacplmann @juristr
 /packages/angular/** @Coly010 @leosvelperez
@@ -27,9 +30,10 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/make-angular-cli-faster/** @leosvelperez @Coly010
 /packages/angular/plugins/component-testing.ts @leosvelperez @Coly010 @barbados-clemens
 /packages/angular/src/generators/cypress-component-configuration/** @leosvelperez @Coly010 @barbados-clemens
-/packages/angular/src/generators/component-test/** @leosvelperez @Coly010 @barbados-clemens
+/packages/angular/src/generators/component-test/\*\* @leosvelperez @Coly010 @barbados-clemens
 
 ## React
+
 /docs/generated/packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
 /docs/generated/packages/next/** @jaysoo @ndcunningham @xiongemi
 /docs/shared/packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
@@ -42,9 +46,10 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/cra-to-nx/** @jaysoo @xiongemi @mandarini @ndcunningham
 /packages/react/plugins/component-testing/** @jaysoo @ndcunningham @barbados-clemens
 /packages/react/src/generators/cypress-component-configuration/** @jaysoo @ndcunningham @barbados-clemens
-/packages/react/src/generators/component-test/** @jaysoo @ndcunningham @barbados-clemens
+/packages/react/src/generators/component-test/\*\* @jaysoo @ndcunningham @barbados-clemens
 
 # React Native
+
 /docs/generated/packages/detox/** @xiongemi @jaysoo @ndcunningham
 /docs/generated/packages/expo/** @xiongemi @jaysoo @ndcunningham
 /docs/generated/packages/react-native/** @xiongemi @jaysoo @ndcunningham
@@ -53,16 +58,18 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /packages/expo/** @xiongemi @jaysoo @ndcunningham
 /e2e/expo/** @xiongemi @jaysoo @ndcunningham
 /packages/react-native/** @xiongemi @jaysoo @ndcunningham
-/e2e/react-native/** @xiongemi @jaysoo @ndcunningham
+/e2e/react-native/\*\* @xiongemi @jaysoo @ndcunningham
 
 ## Node
+
 /docs/generated/packages/node/** @nartc @ndcunningham @jaysoo
 /packages/node/** @nartc @ndcunningham @jaysoo
 /packages/express/** @nartc @ndcunningham @jaysoo
 /packages/nest/** @nartc @ndcunningham @jaysoo
-/e2e/node/** @nartc @ndcunningham @jaysoo
+/e2e/node/\*\* @nartc @ndcunningham @jaysoo
 
 ## JS
+
 /docs/generated/packages/js/** @nartc @jaysoo @ndcunningham
 /docs/generated/packages/web/** @jaysoo @mandarini @ndcunningham
 /docs/generated/packages/webpack/** @jaysoo @mandarini @ndcunningham
@@ -89,6 +96,7 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/vite/** @jaysoo @mandarini @ndcunningham
 
 ## Tools
+
 /docs/generated/packages/cypress/** @barbados-clemens @FrozenPandaz
 /docs/generated/packages/jest/** @barbados-clemens @FrozenPandaz
 /packages/cypress/** @barbados-clemens @FrozenPandaz
@@ -97,33 +105,38 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/jest/** @barbados-clemens @FrozenPandaz
 
 # Linter
+
 /docs/generated/packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz @JamesHenry
 /docs/generated/packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
 /packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz @JamesHenry
 /packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
-/e2e/linter/** @meeroslav @FrozenPandaz 
-.eslint* @meeroslav @FrozenPandaz @JamesHenry
+/e2e/linter/\*_ @meeroslav @FrozenPandaz
+.eslint_ @meeroslav @FrozenPandaz @JamesHenry
 
 # Storybook
+
 /docs/generated/packages/storybook/** @mandarini @jaysoo @Coly010
 /docs/shared/packages/storybook/** @mandarini @jaysoo @Coly010
 /packages/storybook/** @mandarini @jaysoo @Coly010
 /e2e/storybook/** @mandarini @FrozenPandaz @Coly010
-/e2e/storybook-angular/** @mandarini @Coly010
+/e2e/storybook-angular/\*\* @mandarini @Coly010
 
 ## Devkit
+
 /docs/generated/devkit/** @FrozenPandaz @AgentEnder
 /docs/generated/packages/devkit/** @FrozenPandaz @AgentEnder
-/packages/devkit/** @FrozenPandaz @AgentEnder
+/packages/devkit/\*\* @FrozenPandaz @AgentEnder
 /packages/devkit/index.ts @FrozenPandaz @vsavkin
 /packages/devkit/src/utils/module-federation @jaysoo @Coly010
 
 # Nx-Plugin
+
 /docs/generated/packages/nx-plugin/** @AgentEnder @FrozenPandaz
 /packages/nx-plugin/** @AgentEnder @FrozenPandaz
-/e2e/nx-plugin/** @AgentEnder @FrozenPandaz
+/e2e/nx-plugin/\*\* @AgentEnder @FrozenPandaz
 
 ## Core
+
 /docs/generated/packages/nx/** @vsavkin @FrozenPandaz @AgentEnder
 /docs/generated/packages/workspace/** @vsavkin @FrozenPandaz @AgentEnder
 /packages/nx/** @vsavkin @FrozenPandaz @AgentEnder
@@ -135,7 +148,7 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /packages/nx/src/nx-init/react/** @jaysoo @xiongemi @mandarini
 /e2e/nx-init/src/nx-init-react.test.ts @jaysoo @xiongemi @mandarini @ndcunningham
 /e2e/nx-init/src/files/cra/** @jaysoo @xiongemi @mandarini @ndcunningham
-/e2e/nx*/** @FrozenPandaz @AgentEnder @vsavkin
+/e2e/nx\*/** @FrozenPandaz @AgentEnder @vsavkin
 /packages/workspace/** @FrozenPandaz @AgentEnder @vsavkin
 /e2e/workspace-create/** @FrozenPandaz @AgentEnder @vsavkin
 /e2e/workspace-create-npm/** @FrozenPandaz @vsavkin
@@ -144,6 +157,7 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/add-nx-to-monorepo/** @vsavkin @FrozenPandaz @AgentEnder
 
 # Misc
+
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
 /e2e/utils/** @meeroslav @barbados-clemens @vsavkin @mandarini
 /community @AgentEnder @FrozenPandaz
@@ -152,18 +166,21 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /CODEOWNERS @FrozenPandaz @AgentEnder
 
 # Scripts
+
 /scripts/depcheck @FrozenPandaz @vsavkin @jaysoo
 /scripts/documentation @bcabanes @isaacplmann
 /scripts/local-registry @FrozenPandaz @vsavkin
 /scripts/angular-support-upgrades @Coly010 @leosvelperez
 
 # CI
+
 /.circleci/** @meeroslav @vsavkin @FrozenPandaz
 /.github/** @meeroslav @vsavkin @FrozenPandaz @JamesHenry
 /.husky/** @meeroslav @vsavkin @FrozenPandaz
 /packages/workspace/src/generators/ci-workflow/** @meeroslav @StalkAltan @vsavkin
 
 # Global Files
+
 project.json @FrozenPandaz @vsavkin
 jest.config.ts @barbados-clemens @FrozenPandaz
 jest.preset.ts @barbados-clemens @FrozenPandaz

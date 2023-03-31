@@ -233,6 +233,6 @@ npx nx affected --target=build
 
 {% card title="React Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with React applications sharing code." url="/react-tutorial/1-code-generation" /%}
 
-{% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/getting-started/node-server-tutorial" /%}
+{% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/tutorials/node-server-tutorial" /%}
 
 {% /cards %}

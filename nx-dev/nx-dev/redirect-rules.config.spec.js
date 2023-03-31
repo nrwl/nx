@@ -79,7 +79,7 @@ describe('Redirect rules configuration', () => {
 
       for (const url of oldNodeTutorialPaths) {
         expect(redirectRules.tutorialRedirects[url]).toEqual(
-          '/getting-started/node-server-tutorial'
+          '/tutorials/node-server-tutorial'
         );
       }
 
