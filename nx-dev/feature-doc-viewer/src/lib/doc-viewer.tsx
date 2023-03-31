@@ -8,6 +8,8 @@ import { Breadcrumbs, Footer } from '@nrwl/nx-dev/ui-common';
 import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
+import { useRef } from 'react';
+import { collectHeadings, TableOfContents } from './table-of-contents';
 
 export function DocViewer({
   document,
@@ -17,10 +19,14 @@ export function DocViewer({
   relatedDocuments: RelatedDocument[];
 }): JSX.Element {
   const router = useRouter();
+  const ref = useRef<HTMLDivElement | null>(null);
 
-  const { metadata, node } = renderMarkdown(document.content.toString(), {
-    filePath: document.filePath,
-  });
+  const { metadata, node, treeNode } = renderMarkdown(
+    document.content.toString(),
+    {
+      filePath: document.filePath,
+    }
+  );
 
   const vm = {
     title: metadata['title'] ?? document.name,
@@ -34,6 +40,7 @@ export function DocViewer({
         filePath: '',
       }
     ).node,
+    tableOfContent: collectHeadings(treeNode),
   };
 
   return (
@@ -75,11 +82,21 @@ export function DocViewer({
           </div>
           <div className="min-w-0 flex-auto pb-24 lg:pb-16">
             {/*MAIN CONTENT*/}
-            <div
-              data-document="main"
-              className="prose prose-slate dark:prose-invert max-w-none"
-            >
-              {vm.content}
+            <div className="relative">
+              <div
+                ref={ref}
+                data-document="main"
+                className="prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl"
+              >
+                {vm.content}
+              </div>
+              <div className="fixed top-36 right-[max(4rem,calc(50%-55rem))] z-20 hidden w-60 overflow-y-auto bg-white py-10 text-sm dark:bg-slate-900 2xl:block">
+                <TableOfContents
+                  elementRef={ref}
+                  path={router.basePath}
+                  headings={vm.tableOfContent}
+                />
+              </div>
             </div>
             {/*RELATED CONTENT*/}
             <div
