@@ -7597,10 +7597,6 @@
             "hash": "9bf81e20b174c74466770384d9f420578aefb3fa"
           },
           {
-            "file": "packages/angular/docs/file-server-examples.md",
-            "hash": "7970193bd9b6d0e74c36ac0e301c87e0d64a6680"
-          },
-          {
             "file": "packages/angular/docs/karma-project-examples.md",
             "hash": "e68f2b2c13e158bb2a31508eb6a503695cb9abd5"
           },
@@ -7906,24 +7902,6 @@
           {
             "file": "packages/angular/src/executors/delegate-build/schema.json",
             "hash": "d60ccce50361ab93c1f275dc0b49b932ad1d8b79"
-          },
-          {
-            "file": "packages/angular/src/executors/file-server/compat.ts",
-            "hash": "094efc423152340e16481ea0d7c25caa077a714f",
-            "deps": ["devkit"]
-          },
-          {
-            "file": "packages/angular/src/executors/file-server/file-server.impl.ts",
-            "hash": "0a96dae29f5508ac0d1c045b1427e29dfddfe39d",
-            "deps": ["devkit", "npm:chokidar", "npm:ignore", "nx"]
-          },
-          {
-            "file": "packages/angular/src/executors/file-server/schema.d.ts",
-            "hash": "119d207103daa389ce5b30ef23a45b2bdf5a3e19"
-          },
-          {
-            "file": "packages/angular/src/executors/file-server/schema.json",
-            "hash": "5773152a7176513833c148843bd881aa5eb56f3b"
           },
           {
             "file": "packages/angular/src/executors/ng-packagr-lite/compat.ts",

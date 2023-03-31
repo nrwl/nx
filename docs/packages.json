@@ -16,7 +16,6 @@
         "delegate-build",
         "ng-packagr-lite",
         "package",
-        "file-server",
         "webpack-browser",
         "webpack-dev-server",
         "webpack-server",
