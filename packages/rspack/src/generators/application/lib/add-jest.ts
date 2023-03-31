@@ -26,7 +26,6 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
     skipSerializers: true,
     setupFile: 'none',
     compiler: 'babel', // have to use babel for React projects
-    rootProject: options.rootProject,
   });
 
   updateSpecConfig(host, options);
