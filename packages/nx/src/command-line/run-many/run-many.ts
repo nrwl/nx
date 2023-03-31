@@ -56,7 +56,7 @@ export async function runMany(
         targets: nxArgs.targets,
         projects: projectNames,
       },
-      projectNames
+      () => Promise.resolve(projectNames)
     );
   } else {
     await runCommand(

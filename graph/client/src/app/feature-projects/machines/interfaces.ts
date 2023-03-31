@@ -65,6 +65,11 @@ export type ProjectGraphMachineEvents =
       type: 'updateGraph';
       projects: ProjectGraphProjectNode[];
       dependencies: Record<string, ProjectGraphDependency[]>;
+      affectedProjects: string[];
+      workspaceLayout: {
+        libsDir: string;
+        appsDir: string;
+      };
     };
 
 // The context (extended state) of the machine

@@ -9,5 +9,7 @@ export const yargsDepGraphCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(withDepGraphOptions(yargs), 'dep-graph'),
   handler: async (args) =>
-    await (await import('./graph')).generateGraph(args as any, []),
+    await (
+      await import('./graph')
+    ).generateGraph(args as any, () => Promise.resolve([])),
 };

@@ -254,10 +254,8 @@ export const projectGraphMachine = createMachine<
         //   name: 'route',
         // });
 
-        if (event.type === 'setProjects') {
-          ctx.workspaceLayout = event.workspaceLayout;
-          ctx.affectedProjects = event.affectedProjects;
-        }
+        ctx.workspaceLayout = event.workspaceLayout;
+        ctx.affectedProjects = event.affectedProjects;
       }),
       notifyGraphTracing: send(
         (ctx, event) => {

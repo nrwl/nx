@@ -307,6 +307,8 @@ export function ProjectsSidebar(): JSX.Element {
           type: 'updateGraph',
           projects: project.projects,
           dependencies: project.dependencies,
+          affectedProjects: project.affected,
+          workspaceLayout: selectedProjectRouteData.layout,
         });
       };
 

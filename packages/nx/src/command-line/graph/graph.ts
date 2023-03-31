@@ -40,6 +40,22 @@ export interface TaskGraphClientResponse {
   errors: Record<string, string>;
 }
 
+interface AffectedProjectsResolverArgs {
+  all?: boolean;
+  exclude?: string[];
+  files?: string[];
+  uncommitted?: boolean;
+  untracked?: boolean;
+  base?: string;
+  head?: string;
+  isBaseOriginallySet?: boolean;
+}
+
+type AffectedProjectsResolver = (
+  projectGraph: ProjectGraph,
+  options: AffectedProjectsResolverArgs
+) => Promise<string[]>;
+
 // maps file extention to MIME types
 const mimeType = {
   '.ico': 'image/x-icon',
@@ -184,9 +200,33 @@ export async function generateGraph(
     targets?: string[];
     focus?: string;
     exclude?: string[];
+    isBaseOriginallySet?: boolean;
+    files?: string[];
+    uncommitted?: boolean;
+    untracked?: boolean;
+    base?: string;
+    head?: string;
   },
-  affectedProjects: string[]
+  affectedProjectsResolver: AffectedProjectsResolver
 ): Promise<void> {
+  const projectGraph = await createProjectGraphAsync();
+  const affectedProjectsResolverArgs: AffectedProjectsResolverArgs = {
+    all: args.all,
+    exclude: args.exclude,
+    files: args.files,
+    uncommitted: args.uncommitted,
+    untracked: args.untracked,
+    base: args.base,
+    head: args.head,
+    isBaseOriginallySet: args.isBaseOriginallySet,
+  };
+  const affectedProjects: string[] = await affectedProjectsResolver(
+    projectGraph,
+    affectedProjectsResolverArgs
+  );
+
+  args.projects = affectedProjects;
+
   if (Array.isArray(args.targets) && args.targets.length > 1) {
     output.warn({
       title: 'Showing Multiple Targets is not supported yet',
@@ -328,7 +368,9 @@ export async function generateGraph(
       affectedProjects,
       args.focus,
       args.groupByFolder,
-      args.exclude
+      args.exclude,
+      affectedProjectsResolver,
+      affectedProjectsResolverArgs
     );
 
     url.pathname = args.view;
@@ -377,7 +419,9 @@ async function startServer(
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
-  exclude: string[] = []
+  exclude: string[] = [],
+  affectedProjectsResolver: AffectedProjectsResolver,
+  affectedProjectsResolverArgs: AffectedProjectsResolverArgs
 ) {
   let unregisterFileWatcher: (() => void) | undefined;
   if (watchForchanges) {
@@ -401,6 +445,19 @@ async function startServer(
 
     if (sanitizePath === 'project-graph.json') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
+      if (watchForchanges) {
+        const projectGraph = await createProjectGraphAsync();
+        const affected = await affectedProjectsResolver(
+          projectGraph,
+          affectedProjectsResolverArgs
+        );
+        currentDepGraphClientResponse = await createDepGraphClientResponse(
+          affected
+        );
+        currentDepGraphClientResponse.focus = focus;
+        currentDepGraphClientResponse.groupByFolder = groupByFolder;
+        currentDepGraphClientResponse.exclude = exclude;
+      }
       res.end(JSON.stringify(currentDepGraphClientResponse));
       return;
     }
@@ -489,7 +546,8 @@ function debounce(fn: (...args) => void, time: number) {
 function createFileWatcher() {
   return daemonClient.registerFileWatcher(
     { watchProjects: 'all', includeGlobalWorkspaceFiles: true },
-    debounce(async (error, { changedFiles }) => {
+    debounce(async (error, changed) => {
+      const changedFiles = changed.changedFiles ?? [];
       if (error === 'closed') {
         output.error({ title: `Watch error: Daemon closed the connection` });
         process.exit(1);
@@ -544,7 +602,7 @@ async function createDepGraphClientResponse(
   const dependencies = graph.dependencies;
 
   const hasher = createHash('sha256');
-  hasher.update(JSON.stringify({ layout, projects, dependencies }));
+  hasher.update(JSON.stringify({ layout, projects, dependencies, affected }));
 
   const hash = hasher.digest('hex');
 
