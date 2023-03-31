@@ -36,7 +36,7 @@ For this tutorial, you'll create an Express API application, a library that the 
 Run the command `npx create-nx-workspace@latest` and when prompted, provide the following responses:
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
-✔ Choose what to create                 · node-server
+✔ Choose what to create                 · node-standalone
 ✔ Application name                      · products-api
 ✔ What framework should be used? · express
 ✔ Would you like to generate a Dockerfile? [https://docs.docker.com/] · Yes
@@ -45,10 +45,10 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}
 
-The `node-server` preset automatically creates a `products-api` application at the root of the workspace and an `e2e` project that runs against it.
+The `node-standalone` preset automatically creates a `products-api` application at the root of the workspace and an `e2e` project that runs against it.
 
 {% callout type="note" title="Framework Options" %}
-This tutorial uses the `express` framework. The `node-server` preset also provides starter files for `koa` and `fastify`.
+This tutorial uses the `express` framework. The `node-standalone` preset also provides starter files for `koa` and `fastify`. For other frameworks, you can choose `none` and add a it yourself.
 {% /callout %}
 
 ## Generating Libraries

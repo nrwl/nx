@@ -1009,7 +1009,7 @@
         {
           "name": "Storybook",
           "id": "storybook",
-          "description": "Storybook how tos",
+          "description": "Storybook how tos.",
           "itemList": [
             {
               "name": "Publishing Storybook: One main Storybook instance for all projects",
@@ -1028,6 +1028,19 @@
               "id": "one-storybook-with-composition",
               "tags": ["storybook"],
               "file": "shared/recipes/one-storybook-with-composition"
+            }
+          ]
+        },
+        {
+          "name": "Deployment",
+          "id": "deployment",
+          "description": "Deployment recipes for Node.js and Deno server applications.",
+          "itemList": [
+            {
+              "name": "Deploying a Node.js server to Fly.io",
+              "id": "node-server-fly-io",
+              "tags": ["deployment", "node"],
+              "file": "shared/recipes/deployment/node-server-fly-io"
             }
           ]
         },

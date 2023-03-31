@@ -2560,6 +2560,31 @@
         "disableCollapsible": false
       },
       {
+        "name": "Deployment",
+        "path": "/recipes/deployment",
+        "id": "deployment",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Deploying a Node.js server to Fly.io",
+            "path": "/recipes/deployment/node-server-fly-io",
+            "id": "node-server-fly-io",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Deploying a Node.js server to Fly.io",
+        "path": "/recipes/deployment/node-server-fly-io",
+        "id": "node-server-fly-io",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Other",
         "path": "/recipes/other",
         "id": "other",
