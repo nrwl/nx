@@ -79,6 +79,7 @@ async function createTasks(
             p.getId(affectedProject.name, target, resolvedConfiguration),
             affectedProject,
             target,
+            nxArgs.environment,
             resolvedConfiguration,
             overrides
           )

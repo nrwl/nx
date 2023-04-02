@@ -23,6 +23,12 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { Transform } from 'stream';
 
 const workerPath = join(__dirname, './batch/run-batch.js');
+/**
+ * Sets the default environment to 'local' for running NX.
+ * While yargs handles this default, it is also set here to
+ * accommodate other processes that may use it.
+ */
+const defaultEnv = 'local';
 
 export class ForkedProcessTaskRunner {
   workspaceRoot = workspaceRoot;
@@ -400,42 +406,37 @@ export class ForkedProcessTaskRunner {
     };
   }
 
-  private getDotenvVariablesForForkedProcess() {
+  private getDotenvVariablesForForkedProcess(environment: string = defaultEnv) {
     return {
       ...parseEnv('.env'),
-      ...parseEnv('.local.env'),
-      ...parseEnv('.env.local'),
+      ...parseEnv(`.${environment}.env`),
+      ...parseEnv(`.env.${environment}`),
     };
   }
 
   private getDotenvVariablesForTask(task: Task) {
     if (process.env.NX_LOAD_DOT_ENV_FILES == 'true') {
-      return {
-        ...this.getDotenvVariablesForForkedProcess(),
-        ...parseEnv(`.${task.target.target}.env`),
-        ...parseEnv(`.env.${task.target.target}`),
-        ...(task.target.configuration
-          ? parseEnv(`.${task.target.target}.${task.target.configuration}.env`)
-          : {}),
-        ...(task.target.configuration
-          ? parseEnv(`.env.${task.target.target}.${task.target.configuration}`)
-          : {}),
-        ...parseEnv(`${task.projectRoot}/.env`),
-        ...parseEnv(`${task.projectRoot}/.local.env`),
-        ...parseEnv(`${task.projectRoot}/.env.local`),
-        ...parseEnv(`${task.projectRoot}/.${task.target.target}.env`),
-        ...parseEnv(`${task.projectRoot}/.env.${task.target.target}`),
-        ...(task.target.configuration
-          ? parseEnv(
-              `${task.projectRoot}/.${task.target.target}.${task.target.configuration}.env`
-            )
-          : {}),
-        ...(task.target.configuration
-          ? parseEnv(
-              `${task.projectRoot}/.env.${task.target.target}.${task.target.configuration}`
-            )
-          : {}),
-      };
+      const {
+        projectRoot,
+        target: { configuration, environment = defaultEnv, target },
+      } = task;
+
+      return [
+        `.${target}.env`,
+        `.env.${target}`,
+        `.${target}.${configuration}.env`,
+        `.env.${target}.${configuration}`,
+        `${projectRoot}/.env`,
+        `${projectRoot}/.${environment}.env`,
+        `${projectRoot}/.env.${environment}`,
+        `${projectRoot}/.${target}.env`,
+        `${projectRoot}/.env.${target}`,
+        `${projectRoot}/.${target}.${configuration}.env`,
+        `${projectRoot}/.env.${target}.${configuration}`,
+      ].reduce(
+        (env, path) => ({ ...env, ...parseEnv(path) }),
+        this.getDotenvVariablesForForkedProcess(environment)
+      );
     } else {
       return {};
     }

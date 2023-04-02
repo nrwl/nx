@@ -87,11 +87,20 @@ export function withTargetAndConfigurationOption(
 }
 
 export function withConfiguration(yargs: Argv) {
-  return yargs.options('configuration', {
+  return withEnvironment(yargs).options('configuration', {
     describe:
       'This is the configuration to use when performing tasks on projects',
     type: 'string',
     alias: 'c',
+  });
+}
+
+export function withEnvironment(yargs: Argv) {
+  return yargs.options('environment', {
+    describe: 'This is the environment name to use when loading env files',
+    default: 'local',
+    type: 'string',
+    alias: 'e',
   });
 }
 

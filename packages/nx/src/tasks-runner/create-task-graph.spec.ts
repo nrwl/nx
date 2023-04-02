@@ -73,6 +73,7 @@ describe('createTaskGraph', () => {
       {},
       [],
       ['test'],
+      undefined,
       'development',
       {}
     );
@@ -90,6 +91,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1'],
       ['test'],
+      undefined,
       'development',
       {
         a: 123,
@@ -118,6 +120,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1', 'lib1'],
       ['test'],
+      undefined,
       'development',
       {
         a: 123,
@@ -230,6 +233,7 @@ describe('createTaskGraph', () => {
       {},
       ['lib1'],
       ['build'],
+      undefined,
       null,
       {}
     );
@@ -270,6 +274,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1'],
       ['build'],
+      'local',
       'ci',
       {}
     );
@@ -282,6 +287,7 @@ describe('createTaskGraph', () => {
           target: {
             project: 'app1',
             target: 'build',
+            environment: 'local',
             configuration: 'ci',
           },
           overrides: {},
@@ -292,6 +298,7 @@ describe('createTaskGraph', () => {
           target: {
             project: 'lib1',
             target: 'build',
+            environment: 'local',
             configuration: 'libDefault',
           },
           overrides: {
@@ -304,6 +311,7 @@ describe('createTaskGraph', () => {
           target: {
             project: 'lib2',
             target: 'build',
+            environment: 'local',
             configuration: 'ci',
           },
           overrides: {
@@ -390,6 +398,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1'],
       ['build'],
+      undefined,
       null,
       {}
     );
@@ -431,6 +440,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1'],
       ['test'],
+      undefined,
       'development',
       {
         a: '--value={project.root}',
@@ -461,6 +471,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1'],
       ['test'],
+      undefined,
       'development',
       {
         a: '--base-href=/{projectRoot}${deploymentId}',
@@ -573,6 +584,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1'],
       ['build'],
+      undefined,
       'development',
       {
         myFlag: 'flag value',
@@ -634,6 +646,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1'],
       ['build'],
+      undefined,
       'development',
       {
         __overrides_unparsed__: [],
@@ -703,6 +716,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1', 'lib1'],
       ['build', 'prebuild'],
+      undefined,
       'development',
       {
         __overrides_unparsed__: [],
@@ -841,6 +855,7 @@ describe('createTaskGraph', () => {
       },
       ['app1'],
       ['build'],
+      undefined,
       'development',
       {
         __overrides_unparsed__: [],
@@ -1000,6 +1015,7 @@ describe('createTaskGraph', () => {
       },
       ['infra1'],
       ['apply'],
+      undefined,
       'development',
       {
         myFlag: 'flag value',
@@ -1085,6 +1101,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1'],
       ['build'],
+      undefined,
       'development',
       {
         __overrides_unparsed__: [],
@@ -1177,6 +1194,7 @@ describe('createTaskGraph', () => {
       },
       ['app1'],
       ['build'],
+      undefined,
       'development',
       {
         __overrides_unparsed__: [],
@@ -1265,6 +1283,7 @@ describe('createTaskGraph', () => {
       },
       ['app1'],
       ['build'],
+      undefined,
       'development',
       {
         __overrides_unparsed__: [],
@@ -1349,6 +1368,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1'],
       ['build'],
+      undefined,
       'development',
       {
         __overrides_unparsed__: [],
@@ -1381,6 +1401,7 @@ describe('createTaskGraph', () => {
       {},
       ['app1', 'app2'],
       ['build'],
+      undefined,
       'development',
       {
         __overrides_unparsed__: [],
@@ -1466,7 +1487,15 @@ describe('createTaskGraph', () => {
         app1: [],
       },
     };
-    const taskGraph = createTaskGraph(graph, {}, ['app1'], ['build'], null, {});
+    const taskGraph = createTaskGraph(
+      graph,
+      {},
+      ['app1'],
+      ['build'],
+      undefined,
+      null,
+      {}
+    );
     expect(taskGraph.tasks).toHaveProperty('app1:build');
     expect(taskGraph.tasks).toHaveProperty('lib1:build');
     expect(taskGraph.tasks).toHaveProperty('lib2:build');

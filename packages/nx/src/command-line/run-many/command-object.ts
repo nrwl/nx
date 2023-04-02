@@ -5,6 +5,7 @@ import {
   withOutputStyleOption,
   withTargetAndConfigurationOption,
   withOverrides,
+  withEnvironment,
 } from '../yargs-utils/shared-options';
 
 export const yargsRunManyCommand: CommandModule = {

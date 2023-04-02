@@ -110,6 +110,7 @@ function createTaskGraphAndValidateCycles(
     defaultDependencyConfigs,
     projectNames,
     nxArgs.targets,
+    nxArgs.environment,
     nxArgs.configuration,
     overrides,
     extraOptions.excludeTaskDependencies

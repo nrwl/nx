@@ -13,15 +13,15 @@ By default, Nx will load any environment variables you place in the following fi
 2. `apps/my-app/.[target-name].[configuration-name].env`
 3. `apps/my-app/.env.[target-name]`
 4. `apps/my-app/.[target-name].env`
-5. `apps/my-app/.env.local`
-6. `apps/my-app/.local.env`
+5. `apps/my-app/.env.[environment-name]`
+6. `apps/my-app/.[environment-name].env`
 7. `apps/my-app/.env`
 8. `.env.[target-name].[configuration-name]`
 9. `.[target-name].[configuration-name].env`
 10. `.env.[target-name]`
 11. `.[target-name].env`
-12. `.local.env`
-13. `.env.local`
+12. `.[environment-name].env`
+13. `.env.[environment-name]`
 14. `.env`
 
 {% callout type="warning" title="Order is important" %}
@@ -29,17 +29,16 @@ Nx will move through the above list, ignoring files it can't find, and loading e
 into the current process for the ones it can find. If it finds a variable that has already been loaded into the process,
 it will ignore it. It does this for two reasons:
 
-1. Developers can't accidentally overwrite important system level variables (like `NODE_ENV`)
-2. Allows developers to create `.env.local` or `.local.env` files for their local environment and override any project
-   defaults set in `.env`
-3. Allows developers to create target specific `.env.[target-name]` or `.[target-name].env` to overwrite environment variables for specific targets. For instance, you could increase the memory use for node processes only for build targets by setting `NODE_OPTIONS=--max-old-space-size=4096` in `.build.env`
+1. Protects important system-level variables, such as `NODE_ENV`, from being accidentally overwritten by developers.
+2. Enables the creation of `.env.local` or `.local.env` files for local environments, which can override project defaults set in `.env`.
+3. Supports the use of `.env.[environment-name]` or `.[environment-name].env` files to manage environment-specific configurations. If `-e [environment-name]` is not passed when the `nx` command is run, `[environment-name]` will default to `local`.
+4. Allows developers to create target specific `.env.[target-name]` or `.[target-name].env` files to overwrite environment variables for specific targets. For instance, you could increase the memory use for node processes only for build targets by setting `NODE_OPTIONS=--max-old-space-size=4096` in `.build.env`.
 
 For example:
 
 1. `apps/my-app/.env.local` contains `NX_API_URL=http://localhost:3333`
 2. `apps/my-app/.env` contains `NX_API_URL=https://api.example.com`
-3. Nx will first load the variables from `apps/my-app/.env.local` into the process. When it tries to load the variables
-   from `apps/my-app/.env`, it will notice that `NX_API_URL` already exists, so it will ignore it.
+3. Nx will first load the variables from `apps/my-app/.env.local` into the process. When it tries to load the variables from `apps/my-app/.env`, it will notice that `NX_API_URL` already exists, so it will ignore it.
 
 We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files
 for workspace-specific settings (like the [Nx Cloud token](/core-features/share-your-cache)).

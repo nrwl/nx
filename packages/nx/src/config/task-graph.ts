@@ -19,6 +19,11 @@ export interface Task {
      */
     target: string;
     /**
+     * The environment name to use when loading env files for the task.
+     * Defaults to 'local' if not provided.
+     */
+    environment?: string;
+    /**
      * The configuration of the target which the task invokes
      */
     configuration?: string;

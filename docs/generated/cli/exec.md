@@ -23,6 +23,14 @@ Type: `string`
 
 This is the configuration to use when performing tasks on projects
 
+### environment
+
+Type: `string`
+
+Default: `local`
+
+This is the environment name to use when loading env files
+
 ### exclude
 
 Type: `string`

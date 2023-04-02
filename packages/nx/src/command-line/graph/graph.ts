@@ -638,6 +638,7 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
           [projectName],
           [target],
           undefined,
+          undefined,
           {}
         );
       } catch (err) {
@@ -663,6 +664,7 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
               defaultDependencyConfigs,
               [projectName],
               [target],
+              undefined,
               configuration,
               {}
             );
@@ -742,6 +744,7 @@ function createJsonOutput(
       defaultDependencyConfigs,
       projects,
       targets,
+      undefined,
       undefined,
       {}
     );

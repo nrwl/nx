@@ -23,6 +23,7 @@ export class ProcessTasks {
   processTasks(
     projectNames: string[],
     targets: string[],
+    environment: string,
     configuration: string,
     overrides: Object,
     excludeTaskDependencies: boolean
@@ -41,6 +42,7 @@ export class ProcessTasks {
             id,
             project,
             target,
+            environment,
             resolvedConfiguration,
             overrides
           );
@@ -55,7 +57,13 @@ export class ProcessTasks {
 
     for (const taskId of Object.keys(this.tasks)) {
       const task = this.tasks[taskId];
-      this.processTask(task, task.target.project, configuration, overrides);
+      this.processTask(
+        task,
+        task.target.project,
+        environment,
+        configuration,
+        overrides
+      );
     }
 
     if (excludeTaskDependencies) {
@@ -88,6 +96,7 @@ export class ProcessTasks {
   processTask(
     task: Task,
     projectUsedToDeriveDependencies: string,
+    environment: string,
     configuration: string,
     overrides: Object
   ) {
@@ -111,6 +120,7 @@ export class ProcessTasks {
         this.processTasksForMatchingProjects(
           dependencyConfig,
           projectUsedToDeriveDependencies,
+          environment,
           configuration,
           task,
           taskOverrides,
@@ -120,6 +130,7 @@ export class ProcessTasks {
         this.processTasksForDependencies(
           projectUsedToDeriveDependencies,
           dependencyConfig,
+          environment,
           configuration,
           task,
           taskOverrides,
@@ -130,6 +141,7 @@ export class ProcessTasks {
           task,
           task.target.project,
           dependencyConfig,
+          environment,
           configuration,
           taskOverrides,
           overrides
@@ -141,6 +153,7 @@ export class ProcessTasks {
   private processTasksForMatchingProjects(
     dependencyConfig: TargetDependencyConfig,
     projectUsedToDeriveDependencies: string,
+    environment: string,
     configuration: string,
     task: Task,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
@@ -161,6 +174,7 @@ export class ProcessTasks {
         this.processTasksForDependencies(
           projectUsedToDeriveDependencies,
           dependencyConfig,
+          environment,
           configuration,
           task,
           taskOverrides,
@@ -192,6 +206,7 @@ export class ProcessTasks {
             task,
             projectName,
             dependencyConfig,
+            environment,
             configuration,
             taskOverrides,
             overrides
@@ -205,6 +220,7 @@ export class ProcessTasks {
     task: Task,
     projectName: string,
     dependencyConfig: TargetDependencyConfig,
+    environment: string,
     configuration: string,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
     overrides: Object
@@ -232,6 +248,7 @@ export class ProcessTasks {
           selfTaskId,
           selfProject,
           dependencyConfig.target,
+          environment,
           resolvedConfiguration,
           taskOverrides
         );
@@ -240,6 +257,7 @@ export class ProcessTasks {
         this.processTask(
           newTask,
           newTask.target.project,
+          environment,
           configuration,
           overrides
         );
@@ -250,6 +268,7 @@ export class ProcessTasks {
   private processTasksForDependencies(
     projectUsedToDeriveDependencies: string,
     dependencyConfig: TargetDependencyConfig,
+    environment: string,
     configuration: string,
     task: Task,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
@@ -285,6 +304,7 @@ export class ProcessTasks {
             depTargetId,
             depProject,
             dependencyConfig.target,
+            environment,
             resolvedConfiguration,
             taskOverrides
           );
@@ -294,12 +314,19 @@ export class ProcessTasks {
           this.processTask(
             newTask,
             newTask.target.project,
+            environment,
             configuration,
             overrides
           );
         }
       } else {
-        this.processTask(task, depProject.name, configuration, overrides);
+        this.processTask(
+          task,
+          depProject.name,
+          environment,
+          configuration,
+          overrides
+        );
       }
     }
   }
@@ -308,6 +335,7 @@ export class ProcessTasks {
     id: string,
     project: ProjectGraphProjectNode,
     target: string,
+    environment: string | undefined,
     resolvedConfiguration: string | undefined,
     overrides: Object
   ): Task {
@@ -326,6 +354,7 @@ export class ProcessTasks {
     const qualifiedTarget = {
       project: project.name,
       target,
+      environment,
       configuration: resolvedConfiguration,
     };
 
@@ -368,6 +397,7 @@ export function createTaskGraph(
   defaultDependencyConfigs: TargetDependencies,
   projectNames: string[],
   targets: string[],
+  environment: string | undefined,
   configuration: string | undefined,
   overrides: Object,
   excludeTaskDependencies: boolean = false
@@ -376,6 +406,7 @@ export function createTaskGraph(
   const roots = p.processTasks(
     projectNames,
     targets,
+    environment,
     configuration,
     overrides,
     excludeTaskDependencies
