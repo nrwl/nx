@@ -1,0 +1,66 @@
+{
+  "name": "generate-package-json",
+  "implementation": "/packages/js/src/executors/generate-package-json/generate-package-json.impl.ts",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "outputCapture": "direct-nodejs",
+    "version": 2,
+    "cli": "nx",
+    "title": "GeneratePackageJson builder",
+    "description": "Generates a package.json file.",
+    "type": "object",
+    "properties": {
+      "main": {
+        "type": "string",
+        "description": "The path to the entry file, relative to project.",
+        "alias": "entryFile",
+        "x-completion-type": "file",
+        "x-completion-glob": "**/*@(.js|.ts)"
+      },
+      "outputPath": {
+        "type": "string",
+        "description": "The output path of the generated files.",
+        "x-completion-type": "directory",
+        "x-priority": "important"
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "The path to tsconfig file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json"
+      },
+      "buildableProjectDepsInPackageJsonType": {
+        "type": "string",
+        "description": "The type of dependency to use for buildable project dependencies in the generated `package.json`.",
+        "enum": ["dependencies", "devDependencies"],
+        "default": "dependencies"
+      },
+      "excludeLibsInPackageJson": {
+        "type": "boolean",
+        "description": "Exclude libraries in the `package.json` file. This is useful if you are using a `package.json` file in the project's directory.",
+        "default": true
+      },
+      "generateLockfile": {
+        "type": "boolean",
+        "description": "Generate a lock file for the generated `package.json`.",
+        "default": true
+      },
+      "format": {
+        "type": "string",
+        "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
+        "alias": "f",
+        "enum": ["esm", "cjs"],
+        "default": "esm"
+      }
+    },
+    "definitions": {},
+    "required": ["main", "outputPath", "tsConfig"],
+    "examplesFile": "---\ntitle: Examples for the generate package json executor\ndescription: This page contains examples for the js @nx/js:generate-package-json executor.\n---\n\n`project.json`:\n\n```json\n{\n  \"name\": \"api\",\n  //...\n  \"targets\": {\n    \"build\": {\n      \"dependsOn\": [\n        { \"projects\": \"self\", \"target\": \"build-api\", \"params\": \"forward\" }\n      ],\n      \"executor\": \"@nx/js:generate-package-json\",\n      \"options\": {\n        \"outputPath\": \"dist/apps/api\",\n        \"main\": \"apps/api/src/main.ts\",\n        \"tsConfig\": \"apps/api/tsconfig.app.json\"\n      }\n    },\n    \"build-api\": {\n      \"executor\": \"@nx/vite:build\",\n      //...\n      \"configurations\": {\n        \"production\": {\n          \"mode\": \"production\"\n        }\n      }\n    },\n    \"serve\": {\n      \"executor\": \"@nx/vite:dev-server\",\n      //...\n      \"configurations\": {\n        \"production\": {\n          \"buildTarget\": \"api:build:production\"\n        }\n      }\n    }\n  }\n}\n```\n\n```bash\nnx build api --prod\nnx build api --dev\n```\n",
+    "presets": []
+  },
+  "description": "Generates a `package.json` and pruned lock file (if generateLockfile not disabled) with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/js/src/executors/generate-package-json/schema.json",
+  "type": "executor"
+}

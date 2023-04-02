@@ -6,6 +6,7 @@ import {
   copyAssets,
   copyPackageJson,
   CopyPackageJsonOptions,
+  getExtraDependencies,
   printDiagnostics,
   runTypeCheck as _runTypeCheck,
   TypeCheckOptions,
@@ -21,7 +22,6 @@ import {
   getOutExtension,
   getOutfile,
 } from './lib/build-esbuild-options';
-import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { join } from 'path';
 

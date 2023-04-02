@@ -5035,6 +5035,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "generate-package-json",
+                "path": "/packages/js/executors/generate-package-json",
+                "name": "generate-package-json",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

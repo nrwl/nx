@@ -20,6 +20,11 @@
       "implementation": "./src/executors/verdaccio/verdaccio.impl",
       "schema": "./src/executors/verdaccio/schema.json",
       "description": "Start local registry with verdaccio"
+    },
+    "generate-package-json": {
+      "implementation": "./src/executors/generate-package-json/generate-package-json.impl",
+      "schema": "./src/executors/generate-package-json/schema.json",
+      "description": "Generates a `package.json` and pruned lock file (if generateLockfile not disabled) with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated."
     }
   },
   "builders": {

@@ -1011,6 +1011,15 @@
         "originalFilePath": "/packages/js/src/executors/verdaccio/schema.json",
         "path": "/packages/js/executors/verdaccio",
         "type": "executor"
+      },
+      "/packages/js/executors/generate-package-json": {
+        "description": "Generates a `package.json` and pruned lock file (if generateLockfile not disabled) with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.",
+        "file": "generated/packages/js/executors/generate-package-json.json",
+        "hidden": false,
+        "name": "generate-package-json",
+        "originalFilePath": "/packages/js/src/executors/generate-package-json/schema.json",
+        "path": "/packages/js/executors/generate-package-json",
+        "type": "executor"
       }
     },
     "generators": {
