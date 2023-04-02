@@ -6,7 +6,12 @@ import {
   getViteSharedConfig,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
-import { copyAssets } from '@nrwl/js';
+import {
+  copyAssets,
+  copyPackageJson,
+  CopyPackageJsonOptions,
+  getExtraDependencies,
+} from '@nrwl/js';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
@@ -36,8 +41,47 @@ export async function* viteBuildExecutor(
   const libraryPackageJson = resolve(projectRoot, 'package.json');
   const rootPackageJson = resolve(context.root, 'package.json');
 
+  if (options.generatePackageJson) {
+    const {
+      buildableProjectDepsInPackageJsonType = 'dependencies',
+      excludeLibsInPackageJson = true,
+      format = 'esm',
+      generateLockfile = true,
+    } = options;
+
+    if (!options.main) {
+      throw new Error(
+        'Missing "main" option required for generating package.json'
+      );
+    }
+    if (!options.tsConfig) {
+      throw new Error(
+        'Missing "tsConfig" option required for generating package.json'
+      );
+    }
+
+    const externalDependencies = getExtraDependencies(
+      context.projectName,
+      context.projectGraph
+    );
+
+    const cpjOptions: CopyPackageJsonOptions = {
+      outputPath: options.outputPath,
+      buildableProjectDepsInPackageJsonType,
+      excludeLibsInPackageJson,
+      generateLockfile,
+      format: [format],
+      main: options.main,
+      watch: false,
+      skipTypings: true,
+      updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
+    };
+
+    await copyPackageJson(cpjOptions, context);
+  }
   // For buildable libs, copy package.json if it exists.
-  if (
+  // this is here for backwards compatibility, you'll likely want to generate a package JSON if creating a buildable lib
+  else if (
     existsSync(libraryPackageJson) &&
     rootPackageJson !== libraryPackageJson
   ) {

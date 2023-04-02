@@ -135,6 +135,47 @@
         }
       ],
       "default": false
+    },
+    "main": {
+      "type": "string",
+      "description": "The path to the entry file, relative to project. Only needed if using generatePackageJson",
+      "alias": "entryFile",
+      "x-completion-type": "file",
+      "x-completion-glob": "**/*@(.js|.ts)"
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The path to tsconfig file. Only needed if using generatePacakgeJson",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json"
+    },
+    "generatePackageJson": {
+      "type": "boolean",
+      "description": "Generates a `package.json` and pruned lock file (if generateLockfile not disabled) with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.",
+      "default": false,
+      "buildableProjectDepsInPackageJsonType": {
+        "type": "string",
+        "description": "The type of dependency to use for buildable project dependencies in the generated `package.json`.",
+        "enum": ["dependencies", "devDependencies"],
+        "default": "dependencies"
+      },
+      "excludeLibsInPackageJson": {
+        "type": "boolean",
+        "description": "Exclude libraries in the `package.json` file. This is useful if you are using a `package.json` file in the project's directory.",
+        "default": true
+      },
+      "generateLockfile": {
+        "type": "boolean",
+        "description": "Generate a lock file for the generated `package.json`.",
+        "default": true
+      },
+      "format": {
+        "type": "string",
+        "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
+        "alias": "f",
+        "enum": ["esm", "cjs"],
+        "default": "esm"
+      }
     }
   },
   "definitions": {},
