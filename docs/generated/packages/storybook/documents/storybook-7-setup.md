@@ -53,7 +53,7 @@ npm install -D @nrwl/storybook
 You can generate Storybook configuration for an individual project with this command:
 
 ```shell
-nx g @nrwl/storybook:configuration project-name --storybook7Configuration --storybook7UiFramework=@storybook/react-webpack5
+nx g @nrwl/storybook:configuration --project-name storybook7Configuration --storybook7UiFramework=@storybook/react-webpack5
 ```
 
 {% callout type="info" title="For Nx versions <15.9" %}
