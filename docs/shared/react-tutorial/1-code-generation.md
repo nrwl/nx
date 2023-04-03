@@ -93,8 +93,6 @@ CREATE apps/admin/tsconfig.spec.json
 
 To create the `common-ui` and `products` libraries, use the `@nrwl/react:lib` and `@nrwl/js:lib` generators respectively:
 
-{% side-by-side %}
-
 ```{% command="npx nx g @nrwl/react:lib common-ui" path="~/myorg" %}
 
 > NX Generating @nrwl/react:library
@@ -132,8 +130,6 @@ CREATE libs/products/.eslintrc.json
 CREATE libs/products/jest.config.ts
 CREATE libs/products/tsconfig.spec.json
 ```
-
-{% /side-by-side %}
 
 You should now be able to see all four projects of our design:
 

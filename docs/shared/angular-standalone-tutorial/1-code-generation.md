@@ -84,8 +84,6 @@ UPDATE src/app/app.module.ts
 
 To create the `cart` and `shared/ui` libraries, use the `@nrwl/angular:lib` generator:
 
-{% side-by-side %}
-
 ```{% command="npx nx g @nrwl/angular:library cart" path="~/store" %}
 
 >  NX  Generating @nrwl/angular:library
@@ -138,8 +136,6 @@ To address all issues (including breaking changes), run:
 
 Run `npm audit` for details.
 ```
-
-{% /side-by-side %}
 
 You should now be able to see all three projects of our design:
 

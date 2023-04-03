@@ -84,8 +84,6 @@ CREATE src/app/shop/shop.tsx
 
 To create the `cart` and `shared/ui` libraries, use the `@nrwl/react:lib` generator:
 
-{% side-by-side %}
-
 ```{% command="npx nx g @nrwl/react:library cart" path="~/store" %}
 
 >  NX  Generating @nrwl/react:library
@@ -136,8 +134,6 @@ CREATE shared/ui/src/lib/shared-ui.module.css
 CREATE shared/ui/src/lib/shared-ui.spec.tsx
 CREATE shared/ui/src/lib/shared-ui.tsx
 ```
-
-{% /side-by-side %}
 
 You should now be able to see all three projects of our design:
 

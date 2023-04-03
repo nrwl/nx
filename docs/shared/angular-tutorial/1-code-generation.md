@@ -97,8 +97,6 @@ CREATE apps/admin-e2e/.eslintrc.json
 
 To create the `common-ui` and `products` libraries, use the `@nrwl/angular:lib` and `@nrwl/js:lib` generators respectively:
 
-{% side-by-side %}
-
 ```{% command="npx nx g @nrwl/angular:lib common-ui" path="~/myorg" %}
 
 >  NX  Generating @nrwl/angular:library
@@ -136,8 +134,6 @@ CREATE libs/products/.eslintrc.json
 CREATE libs/products/jest.config.ts
 CREATE libs/products/tsconfig.spec.json
 ```
-
-{% /side-by-side %}
 
 You should now be able to see all four projects of our design:
 
