@@ -1765,6 +1765,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Nx Console Telemetry",
+            "path": "/recipes/nx-console/console-telemetry",
+            "id": "console-telemetry",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Nx Console Generate Command",
             "path": "/recipes/nx-console/console-generate-command",
             "id": "console-generate-command",
@@ -1805,6 +1813,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Console Telemetry",
+        "path": "/recipes/nx-console/console-telemetry",
+        "id": "console-telemetry",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
