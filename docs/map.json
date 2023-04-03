@@ -1047,6 +1047,18 @@
               "id": "node-server-fly-io",
               "tags": ["deployment", "node"],
               "file": "shared/recipes/deployment/node-server-fly-io"
+            },
+            {
+              "name": "Serverless deployment with Deno Deploy",
+              "id": "deno-deploy",
+              "tags": ["deployment", "deno"],
+              "file": "shared/recipes/deployment/deno-deploy"
+            },
+            {
+              "name": "Serverless deployment with Deno and Netlify",
+              "id": "deno-netlify",
+              "tags": ["deployment", "deno"],
+              "file": "shared/recipes/deployment/deno-netlify"
             }
           ]
         },

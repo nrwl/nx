@@ -835,6 +835,20 @@
       "id": "node-server-fly-io",
       "name": "Deploying a Node.js server to Fly.io",
       "path": "/recipes/deployment/node-server-fly-io"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/deno-deploy",
+      "id": "deno-deploy",
+      "name": "Serverless deployment with Deno Deploy",
+      "path": "/recipes/deployment/deno-deploy"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/deno-netlify",
+      "id": "deno-netlify",
+      "name": "Serverless deployment with Deno and Netlify",
+      "path": "/recipes/deployment/deno-netlify"
     }
   ],
   "node": [
@@ -844,6 +858,22 @@
       "id": "node-server-fly-io",
       "name": "Deploying a Node.js server to Fly.io",
       "path": "/recipes/deployment/node-server-fly-io"
+    }
+  ],
+  "deno": [
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/deno-deploy",
+      "id": "deno-deploy",
+      "name": "Serverless deployment with Deno Deploy",
+      "path": "/recipes/deployment/deno-deploy"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/deno-netlify",
+      "id": "deno-netlify",
+      "name": "Serverless deployment with Deno and Netlify",
+      "path": "/recipes/deployment/deno-netlify"
     }
   ],
   "workspace-watching": [
