@@ -16,7 +16,6 @@ export async function scrapeIssues(prevDate?: Date): Promise<ReportData> {
   for await (const { data: slice } of issues) {
     // ignore PRs
     const issueSlice = slice.filter((x) => !('pull_request' in x));
-    total += issueSlice.length;
     for (const issue of issueSlice) {
       if (!(typeof issue === 'string')) {
         const bug = issue.labels.some(
@@ -34,6 +33,7 @@ export async function scrapeIssues(prevDate?: Date): Promise<ReportData> {
           if (bug) {
             totalBugs += 1;
           }
+          total += 1;
         }
 
         let triaged = false;
