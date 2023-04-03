@@ -405,6 +405,11 @@ jobs:
           git config --global user.email test@test.com
           git config --global user.name "Test Test"
 
+      - name: Set starting timestamp
+        id: before-e2e
+        run: |
+          echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
+
       - name: Run e2e tests
         id: e2e-run
         run: yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1
@@ -428,10 +433,15 @@ jobs:
       - name: Save matrix config in file
         if: ${{ always() }}
         id: save-matrix
+        shell: bash
         run: |
+          before=${{ steps.before-e2e.outputs.timestamp }}
+          now=$(date +%s)
+          echo "$before $now"
+          delta=$(($now - $before))
           matrix=$((
             echo '${{ toJSON(matrix) }}'
-          ) | jq -c '. + { "status": "${{ steps.e2e-run.outcome}}" }')
+          ) | jq -c '. + { "status": "${{ steps.e2e-run.outcome}}", "duration": $delta }')
           echo "$matrix" > matrix
           path=outputs/${{ matrix.os_name}}-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
           echo "path=$path" >> $GITHUB_OUTPUT
@@ -486,7 +496,7 @@ jobs:
             });
             core.setOutput('CODEOWNERS', Array.from(codeowners).join(','));
 
-            // message
+            // failed message
             let lastProject;
             let result = `
               \`\`\`
@@ -500,6 +510,31 @@ jobs:
             result += `\`\`\``;
             const message = result.split('\n').map(l => l.trim()).join('\n');
             core.setOutput('SLACK_MESSAGE', message);
+
+            // duration message
+            console.log(combined);
+            const timeReport = {};
+            combined.forEach(matrix => {
+              if (timeReport[matrix.project]) {
+                if (matrix.duration > timeReport[matrix.project].max) {
+                  timeReport[matrix.project].max = matrix.duration;
+                  timeReport[matrix.project].maxEnv: `${matrix.os_name}, ${matrix.package_manager}`;
+                }
+                if (matrix.duration < timeReport[matrix.project].min) {
+                  timeReport[matrix.project].min = matrix.duration;
+                  timeReport[matrix.project].minEnv: `${matrix.os_name}, ${matrix.package_manager}`;
+                }
+              } else {
+                timeReport[matrix.project] = {
+                  min: matrix.duration,
+                  max: matrix.duration,
+                  minEnv: `${matrix.os_name}, ${matrix.package_manager}`
+                  maxEnv: `${matrix.os_name}, ${matrix.package_manager}`
+                }
+              }
+            });
+            console.log(timeReport);
+
 
   report-failure:
     if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
