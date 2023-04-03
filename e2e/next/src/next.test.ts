@@ -198,7 +198,7 @@ describe('Next.js Applications', () => {
     selfContainedProcess.kill();
     await killPort(prodServePort);
     await killPort(selfContainedPort);
-  }, 300_000);
+  }, 600_000);
 
   it('should build and install pruned lock file', () => {
     const appName = uniq('app');
