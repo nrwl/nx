@@ -56,6 +56,20 @@ jobs:
         if: steps.cache-modules.outputs.cache-hit != 'true'
         run: yarn install --prefer-offline --frozen-lockfile --non-interactive
 
+      - name: Homebrew cache directory path
+        if: ${{ matrix.os == 'macos-latest' }}
+        id: homebrew-cache-dir-path
+        run: echo "dir=$(brew --cache)" >> $GITHUB_OUTPUT
+
+      - name: Cache Homebrew
+        if: ${{ matrix.os == 'macos-latest' }}
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
+          key: brew-${{ matrix.node_version }}
+          restore-keys: |
+            brew-
+
       - name: Cache Cypress
         id: cache-cypress
         uses: actions/cache@v3
