@@ -47,7 +47,7 @@ export function newProject({
 
     if (!directoryExists(tmpBackupProjPath())) {
       runCreateWorkspace(projScope, {
-        preset: 'empty',
+        preset: 'apps',
         packageManager,
       });
 
@@ -287,17 +287,12 @@ export function packageInstall(
   } ${pkgsWithVersions}${isVerbose() ? ' --verbose' : ''}`;
 
   try {
-    const install = execSync(
-      `${mode === 'dev' ? pm.addDev : pm.addProd} ${pkgsWithVersions}${
-        isVerbose() ? ' --verbose' : ''
-      }`,
-      {
-        cwd,
-        stdio: 'pipe',
-        env: process.env,
-        encoding: 'utf-8',
-      }
-    );
+    const install = execSync(command, {
+      cwd,
+      stdio: 'pipe',
+      env: process.env,
+      encoding: 'utf-8',
+    });
 
     if (isVerbose()) {
       output.log({
