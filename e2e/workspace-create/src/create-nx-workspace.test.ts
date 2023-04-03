@@ -19,7 +19,7 @@ describe('create-nx-workspace', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should create a workspace with a single angular app at the root without routing', () => {
+  it('should create a workspace with a single angular app at the root with routing', () => {
     const wsName = uniq('angular');
 
     runCreateWorkspace(wsName, {
@@ -28,6 +28,24 @@ describe('create-nx-workspace', () => {
       style: 'css',
       packageManager,
       standaloneApi: false,
+      routing: true,
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('src/app/app.routes.ts');
+    checkFilesDoNotExist('tsconfig.base.json');
+    checkFilesExist('project.json');
+    expectCodeIsFormatted();
+  });
+
+  it('should create a workspace with a single angular app at the root without routing', () => {
+    const wsName = uniq('angular');
+
+    runCreateWorkspace(wsName, {
+      preset: 'angular-standalone',
+      appName: wsName,
+      style: 'css',
+      packageManager,
       routing: false,
     });
 
@@ -52,7 +70,6 @@ describe('create-nx-workspace', () => {
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
-    checkFilesExist('src/app/app.routes.ts');
     checkFilesDoNotExist('src/app/app.module.ts');
     expectCodeIsFormatted();
   });
@@ -96,7 +113,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create an empty workspace built for apps', () => {
     const wsName = uniq('apps');
     runCreateWorkspace(wsName, {
-      preset: 'apps',
+      preset: 'empty',
       packageManager,
     });
 
@@ -106,6 +123,9 @@ describe('create-nx-workspace', () => {
       'apps/.gitkeep',
       'libs/.gitkeep'
     );
+    const foreignLockFiles = Object.keys(packageManagerLockFile)
+      .filter((pm) => pm !== packageManager)
+      .map((pm) => packageManagerLockFile[pm]);
 
     expectNoAngularDevkit();
   });
@@ -159,7 +179,7 @@ describe('create-nx-workspace', () => {
         appName,
         packageManager,
         standaloneApi: false,
-        routing: false,
+        routing: true,
       })
     ).toThrow();
   });
@@ -247,7 +267,6 @@ describe('create-nx-workspace', () => {
   it('should be able to create react-native workspace', () => {
     const wsName = uniq('react-native');
     const appName = uniq('app');
-    // TODO @meeroslav: let's run those only on macos or only if the `packageManager` is `npm`
     runCreateWorkspace(wsName, {
       preset: 'react-native',
       appName,
@@ -261,7 +280,6 @@ describe('create-nx-workspace', () => {
   it('should be able to create an expo workspace', () => {
     const wsName = uniq('expo');
     const appName = uniq('app');
-    // TODO @meeroslav: let's run those only on macos or only if the `packageManager` is `npm`
     runCreateWorkspace(wsName, {
       preset: 'expo',
       appName,
@@ -275,7 +293,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create a workspace with a custom base branch and HEAD', () => {
     const wsName = uniq('branch');
     runCreateWorkspace(wsName, {
-      preset: 'apps',
+      preset: 'empty',
       base: 'main',
       packageManager,
     });
@@ -284,7 +302,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create a workspace with custom commit information', () => {
     const wsName = uniq('branch');
     runCreateWorkspace(wsName, {
-      preset: 'apps',
+      preset: 'empty',
       extraArgs:
         '--commit.name="John Doe" --commit.email="myemail@test.com" --commit.message="Custom commit message!"',
       packageManager,
@@ -304,24 +322,51 @@ describe('create-nx-workspace', () => {
 
   it('should respect package manager preference', () => {
     const wsName = uniq('pm');
+    const appName = uniq('app');
 
     process.env.YARN_REGISTRY = `http://localhost:4872`;
     process.env.SELECTED_PM = 'npm';
 
     runCreateWorkspace(wsName, {
-      preset: 'apps',
+      preset: 'react-monorepo',
+      style: 'css',
+      appName,
       packageManager: 'npm',
+      bundler: 'webpack',
     });
 
     checkFilesDoNotExist('yarn.lock');
     checkFilesExist('package-lock.json');
+    expectCodeIsFormatted();
+    process.env.SELECTED_PM = packageManager;
+  });
+
+  it('should store package manager preference for angular', () => {
+    const wsName = uniq('pm');
+    const appName = uniq('app');
+
+    process.env.YARN_REGISTRY = `http://localhost:4872`;
+    process.env.SELECTED_PM = 'npm';
+
+    runCreateWorkspace(wsName, {
+      preset: 'angular-monorepo',
+      appName,
+      style: 'css',
+      packageManager: 'npm',
+      routing: true,
+      standaloneApi: false,
+    });
+
+    checkFilesDoNotExist('yarn.lock');
+    checkFilesExist('package-lock.json');
+    expectCodeIsFormatted();
     process.env.SELECTED_PM = packageManager;
   });
 
   it('should return error when ci workflow is selected but no cloud is set up', () => {
     const wsName = uniq('github');
-    runCreateWorkspace(wsName, {
-      preset: 'apps',
+    const create = runCreateWorkspace(wsName, {
+      preset: 'npm',
       packageManager,
       ci: 'circleci',
     });
@@ -333,7 +378,7 @@ describe('create-nx-workspace', () => {
     function setupProject(envPm: 'npm' | 'yarn' | 'pnpm') {
       process.env.SELECTED_PM = envPm;
       runCreateWorkspace(uniq('pm'), {
-        preset: 'apps',
+        preset: 'empty',
         packageManager: envPm,
         useDetectedPm: true,
       });
@@ -380,7 +425,7 @@ describe('create-nx-workspace', () => {
 
 describe('create-nx-workspace custom parent folder', () => {
   const tmpDir = `${e2eCwd}/${uniq('with space')}`;
-  const wsName = uniq('parent');
+  const wsName = uniq('empty');
   const packageManager = getSelectedPackageManager() || 'pnpm';
 
   afterEach(() => cleanupProject({ cwd: `${tmpDir}/${wsName}` }));
