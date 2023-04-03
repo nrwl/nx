@@ -250,6 +250,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/console-telemetry",
+      "id": "console-telemetry",
+      "name": "Nx Console Telemetry",
+      "path": "/recipes/nx-console/console-telemetry"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/console-generate-command",
       "id": "console-generate-command",
       "name": "Nx Console Generate Command",

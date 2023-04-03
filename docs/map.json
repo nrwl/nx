@@ -709,6 +709,12 @@
           "description": "Checkout all the recipes related to Nx Console.",
           "itemList": [
             {
+              "name": "Nx Console Telemetry",
+              "id": "console-telemetry",
+              "tags": ["integrate-with-editors"],
+              "file": "shared/recipes/console-telemetry"
+            },
+            {
               "name": "Nx Console Generate Command",
               "id": "console-generate-command",
               "tags": ["integrate-with-editors"],

@@ -37,6 +37,16 @@
     "file": "",
     "itemList": [
       {
+        "id": "console-telemetry",
+        "name": "Nx Console Telemetry",
+        "description": "",
+        "file": "shared/recipes/console-telemetry",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-telemetry",
+        "tags": ["integrate-with-editors"]
+      },
+      {
         "id": "console-generate-command",
         "name": "Nx Console Generate Command",
         "description": "",
@@ -90,6 +100,16 @@
     "isExternal": false,
     "path": "/recipes/nx-console",
     "tags": []
+  },
+  "/recipes/nx-console/console-telemetry": {
+    "id": "console-telemetry",
+    "name": "Nx Console Telemetry",
+    "description": "",
+    "file": "shared/recipes/console-telemetry",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-telemetry",
+    "tags": ["integrate-with-editors"]
   },
   "/recipes/nx-console/console-generate-command": {
     "id": "console-generate-command",
