@@ -11,8 +11,8 @@ import {
   getNxRequirePaths,
 } from '../src/utils/installation-directory';
 import { major } from 'semver';
-import { readJsonFile } from '../src/utils/fileutils';
 import { stripIndents } from '../src/utils/strip-indents';
+import { readModulePackageJson } from '../src/utils/package-json';
 import { execSync } from 'child_process';
 
 function main() {
@@ -163,12 +163,17 @@ function warnIfUsingOutdatedGlobalInstall(
   }
 }
 
-function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string {
-  return readJsonFile(
-    require.resolve('nx/package.json', {
-      paths: getNxRequirePaths(workspace.dir),
-    })
-  ).version;
+function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
+  const localNxPackages = ['nx', '@nrwl/tao', '@nrwl/cli'];
+  for (const pkg of localNxPackages) {
+    try {
+      const { packageJson } = readModulePackageJson(
+        'nx',
+        getNxRequirePaths(workspace.dir)
+      );
+      return packageJson.version;
+    } catch {}
+  }
 }
 
 function _getLatestVersionOfNx(): string {
