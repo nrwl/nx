@@ -25,16 +25,12 @@ export default async function* prebuildExecutor(
     await prebuildAsync(context.root, projectRoot, options);
 
     if (options.install) {
-      await installAsync(context.root, {
-        fix: true,
-      });
+      await installAsync(context.root, { fix: true });
       if (options.platform === 'ios') {
         await podInstall(join(context.root, projectRoot, 'ios'));
       }
     } else {
-      await installAsync(context.root, {
-        check: true,
-      });
+      await installAsync(context.root, {});
     }
 
     yield {
