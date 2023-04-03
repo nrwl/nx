@@ -403,8 +403,12 @@ export class FsTree implements Tree {
     }
     Object.keys(this.recordedChanges).forEach((f) => {
       if (f.startsWith(`${path}/`)) {
-        const [_, file] = f.split(`${path}/`);
-        res[file.split('/')[0]] = true;
+        // Remove the current folder's path from the directory
+        const file = f.substring(path.length + 1);
+        // Split the path on segments, and take the first one
+        const basePath = file.split('/')[0];
+        // Mark it as a child of the current directory
+        res[basePath] = true;
       }
     });
 
