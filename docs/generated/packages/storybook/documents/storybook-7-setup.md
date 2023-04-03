@@ -56,11 +56,17 @@ You can generate Storybook configuration for an individual project with this com
 nx g @nrwl/storybook:configuration project-name --storybook7Configuration --storybook7UiFramework=@storybook/react-webpack5
 ```
 
+Make sure to use the framework-specific generators if your project is using Angular, React, Next.js or React Native: [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nrwl/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration), for example:
+
+```shell
+nx g @nrwl/angular:storybook-configuration my-angular-project --storybook7Configuration
+```
+
 {% callout type="info" title="For Nx versions <15.9" %}
 The flag is called `storybook7betaConfiguration` for Nx versions <15.9.
 {% /callout %}
 
-In the field `storybook7UiFramework` you must choose one of the following Storybook frameworks:
+If you are NOT using a framework-specific generator, in the field `storybook7UiFramework` you must choose one of the following Storybook frameworks:
 
 - `@storybook/angular`
 - `@storybook/html-webpack5`
@@ -81,7 +87,7 @@ In the field `storybook7UiFramework` you must choose one of the following Storyb
 
 In Storybook 7, [the `framework` field in `.storybook/main.js|ts` is mandatory](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#framework-field-mandatory). You must choose one of the above frameworks when setting up your application.
 
-If you are using one of the framework-specific generators (e.g. [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), or [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration) for React and Nextjs projects, or [`@nrwl/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration), the generator will automatically choose the correct framework for you.
+If you are using one of the framework-specific generators, the generator will automatically choose the correct framework for you.
 
 Choosing one of these frameworks will have the following effects on your workspace:
 
@@ -89,7 +95,7 @@ Choosing one of these frameworks will have the following effects on your workspa
 
 2. Nx will generate a root `.storybook` folder and a project-level `.storybook` folder (located under `libs/your-project/.storybook` or `apps/your-project/.storybook`) containing the essential configuration files for Storybook.
 
-3. If you are working on an Angular, a React or a React Native project (and you choose `@storybook/angular`, `@storybook/react` or `@storybook/react-native`) the Nx generator will also generate stories for all the components in your project.
+3. If you are working on an Angular, a React or a React Native project and you use one of the framework-specific generators, Nx will also generate stories for all the components in your project.
 
 4. Nx will create new `targets` in your project's `project.json`, called `storybook` and `build-storybook`, containing all the necessary configuration to serve and build Storybook.
 
