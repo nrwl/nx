@@ -448,9 +448,10 @@ export function ensurePackage<T extends any = any>(
   const tempDir = dirSync().name;
 
   console.log(`Fetching ${pkg}...`);
+  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
   execSync(`${getPackageManagerCommand().addDev} ${pkg}@${requiredVersion}`, {
     cwd: tempDir,
-    stdio: 'ignore',
+    stdio: isVerbose ? 'inherit' : 'ignore',
   });
 
   addToNodePath(join(workspaceRoot, 'node_modules'));

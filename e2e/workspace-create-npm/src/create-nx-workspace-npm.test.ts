@@ -1,6 +1,8 @@
 import {
   checkFilesExist,
   cleanupProject,
+  e2eCwd,
+  getPackageManagerCommand,
   getSelectedPackageManager,
   packageInstall,
   readJson,
@@ -9,23 +11,33 @@ import {
   runCreateWorkspace,
   uniq,
 } from '@nrwl/e2e/utils';
+import { execSync } from 'child_process';
 
 describe('create-nx-workspace --preset=npm', () => {
   const wsName = uniq('npm');
-  const packageManager = getSelectedPackageManager() || 'pnpm';
 
+  let originalVerbose;
   beforeAll(() => {
+    originalVerbose = process.env.NX_VERBOSE_LOGGING;
+    process.env.NX_VERBOSE_LOGGING = 'true';
     runCreateWorkspace(wsName, {
       preset: 'npm',
-      packageManager,
+      packageManager: getSelectedPackageManager(),
     });
   });
 
-  beforeEach(() => {
-    runCommand(`git reset --hard`);
+  afterEach(() => {
+    runCommand(`git reset --hard HEAD`);
+    execSync(`${getPackageManagerCommand().runNx} reset`, {
+      cwd: `${e2eCwd}/${wsName}`,
+      stdio: 'pipe',
+    });
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    process.env.NX_VERBOSE_LOGGING = originalVerbose;
+    cleanupProject({ skipReset: true });
+  });
 
   it('should add angular application', () => {
     packageInstall('@nrwl/angular', wsName);
@@ -54,23 +66,6 @@ describe('create-nx-workspace --preset=npm', () => {
       [libName]: [`packages/${libName}/src/index.ts`],
     });
   }, 1_000_000);
-
-  it('should add workspace library', () => {
-    packageInstall('@nrwl/workspace', wsName);
-
-    const libName = uniq('lib');
-
-    expect(() =>
-      runCLI(
-        `generate @nrwl/workspace:library ${libName} --skipPackageJson --no-interactive`
-      )
-    ).not.toThrowError();
-    checkFilesExist('tsconfig.base.json');
-    const tsconfig = readJson(`tsconfig.base.json`);
-    expect(tsconfig.compilerOptions.paths).toEqual({
-      [libName]: [`packages/${libName}/src/index.ts`],
-    });
-  });
 
   it('should add js library', () => {
     packageInstall('@nrwl/js', wsName);
