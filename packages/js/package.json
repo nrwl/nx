@@ -41,7 +41,7 @@
     "@babel/runtime": "^7.14.8",
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/workspace": "file:../workspace",
-    "@phenomnomnominal/tsquery": "4.1.1",
+    "@phenomnomnominal/tsquery": "~5.0.1",
     "babel-plugin-const-enum": "^1.0.1",
     "babel-plugin-macros": "^2.8.0",
     "babel-plugin-transform-typescript-metadata": "^0.3.1",
