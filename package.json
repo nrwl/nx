@@ -72,7 +72,7 @@
     "@nrwl/web": "15.9.0-rc.1",
     "@nrwl/webpack": "15.9.0-rc.1",
     "@parcel/watcher": "2.0.4",
-    "@phenomnomnominal/tsquery": "4.1.1",
+    "@phenomnomnominal/tsquery": "~5.0.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@pnpm/lockfile-types": "^5.0.0",
     "@reduxjs/toolkit": "1.9.0",

@@ -35,7 +35,7 @@
     "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
-    "@phenomnomnominal/tsquery": "4.1.1",
+    "@phenomnomnominal/tsquery": "~5.0.1",
     "@svgr/webpack": "^6.1.2",
     "chalk": "^4.1.0",
     "file-loader": "^6.2.0",
