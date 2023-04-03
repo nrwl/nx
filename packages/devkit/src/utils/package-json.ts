@@ -11,8 +11,13 @@ import { requireNx } from '../../nx';
 import { dirSync } from 'tmp';
 import { join } from 'path';
 
-const { readJson, updateJson, getPackageManagerCommand, workspaceRoot } =
-  requireNx();
+const {
+  readJson,
+  updateJson,
+  getPackageManagerCommand,
+  workspaceRoot,
+  detectPackageManager,
+} = requireNx();
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -449,10 +454,15 @@ export function ensurePackage<T extends any = any>(
 
   console.log(`Fetching ${pkg}...`);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
-  execSync(`${getPackageManagerCommand().addDev} ${pkg}@${requiredVersion}`, {
-    cwd: tempDir,
-    stdio: isVerbose ? 'inherit' : 'ignore',
-  });
+  execSync(
+    `${
+      getPackageManagerCommand(detectPackageManager(), tempDir).addDev
+    } ${pkg}@${requiredVersion}`,
+    {
+      cwd: tempDir,
+      stdio: isVerbose ? 'inherit' : 'ignore',
+    }
+  );
 
   addToNodePath(join(workspaceRoot, 'node_modules'));
   addToNodePath(join(tempDir, 'node_modules'));

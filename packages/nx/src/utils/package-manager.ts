@@ -7,6 +7,7 @@ import { promisify } from 'util';
 import { writeJsonFile } from './fileutils';
 import { readModulePackageJson } from './package-json';
 import { gte, lt } from 'semver';
+import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
 
@@ -46,7 +47,8 @@ export function detectPackageManager(dir: string = ''): PackageManager {
  * ```
  */
 export function getPackageManagerCommand(
-  packageManager: PackageManager = detectPackageManager()
+  packageManager: PackageManager = detectPackageManager(),
+  root: string = workspaceRoot
 ): PackageManagerCommands {
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => {
@@ -70,7 +72,7 @@ export function getPackageManagerCommand(
       const pnpmVersion = getPackageManagerVersion('pnpm');
       const useExec = gte(pnpmVersion, '6.13.0');
       const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
-      const isPnpmWorkspace = existsSync('pnpm-workspace.yaml');
+      const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
 
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI

@@ -247,6 +247,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create react-native workspace', () => {
     const wsName = uniq('react-native');
     const appName = uniq('app');
+    // TODO @meeroslav: let's run those only on macos or only if the `packageManager` is `npm`
     runCreateWorkspace(wsName, {
       preset: 'react-native',
       appName,
@@ -260,6 +261,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create an expo workspace', () => {
     const wsName = uniq('expo');
     const appName = uniq('app');
+    // TODO @meeroslav: let's run those only on macos or only if the `packageManager` is `npm`
     runCreateWorkspace(wsName, {
       preset: 'expo',
       appName,
