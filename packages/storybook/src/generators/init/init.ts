@@ -20,6 +20,7 @@ import {
   litVersion,
   nxVersion,
   reactNativeStorybookLoader,
+  reactVersion,
   storybook7Version,
   storybookReactNativeVersion,
   storybookVersion,
@@ -42,6 +43,21 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   devDependencies['@nrwl/storybook'] = nxVersion;
 
   if (schema.storybook7Configuration) {
+    // Needed for Storybook 7
+    // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
+    if (
+      !packageJson.dependencies['react'] &&
+      !packageJson.devDependencies['react']
+    ) {
+      dependencies['react'] = reactVersion;
+    }
+    if (
+      !packageJson.dependencies['react-dom'] &&
+      !packageJson.devDependencies['react-dom']
+    ) {
+      dependencies['react-dom'] = reactVersion;
+    }
+
     if (schema.uiFramework === '@storybook/react-native') {
       devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
     } else {

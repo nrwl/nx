@@ -17,4 +17,5 @@ export const litVersion = '^2.6.1';
 export const htmlWebpackPluginVersion = '^5.5.0';
 export const tsNodeVersion = '10.9.1';
 
-export const storybook7Version = '^7.0.0-rc.0';
+export const storybook7Version = '^7.0.1';
+export const reactVersion = '^18.2.0';
