@@ -49,7 +49,7 @@ export function registerTranspiler(
   // Function to register transpiler that returns cleanup function
   let registerTranspiler: () => () => void;
 
-  const preferTsNode = process.env.NX_TS_NODE_LOCAL_EXECUTION === 'true';
+  const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (swcNodeInstalled && !preferTsNode) {
     // These are requires to prevent it from registering when it shouldn't

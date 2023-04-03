@@ -3,7 +3,7 @@
 The following environment variables are ones that you can set to change the behavior of Nx in different environments.
 
 | Property                         | Type    | Description                                                                                                                                                                                                                  |
-| -------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|----------------------------------| ------- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | NX_BASE                          | string  | The default base branch to use when calculating the affected projects. Can be overridden on the command line with `--base`.                                                                                                  |
 | NX_CACHE_DIRECTORY               | string  | The cache for task outputs is stored in `node_modules/.cache/nx` by default. Set this variable to use a different directory.                                                                                                 |
 | NX_CACHE_PROJECT_GRAPH           | boolean | If set to `false`, disables the project graph cache. Most useful when developing a plugin that modifies the project graph.                                                                                                   |
@@ -21,6 +21,7 @@ The following environment variables are ones that you can set to change the beha
 | NX_DRY_RUN                       | boolean | If set to `true`, will perform a dry run of the generator. No files will be created and no packages will be installed.                                                                                                       |
 | NX_INTERACTIVE                   | boolean | If set to `true`, will allow Nx to prompt you in the terminal to answer some further questions when running generators.                                                                                                      |
 | NX_GENERATE_QUIET                | boolean | If set to `true`, will prevent Nx logging file operations during generate                                                                                                                                                    |
+| NX_PREFER_TS_NODE                | boolean | If set to `true`, Nx will use ts-node for local execution of plugins even if `@swc-node/register` is installed.                                                                                                              |
 
 Nx will set the following environment variables so they can be accessible within the process even outside of executors and generators
 
