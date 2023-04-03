@@ -198,19 +198,33 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
 
       const modulePath = (exportDeclaration as any).moduleSpecifier.text;
 
-      let moduleFilePath = joinPathFragments(
-        dirname(filePath),
-        `${modulePath}.ts`
-      );
-      if (!existsSync(moduleFilePath)) {
-        // might be a tsx file
+      let moduleFilePath;
+      if (modulePath.endsWith('.js') || modulePath.endsWith('.jsx')) {
+        moduleFilePath = joinPathFragments(dirname(filePath), modulePath);
+        if (!existsSync(moduleFilePath)) {
+          const tsifiedModulePath = modulePath.replace(/\.js(x?)$/, '.ts$1');
+          moduleFilePath = joinPathFragments(
+            dirname(filePath),
+            `${tsifiedModulePath}`
+          );
+        }
+      } else if (modulePath.endsWith('.ts') || modulePath.endsWith('.tsx')) {
+        moduleFilePath = joinPathFragments(dirname(filePath), modulePath);
+      } else {
         moduleFilePath = joinPathFragments(
           dirname(filePath),
-          `${modulePath}.tsx`
+          `${modulePath}.ts`
         );
+        if (!existsSync(moduleFilePath)) {
+          // might be a tsx file
+          moduleFilePath = joinPathFragments(
+            dirname(filePath),
+            `${modulePath}.tsx`
+          );
+        }
       }
       if (!existsSync(moduleFilePath)) {
-        // might be a index.ts
+        // might be an index.ts
         moduleFilePath = joinPathFragments(
           dirname(filePath),
           `${modulePath}/index.ts`
