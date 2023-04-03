@@ -3,7 +3,7 @@
 The following environment variables are ones that you can set to change the behavior of Nx in different environments.
 
 | Property                         | Type    | Description                                                                                                                                                                                                                  |
-|----------------------------------| ------- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | NX_BASE                          | string  | The default base branch to use when calculating the affected projects. Can be overridden on the command line with `--base`.                                                                                                  |
 | NX_CACHE_DIRECTORY               | string  | The cache for task outputs is stored in `node_modules/.cache/nx` by default. Set this variable to use a different directory.                                                                                                 |
 | NX_CACHE_PROJECT_GRAPH           | boolean | If set to `false`, disables the project graph cache. Most useful when developing a plugin that modifies the project graph.                                                                                                   |
