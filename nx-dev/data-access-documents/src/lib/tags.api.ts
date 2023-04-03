@@ -25,8 +25,11 @@ export class TagsApi {
   }
 
   sortAndDeduplicateItems(tags: RelatedDocument[][]): RelatedDocument[] {
-    return tags
-      .flat()
-      .filter((item, index, items) => items.indexOf(item) === index);
+    return tags.flat().reduce((acc, item: RelatedDocument) => {
+      if (acc.findIndex((curr) => curr.file === item.file) === -1) {
+        acc.push(item);
+      }
+      return acc;
+    }, [] as RelatedDocument[]);
   }
 }

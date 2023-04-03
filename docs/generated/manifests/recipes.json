@@ -1064,6 +1064,26 @@
         "isExternal": false,
         "path": "/recipes/deployment/node-server-fly-io",
         "tags": ["deployment", "node"]
+      },
+      {
+        "id": "deno-deploy",
+        "name": "Serverless deployment with Deno Deploy",
+        "description": "",
+        "file": "shared/recipes/deployment/deno-deploy",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/deployment/deno-deploy",
+        "tags": ["deployment", "deno"]
+      },
+      {
+        "id": "deno-netlify",
+        "name": "Serverless deployment with Deno and Netlify",
+        "description": "",
+        "file": "shared/recipes/deployment/deno-netlify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/deployment/deno-netlify",
+        "tags": ["deployment", "deno"]
       }
     ],
     "isExternal": false,
@@ -1079,6 +1099,26 @@
     "isExternal": false,
     "path": "/recipes/deployment/node-server-fly-io",
     "tags": ["deployment", "node"]
+  },
+  "/recipes/deployment/deno-deploy": {
+    "id": "deno-deploy",
+    "name": "Serverless deployment with Deno Deploy",
+    "description": "",
+    "file": "shared/recipes/deployment/deno-deploy",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/deployment/deno-deploy",
+    "tags": ["deployment", "deno"]
+  },
+  "/recipes/deployment/deno-netlify": {
+    "id": "deno-netlify",
+    "name": "Serverless deployment with Deno and Netlify",
+    "description": "",
+    "file": "shared/recipes/deployment/deno-netlify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/deployment/deno-netlify",
+    "tags": ["deployment", "deno"]
   },
   "/recipes/other": {
     "id": "other",
