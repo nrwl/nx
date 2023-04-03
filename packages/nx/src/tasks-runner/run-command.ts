@@ -292,7 +292,7 @@ function constructLifeCycles(lifeCycle: LifeCycle) {
   const lifeCycles = [] as LifeCycle[];
   lifeCycles.push(new StoreRunInformationLifeCycle());
   lifeCycles.push(lifeCycle);
-  if (process.env.NX_PERF_LOGGING) {
+  if (process.env.NX_PERF_LOGGING === 'true') {
     lifeCycles.push(new TaskTimingsLifeCycle());
   }
   if (process.env.NX_PROFILE) {
