@@ -71,7 +71,6 @@
     "dotenv": "~10.0.0",
     "figures": "3.2.0",
     "flat": "^5.0.2",
-    "glob": "7.1.4",
     "ignore": "^5.0.4",
     "minimatch": "3.0.5",
     "npm-run-path": "^4.0.1",

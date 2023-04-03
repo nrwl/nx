@@ -1,4 +1,4 @@
-import { AssetGlob } from '@nrwl/workspace/src/utilities/assets';
+import { AssetGlob } from '@nrwl/js/src/utils/assets/assets';
 
 export interface AssetGlobPattern {
   glob: string;
