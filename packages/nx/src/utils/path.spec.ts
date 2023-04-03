@@ -1,4 +1,4 @@
-import { normalizePath, joinPathFragments } from './path';
+import { getImportPath, joinPathFragments, normalizePath } from './path';
 
 describe('normalizePath', () => {
   it('should remove drive letters', () => {
@@ -19,5 +19,19 @@ describe('joinPathFragments', () => {
     expect(joinPathFragments('C://some/path', '../other-path')).toEqual(
       '/some/other-path'
     );
+  });
+});
+
+describe('getImportPath', () => {
+  it('should use the npmScope if it is set to anything other than @', () => {
+    expect(getImportPath('myorg', 'my-package')).toEqual('@myorg/my-package');
+  });
+
+  it('should allow for a single @ to be used as the npmScope', () => {
+    expect(getImportPath('@', 'my-package')).toEqual('@/my-package');
+  });
+
+  it('should just use the package name if npmScope is empty', () => {
+    expect(getImportPath('', 'my-package')).toEqual('my-package');
   });
 });
