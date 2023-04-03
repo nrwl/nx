@@ -17,7 +17,6 @@ describe('Storybook generators and executors for standalone workspaces - using R
 
   beforeAll(() => {
     // create a workspace with a single react app at the root
-    // TODO @meeroslav: we always need to pass in `packageManager` here, otherwise `runCreateWorkspace` will use `npm` by default
     runCreateWorkspace(wsName, {
       preset: 'react-standalone',
       appName,

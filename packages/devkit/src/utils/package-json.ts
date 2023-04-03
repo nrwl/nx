@@ -453,16 +453,17 @@ export function ensurePackage<T extends any = any>(
   const tempDir = dirSync().name;
 
   console.log(`Fetching ${pkg}...`);
+  const packageManager = detectPackageManager();
+  let addCommand = getPackageManagerCommand(packageManager).addDev;
+  if (packageManager === 'pnpm') {
+    addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
+  }
+
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
-  execSync(
-    `${
-      getPackageManagerCommand(detectPackageManager(), tempDir).addDev
-    } ${pkg}@${requiredVersion}`,
-    {
-      cwd: tempDir,
-      stdio: isVerbose ? 'inherit' : 'ignore',
-    }
-  );
+  execSync(`${addCommand} ${pkg}@${requiredVersion}`, {
+    cwd: tempDir,
+    stdio: isVerbose ? 'inherit' : 'ignore',
+  });
 
   addToNodePath(join(workspaceRoot, 'node_modules'));
   addToNodePath(join(tempDir, 'node_modules'));

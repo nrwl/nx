@@ -1433,7 +1433,7 @@ Returns the list of outputs that will be cached.
 
 ### getPackageManagerCommand
 
-▸ **getPackageManagerCommand**(`packageManager?`, `root?`): `PackageManagerCommands`
+▸ **getPackageManagerCommand**(`packageManager?`): `PackageManagerCommands`
 
 Returns commands for the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -1447,10 +1447,9 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 #### Parameters
 
-| Name             | Type                                                                  | Default value   |
-| :--------------- | :-------------------------------------------------------------------- | :-------------- |
-| `packageManager` | [`PackageManager`](../../devkit/documents/nrwl_devkit#packagemanager) | `undefined`     |
-| `root`           | `string`                                                              | `workspaceRoot` |
+| Name             | Type                                                                  |
+| :--------------- | :-------------------------------------------------------------------- |
+| `packageManager` | [`PackageManager`](../../devkit/documents/nrwl_devkit#packagemanager) |
 
 #### Returns
 
