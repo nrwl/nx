@@ -36,5 +36,7 @@ export function getImportPath(
   npmScope: string,
   projectDirectory: string
 ): string {
-  return npmScope ? `@${npmScope}/${projectDirectory}` : projectDirectory;
+  return npmScope
+    ? `${npmScope === '@' ? '' : '@'}${npmScope}/${projectDirectory}`
+    : projectDirectory;
 }
