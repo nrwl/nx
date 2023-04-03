@@ -234,7 +234,7 @@ export function validateObject(
         errors.push(e);
       }
     }
-    if (errors.length > 0) {
+    if (errors.length === schema.anyOf.length) {
       throw new Error(
         `Options did not match schema. Please fix any of the following errors:\n${errors
           .map((e) => ' - ' + e.message)
@@ -339,7 +339,7 @@ function validateProperty(
 
   if (schema.allOf) {
     if (!Array.isArray(schema.allOf))
-      throw new Error(`Invalid schema file. anyOf must be an array.`);
+      throw new Error(`Invalid schema file. allOf must be an array.`);
 
     if (
       !schema.allOf.every((r) => {
