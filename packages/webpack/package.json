@@ -68,8 +68,7 @@
     "webpack-node-externals": "^3.0.0",
     "webpack-subresource-integrity": "^5.1.0",
     "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/workspace": "file:../workspace"
+    "@nx/js": "file:../js"
   },
   "publishConfig": {
     "access": "public"

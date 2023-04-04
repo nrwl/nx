@@ -1,7 +1,7 @@
 import {
   assertMinimumCypressVersion,
   installedCypressVersion,
-} from '@nx/cypress/src/utils/cypress-version';
+} from '../../utils/cypress-version';
 import {
   formatFiles,
   installPackagesTask,

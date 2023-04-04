@@ -10,7 +10,7 @@ export async function* devServerExecutor(
 ) {
   const { devServerExecutor: baseDevServerExecutor } = require('@nx/webpack');
   logger.warn(
-    '"@nrwl/web:dev-server" executor is deprecated. Use "@nrwl/webpack:dev-server" instead in your project.json.'
+    '"@nx/web:dev-server" executor is deprecated. Use "@nx/webpack:dev-server" instead in your project.json.'
   );
   yield* baseDevServerExecutor(
     {

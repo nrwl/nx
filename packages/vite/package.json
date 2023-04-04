@@ -34,8 +34,7 @@
     "dotenv": "~10.0.0",
     "enquirer": "~2.3.6",
     "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/workspace": "file:../workspace"
+    "@nx/js": "file:../js"
   },
   "peerDependencies": {
     "vite": "^4.0.1",

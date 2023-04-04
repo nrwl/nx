@@ -40,8 +40,7 @@
     "detect-port": "^1.5.1",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
-    "@nx/linter": "file:../linter",
-    "@nx/workspace": "file:../workspace"
+    "@nx/linter": "file:../linter"
   },
   "peerDependencies": {
     "cypress": ">= 3 < 13"

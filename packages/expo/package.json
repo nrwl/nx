@@ -40,8 +40,7 @@
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",
     "@nx/react": "file:../react",
-    "@nx/webpack": "file:../webpack",
-    "@nx/workspace": "file:../workspace"
+    "@nx/webpack": "file:../webpack"
   },
   "peerDependencies": {
     "expo": "^48.0.6"

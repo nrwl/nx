@@ -68,10 +68,10 @@ export const webpack = async (
   // In case anyone is missing dep and did not run migrations.
   // See: https://github.com/nrwl/nx/issues/14455
   try {
-    require.resolve('@nrwl/webpack');
+    require.resolve('@nx/webpack');
   } catch {
     throw new Error(
-      `'@nrwl/webpack' package is not installed. Install it and try again.`
+      `'@nx/webpack' package is not installed. Install it and try again.`
     );
   }
 

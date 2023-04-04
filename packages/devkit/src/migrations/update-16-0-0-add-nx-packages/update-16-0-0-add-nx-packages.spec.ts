@@ -1,5 +1,6 @@
-import { Tree, readJson, updateJson } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
+import { Tree } from 'nx/src/generators/tree';
+import { readJson, updateJson } from 'nx/src/generators/utils/json';
 import replacePackage from './update-16-0-0-add-nx-packages';
 
 describe('update-16-0-0-add-nx-packages', () => {

@@ -1,6 +1,6 @@
 import { formatFiles, readNxJson, Tree, updateNxJson } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
+import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
 
 export default async function (tree: Tree) {
   const nxJson = readNxJson(tree);

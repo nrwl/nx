@@ -36,8 +36,7 @@
     "tslib": "^2.3.0",
     "tsconfig-paths": "^4.1.2",
     "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/workspace": "file:../workspace"
+    "@nx/js": "file:../js"
   },
   "peerDependencies": {
     "esbuild": "~0.17.5"

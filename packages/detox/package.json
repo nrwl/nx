@@ -29,8 +29,7 @@
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",
-    "@nx/react": "file:../react",
-    "@nx/workspace": "file:../workspace"
+    "@nx/react": "file:../react"
   },
   "peerDependencies": {
     "detox": "~20.5.0"
