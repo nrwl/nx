@@ -12,10 +12,11 @@ describe('pipe generator', () => {
     addProjectConfiguration(tree, 'test', {
       root: 'test',
       sourceRoot: 'test/src',
+      projectType: 'application',
     });
 
     tree.write(
-      'test/src/test.module.ts',
+      'test/src/app/test.module.ts',
       `import {NgModule} from "@angular/core";
     @NgModule({
       imports: [],
@@ -33,9 +34,11 @@ describe('pipe generator', () => {
     await generatePipeWithDefaultOptions(tree);
 
     // ASSERT
-    expect(tree.read('test/src/test.pipe.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('test/src/test.pipe.spec.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('test/src/test.module.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/src/app/test.pipe.ts', 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.read('test/src/app/test.pipe.spec.ts', 'utf-8')
+    ).toMatchSnapshot();
+    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should import the pipe correctly when flat=false', async () => {
@@ -45,11 +48,13 @@ describe('pipe generator', () => {
     await generatePipeWithDefaultOptions(tree, { flat: false });
 
     // ASSERT
-    expect(tree.read('test/src/test/test.pipe.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read('test/src/test/test.pipe.spec.ts', 'utf-8')
+      tree.read('test/src/app/test/test.pipe.ts', 'utf-8')
     ).toMatchSnapshot();
-    expect(tree.read('test/src/test.module.ts', 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.read('test/src/app/test/test.pipe.spec.ts', 'utf-8')
+    ).toMatchSnapshot();
+    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should not import the pipe when standalone=true', async () => {
@@ -59,9 +64,11 @@ describe('pipe generator', () => {
     await generatePipeWithDefaultOptions(tree, { standalone: true });
 
     // ASSERT
-    expect(tree.read('test/src/test.pipe.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('test/src/test.pipe.spec.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('test/src/test.module.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/src/app/test.pipe.ts', 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.read('test/src/app/test.pipe.spec.ts', 'utf-8')
+    ).toMatchSnapshot();
+    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should import the pipe correctly when flat=false and path is nested deeper', async () => {
@@ -70,17 +77,17 @@ describe('pipe generator', () => {
     // ACT
     await generatePipeWithDefaultOptions(tree, {
       flat: false,
-      path: 'test/src/my-pipes',
+      path: 'test/src/app/my-pipes',
     });
 
     // ASSERT
     expect(
-      tree.read('test/src/my-pipes/test/test.pipe.ts', 'utf-8')
+      tree.read('test/src/app/my-pipes/test/test.pipe.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('test/src/my-pipes/test/test.pipe.spec.ts', 'utf-8')
+      tree.read('test/src/app/my-pipes/test/test.pipe.spec.ts', 'utf-8')
     ).toMatchSnapshot();
-    expect(tree.read('test/src/test.module.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should export the pipe correctly when flat=false and path is nested deeper', async () => {
@@ -89,18 +96,18 @@ describe('pipe generator', () => {
     // ACT
     await generatePipeWithDefaultOptions(tree, {
       flat: false,
-      path: 'test/src/my-pipes',
+      path: 'test/src/app/my-pipes',
       export: true,
     });
 
     // ASSERT
     expect(
-      tree.read('test/src/my-pipes/test/test.pipe.ts', 'utf-8')
+      tree.read('test/src/app/my-pipes/test/test.pipe.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('test/src/my-pipes/test/test.pipe.spec.ts', 'utf-8')
+      tree.read('test/src/app/my-pipes/test/test.pipe.spec.ts', 'utf-8')
     ).toMatchSnapshot();
-    expect(tree.read('test/src/test.module.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should not import the pipe when skipImport=true', async () => {
@@ -109,18 +116,18 @@ describe('pipe generator', () => {
     // ACT
     await generatePipeWithDefaultOptions(tree, {
       flat: false,
-      path: 'test/src/my-pipes',
+      path: 'test/src/app/my-pipes',
       skipImport: true,
     });
 
     // ASSERT
     expect(
-      tree.read('test/src/my-pipes/test/test.pipe.ts', 'utf-8')
+      tree.read('test/src/app/my-pipes/test/test.pipe.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('test/src/my-pipes/test/test.pipe.spec.ts', 'utf-8')
+      tree.read('test/src/app/my-pipes/test/test.pipe.spec.ts', 'utf-8')
     ).toMatchSnapshot();
-    expect(tree.read('test/src/test.module.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should not generate test file when skipTests=true', async () => {
@@ -129,16 +136,18 @@ describe('pipe generator', () => {
     // ACT
     await generatePipeWithDefaultOptions(tree, {
       flat: false,
-      path: 'test/src/my-pipes',
+      path: 'test/src/app/my-pipes',
       skipTests: true,
     });
 
     // ASSERT
     expect(
-      tree.read('test/src/my-pipes/test/test.pipe.ts', 'utf-8')
+      tree.read('test/src/app/my-pipes/test/test.pipe.ts', 'utf-8')
     ).toMatchSnapshot();
-    expect(tree.exists('test/src/my-pipes/test/test.pipe.spec.ts')).toBeFalsy();
-    expect(tree.read('test/src/test.module.ts', 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.exists('test/src/app/my-pipes/test/test.pipe.spec.ts')
+    ).toBeFalsy();
+    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
   });
 });
 
