@@ -49,14 +49,16 @@ export function registerTranspiler(
   // Function to register transpiler that returns cleanup function
   let registerTranspiler: () => () => void;
 
-  if (swcNodeInstalled) {
+  const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
+
+  if (swcNodeInstalled && !preferTsNode) {
     // These are requires to prevent it from registering when it shouldn't
     const { register } =
       require('@swc-node/register/register') as typeof import('@swc-node/register/register');
 
     registerTranspiler = () => register(compilerOptions);
   } else {
-    // We can fall back on ts-node if its available
+    // We can fall back on ts-node if it's available
 
     if (tsNodeInstalled) {
       const { register } = require('ts-node') as typeof import('ts-node');
