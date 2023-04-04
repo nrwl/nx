@@ -302,11 +302,11 @@ function constructLifeCycles(lifeCycle: LifeCycle) {
 }
 
 function mergeTargetDependencies(
-  defaults: TargetDefaults,
+  defaults: TargetDefaults | undefined | null,
   deps: TargetDependencies
 ): TargetDependencies {
   const res = {};
-  Object.keys(defaults).forEach((k) => {
+  Object.keys(defaults ?? {}).forEach((k) => {
     res[k] = defaults[k].dependsOn;
   });
   if (deps) {

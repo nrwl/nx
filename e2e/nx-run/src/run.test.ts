@@ -345,7 +345,7 @@ describe('Nx Running Tests', () => {
         );
       });
 
-      it('should be able to include deps using target dependencies', () => {
+      it('should be able to include deps using dependsOn', () => {
         const originalWorkspace = readProjectConfig(myapp);
         updateProjectConfig(myapp, (config) => {
           config.targets.prep = {
@@ -368,25 +368,6 @@ describe('Nx Running Tests', () => {
         expect(output).toContain('PREP');
 
         updateProjectConfig(myapp, () => originalWorkspace);
-      }, 10000);
-
-      it('should be able to include deps using target dependencies defined at the root', () => {
-        const originalNxJson = readFile('nx.json');
-        const nxJson = readJson('nx.json');
-        nxJson.targetDependencies = {
-          build: ['^build', '^e2e-extra-entry-to-bust-cache'],
-        };
-        updateFile('nx.json', JSON.stringify(nxJson));
-
-        const output = runCLI(`build ${myapp}`);
-        expect(output).toContain(
-          `NX   Running target build for project ${myapp} and 2 tasks it depends on`
-        );
-        expect(output).toContain(myapp);
-        expect(output).toContain(mylib1);
-        expect(output).toContain(mylib2);
-
-        updateFile('nx.json', originalNxJson);
       }, 10000);
 
       it('should be able to include deps using target defaults defined at the root', () => {

@@ -49,7 +49,6 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
       delete json.implicitDependencies;
       delete json.targetDefaults;
-      delete json.targetDependencies;
       delete json.workspaceLayout;
       delete json.npmScope;
     }

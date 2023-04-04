@@ -60,8 +60,7 @@ This mechanism is very flexible. Let's look at this example:
 }
 ```
 
-> Note, older versions of Nx used targetDependencies instead of targetDefaults. Both still work, but targetDefaults is
-> recommended.
+> Note, older versions of Nx used targetDependencies instead of targetDefaults. `targetDependencies` was removed in version 16, with `targetDefaults` replacing its use case.
 
 When running `nx test myproj`, the above configuration would tell Nx to
 
