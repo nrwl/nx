@@ -1,28 +1,32 @@
-import type { Tree } from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import { joinPathFragments, readProjectConfiguration } from '@nrwl/devkit';
+import { parseName } from '../../utils/names';
+import { buildSelector } from '../../utils/selector';
 import type { NormalizedSchema, Schema } from '../schema';
 
-export async function normalizeOptions(
+export function normalizeOptions(
   tree: Tree,
   options: Schema
-): Promise<NormalizedSchema> {
-  const { projectType, root, sourceRoot } = readProjectConfiguration(
+): NormalizedSchema {
+  const { prefix, projectType, root, sourceRoot } = readProjectConfiguration(
     tree,
     options.project
-  );
-  const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
+  ) as ProjectConfiguration & { prefix?: string };
 
-  const parsedName = options.name.split('/');
-  const name = parsedName.pop();
-  const namedPath = parsedName.join('/');
+  const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
+  const { name, path: namePath } = parseName(options.name);
 
   const path =
     options.path ??
     joinPathFragments(
       projectSourceRoot,
       projectType === 'application' ? 'app' : 'lib',
-      namedPath
+      namePath
     );
+
+  const selector =
+    options.selector ??
+    buildSelector(tree, name, options.prefix, prefix, 'fileName');
 
   return {
     ...options,
@@ -33,5 +37,6 @@ export async function normalizeOptions(
     path,
     projectSourceRoot,
     projectRoot: root,
+    selector,
   };
 }

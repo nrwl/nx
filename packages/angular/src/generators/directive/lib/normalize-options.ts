@@ -1,11 +1,7 @@
 import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
-import {
-  joinPathFragments,
-  names,
-  readNxJson,
-  readProjectConfiguration,
-} from '@nrwl/devkit';
+import { joinPathFragments, readProjectConfiguration } from '@nrwl/devkit';
 import { parseName } from '../../utils/names';
+import { buildSelector } from '../../utils/selector';
 import type { Schema } from '../schema';
 
 export function normalizeOptions(tree: Tree, options: Schema) {
@@ -26,7 +22,8 @@ export function normalizeOptions(tree: Tree, options: Schema) {
     );
 
   const selector =
-    options.selector ?? buildSelector(tree, name, options.prefix, prefix);
+    options.selector ??
+    buildSelector(tree, name, options.prefix, prefix, 'propertyName');
 
   return {
     ...options,
@@ -36,19 +33,4 @@ export function normalizeOptions(tree: Tree, options: Schema) {
     projectSourceRoot,
     selector,
   };
-}
-
-function buildSelector(
-  tree: Tree,
-  name: string,
-  prefix: string,
-  projectPrefix: string
-): string {
-  let selector = name;
-  prefix ??= projectPrefix ?? readNxJson(tree).npmScope;
-  if (prefix) {
-    selector = `${prefix}-${selector}`;
-  }
-
-  return names(selector).propertyName;
 }

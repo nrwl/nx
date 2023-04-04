@@ -4,32 +4,19 @@ import {
   generateFiles,
   joinPathFragments,
   names,
-  readNxJson,
-  stripIndents,
 } from '@nrwl/devkit';
-import { lt } from 'semver';
-import { checkPathUnderProjectRoot } from '../utils/path';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
-import { exportComponentInEntryPoint } from './lib/component';
-import { normalizeOptions } from './lib/normalize-options';
-import type { Schema } from './schema';
 import { addToNgModule } from '../utils';
-import { findModuleFromOptions } from './lib/module';
+import {
+  exportComponentInEntryPoint,
+  findModuleFromOptions,
+  normalizeOptions,
+  validateOptions,
+} from './lib';
+import type { Schema } from './schema';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {
-  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
-
-  if (
-    lt(installedAngularVersionInfo.version, '14.1.0') &&
-    rawOptions.standalone
-  ) {
-    throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
-    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
-  }
-
-  const options = await normalizeOptions(tree, rawOptions);
-
-  checkPathUnderProjectRoot(tree, options.project, options.path);
+  validateOptions(tree, rawOptions);
+  const options = normalizeOptions(tree, rawOptions);
 
   const pathToGenerate = options.flat
     ? joinPathFragments(__dirname, './files/__fileName__')
@@ -37,10 +24,6 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
 
   const componentNames = names(options.name);
   const typeNames = names(options.type);
-
-  const selector =
-    options.selector ||
-    buildSelector(tree, componentNames.fileName, options.prefix);
 
   generateFiles(tree, pathToGenerate, options.path, {
     fileName: componentNames.fileName,
@@ -55,7 +38,7 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
     changeDetection: options.changeDetection,
     viewEncapsulation: options.viewEncapsulation,
     displayBlock: options.displayBlock,
-    selector,
+    selector: options.selector,
     tpl: '',
   });
 
@@ -121,14 +104,6 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
-}
-
-function buildSelector(tree: Tree, name: string, prefix: string) {
-  const selectorPrefix = names(
-    prefix ?? readNxJson(tree).npmScope ?? 'app'
-  ).fileName;
-
-  return names(`${selectorPrefix}-${name}`).fileName;
 }
 
 export default componentGenerator;

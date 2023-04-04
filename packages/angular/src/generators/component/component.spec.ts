@@ -5,7 +5,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import componentGenerator from './component';
+import { componentGenerator } from './component';
 
 describe('component Generator', () => {
   it('should create the component correctly and export it in the entry point when "export=true"', async () => {
@@ -686,7 +686,7 @@ describe('component Generator', () => {
         standalone: true,
       })
     ).rejects
-      .toThrow(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using 14.0.0.
+      .toThrow(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using "14.0.0".
     You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
   });
 });
