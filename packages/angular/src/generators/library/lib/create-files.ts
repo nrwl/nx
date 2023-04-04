@@ -1,4 +1,4 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import {
   generateFiles,
   getWorkspaceLayout,
@@ -6,14 +6,15 @@ import {
   names,
   offsetFromRoot,
 } from '@nrwl/devkit';
-import { NormalizedSchema } from './normalized-schema';
-import { UnitTestRunner } from '../../../utils/test-runners';
 import { getRootTsConfigFileName } from '@nrwl/js';
+import { UnitTestRunner } from '../../../utils/test-runners';
+import type { AngularProjectConfiguration } from '../../../utils/types';
+import type { NormalizedSchema } from './normalized-schema';
 
 export function createFiles(
   tree: Tree,
   options: NormalizedSchema,
-  project: ProjectConfiguration & { prefix: string }
+  project: AngularProjectConfiguration
 ) {
   const { npmScope } = getWorkspaceLayout(tree);
   const rootOffset = offsetFromRoot(options.libraryOptions.projectRoot);
