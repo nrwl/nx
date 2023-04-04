@@ -132,7 +132,7 @@ export function loadNxPluginsSync(
   // Temporarily load js as if it were a plugin which is built into nx
   // In the future, this will be optional and need to be specified in nx.json
   const jsPlugin: any = require('../plugins/js');
-  jsPlugin.name = 'index';
+  jsPlugin.name = 'nx-js-graph-plugin';
   result.push(jsPlugin as NxPlugin);
 
   plugins ??= [];
@@ -163,7 +163,7 @@ export async function loadNxPlugins(
   // Temporarily load js as if it were a plugin which is built into nx
   // In the future, this will be optional and need to be specified in nx.json
   const jsPlugin: any = await import('../plugins/js');
-  jsPlugin.name = 'index';
+  jsPlugin.name = 'nx-js-graph-plugin';
   result.push(jsPlugin as NxPlugin);
 
   plugins ??= [];
