@@ -41,6 +41,12 @@
       "cli": "nx",
       "description": "Change webpack to metro in expo projects",
       "factory": "./src/migrations/update-15-8-3/change-webpack-to-metro"
+    },
+    "remove-deprecated-expo-targets": {
+      "version": "16.0.0-beta.0",
+      "cli": "nx",
+      "description": "Remove deprecated expo targets",
+      "factory": "./src/migrations/update-16-0-0/remove-deprecated-targets"
     }
   },
   "packageJsonUpdates": {

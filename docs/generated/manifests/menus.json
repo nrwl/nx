@@ -4368,62 +4368,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "build-ios",
-                "path": "/packages/expo/executors/build-ios",
-                "name": "build-ios",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "build-android",
-                "path": "/packages/expo/executors/build-android",
-                "name": "build-android",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "build-web",
-                "path": "/packages/expo/executors/build-web",
-                "name": "build-web",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "build-status",
-                "path": "/packages/expo/executors/build-status",
-                "name": "build-status",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "publish",
-                "path": "/packages/expo/executors/publish",
-                "name": "publish",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "publish-set",
-                "path": "/packages/expo/executors/publish-set",
-                "name": "publish-set",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "rollback",
-                "path": "/packages/expo/executors/rollback",
-                "name": "rollback",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "run",
                 "path": "/packages/expo/executors/run",
                 "name": "run",

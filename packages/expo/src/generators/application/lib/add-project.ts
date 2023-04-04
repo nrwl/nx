@@ -72,30 +72,6 @@ function getTargets(options: NormalizedSchema) {
     },
   };
 
-  // @deprecated, no longer supported in @expo/cli
-  architect['build-ios'] = {
-    executor: '@nrwl/expo:build-ios',
-    options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['build-android'] = {
-    executor: '@nrwl/expo:build-android',
-    options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['build-web'] = {
-    executor: '@nrwl/expo:build-web',
-    options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['build-status'] = {
-    executor: '@nrwl/expo:build-web',
-    options: {},
-  };
-
   architect['sync-deps'] = {
     executor: '@nrwl/expo:sync-deps',
     options: {},
@@ -106,35 +82,9 @@ function getTargets(options: NormalizedSchema) {
     options: {},
   };
 
-  // @deprecated, no longer supported in @expo/cli
-  architect['publish'] = {
-    executor: '@nrwl/expo:publish',
-    options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['publish-set'] = {
-    executor: '@nrwl/expo:publish-set',
-    options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['rollback'] = {
-    executor: '@nrwl/expo:rollback',
-    options: {},
-  };
-
   architect['prebuild'] = {
     executor: '@nrwl/expo:prebuild',
     options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['eject'] = {
-    executor: 'nx:run-commands',
-    options: {
-      command: `nx prebuild ${options.name}`,
-    },
   };
 
   architect['install'] = {

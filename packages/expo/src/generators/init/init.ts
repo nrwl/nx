@@ -10,7 +10,6 @@ import {
 import { Schema } from './schema';
 import {
   babelPresetExpoVersion,
-  deprecatedExpoCliVersion,
   easCliVersion,
   expoCliVersion,
   expoMetroConfigVersion,
@@ -101,7 +100,6 @@ export function updateDependencies(host: Tree) {
       'react-test-renderer': reactTestRendererVersion,
       '@testing-library/react-native': testingLibraryReactNativeVersion,
       '@testing-library/jest-native': testingLibraryJestNativeVersion,
-      'expo-cli': deprecatedExpoCliVersion,
       '@expo/cli': expoCliVersion,
       'eas-cli': easCliVersion,
       'babel-preset-expo': babelPresetExpoVersion,
