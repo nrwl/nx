@@ -17,6 +17,7 @@ documented. This document covers the latter version.
 By default, the container created by the `nxprivatecloud/single-image` image will create two of them: the service, and the file server. Using a single container is the easiest way to set it up, but it isn't the most robust way to run Nx Cloud.
 
 You will then need to host the database separately:
+
 - Either by using a service such as Mongo Atlas
 - Or running it yourself. For that, we created the `nxprivatecloud/nx-cloud-mongo` image.
 
@@ -136,7 +137,7 @@ pull requests.
 If your container cannot access `api.nrwl.io` directly and has to talk via a proxy, you can
 add `-e HTTPS_PROXY="https://myproxy.myorg.com"` to the container creation command.
 
-## Running the Mongo Database 
+## Running the Mongo Database
 
 Nx Cloud uses MongoDB to store its metadata. You will need to provision the `NX_CLOUD_MONGO_SERVER_ENDPOINT` env variable when
 creating a container, like so:
@@ -280,7 +281,7 @@ The main changes between the old image and the new one, is that the new one cann
 
 #### You are connecting to an external Mongo instance
 
-If you are currently connecting to an external Mongo instance, then migrating to the new image is as simple as switching the Docker tag from `nxprivatecloud/nxcloud` to `nxprivatecloud/single-image`. All the other configuration options can stay the same. 
+If you are currently connecting to an external Mongo instance, then migrating to the new image is as simple as switching the Docker tag from `nxprivatecloud/nxcloud` to `nxprivatecloud/single-image`. All the other configuration options can stay the same.
 
 #### You are running Mongo inside the Docker image
 
@@ -298,19 +299,17 @@ If you are currently relying on the image to host Mongo, we will need to move th
 
 1. When running the image, you are probably mapping to the host volume like this `-v /data/private-cloud:/data:Z`
 2. That data folder is where the image stores all its persistent data that needs exist between restarts or updates of the image. Inside it you'll find:
+
    1. Old image:
       1. `/data/file-server`: if you are using the built-in file-server, this is where you'll find all the cached artefacts. If you are using an external S3 buckets this folder won't exist.
       2. `/data/mongo`: this is where Mongo stores all its files.
    2. In the new image:
       1. `/data/file-server` (if using the built-in file-server, otherwise you don't need to map anything)
 
-1. Copy the contents of `/data/mongo` folder on the host where you previously used to run Mongo, to the new host where you'll run the dedicated Mongo image
-1. Run Mongo as described [here](https://github.com/nrwl/nx-cloud-helm/blob/main/MONGO-OPERATOR-GUIDE.md)
+3. Copy the contents of `/data/mongo` folder on the host where you previously used to run Mongo, to the new host where you'll run the dedicated Mongo image
+4. Run Mongo as described [here](https://github.com/nrwl/nx-cloud-helm/blob/main/MONGO-OPERATOR-GUIDE.md)
    1. In there, you'll find instructions to map the `$PWD/mongo-data:/data/db` folder to your host
    2. Copy the data from Step 1. above into the new mapped folder above.
-2. Get the connection string for the above image
-3. Start your `nxprivatecloud/single-image` container with the `-e NX_CLOUD_MONGO_SERVER_ENDPOINT="mongodb://52.201.253.213:27017/?authSource=admin&directConnection=true"` env var
-4. You can remove the `/data/mongo` folder from the `single-image` mapping (you will need to keep `/data/file-server` if you not using an external S3 bucket)
-
-
-
+5. Get the connection string for the above image
+6. Start your `nxprivatecloud/single-image` container with the `-e NX_CLOUD_MONGO_SERVER_ENDPOINT="mongodb://52.201.253.213:27017/?authSource=admin&directConnection=true"` env var
+7. You can remove the `/data/mongo` folder from the `single-image` mapping (you will need to keep `/data/file-server` if you not using an external S3 bucket)
