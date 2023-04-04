@@ -1,10 +1,12 @@
-import { parse } from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   EsBuildExecutorOptions,
   NormalizedEsBuildExecutorOptions,
 } from '../schema';
 import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
 import chalk = require('chalk');
+import * as esbuild from 'esbuild';
 
 export function normalizeOptions(
   options: EsBuildExecutorOptions,
@@ -36,6 +38,24 @@ export function normalizeOptions(
   }
 
   const thirdParty = !options.bundle ? false : options.thirdParty;
+
+  let userDefinedBuildOptions: esbuild.BuildOptions;
+  if (options.esbuildConfig) {
+    const userDefinedConfig = path.resolve(context.root, options.esbuildConfig);
+
+    if (options.esbuildOptions)
+      throw new Error(
+        `Cannot use both esbuildOptions and esbuildConfig options. Remove one of them and try again.`
+      );
+    if (!fs.existsSync(userDefinedConfig))
+      throw new Error(
+        `Path of esbuildConfig does not exist: ${userDefinedConfig}`
+      );
+    userDefinedBuildOptions = require(userDefinedConfig);
+  } else if (options.esbuildOptions) {
+    userDefinedBuildOptions = options.esbuildOptions;
+  }
+
   if (options.additionalEntryPoints?.length > 0) {
     const { outputFileName, ...rest } = options;
     if (outputFileName) {
@@ -47,23 +67,25 @@ export function normalizeOptions(
       ...rest,
       thirdParty,
       assets,
+      userDefinedBuildOptions,
       external: options.external ?? [],
       singleEntry: false,
       // Use the `main` file name as the output file name.
       // This is needed for `@nrwl/js:node` to know the main file to execute.
       // NOTE: The .js default extension may be replaced later in getOutfile() call.
-      outputFileName: `${parse(options.main).name}.js`,
+      outputFileName: `${path.parse(options.main).name}.js`,
     };
   } else {
     return {
       ...options,
       thirdParty,
       assets,
+      userDefinedBuildOptions,
       external: options.external ?? [],
       singleEntry: true,
       outputFileName:
         // NOTE: The .js default extension may be replaced later in getOutfile() call.
-        options.outputFileName ?? `${parse(options.main).name}.js`,
+        options.outputFileName ?? `${path.parse(options.main).name}.js`,
     };
   }
 }

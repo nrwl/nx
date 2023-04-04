@@ -49,6 +49,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          userDefinedBuildOptions: {},
         },
         context
       )
@@ -89,6 +90,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: false,
           external: [],
+          userDefinedBuildOptions: {},
         },
         context
       )
@@ -128,6 +130,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          userDefinedBuildOptions: {},
         },
         context
       )
@@ -167,6 +170,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          userDefinedBuildOptions: {},
         },
         context
       )
@@ -203,7 +207,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           singleEntry: true,
           external: [],
-          esbuildOptions: {
+          userDefinedBuildOptions: {
             outExtension: {
               '.js': '.mjs',
             },
@@ -242,7 +246,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           singleEntry: true,
           external: [],
-          esbuildOptions: {
+          userDefinedBuildOptions: {
             outExtension: {
               '.js': '.js',
             },
@@ -282,7 +286,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           singleEntry: true,
           external: [],
-          esbuildOptions: {
+          userDefinedBuildOptions: {
             outExtension: {
               '.js': '.cjs',
             },
@@ -323,7 +327,7 @@ describe('buildEsbuildOptions', () => {
           singleEntry: true,
           outputFileName: 'index.js',
           external: ['foo'],
-          esbuildOptions: {
+          userDefinedBuildOptions: {
             external: ['bar'],
           },
         },
@@ -361,6 +365,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           singleEntry: true,
           external: ['foo'],
+          userDefinedBuildOptions: {},
         },
         context
       )
@@ -398,6 +403,7 @@ describe('buildEsbuildOptions', () => {
           singleEntry: true,
           sourcemap: true,
           external: [],
+          userDefinedBuildOptions: {},
         },
         context
       )
@@ -434,6 +440,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           singleEntry: true,
           external: [],
+          userDefinedBuildOptions: {},
         },
         context
       )
@@ -469,7 +476,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           assets: [],
           singleEntry: true,
-          esbuildOptions: {
+          userDefinedBuildOptions: {
             sourcemap: true,
           },
           external: [],
@@ -508,7 +515,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           assets: [],
           singleEntry: true,
-          esbuildOptions: {
+          userDefinedBuildOptions: {
             sourcemap: false,
           },
           sourcemap: true,

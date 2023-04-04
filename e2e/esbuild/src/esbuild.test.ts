@@ -3,16 +3,16 @@ import {
   checkFilesExist,
   cleanupProject,
   newProject,
+  packageInstall,
   readFile,
   readJson,
+  rmDist,
   runCLI,
   runCommand,
+  runCommandUntil,
   uniq,
   updateFile,
   updateProjectConfig,
-  packageInstall,
-  rmDist,
-  runCommandUntil,
   waitUntil,
 } from '@nrwl/e2e/utils';
 
@@ -229,5 +229,22 @@ describe('EsBuild Plugin', () => {
 
     expect(runCommand(`node dist/libs/${myPkg}/main.js`)).toMatch(/main/);
     expect(runCommand(`node dist/libs/${myPkg}/extra.js`)).toMatch(/extra/);
-  });
+  }, 120_000);
+
+  it('should support external esbuild.config.js file', async () => {
+    const myPkg = uniq('my-pkg');
+    runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=esbuild`);
+    updateFile(
+      `libs/${myPkg}/esbuild.config.js`,
+      `console.log('custom config loaded');\nmodule.exports = {};\n`
+    );
+    updateProjectConfig(myPkg, (json) => {
+      delete json.targets.build.options.esbuildOptions;
+      json.targets.build.options.esbuildConfig = `libs/${myPkg}/esbuild.config.js`;
+      return json;
+    });
+
+    const output = runCLI(`build ${myPkg}`);
+    expect(output).toContain('custom config loaded');
+  }, 120_000);
 });
