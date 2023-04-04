@@ -138,8 +138,13 @@
     },
     "esbuildOptions": {
       "type": "object",
-      "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/.",
+      "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/. Cannot be used with 'esbuildConfig' option.",
       "additionalProperties": true,
+      "x-priority": "important"
+    },
+    "esbuildConfig": {
+      "type": "string",
+      "description": "Path to a esbuild configuration file. See https://esbuild.github.io/api/. Cannot be used with 'esbuildOptions' option.",
       "x-priority": "important"
     }
   },

@@ -1,4 +1,5 @@
 import { AssetGlob } from '@nrwl/js/src/utils/assets/assets';
+import * as esbuild from 'esbuild';
 
 type Compiler = 'babel' | 'swc';
 
@@ -10,6 +11,7 @@ export interface EsBuildExecutorOptions {
   deleteOutputPath?: boolean;
   dependenciesFieldType?: boolean;
   esbuildOptions?: Record<string, any>;
+  esbuildConfig?: string;
   external?: string[];
   format?: Array<'esm' | 'cjs'>;
   generatePackageJson?: boolean;
@@ -29,7 +31,8 @@ export interface EsBuildExecutorOptions {
 }
 
 export interface NormalizedEsBuildExecutorOptions
-  extends EsBuildExecutorOptions {
+  extends Omit<EsBuildExecutorOptions, 'esbuildOptions' | 'esbuildConfig'> {
   singleEntry: boolean;
   external: string[];
+  userDefinedBuildOptions: esbuild.BuildOptions;
 }
