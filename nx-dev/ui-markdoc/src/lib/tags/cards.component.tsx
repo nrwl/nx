@@ -12,7 +12,7 @@ export function Cards({
 }: {
   cols: number;
   children: ReactNode;
-}) {
+}): JSX.Element {
   const gridColums: { [key: number]: string } = {
     1: 'lg:grid-cols-1',
     2: 'lg:grid-cols-2',
@@ -37,7 +37,7 @@ export function Card({
   description: string;
   type: 'documentation' | 'external' | 'video';
   url: string;
-}) {
+}): JSX.Element {
   const iconMap = {
     documentation: <DocumentIcon className="mr-3 h-5 w-5 shrink-0" />,
     external: <ArrowTopRightOnSquareIcon className="mr-3 h-5 w-5 shrink-0" />,
@@ -77,5 +77,25 @@ export function Card({
         </span>
       </div>
     </div>
+  );
+}
+
+export function TitleCard({
+  title,
+  url,
+}: {
+  title: string;
+  url: string;
+}): JSX.Element {
+  return (
+    <a
+      key={title}
+      href={url}
+      className="relative col-span-1 flex items-center rounded-md border border-slate-200 bg-slate-50/40 p-4 text-left text-lg font-semibold shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800 lg:justify-center lg:text-center"
+      style={{ textDecorationLine: 'none' }}
+    >
+      <span className="absolute inset-0" />
+      {title}
+    </a>
   );
 }
