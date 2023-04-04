@@ -102,12 +102,12 @@ export interface ProjectConfiguration {
 
 export interface TargetDependencyConfig {
   /**
-   * This the projects that the targets belong to
+   * A list of projects that have `target`. Supports two tokens or a string[]:
    *
-   * 'self': This target depends on another target of the same project
-   * 'deps': This target depends on targets of the projects of it's deps.
+   * - '{self}': This target depends on another target of the same project
+   * - '{dependencies}': This target depends on targets of the projects of it's deps.
    */
-  projects: 'self' | 'dependencies';
+  projects: string[] | string;
 
   /**
    * The name of the target

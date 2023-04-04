@@ -278,10 +278,10 @@ You can also express the same configuration using:
 
 ```json
 "build": {
-  "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+  "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
 },
 "test": {
-  "dependsOn": [{ "projects": "self", "target": "build" }]
+  "dependsOn": [{ "projects": "{self}", "target": "build" }]
 }
 ```
 
@@ -290,24 +290,33 @@ With the expanded syntax, you also have a third option available to configure ho
 ```json
 "build": {
    // forward params passed to this target to the dependency targets
-  "dependsOn": [{ "projects": "dependencies", "target": "build", "params": "forward" }]
+  "dependsOn": [{ "projects": "{dependencies}", "target": "build", "params": "forward" }]
 },
 "test": {
   // ignore params passed to this target, won't be forwarded to the dependency targets
-  "dependsOn": [{ "projects": "dependencies", "target": "build", "params": "ignore" }]
+  "dependsOn": [{ "projects": "{dependencies}", "target": "build", "params": "ignore" }]
 }
 "lint": {
   // ignore params passed to this target, won't be forwarded to the dependency targets
-  "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+  "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
 }
 ```
 
-Obviously this also works when defining a relation for the target of the project itself using `"projects": "self"`:
+Obviously this also works when defining a relation for the target of the project itself using `"projects": "{self}"`:
 
 ```json
 "build": {
    // forward params passed to this target to the project target
-  "dependsOn": [{ "projects": "self", "target": "pre-build", "params": "forward" }]
+  "dependsOn": [{ "projects": "{self}", "target": "pre-build", "params": "forward" }]
+}
+```
+
+Additionally, when using the expanded object syntax, you can specify individual projects.
+
+```json
+"build": {
+   // Run is-even:pre-build and is-odd:pre-build before this target
+  "dependsOn": [{ "projects": ["is-even", "is-odd"], "target": "pre-build" }]
 }
 ```
 
