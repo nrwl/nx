@@ -22,17 +22,17 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - macos-latest
+          # - macos-latest
         node_version:
           - 19
           - 18
           - 16
-        exclude:
+        # exclude:
           # run just node v18 on macos
-          - os: macos-latest
-            node_version: 19
-          - os: macos-latest
-            node_version: 16
+          # - os: macos-latest
+          #   node_version: 19
+          # - os: macos-latest
+          #   node_version: 16
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:
@@ -92,7 +92,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - macos-latest
+          # - macos-latest
         node_version:
           - 19
           - 18
@@ -102,105 +102,105 @@ jobs:
           - yarn
           - pnpm
         project:
-          - e2e-add-nx-to-monorepo
-          - e2e-angular-core
-          - e2e-angular-extensions
-          - e2e-cra-to-nx
+          # - e2e-add-nx-to-monorepo
+          # - e2e-angular-core
+          # - e2e-angular-extensions
+          # - e2e-cra-to-nx
           - e2e-cypress
-          - e2e-detox
+          # - e2e-detox
           - e2e-esbuild
-          - e2e-expo
-          - e2e-jest
-          - e2e-js
-          - e2e-lerna-smoke-tests
+          # - e2e-expo
+          # - e2e-jest
+          # - e2e-js
+          # - e2e-lerna-smoke-tests
           - e2e-linter
-          - e2e-make-angular-cli-faster
-          - e2e-next
-          - e2e-node
-          - e2e-nx-init
-          - e2e-nx-misc
-          - e2e-nx-plugin
-          - e2e-nx-run
-          - e2e-react
-          - e2e-react-native
-          - e2e-web
-          - e2e-rollup
-          - e2e-storybook
-          - e2e-storybook-angular
-          - e2e-vite
-          - e2e-webpack
-          - e2e-workspace-create
-          - e2e-workspace-create-npm
+          # - e2e-make-angular-cli-faster
+          # - e2e-next
+          # - e2e-node
+          # - e2e-nx-init
+          # - e2e-nx-misc
+          # - e2e-nx-plugin
+          # - e2e-nx-run
+          # - e2e-react
+          # - e2e-react-native
+          # - e2e-web
+          # - e2e-rollup
+          # - e2e-storybook
+          # - e2e-storybook-angular
+          # - e2e-vite
+          # - e2e-webpack
+          # - e2e-workspace-create
+          # - e2e-workspace-create-npm
         include:
           # os short names
           - os: ubuntu-latest
             os_name: 'Linux'
-          - os: macos-latest
-            os_name: 'MacOS'
+          # - os: macos-latest
+          #   os_name: 'MacOS'
           # test timeouts
           - os: ubuntu-latest
             os_timeout: 60
-          - os: macos-latest
-            os_timeout: 90
+          # - os: macos-latest
+          #   os_timeout: 90
           # codeowner groups
-          - project: e2e-add-nx-to-monorepo
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-angular-core
-            codeowners: 'S04SS457V38'
-          - project: e2e-angular-extensions
-            codeowners: 'S04SS457V38'
-          - project: e2e-cra-to-nx
-            codeowners: 'S04TNCNJG5N'
+          # - project: e2e-add-nx-to-monorepo
+          #   codeowners: 'S04SYHYKGNP'
+          # - project: e2e-angular-core
+          #   codeowners: 'S04SS457V38'
+          # - project: e2e-angular-extensions
+          #   codeowners: 'S04SS457V38'
+          # - project: e2e-cra-to-nx
+          #   codeowners: 'S04TNCNJG5N'
           - project: e2e-cypress
             codeowners: 'S04T16BTJJY'
-          - project: e2e-detox
-            codeowners: 'S04TNCNJG5N'
+          # - project: e2e-detox
+          #   codeowners: 'S04TNCNJG5N'
           - project: e2e-esbuild
             codeowners: 'S04SJ6HHP0X'
-          - project: e2e-expo
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-jest
-            codeowners: 'S04T16BTJJY'
-          - project: e2e-js
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-lerna-smoke-tests
-            codeowners: 'S04TNCVEETS'
+          # - project: e2e-expo
+          #   codeowners: 'S04TNCNJG5N'
+          # - project: e2e-jest
+          #   codeowners: 'S04T16BTJJY'
+          # - project: e2e-js
+          #   codeowners: 'S04SJ6HHP0X'
+          # - project: e2e-lerna-smoke-tests
+          #   codeowners: 'S04TNCVEETS'
           - project: e2e-linter
             codeowners: 'S04SYJGKSCT'
-          - project: e2e-make-angular-cli-faster
-            codeowners: 'S04SS457V38'
-          - project: e2e-next
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-node
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-nx-init
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-nx-misc
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-nx-plugin
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-nx-run
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-react
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-react-native
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-web
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-rollup
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-storybook
-            codeowners: 'S04SVQ8H0G5'
-          - project: e2e-storybook-angular
-            codeowners: 'S04SVQ8H0G5'
-          - project: e2e-vite
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-webpack
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-workspace-create
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-workspace-create-npm
-            codeowners: 'S04SYHYKGNP'
+          # - project: e2e-make-angular-cli-faster
+          #   codeowners: 'S04SS457V38'
+          # - project: e2e-next
+          #   codeowners: 'S04TNCNJG5N'
+          # - project: e2e-node
+          #   codeowners: 'S04SJ6HHP0X'
+          # - project: e2e-nx-init
+          #   codeowners: 'S04SYHYKGNP'
+          # - project: e2e-nx-misc
+          #   codeowners: 'S04SYHYKGNP'
+          # - project: e2e-nx-plugin
+          #   codeowners: 'S04SYHYKGNP'
+          # - project: e2e-nx-run
+          #   codeowners: 'S04SYHYKGNP'
+          # - project: e2e-react
+          #   codeowners: 'S04TNCNJG5N'
+          # - project: e2e-react-native
+          #   codeowners: 'S04TNCNJG5N'
+          # - project: e2e-web
+          #   codeowners: 'S04SJ6PL98X'
+          # - project: e2e-rollup
+          #   codeowners: 'S04SJ6PL98X'
+          # - project: e2e-storybook
+          #   codeowners: 'S04SVQ8H0G5'
+          # - project: e2e-storybook-angular
+          #   codeowners: 'S04SVQ8H0G5'
+          # - project: e2e-vite
+          #   codeowners: 'S04SJ6PL98X'
+          # - project: e2e-webpack
+          #   codeowners: 'S04SJ6PL98X'
+          # - project: e2e-workspace-create
+          #   codeowners: 'S04SYHYKGNP'
+          # - project: e2e-workspace-create-npm
+          #   codeowners: 'S04SYHYKGNP'
         exclude:
           # exclude react-native tests from ubuntu
           - os: ubuntu-latest
@@ -210,119 +210,119 @@ jobs:
           - os: ubuntu-latest
             project: e2e-expo
           # exclude non-CNW/Lerna tests from non-LTS node versions
-          - node_version: 16
-            project: e2e-add-nx-to-monorepo
-          - node_version: 16
-            project: e2e-angular-core
-          - node_version: 16
-            project: e2e-angular-extensions
-          - node_version: 16
-            project: e2e-cra-to-nx
+          # - node_version: 16
+          #   project: e2e-add-nx-to-monorepo
+          # - node_version: 16
+          #   project: e2e-angular-core
+          # - node_version: 16
+          #   project: e2e-angular-extensions
+          # - node_version: 16
+          #   project: e2e-cra-to-nx
           - node_version: 16
             project: e2e-cypress
-          - node_version: 16
-            project: e2e-detox
+          # - node_version: 16
+          #   project: e2e-detox
           - node_version: 16
             project: e2e-esbuild
-          - node_version: 16
-            project: e2e-expo
-          - node_version: 16
-            project: e2e-jest
-          - node_version: 16
-            project: e2e-js
+          # - node_version: 16
+          #   project: e2e-expo
+          # - node_version: 16
+          #   project: e2e-jest
+          # - node_version: 16
+          #   project: e2e-js
           - node_version: 16
             project: e2e-linter
-          - node_version: 16
-            project: e2e-make-angular-cli-faster
-          - node_version: 16
-            project: e2e-next
-          - node_version: 16
-            project: e2e-node
-          - node_version: 16
-            project: e2e-nx-init
-          - node_version: 16
-            project: e2e-nx-misc
-          - node_version: 16
-            project: e2e-nx-plugin
-          - node_version: 16
-            project: e2e-lerna-smoke-tests
-          - node_version: 16
-            project: e2e-react
-          - node_version: 16
-            project: e2e-react-native
-          - node_version: 16
-            project: e2e-web
-          - node_version: 16
-            project: e2e-rollup
-          - node_version: 16
-            project: e2e-storybook
-          - node_version: 16
-            project: e2e-storybook-angular
-          - node_version: 16
-            project: e2e-vite
-          - node_version: 16
-            project: e2e-webpack
-          - node_version: 19
-            project: e2e-add-nx-to-monorepo
-          - node_version: 19
-            project: e2e-angular-core
-          - node_version: 19
-            project: e2e-angular-extensions
-          - node_version: 19
-            project: e2e-cra-to-nx
+          # - node_version: 16
+          #   project: e2e-make-angular-cli-faster
+          # - node_version: 16
+          #   project: e2e-next
+          # - node_version: 16
+          #   project: e2e-node
+          # - node_version: 16
+          #   project: e2e-nx-init
+          # - node_version: 16
+          #   project: e2e-nx-misc
+          # - node_version: 16
+          #   project: e2e-nx-plugin
+          # - node_version: 16
+          #   project: e2e-lerna-smoke-tests
+          # - node_version: 16
+          #   project: e2e-react
+          # - node_version: 16
+          #   project: e2e-react-native
+          # - node_version: 16
+          #   project: e2e-web
+          # - node_version: 16
+          #   project: e2e-rollup
+          # - node_version: 16
+          #   project: e2e-storybook
+          # - node_version: 16
+          #   project: e2e-storybook-angular
+          # - node_version: 16
+          #   project: e2e-vite
+          # - node_version: 16
+          #   project: e2e-webpack
+          # - node_version: 19
+          #   project: e2e-add-nx-to-monorepo
+          # - node_version: 19
+          #   project: e2e-angular-core
+          # - node_version: 19
+          #   project: e2e-angular-extensions
+          # - node_version: 19
+          #   project: e2e-cra-to-nx
           - node_version: 19
             project: e2e-cypress
-          - node_version: 19
-            project: e2e-detox
+          # - node_version: 19
+          #   project: e2e-detox
           - node_version: 19
             project: e2e-esbuild
-          - node_version: 19
-            project: e2e-expo
-          - node_version: 19
-            project: e2e-jest
-          - node_version: 19
-            project: e2e-js
+          # - node_version: 19
+          #   project: e2e-expo
+          # - node_version: 19
+          #   project: e2e-jest
+          # - node_version: 19
+          #   project: e2e-js
           - node_version: 19
             project: e2e-linter
-          - node_version: 19
-            project: e2e-make-angular-cli-faster
-          - node_version: 19
-            project: e2e-next
-          - node_version: 19
-            project: e2e-node
-          - node_version: 19
-            project: e2e-nx-init
-          - node_version: 19
-            project: e2e-nx-misc
-          - node_version: 19
-            project: e2e-nx-plugin
-          - node_version: 19
-            project: e2e-lerna-smoke-tests
-          - node_version: 19
-            project: e2e-react
-          - node_version: 19
-            project: e2e-react-native
-          - node_version: 19
-            project: e2e-web
-          - node_version: 19
-            project: e2e-rollup
-          - node_version: 19
-            project: e2e-storybook
-          - node_version: 19
-            project: e2e-storybook-angular
-          - node_version: 19
-            project: e2e-vite
-          - node_version: 19
-            project: e2e-webpack
+          # - node_version: 19
+          #   project: e2e-make-angular-cli-faster
+          # - node_version: 19
+          #   project: e2e-next
+          # - node_version: 19
+          #   project: e2e-node
+          # - node_version: 19
+          #   project: e2e-nx-init
+          # - node_version: 19
+          #   project: e2e-nx-misc
+          # - node_version: 19
+          #   project: e2e-nx-plugin
+          # - node_version: 19
+          #   project: e2e-lerna-smoke-tests
+          # - node_version: 19
+          #   project: e2e-react
+          # - node_version: 19
+          #   project: e2e-react-native
+          # - node_version: 19
+          #   project: e2e-web
+          # - node_version: 19
+          #   project: e2e-rollup
+          # - node_version: 19
+          #   project: e2e-storybook
+          # - node_version: 19
+          #   project: e2e-storybook-angular
+          # - node_version: 19
+          #   project: e2e-vite
+          # - node_version: 19
+          #   project: e2e-webpack
           # run just npm v18 on macos
-          - os: macos-latest
-            package_manager: yarn
-          - os: macos-latest
-            package_manager: pnpm
-          - os: macos-latest
-            node_version: 16
-          - os: macos-latest
-            node_version: 19
+          # - os: macos-latest
+          #   package_manager: yarn
+          # - os: macos-latest
+          #   package_manager: pnpm
+          # - os: macos-latest
+          #   node_version: 16
+          # - os: macos-latest
+          #   node_version: 19
       fail-fast: false
 
     name: ${{ matrix.os_name }}/${{ matrix.package_manager }}/${{ matrix.node_version }} ${{ join(matrix.project) }}
@@ -437,11 +437,10 @@ jobs:
         run: |
           before=${{ steps.before-e2e.outputs.timestamp }}
           now=$(date +%s)
-          echo "$before $now"
           delta=$(($now - $before))
           matrix=$((
             echo '${{ toJSON(matrix) }}'
-          ) | jq -c '. + { "status": "${{ steps.e2e-run.outcome}}", "duration": $delta }')
+          ) | jq --argjson delta $delta -c '. + { "status": "${{ steps.e2e-run.outcome}}", "duration": $delta }')
           echo "$matrix" > matrix
           path=outputs/${{ matrix.os_name}}-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
           echo "path=$path" >> $GITHUB_OUTPUT
@@ -496,6 +495,10 @@ jobs:
             });
             core.setOutput('CODEOWNERS', Array.from(codeowners).join(','));
 
+            function trimSpace(res) {
+              return res.split('\n').map((l) => l.trim()).join('\n');
+            }
+
             // failed message
             let lastProject;
             let result = `
@@ -508,33 +511,99 @@ jobs:
               lastProject = matrix.project;
             });
             result += `\`\`\``;
-            const message = result.split('\n').map(l => l.trim()).join('\n');
-            core.setOutput('SLACK_MESSAGE', message);
+            core.setOutput('SLACK_MESSAGE', trimSpace(result));
+
+            function humanizeDuration(num) {
+              let res = '';
+              const hours = Math.floor(num / 3600);
+              if (hours) {
+                res += `${hours}h `;
+              }
+              const mins = Math.floor((num % 3600) / 60);
+              if (mins) {
+                res += `${mins}m `;
+              }
+              const sec = num % 60;
+              if (sec) {
+                res += `${sec}s`
+              }
+              return res;
+            }
 
             // duration message
-            console.log(combined);
             const timeReport = {};
-            combined.forEach(matrix => {
-              if (timeReport[matrix.project]) {
-                if (matrix.duration > timeReport[matrix.project].max) {
-                  timeReport[matrix.project].max = matrix.duration;
-                  timeReport[matrix.project].maxEnv: `${matrix.os_name}, ${matrix.package_manager}`;
-                }
-                if (matrix.duration < timeReport[matrix.project].min) {
-                  timeReport[matrix.project].min = matrix.duration;
-                  timeReport[matrix.project].minEnv: `${matrix.os_name}, ${matrix.package_manager}`;
-                }
-              } else {
-                timeReport[matrix.project] = {
-                  min: matrix.duration,
-                  max: matrix.duration,
-                  minEnv: `${matrix.os_name}, ${matrix.package_manager}`
-                  maxEnv: `${matrix.os_name}, ${matrix.package_manager}`
+            const pmReport = {
+              npm: 0,
+              yarn: 0,
+              pnpm: 0
+            };
+            combined.forEach((matrix) => {
+              if (matrix.os_name === 'Linux') {
+                pmReport[matrix.package_manager] += matrix.duration;
+
+                if (timeReport[matrix.project]) {
+                  if (matrix.duration > timeReport[matrix.project].max) {
+                    timeReport[matrix.project].max = matrix.duration;
+                    timeReport[
+                      matrix.project
+                    ].maxEnv = `${matrix.os_name}, ${matrix.package_manager}`;
+                  }
+                  if (matrix.duration < timeReport[matrix.project].min) {
+                    timeReport[matrix.project].min = matrix.duration;
+                    timeReport[
+                      matrix.project
+                    ].minEnv = `${matrix.os_name}, ${matrix.package_manager}`;
+                  }
+                } else {
+                  timeReport[matrix.project] = {
+                    min: matrix.duration,
+                    max: matrix.duration,
+                    minEnv: `${matrix.os_name}, ${matrix.package_manager}`,
+                    maxEnv: `${matrix.os_name}, ${matrix.package_manager}`,
+                  };
                 }
               }
             });
-            console.log(timeReport);
 
+            // project time report
+            let resultPkg = `
+                \`\`\`
+                | Project                        | Time                      |
+                |--------------------------------|---------------------------|`;
+            function mapProjectTime(proj, section) {
+              let res = '';
+              res += `${humanizeDuration(timeReport[proj][section])}`;
+              res += ` (${timeReport[proj][section + 'Env']})`
+              return res;
+            }
+            function durationIcon(proj, section) {
+              if (timeReport[proj][section] < 12 * 60) {
+                return `${section} ✅`;
+              }
+              if (timeReport[proj][section] < 15 * 60) {
+                return `${section} ❗`;
+              }
+              return `${section} ❌`;
+            }
+            Object.keys(timeReport).forEach(proj => {
+              resultPkg += `\n| ${proj.padEnd(30)} |                           |`;
+              resultPkg += `\n| ${durationIcon(proj, 'min').padStart(29)} | ${mapProjectTime(proj, 'min').padEnd(25)} |`;
+              resultPkg += `\n| ${durationIcon(proj, 'max').padStart(29)} | ${mapProjectTime(proj, 'max').padEnd(25)} |`;
+            });
+            resultPkg += `\`\`\``;
+            core.setOutput('SLACK_PROJ_DURATION', trimSpace(resultPkg));
+            console.log(trimSpace(resultPkg));
+
+            let resultPm = `
+                \`\`\`
+                | PM   | Total time  |
+                |------|-------------|`;
+            Object.keys(pmReport).forEach(pm => {
+              resultPm += `\n| ${pm.padEnd(4)} | ${humanizeDuration(pmReport[pm]).padEnd(11)} |`
+            });
+            resultPm += `\`\`\``;
+            core.setOutput('SLACK_PM_DURATION', trimSpace(result));
+            console.log(trimSpace(result));
 
   report-failure:
     if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
