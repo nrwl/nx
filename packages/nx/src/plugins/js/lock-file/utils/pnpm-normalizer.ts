@@ -14,53 +14,8 @@ import { existsSync, readFileSync } from 'fs';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import { valid } from 'semver';
 
-const LOCKFILE_YAML_FORMAT = {
-  blankLines: true,
-  lineWidth: 1000,
-  noCompatMode: true,
-  noRefs: true,
-  sortKeys: false,
-};
-
-const ROOT_KEYS_ORDER = {
-  lockfileVersion: 1,
-  // only and never are conflict options.
-  neverBuiltDependencies: 2,
-  onlyBuiltDependencies: 2,
-  overrides: 3,
-  packageExtensionsChecksum: 4,
-  patchedDependencies: 5,
-  specifiers: 10,
-  dependencies: 11,
-  optionalDependencies: 12,
-  devDependencies: 13,
-  dependenciesMeta: 14,
-  importers: 15,
-  packages: 16,
-};
-
-function isV6Lockfile(data: InlineSpecifiersLockfile | Lockfile) {
+export function isV6Lockfile(data: InlineSpecifiersLockfile | Lockfile) {
   return data.lockfileVersion.toString().startsWith('6.');
-}
-
-export function stringifyToPnpmYaml(lockfile: Lockfile): string {
-  const isLockfileV6 = isV6Lockfile(lockfile);
-  const adaptedLockfile = isLockfileV6
-    ? convertToInlineSpecifiersFormat(lockfile)
-    : lockfile;
-  return dump(
-    sortLockfileKeys(
-      normalizeLockfile(adaptedLockfile as Lockfile, isLockfileV6)
-    ),
-    LOCKFILE_YAML_FORMAT
-  );
-}
-
-export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
-  const lockFileData = load(content);
-  return revertFromInlineSpecifiersFormatIfNecessary(
-    convertFromLockfileFileMutable(lockFileData)
-  );
 }
 
 export function loadPnpmHoistedDepsDefinition() {
@@ -74,44 +29,32 @@ export function loadPnpmHoistedDepsDefinition() {
   }
 }
 
-/**
- * THE FOLLOWING CODE IS COPIED FROM @pnpm/lockfile-file for convenience
- */
+/*************************************************************************
+ * THE FOLLOWING CODE IS COPIED & simplified FROM @pnpm/lockfile-file for convenience
+ *************************************************************************/
 
-function isMutableLockfile(
-  lockfileFile:
-    | (Omit<Lockfile, 'importers'> &
-        Partial<ProjectSnapshot> &
-        Partial<Pick<Lockfile, 'importers'>>)
-    | InlineSpecifiersLockfile
-    | Lockfile
-): lockfileFile is Omit<Lockfile, 'importers'> &
-  Partial<ProjectSnapshot> &
-  Partial<Pick<Lockfile, 'importers'>> {
-  return typeof lockfileFile['importers'] === 'undefined';
+/**
+ * Parsing and mapping logic from pnpm lockfile `read` function
+ * https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/read.ts#L91
+ */
+export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
+  const lockFileData = load(content);
+  return revertFromInlineSpecifiersFormatIfNecessary(
+    convertFromLockfileFileMutable(lockFileData)
+  );
 }
 
 /**
  * Reverts changes from the "forceSharedFormat" write option if necessary.
+ * https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/read.ts#L234
  */
-function convertFromLockfileFileMutable(
-  lockfileFile:
-    | (Omit<Lockfile, 'importers'> &
-        Partial<ProjectSnapshot> &
-        Partial<Pick<Lockfile, 'importers'>>)
-    | InlineSpecifiersLockfile
-    | Lockfile
-): InlineSpecifiersLockfile | Lockfile {
-  if (isMutableLockfile(lockfileFile)) {
+function convertFromLockfileFileMutable(lockfileFile: LockfileFile): Lockfile {
+  if (typeof lockfileFile?.['importers'] === 'undefined') {
     lockfileFile.importers = {
       '.': {
         specifiers: lockfileFile['specifiers'] ?? {},
-        ...(lockfileFile['dependenciesMeta'] && {
-          dependenciesMeta: lockfileFile['dependenciesMeta'],
-        }),
-        ...(lockfileFile['publishDirectory'] && {
-          publishDirectory: lockfileFile['publishDirectory'],
-        }),
+        dependenciesMeta: lockfileFile['dependenciesMeta'],
+        publishDirectory: lockfileFile['publishDirectory'],
       },
     };
     delete lockfileFile.specifiers;
@@ -121,209 +64,42 @@ function convertFromLockfileFileMutable(
         delete lockfileFile[depType];
       }
     }
-    return lockfileFile as Lockfile;
-  } else {
-    return lockfileFile;
   }
+  return lockfileFile as Lockfile;
 }
 
-interface InlineSpecifiersLockfile
-  extends Omit<Lockfile, 'lockfileVersion' | 'importers'> {
-  lockfileVersion: string;
-  importers: Record<string, InlineSpecifiersProjectSnapshot>;
-}
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L27
+const LOCKFILE_YAML_FORMAT = {
+  blankLines: true,
+  lineWidth: 1000,
+  noCompatMode: true,
+  noRefs: true,
+  sortKeys: false,
+};
 
-interface InlineSpecifiersProjectSnapshot {
-  dependencies?: InlineSpecifiersResolvedDependencies;
-  devDependencies?: InlineSpecifiersResolvedDependencies;
-  optionalDependencies?: InlineSpecifiersResolvedDependencies;
-  dependenciesMeta?: ProjectSnapshot['dependenciesMeta'];
-}
-
-interface InlineSpecifiersResolvedDependencies {
-  [depName: string]: SpecifierAndResolution;
-}
-
-interface SpecifierAndResolution {
-  specifier: string;
-  version: string;
-}
-
-const INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX = '-inlineSpecifiers';
-
-function isInlineSpecifierLockfile(
-  lockfile: InlineSpecifiersLockfile | Lockfile
-): lockfile is InlineSpecifiersLockfile {
-  const { lockfileVersion } = lockfile;
-  return (
-    isV6Lockfile(lockfile) ||
-    (typeof lockfileVersion === 'string' &&
-      lockfileVersion.endsWith(
-        INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX
-      ))
+/**
+ * Mapping and writing logic from pnpm lockfile `write` function
+ * https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L77
+ */
+export function stringifyToPnpmYaml(lockfile: Lockfile): string {
+  const isLockfileV6 = isV6Lockfile(lockfile);
+  const adaptedLockfile = isLockfileV6
+    ? convertToInlineSpecifiersFormat(lockfile)
+    : lockfile;
+  return dump(
+    sortLockfileKeys(
+      normalizeLockfile(adaptedLockfile as Lockfile, isLockfileV6)
+    ),
+    LOCKFILE_YAML_FORMAT
   );
 }
 
-function revertFromInlineSpecifiersFormatIfNecessary(
-  lockfile: InlineSpecifiersLockfile | Lockfile
-): Lockfile {
-  if (isInlineSpecifierLockfile(lockfile)) {
-    const { lockfileVersion, importers, ...rest } = lockfile;
-
-    const originalVersionStr = lockfileVersion.replace(
-      INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX,
-      ''
-    );
-    const originalVersion = Number(originalVersionStr);
-    if (isNaN(originalVersion)) {
-      throw new Error(
-        `Unable to revert lockfile from inline specifiers format. Invalid version parsed: ${originalVersionStr}`
-      );
-    }
-
-    let revertedImporters = mapValues(importers, revertProjectSnapshot);
-    let packages = lockfile.packages;
-    if (originalVersion === 6) {
-      revertedImporters = Object.fromEntries(
-        Object.entries(revertedImporters ?? {}).map(
-          ([importerId, pkgSnapshot]: [string, ProjectSnapshot]) => {
-            const newSnapshot = { ...pkgSnapshot };
-            if (newSnapshot.dependencies != null) {
-              newSnapshot.dependencies = mapValues(
-                newSnapshot.dependencies,
-                convertNewRefToOldRef
-              );
-            }
-            if (newSnapshot.optionalDependencies != null) {
-              newSnapshot.optionalDependencies = mapValues(
-                newSnapshot.optionalDependencies,
-                convertNewRefToOldRef
-              );
-            }
-            if (newSnapshot.devDependencies != null) {
-              newSnapshot.devDependencies = mapValues(
-                newSnapshot.devDependencies,
-                convertNewRefToOldRef
-              );
-            }
-            return [importerId, newSnapshot];
-          }
-        )
-      );
-      packages = Object.fromEntries(
-        Object.entries(lockfile.packages ?? {}).map(
-          ([depPath, pkgSnapshot]) => {
-            const newSnapshot = { ...pkgSnapshot };
-            if (newSnapshot.dependencies != null) {
-              newSnapshot.dependencies = mapValues(
-                newSnapshot.dependencies,
-                convertNewRefToOldRef
-              );
-            }
-            if (newSnapshot.optionalDependencies != null) {
-              newSnapshot.optionalDependencies = mapValues(
-                newSnapshot.optionalDependencies,
-                convertNewRefToOldRef
-              );
-            }
-            return [convertNewDepPathToOldDepPath(depPath), newSnapshot];
-          }
-        )
-      );
-    }
-    const newLockfile = {
-      ...rest,
-      lockfileVersion: lockfileVersion.endsWith(
-        INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX
-      )
-        ? originalVersion
-        : lockfileVersion,
-      packages,
-      importers: revertedImporters,
-    };
-    if (originalVersion === 6 && newLockfile.time) {
-      newLockfile.time = Object.fromEntries(
-        Object.entries(newLockfile.time).map(([depPath, time]) => [
-          convertNewDepPathToOldDepPath(depPath),
-          time,
-        ])
-      );
-    }
-    return newLockfile;
-  }
-  return lockfile;
-}
-
-function convertNewDepPathToOldDepPath(oldDepPath: string) {
-  if (!oldDepPath.includes('@', 2)) return oldDepPath;
-  const index = oldDepPath.indexOf('@', oldDepPath.indexOf('/@') + 2);
-  if (oldDepPath.includes('(') && index > oldDepPath.indexOf('('))
-    return oldDepPath;
-  return `${oldDepPath.substring(0, index)}/${oldDepPath.substring(index + 1)}`;
-}
-
-function convertNewRefToOldRef(oldRef: string) {
-  if (oldRef.startsWith('link:') || oldRef.startsWith('file:')) {
-    return oldRef;
-  }
-  if (oldRef.includes('@')) {
-    return convertNewDepPathToOldDepPath(oldRef);
-  }
-  return oldRef;
-}
-
-function revertProjectSnapshot(
-  from: InlineSpecifiersProjectSnapshot
-): ProjectSnapshot {
-  const specifiers: ResolvedDependencies = {};
-
-  function moveSpecifiers(
-    from: InlineSpecifiersResolvedDependencies
-  ): ResolvedDependencies {
-    const resolvedDependencies: ResolvedDependencies = {};
-    for (const [depName, { specifier, version }] of Object.entries(from)) {
-      const existingValue = specifiers[depName];
-      if (existingValue != null && existingValue !== specifier) {
-        throw new Error(
-          `Project snapshot lists the same dependency more than once with conflicting versions: ${depName}`
-        );
-      }
-
-      specifiers[depName] = specifier;
-      resolvedDependencies[depName] = version;
-    }
-    return resolvedDependencies;
-  }
-
-  const dependencies: ResolvedDependencies = from.dependencies
-    ? moveSpecifiers(from.dependencies)
-    : null;
-  const devDependencies: ResolvedDependencies = from.devDependencies
-    ? moveSpecifiers(from.devDependencies)
-    : null;
-  const optionalDependencies: ResolvedDependencies = from.optionalDependencies
-    ? moveSpecifiers(from.optionalDependencies)
-    : null;
-
-  return {
-    ...from,
-    specifiers,
-    dependencies,
-    devDependencies,
-    optionalDependencies,
-  };
-}
-
-export const DEPENDENCIES_FIELDS = [
-  'optionalDependencies',
-  'dependencies',
-  'devDependencies',
-];
-
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L99
 type LockfileFile = Omit<Lockfile, 'importers'> &
   Partial<ProjectSnapshot> &
   Partial<Pick<Lockfile, 'importers'>>;
 
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L106
 function normalizeLockfile(lockfile: Lockfile, isLockfileV6: boolean) {
   let lockfileToSave!: LockfileFile;
   if (Object.keys(lockfile.importers).length === 1 && lockfile.importers['.']) {
@@ -402,32 +178,7 @@ function normalizeLockfile(lockfile: Lockfile, isLockfileV6: boolean) {
   return lockfileToSave;
 }
 
-function pruneTime(
-  time: Record<string, string>,
-  importers: Record<string, ProjectSnapshot | ProjectSnapshotV6>
-): Record<string, string> {
-  const rootDepPaths = new Set<string>();
-  for (const importer of Object.values(importers)) {
-    for (const depType of DEPENDENCIES_FIELDS) {
-      for (let [depName, ref] of Object.entries(importer[depType] ?? {})) {
-        let version: string;
-        if (ref['version']) {
-          version = ref['version'];
-        } else {
-          version = ref as string;
-        }
-        const suffixStart = version.indexOf('_');
-        const refWithoutPeerSuffix =
-          suffixStart === -1 ? version : version.slice(0, suffixStart);
-        const depPath = dpRefToRelative(refWithoutPeerSuffix, depName);
-        if (!depPath) continue;
-        rootDepPaths.add(depPath);
-      }
-    }
-  }
-  return pickBy((depPath) => rootDepPaths.has(depPath), time);
-}
-
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L173
 function pruneTimeInLockfileV6(
   time: Record<string, string>,
   importers: Record<string, ProjectSnapshot>
@@ -454,6 +205,7 @@ function pruneTimeInLockfileV6(
   return pickBy((prop) => rootDepPaths.has(prop), time);
 }
 
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L191
 function refToRelative(reference: string, pkgName: string): string | null {
   if (reference.startsWith('link:')) {
     return null;
@@ -470,6 +222,106 @@ function refToRelative(reference: string, pkgName: string): string | null {
   return reference;
 }
 
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L207
+function pruneTime(
+  time: Record<string, string>,
+  importers: Record<string, ProjectSnapshot | ProjectSnapshotV6>
+): Record<string, string> {
+  const rootDepPaths = new Set<string>();
+  for (const importer of Object.values(importers)) {
+    for (const depType of DEPENDENCIES_FIELDS) {
+      for (let [depName, ref] of Object.entries(importer[depType] ?? {})) {
+        let version: string;
+        if (ref['version']) {
+          version = ref['version'];
+        } else {
+          version = ref as string;
+        }
+        const suffixStart = version.indexOf('_');
+        const refWithoutPeerSuffix =
+          suffixStart === -1 ? version : version.slice(0, suffixStart);
+        const depPath = dpRefToRelative(refWithoutPeerSuffix, depName);
+        if (!depPath) continue;
+        rootDepPaths.add(depPath);
+      }
+    }
+  }
+  return pickBy((depPath) => rootDepPaths.has(depPath), time);
+}
+
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/sortLockfileKeys.ts#L34
+const ROOT_KEYS_ORDER = {
+  lockfileVersion: 1,
+  // only and never are conflict options.
+  neverBuiltDependencies: 2,
+  onlyBuiltDependencies: 2,
+  overrides: 3,
+  packageExtensionsChecksum: 4,
+  patchedDependencies: 5,
+  specifiers: 10,
+  dependencies: 11,
+  optionalDependencies: 12,
+  devDependencies: 13,
+  dependenciesMeta: 14,
+  importers: 15,
+  packages: 16,
+};
+
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/sortLockfileKeys.ts#L60
+function sortLockfileKeys(lockfile: LockfileFile): LockfileFile {
+  let sortedLockfile = {} as Lockfile;
+  const sortedKeys = Object.keys(lockfile).sort(
+    (a, b) => ROOT_KEYS_ORDER[a] - ROOT_KEYS_ORDER[b]
+  );
+  for (const key of sortedKeys) {
+    sortedLockfile[key] = lockfile[key];
+  }
+  return sortedLockfile;
+}
+
+/**
+ * Types from https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/InlineSpecifiersLockfile.ts
+ */
+
+const INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX = '-inlineSpecifiers';
+
+interface InlineSpecifiersLockfile
+  extends Omit<Lockfile, 'lockfileVersion' | 'importers'> {
+  lockfileVersion: string;
+  importers: Record<string, InlineSpecifiersProjectSnapshot>;
+}
+
+interface InlineSpecifiersProjectSnapshot {
+  dependencies?: InlineSpecifiersResolvedDependencies;
+  devDependencies?: InlineSpecifiersResolvedDependencies;
+  optionalDependencies?: InlineSpecifiersResolvedDependencies;
+  dependenciesMeta?: ProjectSnapshot['dependenciesMeta'];
+}
+
+interface InlineSpecifiersResolvedDependencies {
+  [depName: string]: SpecifierAndResolution;
+}
+
+interface SpecifierAndResolution {
+  specifier: string;
+  version: string;
+}
+
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L10
+function isExperimentalInlineSpecifiersFormat(
+  lockfile: InlineSpecifiersLockfile | Lockfile
+): lockfile is InlineSpecifiersLockfile {
+  const { lockfileVersion } = lockfile;
+  return (
+    lockfileVersion.toString().startsWith('6.') ||
+    (typeof lockfileVersion === 'string' &&
+      lockfileVersion.endsWith(
+        INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX
+      ))
+  );
+}
+
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L17
 function convertToInlineSpecifiersFormat(
   lockfile: Lockfile
 ): InlineSpecifiersLockfile {
@@ -547,6 +399,25 @@ function convertToInlineSpecifiersFormat(
   return newLockfile;
 }
 
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L72
+function convertOldDepPathToNewDepPath(oldDepPath: string) {
+  const parsedDepPath = dpParse(oldDepPath);
+  if (!parsedDepPath.name || !parsedDepPath.version) return oldDepPath;
+  let newDepPath = `/${parsedDepPath.name}@${parsedDepPath.version}`;
+  if (parsedDepPath.peersSuffix) {
+    if (parsedDepPath.peersSuffix.startsWith('(')) {
+      newDepPath += parsedDepPath.peersSuffix;
+    } else {
+      newDepPath += `_${parsedDepPath.peersSuffix}`;
+    }
+  }
+  if (parsedDepPath.host) {
+    newDepPath = `${parsedDepPath.host}${newDepPath}`;
+  }
+  return newDepPath;
+}
+
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L89
 function convertOldRefToNewRef(oldRef: string) {
   if (oldRef.startsWith('link:') || oldRef.startsWith('file:')) {
     return oldRef;
@@ -557,6 +428,122 @@ function convertOldRefToNewRef(oldRef: string) {
   return oldRef;
 }
 
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L99
+function revertFromInlineSpecifiersFormatIfNecessary(
+  lockfile: Lockfile | InlineSpecifiersLockfile
+): Lockfile {
+  return isExperimentalInlineSpecifiersFormat(lockfile)
+    ? revertFromInlineSpecifiersFormat(lockfile)
+    : lockfile;
+}
+
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L105
+function revertFromInlineSpecifiersFormat(
+  lockfile: InlineSpecifiersLockfile
+): Lockfile {
+  const { lockfileVersion, importers, ...rest } = lockfile;
+
+  const originalVersionStr = lockfileVersion.replace(
+    INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX,
+    ''
+  );
+  const originalVersion = Number(originalVersionStr);
+  if (isNaN(originalVersion)) {
+    throw new Error(
+      `Unable to revert lockfile from inline specifiers format. Invalid version parsed: ${originalVersionStr}`
+    );
+  }
+
+  let revertedImporters = mapValues(importers, revertProjectSnapshot);
+  let packages = lockfile.packages;
+  if (originalVersion === 6) {
+    revertedImporters = Object.fromEntries(
+      Object.entries(revertedImporters ?? {}).map(
+        ([importerId, pkgSnapshot]: [string, ProjectSnapshot]) => {
+          const newSnapshot = { ...pkgSnapshot };
+          if (newSnapshot.dependencies != null) {
+            newSnapshot.dependencies = mapValues(
+              newSnapshot.dependencies,
+              convertNewRefToOldRef
+            );
+          }
+          if (newSnapshot.optionalDependencies != null) {
+            newSnapshot.optionalDependencies = mapValues(
+              newSnapshot.optionalDependencies,
+              convertNewRefToOldRef
+            );
+          }
+          if (newSnapshot.devDependencies != null) {
+            newSnapshot.devDependencies = mapValues(
+              newSnapshot.devDependencies,
+              convertNewRefToOldRef
+            );
+          }
+          return [importerId, newSnapshot];
+        }
+      )
+    );
+    packages = Object.fromEntries(
+      Object.entries(lockfile.packages ?? {}).map(([depPath, pkgSnapshot]) => {
+        const newSnapshot = { ...pkgSnapshot };
+        if (newSnapshot.dependencies != null) {
+          newSnapshot.dependencies = mapValues(
+            newSnapshot.dependencies,
+            convertNewRefToOldRef
+          );
+        }
+        if (newSnapshot.optionalDependencies != null) {
+          newSnapshot.optionalDependencies = mapValues(
+            newSnapshot.optionalDependencies,
+            convertNewRefToOldRef
+          );
+        }
+        return [convertNewDepPathToOldDepPath(depPath), newSnapshot];
+      })
+    );
+  }
+  const newLockfile = {
+    ...rest,
+    lockfileVersion: lockfileVersion.endsWith(
+      INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX
+    )
+      ? originalVersion
+      : lockfileVersion,
+    packages,
+    importers: revertedImporters,
+  };
+  if (originalVersion === 6 && newLockfile.time) {
+    newLockfile.time = Object.fromEntries(
+      Object.entries(newLockfile.time).map(([depPath, time]) => [
+        convertNewDepPathToOldDepPath(depPath),
+        time,
+      ])
+    );
+  }
+  return newLockfile;
+}
+
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L162
+function convertNewDepPathToOldDepPath(oldDepPath: string) {
+  if (!oldDepPath.includes('@', 2)) return oldDepPath;
+  const index = oldDepPath.indexOf('@', oldDepPath.indexOf('/@') + 2);
+  if (oldDepPath.includes('(') && index > oldDepPath.indexOf('('))
+    return oldDepPath;
+  return `${oldDepPath.substring(0, index)}/${oldDepPath.substring(index + 1)}`;
+}
+
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L169
+function convertNewRefToOldRef(oldRef: string) {
+  if (oldRef.startsWith('link:') || oldRef.startsWith('file:')) {
+    return oldRef;
+  }
+  if (oldRef.includes('@')) {
+    return convertNewDepPathToOldDepPath(oldRef);
+  }
+  return oldRef;
+}
+
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L179
 function convertProjectSnapshotToInlineSpecifiersFormat(
   projectSnapshot: ProjectSnapshot
 ): InlineSpecifiersProjectSnapshot {
@@ -575,6 +562,7 @@ function convertProjectSnapshotToInlineSpecifiersFormat(
   } as InlineSpecifiersProjectSnapshot;
 }
 
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L195
 function convertResolvedDependenciesToInlineSpecifiersFormat(
   resolvedDependencies: ResolvedDependencies,
   { specifiers }: { specifiers: ResolvedDependencies }
@@ -585,23 +573,50 @@ function convertResolvedDependenciesToInlineSpecifiersFormat(
   }));
 }
 
-function convertOldDepPathToNewDepPath(oldDepPath: string) {
-  const parsedDepPath = dpParse(oldDepPath);
-  if (!parsedDepPath.name || !parsedDepPath.version) return oldDepPath;
-  let newDepPath = `/${parsedDepPath.name}@${parsedDepPath.version}`;
-  if (parsedDepPath.peersSuffix) {
-    if (parsedDepPath.peersSuffix.startsWith('(')) {
-      newDepPath += parsedDepPath.peersSuffix;
-    } else {
-      newDepPath += `_${parsedDepPath.peersSuffix}`;
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L205
+function revertProjectSnapshot(
+  from: InlineSpecifiersProjectSnapshot
+): ProjectSnapshot {
+  const specifiers: ResolvedDependencies = {};
+
+  function moveSpecifiers(
+    from: InlineSpecifiersResolvedDependencies
+  ): ResolvedDependencies {
+    const resolvedDependencies: ResolvedDependencies = {};
+    for (const [depName, { specifier, version }] of Object.entries(from)) {
+      const existingValue = specifiers[depName];
+      if (existingValue != null && existingValue !== specifier) {
+        throw new Error(
+          `Project snapshot lists the same dependency more than once with conflicting versions: ${depName}`
+        );
+      }
+
+      specifiers[depName] = specifier;
+      resolvedDependencies[depName] = version;
     }
+    return resolvedDependencies;
   }
-  if (parsedDepPath.host) {
-    newDepPath = `${parsedDepPath.host}${newDepPath}`;
-  }
-  return newDepPath;
+
+  const dependencies: ResolvedDependencies = from.dependencies
+    ? moveSpecifiers(from.dependencies)
+    : null;
+  const devDependencies: ResolvedDependencies = from.devDependencies
+    ? moveSpecifiers(from.devDependencies)
+    : null;
+  const optionalDependencies: ResolvedDependencies = from.optionalDependencies
+    ? moveSpecifiers(from.optionalDependencies)
+    : null;
+
+  return {
+    ...from,
+    specifiers,
+    dependencies,
+    devDependencies,
+    optionalDependencies,
+  };
 }
 
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L241
 function mapValues<T, U>(
   obj: Record<string, T>,
   mapper: (val: T, key: string) => U
@@ -613,21 +628,27 @@ function mapValues<T, U>(
   return result;
 }
 
-function sortLockfileKeys(lockfile: LockfileFile): LockfileFile {
-  let sortedLockfile = {} as Lockfile;
-  const sortedKeys = Object.keys(lockfile).sort(
-    (a, b) => ROOT_KEYS_ORDER[a] - ROOT_KEYS_ORDER[b]
-  );
-  for (const key of sortedKeys) {
-    sortedLockfile[key] = lockfile[key];
-  }
-  return sortedLockfile;
+/*************************************************************************
+ * THE FOLLOWING CODE IS COPIED FROM @pnpm/types for convenience
+ *************************************************************************/
+
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/packages/types/src/misc.ts#L6
+const DEPENDENCIES_FIELDS = [
+  'optionalDependencies',
+  'dependencies',
+  'devDependencies',
+];
+
+/*************************************************************************
+ * THE FOLLOWING CODE IS COPIED FROM @pnpm/dependency-path for convenience
+ *************************************************************************/
+
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/packages/dependency-path/src/index.ts#L6
+function isAbsolute(dependencyPath) {
+  return dependencyPath[0] !== '/';
 }
 
-/**
- * THE FOLLOWING CODE IS COPIED FROM @pnpm/dependency-path for convenience
- */
-
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/packages/dependency-path/src/index.ts#L80
 function dpRefToRelative(reference, pkgName) {
   if (reference.startsWith('link:')) {
     return null;
@@ -645,10 +666,7 @@ function dpRefToRelative(reference, pkgName) {
   return reference;
 }
 
-function isAbsolute(dependencyPath) {
-  return dependencyPath[0] !== '/';
-}
-
+// https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/packages/dependency-path/src/index.ts#L96
 function dpParse(dependencyPath) {
   // eslint-disable-next-line: strict-type-predicates
   if (typeof dependencyPath !== 'string') {
@@ -706,10 +724,11 @@ function dpParse(dependencyPath) {
   };
 }
 
-/**
+/********************************************************************************
  * THE FOLLOWING CODE IS COPIED AND SIMPLIFIED FROM @pnpm/ramda for convenience
- */
+ *******************************************************************************/
 
+// https://github.com/pnpm/ramda/blob/50c6b57110b2f3631ed8633141f12012b7768d85/source/pickBy.js#L24
 function pickBy(test: (prop: string) => boolean, obj: Record<string, string>) {
   let result = {};
 
@@ -722,6 +741,7 @@ function pickBy(test: (prop: string) => boolean, obj: Record<string, string>) {
   return result;
 }
 
+// https://github.com/pnpm/ramda/blob/50c6b57110b2f3631ed8633141f12012b7768d85/source/isEmpty.js#L28
 function isEmpty(obj: object) {
   return obj != null && Object.keys(obj).length === 0;
 }

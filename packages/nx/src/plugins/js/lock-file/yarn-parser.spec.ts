@@ -167,7 +167,7 @@ describe('yarn LockFile utility', () => {
     });
 
     it('should parse root lock file', async () => {
-      expect(Object.keys(graph.externalNodes).length).toEqual(1244); // 1104
+      expect(Object.keys(graph.externalNodes).length).toEqual(1244);
     });
 
     it('should prune lock file', async () => {
@@ -231,7 +231,7 @@ describe('yarn LockFile utility', () => {
       const builder = new ProjectGraphBuilder();
       parseYarnLockfile(classicLockFile, builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(127); // 124 hoisted
+      expect(Object.keys(graph.externalNodes).length).toEqual(127);
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         Object {
@@ -369,7 +369,7 @@ describe('yarn LockFile utility', () => {
       const builder = new ProjectGraphBuilder();
       parseYarnLockfile(berryLockFile, builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(129); //124 hoisted
+      expect(Object.keys(graph.externalNodes).length).toEqual(129);
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         Object {
@@ -506,7 +506,7 @@ describe('yarn LockFile utility', () => {
       const builder = new ProjectGraphBuilder();
       parseYarnLockfile(classicLockFile, builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(371); //337 hoisted
+      expect(Object.keys(graph.externalNodes).length).toEqual(371);
     });
   });
 

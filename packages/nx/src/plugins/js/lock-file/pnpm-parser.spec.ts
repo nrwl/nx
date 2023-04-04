@@ -124,7 +124,7 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should parse root lock file', async () => {
-        expect(Object.keys(graph.externalNodes).length).toEqual(1280); ///1143
+        expect(Object.keys(graph.externalNodes).length).toEqual(1280);
       });
 
       it('should prune lock file', async () => {
@@ -132,18 +132,10 @@ describe('pnpm LockFile utility', () => {
           __dirname,
           '__fixtures__/nextjs/app/package.json'
         ));
-        // this is original generated lock file
-        // const appLockFile = require(joinPathFragments(
-        //   __dirname,
-        //   '__fixtures__/nextjs/app/pnpm-lock.yaml'
-        // )).default;
-
-        // const appGraph = parsePnpmLockfile(appLockFile);
-        // expect(Object.keys(appGraph.externalNodes).length).toEqual(863);
 
         // this is our pruned lock file structure
         const prunedGraph = pruneProjectGraph(graph, appPackageJson);
-        // meeroslav: our pruning keep all transitive peer deps, mainly cypress and eslint
+        // our pruning keep all transitive peer deps, mainly cypress and eslint
         // which adds 119 more deps
         //  but it's still possible to run `pnpm install --frozen-lockfile` on it (there are e2e tests for that)
         expect(Object.keys(prunedGraph.externalNodes).length).toEqual(
@@ -151,11 +143,9 @@ describe('pnpm LockFile utility', () => {
         );
 
         // this should not fail
-        const result = stringifyPnpmLockfile(
-          prunedGraph,
-          lockFile,
-          appPackageJson
-        );
+        expect(() =>
+          stringifyPnpmLockfile(prunedGraph, lockFile, appPackageJson)
+        ).not.toThrow();
       });
     });
 
@@ -168,12 +158,10 @@ describe('pnpm LockFile utility', () => {
         const builder = new ProjectGraphBuilder();
         parsePnpmLockfile(lockFile, builder);
         graph = builder.getUpdatedProjectGraph();
-
-        // console.log(JSON.stringify(Object.keys(graph.externalNodes).sort().map(k => ({ p: k, v: graph.externalNodes[k].data.version })), null, 2));
       });
 
       it('should parse root lock file', async () => {
-        expect(Object.keys(graph.externalNodes).length).toEqual(1296); ///1143
+        expect(Object.keys(graph.externalNodes).length).toEqual(1296);
       });
 
       it('should prune lock file', async () => {
@@ -199,11 +187,9 @@ describe('pnpm LockFile utility', () => {
         );
 
         // this should not fail
-        const result = stringifyPnpmLockfile(
-          prunedGraph,
-          lockFile,
-          appPackageJson
-        );
+        expect(() =>
+          stringifyPnpmLockfile(prunedGraph, lockFile, appPackageJson)
+        ).not.toThrow();
       });
     });
   });
@@ -241,7 +227,7 @@ describe('pnpm LockFile utility', () => {
       const builder = new ProjectGraphBuilder();
       parsePnpmLockfile(lockFile, builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(213); //202
+      expect(Object.keys(graph.externalNodes).length).toEqual(213);
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         Object {
@@ -362,7 +348,7 @@ describe('pnpm LockFile utility', () => {
       const builder = new ProjectGraphBuilder();
       parsePnpmLockfile(lockFile, builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(370); //337
+      expect(Object.keys(graph.externalNodes).length).toEqual(370);
       expect(Object.keys(graph.dependencies).length).toEqual(213);
       expect(graph.dependencies['npm:@nrwl/devkit'].length).toEqual(6);
     });

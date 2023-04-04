@@ -5,6 +5,7 @@ import type {
   PackageSnapshots,
 } from '@pnpm/lockfile-types';
 import {
+  isV6Lockfile,
   loadPnpmHoistedDepsDefinition,
   parseAndNormalizePnpmLockfile,
   stringifyToPnpmYaml,
@@ -31,8 +32,6 @@ export function parsePnpmLockfile(
   addDependencies(data, builder, keyMap);
 }
 
-const MATCH_ADDITIONAL_VERSION_INFO = /_|\(/;
-
 function addNodes(
   data: Lockfile,
   builder: ProjectGraphBuilder,
@@ -42,9 +41,10 @@ function addNodes(
 
   Object.entries(data.packages).forEach(([key, snapshot]) => {
     const packageName = findPackageName(key, snapshot, data);
-    const version = findVersion(key, packageName).split(
-      MATCH_ADDITIONAL_VERSION_INFO
-    )[0];
+    const rawVersion = findVersion(key, packageName);
+    const version = isV6Lockfile(data)
+      ? rawVersion.split('(')[0]
+      : rawVersion.split('_')[0];
 
     // we don't need to keep duplicates, we can just track the keys
     const existingNode = nodes.get(packageName)?.get(version);
@@ -107,7 +107,7 @@ function getHoistedVersion(
       k.startsWith(`/${packageName}/`)
     );
     if (key) {
-      version = key.slice(key.lastIndexOf('/') + 1).split('_')[0];
+      version = getVersion(key, packageName).split('_')[0];
     } else {
       // pnpm might not hoist every package
       // similarly those packages will not be available to be used via import
@@ -149,11 +149,12 @@ export function stringifyPnpmLockfile(
   packageJson: NormalizedPackageJson
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
+  const { lockfileVersion, packages } = data;
 
   const output: Lockfile = {
-    lockfileVersion: normalizeLockfileVersion(data.lockfileVersion),
+    lockfileVersion,
     importers: {
-      '.': mapRootSnapshot(packageJson, data.packages, graph.externalNodes),
+      '.': mapRootSnapshot(packageJson, packages, graph.externalNodes),
     },
     packages: sortObjectByKeys(
       mapSnapshots(data.packages, graph.externalNodes)
@@ -161,13 +162,6 @@ export function stringifyPnpmLockfile(
   };
 
   return stringifyToPnpmYaml(output);
-}
-
-function normalizeLockfileVersion(version: string | number) {
-  if (typeof version === 'string' || version < 6) {
-    return version;
-  }
-  return version.toFixed(1);
 }
 
 function mapSnapshots(
@@ -200,7 +194,7 @@ function findOriginalKeys(
     // standard package
     if (key.startsWith(`/${packageName}/${version}`)) {
       matchedKeys.push([
-        returnFullKey ? key : key.slice(packageName.length + 2),
+        returnFullKey ? key : getVersion(key, packageName),
         snapshot,
       ]);
     }
@@ -209,18 +203,23 @@ function findOriginalKeys(
       matchedKeys.push([version, snapshot]);
     }
     // alias package
-    if (
-      version.startsWith('npm:') &&
-      key.startsWith(
-        `/${version.slice(4, version.indexOf('@', 6))}/${version.slice(
-          version.indexOf('@', 6) + 1
-        )}`
-      )
-    ) {
+    if (versionIsAlias(key, version)) {
       matchedKeys.push([key, snapshot]);
     }
   }
   return matchedKeys;
+}
+
+// check if version has a form of npm:packageName@version and
+// key starts with /packageName/version
+function versionIsAlias(key: string, versionExpr: string): boolean {
+  const PREFIX = 'npm:';
+  if (!versionExpr.startsWith(PREFIX)) return false;
+
+  const indexOfVersionSeparator = versionExpr.indexOf('@', PREFIX.length + 1);
+  const packageName = versionExpr.slice(PREFIX.length, indexOfVersionSeparator);
+  const version = versionExpr.slice(indexOfVersionSeparator + 1);
+  return key.startsWith(`/${packageName}/${version}`);
 }
 
 function mapRootSnapshot(
@@ -258,12 +257,12 @@ function mapRootSnapshot(
 
 function findVersion(key: string, packageName: string): string {
   if (key.startsWith(`/${packageName}/`)) {
-    return key.slice(packageName.length + 2);
+    return getVersion(key, packageName);
   }
   // for alias packages prepend with "npm:"
   if (key.startsWith('/')) {
     const aliasName = key.slice(1, key.lastIndexOf('/'));
-    const version = key.slice(key.lastIndexOf('/') + 1);
+    const version = getVersion(key, aliasName);
     return `npm:${aliasName}@${version}`;
   }
 
@@ -316,14 +315,25 @@ function findPackageName(
       return dependencyName;
     }
   }
-  // if package contains org e.g. "/@babel/runtime/7.12.5"
+  return extractNameFromKey(key);
+}
+
+function getVersion(key: string, packageName: string): string {
+  const KEY_NAME_SEPARATOR_LENGTH = 2; // leading and trailing slash
+
+  return key.slice(packageName.length + KEY_NAME_SEPARATOR_LENGTH);
+}
+
+function extractNameFromKey(key: string): string {
+  // if package name contains org e.g. "/@babel/runtime/7.12.5"
   // we want slice until the third slash
   if (key.startsWith('/@')) {
-    const nameIndex = key.indexOf('/', 1);
-    return key.slice(1, key.indexOf('/', nameIndex + 1));
+    // find the position of the '/' after org name
+    const startFrom = key.indexOf('/', 1);
+    return key.slice(1, key.indexOf('/', startFrom + 1));
   }
-  // if package name doesnt contain org we slice at the second slash
   if (key.startsWith('/')) {
+    // if package has just a name e.g. "/react/7.12.5..."
     return key.slice(1, key.indexOf('/', 1));
   }
   return key;

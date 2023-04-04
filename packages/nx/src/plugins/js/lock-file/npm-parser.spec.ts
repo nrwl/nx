@@ -27,7 +27,7 @@ describe('NPM lock file utility', () => {
     });
 
     it('should parse root lock file', async () => {
-      expect(Object.keys(graph.externalNodes).length).toEqual(1285); // 1143
+      expect(Object.keys(graph.externalNodes).length).toEqual(1285);
     });
 
     it('should prune lock file', async () => {
@@ -151,7 +151,7 @@ describe('NPM lock file utility', () => {
       const builder = new ProjectGraphBuilder();
       parseNpmLockfile(JSON.stringify(rootV2LockFile), builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(212); // 202
+      expect(Object.keys(graph.externalNodes).length).toEqual(212);
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         Object {
@@ -336,7 +336,7 @@ describe('NPM lock file utility', () => {
       const builder = new ProjectGraphBuilder();
       parseNpmLockfile(JSON.stringify(rootLockFile), builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(369); // 338
+      expect(Object.keys(graph.externalNodes).length).toEqual(369);
     });
     it('should parse v3', async () => {
       const rootLockFile = require(joinPathFragments(
@@ -347,7 +347,7 @@ describe('NPM lock file utility', () => {
       const builder = new ProjectGraphBuilder();
       parseNpmLockfile(JSON.stringify(rootLockFile), builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(369); //338
+      expect(Object.keys(graph.externalNodes).length).toEqual(369);
     });
   });
 
