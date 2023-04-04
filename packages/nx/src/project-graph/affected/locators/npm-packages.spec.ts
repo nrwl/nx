@@ -17,14 +17,6 @@ describe('getTouchedNpmPackages', () => {
       },
     };
     nxJson = {
-      implicitDependencies: {
-        'package.json': {
-          dependencies: ['proj1'],
-          some: {
-            'deep-field': ['proj2'],
-          },
-        },
-      },
       npmScope: 'scope',
     };
     projectGraph = {

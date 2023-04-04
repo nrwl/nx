@@ -56,6 +56,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   extends?: string;
   /**
    * Map of files to projects that implicitly depend on them
+   * @deprecated use {@link namedInputs} instead. For more information see https://nx.dev/deprecated/global-implicit-dependencies#global-implicit-dependencies
    */
   implicitDependencies?: ImplicitDependencyEntry<T>;
   /**

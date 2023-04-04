@@ -4,7 +4,6 @@ import {
   getTouchedProjects,
 } from './locators/workspace-projects';
 import { getTouchedNpmPackages } from './locators/npm-packages';
-import { getImplicitlyTouchedProjectsByJsonChanges } from './locators/implicit-json-changes';
 import {
   AffectedProjectGraphContext,
   TouchedProjectLocator,
@@ -27,7 +26,6 @@ export async function filterAffected(
     getTouchedProjects,
     getImplicitlyTouchedProjects,
     getTouchedNpmPackages,
-    getImplicitlyTouchedProjectsByJsonChanges,
     getTouchedProjectsFromTsConfig,
     getTouchedProjectsFromProjectGlobChanges,
   ];

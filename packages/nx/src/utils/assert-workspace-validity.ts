@@ -1,10 +1,7 @@
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import {
-  ImplicitJsonSubsetDependency,
-  NxJsonConfiguration,
-} from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 import { findMatchingProjects } from './find-matching-projects';
-import { stripIndents } from './strip-indents';
+import { output } from './output';
 
 export function assertWorkspaceValidity(
   projectsConfigurations,
@@ -19,44 +16,15 @@ export function assertWorkspaceValidity(
 
   const invalidImplicitDependencies = new Map<string, string[]>();
 
-  Object.entries<'*' | string[] | ImplicitJsonSubsetDependency>(
-    nxJson.implicitDependencies || {}
-  )
-    .reduce((acc, entry) => {
-      function recur(value, acc = [], path: string[]) {
-        if (value === '*') {
-          // do nothing since '*' is calculated and always valid.
-        } else if (typeof value === 'string') {
-          // This is invalid because the only valid string is '*'
-          throw new Error(stripIndents`
-         Configuration Error 
-         nx.json is not configured properly. "${path.join(
-           ' > '
-         )}" is improperly configured to implicitly depend on "${value}" but should be an array of project names or "*".
-          `);
-        } else if (Array.isArray(value)) {
-          acc.push([entry[0], value]);
-        } else {
-          Object.entries(value).forEach(([k, v]) => {
-            recur(v, acc, [...path, k]);
-          });
-        }
-      }
-
-      recur(entry[1], acc, [entry[0]]);
-      return acc;
-    }, [])
-    .reduce((map, [filename, projectNames]: [string, string[]]) => {
-      detectAndSetInvalidProjectGlobValues(
-        map,
-        filename,
-        projectNames,
-        projects,
-        projectNames,
-        projectNameSet
-      );
-      return map;
-    }, invalidImplicitDependencies);
+  if (nxJson.implicitDependencies) {
+    output.warn({
+      title:
+        'Using "implicitDependencies" is deprecated. Use "namedInputs" instead.',
+      bodyLines: [
+        'For more information about the usage of "namedInputs" see https://nx.dev/deprecated/global-implicit-dependencies#global-implicit-dependencies',
+      ],
+    });
+  }
 
   projectNames
     .filter((projectName) => {
