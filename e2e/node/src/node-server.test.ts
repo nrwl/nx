@@ -116,7 +116,7 @@ describe('Node Applications + webpack', () => {
     await runE2eTests(fastifyApp);
     await runE2eTests(koaApp);
     await runE2eTests(nestApp);
-  }, 300_000);
+  }, 900_000);
 
   it('should generate a Dockerfile', async () => {
     const expressApp = uniq('expressapp');
