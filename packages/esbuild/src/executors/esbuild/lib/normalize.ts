@@ -3,7 +3,8 @@ import {
   EsBuildExecutorOptions,
   NormalizedEsBuildExecutorOptions,
 } from '../schema';
-import { ExecutorContext, joinPathFragments } from '@nrwl/devkit';
+import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
+import chalk = require('chalk');
 
 export function normalizeOptions(
   options: EsBuildExecutorOptions,
@@ -20,6 +21,21 @@ export function normalizeOptions(
         ),
       ];
 
+  if (!options.bundle && options.thirdParty) {
+    logger.info(
+      chalk.yellow(
+        `Your build has conflicting options, ${chalk.bold(
+          'bundle:false'
+        )} and ${chalk.bold(
+          'thirdParty:true'
+        )}. Your package.json depedencies might not be generated correctly so we added an update ${chalk.bold(
+          'thirdParty:false'
+        )}`
+      )
+    );
+  }
+
+  const thirdParty = !options.bundle ? false : options.thirdParty;
   if (options.additionalEntryPoints?.length > 0) {
     const { outputFileName, ...rest } = options;
     if (outputFileName) {
@@ -29,6 +45,7 @@ export function normalizeOptions(
     }
     return {
       ...rest,
+      thirdParty,
       assets,
       external: options.external ?? [],
       singleEntry: false,
@@ -40,6 +57,7 @@ export function normalizeOptions(
   } else {
     return {
       ...options,
+      thirdParty,
       assets,
       external: options.external ?? [],
       singleEntry: true,
