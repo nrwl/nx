@@ -355,6 +355,14 @@ describe('tree', () => {
         ]);
       });
 
+      it('should support nested dirs with same name as parent', () => {
+        tree.write('/parent-a/parent-a/parent-a-file.txt', 'parent content');
+        expect(tree.children('/parent-a')).toEqual(['parent-a']);
+        expect(tree.children('/parent-a/parent-a')).toEqual([
+          'parent-a-file.txt',
+        ]);
+      });
+
       describe('at the root', () => {
         it('should return a list of children', () => {
           expect(tree.children('')).toEqual(['parent', 'root-file.txt']);
