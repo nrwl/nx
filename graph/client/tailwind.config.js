@@ -1,7 +1,7 @@
 const path = require('path');
 
 // nx-ignore-next-line
-const { createGlobPatternsForDependencies } = require('@nx/react/tailwind');
+const { createGlobPatternsForDependencies } = require('@nrwl/react/tailwind');
 
 module.exports = {
   content: [

@@ -1,7 +1,7 @@
 // nx-ignore-next-line
-const { withNx, composePlugins } = require('@nx/webpack');
+const { withNx, composePlugins } = require('@nrwl/webpack');
 // nx-ignore-next-line
-const { withReact } = require('@nx/react');
+const { withReact } = require('@nrwl/react');
 
 module.exports = composePlugins(withNx(), withReact(), (config, context) => {
   return {
