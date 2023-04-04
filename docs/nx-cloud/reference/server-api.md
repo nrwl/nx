@@ -1,16 +1,16 @@
 # Nx Cloud Server API Reference
 
-## OpenAPI 3.0.3
+## OpenAPI
 
-The nx-api has an OpenAPI 3.0.3 spec definition available at:
+The nx-api has an OpenAPI `3.0.3` spec definition available at:
 
-https://cloud.nx.app/nx-cloud/api/definition.json
+[https://cloud.nx.app/nx-cloud/api/definition.json](https://cloud.nx.app/nx-cloud/api/definition.json)
 
 ## Authenticating
 
 To authenticate, you may use your tokens (accessible from Nx Cloud):
 
-![Access tokens](/nx-cloud/reference/access-tokens.png)
+![Access tokens](/nx-cloud/reference/access-tokens.webp)
 
 Per the spec, you use this token in the `Authentication` header.
 
