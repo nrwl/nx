@@ -326,7 +326,7 @@ export function runCLI(
   try {
     const pm = getPackageManagerCommand();
     const logs = execSync(
-      `${pm.runNx} ${command} ${
+      `${pm.runNxSilent} ${command} ${
         opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
       }`,
       {
