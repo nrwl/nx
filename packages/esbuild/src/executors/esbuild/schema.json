@@ -128,8 +128,7 @@
     },
     "thirdParty": {
       "type": "boolean",
-      "description": "Includes third-party packages in the bundle (i.e. npm packages).",
-      "default": true
+      "description": "Includes third-party packages in the bundle (i.e. npm packages)."
     },
     "dependenciesFieldType": {
       "type": "string",

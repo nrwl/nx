@@ -43,6 +43,7 @@ describe('normalizeOptions', () => {
       outputFileName: 'index.js',
       singleEntry: true,
       external: [],
+      thirdParty: false,
     });
   });
 
@@ -69,6 +70,7 @@ describe('normalizeOptions', () => {
       additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
       singleEntry: false,
       external: [],
+      thirdParty: false,
     });
   });
 
@@ -94,6 +96,7 @@ describe('normalizeOptions', () => {
       outputFileName: 'test.js',
       singleEntry: true,
       external: [],
+      thirdParty: false,
     });
   });
 
@@ -108,6 +111,7 @@ describe('normalizeOptions', () => {
           generatePackageJson: true,
           additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
           outputFileName: 'test.js',
+          thirdParty: false,
         },
         context
       )
@@ -135,6 +139,24 @@ describe('normalizeOptions', () => {
       outputFileName: 'index.js',
       singleEntry: true,
       external: [],
+      thirdParty: false,
     });
+  });
+
+  it('should override thirdParty if bundle:false', () => {
+    expect(
+      normalizeOptions(
+        {
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          generatePackageJson: true,
+          bundle: false,
+          thirdParty: true,
+          assets: [],
+        },
+        context
+      )
+    ).toEqual(expect.objectContaining({ thirdParty: false }));
   });
 });
