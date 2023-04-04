@@ -1,9 +1,14 @@
 import type * as ts from 'typescript';
 import { findNodes } from 'nx/src/utils/typescript';
-import { getSourceNodes } from '@nrwl/js';
+import {
+  getImport,
+  getSourceNodes,
+  insertChange,
+  removeChange,
+  replaceChange,
+} from '@nrwl/js';
 import { dirname, join } from 'path';
 import { names, readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { getImport, insertChange, removeChange, replaceChange } from '@nrwl/js';
 import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
@@ -65,6 +70,11 @@ function _angularImportsFromNode(
   }
 }
 
+/**
+ * Check if the Component, Directive or Pipe is standalone
+ * @param sourceFile TS Source File containing the token to check
+ * @param decoratorName The type of decorator to check (Component, Directive, Pipe)
+ */
 export function isStandalone(
   sourceFile: ts.SourceFile,
   decoratorName: DecoratorName
@@ -341,6 +351,13 @@ export function removeFromNgModule(
   }
 }
 
+/**
+ * Add an import to a Standalone Component
+ * @param host Virtual Tree
+ * @param source TS Source File containing the Component
+ * @param componentPath The path to the Component
+ * @param symbolName The import to add to the Component
+ */
 export function addImportToComponent(
   host: Tree,
   source: ts.SourceFile,
@@ -357,6 +374,13 @@ export function addImportToComponent(
   );
 }
 
+/**
+ * Add an import to a Standalone Directive
+ * @param host Virtual Tree
+ * @param source TS Source File containing the Directive
+ * @param directivePath The path to the Directive
+ * @param symbolName The import to add to the Directive
+ */
 export function addImportToDirective(
   host: Tree,
   source: ts.SourceFile,
@@ -373,6 +397,13 @@ export function addImportToDirective(
   );
 }
 
+/**
+ * Add an import to a Standalone Pipe
+ * @param host Virtual Tree
+ * @param source TS Source File containing the Pipe
+ * @param pipePath The path to the Pipe
+ * @param symbolName The import to add to the Pipe
+ */
 export function addImportToPipe(
   host: Tree,
   source: ts.SourceFile,
@@ -389,6 +420,13 @@ export function addImportToPipe(
   );
 }
 
+/**
+ * Add an import to an NgModule
+ * @param host Virtual Tree
+ * @param source TS Source File containing the NgModule
+ * @param modulePath The path to the NgModule
+ * @param symbolName The import to add to the NgModule
+ */
 export function addImportToModule(
   host: Tree,
   source: ts.SourceFile,
@@ -638,6 +676,12 @@ function getListOfRoutes(
   return null;
 }
 
+/**
+ * Add a provider to bootstrapApplication call for Standalone Applications
+ * @param tree Virtual Tree
+ * @param filePath Path to the file containing the bootstrapApplication call
+ * @param providerToAdd Provider to add
+ */
 export function addProviderToBootstrapApplication(
   tree: Tree,
   filePath: string,
@@ -672,6 +716,13 @@ export function addProviderToBootstrapApplication(
   tree.write(filePath, newFileContents);
 }
 
+/**
+ * Add a provider to an NgModule
+ * @param host Virtual Tree
+ * @param source TS Source File containing the NgModule
+ * @param modulePath Path to the NgModule
+ * @param symbolName The provider to add
+ */
 export function addProviderToModule(
   host: Tree,
   source: ts.SourceFile,
@@ -687,6 +738,13 @@ export function addProviderToModule(
   );
 }
 
+/**
+ * Add a provider to a Standalone Component
+ * @param host Virtual Tree
+ * @param source TS Source File containing the Component
+ * @param componentPath Path to the Component
+ * @param symbolName The provider to add
+ */
 export function addProviderToComponent(
   host: Tree,
   source: ts.SourceFile,
