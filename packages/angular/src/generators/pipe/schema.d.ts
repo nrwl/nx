@@ -10,3 +10,7 @@ export interface Schema {
   export?: boolean;
   skipFormat?: boolean;
 }
+
+export interface NormalizedSchema extends Schema {
+  path: string;
+}

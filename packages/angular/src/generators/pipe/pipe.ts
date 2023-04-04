@@ -2,54 +2,39 @@ import type { Tree } from '@nrwl/devkit';
 import {
   formatFiles,
   generateFiles,
-  getProjects,
   joinPathFragments,
   names,
-  readProjectConfiguration,
 } from '@nrwl/devkit';
-import type { AngularProjectConfiguration } from '../../utils/types';
 import { addToNgModule, findModule } from '../utils';
-import { checkPathUnderProjectRoot } from '../utils/path';
+import { normalizeOptions, validateOptions } from './lib';
 import type { Schema } from './schema';
 
-let tsModule: typeof import('typescript');
+export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
+  validateOptions(tree, rawOptions);
+  const options = normalizeOptions(tree, rawOptions);
 
-export async function pipeGenerator(tree: Tree, schema: Schema) {
-  const projects = getProjects(tree);
-  if (!projects.has(schema.project)) {
-    throw new Error(`Project "${schema.project}" does not exist!`);
-  }
-
-  checkPathUnderProjectRoot(tree, schema.project, schema.path);
-
-  const project = readProjectConfiguration(
-    tree,
-    schema.project
-  ) as AngularProjectConfiguration;
-
-  const path = schema.path ?? `${project.sourceRoot}`;
-  const pipeNames = names(schema.name);
-
-  const pathToGenerateFiles = schema.flat
+  const pathToGenerateFiles = options.flat
     ? './files/__pipeFileName__'
     : './files';
-  await generateFiles(
+  const pipeNames = names(options.name);
+
+  generateFiles(
     tree,
     joinPathFragments(__dirname, pathToGenerateFiles),
-    path,
+    options.path,
     {
       pipeClassName: pipeNames.className,
       pipeFileName: pipeNames.fileName,
       pipePropertyName: pipeNames.propertyName,
-      standalone: schema.standalone,
+      standalone: options.standalone,
       tpl: '',
     }
   );
 
-  if (schema.skipTests) {
+  if (options.skipTests) {
     const pathToSpecFile = joinPathFragments(
-      path,
-      `${!schema.flat ? `${pipeNames.fileName}/` : ``}${
+      options.path,
+      `${!options.flat ? `${pipeNames.fileName}/` : ``}${
         pipeNames.fileName
       }.pipe.spec.ts`
     );
@@ -57,22 +42,22 @@ export async function pipeGenerator(tree: Tree, schema: Schema) {
     tree.delete(pathToSpecFile);
   }
 
-  if (!schema.skipImport && !schema.standalone) {
-    const modulePath = findModule(tree, path, schema.module);
+  if (!options.skipImport && !options.standalone) {
+    const modulePath = findModule(tree, options.path, options.module);
     addToNgModule(
       tree,
-      path,
+      options.path,
       modulePath,
       pipeNames.fileName,
       `${pipeNames.className}Pipe`,
       `${pipeNames.fileName}.pipe`,
       'declarations',
-      schema.flat,
-      schema.export
+      options.flat,
+      options.export
     );
   }
 
-  if (!schema.skipFormat) {
+  if (!options.skipFormat) {
     await formatFiles(tree);
   }
 }
