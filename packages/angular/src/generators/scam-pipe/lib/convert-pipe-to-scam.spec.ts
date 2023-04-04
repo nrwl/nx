@@ -1,6 +1,6 @@
 import { addProjectConfiguration } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { pipeGenerator } from '../../pipe/pipe';
 import { convertPipeToScam } from './convert-pipe-to-scam';
 
 describe('convertPipeToScam', () => {
@@ -13,11 +13,7 @@ describe('convertPipeToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularPipeSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'pipe'
-    );
-    await angularPipeSchematic(tree, {
+    await pipeGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -54,14 +50,12 @@ describe('convertPipeToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example'
+        name: 'example',
       })
       export class ExamplePipe implements PipeTransform {
-
         transform(value: unknown, ...args: unknown[]): unknown {
           return null;
         }
-
       }
 
       @NgModule({
@@ -82,11 +76,7 @@ describe('convertPipeToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularPipeSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'pipe'
-    );
-    await angularPipeSchematic(tree, {
+    await pipeGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -141,11 +131,7 @@ describe('convertPipeToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularPipeSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'pipe'
-    );
-    await angularPipeSchematic(tree, {
+    await pipeGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -179,14 +165,12 @@ describe('convertPipeToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example'
+        name: 'example',
       })
       export class ExamplePipe implements PipeTransform {
-
         transform(value: unknown, ...args: unknown[]): unknown {
           return null;
         }
-
       }
 
       @NgModule({
@@ -207,11 +191,7 @@ describe('convertPipeToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularPipeSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'pipe'
-    );
-    await angularPipeSchematic(tree, {
+    await pipeGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -266,11 +246,7 @@ describe('convertPipeToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularPipeSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'pipe'
-    );
-    await angularPipeSchematic(tree, {
+    await pipeGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -308,14 +284,12 @@ describe('convertPipeToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example'
+        name: 'example',
       })
       export class ExamplePipe implements PipeTransform {
-
         transform(value: unknown, ...args: unknown[]): unknown {
           return null;
         }
-
       }
 
       @NgModule({
@@ -336,11 +310,7 @@ describe('convertPipeToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularPipeSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'pipe'
-    );
-    await angularPipeSchematic(tree, {
+    await pipeGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -378,14 +348,12 @@ describe('convertPipeToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example'
+        name: 'example',
       })
       export class ExamplePipe implements PipeTransform {
-
         transform(value: unknown, ...args: unknown[]): unknown {
           return null;
         }
-
       }
 
       @NgModule({

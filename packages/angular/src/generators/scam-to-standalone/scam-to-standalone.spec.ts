@@ -55,7 +55,6 @@ describe('scam-to-standalone', () => {
     expect(tree.read('apps/foo/src/app/bar/bar.component.spec.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ComponentFixture, TestBed } from '@angular/core/testing';
-
       import { BarComponent } from './bar.component';
 
       describe('BarComponent', () => {
