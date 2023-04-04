@@ -24,9 +24,9 @@ export const processProjectGraph: ProjectGraphProcessor = async (
 ) => {
   const builder = new ProjectGraphBuilder(graph);
 
-  const lockHash = lockFileHash() ?? 'n/a';
   // during the create-nx-workspace lock file might not exists yet
   if (lockFileExists()) {
+    const lockHash = lockFileHash() ?? 'n/a';
     if (lockFileNeedsReprocessing(lockHash)) {
       removeNpmNodes(graph, builder);
       parseLockFile(builder);
