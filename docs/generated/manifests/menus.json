@@ -2590,6 +2590,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Deploying Node.js serverless functions to Netlify",
+            "path": "/recipes/deployment/node-serverless-functions-netlify",
+            "id": "node-serverless-functions-netlify",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Serverless deployment with Deno Deploy",
             "path": "/recipes/deployment/deno-deploy",
             "id": "deno-deploy",
@@ -2612,6 +2620,14 @@
         "name": "Deploying a Node.js server to Fly.io",
         "path": "/recipes/deployment/node-server-fly-io",
         "id": "node-server-fly-io",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Deploying Node.js serverless functions to Netlify",
+        "path": "/recipes/deployment/node-serverless-functions-netlify",
+        "id": "node-serverless-functions-netlify",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

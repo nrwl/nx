@@ -1066,6 +1066,16 @@
         "tags": ["deployment", "node"]
       },
       {
+        "id": "node-serverless-functions-netlify",
+        "name": "Deploying Node.js serverless functions to Netlify",
+        "description": "",
+        "file": "shared/recipes/deployment/node-serverless-functions-netlify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/deployment/node-serverless-functions-netlify",
+        "tags": ["deployment", "node"]
+      },
+      {
         "id": "deno-deploy",
         "name": "Serverless deployment with Deno Deploy",
         "description": "",
@@ -1098,6 +1108,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/deployment/node-server-fly-io",
+    "tags": ["deployment", "node"]
+  },
+  "/recipes/deployment/node-serverless-functions-netlify": {
+    "id": "node-serverless-functions-netlify",
+    "name": "Deploying Node.js serverless functions to Netlify",
+    "description": "",
+    "file": "shared/recipes/deployment/node-serverless-functions-netlify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/deployment/node-serverless-functions-netlify",
     "tags": ["deployment", "node"]
   },
   "/recipes/deployment/deno-deploy": {

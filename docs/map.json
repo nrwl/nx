@@ -1049,6 +1049,12 @@
               "file": "shared/recipes/deployment/node-server-fly-io"
             },
             {
+              "name": "Deploying Node.js serverless functions to Netlify",
+              "id": "node-serverless-functions-netlify",
+              "tags": ["deployment", "node"],
+              "file": "shared/recipes/deployment/node-serverless-functions-netlify"
+            },
+            {
               "name": "Serverless deployment with Deno Deploy",
               "id": "deno-deploy",
               "tags": ["deployment", "deno"],

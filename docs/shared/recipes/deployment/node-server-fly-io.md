@@ -32,7 +32,7 @@ For existing projects, see the next section, otherwise you can skip to [deployme
 
 ### Configure existing projects
 
-**Skip this step if you are not configuring an exist project.**
+**Skip this step if you are not configuring an existing project.**
 
 If you have an existing Node.js server project, you can add the same deployment capabilities as we've just covered. Firstly, if the project is not an Nx project you can initialize it as such by running the `npx nx init` command in your project. Next, we can add the `build` and `docker-build` targets by invoking a couple of generators.
 
