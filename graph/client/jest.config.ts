@@ -1,6 +1,6 @@
 /* eslint-disable */
 // nx-ignore-next-line
-const nxPreset = require('@nx/jest/preset').default;
+const nxPreset = require('@nrwl/jest/preset').default;
 
 export default {
   ...nxPreset,
