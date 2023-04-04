@@ -1,11 +1,12 @@
-import { NormalizedSchema } from './normalized-schema';
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import { addProjectConfiguration } from '@nrwl/devkit';
+import type { AngularProjectConfiguration } from '../../../utils/types';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import type { NormalizedSchema } from './normalized-schema';
 
 export function createProject(tree: Tree, options: NormalizedSchema) {
   const installedAngularInfo = getInstalledAngularVersionInfo(tree);
-  const project: ProjectConfiguration & { prefix: string } = {
+  const project: AngularProjectConfiguration = {
     name: options.name,
     projectType: 'application',
     prefix: options.prefix,

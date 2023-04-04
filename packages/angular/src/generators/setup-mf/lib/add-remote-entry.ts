@@ -1,25 +1,23 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import {
   generateFiles,
   joinPathFragments,
   readNxJson,
   readProjectConfiguration,
 } from '@nrwl/devkit';
-import type { Schema } from '../schema';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
+import type { AngularProjectConfiguration } from '../../../utils/types';
+import type { Schema } from '../schema';
 
 export function addRemoteEntry(
   tree: Tree,
-  { appName, routing, mfType, prefix, standalone }: Schema,
+  { appName, routing, prefix, standalone }: Schema,
   appRoot: string
 ) {
   prefix =
     prefix ??
-    (
-      readProjectConfiguration(tree, appName) as ProjectConfiguration & {
-        prefix?: string;
-      }
-    )?.prefix ??
+    (readProjectConfiguration(tree, appName) as AngularProjectConfiguration)
+      ?.prefix ??
     readNxJson(tree).npmScope;
   generateFiles(
     tree,

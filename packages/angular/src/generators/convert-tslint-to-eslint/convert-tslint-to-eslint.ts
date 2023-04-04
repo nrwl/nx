@@ -6,10 +6,11 @@ import {
   logger,
   Tree,
 } from '@nrwl/devkit';
-import { warnForSchematicUsage } from '../utils/warn-for-schematic-usage';
 import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nrwl/linter';
 import type { Linter } from 'eslint';
+import type { AngularProjectConfiguration } from '../../utils/types';
 import { addLintingGenerator } from '../add-linting/add-linting';
+import { warnForSchematicUsage } from '../utils/warn-for-schematic-usage';
 
 export async function conversionGenerator(
   host: Tree,
@@ -33,7 +34,7 @@ export async function conversionGenerator(
       await addLintingGenerator(host, {
         projectName,
         projectRoot: projectConfig.root,
-        prefix: (projectConfig as any).prefix || 'app',
+        prefix: (projectConfig as AngularProjectConfiguration).prefix || 'app',
         /**
          * We set the parserOptions.project config just in case the converted config uses
          * rules which require type-checking. Later in the conversion we check if it actually

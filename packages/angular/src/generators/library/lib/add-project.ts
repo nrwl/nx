@@ -1,12 +1,13 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import { addProjectConfiguration, joinPathFragments } from '@nrwl/devkit';
-import { NormalizedSchema } from './normalized-schema';
+import type { AngularProjectConfiguration } from '../../../utils/types';
+import type { NormalizedSchema } from './normalized-schema';
 
 export function addProject(
   tree: Tree,
   libraryOptions: NormalizedSchema['libraryOptions']
 ) {
-  const project: ProjectConfiguration & { prefix: string } = {
+  const project: AngularProjectConfiguration = {
     name: libraryOptions.name,
     root: libraryOptions.projectRoot,
     sourceRoot: joinPathFragments(libraryOptions.projectRoot, 'src'),

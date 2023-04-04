@@ -1,6 +1,7 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, readProjectConfiguration } from '@nrwl/devkit';
-import { parseName } from '../../utils/names';
+import type { AngularProjectConfiguration } from '../../../utils/types';
+import { parseNameWithPath } from '../../utils/names';
 import { buildSelector } from '../../utils/selector';
 import type { NormalizedSchema, Schema } from '../schema';
 
@@ -11,10 +12,10 @@ export function normalizeOptions(
   const { prefix, projectType, root, sourceRoot } = readProjectConfiguration(
     tree,
     options.project
-  ) as ProjectConfiguration & { prefix?: string };
+  ) as AngularProjectConfiguration;
 
   const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
-  const { name, path: namePath } = parseName(options.name);
+  const { name, path: namePath } = parseNameWithPath(options.name);
 
   const path =
     options.path ??

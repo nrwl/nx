@@ -1,4 +1,4 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import {
   formatFiles,
   generateFiles,
@@ -7,9 +7,10 @@ import {
   names,
   readProjectConfiguration,
 } from '@nrwl/devkit';
-import type { Schema } from './schema';
-import { checkPathUnderProjectRoot } from '../utils/path';
+import type { AngularProjectConfiguration } from '../../utils/types';
 import { addToNgModule, findModule } from '../utils';
+import { checkPathUnderProjectRoot } from '../utils/path';
+import type { Schema } from './schema';
 
 let tsModule: typeof import('typescript');
 
@@ -24,7 +25,7 @@ export async function pipeGenerator(tree: Tree, schema: Schema) {
   const project = readProjectConfiguration(
     tree,
     schema.project
-  ) as ProjectConfiguration & { prefix?: string };
+  ) as AngularProjectConfiguration;
 
   const path = schema.path ?? `${project.sourceRoot}`;
   const pipeNames = names(schema.name);
