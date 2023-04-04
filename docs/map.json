@@ -1055,6 +1055,12 @@
               "file": "shared/recipes/deployment/node-serverless-functions-netlify"
             },
             {
+              "name": "Deploying AWS lambda in Node.js",
+              "id": "node-aws-lambda",
+              "tags": ["deployment", "node"],
+              "file": "shared/recipes/deployment/node-aws-lambda"
+            },
+            {
               "name": "Serverless deployment with Deno Deploy",
               "id": "deno-deploy",
               "tags": ["deployment", "deno"],

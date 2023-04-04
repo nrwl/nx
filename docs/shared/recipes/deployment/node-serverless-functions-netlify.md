@@ -58,7 +58,7 @@ This will do a few things:
 
 1. Create a new serverless function in `src/functions`.
 2. Add the `netlify.toml` in the root of the project
-3. Update your `project.json` to have 2 new targets `dev` & `deploy`.
+3. Update your `project.json` to have 2 new targets `serve` & `deploy`.
 
 ## Configure your Netlify deploy settings
 
