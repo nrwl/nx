@@ -2,9 +2,9 @@ import type { Tree } from '@nrwl/devkit';
 import {
   formatFiles,
   normalizePath,
-  readNxJson,
   readProjectConfiguration,
 } from '@nrwl/devkit';
+import componentGenerator from '../component/component';
 import { exportScam } from '../utils/export-scam';
 import { getComponentFileInfo } from '../utils/file-info';
 import { pathStartsWith } from '../utils/path';
@@ -17,12 +17,7 @@ export async function scamGenerator(tree: Tree, rawOptions: Schema) {
 
   checkPathUnderProjectRoot(tree, options);
 
-  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
-  const angularComponentSchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'component'
-  );
-  await angularComponentSchematic(tree, {
+  await componentGenerator(tree, {
     ...schematicOptions,
     skipImport: true,
     export: false,

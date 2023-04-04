@@ -1,7 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { componentGenerator } from '../component/component';
 import * as storybookUtils from '../utils/storybook-ast/storybook-inputs';
 import { generateTestLibrary } from '../utils/testing';
 import { componentStoryGenerator } from './component-story';
@@ -13,11 +13,6 @@ describe('componentStory generator', () => {
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-
-    const componentGenerator = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
 
     await generateTestLibrary(tree, { name: libName });
     await componentGenerator(tree, {

@@ -1,6 +1,6 @@
 import { addProjectConfiguration } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { componentGenerator } from '../../component/component';
 import { convertComponentToScam } from './convert-component-to-scam';
 
 describe('convertComponentToScam', () => {
@@ -13,11 +13,7 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -52,13 +48,11 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'example',
+        selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css']
+        styleUrls: ['./example.component.css'],
       })
-      export class ExampleComponent {
-
-      }
+      export class ExampleComponent {}
 
       @NgModule({
         imports: [CommonModule],
@@ -78,11 +72,7 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -135,11 +125,7 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -176,13 +162,11 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'example',
+        selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css']
+        styleUrls: ['./example.component.css'],
       })
-      export class ExampleComponent {
-
-      }
+      export class ExampleComponent {}
 
       @NgModule({
         imports: [CommonModule],
@@ -202,11 +186,7 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -261,11 +241,7 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -304,13 +280,11 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'example',
+        selector: 'proj-example',
         templateUrl: './example.random.html',
-        styleUrls: ['./example.random.css']
+        styleUrls: ['./example.random.css'],
       })
-      export class ExampleRandom {
-
-      }
+      export class ExampleRandom {}
 
       @NgModule({
         imports: [CommonModule],
@@ -330,11 +304,7 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -391,11 +361,7 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -433,13 +399,11 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'example',
+        selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css']
+        styleUrls: ['./example.component.css'],
       })
-      export class ExampleComponent {
-
-      }
+      export class ExampleComponent {}
 
       @NgModule({
         imports: [CommonModule],
@@ -459,11 +423,7 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -501,13 +461,11 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'example',
+        selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css']
+        styleUrls: ['./example.component.css'],
       })
-      export class ExampleComponent {
-
-      }
+      export class ExampleComponent {}
 
       @NgModule({
         imports: [CommonModule],

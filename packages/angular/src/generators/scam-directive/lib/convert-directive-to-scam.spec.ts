@@ -1,6 +1,6 @@
 import { addProjectConfiguration } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { directiveGenerator } from '../../directive/directive';
 import { convertDirectiveToScam } from './convert-directive-to-scam';
 
 describe('convertDirectiveToScam', () => {
@@ -13,11 +13,7 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -54,12 +50,10 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[example]'
+        selector: '[projExample]',
       })
       export class ExampleDirective {
-
-        constructor() { }
-
+        constructor() {}
       }
 
       @NgModule({
@@ -80,11 +74,7 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -139,11 +129,7 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -180,12 +166,10 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[example]'
+        selector: '[projExample]',
       })
       export class ExampleDirective {
-
-        constructor() { }
-
+        constructor() {}
       }
 
       @NgModule({
@@ -206,11 +190,7 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -265,11 +245,7 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -307,12 +283,10 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[example]'
+        selector: '[projExample]',
       })
       export class ExampleDirective {
-
-        constructor() { }
-
+        constructor() {}
       }
 
       @NgModule({
@@ -333,11 +307,7 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
@@ -375,12 +345,10 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[example]'
+        selector: '[projExample]',
       })
       export class ExampleDirective {
-
-        constructor() { }
-
+        constructor() {}
       }
 
       @NgModule({
