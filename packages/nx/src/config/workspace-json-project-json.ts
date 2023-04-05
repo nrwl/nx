@@ -102,10 +102,13 @@ export interface ProjectConfiguration {
 
 export interface TargetDependencyConfig {
   /**
-   * A list of projects that have `target`. Supports two tokens or a string[]:
+   * A list of projects that have `target`. Supports project names or two special values:
    *
    * - '{self}': This target depends on another target of the same project
    * - '{dependencies}': This target depends on targets of the projects of it's deps.
+   *
+   * The special values {self}/{dependencies} should be preferred - they prevent cases where a project
+   * that needs to be built is missed.
    */
   projects: string[] | string;
 

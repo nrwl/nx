@@ -1,12 +1,13 @@
 import {
   getProjects,
   readNxJson,
+  updateNxJson,
   updateProjectConfiguration,
 } from '../../generators/utils/project-configuration';
 import { Tree } from '../../generators/tree';
 
 export default async function (tree: Tree) {
-  updateNxJson(tree);
+  updateDependsOnInsideNxJson(tree);
 
   const projectsConfigurations = getProjects(tree);
   for (const [projectName, projectConfiguration] of projectsConfigurations) {
@@ -16,11 +17,13 @@ export default async function (tree: Tree) {
     )) {
       for (const dependency of targetConfiguration.dependsOn ?? []) {
         if (typeof dependency !== 'string') {
-          dependency.projects =
-            (dependency.projects as string) === 'self'
-              ? '{self}'
-              : '{dependencies}';
-          projectChanged = true;
+          if (dependency.projects === 'self') {
+            dependency.projects = '{self}';
+            projectChanged = true;
+          } else if (dependency.projects === 'dependencies') {
+            dependency.projects = '{dependencies}';
+            projectChanged = true;
+          }
         }
       }
     }
@@ -29,7 +32,7 @@ export default async function (tree: Tree) {
     }
   }
 }
-function updateNxJson(tree: Tree) {
+function updateDependsOnInsideNxJson(tree: Tree) {
   const nxJson = readNxJson(tree);
   let nxJsonChanged = false;
   for (const [target, defaults] of Object.entries(
@@ -37,15 +40,17 @@ function updateNxJson(tree: Tree) {
   )) {
     for (const dependency of defaults.dependsOn ?? []) {
       if (typeof dependency !== 'string') {
-        dependency.projects =
-          (dependency.projects as string) === 'self'
-            ? '{self}'
-            : '{dependencies}';
-        nxJsonChanged = true;
+        if (dependency.projects === 'self') {
+          dependency.projects = '{self}';
+          nxJsonChanged = true;
+        } else if (dependency.projects === 'dependencies') {
+          dependency.projects = '{dependencies}';
+          nxJsonChanged = true;
+        }
       }
     }
   }
   if (nxJsonChanged) {
-    tree.write('nx.json', JSON.stringify(nxJson, null, 2));
+    updateNxJson(tree, nxJson);
   }
 }
