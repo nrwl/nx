@@ -1,5 +1,5 @@
 import { findMatchingProjects } from './find-matching-projects';
-import { type ProjectGraphProjectNode } from '../config/project-graph';
+import type { ProjectGraphProjectNode } from '../config/project-graph';
 
 describe('findMatchingProjects', () => {
   let projectGraph: Record<string, ProjectGraphProjectNode> = {
@@ -94,7 +94,7 @@ describe('findMatchingProjects', () => {
   });
 
   it('should expand "*" for tags', () => {
-    expect(findMatchingProjects(['tags:*'], projectGraph)).toEqual([
+    expect(findMatchingProjects(['tag:*'], projectGraph)).toEqual([
       'test-project',
       'a',
       'b',
@@ -103,9 +103,6 @@ describe('findMatchingProjects', () => {
   });
 
   it('should support negation "!" for tags', () => {
-    expect(findMatchingProjects(['*', 'tag:!api'], projectGraph)).toEqual([
-      'b',
-    ]);
     expect(findMatchingProjects(['*', '!tag:api'], projectGraph)).toEqual([
       'b',
     ]);

@@ -533,7 +533,7 @@ The alias of this property. Example:
 {
   "tags": {
     "type": "string",
-    "description": "Add tags to the project",
+    "description": "Add tags to the project (used for linting)",
     "alias": "t"
   },
   "directory": {

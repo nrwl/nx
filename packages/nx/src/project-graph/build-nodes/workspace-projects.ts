@@ -28,9 +28,11 @@ export async function buildWorkspaceProjectNodes(
   nxJson: NxJsonConfiguration
 ) {
   const toAdd = [];
-  const projects = Object.keys(ctx.workspace.projects);
-  const projectsGraph = projects.reduce((graph, project) => {
-    const projectConfiguration = ctx.workspace.projects[project];
+  const projects = Object.keys(ctx.projectsConfigurations.projects);
+
+  // Used for expanding implicit dependencies (e.g. `@proj/*` or `tag:foo`)
+  const partialProjectGraphNodes = projects.reduce((graph, project) => {
+    const projectConfiguration = ctx.projectsConfigurations.projects[project];
     graph[project] = {
       name: project,
       type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
@@ -43,7 +45,7 @@ export async function buildWorkspaceProjectNodes(
   }, {} as Record<string, ProjectGraphProjectNode>);
 
   for (const key of projects) {
-    const p = ctx.workspace.projects[key];
+    const p = ctx.projectsConfigurations.projects[key];
     const projectRoot = join(workspaceRoot, p.root);
 
     if (existsSync(join(projectRoot, 'package.json'))) {
@@ -73,13 +75,13 @@ export async function buildWorkspaceProjectNodes(
     p.implicitDependencies = normalizeImplicitDependencies(
       key,
       p.implicitDependencies,
-      projectsGraph
+      partialProjectGraphNodes
     );
 
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,
       p.targets,
-      await loadNxPlugins(ctx.workspace.plugins)
+      await loadNxPlugins(ctx.nxJsonConfiguration.plugins)
     );
 
     p.targets = normalizeProjectTargets(p, nxJson.targetDefaults, key);
@@ -91,7 +93,7 @@ export async function buildWorkspaceProjectNodes(
           ? 'e2e'
           : 'app'
         : 'lib';
-    const tags = ctx.workspace.projects?.[key]?.tags || [];
+    const tags = ctx.projectsConfigurations.projects?.[key]?.tags || [];
 
     toAdd.push({
       name: key,

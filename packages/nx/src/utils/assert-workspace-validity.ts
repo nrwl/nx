@@ -1,7 +1,7 @@
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { findMatchingProjects } from './find-matching-projects';
-import {output} from './output';
+import { output } from './output';
 import { ProjectGraphProjectNode } from '../config/project-graph';
 
 export function assertWorkspaceValidity(
@@ -9,7 +9,7 @@ export function assertWorkspaceValidity(
   nxJson: NxJsonConfiguration
 ) {
   const projectNames = Object.keys(projectsConfigurations.projects);
-  const projectsGraph = projectNames.reduce((graph, project) => {
+  const projectGraphNodes = projectNames.reduce((graph, project) => {
     const projectConfiguration = projectsConfigurations.projects[project];
     graph[project] = {
       name: project,
@@ -51,7 +51,7 @@ export function assertWorkspaceValidity(
         projectName,
         project.implicitDependencies,
         projects,
-        projectsGraph
+        projectGraphNodes
       );
       return map;
     }, invalidImplicitDependencies);

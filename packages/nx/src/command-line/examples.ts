@@ -312,7 +312,7 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'run-many --target=test --projects=tag:api-*',
       description:
-        'Test all projects with tags starting with `api-*`.  Note: your shell may require you to escape the `*` like this: `\\*`',
+        'Test all projects with tags starting with `api-`.  Note: your shell may require you to escape the `*` like this: `\\*`',
     },
     {
       command: 'run-many --targets=lint,test,build --all',
