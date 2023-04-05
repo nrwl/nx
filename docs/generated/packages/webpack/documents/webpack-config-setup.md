@@ -173,7 +173,7 @@ module.exports = composePlugins(
       // your options here
     });
 
-    return merge(federatedModules(config, context), {
+    return merge(federatedModules(config, { options, context }), {
       // overwrite values here
     });
   }
