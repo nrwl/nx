@@ -27,12 +27,12 @@ describe('Workspace Tests', () => {
 
   afterAll(() => cleanupProject());
 
-  describe('@nrwl/workspace:library', () => {
+  describe('@nrwl/js:library', () => {
     it('should create a library that can be tested and linted', async () => {
       const libName = uniq('mylib');
       const dirName = uniq('dir');
 
-      runCLI(`generate @nrwl/workspace:lib ${libName} --directory ${dirName}`);
+      runCLI(`generate @nrwl/js:lib ${libName} --directory ${dirName}`);
 
       checkFilesExist(
         `libs/${dirName}/${libName}/src/index.ts`,
@@ -46,15 +46,15 @@ describe('Workspace Tests', () => {
       expect(result).toContain('All files pass linting.');
 
       // Test
-      await expectJestTestsToPass('@nrwl/workspace:lib');
+      await expectJestTestsToPass('@nrwl/js:lib');
     }, 100000);
 
     it('should be able to use and be used by other libs', () => {
       const consumerLib = uniq('consumer');
       const producerLib = uniq('producer');
 
-      runCLI(`generate @nrwl/workspace:lib ${consumerLib}`);
-      runCLI(`generate @nrwl/workspace:lib ${producerLib}`);
+      runCLI(`generate @nrwl/js:lib ${consumerLib}`);
+      runCLI(`generate @nrwl/js:lib ${producerLib}`);
 
       updateFile(
         `libs/${producerLib}/src/lib/${producerLib}.ts`,
@@ -88,7 +88,7 @@ describe('Workspace Tests', () => {
     it('should be able to be built when it is buildable', () => {
       const buildableLib = uniq('buildable');
 
-      runCLI(`generate @nrwl/workspace:lib ${buildableLib} --buildable`);
+      runCLI(`generate @nrwl/js:lib ${buildableLib} --buildable`);
 
       const result = runCLI(`build ${buildableLib}`);
 
@@ -310,7 +310,7 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
-      runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
+      runCLI(`generate @nrwl/js:lib ${lib1}/data-access`);
 
       updateFile(
         `libs/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
@@ -326,7 +326,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+      runCLI(`generate @nrwl/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -339,7 +339,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      runCLI(`generate @nrwl/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -446,7 +446,7 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
       runCLI(
-        `generate @nrwl/workspace:lib ${lib1}/data-access --importPath=${importPath}`
+        `generate @nrwl/js:lib ${lib1}/data-access --importPath=${importPath}`
       );
 
       updateFile(
@@ -463,7 +463,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+      runCLI(`generate @nrwl/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -476,7 +476,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      runCLI(`generate @nrwl/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -579,7 +579,7 @@ describe('Workspace Tests', () => {
       nxJson.workspaceLayout = { libsDir: 'packages' };
       updateFile('nx.json', JSON.stringify(nxJson));
 
-      runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
+      runCLI(`generate @nrwl/js:lib ${lib1}/data-access`);
 
       updateFile(
         `packages/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
@@ -595,7 +595,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+      runCLI(`generate @nrwl/js:lib ${lib2}/ui`);
 
       updateFile(
         `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -608,7 +608,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      runCLI(`generate @nrwl/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -707,7 +707,7 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('lib1');
       const lib2 = uniq('lib2');
       const lib3 = uniq('lib3');
-      runCLI(`generate @nrwl/workspace:lib ${lib1}`);
+      runCLI(`generate @nrwl/js:lib ${lib1}`);
 
       updateFile(
         `libs/${lib1}/src/lib/${lib1}.ts`,
@@ -723,7 +723,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+      runCLI(`generate @nrwl/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -736,7 +736,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      runCLI(`generate @nrwl/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [lib1];
         return config;
@@ -841,7 +841,7 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
-      runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
+      runCLI(`generate @nrwl/js:lib ${lib1}/data-access`);
       let rootTsConfig = readJson('tsconfig.base.json');
       expect(
         rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
@@ -864,7 +864,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+      runCLI(`generate @nrwl/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -877,7 +877,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      runCLI(`generate @nrwl/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -955,14 +955,14 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('myliba');
       const lib2 = uniq('mylibb');
 
-      runCLI(`generate @nrwl/workspace:lib ${lib1}`);
+      runCLI(`generate @nrwl/js:lib ${lib1}`);
       expect(exists(tmpProjPath(`libs/${lib1}`))).toBeTruthy();
 
       /**
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}`);
+      runCLI(`generate @nrwl/js:lib ${lib2}`);
       updateProjectConfig(lib2, (config) => {
         config.implicitDependencies = [lib1];
         return config;

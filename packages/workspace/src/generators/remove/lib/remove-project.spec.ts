@@ -1,8 +1,15 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  ensurePackage,
+  NX_VERSION,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
-import { libraryGenerator } from '../../library/library';
 import { removeProject } from '@nrwl/workspace/src/generators/remove/lib/remove-project';
+
+// avoid circular deps
+const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
 
 describe('moveProject', () => {
   let schema: Schema;

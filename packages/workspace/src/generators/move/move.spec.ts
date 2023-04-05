@@ -1,7 +1,8 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { ensurePackage, NX_VERSION, readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { moveGenerator } from './move';
-import { libraryGenerator } from '../library/library';
+
+const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
 
 describe('move', () => {
   let tree: Tree;

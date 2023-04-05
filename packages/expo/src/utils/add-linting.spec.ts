@@ -1,7 +1,7 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import { libraryGenerator } from '@nrwl/workspace/src/generators/library/library';
+import { libraryGenerator } from '@nrwl/js';
 import { addLinting } from './add-linting';
 
 describe('Add Linting', () => {

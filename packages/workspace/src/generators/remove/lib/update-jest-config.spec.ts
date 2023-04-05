@@ -1,4 +1,9 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  ensurePackage,
+  NX_VERSION,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { readFileSync } from 'fs';
@@ -6,7 +11,9 @@ import { join } from 'path';
 
 import { Schema } from '../schema';
 import { updateJestConfig } from './update-jest-config';
-import { libraryGenerator } from '../../library/library';
+
+// avoid circular deps
+const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
 
 describe('updateRootJestConfig', () => {
   let tree: Tree;

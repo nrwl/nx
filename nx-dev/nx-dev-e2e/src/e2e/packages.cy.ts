@@ -453,10 +453,6 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/workspace/generators/new',
     },
     {
-      title: '@nrwl/workspace:library',
-      path: '/packages/workspace/generators/library',
-    },
-    {
       title: '@nrwl/workspace:workspace-generator',
       path: '/packages/workspace/generators/workspace-generator',
     },

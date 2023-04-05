@@ -29,7 +29,7 @@ describe('Nx Running Tests', () => {
     describe('(forwarding params)', () => {
       let proj = uniq('proj');
       beforeAll(() => {
-        runCLI(`generate @nrwl/workspace:lib ${proj}`);
+        runCLI(`generate @nrwl/js:lib ${proj}`);
         updateProjectConfig(proj, (c) => {
           c.targets['echo'] = {
             command: 'echo ECHO:',

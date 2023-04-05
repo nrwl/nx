@@ -6706,14 +6706,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "library",
-                "path": "/packages/workspace/generators/library",
-                "name": "library",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "workspace-generator",
                 "path": "/packages/workspace/generators/workspace-generator",
                 "name": "workspace-generator",

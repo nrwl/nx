@@ -1,4 +1,6 @@
 import {
+  ensurePackage,
+  NX_VERSION,
   ProjectConfiguration,
   readJson,
   readProjectConfiguration,
@@ -6,9 +8,11 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateCypressConfig } from './update-cypress-config';
+
+// avoid circular deps
+const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
 
 describe('updateCypressConfig', () => {
   let tree: Tree;

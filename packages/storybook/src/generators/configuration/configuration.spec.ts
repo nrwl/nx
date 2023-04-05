@@ -11,7 +11,7 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import * as enquirer from 'enquirer';
 
 import { Linter } from '@nrwl/linter';
-import { libraryGenerator } from '@nrwl/workspace/generators';
+import { libraryGenerator } from '@nrwl/js';
 import { nxVersion } from '../../utils/versions';
 import { TsConfig } from '../../utils/utilities';
 import configurationGenerator from './configuration';

@@ -7,7 +7,7 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '@nrwl/workspace';
+import { libraryGenerator } from '@nrwl/js';
 import { defaultExclude } from '../../utils/swc/add-swc-config';
 import update from './update-swcrc';
 

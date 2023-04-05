@@ -1,12 +1,16 @@
 import {
+  ensurePackage,
+  NX_VERSION,
   ProjectConfiguration,
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { moveProjectFiles } from './move-project-files';
+
+// avoid circular deps
+const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
 
 describe('moveProject', () => {
   let tree: Tree;
@@ -14,7 +18,7 @@ describe('moveProject', () => {
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await libraryGenerator(tree, { name: 'my-lib', standaloneConfig: false });
+    await libraryGenerator(tree, { name: 'my-lib' });
     projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
 

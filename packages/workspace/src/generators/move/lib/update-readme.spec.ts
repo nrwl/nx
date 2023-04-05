@@ -1,9 +1,11 @@
-import { Tree } from '@nrwl/devkit';
+import { ensurePackage, NX_VERSION, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { join } from 'path';
-import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateReadme } from './update-readme';
+
+// avoid circular deps
+const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
 
 describe('updateReadme', () => {
   let tree: Tree;

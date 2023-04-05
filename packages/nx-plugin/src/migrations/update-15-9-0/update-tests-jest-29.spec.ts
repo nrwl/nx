@@ -5,7 +5,7 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '@nrwl/workspace';
+import { libraryGenerator } from '@nrwl/js';
 import { updateTestsJest29 } from './jest-29-tests';
 
 let projectGraph: ProjectGraph;
@@ -92,9 +92,9 @@ transform: {
   '^.+\\\\.[tj]sx?$': 'ts-jest'
 },
 moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-globals: { 
+globals: {
     'ts-jest': {
-        tsconfig: '<rootDir>/tsconfig.spec.json' 
+        tsconfig: '<rootDir>/tsconfig.spec.json'
     }
   },
 displayName: 'jest',

@@ -1,9 +1,17 @@
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  ensurePackage,
+  NX_VERSION,
+  readJson,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '../../library/library';
 import { Schema } from '../schema';
 import { updateImports } from './update-imports';
 import { normalizeSchema } from './normalize-schema';
+
+// avoid circular deps
+const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
 
 describe('updateImports', () => {
   let tree: Tree;
@@ -25,6 +33,7 @@ describe('updateImports', () => {
     // source and destination to make sure that the workspace has libraries with those names.
     await libraryGenerator(tree, {
       name: 'my-destination',
+      config: 'project',
     });
     await libraryGenerator(tree, {
       name: 'my-source',
@@ -247,7 +256,7 @@ describe('updateImports', () => {
     tree.write(
       importerFilePath,
       `import { MyClass } from '@proj/my-source';
-  
+
 export MyExtendedClass extends MyClass {};`
     );
     schema.updateImportPath = false;

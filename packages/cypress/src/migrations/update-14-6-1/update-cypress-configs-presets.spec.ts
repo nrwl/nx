@@ -11,7 +11,7 @@ import {
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { cypressProjectGenerator } from '../../generators/cypress-project/cypress-project';
-import { libraryGenerator } from '@nrwl/workspace';
+import { libraryGenerator } from '@nrwl/js';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nrwl/devkit', () => {

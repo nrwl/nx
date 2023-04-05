@@ -1,8 +1,15 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  ensurePackage,
+  NX_VERSION,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateProjectRootFiles } from './update-project-root-files';
+
+// avoid circular deps
+const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
 
 describe('updateProjectRootFiles', () => {
   let tree: Tree;

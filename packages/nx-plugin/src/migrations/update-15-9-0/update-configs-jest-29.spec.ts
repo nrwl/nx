@@ -6,7 +6,7 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { updateConfigsJest29 } from './jest-29-configs';
-import { libraryGenerator } from '@nrwl/workspace';
+import { libraryGenerator } from '@nrwl/js';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nrwl/devkit', () => ({
@@ -55,9 +55,9 @@ describe('Nx Plugin Migration - jest 29 update configs', () => {
 module.exports = {
   ...nxPreset,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
-  globals: { 
+  globals: {
     'ts-jest': {
-        tsconfig: '<rootDir>/tsconfig.spec.json' 
+        tsconfig: '<rootDir>/tsconfig.spec.json'
     },
     something: 'else',
     abc: [1234, true, {abc: 'yes'}]
@@ -307,8 +307,8 @@ module.exports = {
     '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
   globals: {
-      'ts-jest': { 
-          tsconfig: '<rootDir>/tsconfig.spec.json' 
+      'ts-jest': {
+          tsconfig: '<rootDir>/tsconfig.spec.json'
       },
       something: 'else',
       abc: [1234, true, {abc: 'yes'}]
@@ -331,8 +331,8 @@ module.exports = {
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
   globals: {
-      'ts-jest': { 
-          tsconfig: '<rootDir>/tsconfig.spec.json' 
+      'ts-jest': {
+          tsconfig: '<rootDir>/tsconfig.spec.json'
       },
       something: 'else',
       abc: [1234, true, {abc: 'yes'}]
@@ -431,9 +431,9 @@ transform: {
 },
 // I am a comment and shouldn't be removed
 moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-globals: { 
+globals: {
     'ts-jest': {
-        tsconfig: '<rootDir>/tsconfig.spec.json' 
+        tsconfig: '<rootDir>/tsconfig.spec.json'
     },
     something: 'else',
     abc: [1234, true, {abc: 'yes'}]

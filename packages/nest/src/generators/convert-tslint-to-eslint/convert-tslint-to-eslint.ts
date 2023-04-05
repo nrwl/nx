@@ -12,7 +12,7 @@ import {
 import {
   addLint as addLintingToLibraryGenerator,
   NormalizedSchema as AddLintForLibrarySchema,
-} from '@nrwl/workspace/src/generators/library/library';
+} from '@nrwl/js/src/generators/library/library';
 import type { Linter } from 'eslint';
 
 export async function conversionGenerator(

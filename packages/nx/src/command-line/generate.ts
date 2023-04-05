@@ -235,7 +235,7 @@ async function convertToGenerateOptions(
   }
 
   if (!collectionName) {
-    throwInvalidInvocation(['@nrwl/workspace:library']);
+    throwInvalidInvocation(['@nrwl/js:library']);
   }
 
   const res = {

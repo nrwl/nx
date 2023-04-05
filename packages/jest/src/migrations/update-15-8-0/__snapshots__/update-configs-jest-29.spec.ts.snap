@@ -360,8 +360,8 @@ abc: [1234, true, {abc: 'yes'}] },
 exports[`Jest Migration - jest 29 update configs should work snapshotFormat is defined 2`] = `
 "module.exports = {
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': ['ts-jest', { 
-          tsconfig: '<rootDir>/tsconfig.spec.json' 
+    '^.+\\\\\\\\.[tj]sx?$': ['ts-jest', {
+          tsconfig: '<rootDir>/tsconfig.spec.json'
       }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']

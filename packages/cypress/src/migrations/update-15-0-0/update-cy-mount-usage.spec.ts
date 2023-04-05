@@ -10,7 +10,7 @@ import {
   updateCyFile,
   updateCyMountUsage,
 } from './update-cy-mount-usage';
-import { libraryGenerator } from '@nrwl/workspace';
+import { libraryGenerator } from '@nrwl/js';
 import { cypressComponentProject } from '../../generators/cypress-component-project/cypress-component-project';
 
 jest.mock('../../utils/cypress-version');
