@@ -1,4 +1,5 @@
 import {
+  extractLayoutDirectory,
   formatFiles,
   getProjects,
   runTasksInSerial,
@@ -30,7 +31,8 @@ export async function remote(tree: Tree, options: Schema) {
     );
   }
 
-  const appName = normalizeProjectName(options.name, options.directory);
+  const { projectDirectory } = extractLayoutDirectory(options.directory);
+  const appName = normalizeProjectName(options.name, projectDirectory);
   const port = options.port ?? findNextAvailablePort(tree);
 
   const appInstallTask = await applicationGenerator(tree, {

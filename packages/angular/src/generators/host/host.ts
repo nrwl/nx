@@ -1,4 +1,5 @@
 import {
+  extractLayoutDirectory,
   formatFiles,
   getProjects,
   runTasksInSerial,
@@ -39,7 +40,8 @@ export async function host(tree: Tree, options: Schema) {
     });
   }
 
-  const appName = normalizeProjectName(options.name, options.directory);
+  const { projectDirectory } = extractLayoutDirectory(options.directory);
+  const appName = normalizeProjectName(options.name, projectDirectory);
 
   const appInstallTask = await applicationGenerator(tree, {
     ...options,
