@@ -28,10 +28,26 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
 
   generateFiles(
     host,
-    join(__dirname, '../files'),
+    join(__dirname, '../files/common'),
     options.appProjectRoot,
     templateVariables
   );
+
+  if (options.appDir) {
+    generateFiles(
+      host,
+      join(__dirname, '../files/app'),
+      join(options.appProjectRoot, 'app'),
+      templateVariables
+    );
+  } else {
+    generateFiles(
+      host,
+      join(__dirname, '../files/pages'),
+      join(options.appProjectRoot, 'pages'),
+      templateVariables
+    );
+  }
 
   if (options.unitTestRunner === 'none') {
     host.delete(`${options.appProjectRoot}/specs/${options.fileName}.spec.tsx`);

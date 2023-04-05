@@ -1,7 +1,6 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import {
   getProjects,
-  NxJsonConfiguration,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -417,5 +416,24 @@ describe('app', () => {
     });
 
     expect(tree.exists('apps/my-app/public/.gitkeep')).toBe(true);
+  });
+
+  describe('--appDir', () => {
+    it('should generate app directory instead of pages', async () => {
+      await applicationGenerator(tree, {
+        name: 'testApp',
+        style: 'css',
+        appDir: true,
+      });
+
+      expect(tree.exists('apps/testApp/pages/styles.css')).toBeFalsy();
+
+      expect(tree.exists('apps/testApp/app/global.css'));
+      expect(tree.exists('apps/testApp/app/page.tsx'));
+      expect(tree.exists('apps/testApp/app/layout.tsx'));
+      expect(tree.exists('apps/testApp/app/api/hello/route.ts'));
+      expect(tree.exists('apps/testApp/app/page.module.css'));
+      expect(tree.exists('apps/testApp/app/favicon.ico'));
+    });
   });
 });

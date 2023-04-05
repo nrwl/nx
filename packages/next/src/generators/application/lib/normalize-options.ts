@@ -47,6 +47,8 @@ export function normalizeOptions(
 
   const fileName = 'index';
 
+  const appDir = options.appDir ?? false;
+
   const styledModule = /^(css|scss|less|styl)$/.test(options.style)
     ? null
     : options.style;
@@ -55,6 +57,7 @@ export function normalizeOptions(
 
   return {
     ...options,
+    appDir,
     name: names(options.name).fileName,
     projectName: appProjectName,
     linter: options.linter || Linter.EsLint,
