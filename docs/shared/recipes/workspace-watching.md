@@ -150,7 +150,7 @@ yarn nx -- watch --all -- echo %NX_PROJECT_NAME%
 To watch for specific projects and echo the changed files, run this command:
 
 ```shell
-nx watch --projects=app1,app2 -- echo \$NX_CHANGED_FILES
+nx watch --projects=app1,app2 -- echo \$NX_FILE_CHANGES
 ```
 
 ### Watching for dependent projects
