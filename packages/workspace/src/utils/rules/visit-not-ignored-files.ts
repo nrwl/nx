@@ -7,6 +7,9 @@ import {
 } from '@angular-devkit/schematics';
 import ignore, { Ignore } from 'ignore';
 
+/**
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nrwl/devkit. This function can be replaced with 'visitNotIgnoredFiles' from @nrwl/devkit.
+ */
 export function visitNotIgnoredFiles(
   visitor: (file: Path, host: Tree, context: SchematicContext) => void | Rule,
   dir: Path = normalize('')
@@ -17,6 +20,7 @@ export function visitNotIgnoredFiles(
       ig = ignore();
       ig.add(host.read('.gitignore').toString());
     }
+
     function visit(_dir: Path) {
       if (_dir && ig?.ignores(_dir)) {
         return;
