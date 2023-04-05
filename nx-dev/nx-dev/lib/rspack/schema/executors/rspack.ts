@@ -64,6 +64,11 @@ export const schema = {
           $ref: '#/definitions/assetPattern',
         },
       },
+      outputFileName: {
+        type: 'string',
+        description: 'Name of the main output file.',
+        default: 'main.js',
+      },
     },
     required: ['target', 'main', 'outputPath', 'tsConfig', 'rspackConfig'],
     definitions: {
