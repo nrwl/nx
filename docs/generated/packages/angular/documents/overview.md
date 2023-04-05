@@ -92,7 +92,7 @@ nx g @nrwl/angular:service my-service
 ## More Documentation
 
 - [Angular Nx Tutorial](/angular-tutorial/1-code-generation)
-- [Migrating from the Angular CLI](recipe/migration-angular)
+- [Migrating from the Angular CLI](/recipes/adopting-nx/migration-angular)
 - [Setup Module Federation with Angular and Nx](/recipes/module-federation/faster-builds)
 - [Using NgRx](/recipes/other/misc-ngrx)
 - [Using Data Persistence operators](/recipes/other/misc-data-persistence)
