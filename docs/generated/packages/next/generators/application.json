@@ -124,6 +124,12 @@
         "default": false,
         "description": "Do not add dependencies to `package.json`.",
         "x-priority": "internal"
+      },
+      "appDir": {
+        "type": "boolean",
+        "default": false,
+        "description": "Enable experimental app directory for the project",
+        "x-prompt": "Do you want to use experimental app/ in this project?"
       }
     },
     "required": [],

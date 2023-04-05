@@ -17,6 +17,11 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
+  <% if(appDir) { %>
+  experimental: { 
+    appDir: true
+  },
+  <% } %>
 };
 
 module.exports = withLess(withNx(nextConfig));
@@ -32,6 +37,11 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
+  <% if(appDir) { %>
+  experimental: { 
+    appDir: true
+  },
+  <% } %>
 };
 
 module.exports = withStylus(withNx(nextConfig));
@@ -50,6 +60,11 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
+  <% if(appDir) { %>
+  experimental: { 
+    appDir: true
+  },
+  <% } %>
 };
 
 module.exports = withNx(nextConfig);
@@ -64,6 +79,11 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
+  <% if(appDir) { %>
+  experimental: { 
+    appDir: true
+  },
+  <% } %>
 };
 
 module.exports = withNx(nextConfig);

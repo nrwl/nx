@@ -17,4 +17,5 @@ export interface Schema {
   swc?: boolean;
   customServer?: boolean;
   skipPackageJson?: boolean;
+  appDir?: boolean;
 }
