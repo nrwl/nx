@@ -205,6 +205,7 @@ function getPnpmResolver(extensions: string[]) {
       modules: [join(workspaceRoot, 'node_modules'), 'node_modules'],
       conditionNames: ['native', 'browser', 'require', 'default'],
       mainFields: ['react-native', 'browser', 'main'],
+      aliasFields: ['browser'],
     });
   }
   return resolver;
