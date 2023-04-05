@@ -2598,6 +2598,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Deploying AWS lambda in Node.js",
+            "path": "/recipes/deployment/node-aws-lambda",
+            "id": "node-aws-lambda",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Serverless deployment with Deno Deploy",
             "path": "/recipes/deployment/deno-deploy",
             "id": "deno-deploy",
@@ -2628,6 +2636,14 @@
         "name": "Deploying Node.js serverless functions to Netlify",
         "path": "/recipes/deployment/node-serverless-functions-netlify",
         "id": "node-serverless-functions-netlify",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Deploying AWS lambda in Node.js",
+        "path": "/recipes/deployment/node-aws-lambda",
+        "id": "node-aws-lambda",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
