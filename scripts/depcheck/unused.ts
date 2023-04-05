@@ -44,7 +44,6 @@ const IGNORE_MATCHES = {
     'tmp',
     'yargs',
   ],
-  'make-angular-cli-faster': ['tmp', 'yargs'],
 };
 
 export default async function getUnusedDependencies(

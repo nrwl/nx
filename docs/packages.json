@@ -178,13 +178,6 @@
     }
   },
   {
-    "name": "make-angular-cli-faster",
-    "packageName": "make-angular-cli-faster",
-    "description": "Make Angular CLI faster by enabling distributed computation caching",
-    "path": "generated/packages/make-angular-cli-faster.json",
-    "schemas": { "executors": [], "generators": [] }
-  },
-  {
     "name": "nest",
     "packageName": "nest",
     "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",

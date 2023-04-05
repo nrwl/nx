@@ -178,7 +178,6 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'tsconfig-paths',
   ],
   nest: ['semver'],
-  'make-angular-cli-faster': ['@angular/core'],
 };
 
 const IGNORE_MATCHES_BY_FILE: Record<string, string[]> = {

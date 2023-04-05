@@ -4938,14 +4938,6 @@
         "disableCollapsible": false
       },
       {
-        "id": "make-angular-cli-faster",
-        "path": "/packages/make-angular-cli-faster",
-        "name": "make-angular-cli-faster",
-        "children": [],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
         "id": "nest",
         "path": "/packages/nest",
         "name": "nest",

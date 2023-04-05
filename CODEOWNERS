@@ -23,8 +23,6 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /packages/angular/** @Coly010 @leosvelperez
 /e2e/angular-core/** @Coly010 @leosvelperez
 /e2e/angular-extensions/** @Coly010 @leosvelperez
-/packages/make-angular-cli-faster/** @leosvelperez @Coly010
-/e2e/make-angular-cli-faster/** @leosvelperez @Coly010
 /packages/angular/plugins/component-testing.ts @leosvelperez @Coly010 @barbados-clemens
 /packages/angular/src/generators/cypress-component-configuration/** @leosvelperez @Coly010 @barbados-clemens
 /packages/angular/src/generators/component-test/** @leosvelperez @Coly010 @barbados-clemens

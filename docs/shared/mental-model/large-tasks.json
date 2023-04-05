@@ -207,117 +207,6 @@
       }
     },
     {
-      "name": "make-angular-cli-faster",
-      "type": "lib",
-      "data": {
-        "tags": [],
-        "root": "packages/make-angular-cli-faster",
-        "files": [
-          {
-            "file": "packages/make-angular-cli-faster/.eslintrc.json",
-            "hash": "9afd5d63f09f7d350b479cea3984ab4d8920d964"
-          },
-          {
-            "file": "packages/make-angular-cli-faster/package.json",
-            "hash": "22518ef4e10ef683242c2fae4edfb8c83190deb2",
-            "deps": ["npm:enquirer", "nx", "npm:semver", "npm:yargs-parser"]
-          },
-          {
-            "file": "packages/make-angular-cli-faster/project.json",
-            "hash": "988e8a44c9bfc21e9225c16b105e95b79402c016"
-          },
-          {
-            "file": "packages/make-angular-cli-faster/README.md",
-            "hash": "367197abf75cf30264cbdb9c2241d11a5a42386b"
-          },
-          {
-            "file": "packages/make-angular-cli-faster/src/index.ts",
-            "hash": "6b857cf60813ca0238c0d88e55f56a5dc2f7e82e",
-            "deps": ["npm:yargs-parser"]
-          },
-          {
-            "file": "packages/make-angular-cli-faster/src/utilities/make-angular-cli-faster.ts",
-            "hash": "f2f3eb18221aafe8f5b301fd933bd87e016fb0b9",
-            "deps": ["nx", "npm:semver"]
-          },
-          {
-            "file": "packages/make-angular-cli-faster/src/utilities/migration.ts",
-            "hash": "bf6a5327a735965be22d680f3ada2745de777c5b",
-            "deps": ["nx", "npm:semver"]
-          },
-          {
-            "file": "packages/make-angular-cli-faster/src/utilities/nx-cloud.ts",
-            "hash": "6a6576190de5728ce8a9966287b7b4363fb02486",
-            "deps": ["npm:enquirer", "nx"]
-          },
-          {
-            "file": "packages/make-angular-cli-faster/src/utilities/package-manager.ts",
-            "hash": "7dfc9795a11d9e92f9de08c7dba5b16a65da9c64",
-            "deps": ["npm:semver", "nx"]
-          },
-          {
-            "file": "packages/make-angular-cli-faster/src/utilities/types.ts",
-            "hash": "f20a3f138c818b64bb604ae473e591309a051856"
-          },
-          {
-            "file": "packages/make-angular-cli-faster/tsconfig.json",
-            "hash": "58bd2c97a66f5e5ea5d05c8a5709ee79bad02094"
-          },
-          {
-            "file": "packages/make-angular-cli-faster/tsconfig.lib.json",
-            "hash": "88434d22a938c6e08c3be6c143e1be2fe96a9940"
-          },
-          {
-            "file": "packages/make-angular-cli-faster/tsconfig.spec.json",
-            "hash": "559410b96af6781ac3e7cf348bf4a710b4009481"
-          }
-        ],
-        "targets": {
-          "build-base": {
-            "executor": "@nrwl/js:tsc",
-            "options": {
-              "outputPath": "build/packages/make-angular-cli-faster",
-              "tsConfig": "packages/make-angular-cli-faster/tsconfig.lib.json",
-              "packageJson": "packages/make-angular-cli-faster/package.json",
-              "main": "packages/make-angular-cli-faster/src/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
-              "assets": [
-                {
-                  "input": "",
-                  "glob": "LICENSE",
-                  "output": "/"
-                },
-                "packages/make-angular-cli-faster/*.md"
-              ],
-              "srcRootForCompilationRoot": "packages/make-angular-cli-faster/src"
-            },
-            "outputs": ["{options.outputPath}"],
-            "dependsOn": ["^build-base"],
-            "inputs": ["production", "^production"]
-          },
-          "build": {
-            "executor": "nx:run-commands",
-            "outputs": [
-              "{workspaceRoot}/build/packages/make-angular-cli-faster"
-            ],
-            "options": {
-              "commands": [
-                {
-                  "command": "node ./scripts/chmod build/packages/make-angular-cli-faster/src/index.js"
-                },
-                {
-                  "command": "node ./scripts/copy-readme.js make-angular-cli-faster"
-                }
-              ],
-              "parallel": false
-            },
-            "dependsOn": ["build-base"],
-            "inputs": ["production", "^production"]
-          }
-        }
-      }
-    },
-    {
       "name": "nx-dev-data-access-documents",
       "type": "lib",
       "data": {
@@ -632,80 +521,6 @@
               "default",
               "{workspaceRoot}/.eslintrc.json",
               "{workspaceRoot}/tools/eslint-rules/**/*"
-            ]
-          }
-        }
-      }
-    },
-    {
-      "name": "e2e-make-angular-cli-faster",
-      "type": "app",
-      "data": {
-        "tags": [],
-        "root": "e2e/make-angular-cli-faster",
-        "files": [
-          {
-            "file": "e2e/make-angular-cli-faster/jest.config.ts",
-            "hash": "a3f3c2bd6abc44a897d757fa04aeee87713c7721"
-          },
-          {
-            "file": "e2e/make-angular-cli-faster/project.json",
-            "hash": "ea32d3d65edb05e6f2eb7ae7e4ea9478777562b8"
-          },
-          {
-            "file": "e2e/make-angular-cli-faster/src/make-angular-cli-faster.test.ts",
-            "hash": "72856820c5e3bcb4eb3da20f7f87c5e48e44e644",
-            "deps": ["e2e-utils", "nx"]
-          },
-          {
-            "file": "e2e/make-angular-cli-faster/tsconfig.json",
-            "hash": "6d5abf84832009a8c70e7a910c49f332bf1f0612"
-          },
-          {
-            "file": "e2e/make-angular-cli-faster/tsconfig.spec.json",
-            "hash": "1a24bfb0a13536cd17717808ca5609e15def438f"
-          }
-        ],
-        "targets": {
-          "e2e": {
-            "executor": "nx:run-commands",
-            "options": {
-              "commands": [
-                {
-                  "command": "yarn e2e-start-local-registry"
-                },
-                {
-                  "command": "yarn e2e-build-package-publish"
-                },
-                {
-                  "command": "nx run-e2e-tests e2e-make-angular-cli-faster"
-                }
-              ],
-              "parallel": false
-            },
-            "inputs": [
-              "default",
-              "^production",
-              {
-                "env": "SELECTED_CLI"
-              },
-              {
-                "env": "NX_E2E_CI_CACHE_KEY"
-              }
-            ]
-          },
-          "run-e2e-tests": {
-            "executor": "@nrwl/jest:jest",
-            "options": {
-              "jestConfig": "e2e/make-angular-cli-faster/jest.config.ts",
-              "passWithNoTests": true,
-              "runInBand": true
-            },
-            "outputs": ["{workspaceRoot}/coverage/e2e/make-angular-cli-faster"],
-            "inputs": [
-              "default",
-              "^production",
-              "{workspaceRoot}/jest.preset.js"
             ]
           }
         }
@@ -25387,10 +25202,6 @@
             "hash": "60dc068f8629618fd2587ce7f6cd2ca000a908a8"
           },
           {
-            "file": "docs/generated/packages/make-angular-cli-faster.json",
-            "hash": "289a5449a3f6eb1add54a0d41fb56f06b15d44fe"
-          },
-          {
             "file": "docs/generated/packages/nest.json",
             "hash": "645fa47876500f0e23b91d0e6dd30ad7fcb271e4"
           },
@@ -27749,83 +27560,6 @@
       },
       "dependencies": { "nx-dev-feature-package-schema-viewer:test": [] }
     },
-    "make-angular-cli-faster:build-base": {
-      "roots": ["graph-client:build-base:release"],
-      "tasks": {
-        "make-angular-cli-faster:build-base": {
-          "id": "make-angular-cli-faster:build-base",
-          "target": {
-            "project": "make-angular-cli-faster",
-            "target": "build-base"
-          },
-          "projectRoot": "packages/make-angular-cli-faster",
-          "overrides": {}
-        },
-        "nx:build-base": {
-          "id": "nx:build-base",
-          "target": { "project": "nx", "target": "build-base" },
-          "projectRoot": "packages/nx",
-          "overrides": { "__overrides_unparsed__": [] }
-        },
-        "graph-client:build-base:release": {
-          "id": "graph-client:build-base:release",
-          "target": {
-            "project": "graph-client",
-            "target": "build-base",
-            "configuration": "release"
-          },
-          "projectRoot": "graph/client",
-          "overrides": { "__overrides_unparsed__": [] }
-        }
-      },
-      "dependencies": {
-        "make-angular-cli-faster:build-base": ["nx:build-base"],
-        "nx:build-base": ["graph-client:build-base:release"],
-        "graph-client:build-base:release": []
-      }
-    },
-    "make-angular-cli-faster:build": {
-      "roots": ["graph-client:build-base:release"],
-      "tasks": {
-        "make-angular-cli-faster:build": {
-          "id": "make-angular-cli-faster:build",
-          "target": { "project": "make-angular-cli-faster", "target": "build" },
-          "projectRoot": "packages/make-angular-cli-faster",
-          "overrides": {}
-        },
-        "make-angular-cli-faster:build-base": {
-          "id": "make-angular-cli-faster:build-base",
-          "target": {
-            "project": "make-angular-cli-faster",
-            "target": "build-base"
-          },
-          "projectRoot": "packages/make-angular-cli-faster",
-          "overrides": { "__overrides_unparsed__": [] }
-        },
-        "nx:build-base": {
-          "id": "nx:build-base",
-          "target": { "project": "nx", "target": "build-base" },
-          "projectRoot": "packages/nx",
-          "overrides": { "__overrides_unparsed__": [] }
-        },
-        "graph-client:build-base:release": {
-          "id": "graph-client:build-base:release",
-          "target": {
-            "project": "graph-client",
-            "target": "build-base",
-            "configuration": "release"
-          },
-          "projectRoot": "graph/client",
-          "overrides": { "__overrides_unparsed__": [] }
-        }
-      },
-      "dependencies": {
-        "make-angular-cli-faster:build": ["make-angular-cli-faster:build-base"],
-        "make-angular-cli-faster:build-base": ["nx:build-base"],
-        "nx:build-base": ["graph-client:build-base:release"],
-        "graph-client:build-base:release": []
-      }
-    },
     "nx-dev-data-access-documents:lint": {
       "roots": ["nx-dev-data-access-documents:lint"],
       "tasks": {
@@ -28788,36 +28522,6 @@
         }
       },
       "dependencies": { "create-nx-workspace:lint": [] }
-    },
-    "e2e-make-angular-cli-faster:e2e": {
-      "roots": ["e2e-make-angular-cli-faster:e2e"],
-      "tasks": {
-        "e2e-make-angular-cli-faster:e2e": {
-          "id": "e2e-make-angular-cli-faster:e2e",
-          "target": {
-            "project": "e2e-make-angular-cli-faster",
-            "target": "e2e"
-          },
-          "projectRoot": "e2e/make-angular-cli-faster",
-          "overrides": {}
-        }
-      },
-      "dependencies": { "e2e-make-angular-cli-faster:e2e": [] }
-    },
-    "e2e-make-angular-cli-faster:run-e2e-tests": {
-      "roots": ["e2e-make-angular-cli-faster:run-e2e-tests"],
-      "tasks": {
-        "e2e-make-angular-cli-faster:run-e2e-tests": {
-          "id": "e2e-make-angular-cli-faster:run-e2e-tests",
-          "target": {
-            "project": "e2e-make-angular-cli-faster",
-            "target": "run-e2e-tests"
-          },
-          "projectRoot": "e2e/make-angular-cli-faster",
-          "overrides": {}
-        }
-      },
-      "dependencies": { "e2e-make-angular-cli-faster:run-e2e-tests": [] }
     },
     "nx-dev-data-access-packages:lint": {
       "roots": ["nx-dev-data-access-packages:lint"],
