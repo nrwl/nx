@@ -148,16 +148,6 @@ export default {
 
 {% /callout %}
 
-## Debugging Failing Tests
-
-If your code editor doesn't provide a way to debug your tests, you can leverage the Chrome DevTools to debug your tests with the `--inspect-brk` flag for node.
-
-```shell
-node --inspect-brk ./node_modules/@nrwl/cli/bin/nx test <project-name>
-```
-
-Enter [chrome://inspect](chrome://inspect) in Chrome address bar and inspect the target to attach to the node process. Visit the official [Jest documentation](https://jestjs.io/docs/en/troubleshooting#tests-are-failing-and-you-don-t-know-why) to find out more.
-
 ## More Documentation
 
 - [Jest Docs](https://jestjs.io/)
