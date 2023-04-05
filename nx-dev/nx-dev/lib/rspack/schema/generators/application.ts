@@ -44,14 +44,14 @@ export const schema = {
                 'SASS(.scss)       [ http://sass-lang.com                     ]',
             },
             {
-              value: 'styl',
-              label:
-                'Stylus(.styl)     [ http://stylus-lang.com                   ]',
-            },
-            {
               value: 'less',
               label:
                 'LESS              [ http://lesscss.org                       ]',
+            },
+            {
+              value: 'styl',
+              label:
+                'DEPRECATED: Stylus(.styl) [ http://stylus-lang.com           ]',
             },
             {
               value: 'none',
