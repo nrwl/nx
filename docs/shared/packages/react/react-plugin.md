@@ -8,7 +8,7 @@ It provides:
 
 ## Setting Up React
 
-To create a new workspace with React, run `npx create-nx-workspace@latest --preset=react`.
+To create a new workspace with React, run `npx create-nx-workspace@latest --preset=react-standalone`.
 
 To add the React plugin to an existing workspace, run one of the following:
 
