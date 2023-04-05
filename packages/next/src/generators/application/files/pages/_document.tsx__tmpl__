@@ -13,10 +13,10 @@ export default class CustomDocument extends Document {
     enhanceComponent: (Component) => Component,
    });
 
-   const intialProps = await Document.getInitialProps(ctx);
+   const initialProps = await Document.getInitialProps(ctx);
    const styles = sheet.getStyleElement();
 
-   return {...intialProps, styles };
+   return {...initialProps, styles };
   }
 
   render() {
