@@ -111,7 +111,7 @@ jobs:
           - e2e-esbuild
           # - e2e-expo
           # - e2e-jest
-          # - e2e-js
+          - e2e-js
           # - e2e-lerna-smoke-tests
           - e2e-linter
           # - e2e-make-angular-cli-faster
@@ -121,7 +121,7 @@ jobs:
           # - e2e-nx-misc
           # - e2e-nx-plugin
           # - e2e-nx-run
-          # - e2e-react
+          - e2e-react
           # - e2e-react-native
           # - e2e-web
           # - e2e-rollup
@@ -161,8 +161,8 @@ jobs:
           #   codeowners: 'S04TNCNJG5N'
           # - project: e2e-jest
           #   codeowners: 'S04T16BTJJY'
-          # - project: e2e-js
-          #   codeowners: 'S04SJ6HHP0X'
+          - project: e2e-js
+            codeowners: 'S04SJ6HHP0X'
           # - project: e2e-lerna-smoke-tests
           #   codeowners: 'S04TNCVEETS'
           - project: e2e-linter
@@ -181,8 +181,8 @@ jobs:
           #   codeowners: 'S04SYHYKGNP'
           # - project: e2e-nx-run
           #   codeowners: 'S04SYHYKGNP'
-          # - project: e2e-react
-          #   codeowners: 'S04TNCNJG5N'
+          - project: e2e-react
+            codeowners: 'S04TNCNJG5N'
           # - project: e2e-react-native
           #   codeowners: 'S04TNCNJG5N'
           # - project: e2e-web
@@ -228,8 +228,8 @@ jobs:
           #   project: e2e-expo
           # - node_version: 16
           #   project: e2e-jest
-          # - node_version: 16
-          #   project: e2e-js
+          - node_version: 16
+            project: e2e-js
           - node_version: 16
             project: e2e-linter
           # - node_version: 16
@@ -246,8 +246,8 @@ jobs:
           #   project: e2e-nx-plugin
           # - node_version: 16
           #   project: e2e-lerna-smoke-tests
-          # - node_version: 16
-          #   project: e2e-react
+          - node_version: 16
+            project: e2e-react
           # - node_version: 16
           #   project: e2e-react-native
           # - node_version: 16
@@ -280,8 +280,8 @@ jobs:
           #   project: e2e-expo
           # - node_version: 19
           #   project: e2e-jest
-          # - node_version: 19
-          #   project: e2e-js
+          - node_version: 19
+            project: e2e-js
           - node_version: 19
             project: e2e-linter
           # - node_version: 19
@@ -298,8 +298,8 @@ jobs:
           #   project: e2e-nx-plugin
           # - node_version: 19
           #   project: e2e-lerna-smoke-tests
-          # - node_version: 19
-          #   project: e2e-react
+          - node_version: 19
+            project: e2e-react
           # - node_version: 19
           #   project: e2e-react-native
           # - node_version: 19
@@ -464,6 +464,8 @@ jobs:
     needs: e2e
     outputs:
       message: ${{ steps.process-json.outputs.SLACK_MESSAGE }}
+      proj-duration: ${{ steps.process-json.outputs.SLACK_PROJ_DURATION }}
+      pm-duration: ${{ steps.process-json.outputs.SLACK_PM_DURATION }}
       codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
     steps:
       - name: Load outputs
@@ -540,28 +542,27 @@ jobs:
             combined.forEach((matrix) => {
               if (matrix.os_name === 'Linux') {
                 pmReport[matrix.package_manager] += matrix.duration;
-
-                if (timeReport[matrix.project]) {
-                  if (matrix.duration > timeReport[matrix.project].max) {
-                    timeReport[matrix.project].max = matrix.duration;
-                    timeReport[
-                      matrix.project
-                    ].maxEnv = `${matrix.os_name}, ${matrix.package_manager}`;
-                  }
-                  if (matrix.duration < timeReport[matrix.project].min) {
-                    timeReport[matrix.project].min = matrix.duration;
-                    timeReport[
-                      matrix.project
-                    ].minEnv = `${matrix.os_name}, ${matrix.package_manager}`;
-                  }
-                } else {
-                  timeReport[matrix.project] = {
-                    min: matrix.duration,
-                    max: matrix.duration,
-                    minEnv: `${matrix.os_name}, ${matrix.package_manager}`,
-                    maxEnv: `${matrix.os_name}, ${matrix.package_manager}`,
-                  };
+              }
+              if (timeReport[matrix.project]) {
+                if (matrix.duration > timeReport[matrix.project].max) {
+                  timeReport[matrix.project].max = matrix.duration;
+                  timeReport[
+                    matrix.project
+                  ].maxEnv = `${matrix.os_name}, ${matrix.package_manager}`;
                 }
+                if (matrix.duration < timeReport[matrix.project].min) {
+                  timeReport[matrix.project].min = matrix.duration;
+                  timeReport[
+                    matrix.project
+                  ].minEnv = `${matrix.os_name}, ${matrix.package_manager}`;
+                }
+              } else {
+                timeReport[matrix.project] = {
+                  min: matrix.duration,
+                  max: matrix.duration,
+                  minEnv: `${matrix.os_name}, ${matrix.package_manager}`,
+                  maxEnv: `${matrix.os_name}, ${matrix.package_manager}`,
+                };
               }
             });
 
@@ -592,7 +593,6 @@ jobs:
             });
             resultPkg += `\`\`\``;
             core.setOutput('SLACK_PROJ_DURATION', trimSpace(resultPkg));
-            console.log(trimSpace(resultPkg));
 
             let resultPm = `
                 \`\`\`
@@ -602,8 +602,7 @@ jobs:
               resultPm += `\n| ${pm.padEnd(4)} | ${humanizeDuration(pmReport[pm]).padEnd(11)} |`
             });
             resultPm += `\`\`\``;
-            core.setOutput('SLACK_PM_DURATION', trimSpace(result));
-            console.log(trimSpace(result));
+            core.setOutput('SLACK_PM_DURATION', trimSpace(resultPm));
 
   report-failure:
     if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
@@ -635,5 +634,37 @@ jobs:
           message_format: '{emoji} Workflow has {status_message}'
           notification_title: '{workflow}'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
+  report-pm-time:
+    # if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    if: ${{ always() }}
+    needs: process-result
+    runs-on: ubuntu-latest
+    name: Report duration per package manager
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: 'skipped'
+          message_format: 'THIS IS TEST ${{ needs.process-result.outputs.pm-duration }}'
+          notification_title: 'Total duration per package manager (ubuntu only)'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
+  report-proj-time:
+    # if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    if: ${{ always() }}
+    needs: process-result
+    runs-on: ubuntu-latest
+    name: Report duration per package manager
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: 'skipped'
+          message_format: 'THIS IS TEST ${{ needs.process-result.outputs.proj-duration }}'
+          notification_title: 'E2E Project duration stats'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
