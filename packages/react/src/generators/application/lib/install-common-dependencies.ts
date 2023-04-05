@@ -23,7 +23,7 @@ export function installCommonDependencies(
       case 'less':
         devDependencies = { less: lessVersion };
         break;
-      case 'styl':
+      case 'styl': // @TODO(17): deprecated, going to be removed in Nx 17
         devDependencies = { stylus: stylusVersion };
         break;
     }

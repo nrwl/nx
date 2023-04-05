@@ -44,7 +44,7 @@ export const schema = {
                 'SASS(.scss)       [ http://sass-lang.com                     ]',
             },
             {
-              value: 'styl',
+              value: 'styl (deprecated)',
               label:
                 'Stylus(.styl)     [ http://stylus-lang.com                   ]',
             },

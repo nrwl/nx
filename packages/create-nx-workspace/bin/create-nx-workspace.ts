@@ -589,13 +589,6 @@ async function determineStyle(
     },
   ];
 
-  if (![Preset.AngularMonorepo, Preset.AngularStandalone].includes(preset)) {
-    choices.push({
-      name: 'styl',
-      message: 'Stylus(.styl)     [ http://stylus-lang.com ]',
-    });
-  }
-
   if (
     [Preset.ReactMonorepo, Preset.ReactStandalone, Preset.NextJs].includes(
       preset
