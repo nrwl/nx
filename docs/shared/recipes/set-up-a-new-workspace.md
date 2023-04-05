@@ -23,7 +23,7 @@ npx create-nx-workspace --preset=ts
 Some presets set up applications, e2e tests, etc.
 
 ```shell
-npx create-nx-workspace --preset=react
+npx create-nx-workspace --preset=react-standalone
 npx create-nx-workspace --preset=react-native
 npx create-nx-workspace --preset=angular
 ```
