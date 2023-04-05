@@ -43,7 +43,7 @@ nx g @nrwl/angular:app my-app --standalone
 
 {% tab label="Set custom prefix and tags" %}
 
-Set the prefix to apply to generated selectors and add tags to the application.
+Set the prefix to apply to generated selectors and add tags to the application (used for linting).
 
 ```bash
 nx g @nrwl/angular:app my-app --prefix=admin --tags=scope:admin,type:ui

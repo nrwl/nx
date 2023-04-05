@@ -50,7 +50,7 @@
         "default": "jest"
       },
       "tags": {
-        "description": "Add tags to the application.",
+        "description": "Add tags to the application (used for linting).",
         "type": "string"
       },
       "frontendProject": {

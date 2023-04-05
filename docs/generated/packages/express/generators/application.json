@@ -44,7 +44,7 @@
       },
       "tags": {
         "type": "string",
-        "description": "Add tags to the application."
+        "description": "Add tags to the application (used for linting)."
       },
       "frontendProject": {
         "type": "string",

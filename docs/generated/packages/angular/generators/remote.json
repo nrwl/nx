@@ -109,7 +109,7 @@
       },
       "tags": {
         "type": "string",
-        "description": "Add tags to the application."
+        "description": "Add tags to the application (used for linting)."
       },
       "linter": {
         "description": "The tool to use for running lint checks.",

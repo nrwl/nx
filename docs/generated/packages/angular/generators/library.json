@@ -89,7 +89,10 @@
         "description": "Path to the parent route configuration using `loadChildren` or `children`, depending on what `lazy` is set to.",
         "x-priority": "important"
       },
-      "tags": { "type": "string", "description": "Add tags to the library." },
+      "tags": {
+        "type": "string",
+        "description": "Add tags to the library (used for linting)."
+      },
       "unitTestRunner": {
         "type": "string",
         "enum": ["jest", "none"],

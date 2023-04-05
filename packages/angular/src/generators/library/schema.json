@@ -91,7 +91,7 @@
     },
     "tags": {
       "type": "string",
-      "description": "Add tags to the library."
+      "description": "Add tags to the library (used for linting)."
     },
     "unitTestRunner": {
       "type": "string",
