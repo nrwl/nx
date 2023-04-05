@@ -12,7 +12,7 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /docs/nx-cloud @StalkAltan @rarmatei @isaacplmann @juristr @bcabanes
 /graph/** @philipjfulcher @FrozenPandaz @bcabanes
 /images/shared @bcabanes @isaacplmann @juristr
-/nx-dev/** @bcabanes @isaacplmann
+/nx-dev/** @bcabanes @isaacplmann @juristr
 /typedoc-theme @bcabanes @isaacplmann
 
 # Plugin Verticals
