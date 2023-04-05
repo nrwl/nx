@@ -903,7 +903,7 @@ Make sure that the number is less than the specified number.
 {
   "value": {
     "type": "number",
-    "maximum": 201
+    "exclusiveMaximum": 201
   }
 }
 ```
