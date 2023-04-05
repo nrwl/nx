@@ -4,7 +4,7 @@
   "license": "MIT",
   "dependencies": {
     "nx": "15.4.0",
-    "@nx/devkit": "^14.8.0",
-    "@nx/workspace": "^14.8.0"
+    "@nrwl/devkit": "^14.8.0",
+    "@nrwl/workspace": "^14.8.0"
   }
 }
