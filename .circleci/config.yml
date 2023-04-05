@@ -68,7 +68,6 @@ commands:
           name: Save Yarn Package Cache
           key: node-deps-{{ arch }}-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
           paths:
-            - node_modules
             - ~/.cache/yarn
             - ~/.cache/Cypress
   install-pnpm:
