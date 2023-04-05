@@ -22,23 +22,17 @@ describe('convertPipeToScam', () => {
     });
 
     // ACT
-    convertPipeToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/example',
-        fileName: 'example.pipe',
-        filePath: 'apps/app1/src/app/example/example.pipe.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: false,
-        inlineScam: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertPipeToScam(tree, {
+      directory: 'apps/app1/src/app/example',
+      fileName: 'example.pipe',
+      filePath: 'apps/app1/src/app/example/example.pipe.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      flat: false,
+      inlineScam: true,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const pipeSource = tree.read(
@@ -85,23 +79,17 @@ describe('convertPipeToScam', () => {
     });
 
     // ACT
-    convertPipeToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/example',
-        fileName: 'example.pipe',
-        filePath: 'apps/app1/src/app/example/example.pipe.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: false,
-        inlineScam: false,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertPipeToScam(tree, {
+      directory: 'apps/app1/src/app/example',
+      fileName: 'example.pipe',
+      filePath: 'apps/app1/src/app/example/example.pipe.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      flat: false,
+      inlineScam: false,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const pipeModuleSource = tree.read(
@@ -140,23 +128,17 @@ describe('convertPipeToScam', () => {
     });
 
     // ACT
-    convertPipeToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.pipe',
-        filePath: 'apps/app1/src/app/example.pipe.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: true,
-        flat: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertPipeToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.pipe',
+      filePath: 'apps/app1/src/app/example.pipe.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      inlineScam: true,
+      flat: true,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const pipeSource = tree.read('apps/app1/src/app/example.pipe.ts', 'utf-8');
@@ -200,23 +182,17 @@ describe('convertPipeToScam', () => {
     });
 
     // ACT
-    convertPipeToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.pipe',
-        filePath: 'apps/app1/src/app/example.pipe.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: false,
-        flat: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertPipeToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.pipe',
+      filePath: 'apps/app1/src/app/example.pipe.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      inlineScam: false,
+      flat: true,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const pipeModuleSource = tree.read(
@@ -256,23 +232,17 @@ describe('convertPipeToScam', () => {
     });
 
     // ACT
-    convertPipeToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/random/example',
-        fileName: 'example.pipe',
-        filePath: 'apps/app1/src/app/random/example/example.pipe.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: false,
-        inlineScam: true,
-        path: 'apps/app1/src/app/random',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertPipeToScam(tree, {
+      directory: 'apps/app1/src/app/random/example',
+      fileName: 'example.pipe',
+      filePath: 'apps/app1/src/app/random/example/example.pipe.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      flat: false,
+      inlineScam: true,
+      path: 'apps/app1/src/app/random',
+    });
 
     // ASSERT
     const pipeModuleSource = tree.read(
@@ -320,23 +290,17 @@ describe('convertPipeToScam', () => {
     });
 
     // ACT
-    convertPipeToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/random',
-        fileName: 'example.pipe',
-        filePath: 'apps/app1/src/app/random/example.pipe.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: true,
-        inlineScam: true,
-        path: 'apps/app1/src/app/random',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertPipeToScam(tree, {
+      directory: 'apps/app1/src/app/random',
+      fileName: 'example.pipe',
+      filePath: 'apps/app1/src/app/random/example.pipe.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      flat: true,
+      inlineScam: true,
+      path: 'apps/app1/src/app/random',
+    });
 
     // ASSERT
     const pipeModuleSource = tree.read(

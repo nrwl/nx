@@ -18,36 +18,35 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   validateOptions(tree, rawOptions);
   const options = normalizeOptions(tree, rawOptions);
 
-  const pathToGenerate = options.flat
-    ? joinPathFragments(__dirname, './files/__fileName__')
-    : joinPathFragments(__dirname, './files');
-
   const componentNames = names(options.name);
   const typeNames = names(options.type);
 
-  generateFiles(tree, pathToGenerate, options.path, {
-    fileName: componentNames.fileName,
-    className: componentNames.className,
-    type: typeNames.fileName,
-    typeClassName: typeNames.className,
-    style: options.style,
-    inlineStyle: options.inlineStyle,
-    inlineTemplate: options.inlineTemplate,
-    standalone: options.standalone,
-    skipSelector: options.skipSelector,
-    changeDetection: options.changeDetection,
-    viewEncapsulation: options.viewEncapsulation,
-    displayBlock: options.displayBlock,
-    selector: options.selector,
-    tpl: '',
-  });
+  generateFiles(
+    tree,
+    joinPathFragments(__dirname, 'files'),
+    options.directory,
+    {
+      fileName: componentNames.fileName,
+      className: componentNames.className,
+      type: typeNames.fileName,
+      typeClassName: typeNames.className,
+      style: options.style,
+      inlineStyle: options.inlineStyle,
+      inlineTemplate: options.inlineTemplate,
+      standalone: options.standalone,
+      skipSelector: options.skipSelector,
+      changeDetection: options.changeDetection,
+      viewEncapsulation: options.viewEncapsulation,
+      displayBlock: options.displayBlock,
+      selector: options.selector,
+      tpl: '',
+    }
+  );
 
   if (options.skipTests) {
     const pathToSpecFile = joinPathFragments(
-      options.path,
-      `${!options.flat ? `${componentNames.fileName}/` : ``}${
-        componentNames.fileName
-      }.${typeNames.fileName}.spec.ts`
+      options.directory,
+      `${componentNames.fileName}.${typeNames.fileName}.spec.ts`
     );
 
     tree.delete(pathToSpecFile);
@@ -55,10 +54,8 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
 
   if (options.inlineTemplate) {
     const pathToTemplateFile = joinPathFragments(
-      options.path,
-      `${!options.flat ? `${componentNames.fileName}/` : ``}${
-        componentNames.fileName
-      }.${typeNames.fileName}.html`
+      options.directory,
+      `${componentNames.fileName}.${typeNames.fileName}.html`
     );
 
     tree.delete(pathToTemplateFile);
@@ -66,10 +63,8 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
 
   if (options.inlineStyle) {
     const pathToStyleFile = joinPathFragments(
-      options.path,
-      `${!options.flat ? `${componentNames.fileName}/` : ``}${
-        componentNames.fileName
-      }.${typeNames.fileName}.${options.style}`
+      options.directory,
+      `${componentNames.fileName}.${typeNames.fileName}.${options.style}`
     );
 
     tree.delete(pathToStyleFile);

@@ -22,7 +22,8 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Schema {
-  path: string;
+  directory: string;
+  filePath: string;
   projectSourceRoot: string;
   projectRoot: string;
   selector: string;

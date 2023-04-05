@@ -228,20 +228,17 @@ describe('SCAM Generator', () => {
         root: 'apps/app1',
       });
 
-      // ACT
-      try {
-        await scamGenerator(tree, {
+      // ACT & ASSERT
+      expect(
+        scamGenerator(tree, {
           name: 'example',
           project: 'app1',
           path: 'libs/proj/src/lib/random',
           inlineScam: true,
-        });
-      } catch (error) {
-        // ASSERT
-        expect(error).toMatchInlineSnapshot(
-          `[Error: The path provided for the SCAM (libs/proj/src/lib/random) does not exist under the project root (apps/app1).]`
-        );
-      }
+        })
+      ).rejects.toThrow(
+        'The path provided (libs/proj/src/lib/random) does not exist under the project root (apps/app1).'
+      );
     });
   });
 });

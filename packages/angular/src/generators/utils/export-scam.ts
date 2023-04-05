@@ -7,21 +7,18 @@ import {
   stripIndents,
 } from '@nrwl/devkit';
 import { locateLibraryEntryPointFromDirectory } from './entry-point';
-import type { FileInfo } from './file-info';
 import { getRelativeImportToFile } from './path';
 
 export type GenerationOptions = {
+  directory: string;
+  filePath: string;
   name: string;
   project: string;
   export?: boolean;
   inlineScam?: boolean;
 };
 
-export function exportScam(
-  tree: Tree,
-  fileInfo: FileInfo,
-  options: GenerationOptions
-): void {
+export function exportScam(tree: Tree, options: GenerationOptions): void {
   if (!options.export) {
     return;
   }
@@ -42,7 +39,7 @@ export function exportScam(
 
   const entryPointPath = locateLibraryEntryPointFromDirectory(
     tree,
-    fileInfo.directory,
+    options.directory,
     root,
     projectSourceRoot
   );
@@ -59,7 +56,7 @@ export function exportScam(
 
   const relativePathFromEntryPoint = getRelativeImportToFile(
     entryPointPath,
-    fileInfo.filePath
+    options.filePath
   );
   const entryPointContent = tree.read(entryPointPath, 'utf-8');
   let updatedEntryPointContent = stripIndents`${entryPointContent}
@@ -67,7 +64,7 @@ export function exportScam(
 
   if (!options.inlineScam) {
     const moduleFilePath = joinPathFragments(
-      fileInfo.directory,
+      options.directory,
       `${names(options.name).fileName}.module.ts`
     );
     const relativePathFromModule = getRelativeImportToFile(

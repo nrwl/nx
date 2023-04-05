@@ -15,12 +15,10 @@ export function findModuleFromOptions(
   projectRoot: string
 ): string | null {
   if (!options.module) {
-    const pathToCheck = joinPathFragments(options.path, options.name);
-
-    return normalizePath(findModule(tree, pathToCheck, projectRoot));
+    return normalizePath(findModule(tree, options.directory, projectRoot));
   } else {
     const modulePath = joinPathFragments(options.path, options.module);
-    const componentPath = joinPathFragments(options.path, options.name);
+    const componentPath = options.directory;
     const moduleBaseName = basename(modulePath);
 
     const candidateSet = new Set<string>([options.path]);

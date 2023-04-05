@@ -13,15 +13,12 @@ export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
   validateOptions(tree, rawOptions);
   const options = normalizeOptions(tree, rawOptions);
 
-  const pathToGenerateFiles = options.flat
-    ? './files/__pipeFileName__'
-    : './files';
   const pipeNames = names(options.name);
 
   generateFiles(
     tree,
-    joinPathFragments(__dirname, pathToGenerateFiles),
-    options.path,
+    joinPathFragments(__dirname, 'files'),
+    options.directory,
     {
       pipeClassName: pipeNames.className,
       pipeFileName: pipeNames.fileName,
@@ -33,10 +30,8 @@ export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
 
   if (options.skipTests) {
     const pathToSpecFile = joinPathFragments(
-      options.path,
-      `${!options.flat ? `${pipeNames.fileName}/` : ``}${
-        pipeNames.fileName
-      }.pipe.spec.ts`
+      options.directory,
+      `${pipeNames.fileName}.pipe.spec.ts`
     );
 
     tree.delete(pathToSpecFile);

@@ -16,11 +16,13 @@ export interface Schema {
   selector?: string;
   skipSelector?: boolean;
   export?: boolean;
+  skipFormat?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
+  directory: string;
+  fileName: string;
+  filePath: string;
   export: boolean;
   inlineScam: boolean;
-  path: string;
-  projectSourceRoot: string;
 }
