@@ -17,8 +17,8 @@ import { CustomLink } from './lib/nodes/link.component';
 import { link } from './lib/nodes/link.schema';
 import { Callout } from './lib/tags/callout.component';
 import { callout } from './lib/tags/callout.schema';
-import { Card, Cards } from './lib/tags/cards.component';
-import { card, cards } from './lib/tags/cards.schema';
+import { Card, Cards, TitleCard } from './lib/tags/cards.component';
+import { card, cards, titleCard } from './lib/tags/cards.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
 import { githubRepository } from './lib/tags/github-repository.schema';
 import { Graph } from './lib/tags/graph.component';
@@ -62,6 +62,7 @@ export const getMarkdocCustomConfig = (
       'side-by-side': sideBySide,
       tab,
       tabs,
+      'title-card': titleCard,
       youtube,
     },
   },
@@ -82,6 +83,7 @@ export const getMarkdocCustomConfig = (
     SideBySide,
     Tab,
     Tabs,
+    TitleCard,
     YouTube,
   },
 });

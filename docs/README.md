@@ -36,13 +36,24 @@ Your content goes here.
 
 #### Cards
 
-Cards allow to show content in a grid system with a title, a description, a type and an url (internal/external).
+Cards allow showing content in a grid system with a title, a description, a type and an url (internal/external).
 
 ```markdown
 {% cards %}
 {% card title="string" description="string" type="documentation|external|video" url="string" /%}
 {% card title="string" description="string" type="documentation|external|video" url="string" /%}
 // as many as cards you want
+{% /cards %}
+```
+
+Title cards allow to only show a title in a card with a title and an url.
+
+```markdown
+{% cards cols="4" %}
+{% title-card title="string" href="string" /%}
+{% title-card title="string" href="string" /%}
+{% title-card title="string" href="string" /%}
+{% title-card title="string" href="string" /%}
 {% /cards %}
 ```
 

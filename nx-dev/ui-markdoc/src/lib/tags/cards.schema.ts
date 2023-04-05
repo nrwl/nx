@@ -31,3 +31,16 @@ export const card: Schema = {
     },
   },
 };
+export const titleCard: Schema = {
+  render: 'TitleCard',
+  attributes: {
+    title: {
+      type: 'String',
+      required: true,
+    },
+    url: {
+      type: 'String',
+      required: true,
+    },
+  },
+};
