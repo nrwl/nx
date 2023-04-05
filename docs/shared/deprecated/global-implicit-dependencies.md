@@ -1,6 +1,6 @@
 # Global Implicit Dependencies
 
-Since v14.4 Nx supports [`inputs` and `namedInputs`](/more-concepts/customizing-inputs) for setting up implicit dependencies. As of Nx v16, the `implicitDependencies` defined in `nx.json` are deprecated and do not influence the affected graph. This field will be removed in v17. The [`implicitDependencies` in the project configuration](/reference/project-configuration#implicitdependencies) are still the best way to manually set up a dependency between two projects that Nx is not able to detect automatically.
+Since v14.4 Nx supports [`inputs` and `namedInputs`](/more-concepts/customizing-inputs) for setting up implicit dependencies. As of Nx v16, the `implicitDependencies` defined in `nx.json` are ignored and do not influence the affected graph. This field will be removed in v17. The [`implicitDependencies` in the project configuration](/reference/project-configuration#implicitdependencies) are still the best way to manually set up a dependency between two projects that Nx is not able to detect automatically.
 
 ## Projects Depending on Global Files
 

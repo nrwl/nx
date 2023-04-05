@@ -19,8 +19,9 @@ export function assertWorkspaceValidity(
   if (nxJson.implicitDependencies) {
     output.warn({
       title:
-        'Using "implicitDependencies" is deprecated. Use "namedInputs" instead.',
+        'Using `implicitDependencies` for global implicit dependencies configuration is no longer supported.',
       bodyLines: [
+        'Use "namedInputs" instead.',
         'For more information about the usage of "namedInputs" see https://nx.dev/deprecated/global-implicit-dependencies#global-implicit-dependencies',
       ],
     });
