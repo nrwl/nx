@@ -8,6 +8,159 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { componentGenerator } from './component';
 
 describe('component Generator', () => {
+  it('should create component files correctly', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write(
+      'libs/lib1/src/lib/lib.module.ts',
+      `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+    );
+    tree.write('libs/lib1/src/index.ts', 'export * from "./lib/lib.module";');
+
+    // ACT
+    await componentGenerator(tree, {
+      name: 'example',
+      project: 'lib1',
+    });
+
+    // ASSERT
+    expect(
+      tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
+    ).toMatchSnapshot('component');
+    expect(
+      tree.read('libs/lib1/src/lib/example/example.component.html', 'utf-8')
+    ).toMatchSnapshot('template');
+    expect(
+      tree.read('libs/lib1/src/lib/example/example.component.css', 'utf-8')
+    ).toMatchSnapshot('stylesheet');
+    expect(
+      tree.read('libs/lib1/src/lib/example/example.component.spec.ts', 'utf-8')
+    ).toMatchSnapshot('component test file');
+    expect(tree.read('libs/lib1/src/index.ts', 'utf-8')).toMatchSnapshot(
+      'entry point file'
+    );
+  });
+
+  it('should not generate test file when --skip-tests=true', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write(
+      'libs/lib1/src/lib/lib.module.ts',
+      `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+    );
+    tree.write('libs/lib1/src/index.ts', '');
+
+    // ACT
+    await componentGenerator(tree, {
+      name: 'example',
+      project: 'lib1',
+      skipTests: true,
+    });
+
+    // ASSERT
+    expect(
+      tree.exists('libs/lib1/src/lib/example/example.component.spec.ts')
+    ).toBe(false);
+  });
+
+  it('should inline template when --inline-template=true', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write(
+      'libs/lib1/src/lib/lib.module.ts',
+      `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+    );
+    tree.write('libs/lib1/src/index.ts', '');
+
+    // ACT
+    await componentGenerator(tree, {
+      name: 'example',
+      project: 'lib1',
+      inlineTemplate: true,
+    });
+
+    // ASSERT
+    expect(
+      tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.exists('libs/lib1/src/lib/example/example.component.html')
+    ).toBe(false);
+  });
+
+  it('should inline styles when --inline-style=true', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write(
+      'libs/lib1/src/lib/lib.module.ts',
+      `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+    );
+    tree.write('libs/lib1/src/index.ts', '');
+
+    // ACT
+    await componentGenerator(tree, {
+      name: 'example',
+      project: 'lib1',
+      inlineStyle: true,
+    });
+
+    // ASSERT
+    expect(
+      tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
+    ).toMatchSnapshot();
+    expect(tree.exists('libs/lib1/src/lib/example/example.component.css')).toBe(
+      false
+    );
+  });
+
   it('should create the component correctly and export it in the entry point when "export=true"', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

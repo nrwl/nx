@@ -3,7 +3,6 @@ import { logger, readProjectConfiguration, stripIndents } from '@nrwl/devkit';
 import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import type { StringLiteral } from 'typescript';
 import { locateLibraryEntryPointFromDirectory } from '../../utils/entry-point';
-import { getComponentFileInfo } from '../../utils/file-info';
 import { getRelativeImportToFile } from '../../utils/path';
 import type { NormalizedSchema } from '../schema';
 import { findModuleFromOptions } from './module';
@@ -22,11 +21,9 @@ export function exportComponentInEntryPoint(
     return;
   }
 
-  const { directory, filePath } = getComponentFileInfo(tree, schema);
-
   const entryPointPath = locateLibraryEntryPointFromDirectory(
     tree,
-    directory,
+    schema.directory,
     root,
     schema.projectSourceRoot
   );
@@ -48,7 +45,7 @@ export function exportComponentInEntryPoint(
 
   const relativePathFromEntryPoint = getRelativeImportToFile(
     entryPointPath,
-    filePath
+    schema.filePath
   );
   const updateEntryPointContent = stripIndents`${tree.read(
     entryPointPath,

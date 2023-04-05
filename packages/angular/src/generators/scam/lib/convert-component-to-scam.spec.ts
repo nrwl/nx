@@ -21,22 +21,16 @@ describe('convertComponentToScam', () => {
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/example',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/example/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app/example',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/example/example.component.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      inlineScam: true,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const componentSource = tree.read(
@@ -80,22 +74,16 @@ describe('convertComponentToScam', () => {
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/example',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/example/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: false,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app/example',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/example/example.component.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      inlineScam: false,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -134,23 +122,17 @@ describe('convertComponentToScam', () => {
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: true,
-        flat: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/example.component.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      inlineScam: true,
+      flat: true,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const componentSource = tree.read(
@@ -195,23 +177,17 @@ describe('convertComponentToScam', () => {
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: false,
-        flat: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/example.component.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      inlineScam: false,
+      flat: true,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -251,24 +227,18 @@ describe('convertComponentToScam', () => {
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.random',
-        filePath: 'apps/app1/src/app/example.random.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: true,
-        flat: true,
-        type: 'random',
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.random',
+      filePath: 'apps/app1/src/app/example.random.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      inlineScam: true,
+      flat: true,
+      type: 'random',
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const componentSource = tree.read(
@@ -314,24 +284,18 @@ describe('convertComponentToScam', () => {
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.random',
-        filePath: 'apps/app1/src/app/example.random.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: false,
-        flat: true,
-        type: 'random',
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.random',
+      filePath: 'apps/app1/src/app/example.random.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      inlineScam: false,
+      flat: true,
+      type: 'random',
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -371,23 +335,17 @@ describe('convertComponentToScam', () => {
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/random/example',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/random/example/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: false,
-        inlineScam: true,
-        path: 'apps/app1/src/app/random',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app/random/example',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/random/example/example.component.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      flat: false,
+      inlineScam: true,
+      path: 'apps/app1/src/app/random',
+    });
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -433,23 +391,17 @@ describe('convertComponentToScam', () => {
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/random',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/random/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: true,
-        inlineScam: true,
-        path: 'apps/app1/src/app/random',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app/random',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/random/example.component.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      flat: true,
+      inlineScam: true,
+      path: 'apps/app1/src/app/random',
+    });
 
     // ASSERT
     const componentModuleSource = tree.read(

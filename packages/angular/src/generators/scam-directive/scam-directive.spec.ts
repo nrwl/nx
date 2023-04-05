@@ -1,6 +1,6 @@
 import { addProjectConfiguration, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import scamDirectiveGenerator from './scam-directive';
+import { scamDirectiveGenerator } from './scam-directive';
 
 describe('SCAM Directive Generator', () => {
   it('should create the inline scam directive correctly', async () => {
@@ -107,7 +107,7 @@ describe('SCAM Directive Generator', () => {
 
     // ASSERT
     const directiveModuleSource = tree.read(
-      'libs/lib1/feature/src/lib/example.module.ts',
+      'libs/lib1/feature/src/lib/example/example.module.ts',
       'utf-8'
     );
     expect(directiveModuleSource).toMatchInlineSnapshot(`
@@ -128,8 +128,8 @@ describe('SCAM Directive Generator', () => {
       'utf-8'
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
-      "export * from './lib/example.directive';
-      export * from './lib/example.module';
+      "export * from './lib/example/example.directive';
+      export * from './lib/example/example.module';
       "
     `);
   });
@@ -232,21 +232,18 @@ describe('SCAM Directive Generator', () => {
         root: 'apps/app1',
       });
 
-      // ACT
-      try {
-        await scamDirectiveGenerator(tree, {
+      // ACT & ASSERT
+      expect(
+        scamDirectiveGenerator(tree, {
           name: 'example',
           project: 'app1',
           path: 'libs/proj/src/lib/random',
           inlineScam: true,
           flat: false,
-        });
-      } catch (error) {
-        // ASSERT
-        expect(error).toMatchInlineSnapshot(
-          `[Error: The path provided for the SCAM (libs/proj/src/lib/random) does not exist under the project root (apps/app1).]`
-        );
-      }
+        })
+      ).rejects.toThrow(
+        'The path provided (libs/proj/src/lib/random) does not exist under the project root (apps/app1).'
+      );
     });
   });
 });

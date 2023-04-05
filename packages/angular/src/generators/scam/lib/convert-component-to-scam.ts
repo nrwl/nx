@@ -1,20 +1,15 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, names } from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import { insertImport } from '@nrwl/js';
-import type { FileInfo } from '../../utils/file-info';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import type { NormalizedSchema } from '../schema';
 
 let tsModule: typeof import('typescript');
 
-export function convertComponentToScam(
-  tree: Tree,
-  componentFileInfo: FileInfo,
-  options: NormalizedSchema
-) {
-  if (!tree.exists(componentFileInfo.filePath)) {
+export function convertComponentToScam(tree: Tree, options: NormalizedSchema) {
+  if (!tree.exists(options.filePath)) {
     throw new Error(
-      `Couldn't find component at path ${componentFileInfo.filePath} to add SCAM setup.`
+      `Couldn't find component at path ${options.filePath} to add SCAM setup.`
     );
   }
 
@@ -27,12 +22,9 @@ export function convertComponentToScam(
   }
 
   if (options.inlineScam) {
-    const currentComponentContents = tree.read(
-      componentFileInfo.filePath,
-      'utf-8'
-    );
+    const currentComponentContents = tree.read(options.filePath, 'utf-8');
     let source = tsModule.createSourceFile(
-      componentFileInfo.filePath,
+      options.filePath,
       currentComponentContents,
       tsModule.ScriptTarget.Latest,
       true
@@ -41,14 +33,14 @@ export function convertComponentToScam(
     source = insertImport(
       tree,
       source,
-      componentFileInfo.filePath,
+      options.filePath,
       'NgModule',
       '@angular/core'
     );
     source = insertImport(
       tree,
       source,
-      componentFileInfo.filePath,
+      options.filePath,
       'CommonModule',
       '@angular/common'
     );
@@ -58,18 +50,18 @@ export function convertComponentToScam(
       componentClassName
     )}`;
 
-    tree.write(componentFileInfo.filePath, updatedComponentSource);
+    tree.write(options.filePath, updatedComponentSource);
     return;
   }
 
   const moduleFilePath = joinPathFragments(
-    componentFileInfo.directory,
+    options.directory,
     `${componentNames.fileName}.module.ts`
   );
 
   tree.write(
     moduleFilePath,
-    getModuleFileContent(componentClassName, componentFileInfo.fileName)
+    getModuleFileContent(componentClassName, options.fileName)
   );
 }
 

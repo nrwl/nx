@@ -22,23 +22,17 @@ describe('convertDirectiveToScam', () => {
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/example',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/example/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: false,
-        inlineScam: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app/example',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/example/example.directive.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      flat: false,
+      inlineScam: true,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const directiveSource = tree.read(
@@ -83,23 +77,17 @@ describe('convertDirectiveToScam', () => {
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/example',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/example/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: false,
-        inlineScam: false,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app/example',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/example/example.directive.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      flat: false,
+      inlineScam: false,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const directiveModuleSource = tree.read(
@@ -138,23 +126,17 @@ describe('convertDirectiveToScam', () => {
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: true,
-        flat: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/example.directive.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      inlineScam: true,
+      flat: true,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const directiveSource = tree.read(
@@ -199,23 +181,17 @@ describe('convertDirectiveToScam', () => {
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: false,
-        flat: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/example.directive.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      inlineScam: false,
+      flat: true,
+      path: 'apps/app1/src/app',
+    });
 
     // ASSERT
     const directiveModuleSource = tree.read(
@@ -255,23 +231,17 @@ describe('convertDirectiveToScam', () => {
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/random/example',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/random/example/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: false,
-        inlineScam: true,
-        path: 'apps/app1/src/app/random',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app/random/example',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/random/example/example.directive.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      flat: false,
+      inlineScam: true,
+      path: 'apps/app1/src/app/random',
+    });
 
     // ASSERT
     const directiveModuleSource = tree.read(
@@ -317,23 +287,17 @@ describe('convertDirectiveToScam', () => {
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/random',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/random/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: true,
-        inlineScam: true,
-        path: 'apps/app1/src/app/random',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app/random',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/random/example.directive.ts',
+      name: 'example',
+      project: 'app1',
+      export: false,
+      flat: true,
+      inlineScam: true,
+      path: 'apps/app1/src/app/random',
+    });
 
     // ASSERT
     const directiveModuleSource = tree.read(

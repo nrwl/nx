@@ -11,9 +11,11 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Schema {
+  directory: string;
   export: boolean;
+  fileName: string;
+  filePath: string;
   flat: boolean;
   inlineScam: boolean;
   path: string;
-  projectSourceRoot: string;
 }

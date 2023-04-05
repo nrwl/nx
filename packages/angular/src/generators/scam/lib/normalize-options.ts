@@ -1,28 +1,23 @@
 import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, readProjectConfiguration } from '@nrwl/devkit';
+import { normalizeNameAndPaths } from '../../utils/path';
 import type { NormalizedSchema, Schema } from '../schema';
 
 export function normalizeOptions(
   tree: Tree,
   options: Schema
 ): NormalizedSchema {
-  const { projectType, root, sourceRoot } = readProjectConfiguration(
-    tree,
-    options.project
-  );
-  const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
-  const path =
-    options.path ??
-    joinPathFragments(
-      projectSourceRoot,
-      projectType === 'application' ? 'app' : 'lib'
-    );
+  const { directory, fileName, filePath, name } = normalizeNameAndPaths(tree, {
+    ...options,
+    type: options.type ?? 'component',
+  });
 
   return {
     ...options,
     export: options.export ?? true,
     inlineScam: options.inlineScam ?? true,
-    path,
-    projectSourceRoot,
+    directory,
+    fileName,
+    filePath,
+    name,
   };
 }

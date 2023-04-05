@@ -1,26 +1,23 @@
 import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, readProjectConfiguration } from '@nrwl/devkit';
+import { readProjectConfiguration } from '@nrwl/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
-import { parseNameWithPath } from '../../utils/names';
+import { normalizeNameAndPaths } from '../../utils/path';
 import { buildSelector } from '../../utils/selector';
-import type { Schema } from '../schema';
+import type { NormalizedSchema, Schema } from '../schema';
 
-export function normalizeOptions(tree: Tree, options: Schema) {
-  const { prefix, projectType, root, sourceRoot } = readProjectConfiguration(
+export function normalizeOptions(
+  tree: Tree,
+  options: Schema
+): NormalizedSchema {
+  const { directory, name, path } = normalizeNameAndPaths(tree, {
+    ...options,
+    type: 'directive',
+  });
+
+  const { prefix } = readProjectConfiguration(
     tree,
     options.project
   ) as AngularProjectConfiguration;
-
-  const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
-  const { name, path: namePath } = parseNameWithPath(options.name);
-
-  const path =
-    options.path ??
-    joinPathFragments(
-      projectSourceRoot,
-      projectType === 'application' ? 'app' : 'lib',
-      namePath
-    );
 
   const selector =
     options.selector ??
@@ -28,10 +25,9 @@ export function normalizeOptions(tree: Tree, options: Schema) {
 
   return {
     ...options,
+    directory,
     name,
     path,
-    projectRoot: root,
-    projectSourceRoot,
     selector,
   };
 }

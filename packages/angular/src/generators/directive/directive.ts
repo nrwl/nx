@@ -15,13 +15,10 @@ export async function directiveGenerator(tree: Tree, schema: Schema) {
 
   const directiveNames = names(options.name);
 
-  const pathToGenerateFiles = options.flat
-    ? './files/__directiveFileName__'
-    : './files';
   generateFiles(
     tree,
-    joinPathFragments(__dirname, pathToGenerateFiles),
-    options.path,
+    joinPathFragments(__dirname, 'files'),
+    options.directory,
     {
       selector: options.selector,
       directiveClassName: directiveNames.className,
@@ -33,10 +30,8 @@ export async function directiveGenerator(tree: Tree, schema: Schema) {
 
   if (options.skipTests) {
     const pathToSpecFile = joinPathFragments(
-      options.path,
-      `${!options.flat ? `${directiveNames.fileName}/` : ``}${
-        directiveNames.fileName
-      }.directive.spec.ts`
+      options.directory,
+      `${directiveNames.fileName}.directive.spec.ts`
     );
 
     tree.delete(pathToSpecFile);

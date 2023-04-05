@@ -116,6 +116,12 @@
         "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
         "default": true,
         "x-priority": "important"
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files.",
+        "default": false,
+        "x-priority": "internal"
       }
     },
     "required": ["name", "project"],
