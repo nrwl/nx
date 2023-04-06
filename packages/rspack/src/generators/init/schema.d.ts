@@ -1,5 +1,7 @@
+export type Framework = 'none' | 'react' | 'web' | 'nest';
+
 export interface InitGeneratorSchema {
-  uiFramework?: 'none' | 'react' | 'web';
+  framework?: Framework;
   style?: 'none' | 'css' | 'scss' | 'less';
   devServer?: boolean;
 }
