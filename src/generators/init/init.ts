@@ -31,7 +31,7 @@ export async function rspackInitGenerator(
     devDependencies['@rspack/less-loader'] = rspackLessLoaderVersion;
   }
 
-  if (schema.uiFramework !== 'none' || schema.devServer) {
+  if (schema.framework !== 'none' || schema.devServer) {
     devDependencies['@rspack/dev-server'] = rspackDevServerVersion;
   }
 

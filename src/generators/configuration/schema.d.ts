@@ -1,4 +1,4 @@
-import { InitGeneratorSchema } from '../init/schema';
+import { Framework, InitGeneratorSchema } from '../init/schema';
 
 export interface ConfigurationSchema extends InitGeneratorSchema {
   project: string;
@@ -6,4 +6,8 @@ export interface ConfigurationSchema extends InitGeneratorSchema {
   tsConfig?: string;
   target?: 'node' | 'web';
   skipValidation?: boolean;
+  newProject?: boolean;
+  buildTarget?: string;
+  serveTarget?: string;
+  framework?: Framework;
 }

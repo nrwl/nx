@@ -67,9 +67,10 @@ export default async function (
     project: options.name,
     devServer: true,
     tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-    uiFramework: 'react',
+    framework: 'react',
     target: 'web',
     main: joinPathFragments(options.appProjectRoot, 'src/main.tsx'),
+    newProject: true,
   });
   tasks.push(projectTask);
 

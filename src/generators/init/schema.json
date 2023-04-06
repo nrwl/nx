@@ -5,10 +5,11 @@
   "title": "",
   "type": "object",
   "properties": {
-    "uiFramework": {
+    "framework": {
       "type": "string",
       "description": "The UI framework used by the project.",
-      "enum": ["none", "react", "web"]
+      "enum": ["none", "react", "web", "nest"],
+      "alias": ["uiFramework"]
     },
     "style": {
       "type": "string",
