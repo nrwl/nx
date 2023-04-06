@@ -147,7 +147,7 @@ export function getPackageManagerCommand({
       addProd: `yarn add`,
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
-      runLerna: `yarn lerna`,
+      runLerna: `yarn --silent lerna`,
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
