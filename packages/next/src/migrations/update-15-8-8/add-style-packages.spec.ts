@@ -22,7 +22,10 @@ describe('Add less and stylus if needed', () => {
         },
       },
     });
-    tree.write(`myapp/next.config.js`, `require('@nx/next/plugins/with-less')`);
+    tree.write(
+      `myapp/next.config.js`,
+      `require('@nrwl/next/plugins/with-less')`
+    );
 
     await update(tree);
 
@@ -48,7 +51,7 @@ describe('Add less and stylus if needed', () => {
     });
     tree.write(
       `myapp/next.config.js`,
-      `require('@nx/next/plugins/with-stylus')`
+      `require('@nrwl/next/plugins/with-stylus')`
     );
 
     await update(tree);
@@ -73,7 +76,7 @@ describe('Add less and stylus if needed', () => {
         },
       },
     });
-    tree.write(`myapp/next.config.js`, `require('@nx/next/plugins/with-nx')`);
+    tree.write(`myapp/next.config.js`, `require('@nrwl/next/plugins/with-nx')`);
 
     await update(tree);
 
