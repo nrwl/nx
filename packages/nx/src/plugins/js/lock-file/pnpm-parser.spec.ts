@@ -112,47 +112,85 @@ describe('pnpm LockFile utility', () => {
     let graph: ProjectGraph;
     let lockFile: string;
 
-    beforeEach(() => {
-      lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/pnpm-lock.yaml'
-      )).default;
-      const builder = new ProjectGraphBuilder();
-      parsePnpmLockfile(lockFile, builder);
-      graph = builder.getUpdatedProjectGraph();
+    describe('v5.4', () => {
+      beforeEach(() => {
+        lockFile = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/pnpm-lock.yaml'
+        )).default;
+        const builder = new ProjectGraphBuilder();
+        parsePnpmLockfile(lockFile, builder);
+        graph = builder.getUpdatedProjectGraph();
+      });
+
+      it('should parse root lock file', async () => {
+        expect(Object.keys(graph.externalNodes).length).toEqual(1280);
+      });
+
+      it('should prune lock file', async () => {
+        const appPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/app/package.json'
+        ));
+
+        // this is our pruned lock file structure
+        const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+        // our pruning keep all transitive peer deps, mainly cypress and eslint
+        // which adds 119 more deps
+        //  but it's still possible to run `pnpm install --frozen-lockfile` on it (there are e2e tests for that)
+        expect(Object.keys(prunedGraph.externalNodes).length).toEqual(
+          863 + 119
+        );
+
+        // this should not fail
+        expect(() =>
+          stringifyPnpmLockfile(prunedGraph, lockFile, appPackageJson)
+        ).not.toThrow();
+      });
     });
 
-    it('should parse root lock file', async () => {
-      expect(Object.keys(graph.externalNodes).length).toEqual(1280); ///1143
-    });
+    describe('v6.0', () => {
+      beforeEach(() => {
+        lockFile = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/pnpm-lock-v6.yaml'
+        )).default;
+        const builder = new ProjectGraphBuilder();
+        parsePnpmLockfile(lockFile, builder);
+        graph = builder.getUpdatedProjectGraph();
+      });
 
-    it('should prune lock file', async () => {
-      const appPackageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/app/package.json'
-      ));
-      // this is original generated lock file
-      // const appLockFile = require(joinPathFragments(
-      //   __dirname,
-      //   '__fixtures__/nextjs/app/pnpm-lock.yaml'
-      // )).default;
+      it('should parse root lock file', async () => {
+        expect(Object.keys(graph.externalNodes).length).toEqual(1296);
+      });
 
-      // const appGraph = parsePnpmLockfile(appLockFile);
-      // expect(Object.keys(appGraph.externalNodes).length).toEqual(863);
+      it('should prune lock file', async () => {
+        const appPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/app/package.json'
+        ));
+        // this is original generated lock file
+        const appLockFile = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/app/pnpm-lock-v6.yaml'
+        )).default;
 
-      // this is our pruned lock file structure
-      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
-      // meeroslav: our pruning keep all transitive peer deps, mainly cypress and eslint
-      // which adds 119 more deps
-      //  but it's still possible to run `pnpm install --frozen-lockfile` on it (there are e2e tests for that)
-      expect(Object.keys(prunedGraph.externalNodes).length).toEqual(863 + 119);
+        const builder = new ProjectGraphBuilder();
+        parsePnpmLockfile(appLockFile, builder);
+        const appGraph = builder.getUpdatedProjectGraph();
+        expect(Object.keys(appGraph.externalNodes).length).toEqual(864);
 
-      // this should not fail
-      const result = stringifyPnpmLockfile(
-        prunedGraph,
-        lockFile,
-        appPackageJson
-      );
+        // this is our pruned lock file structure
+        const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+        expect(Object.keys(prunedGraph.externalNodes).length).toEqual(
+          864 + 117 // peer cypress adds additional 117 deps
+        );
+
+        // this should not fail
+        expect(() =>
+          stringifyPnpmLockfile(prunedGraph, lockFile, appPackageJson)
+        ).not.toThrow();
+      });
     });
   });
 
@@ -189,7 +227,7 @@ describe('pnpm LockFile utility', () => {
       const builder = new ProjectGraphBuilder();
       parsePnpmLockfile(lockFile, builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(213); //202
+      expect(Object.keys(graph.externalNodes).length).toEqual(213);
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         Object {
@@ -310,7 +348,7 @@ describe('pnpm LockFile utility', () => {
       const builder = new ProjectGraphBuilder();
       parsePnpmLockfile(lockFile, builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(370); //337
+      expect(Object.keys(graph.externalNodes).length).toEqual(370);
       expect(Object.keys(graph.dependencies).length).toEqual(213);
       expect(graph.dependencies['npm:@nrwl/devkit'].length).toEqual(6);
     });
@@ -364,53 +402,108 @@ describe('pnpm LockFile utility', () => {
         )).default,
       };
       vol.fromJSON(fileSys, '/root');
-
-      lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/pnpm-lock.yaml'
-      )).default;
-
-      const builder = new ProjectGraphBuilder();
-      parsePnpmLockfile(lockFile, builder);
-      graph = builder.getUpdatedProjectGraph();
     });
 
-    it('should prune single package', () => {
-      const typescriptPackageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/typescript/package.json'
-      ));
-      const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
-      const result = stringifyPnpmLockfile(
-        prunedGraph,
-        lockFile,
-        typescriptPackageJson
-      );
-      expect(result).toEqual(
-        require(joinPathFragments(
+    describe('v5.4', () => {
+      beforeEach(() => {
+        lockFile = require(joinPathFragments(
           __dirname,
-          '__fixtures__/pruning/typescript/pnpm-lock.yaml'
-        )).default
-      );
+          '__fixtures__/pruning/pnpm-lock.yaml'
+        )).default;
+
+        const builder = new ProjectGraphBuilder();
+        parsePnpmLockfile(lockFile, builder);
+        graph = builder.getUpdatedProjectGraph();
+      });
+
+      it('should prune single package', () => {
+        const typescriptPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/typescript/package.json'
+        ));
+        const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFile,
+          typescriptPackageJson
+        );
+        expect(result).toEqual(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/pnpm-lock.yaml'
+          )).default
+        );
+      });
+
+      it('should prune multi packages', () => {
+        const multiPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/devkit-yargs/package.json'
+        ));
+        const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFile,
+          multiPackageJson
+        );
+        expect(result).toEqual(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/devkit-yargs/pnpm-lock.yaml'
+          )).default
+        );
+      });
     });
 
-    it('should prune multi packages', () => {
-      const multiPackageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/devkit-yargs/package.json'
-      ));
-      const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
-      const result = stringifyPnpmLockfile(
-        prunedGraph,
-        lockFile,
-        multiPackageJson
-      );
-      expect(result).toEqual(
-        require(joinPathFragments(
+    describe('v6.0', () => {
+      beforeEach(() => {
+        lockFile = require(joinPathFragments(
           __dirname,
-          '__fixtures__/pruning/devkit-yargs/pnpm-lock.yaml'
-        )).default
-      );
+          '__fixtures__/pruning/pnpm-lock-v6.yaml'
+        )).default;
+
+        const builder = new ProjectGraphBuilder();
+        parsePnpmLockfile(lockFile, builder);
+        graph = builder.getUpdatedProjectGraph();
+      });
+
+      it('should prune single package', () => {
+        const typescriptPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/typescript/package.json'
+        ));
+        const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFile,
+          typescriptPackageJson
+        );
+        expect(result).toEqual(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/pnpm-lock-v6.yaml'
+          )).default
+        );
+      });
+
+      it('should prune multi packages', () => {
+        const multiPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/devkit-yargs/package.json'
+        ));
+        const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFile,
+          multiPackageJson
+        );
+        expect(result).toEqual(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/devkit-yargs/pnpm-lock-v6.yaml'
+          )).default
+        );
+      });
     });
   });
 
