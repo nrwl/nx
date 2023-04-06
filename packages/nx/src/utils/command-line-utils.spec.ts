@@ -178,6 +178,7 @@ describe('splitArgs', () => {
         {} as any
       ).nxArgs
     ).toEqual({
+      parallel: 3,
       projects: ['aaa', 'bbb'],
       skipNxCache: false,
     });
