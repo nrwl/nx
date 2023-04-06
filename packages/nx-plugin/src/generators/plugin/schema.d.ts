@@ -13,6 +13,5 @@ export interface Schema {
   linter: Linter;
   setParserOptionsProject?: boolean;
   compiler: 'swc' | 'tsc';
-  minimal?: boolean;
   rootProject?: boolean;
 }

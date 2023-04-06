@@ -1813,7 +1813,7 @@
       {
         "description": "Create a E2E application for a Nx Plugin.",
         "file": "generated/packages/nx-plugin/generators/e2e-project.json",
-        "hidden": true,
+        "hidden": false,
         "name": "e2e-project",
         "originalFilePath": "/packages/nx-plugin/src/generators/e2e-project/schema.json",
         "path": "nx-plugin/generators/e2e-project",

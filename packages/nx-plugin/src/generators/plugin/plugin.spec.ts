@@ -30,7 +30,7 @@ describe('NxPlugin Plugin Generator', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should update the workspace.json file', async () => {
+  it('should update the project configuration', async () => {
     await pluginGenerator(tree, getSchema());
     const project = readProjectConfiguration(tree, 'my-plugin');
     expect(project.root).toEqual('libs/my-plugin');
@@ -72,9 +72,7 @@ describe('NxPlugin Plugin Generator', () => {
       options: {
         lintFilePatterns: expect.arrayContaining([
           'libs/my-plugin/**/*.ts',
-          'libs/my-plugin/generators.json',
           'libs/my-plugin/package.json',
-          'libs/my-plugin/executors.json',
         ]),
       },
     });
@@ -108,52 +106,6 @@ describe('NxPlugin Plugin Generator', () => {
     expect(projectE2e.root).toEqual('apps/plugins/my-plugin-e2e');
   });
 
-  it('should create schematic and builder files', async () => {
-    await pluginGenerator(tree, getSchema({ name: 'myPlugin' }));
-
-    [
-      'libs/my-plugin/project.json',
-      'libs/my-plugin/generators.json',
-      'libs/my-plugin/executors.json',
-      'libs/my-plugin/src/generators/my-plugin/schema.d.ts',
-      'libs/my-plugin/src/generators/my-plugin/generator.ts',
-      'libs/my-plugin/src/generators/my-plugin/generator.spec.ts',
-      'libs/my-plugin/src/generators/my-plugin/schema.json',
-      'libs/my-plugin/src/generators/my-plugin/schema.d.ts',
-      'libs/my-plugin/src/generators/my-plugin/files/src/index.ts__template__',
-      'libs/my-plugin/src/executors/build/executor.ts',
-      'libs/my-plugin/src/executors/build/executor.spec.ts',
-      'libs/my-plugin/src/executors/build/schema.json',
-      'libs/my-plugin/src/executors/build/schema.d.ts',
-    ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
-
-    expect(
-      tree.read(
-        'libs/my-plugin/src/generators/my-plugin/files/src/index.ts__template__',
-        'utf-8'
-      )
-    ).toContain('const variable = "<%= projectName %>";');
-  });
-
-  it('should not create generator and executor files for minimal setups', async () => {
-    await pluginGenerator(tree, getSchema({ name: 'myPlugin', minimal: true }));
-
-    expect(tree.exists('libs/my-plugin/project.json')).toBeTruthy();
-
-    [
-      'libs/my-plugin/src/generators/my-plugin/schema.d.ts',
-      'libs/my-plugin/src/generators/my-plugin/generator.ts',
-      'libs/my-plugin/src/generators/my-plugin/generator.spec.ts',
-      'libs/my-plugin/src/generators/my-plugin/schema.json',
-      'libs/my-plugin/src/generators/my-plugin/schema.d.ts',
-      'libs/my-plugin/src/generators/my-plugin/files/src/index.ts__template__',
-      'libs/my-plugin/src/executors/build/executor.ts',
-      'libs/my-plugin/src/executors/build/executor.spec.ts',
-      'libs/my-plugin/src/executors/build/schema.json',
-      'libs/my-plugin/src/executors/build/schema.d.ts',
-    ].forEach((path) => expect(tree.exists(path)).toBeFalsy());
-  });
-
   describe('--unitTestRunner', () => {
     describe('none', () => {
       it('should not generate test files', async () => {
@@ -165,15 +117,13 @@ describe('NxPlugin Plugin Generator', () => {
           })
         );
 
-        [
-          'libs/my-plugin/src/generators/my-plugin/generator.ts',
-          'libs/my-plugin/src/executors/build/executor.ts',
-        ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
+        ['libs/my-plugin/jest.config.ts'].forEach((path) =>
+          expect(tree.exists(path)).toBeFalsy()
+        );
 
-        [
-          'libs/my-plugin/src/generators/my-plugin/generator.spec.ts',
-          'libs/my-plugin/src/executors/build/executor.spec.ts',
-        ].forEach((path) => expect(tree.exists(path)).toBeFalsy());
+        expect(
+          readProjectConfiguration(tree, 'my-plugin').targets.test
+        ).not.toBeDefined();
       });
     });
   });

@@ -14,6 +14,7 @@ import type { Tree } from '@nx/devkit';
 import type { Schema } from './schema';
 import * as path from 'path';
 import { PackageJson } from 'nx/src/utils/package-json';
+import pluginLintCheckGenerator from '../lint-checks/generator';
 
 interface NormalizedSchema extends Schema {
   fileName: string;
@@ -70,10 +71,15 @@ function addHasherFiles(host: Tree, options: NormalizedSchema) {
   }
 }
 
-function createExecutorsJson(host: Tree, options: NormalizedSchema) {
+export async function createExecutorsJson(
+  host: Tree,
+  projectRoot: string,
+  projectName: string,
+  skipLintChecks?: boolean
+) {
   updateJson<PackageJson>(
     host,
-    joinPathFragments(options.projectRoot, 'package.json'),
+    joinPathFragments(projectRoot, 'package.json'),
     (json) => {
       json.executors ??= './executors.json';
       return json;
@@ -81,18 +87,24 @@ function createExecutorsJson(host: Tree, options: NormalizedSchema) {
   );
   writeJson<ExecutorsJson>(
     host,
-    joinPathFragments(options.projectRoot, 'executors.json'),
+    joinPathFragments(projectRoot, 'executors.json'),
     {
       executors: {},
     }
   );
+  if (!skipLintChecks) {
+    await pluginLintCheckGenerator(host, {
+      projectName,
+    });
+  }
 }
 
-function updateExecutorJson(host: Tree, options: NormalizedSchema) {
+async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
   const packageJson = readJson<PackageJson>(
     host,
     joinPathFragments(options.projectRoot, 'package.json')
   );
+
   const packageJsonExecutors = packageJson.executors ?? packageJson.builders;
   let executorsPath = packageJsonExecutors
     ? joinPathFragments(options.projectRoot, packageJsonExecutors)
@@ -102,7 +114,12 @@ function updateExecutorJson(host: Tree, options: NormalizedSchema) {
     executorsPath = joinPathFragments(options.projectRoot, 'executors.json');
   }
   if (!host.exists(executorsPath)) {
-    createExecutorsJson(host, options);
+    await createExecutorsJson(
+      host,
+      options.projectRoot,
+      options.project,
+      options.skipLintChecks
+    );
   }
 
   return updateJson(host, executorsPath, (json) => {
@@ -158,7 +175,7 @@ export async function executorGenerator(host: Tree, schema: Schema) {
     addHasherFiles(host, options);
   }
 
-  updateExecutorJson(host, options);
+  await updateExecutorJson(host, options);
 }
 
 export default executorGenerator;

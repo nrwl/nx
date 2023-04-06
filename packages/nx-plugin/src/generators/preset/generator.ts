@@ -1,13 +1,14 @@
 import {
   Tree,
-  readJson,
-  joinPathFragments,
   updateJson,
   updateNxJson,
   readNxJson,
+  readProjectConfiguration,
 } from '@nx/devkit';
 import { Linter } from '@nx/linter';
 import { PackageJson } from 'nx/src/utils/package-json';
+import { createExecutorsJson } from '../executor/executor';
+import { createGeneratorsJson } from '../generator/generator';
 import { pluginGenerator } from '../plugin/plugin';
 import { PresetGeneratorSchema } from './schema';
 
@@ -24,7 +25,12 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
     unitTestRunner: 'jest',
     importPath: options.pluginName,
     rootProject: true,
+    e2eTestRunner: 'jest',
   });
+
+  const { root } = readProjectConfiguration(tree, options.pluginName);
+  await createExecutorsJson(tree, root, options.pluginName);
+  await createGeneratorsJson(tree, root, options.pluginName);
 
   removeNpmScope(tree);
   moveNxPluginToDevDeps(tree);

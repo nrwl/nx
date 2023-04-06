@@ -11,8 +11,7 @@
     "e2e-project": {
       "factory": "./src/generators/e2e-project/e2e",
       "schema": "./src/generators/e2e-project/schema.json",
-      "description": "Create a E2E application for a Nx Plugin.",
-      "hidden": true
+      "description": "Create a E2E application for a Nx Plugin."
     },
     "migration": {
       "factory": "./src/generators/migration/migration",
@@ -51,8 +50,7 @@
     "e2e-project": {
       "factory": "./src/generators/e2e-project/e2e#e2eProjectSchematic",
       "schema": "./src/generators/e2e-project/schema.json",
-      "description": "Create a E2E application for a Nx Plugin.",
-      "hidden": true
+      "description": "Create a E2E application for a Nx Plugin."
     },
     "migration": {
       "factory": "./src/generators/migration/migration#migrationSchematic",

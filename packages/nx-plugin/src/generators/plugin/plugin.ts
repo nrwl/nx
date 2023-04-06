@@ -37,21 +37,6 @@ async function addFiles(host: Tree, options: NormalizedSchema) {
       tmpl: '',
     }
   );
-
-  if (options.minimal) {
-    return;
-  }
-  await generatorGenerator(host, {
-    project: options.name,
-    name: options.name,
-    unitTestRunner: options.unitTestRunner,
-  });
-  await executorGenerator(host, {
-    project: options.name,
-    name: 'build',
-    unitTestRunner: options.unitTestRunner,
-    includeHasher: false,
-  });
 }
 
 function updatePluginConfig(host: Tree, options: NormalizedSchema) {
@@ -126,7 +111,6 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       projectDirectory: options.projectDirectory,
       pluginOutputPath: `dist/${options.libsDir}/${options.projectDirectory}`,
       npmPackageName: options.npmPackageName,
-      minimal: options.minimal ?? false,
       skipFormat: true,
       rootProject: options.rootProject,
     });

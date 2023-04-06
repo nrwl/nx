@@ -179,8 +179,6 @@ describe('NxPlugin Generator Generator', () => {
         'libs/my-plugin/generators.json'
       );
 
-      console.log(generatorJson.generators['preset']);
-
       expect(
         generatorJson.generators['preset']['x-use-standalone-layout']
       ).toEqual(true);

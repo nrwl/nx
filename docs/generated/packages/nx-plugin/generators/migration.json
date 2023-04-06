@@ -45,6 +45,11 @@
         "description": "Whether or not to include `package.json` updates.",
         "alias": "p",
         "default": false
+      },
+      "skipLintChecks": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not eslint configuration for plugin json files."
       }
     },
     "required": ["project", "packageVersion"],
