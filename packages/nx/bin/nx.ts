@@ -115,6 +115,7 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
       paths: workspace ? [workspace.dir] : undefined,
     });
   } catch {
+    // TODO(v17): Remove this
     // fallback for old CLI install setup
     return require.resolve('@nrwl/cli/bin/nx.js', {
       paths: workspace ? [workspace.dir] : undefined,
@@ -169,6 +170,7 @@ function warnIfUsingOutdatedGlobalInstall(
 }
 
 function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
+  // TODO(v17): Remove @nrwl/cli from this list
   const localNxPackages = ['nx', '@nrwl/tao', '@nrwl/cli'];
   for (const pkg of localNxPackages) {
     try {

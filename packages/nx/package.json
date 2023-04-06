@@ -97,7 +97,6 @@
       "@nrwl/linter",
       "@nrwl/workspace",
       "@nrwl/angular",
-      "@nrwl/cli",
       "@nrwl/cypress",
       "@nrwl/detox",
       "@nrwl/devkit",

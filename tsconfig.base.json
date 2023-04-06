@@ -19,8 +19,6 @@
     "paths": {
       "@nrwl/angular": ["packages/angular"],
       "@nrwl/angular/*": ["packages/angular/*"],
-      "@nrwl/cli": ["packages/cli"],
-      "@nrwl/cli/*": ["packages/cli/*"],
       "@nrwl/cypress": ["packages/cypress"],
       "@nrwl/cypress/*": ["packages/cypress/*"],
       "@nrwl/detox": ["packages/detox"],

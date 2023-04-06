@@ -70,7 +70,7 @@ If you have problems publishing, make sure you use Node 18 and NPM 8.
 
 **NOTE:** After you finish with local testing don't forget to stop the local registry (e.g. closing the Terminal 1) and disabling the local registy using `yarn local-registry disable`. Keeping local registry enabled will change your lock file resolutions to `localhost:4873` on the next `yarn install`. You can also run `yarn local-registry clear` to clean all packages in that local registry.
 
-**NOTE:** To use this newly published local version, you need to make a new workspace or change all of your target packages to this new version, eg: `"@nrwl/cli": "^16.0.0",` and re-run `yarn install` in your testing project.
+**NOTE:** To use this newly published local version, you need to make a new workspace or change all of your target packages to this new version, eg: `"nx": "^16.0.0",` and re-run `yarn install` in your testing project.
 
 ### Publishing for Yarn 2+ (Berry)
 

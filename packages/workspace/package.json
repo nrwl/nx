@@ -37,7 +37,6 @@
       "@nrwl/jest": "*",
       "@nrwl/linter": "*",
       "@nrwl/angular": "*",
-      "@nrwl/cli": "*",
       "@nrwl/cypress": "*",
       "@nrwl/detox": "*",
       "@nrwl/devkit": "*",

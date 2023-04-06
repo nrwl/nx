@@ -53,6 +53,12 @@
       "version": "15.8.2-beta.0",
       "description": "Updates the nx wrapper.",
       "implementation": "./src/migrations/update-15-8-2/update-nxw"
+    },
+    "16.0.0-remove-nrwl-cli": {
+      "cli": "nx",
+      "version": "16.0.0-beta.0",
+      "description": "Remove @nrwl/cli.",
+      "implementation": "./src/migrations/update-16-0-0/remove-nrwl-cli"
     }
   }
 }

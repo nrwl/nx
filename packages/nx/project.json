@@ -87,9 +87,6 @@
             "command": "node ./scripts/copy-readme.js nx"
           },
           {
-            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/cli"
-          },
-          {
             "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
           }
         ],
