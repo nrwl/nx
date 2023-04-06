@@ -12,9 +12,10 @@ import { stripIndents } from '../src/utils/strip-indents';
  *
  * @param workspace Relevant local workspace properties
  */
-process.env.NX_CLI_SET = 'true';
 
 export function initLocal(workspace: WorkspaceTypeAndRoot) {
+  process.env.NX_CLI_SET = 'true';
+
   try {
     performance.mark('init-local');
     require('nx/src/utils/perf-logging');
