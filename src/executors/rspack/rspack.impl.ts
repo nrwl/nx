@@ -22,7 +22,7 @@ export default async function runExecutor(
 
   const compiler = await createCompiler(options, context);
 
-  return new Promise<{ success: boolean }>((res) => {
+  return new Promise<{ success: boolean; outfile?: string }>((res) => {
     compiler.run((error, stats) => {
       compiler.close(() => {
         if (error) {
@@ -44,7 +44,10 @@ export default async function runExecutor(
         if (printedStats) {
           console.error(printedStats);
         }
-        res({ success: !stats.hasErrors() });
+        res({
+          success: !stats.hasErrors(),
+          outfile: path.resolve(context.root, options.outputPath, 'main.js'),
+        });
       });
     });
   });
