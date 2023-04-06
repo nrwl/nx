@@ -40,7 +40,7 @@ interface NormalizedOptions extends Options {
 }
 
 const parsedArgs = yargsParser(process.argv, {
-  boolean: ['force', 'e2e', 'nxCloud', 'vite', 'integrated'],
+  boolean: ['force', 'e2e', 'nxCloud', 'vite'],
   default: {
     nxCloud: true,
     vite: true,
@@ -50,7 +50,7 @@ const parsedArgs = yargsParser(process.argv, {
   },
 });
 
-export async function addNxToCraRepo() {
+export async function addNxToCraRepo(integrated: boolean) {
   if (!parsedArgs.force) {
     checkForUncommittedChanges();
     checkForCustomWebpackSetup();
@@ -58,7 +58,10 @@ export async function addNxToCraRepo() {
 
   output.log({ title: '✨ Nx initialization' });
 
-  const normalizedOptions = normalizeOptions(parsedArgs as unknown as Options);
+  const normalizedOptions = normalizeOptions(
+    parsedArgs as unknown as Options,
+    integrated
+  );
   await reorgnizeWorkspaceStructure(normalizedOptions);
 }
 
@@ -68,7 +71,10 @@ function addDependencies(pmc: PackageManagerCommands, ...deps: string[]) {
   execSync(`${pmc.addDev} ${depsArg}`, { stdio: [0, 1, 2] });
 }
 
-function normalizeOptions(options: Options): NormalizedOptions {
+function normalizeOptions(
+  options: Options,
+  integrated: boolean
+): NormalizedOptions {
   const packageManager = detectPackageManager();
   const pmc = getPackageManagerCommand(packageManager);
 
@@ -85,7 +91,7 @@ function normalizeOptions(options: Options): NormalizedOptions {
   // Should remove this check 04/2023 once Node 14 & npm 6 reach EOL
   const npxYesFlagNeeded = !npmVersion.startsWith('6'); // npm 7 added -y flag to npx
   const isVite = options.vite;
-  const isStandalone = !options.integrated;
+  const isStandalone = !integrated;
 
   return {
     ...options,
@@ -97,6 +103,7 @@ function normalizeOptions(options: Options): NormalizedOptions {
     npxYesFlagNeeded,
     isVite,
     isStandalone,
+    integrated,
   };
 }
 

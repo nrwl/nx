@@ -23,6 +23,7 @@ const versionWithConsolidatedPackages = '13.9.0';
 
 export async function getLegacyMigrationFunctionIfApplicable(
   repoRoot: string,
+  isIntegratedMigration: boolean,
   interactive: boolean
 ): Promise<() => Promise<void> | null> {
   const angularVersion =
@@ -43,12 +44,18 @@ export async function getLegacyMigrationFunctionIfApplicable(
       pkgName,
       `^${majorAngularVersion}.0.0`
     );
-    legacyMigrationCommand = `ng g ${pkgName}:ng-add --preserveAngularCLILayout`;
+    const preserveAngularCliLayoutFlag = !isIntegratedMigration
+      ? '--preserveAngularCLILayout'
+      : '--preserveAngularCLILayout=false';
+    legacyMigrationCommand = `ng g ${pkgName}:ng-add ${preserveAngularCliLayoutFlag}`;
   } else if (majorAngularVersion < 14) {
     // for v13, the migration was in @nrwl/angular:ng-add
     pkgName = '@nrwl/angular';
     pkgVersion = await resolvePackageVersion(pkgName, '~14.1.0');
-    legacyMigrationCommand = `ng g ${pkgName}:ng-add --preserve-angular-cli-layout`;
+    const preserveAngularCliLayoutFlag = !isIntegratedMigration
+      ? '--preserve-angular-cli-layout'
+      : '--preserve-angular-cli-layout=false';
+    legacyMigrationCommand = `ng g ${pkgName}:ng-add ${preserveAngularCliLayoutFlag}`;
   } else {
     // use the latest Nx version that supported the Angular version
     pkgName = '@nrwl/angular';
