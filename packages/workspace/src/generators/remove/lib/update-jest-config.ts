@@ -22,6 +22,15 @@ function isUsingUtilityFunction(host: Tree) {
 }
 
 /**
+ * in a standalone project, the root jest.config.ts is a project config instead
+ * of multi-project config.
+ * in that case we do not need to edit it to remove it
+ **/
+function isMonorepoConfig(tree: Tree) {
+  return tree.read('jest.config.ts', 'utf-8').includes('projects:');
+}
+
+/**
  * Updates the root jest config projects array and removes the project.
  */
 export function updateJestConfig(
@@ -44,7 +53,8 @@ export function updateJestConfig(
   if (
     !tree.exists('jest.config.ts') ||
     !tree.exists(join(projectConfig.root, 'jest.config.ts')) ||
-    isUsingUtilityFunction(tree)
+    isUsingUtilityFunction(tree) ||
+    !isMonorepoConfig(tree)
   ) {
     return;
   }
