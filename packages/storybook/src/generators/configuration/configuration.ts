@@ -30,7 +30,7 @@ import {
 import { Linter } from '@nrwl/linter';
 import {
   findStorybookAndBuildTargetsAndCompiler,
-  isStorybookV7,
+  storybookMajorVersion,
 } from '../../utils/utilities';
 import {
   nxVersion,
@@ -41,11 +41,38 @@ import {
   tsNodeVersion,
 } from '../../utils/versions';
 import { getGeneratorConfigurationOptions } from './lib/user-prompts';
+import { pleaseUpgrade } from '../../executors/utils';
 
 export async function configurationGenerator(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
 ) {
+  /**
+   * Make sure someone is not trying to configure Storybook
+   * with the wrong version.
+   */
+
+  let storybook7 =
+    storybookMajorVersion() === 7 ?? rawSchema.storybook7Configuration;
+
+  if (storybookMajorVersion() === 6 && rawSchema.storybook7Configuration) {
+    logger.error(
+      `You are using Storybook version 6. 
+         So Nx will configure Storybook for version 6.`
+    );
+    pleaseUpgrade();
+    rawSchema.storybook7Configuration = false;
+    storybook7 = false;
+  }
+
+  if (storybook7 && !rawSchema.storybook7Configuration) {
+    rawSchema.storybook7Configuration = true;
+    logger.info(
+      `You are using Storybook version 7. 
+       So Nx will configure Storybook for version 7.`
+    );
+  }
+
   if (process.env.NX_INTERACTIVE === 'true') {
     rawSchema = await getGeneratorConfigurationOptions(rawSchema);
   }
@@ -61,30 +88,11 @@ export async function configurationGenerator(
   const { nextBuildTarget, compiler, viteBuildTarget } =
     findStorybookAndBuildTargetsAndCompiler(targets);
 
-  /**
-   * Make sure someone is not trying to configure Storybook
-   * with the wrong version.
-   */
-  let storybook7;
-  try {
-    storybook7 = isStorybookV7();
-  } catch (e) {
-    storybook7 = schema.storybook7Configuration;
-  }
-
-  if (storybook7 && !schema.storybook7Configuration) {
-    schema.storybook7Configuration = true;
-    logger.info(
-      `You are using Storybook version 7. 
-       So Nx will configure Storybook for version 7.`
-    );
-  }
-
   let viteConfigFilePath: string | undefined;
 
   if (viteBuildTarget) {
     if (schema.bundler !== 'vite') {
-      if (!schema.storybook7Configuration) {
+      if (!storybook7) {
         // The warnings for v7 are handled in the next if statement
         logger.info(
           `Your project ${schema.name} uses Vite as a bundler. 
@@ -103,7 +111,7 @@ export async function configurationGenerator(
     );
   }
 
-  if (schema.storybook7Configuration) {
+  if (storybook7) {
     if (viteBuildTarget) {
       if (schema.storybook7UiFramework === '@storybook/react-webpack5') {
         logger.info(
@@ -142,10 +150,30 @@ export async function configurationGenerator(
         schema.storybook7UiFramework = `${schema.uiFramework}-webpack5`;
       }
     }
+  } else {
+    if (!schema.uiFramework) {
+      if (schema.storybook7UiFramework?.startsWith('@storybook/react')) {
+        schema.uiFramework = '@storybook/react';
+      } else if (
+        schema.storybook7UiFramework?.startsWith('@storybook/web-components')
+      ) {
+        schema.uiFramework = '@storybook/web-components';
+      } else if (schema.storybook7UiFramework === '@storybook/angular') {
+        schema.uiFramework = '@storybook/angular';
+      } else if (
+        schema.storybook7UiFramework?.startsWith('@storybook/react-native')
+      ) {
+        schema.uiFramework = '@storybook/react-native';
+      } else {
+        logger.error(
+          `You have to specify a uiFramework for Storybook version 6.`
+        );
+      }
+    }
   }
 
   // If we're on Storybook 7, ignore schema.uiFramework
-  const uiFrameworkUsed = schema.storybook7Configuration
+  const uiFrameworkUsed = storybook7
     ? schema.storybook7UiFramework
     : schema.uiFramework;
 
@@ -153,7 +181,7 @@ export async function configurationGenerator(
     uiFramework: uiFrameworkUsed,
     js: schema.js,
     bundler: schema.bundler,
-    storybook7Configuration: schema.storybook7Configuration,
+    storybook7Configuration: storybook7,
   });
   tasks.push(initTask);
 
@@ -169,7 +197,7 @@ export async function configurationGenerator(
     !!nextBuildTarget,
     compiler === 'swc',
     schema.bundler === 'vite',
-    schema.storybook7Configuration,
+    storybook7,
     viteConfigFilePath
   );
 
@@ -188,7 +216,7 @@ export async function configurationGenerator(
       schema.name,
       uiFrameworkUsed,
       schema.configureTestRunner,
-      schema.storybook7Configuration
+      storybook7
     );
   }
 
@@ -224,11 +252,7 @@ export async function configurationGenerator(
     devDeps['@storybook/core-common'] = storybookVersion;
     devDeps['ts-node'] = tsNodeVersion;
   }
-  if (
-    nextBuildTarget &&
-    projectType === 'application' &&
-    !schema.storybook7Configuration
-  ) {
+  if (nextBuildTarget && projectType === 'application' && !storybook7) {
     devDeps['storybook-addon-next'] = storybookNextAddonVersion;
     devDeps['storybook-addon-swc'] = storybookSwcAddonVersion;
   } else if (compiler === 'swc') {

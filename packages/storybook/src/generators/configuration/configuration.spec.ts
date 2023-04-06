@@ -52,17 +52,23 @@ describe('@nrwl/storybook:configuration', () => {
       });
       writeJson(tree, 'package.json', {
         devDependencies: {
-          '@storybook/addon-essentials': '~6.2.9',
-          '@storybook/react': '~6.2.9',
+          '@storybook/addon-essentials': '~6.5.9',
+          '@storybook/react': '~6.5.9',
+          '@storybook/core-server': '~6.5.9',
           '@nrwl/web': nxVersion,
         },
       });
+      jest.resetModules();
+      jest.doMock('@storybook/core-server/package.json', () => ({
+        version: '6.5.9',
+      }));
     });
 
     it('should generate files', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
+        storybook7Configuration: false,
       });
 
       expect(
@@ -98,6 +104,7 @@ describe('@nrwl/storybook:configuration', () => {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
         tsConfiguration: true,
+        storybook7Configuration: false,
       });
 
       expect(
@@ -113,6 +120,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
+        storybook7Configuration: false,
       });
 
       expect(
@@ -129,6 +137,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
+        storybook7Configuration: false,
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib');
 
@@ -164,6 +173,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib-2',
         uiFramework: '@storybook/angular',
+        storybook7Configuration: false,
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib-2');
 
@@ -201,6 +211,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib-5',
         uiFramework: '@storybook/angular',
+        storybook7Configuration: false,
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib-5');
 
@@ -237,6 +248,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
+        storybook7Configuration: false,
       });
       const tsconfigJson = readJson<TsConfig>(
         tree,
@@ -259,6 +271,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
+        storybook7Configuration: false,
       });
       const tsconfigJson = readJson<TsConfig>(
         tree,
@@ -302,6 +315,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib2',
         uiFramework: '@storybook/react',
+        storybook7Configuration: false,
       });
 
       expect(enquirer.prompt).toHaveBeenCalled();
@@ -329,6 +343,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib2',
         uiFramework: '@storybook/react',
+        storybook7Configuration: false,
       });
 
       expect(enquirer.prompt).toHaveBeenCalled();
@@ -342,6 +357,7 @@ describe('@nrwl/storybook:configuration', () => {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
         tsConfiguration: true,
+        storybook7Configuration: false,
       });
       expect(tree.exists('libs/test-ui-lib/.storybook/main.ts')).toBeTruthy();
       expect(
@@ -361,6 +377,7 @@ describe('@nrwl/storybook:configuration', () => {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
         configureTestRunner: true,
+        storybook7Configuration: false,
       });
 
       expect(enquirer.prompt).toHaveBeenCalled();

@@ -9,7 +9,7 @@ import { storybookVersion } from './versions';
 import { statSync } from 'fs';
 import { findNodes } from 'nx/src/utils/typescript';
 import ts = require('typescript');
-import { gte } from 'semver';
+import { gte, lt, major } from 'semver';
 import { join } from 'path';
 
 export const Constants = {
@@ -62,6 +62,18 @@ export function isStorybookV7() {
     'package.json'
   )).version;
   return gte(storybookPackageVersion, '7.0.0-alpha.0');
+}
+
+export function storybookMajorVersion() {
+  try {
+    const storybookPackageVersion = require(join(
+      '@storybook/core-server',
+      'package.json'
+    )).version;
+    return major(storybookPackageVersion);
+  } catch {
+    return undefined;
+  }
 }
 
 export function safeFileDelete(tree: Tree, path: string): boolean {

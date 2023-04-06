@@ -85,10 +85,16 @@ describe('@nrwl/storybook:configuration for workspaces with Root project', () =>
       });
       writeJson(tree, 'package.json', {
         devDependencies: {
-          '@storybook/addon-essentials': '~6.2.9',
-          '@storybook/react': '~6.2.9',
+          '@storybook/addon-essentials': '7.0.2',
+          '@storybook/react': '7.0.2',
+          '@storybook/core-server': '7.0.2',
         },
       });
+
+      jest.resetModules();
+      jest.doMock('@storybook/core-server/package.json', () => ({
+        version: '7.0.2',
+      }));
     });
 
     it('should generate files for root app', async () => {

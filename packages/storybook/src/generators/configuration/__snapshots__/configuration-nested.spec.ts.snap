@@ -1,30 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 1`] = `
-"import type { StorybookConfig } from '@storybook/core-common';
-
-import { mergeConfig } from 'vite';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+"import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
-  core: { builder: '@storybook/builder-vite' },
-  stories: [
-    '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
-  ],
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
   addons: ['@storybook/addon-essentials'],
-  async viteFinal(config: any) {
-    return mergeConfig(config, {
-      plugins: [
-        viteTsConfigPaths({
-          root: './../',
-        }),
-      ],
-    });
+  framework: {
+    name: '@storybook/react-vite',
+    options: {
+      builder: {
+        viteConfigPath: '',
+      },
+    },
   },
-} as StorybookConfig;
+};
 
-module.exports = config;
+export default config;
 
 // To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
@@ -66,18 +58,18 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
 exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 3`] = `""`;
 
 exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 4`] = `
-"import type { StorybookConfig } from '@storybook/core-common';
+"import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
-  core: { builder: 'webpack5' },
-  stories: [
-    '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
-  ],
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
   addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
+  framework: {
+    name: '@storybook/react-webpack5',
+    options: {},
+  },
 };
 
-module.exports = config;
+export default config;
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
