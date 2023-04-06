@@ -176,12 +176,6 @@ function setDefaults(tree: Tree, options: NormalizedSchema) {
     e2eTestRunner: options.e2eTestRunner,
     ...nxJson.generators['@nrwl/web:application'],
   };
-  nxJson.generators['@nrwl/web:library'] = {
-    style: options.style,
-    linter: options.linter,
-    unitTestRunner: options.unitTestRunner,
-    ...nxJson.generators['@nrwl/web:library'],
-  };
   updateNxJson(tree, nxJson);
 }
 

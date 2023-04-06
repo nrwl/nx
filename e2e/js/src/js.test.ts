@@ -151,17 +151,9 @@ export function ${lib}Wildcard() {
 
   it('should not be able to be built when it has no bundler', () => {
     const nonBuildable = uniq('buildable');
-
     runCLI(`generate @nrwl/js:lib ${nonBuildable} --bundler=none`);
 
-    const result = runCLI(`build ${nonBuildable}`);
-
-    expect(result).toContain(
-      `Compiling TypeScript files for project "${nonBuildable}"...`
-    );
-    expect(result).toContain(
-      `Done compiling TypeScript files for project "${nonBuildable}".`
-    );
+    expect(() => runCLI(`build ${nonBuildable}`)).toThrow();
 
     checkFilesDoNotExist(`dist/libs/${nonBuildable}/README.md`);
   });
