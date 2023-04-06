@@ -13,8 +13,9 @@ import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { join } from 'path';
 import * as isCI from 'is-ci';
 import { Workspaces } from '../../packages/nx/src/config/workspaces';
-import { updateFile } from './file-utils';
+import { exists, updateFile } from './file-utils';
 import { logError, stripConsoleColors } from './log-utils';
+import { existsSync } from 'fs-extra';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -118,6 +119,7 @@ export function getPackageManagerCommand({
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const publishedVersion = getPublishedVersion();
+  const isPnpmWorkspace = existsSync(join(path, 'pnpm-workspace.yaml'));
 
   return {
     npm: {
@@ -158,8 +160,8 @@ export function getPackageManagerCommand({
       runUninstalledPackage: 'pnpm dlx',
       install: 'pnpm i',
       ciInstall: 'pnpm install --frozen-lockfile',
-      addProd: `pnpm add`,
-      addDev: `pnpm add -D`,
+      addProd: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
+      addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
       list: 'npm ls --depth 10',
       runLerna: `pnpm exec lerna`,
     },
