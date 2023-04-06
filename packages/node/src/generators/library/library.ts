@@ -52,6 +52,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
   const libraryInstall = await jsLibraryGenerator(tree, {
     ...schema,
     bundler: schema.buildable ? 'tsc' : 'none',
+    includeBabelRc: schema.babelJest,
     importPath: options.importPath,
     testEnvironment: 'node',
     skipFormat: true,
