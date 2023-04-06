@@ -113,6 +113,7 @@
       "inputs": [
         "default",
         "^production",
+        "{workspaceRoot}/.circleci/config.yml",
         {
           "env": "SELECTED_CLI"
         },
