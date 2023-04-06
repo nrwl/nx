@@ -40,7 +40,7 @@ const schemaDefaults = {
 function generateGlobalConfig(tree: Tree, isJS: boolean) {
   const contents = isJS
     ? stripIndents`
-    const { getJestProjects } = require('@nx/jest');
+    const { getJestProjects } = require('@nrwl/jest');
 
     module.exports = {
       projects: getJestProjects()
@@ -60,7 +60,7 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
     tree.write(
       `jest.preset.js`,
       `
-      const nxPreset = require('@nx/jest/preset').default;
+      const nxPreset = require('@nrwl/jest/preset').default;
 
       module.exports = { ...nxPreset }`
     );

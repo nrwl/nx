@@ -69,7 +69,7 @@ export function updateRootFiles(tree: Tree): { didUpdateRootPreset: boolean } {
 function updateNxPresetImport(fileContents: string): string {
   return fileContents.replace(
     /require\(['"]@nrwl\/jest\/preset['"]\)[;\s]*?[\n\r]/g,
-    `require('@nx/jest/preset').default;
+    `require('@nrwl/jest/preset').default;
 `
   );
 }

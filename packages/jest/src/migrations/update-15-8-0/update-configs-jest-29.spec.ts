@@ -51,7 +51,7 @@ describe('Jest Migration - jest 29 update configs', () => {
     await setup(tree, 'my-lib');
     tree.write(
       'jest.preset.js',
-      `const nxPreset = require('@nx/jest/preset').default;
+      `const nxPreset = require('@nrwl/jest/preset').default;
 module.exports = {
   ...nxPreset,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
@@ -82,7 +82,7 @@ module.exports = {
     await setup(tree, 'my-lib');
     tree.write(
       'jest.preset.js',
-      `const nxPreset = require('@nx/jest/preset').default;
+      `const nxPreset = require('@nrwl/jest/preset').default;
 module.exports = {
   ...nxPreset,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],

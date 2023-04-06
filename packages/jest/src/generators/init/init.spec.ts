@@ -288,7 +288,7 @@ module.exports = {
       await jestInitGenerator(tree, { js: true, rootProject: false });
       expect(tree.exists('jest.config.app.js')).toBeTruthy();
       expect(tree.read('jest.config.js', 'utf-8'))
-        .toEqual(`const { getJestProjects } = require('@nx/jest');
+        .toEqual(`const { getJestProjects } = require('@nrwl/jest');
 
 module.exports = {
 projects: getJestProjects()
