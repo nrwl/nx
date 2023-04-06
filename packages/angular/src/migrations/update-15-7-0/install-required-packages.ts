@@ -25,8 +25,8 @@ export default async function (tree: Tree) {
   );
 
   const angularCliVersion =
-    pkgJson.devDependencies?.['@angular/cli'] ??
-    pkgJson.dependencies?.['@angular/cli'] ??
+    pkgJson.devDependencies?.['@angular-devkit/build-angular'] ??
+    pkgJson.dependencies?.['@angular-devkit/build-angular'] ??
     angularDevkitVersion;
 
   const filteredPackages: Record<string, string> = packagesToInstall
