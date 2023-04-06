@@ -405,6 +405,11 @@ jobs:
           git config --global user.email test@test.com
           git config --global user.name "Test Test"
 
+      - name: Set starting timestamp
+        id: before-e2e
+        run: |
+          echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
+
       - name: Run e2e tests
         id: e2e-run
         run: yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1
@@ -428,10 +433,14 @@ jobs:
       - name: Save matrix config in file
         if: ${{ always() }}
         id: save-matrix
+        shell: bash
         run: |
+          before=${{ steps.before-e2e.outputs.timestamp }}
+          now=$(date +%s)
+          delta=$(($now - $before))
           matrix=$((
             echo '${{ toJSON(matrix) }}'
-          ) | jq -c '. + { "status": "${{ steps.e2e-run.outcome}}" }')
+          ) | jq --argjson delta $delta -c '. + { "status": "${{ steps.e2e-run.outcome}}", "duration": $delta }')
           echo "$matrix" > matrix
           path=outputs/${{ matrix.os_name}}-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
           echo "path=$path" >> $GITHUB_OUTPUT
@@ -455,6 +464,8 @@ jobs:
     needs: e2e
     outputs:
       message: ${{ steps.process-json.outputs.SLACK_MESSAGE }}
+      proj-duration: ${{ steps.process-json.outputs.SLACK_PROJ_DURATION }}
+      pm-duration: ${{ steps.process-json.outputs.SLACK_PM_DURATION }}
       codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
     steps:
       - name: Load outputs
@@ -486,7 +497,11 @@ jobs:
             });
             core.setOutput('CODEOWNERS', Array.from(codeowners).join(','));
 
-            // message
+            function trimSpace(res) {
+              return res.split('\n').map((l) => l.trim()).join('\n');
+            }
+
+            // failed message
             let lastProject;
             let result = `
               \`\`\`
@@ -498,8 +513,96 @@ jobs:
               lastProject = matrix.project;
             });
             result += `\`\`\``;
-            const message = result.split('\n').map(l => l.trim()).join('\n');
-            core.setOutput('SLACK_MESSAGE', message);
+            core.setOutput('SLACK_MESSAGE', trimSpace(result));
+
+            function humanizeDuration(num) {
+              let res = '';
+              const hours = Math.floor(num / 3600);
+              if (hours) {
+                res += `${hours}h `;
+              }
+              const mins = Math.floor((num % 3600) / 60);
+              if (mins) {
+                res += `${mins}m `;
+              }
+              const sec = num % 60;
+              if (sec) {
+                res += `${sec}s`
+              }
+              return res;
+            }
+
+            // duration message
+            const timeReport = {};
+            const pmReport = {
+              npm: 0,
+              yarn: 0,
+              pnpm: 0
+            };
+            combined.forEach((matrix) => {
+              if (matrix.os_name === 'Linux' && matrix.node_version === 18) {
+                pmReport[matrix.package_manager] += matrix.duration;
+              }
+              if (timeReport[matrix.project]) {
+                if (matrix.duration > timeReport[matrix.project].max) {
+                  timeReport[matrix.project].max = matrix.duration;
+                  timeReport[
+                    matrix.project
+                  ].maxEnv = `${matrix.os_name}, ${matrix.package_manager}`;
+                }
+                if (matrix.duration < timeReport[matrix.project].min) {
+                  timeReport[matrix.project].min = matrix.duration;
+                  timeReport[
+                    matrix.project
+                  ].minEnv = `${matrix.os_name}, ${matrix.package_manager}`;
+                }
+              } else {
+                timeReport[matrix.project] = {
+                  min: matrix.duration,
+                  max: matrix.duration,
+                  minEnv: `${matrix.os_name}, ${matrix.package_manager}`,
+                  maxEnv: `${matrix.os_name}, ${matrix.package_manager}`,
+                };
+              }
+            });
+
+            // project time report
+            let resultPkg = `
+                \`\`\`
+                | Project                        | Time                      |
+                |--------------------------------|---------------------------|`;
+            function mapProjectTime(proj, section) {
+              let res = '';
+              res += `${humanizeDuration(timeReport[proj][section])}`;
+              res += ` (${timeReport[proj][section + 'Env']})`
+              return res;
+            }
+            function durationIcon(proj, section) {
+              if (timeReport[proj][section] < 12 * 60) {
+                return `${section} ✅`;
+              }
+              if (timeReport[proj][section] < 15 * 60) {
+                return `${section} ❗`;
+              }
+              return `${section} ❌`;
+            }
+            Object.keys(timeReport).forEach(proj => {
+              resultPkg += `\n| ${proj.padEnd(30)} |                           |`;
+              resultPkg += `\n| ${durationIcon(proj, 'min').padStart(29)} | ${mapProjectTime(proj, 'min').padEnd(25)} |`;
+              resultPkg += `\n| ${durationIcon(proj, 'max').padStart(29)} | ${mapProjectTime(proj, 'max').padEnd(25)} |`;
+            });
+            resultPkg += `\`\`\``;
+            core.setOutput('SLACK_PROJ_DURATION', trimSpace(resultPkg));
+
+            let resultPm = `
+                \`\`\`
+                | PM   | Total time  |
+                |------|-------------|`;
+            Object.keys(pmReport).forEach(pm => {
+              resultPm += `\n| ${pm.padEnd(4)} | ${humanizeDuration(pmReport[pm]).padEnd(11)} |`
+            });
+            resultPm += `\`\`\``;
+            core.setOutput('SLACK_PM_DURATION', trimSpace(resultPm));
 
   report-failure:
     if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
@@ -531,5 +634,35 @@ jobs:
           message_format: '{emoji} Workflow has {status_message}'
           notification_title: '{workflow}'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
+  report-pm-time:
+    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: process-result
+    runs-on: ubuntu-latest
+    name: Report duration per package manager
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: 'skipped'
+          message_format: '${{ needs.process-result.outputs.pm-duration }}'
+          notification_title: 'Total duration per package manager (ubuntu only)'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
+  report-proj-time:
+    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: process-result
+    runs-on: ubuntu-latest
+    name: Report duration per package manager
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: 'skipped'
+          message_format: '${{ needs.process-result.outputs.proj-duration }}'
+          notification_title: 'E2E Project duration stats'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
