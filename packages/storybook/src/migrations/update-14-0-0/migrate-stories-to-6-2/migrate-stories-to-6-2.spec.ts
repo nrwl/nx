@@ -35,7 +35,7 @@ const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
 );
 
 const runAngularStorybookSchematic = wrapAngularDevkitSchematic(
-  '@nrwl/angular',
+  '@nx/angular',
   'storybook-configuration'
 );
 
