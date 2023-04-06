@@ -24,7 +24,6 @@ import {
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {
   ProjectConfiguration,
@@ -235,15 +234,12 @@ async function updateProjectGraphWithPlugins(
     try {
       graph = await plugin.processProjectGraph(graph, context);
     } catch (e) {
-      const message = `Failed to process the project graph with "${plugin.name}". This will error in the future!`;
-      if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.error(e);
-        logger.error(message);
-        return graph;
-      } else {
-        logger.warn(message);
-        logger.warn(`Run with NX_VERBOSE_LOGGING=true to see the error.`);
+      let message = `Failed to process the project graph with "${plugin.name}".`;
+      if (e instanceof Error) {
+        e.message = message + '\n' + e.message;
+        throw e;
       }
+      throw new Error(message);
     }
   }
   return graph;
