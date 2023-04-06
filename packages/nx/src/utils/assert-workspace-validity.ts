@@ -21,7 +21,7 @@ export function assertWorkspaceValidity(
       title:
         'Using `implicitDependencies` for global implicit dependencies configuration is no longer supported.',
       bodyLines: [
-        'Use "namedInputs" instead.',
+        'Use "namedInputs" instead. You can run "nx repair" to automatically migrate your configuration.',
         'For more information about the usage of "namedInputs" see https://nx.dev/deprecated/global-implicit-dependencies#global-implicit-dependencies',
       ],
     });
