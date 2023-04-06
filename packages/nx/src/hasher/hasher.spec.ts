@@ -674,42 +674,6 @@ describe('Hasher', () => {
     }
   });
 
-  it('should hash implicit deps', async () => {
-    const hasher = new Hasher(
-      {
-        nodes: {
-          parent: {
-            name: 'parent',
-            type: 'lib',
-            data: {
-              root: 'libs/parents',
-              targets: { build: { executor: '@nrwl/workspace:run-commands' } },
-              files: [],
-            },
-          },
-        },
-        dependencies: {},
-        allWorkspaceFiles,
-      },
-      {
-        implicitDependencies: {
-          'global*': '*',
-        },
-      } as any,
-      {},
-      createHashing()
-    );
-
-    const tasksHash = await hasher.hashTask({
-      target: { project: 'parent', target: 'build' },
-      id: 'parent-build',
-      overrides: { prop: 'prop-value' },
-    });
-
-    expect(tasksHash.value).toContain('global1.hash');
-    expect(tasksHash.value).toContain('global2.hash');
-  });
-
   it('should hash npm project versions', async () => {
     const hasher = new Hasher(
       {
