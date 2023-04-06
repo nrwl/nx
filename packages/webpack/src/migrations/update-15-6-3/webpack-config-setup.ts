@@ -65,7 +65,7 @@ export default async function (tree: Tree) {
         tree.write(
           options.webpackConfig,
           `
-        const { composePlugins, withNx } = require('@nx/webpack');
+        const { composePlugins, withNx } = require('@nrwl/webpack');
 
         // Nx plugins for webpack.
         module.exports = composePlugins(withNx(), (config, { options, context }) => {
@@ -111,7 +111,7 @@ export default async function (tree: Tree) {
         tree.write(
           options.webpackConfig,
           `
-        const { composePlugins, withNx } = require('@nx/webpack');
+        const { composePlugins, withNx } = require('@nrwl/webpack');
       
         // Nx plugins for webpack.
         module.exports = composePlugins(withNx(), (config) => {
