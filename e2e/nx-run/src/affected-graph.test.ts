@@ -328,17 +328,16 @@ describe('Nx Affected and Graph Tests', () => {
           ${app2ElementSpec}
           `
       );
-
-      const resWithoutTarget = JSON.parse(
-        (
-          await runCLIAsync(
-            `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts`,
-            {
-              silent: true,
-            }
-          )
-        ).stdout
-      );
+      const outputWithoutTarget = (
+        await runCLIAsync(
+          `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts`,
+          {
+            silent: true,
+          }
+        )
+      ).stdout.trim();
+      console.log({ outputWithoutTarget });
+      const resWithoutTarget = JSON.parse(outputWithoutTarget);
       expect(resWithoutTarget.tasks).toEqual([]);
       compareTwoArrays(resWithoutTarget.projects, [`${myapp}-e2e`, myapp]);
 
