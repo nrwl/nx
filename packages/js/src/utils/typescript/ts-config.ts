@@ -52,38 +52,22 @@ export function getRootTsConfigFileName(tree: Tree): string | null {
   return null;
 }
 
-export function updateRootTsConfig(
-  host: Tree,
-  options: {
-    name: string;
-    importPath?: string;
-    projectRoot: string;
-    js?: boolean;
-  }
+export function addTsConfigPath(
+  tree: Tree,
+  importPath: string,
+  lookupPaths: string[]
 ) {
-  if (!options.importPath) {
-    throw new Error(
-      `Unable to update ${options.name} using the import path "${options.importPath}". Make sure to specify a valid import path one.`
-    );
-  }
-  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
+  updateJson(tree, getRootTsConfigPathInTree(tree), (json) => {
     const c = json.compilerOptions;
-    c.paths = c.paths || {};
-    delete c.paths[options.name];
+    c.paths ??= {};
 
-    if (c.paths[options.importPath]) {
+    if (c.paths[importPath]) {
       throw new Error(
-        `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
+        `You already have a library using the import path "${importPath}". Make sure to specify a unique one.`
       );
     }
 
-    c.paths[options.importPath] = [
-      joinPathFragments(
-        options.projectRoot,
-        './src',
-        'index.' + (options.js ? 'js' : 'ts')
-      ),
-    ];
+    c.paths[importPath] = lookupPaths;
 
     return json;
   });

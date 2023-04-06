@@ -5,8 +5,8 @@ export interface Schema {
   name: string;
   directory?: string;
   style: SupportedStyles;
-  skipTsConfig: boolean;
-  skipFormat: boolean;
+  skipTsConfig?: boolean;
+  skipFormat?: boolean;
   tags?: string;
   pascalCaseFiles?: boolean;
   routing?: boolean;

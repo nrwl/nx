@@ -21,8 +21,8 @@ import {
 import { getImportPath } from 'nx/src/utils/path';
 
 import {
+  addTsConfigPath,
   getRelativePathToRootTsConfig,
-  updateRootTsConfig,
 } from '../../utils/typescript/ts-config';
 import { join } from 'path';
 import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
@@ -117,7 +117,13 @@ export async function projectGenerator(
   }
 
   if (!schema.skipTsConfig) {
-    updateRootTsConfig(tree, options);
+    addTsConfigPath(tree, options.importPath, [
+      joinPathFragments(
+        options.projectRoot,
+        './src',
+        'index.' + (options.js ? 'js' : 'ts')
+      ),
+    ]);
   }
 
   if (!options.skipFormat) {

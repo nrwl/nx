@@ -15,7 +15,7 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 
-import { getRelativePathToRootTsConfig, updateRootTsConfig } from '@nrwl/js';
+import { addTsConfigPath, getRelativePathToRootTsConfig } from '@nrwl/js';
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -64,7 +64,9 @@ export async function reactNativeLibraryGenerator(
   }
 
   if (!options.skipTsConfig) {
-    updateRootTsConfig(host, { ...options, js: false });
+    addTsConfigPath(host, options.importPath, [
+      joinPathFragments(options.projectRoot, './src', 'index.ts'),
+    ]);
   }
 
   if (!options.skipFormat) {

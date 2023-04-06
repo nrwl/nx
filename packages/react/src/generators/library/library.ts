@@ -10,7 +10,7 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 
-import { updateRootTsConfig } from '@nrwl/js';
+import { addTsConfigPath } from '@nrwl/js';
 
 import { nxVersion } from '../../utils/versions';
 import componentGenerator from '../component/component';
@@ -162,8 +162,15 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   setDefaults(host, options);
 
   extractTsConfigBase(host);
+
   if (!options.skipTsConfig) {
-    updateRootTsConfig(host, options);
+    addTsConfigPath(host, options.importPath, [
+      joinPathFragments(
+        options.projectRoot,
+        './src',
+        'index.' + (options.js ? 'js' : 'ts')
+      ),
+    ]);
   }
 
   if (!options.skipFormat) {

@@ -15,7 +15,7 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 
-import { updateRootTsConfig } from '@nrwl/js';
+import { addTsConfigPath } from '@nrwl/js';
 
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';
@@ -54,7 +54,13 @@ export async function expoLibraryGenerator(
   );
 
   if (!options.skipTsConfig) {
-    updateRootTsConfig(host, options);
+    addTsConfigPath(host, options.importPath, [
+      joinPathFragments(
+        options.projectRoot,
+        './src',
+        'index.' + (options.js ? 'js' : 'ts')
+      ),
+    ]);
   }
 
   const jestTask = await addJest(
