@@ -1,7 +1,9 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import runCommands from './run-commands';
-import { ensurePackage, NX_VERSION } from '@nrwl/devkit';
 import { readProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 describe('run-commands', () => {
   it('should generate a target', async () => {
@@ -14,8 +16,6 @@ describe('run-commands', () => {
       outputs: 'dist/a, dist/b, dist/c',
     };
 
-    // avoid circular deps
-    const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
     await libraryGenerator(tree, {
       name: 'lib',
     });

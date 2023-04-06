@@ -1,16 +1,10 @@
-import {
-  ensurePackage,
-  NX_VERSION,
-  readJson,
-  Tree,
-  writeJson,
-} from '@nrwl/devkit';
+import { readJson, Tree, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updatePackageJson } from './update-package-json';
 
-// avoid circular deps
-const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 describe('updatePackageJson', () => {
   let tree: Tree;

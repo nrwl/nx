@@ -1,6 +1,4 @@
 import {
-  ensurePackage,
-  NX_VERSION,
   ProjectGraph,
   readJson,
   readProjectConfiguration,
@@ -10,8 +8,8 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { updateTsconfig } from './update-tsconfig';
 
-// avoid circular deps
-const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 let graph: ProjectGraph;
 jest.mock('@nrwl/devkit', () => {

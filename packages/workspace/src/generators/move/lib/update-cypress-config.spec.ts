@@ -1,6 +1,4 @@
 import {
-  ensurePackage,
-  NX_VERSION,
   ProjectConfiguration,
   readJson,
   readProjectConfiguration,
@@ -11,8 +9,8 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updateCypressConfig } from './update-cypress-config';
 
-// avoid circular deps
-const { libraryGenerator } = ensurePackage('@nrwl/js', NX_VERSION);
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 describe('updateCypressConfig', () => {
   let tree: Tree;
