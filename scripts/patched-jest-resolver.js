@@ -91,7 +91,11 @@ module.exports = function (path, options) {
     } else if (path === '@nrwl/devkit/testing') {
       return join(__dirname, '../', './packages/devkit/testing.js');
     }
-    return ts.resolveModuleName(path, options.basedir, compilerOptions, host)
-      .resolvedModule.resolvedFileName;
+    return ts.resolveModuleName(
+      path,
+      join(options.basedir, 'fake-placeholder.ts'),
+      compilerOptions,
+      host
+    ).resolvedModule.resolvedFileName;
   }
 };
