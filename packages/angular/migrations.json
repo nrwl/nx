@@ -121,7 +121,7 @@
       "factory": "./src/migrations/update-15-2-0/update-workspace-config"
     },
     "update-platform-server-exports": {
-      "cli": "ng",
+      "cli": "nx",
       "version": "15.2.0-beta.0",
       "requires": {
         "@angular/core": ">=15.0.0"
@@ -130,7 +130,7 @@
       "factory": "./src/migrations/update-15-2-0/remove-platform-server-exports"
     },
     "update-karma-main-file": {
-      "cli": "ng",
+      "cli": "nx",
       "version": "15.2.0-beta.0",
       "requires": {
         "@angular/core": ">=15.0.0"
