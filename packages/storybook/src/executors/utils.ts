@@ -67,6 +67,18 @@ export function runStorybookSetupCheck(
   reactWebpack5Check(options);
 }
 
+export function pleaseUpgrade() {
+  logger.warn(
+    `
+    Please consider upgrading to Storybook version 7, 
+    as version 6 is no longer maintained.
+
+    Here is a guide on how to upgrade:
+    https://nx.dev/packages/storybook/generators/migrate-7
+    `
+  );
+}
+
 // TODO(katerina): Remove when Storybook 7
 function reactWebpack5Check(options: CLIOptions & CommonNxStorybookConfig) {
   if (options.uiFramework === '@storybook/react') {

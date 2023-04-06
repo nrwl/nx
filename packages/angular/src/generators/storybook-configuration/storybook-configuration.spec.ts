@@ -50,7 +50,7 @@ describe('StorybookConfiguration generator', () => {
     });
     jest.resetModules();
     jest.doMock('@storybook/angular/package.json', () => ({
-      version: '6.4.0-rc.1',
+      version: '7.0.2',
     }));
   });
 

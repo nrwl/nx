@@ -5,7 +5,11 @@ import {
   isStorybookV7,
   storybookConfigExistsCheck,
 } from '../../utils/utilities';
-import { getStorybookFrameworkPath, runStorybookSetupCheck } from '../utils';
+import {
+  getStorybookFrameworkPath,
+  pleaseUpgrade,
+  runStorybookSetupCheck,
+} from '../utils';
 import { CLIOptions } from '@storybook/types'; // TODO(katerina): Remove when Storybook 7
 import { CommonNxStorybookConfig } from '../../utils/models';
 
@@ -38,6 +42,7 @@ export default async function* storybookExecutor(
     // TODO(katerina): Remove when Storybook 7
     // print warnings
     runStorybookSetupCheck(options);
+    pleaseUpgrade();
 
     let frameworkPath = getStorybookFrameworkPath(options.uiFramework);
     const frameworkOptions = (await import(frameworkPath)).default;

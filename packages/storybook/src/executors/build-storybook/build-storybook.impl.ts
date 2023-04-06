@@ -7,7 +7,11 @@ import {
   storybookConfigExistsCheck,
 } from '../../utils/utilities';
 import { CommonNxStorybookConfig } from '../../utils/models';
-import { getStorybookFrameworkPath, runStorybookSetupCheck } from '../utils';
+import {
+  getStorybookFrameworkPath,
+  pleaseUpgrade,
+  runStorybookSetupCheck,
+} from '../utils';
 
 export default async function buildStorybookExecutor(
   options: CLIOptions & CommonNxStorybookConfig,
@@ -26,6 +30,7 @@ export default async function buildStorybookExecutor(
     // TODO(katerina): Remove when Storybook 7
     // print warnings
     runStorybookSetupCheck(options);
+    pleaseUpgrade();
 
     logger.info(`NX ui framework: ${options.uiFramework}`);
 
