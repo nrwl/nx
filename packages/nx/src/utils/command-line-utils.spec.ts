@@ -180,6 +180,7 @@ describe('splitArgs', () => {
     ).toEqual({
       projects: ['aaa', 'bbb'],
       skipNxCache: false,
+      parallel: 3,
     });
   });
 
