@@ -6,7 +6,6 @@ import {
   runCLI,
   uniq,
   updateFile,
-  expectJestTestsToPass,
   readFile,
   exists,
   updateProjectConfig,
@@ -26,86 +25,6 @@ describe('Workspace Tests', () => {
   });
 
   afterAll(() => cleanupProject());
-
-  describe('@nrwl/js:library', () => {
-    it('should create a library that can be tested and linted', async () => {
-      const libName = uniq('mylib');
-      const dirName = uniq('dir');
-
-      runCLI(`generate @nrwl/js:lib ${libName} --directory ${dirName}`);
-
-      checkFilesExist(
-        `libs/${dirName}/${libName}/src/index.ts`,
-        `libs/${dirName}/${libName}/README.md`
-      );
-
-      // Lint
-      const result = runCLI(`lint ${dirName}-${libName}`);
-
-      expect(result).toContain(`Linting "${dirName}-${libName}"...`);
-      expect(result).toContain('All files pass linting.');
-
-      // Test
-      await expectJestTestsToPass('@nrwl/js:lib');
-    }, 100000);
-
-    it('should be able to use and be used by other libs', () => {
-      const consumerLib = uniq('consumer');
-      const producerLib = uniq('producer');
-
-      runCLI(`generate @nrwl/js:lib ${consumerLib}`);
-      runCLI(`generate @nrwl/js:lib ${producerLib}`);
-
-      updateFile(
-        `libs/${producerLib}/src/lib/${producerLib}.ts`,
-        'export const a = 0;'
-      );
-
-      updateFile(
-        `libs/${consumerLib}/src/lib/${consumerLib}.ts`,
-        `
-    import { a } from '@${proj}/${producerLib}';
-
-    export function ${consumerLib}() {
-      return a + 1;
-    }`
-      );
-      updateFile(
-        `libs/${consumerLib}/src/lib/${consumerLib}.spec.ts`,
-        `
-    import { ${consumerLib} } from './${consumerLib}';
-
-    describe('', () => {
-      it('should return 1', () => {
-        expect(${consumerLib}()).toEqual(1);
-      });
-    });`
-      );
-
-      runCLI(`test ${consumerLib}`);
-    });
-
-    it('should be able to be built when it is buildable', () => {
-      const buildableLib = uniq('buildable');
-
-      runCLI(`generate @nrwl/js:lib ${buildableLib} --buildable`);
-
-      const result = runCLI(`build ${buildableLib}`);
-
-      expect(result).toContain(
-        `Compiling TypeScript files for project "${buildableLib}"...`
-      );
-      expect(result).toContain(
-        `Done compiling TypeScript files for project "${buildableLib}".`
-      );
-
-      checkFilesExist(`dist/libs/${buildableLib}/README.md`);
-
-      const json = readJson(`dist/libs/${buildableLib}/package.json`);
-      expect(json.main).toEqual('./src/index.js');
-      expect(json.types).toEqual('./src/index.d.ts');
-    });
-  });
 
   describe('@nrwl/workspace:npm-package', () => {
     it('should create a minimal npm package', () => {
