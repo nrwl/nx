@@ -38,7 +38,7 @@ describe('Nx Affected and Graph Tests', () => {
       runCLI(`generate @nrwl/js:lib ${mylib}`);
       runCLI(`generate @nrwl/js:lib ${mylib2}`);
       runCLI(
-        `generate @nrwl/js:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib}`
+        `generate @nrwl/js:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib} --tags=ui`
       );
 
       updateFile(
@@ -135,10 +135,18 @@ describe('Nx Affected and Graph Tests', () => {
       expect(build).toContain('Successfully ran target build');
 
       const buildExcluded = runCLI(
-        `affected:build --files="libs/${mylib}/src/index.ts" --exclude ${myapp}`
+        `affected:build --files="libs/${mylib}/src/index.ts" --exclude=${myapp}`
       );
       expect(buildExcluded).toContain(`Running target build for 2 projects:`);
       expect(buildExcluded).toContain(`- ${mypublishablelib}`);
+
+      const buildExcludedByTag = runCLI(
+        `affected:build --files="libs/${mylib}/src/index.ts" --exclude=tag:ui`
+      );
+      expect(buildExcludedByTag).toContain(
+        `Running target build for 2 projects:`
+      );
+      expect(buildExcludedByTag).not.toContain(`- ${mypublishablelib}`);
 
       // test
       updateFile(

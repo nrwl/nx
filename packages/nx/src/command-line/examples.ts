@@ -305,9 +305,14 @@ export const examples: Record<string, Example[]> = {
       description: 'Test proj1 and proj2 in sequence',
     },
     {
-      command: 'run-many --target=test --projects=*-app --exclude excluded-app',
+      command: 'run-many --target=test --projects=*-app --exclude=excluded-app',
       description:
         'Test all projects ending with `*-app` except `excluded-app`.  Note: your shell may require you to escape the `*` like this: `\\*`',
+    },
+    {
+      command: 'run-many --target=test --projects=tag:api-*',
+      description:
+        'Test all projects with tags starting with `api-`.  Note: your shell may require you to escape the `*` like this: `\\*`',
     },
     {
       command: 'run-many --targets=lint,test,build --all',

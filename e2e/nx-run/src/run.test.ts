@@ -440,9 +440,13 @@ describe('Nx Running Tests', () => {
 
       runCLI(`generate @nrwl/web:app ${appA}`);
       runCLI(`generate @nrwl/js:lib ${libA} --bundler=tsc --defaults`);
-      runCLI(`generate @nrwl/js:lib ${libB} --bundler=tsc --defaults`);
-      runCLI(`generate @nrwl/js:lib ${libC} --bundler=tsc --defaults`);
-      runCLI(`generate @nrwl/node:lib ${libD} --defaults`);
+      runCLI(
+        `generate @nrwl/js:lib ${libB} --bundler=tsc --defaults --tags=ui-a`
+      );
+      runCLI(
+        `generate @nrwl/js:lib ${libC} --bundler=tsc --defaults --tags=ui-b,shared`
+      );
+      runCLI(`generate @nrwl/node:lib ${libD} --defaults --tags=api`);
 
       // libA depends on libC
       updateFile(
@@ -462,6 +466,7 @@ describe('Nx Running Tests', () => {
         `run-many --target=build --projects="${libC},${libB}"`
       );
       expect(buildParallel).toContain(`Running target build for 2 projects:`);
+      expect(buildParallel).not.toContain(`- ${appA}`);
       expect(buildParallel).not.toContain(`- ${libA}`);
       expect(buildParallel).toContain(`- ${libB}`);
       expect(buildParallel).toContain(`- ${libC}`);
@@ -480,6 +485,36 @@ describe('Nx Running Tests', () => {
       expect(buildAllParallel).not.toContain(`- ${libD}`);
       expect(buildAllParallel).toContain('Successfully ran target build');
 
+      // testing run many by tags
+      const buildByTagParallel = runCLI(
+        `run-many --target=build --projects="tag:ui*"`
+      );
+      expect(buildByTagParallel).toContain(
+        `Running target build for 2 projects:`
+      );
+      expect(buildByTagParallel).not.toContain(`- ${appA}`);
+      expect(buildByTagParallel).not.toContain(`- ${libA}`);
+      expect(buildByTagParallel).toContain(`- ${libB}`);
+      expect(buildByTagParallel).toContain(`- ${libC}`);
+      expect(buildByTagParallel).not.toContain(`- ${libD}`);
+      expect(buildByTagParallel).toContain('Successfully ran target build');
+
+      // testing run many with exclude
+      const buildWithExcludeParallel = runCLI(
+        `run-many --target=build --exclude="${libD},tag:ui*"`
+      );
+      expect(buildWithExcludeParallel).toContain(
+        `Running target build for 2 projects and 1 task they depend on:`
+      );
+      expect(buildWithExcludeParallel).toContain(`- ${appA}`);
+      expect(buildWithExcludeParallel).toContain(`- ${libA}`);
+      expect(buildWithExcludeParallel).not.toContain(`- ${libB}`);
+      expect(buildWithExcludeParallel).toContain(`${libC}`); // should still include libC as dependency despite exclude
+      expect(buildWithExcludeParallel).not.toContain(`- ${libD}`);
+      expect(buildWithExcludeParallel).toContain(
+        'Successfully ran target build'
+      );
+
       // testing run many when project depends on other projects
       const buildWithDeps = runCLI(
         `run-many --target=build --projects="${libA}"`
@@ -487,6 +522,7 @@ describe('Nx Running Tests', () => {
       expect(buildWithDeps).toContain(
         `Running target build for project ${libA} and 1 task it depends on:`
       );
+      expect(buildWithDeps).not.toContain(`- ${appA}`);
       expect(buildWithDeps).toContain(`- ${libA}`);
       expect(buildWithDeps).toContain(`${libC}`); // build should include libC as dependency
       expect(buildWithDeps).not.toContain(`- ${libB}`);

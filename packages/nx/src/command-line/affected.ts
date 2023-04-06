@@ -17,6 +17,7 @@ import { filterAffected } from '../project-graph/affected/affected-project-graph
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
+import { findMatchingProjects } from '../utils/find-matching-projects';
 
 export async function affected(
   command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
@@ -168,13 +169,16 @@ async function projectsToRun(
       );
 
   if (nxArgs.exclude) {
-    const excludedProjects = new Set(nxArgs.exclude);
+    const excludedProjects = new Set(
+      findMatchingProjects(nxArgs.exclude, affectedGraph.nodes)
+    );
+
     return Object.entries(affectedGraph.nodes)
       .filter(([projectName]) => !excludedProjects.has(projectName))
       .map(([, project]) => project);
   }
 
-  return Object.values(affectedGraph.nodes) as ProjectGraphProjectNode[];
+  return Object.values(affectedGraph.nodes);
 }
 
 function allProjectsWithTarget(

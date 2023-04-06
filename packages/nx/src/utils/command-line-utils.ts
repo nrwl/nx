@@ -173,6 +173,10 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
   }
 
+  if (typeof args.exclude === 'string') {
+    nxArgs.exclude = args.exclude.split(',');
+  }
+
   if (!nxArgs.skipNxCache) {
     nxArgs.skipNxCache = process.env.NX_SKIP_NX_CACHE === 'true';
   }

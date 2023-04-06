@@ -83,11 +83,9 @@ export function projectsToRun(
       selectedProjects.set(projectName, projectGraph.nodes[projectName]);
     }
   } else {
-    const allProjectNames = Object.keys(projectGraph.nodes);
     const matchingProjects = findMatchingProjects(
       nxArgs.projects,
-      allProjectNames,
-      new Set(allProjectNames)
+      projectGraph.nodes
     );
     for (const project of matchingProjects) {
       if (!validProjects.has(project)) {
@@ -108,9 +106,8 @@ export function projectsToRun(
   }
 
   const excludedProjects = findMatchingProjects(
-    nxArgs.exclude ?? [],
-    Array.from(selectedProjects.keys()),
-    new Set(selectedProjects.keys())
+    nxArgs.exclude,
+    selectedProjects
   );
 
   for (const excludedProject of excludedProjects) {

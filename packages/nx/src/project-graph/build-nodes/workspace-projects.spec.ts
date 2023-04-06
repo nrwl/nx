@@ -1,45 +1,83 @@
+import { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import { normalizeImplicitDependencies } from './workspace-projects';
 
 describe('workspace-projects', () => {
-  let projectsSet: Set<string>;
-
-  beforeEach(() => {
-    projectsSet = new Set(['test-project', 'a', 'b', 'c']);
-  });
+  let projectGraph: Record<string, ProjectGraphProjectNode> = {
+    'test-project': {
+      name: 'test-project',
+      type: 'lib',
+      data: {
+        root: 'lib/test-project',
+        files: [],
+        tags: ['api', 'theme1'],
+      },
+    },
+    a: {
+      name: 'a',
+      type: 'lib',
+      data: {
+        root: 'lib/a',
+        files: [],
+        tags: ['api', 'theme2'],
+      },
+    },
+    b: {
+      name: 'b',
+      type: 'lib',
+      data: {
+        root: 'lib/b',
+        files: [],
+        tags: ['ui'],
+      },
+    },
+    c: {
+      name: 'c',
+      type: 'lib',
+      data: {
+        root: 'lib/c',
+        files: [],
+        tags: ['api'],
+      },
+    },
+  };
 
   describe('normalizeImplicitDependencies', () => {
     it('should expand "*" implicit dependencies', () => {
       expect(
-        normalizeImplicitDependencies(
-          'test-project',
-          ['*'],
-          Array.from(projectsSet),
-          projectsSet
-        )
+        normalizeImplicitDependencies('test-project', ['*'], projectGraph)
       ).toEqual(['a', 'b', 'c']);
     });
 
     it('should return [] for null implicit dependencies', () => {
       expect(
-        normalizeImplicitDependencies(
-          'test-project',
-          null,
-          Array.from(projectsSet),
-          projectsSet
-        )
+        normalizeImplicitDependencies('test-project', null, projectGraph)
       ).toEqual([]);
     });
 
     it('should expand glob based implicit dependencies', () => {
-      projectsSet.add('b-1');
-      projectsSet.add('b-2');
+      const projectGraphMod: typeof projectGraph = {
+        ...projectGraph,
+        'b-1': {
+          name: 'b-1',
+          type: 'lib',
+          data: {
+            root: 'lib/b-1',
+            files: [],
+            tags: [],
+          },
+        },
+        'b-2': {
+          name: 'b-2',
+          type: 'lib',
+          data: {
+            root: 'lib/b-2',
+            files: [],
+            tags: [],
+          },
+        },
+      };
       expect(
-        normalizeImplicitDependencies(
-          'test-project',
-          ['b*'],
-          Array.from(projectsSet),
-          projectsSet
-        )
+        normalizeImplicitDependencies('test-project', ['b*'], projectGraphMod)
       ).toEqual(['b', 'b-1', 'b-2']);
     });
   });
