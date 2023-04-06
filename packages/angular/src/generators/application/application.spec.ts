@@ -712,7 +712,7 @@ describe('app', () => {
       // ASSERT
       expect(appTree.read('apps/app1/tailwind.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
         const { join } = require('path');
 
         /** @type {import('tailwindcss').Config} */

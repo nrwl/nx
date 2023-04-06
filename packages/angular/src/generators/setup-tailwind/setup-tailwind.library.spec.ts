@@ -198,7 +198,7 @@ describe('setupTailwind generator', () => {
 
       expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
         const { join } = require('path');
 
         /** @type {import('tailwindcss').Config} */
@@ -231,7 +231,7 @@ describe('setupTailwind generator', () => {
 
       expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
         const { join } = require('path');
 
         /** @type {import('tailwindcss').Config} */
@@ -264,7 +264,7 @@ describe('setupTailwind generator', () => {
 
       expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
         const { join } = require('path');
 
         module.exports = {
@@ -493,7 +493,7 @@ describe('setupTailwind generator', () => {
 
         expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
           .toMatchInlineSnapshot(`
-          "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+          "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
           const { join } = require('path');
 
           /** @type {import('tailwindcss').Config} */
@@ -526,7 +526,7 @@ describe('setupTailwind generator', () => {
 
         expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
           .toMatchInlineSnapshot(`
-          "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+          "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
           const { join } = require('path');
 
           /** @type {import('tailwindcss').Config} */
@@ -559,7 +559,7 @@ describe('setupTailwind generator', () => {
 
         expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
           .toMatchInlineSnapshot(`
-          "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+          "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
           const { join } = require('path');
 
           module.exports = {
