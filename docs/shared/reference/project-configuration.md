@@ -276,6 +276,9 @@ result in `mylib`'s dependencies being built as well.
 
 You can also express the same configuration using:
 
+{% tabs %}
+{% tab label="Version < 16" %}
+
 ```json
 "build": {
   "dependsOn": [{ "projects": "dependencies", "target": "build" }]
@@ -285,7 +288,25 @@ You can also express the same configuration using:
 }
 ```
 
+{% /tab %}
+{% tab label="Version 16+" %}
+
+```json
+"build": {
+  "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
+},
+"test": {
+  "dependsOn": [{ "projects": "{self}", "target": "build" }]
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
 With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target. You can either forward them or you can ignore them (default).
+
+{% tabs %}
+{% tab label="Version < 16" %}
 
 ```json
 "build": {
@@ -302,7 +323,31 @@ With the expanded syntax, you also have a third option available to configure ho
 }
 ```
 
+{% /tab %}
+{% tab label="Version 16+" %}
+
+```json
+"build": {
+   // forward params passed to this target to the dependency targets
+  "dependsOn": [{ "projects": "{dependencies}", "target": "build", "params": "forward" }]
+},
+"test": {
+  // ignore params passed to this target, won't be forwarded to the dependency targets
+  "dependsOn": [{ "projects": "{dependencies}", "target": "build", "params": "ignore" }]
+}
+"lint": {
+  // ignore params passed to this target, won't be forwarded to the dependency targets
+  "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
 Obviously this also works when defining a relation for the target of the project itself using `"projects": "self"`:
+
+{% tabs %}
+{% tab label="Version < 16" %}
 
 ```json
 "build": {
@@ -311,7 +356,20 @@ Obviously this also works when defining a relation for the target of the project
 }
 ```
 
-Additionally, when using the expanded object syntax, you can specify individual projects.
+{% /tab %}
+{% tab label="Version 16+" %}
+
+```json
+"build": {
+   // forward params passed to this target to the project target
+  "dependsOn": [{ "projects": "{self}", "target": "pre-build", "params": "forward" }]
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+Additionally, when using the expanded object syntax, you can specify individual projects in version 16 or greater.
 
 ```json
 "build": {
