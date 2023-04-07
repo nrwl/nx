@@ -56,7 +56,7 @@ export async function configurationGenerator(
     storybookMajorVersion() === 7 || rawSchema.storybook7Configuration;
 
   if (storybookMajorVersion() === 6 && rawSchema.storybook7Configuration) {
-    logger.error(
+    logger.warn(
       `You are using Storybook version 6. 
          So Nx will configure Storybook for version 6.`
     );
