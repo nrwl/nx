@@ -412,7 +412,9 @@ jobs:
 
       - name: Run e2e tests
         id: e2e-run
-        run: yarn nx run-many --target=e2e,e2e-macos --projects="${{ join(matrix.project) }}" --parallel=1
+        run: |
+          yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1
+          yarn nx run-many --target=e2e-macos --projects="${{ join(matrix.project) }}" --parallel=1
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
           GIT_AUTHOR_EMAIL: test@test.com
