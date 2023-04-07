@@ -292,6 +292,8 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['junit'],
+    outputFile: 'junit.xml',
     coverage: {
       enabled: true,
       reportsDirectory: 'coverage',
@@ -313,6 +315,7 @@ export default defineConfig({
       expect(results).toContain(
         `Successfully ran target test for project ${lib}`
       );
+      expect(results).toContain(`JUNIT report written`);
     }, 100_000);
 
     it('should be able to run tests with inSourceTests set to true', async () => {
