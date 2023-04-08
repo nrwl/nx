@@ -50,7 +50,7 @@ jobs:
         with:
           lookup-only: true
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-v2-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
@@ -350,7 +350,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-v2-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
