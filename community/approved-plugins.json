@@ -418,5 +418,10 @@
     "name": "@rbnx/webdriverio",
     "description": "A Nx plugin that adds the WebdriverIO testing framework to a NX workspace.",
     "url": "https://github.com/Roozenboom/rbnx/tree/main/packages/webdriverio"
+  },
+  {
+    "name": "nx-ngrok",
+    "description": "Ngrok support for Nx",
+    "url": "https://github.com/domjtalbot/nx-ngrok"
   }
 ]
