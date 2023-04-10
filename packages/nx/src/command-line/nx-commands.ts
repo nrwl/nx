@@ -1093,7 +1093,10 @@ function parseCSV(args: string[] | string) {
   if (Array.isArray(args)) {
     return args;
   }
-  return args.split(',');
+  const items = args.split(',');
+  return items.map((i) =>
+    i.startsWith('"') && i.endsWith('"') ? i.slice(1, -1) : i
+  );
 }
 
 function linkToNxDevAndExamples(yargs: yargs.Argv, command: string) {
