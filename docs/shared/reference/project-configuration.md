@@ -404,11 +404,6 @@ This also works when defining a relation for the target of the project itself us
 
 Additionally, when using the expanded object syntax, you can specify individual projects in version 16 or greater.
 
-{% /tab %}
-{% /tabs %}
-
-This also works when defining a relation for the target of the project itself using `"projects": "self"`:
-
 {% tabs %}
 {% tab label="Version 16+" %}
 
