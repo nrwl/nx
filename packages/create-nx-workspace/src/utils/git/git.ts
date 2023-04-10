@@ -83,7 +83,4 @@ export async function initializeGitRepo(
     const message = options.commit.message || 'initial commit';
     await execute(['commit', `-m "${message}"`]);
   }
-  output.log({
-    title: 'Successfully initialized git.',
-  });
 }

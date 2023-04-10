@@ -35,7 +35,7 @@ export async function setupCI(
     ciSpinner.fail();
     if (e instanceof Error) {
       output.error({
-        title: `Nx failed to generate CI workflow`,
+        title: `Failed to generate CI workflow`,
         bodyLines: mapErrorToBodyLines(e),
       });
     } else {

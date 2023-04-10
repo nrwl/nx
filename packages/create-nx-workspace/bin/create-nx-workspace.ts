@@ -28,6 +28,9 @@ import {
   withOptions,
   withPackageManager,
 } from '../src/internal-utils/yargs-options';
+import { showNxWarning } from '../src/utils/nx/show-nx-warning';
+import { printNxCloudSuccessMessage } from '../src/utils/nx/nx-cloud';
+import { messages, recordStat } from '../src/utils/nx/ab-testing';
 
 interface Arguments extends CreateWorkspaceOptions {
   preset: string;
@@ -129,7 +132,31 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
   ) as yargs.Argv<Arguments>;
 
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
-  await createWorkspace<Arguments>(parsedArgs.preset, parsedArgs);
+  output.log({
+    title: `Creating your v${nxVersion} workspace.`,
+    bodyLines: [
+      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
+      `Nx will run "${parsedArgs.packageManager} install" several times. Please wait.`,
+    ],
+  });
+
+  const workspaceInfo = await createWorkspace<Arguments>(
+    parsedArgs.preset,
+    parsedArgs
+  );
+
+  showNxWarning(parsedArgs.name);
+
+  await recordStat({
+    nxVersion,
+    command: 'create-nx-workspace',
+    useCloud: parsedArgs.nxCloud,
+    meta: messages.codeOfSelectedPromptMessage('nxCloudCreation'),
+  });
+
+  if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
+    printNxCloudSuccessMessage(workspaceInfo.nxCloudInfo);
+  }
 
   if (isKnownPreset(parsedArgs.preset)) {
     pointToTutorialAndCourse(parsedArgs.preset as Preset);

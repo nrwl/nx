@@ -29,4 +29,5 @@ export interface CreateWorkspaceOptions {
     email: string; // Email to use for the initial commit
     message: string; // Message to use for the initial commit
   };
+  cliName?: string; // Name of the CLI, used when displaying outputs. e.g. nx, Nx
 }
