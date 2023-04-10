@@ -274,7 +274,40 @@ instance, `"dependsOn": ["build"]` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
 
-You can also express the same configuration using:
+You can also express task dependencies with an object syntax:
+
+{% tabs %}
+{% tab label="Version < 16" %}
+
+```json
+"build": {
+  "dependsOn": [{
+    "projects": "dependencies", // "dependencies" or "self"
+    "target": "build", // target name
+    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+  }]
+}
+```
+
+{% /tab %}
+{% tab label="Version 16+" %}
+
+```json
+"build": {
+  "dependsOn": [{
+    "projects": "{dependencies}", // "{dependencies}", "{self}" or "project-name"
+    "target": "build", // target name
+    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+  }]
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+#### Examples
+
+You can write the shorthand configuration above in the object syntax like this:
 
 {% tabs %}
 {% tab label="Version < 16" %}
@@ -344,7 +377,7 @@ With the expanded syntax, you also have a third option available to configure ho
 {% /tab %}
 {% /tabs %}
 
-Obviously this also works when defining a relation for the target of the project itself using `"projects": "self"`:
+This also works when defining a relation for the target of the project itself using `"projects": "self"`:
 
 {% tabs %}
 {% tab label="Version < 16" %}
@@ -371,12 +404,23 @@ Obviously this also works when defining a relation for the target of the project
 
 Additionally, when using the expanded object syntax, you can specify individual projects in version 16 or greater.
 
+{% /tab %}
+{% /tabs %}
+
+This also works when defining a relation for the target of the project itself using `"projects": "self"`:
+
+{% tabs %}
+{% tab label="Version 16+" %}
+
 ```json
 "build": {
    // Run is-even:pre-build and is-odd:pre-build before this target
   "dependsOn": [{ "projects": ["is-even", "is-odd"], "target": "pre-build" }]
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
