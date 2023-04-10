@@ -5,30 +5,38 @@ import {
   JsonChange,
 } from '../../../utils/json-diff';
 import { getRootTsConfigFileName } from '../../../utils/typescript';
-import { TouchedProjectLocator } from '../affected-project-graph-models';
+import {
+  LocatorResult,
+  TouchedProjectLocator,
+} from '../affected-project-graph-models';
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
 
 export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, _a, _b, _c, graph): string[] => {
+> = (touchedFiles, _a, _b, _c, graph) => {
   const rootTsConfig = getRootTsConfigFileName();
   if (!rootTsConfig) {
-    return [];
+    return new Map();
   }
   const tsConfigJsonChanges = touchedFiles.find(
     (change) => change.file === rootTsConfig
   );
   if (!tsConfigJsonChanges) {
-    return [];
+    return new Map();
   }
 
   const changes = tsConfigJsonChanges.getChanges();
 
   if (!allChangesArePathChanges(changes)) {
-    return Object.keys(graph.nodes);
+    return new Map(
+      Object.keys(graph.nodes).map((p) => [
+        p,
+        `A non-path change was made to the root ${rootTsConfig}`,
+      ])
+    );
   }
 
-  const touched: string[] = [];
+  const touched: LocatorResult = new Map();
   for (let i = 0; i < changes.length; i++) {
     const change = changes[i];
 
@@ -38,11 +46,26 @@ export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
 
     // If a path is deleted, everything is touched
     if (change.type === JsonDiffType.Deleted) {
-      return Object.keys(graph.nodes);
+      return new Map(
+        Object.keys(graph.nodes).map((p) => [
+          p,
+          `A path was deleted from the root ${rootTsConfig}. This can affect any project.`,
+        ])
+      );
     }
-    touched.push(
-      ...getProjectsAffectedByPaths(change, Object.values(graph.nodes))
+    const projects = getProjectsAffectedByPaths(
+      change,
+      Object.values(graph.nodes)
     );
+    for (const project of projects) {
+      const msg = `Project's path configuration was changed in ${rootTsConfig}`;
+      const existing = touched.get(project);
+      if (!existing) {
+        touched.set(project, [msg]);
+      } else {
+        existing.push(msg);
+      }
+    }
   }
   return touched;
 };
@@ -60,7 +83,7 @@ function getProjectsAffectedByPaths(
   change: JsonChange,
   nodes: ProjectGraphProjectNode[]
 ) {
-  const result = [];
+  const result = new Set<string>();
   const paths: string[] = [change.value.lhs, change.value.rhs];
   paths.forEach((path) => {
     nodes.forEach((project) => {
@@ -72,7 +95,7 @@ function getProjectsAffectedByPaths(
         (normalizedPath && root && normalizedPath.startsWith(root)) ||
         normalizedPath == root
       ) {
-        result.push(project.name);
+        result.add(project.name);
       }
     });
   });

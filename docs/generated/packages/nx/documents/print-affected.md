@@ -128,3 +128,9 @@ Untracked changes
 Type: `boolean`
 
 Show version number
+
+### why
+
+Type: `string`
+
+Print the reasons that a project is marked as affected.

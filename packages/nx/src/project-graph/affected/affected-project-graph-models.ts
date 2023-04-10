@@ -12,6 +12,11 @@ export interface AffectedProjectGraphContext {
   touchedProjects: string[];
 }
 
+export type LocatorResult = Map<
+  string,
+  (string | { reason: string; occurences: string[] })[]
+>;
+
 export interface TouchedProjectLocator<T extends Change = Change> {
   (
     fileChanges: FileChange<T>[],
@@ -19,5 +24,5 @@ export interface TouchedProjectLocator<T extends Change = Change> {
     nxJson?: NxJsonConfiguration<any>,
     packageJson?: any,
     projectGraph?: ProjectGraph
-  ): string[] | Promise<string[]>;
+  ): LocatorResult | Promise<LocatorResult>;
 }

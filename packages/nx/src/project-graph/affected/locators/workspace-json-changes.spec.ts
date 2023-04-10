@@ -3,8 +3,8 @@ import { WholeFileChange } from '../../file-utils';
 import { JsonDiffType } from '../../../utils/json-diff';
 
 describe('getTouchedProjectsInWorkspaceJson', () => {
-  it('should not return changes when angular.json is not touched', () => {
-    const result = getTouchedProjectsInWorkspaceJson(
+  it('should not return changes when angular.json is not touched', async () => {
+    const result = await getTouchedProjectsInWorkspaceJson(
       [
         {
           file: 'source.ts',
@@ -17,11 +17,11 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         npmScope: 'proj',
       }
     );
-    expect(result).toEqual([]);
+    expect([...result.keys()]).toEqual([]);
   });
 
-  it('should return all projects for a whole file change', () => {
-    const result = getTouchedProjectsInWorkspaceJson(
+  it('should return all projects for a whole file change', async () => {
+    const result = await getTouchedProjectsInWorkspaceJson(
       [
         {
           file: 'angular.json',
@@ -50,11 +50,11 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       }
     );
-    expect(result).toEqual(['proj1', 'proj2']);
+    expect([...result.keys()]).toEqual(['proj1', 'proj2']);
   });
 
-  it('should return all projects for changes to newProjectRoot', () => {
-    const result = getTouchedProjectsInWorkspaceJson(
+  it('should return all projects for changes to newProjectRoot', async () => {
+    const result = await getTouchedProjectsInWorkspaceJson(
       [
         {
           file: 'angular.json',
@@ -92,11 +92,11 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       }
     );
-    expect(result).toEqual(['proj1', 'proj2']);
+    expect([...result.keys()]).toEqual(['proj1', 'proj2']);
   });
 
-  it('should return projects added in angular.json', () => {
-    const result = getTouchedProjectsInWorkspaceJson(
+  it('should return projects added in angular.json', async () => {
+    const result = await getTouchedProjectsInWorkspaceJson(
       [
         {
           file: 'angular.json',
@@ -136,11 +136,11 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       }
     );
-    expect(result).toEqual(['proj1']);
+    expect([...result.keys()]).toEqual(['proj1']);
   });
 
-  it('should affect all projects if a project is removed from angular.json', () => {
-    const result = getTouchedProjectsInWorkspaceJson(
+  it('should affect all projects if a project is removed from angular.json', async () => {
+    const result = await getTouchedProjectsInWorkspaceJson(
       [
         {
           file: 'angular.json',
@@ -180,11 +180,11 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       }
     );
-    expect(result).toEqual(['proj1', 'proj2']);
+    expect([...result.keys()]).toEqual(['proj1', 'proj2']);
   });
 
-  it('should return projects modified in angular.json', () => {
-    const result = getTouchedProjectsInWorkspaceJson(
+  it('should return projects modified in angular.json', async () => {
+    const result = await getTouchedProjectsInWorkspaceJson(
       [
         {
           file: 'angular.json',
@@ -234,6 +234,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       }
     );
-    expect(result).toEqual(['proj1']);
+    expect([...result.keys()]).toEqual(['proj1']);
   });
 });

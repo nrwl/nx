@@ -190,3 +190,9 @@ Prints additional information about the commands (e.g., stack traces)
 Type: `boolean`
 
 Show version number
+
+### why
+
+Type: `string`
+
+Print the reasons that a project is marked as affected.

@@ -61,132 +61,148 @@ describe('getTouchedNpmPackages', () => {
     };
   });
 
-  it('should handle json changes', () => {
-    const result = getTouchedNpmPackages(
-      [
-        {
-          file: 'package.json',
-          hash: 'some-hash',
-          getChanges: () => [
+  it('should handle json changes', async () => {
+    const result = [
+      ...(
+        await getTouchedNpmPackages(
+          [
             {
-              type: JsonDiffType.Modified,
-              path: ['dependencies', 'happy-nrwl'],
-              value: {
-                lhs: '0.0.1',
-                rhs: '0.0.2',
-              },
+              file: 'package.json',
+              hash: 'some-hash',
+              getChanges: () => [
+                {
+                  type: JsonDiffType.Modified,
+                  path: ['dependencies', 'happy-nrwl'],
+                  value: {
+                    lhs: '0.0.1',
+                    rhs: '0.0.2',
+                  },
+                },
+              ],
             },
           ],
-        },
-      ],
-      projectsConfigurations,
-      nxJson,
-      {
-        dependencies: {
-          'happy-nrwl': '0.0.2',
-        },
-      },
-      projectGraph
-    );
+          projectsConfigurations,
+          nxJson,
+          {
+            dependencies: {
+              'happy-nrwl': '0.0.2',
+            },
+          },
+          projectGraph
+        )
+      ).keys(),
+    ];
     expect(result).toEqual(['npm:happy-nrwl']);
   });
 
-  it('should handle json changes for type declaration packages where the implementation package exists', () => {
-    const result = getTouchedNpmPackages(
-      [
-        {
-          file: 'package.json',
-          hash: 'some-hash',
-          getChanges: () => [
+  it('should handle json changes for type declaration packages where the implementation package exists', async () => {
+    const result = [
+      ...(
+        await getTouchedNpmPackages(
+          [
             {
-              type: JsonDiffType.Modified,
-              path: ['dependencies', '@types/happy-nrwl'],
-              value: {
-                lhs: '0.0.1',
-                rhs: '0.0.2',
-              },
+              file: 'package.json',
+              hash: 'some-hash',
+              getChanges: () => [
+                {
+                  type: JsonDiffType.Modified,
+                  path: ['dependencies', '@types/happy-nrwl'],
+                  value: {
+                    lhs: '0.0.1',
+                    rhs: '0.0.2',
+                  },
+                },
+              ],
             },
           ],
-        },
-      ],
-      projectsConfigurations,
-      nxJson,
-      {
-        dependencies: {
-          'happy-nrwl': '0.0.2',
-        },
-        devDependencies: {
-          '@types/happy-nrwl': '0.0.2',
-        },
-      },
-      projectGraph
-    );
+          projectsConfigurations,
+          nxJson,
+          {
+            dependencies: {
+              'happy-nrwl': '0.0.2',
+            },
+            devDependencies: {
+              '@types/happy-nrwl': '0.0.2',
+            },
+          },
+          projectGraph
+        )
+      ).keys(),
+    ];
     expect(result).toEqual(
       expect.arrayContaining(['npm:@types/happy-nrwl', 'npm:happy-nrwl'])
     );
   });
 
-  it('should handle json changes for type declaration packages where the implementation package does not exist', () => {
-    const result = getTouchedNpmPackages(
-      [
-        {
-          file: 'package.json',
-          hash: 'some-hash',
-          getChanges: () => [
+  it('should handle json changes for type declaration packages where the implementation package does not exist', async () => {
+    const result = [
+      ...(
+        await getTouchedNpmPackages(
+          [
             {
-              type: JsonDiffType.Modified,
-              path: ['dependencies', '@types/happy-nrwl'],
-              value: {
-                lhs: '0.0.1',
-                rhs: '0.0.2',
-              },
+              file: 'package.json',
+              hash: 'some-hash',
+              getChanges: () => [
+                {
+                  type: JsonDiffType.Modified,
+                  path: ['dependencies', '@types/happy-nrwl'],
+                  value: {
+                    lhs: '0.0.1',
+                    rhs: '0.0.2',
+                  },
+                },
+              ],
             },
           ],
-        },
-      ],
-      projectsConfigurations,
-      nxJson,
-      {
-        devDependencies: {
-          '@types/happy-nrwl': '0.0.2',
-        },
-      },
-      projectGraph
-    );
+          projectsConfigurations,
+          nxJson,
+          {
+            devDependencies: {
+              '@types/happy-nrwl': '0.0.2',
+            },
+          },
+          projectGraph
+        )
+      ).keys(),
+    ];
     expect(result).toEqual(expect.arrayContaining(['npm:@types/happy-nrwl']));
   });
 
-  it('should handle package deletion', () => {
-    const result = getTouchedNpmPackages(
-      [
-        {
-          file: 'package.json',
-          hash: 'some-hash',
-          getChanges: () => [
+  it('should handle package deletion', async () => {
+    const result = [
+      ...(
+        await getTouchedNpmPackages(
+          [
             {
-              type: JsonDiffType.Deleted,
-              path: ['dependencies', 'sad-nrwl'],
-              value: {
-                lhs: '0.0.1',
-                rhs: undefined,
-              },
+              file: 'package.json',
+              hash: 'some-hash',
+              getChanges: () => [
+                {
+                  type: JsonDiffType.Deleted,
+                  path: ['dependencies', 'sad-nrwl'],
+                  value: {
+                    lhs: '0.0.1',
+                    rhs: undefined,
+                  },
+                },
+              ],
             },
           ],
-        },
-      ],
-      projectsConfigurations,
-      nxJson,
-      {
-        dependencies: {
-          'happy-nrwl': '0.0.2',
-        },
-      },
-      projectGraph
-    );
+          projectsConfigurations,
+          nxJson,
+          {
+            dependencies: {
+              'happy-nrwl': '0.0.2',
+            },
+          },
+          projectGraph
+        )
+      ).keys(),
+    ];
     expect(result).toEqual(['proj1', 'proj2']);
   });
 
-  it('should handle package addition', () => {
+  it('should handle package addition', async () => {
     projectGraph.externalNodes['npm:awesome-nrwl'] = {
       name: 'npm:awesome-nrwl',
       type: 'npm',
@@ -195,37 +211,41 @@ describe('getTouchedNpmPackages', () => {
         version: '1',
       },
     };
-    const result = getTouchedNpmPackages(
-      [
-        {
-          file: 'package.json',
-          hash: 'some-hash',
-          getChanges: () => [
+    const result = [
+      ...(
+        await getTouchedNpmPackages(
+          [
             {
-              type: JsonDiffType.Added,
-              path: ['dependencies', 'awesome-nrwl'],
-              value: {
-                lhs: undefined,
-                rhs: '0.0.1',
-              },
+              file: 'package.json',
+              hash: 'some-hash',
+              getChanges: () => [
+                {
+                  type: JsonDiffType.Added,
+                  path: ['dependencies', 'awesome-nrwl'],
+                  value: {
+                    lhs: undefined,
+                    rhs: '0.0.1',
+                  },
+                },
+              ],
             },
           ],
-        },
-      ],
-      projectsConfigurations,
-      nxJson,
-      {
-        dependencies: {
-          'happy-nrwl': '0.0.2',
-          'awesome-nrwl': '0.0.1',
-        },
-      },
-      projectGraph
-    );
+          projectsConfigurations,
+          nxJson,
+          {
+            dependencies: {
+              'happy-nrwl': '0.0.2',
+              'awesome-nrwl': '0.0.1',
+            },
+          },
+          projectGraph
+        )
+      ).keys(),
+    ];
     expect(result).toEqual(['npm:awesome-nrwl']);
   });
 
-  it('should handle whole file changes', () => {
+  it('should handle whole file changes', async () => {
     projectGraph.externalNodes['npm:awesome-nrwl'] = {
       name: 'npm:awesome-nrwl',
       type: 'npm',
@@ -234,24 +254,28 @@ describe('getTouchedNpmPackages', () => {
         version: '1',
       },
     };
-    const result = getTouchedNpmPackages(
-      [
-        {
-          file: 'package.json',
-          hash: 'some-hash',
-          getChanges: () => [new WholeFileChange()],
-        },
-      ],
-      projectsConfigurations,
-      nxJson,
-      {
-        dependencies: {
-          'happy-nrwl': '0.0.1',
-          'awesome-nrwl': '0.0.1',
-        },
-      },
-      projectGraph
-    );
+    const result = [
+      ...(
+        await getTouchedNpmPackages(
+          [
+            {
+              file: 'package.json',
+              hash: 'some-hash',
+              getChanges: () => [new WholeFileChange()],
+            },
+          ],
+          projectsConfigurations,
+          nxJson,
+          {
+            dependencies: {
+              'happy-nrwl': '0.0.1',
+              'awesome-nrwl': '0.0.1',
+            },
+          },
+          projectGraph
+        )
+      ).keys(),
+    ];
     expect(result).toEqual([
       'npm:happy-nrwl',
       'npm:@types/happy-nrwl',
@@ -259,41 +283,45 @@ describe('getTouchedNpmPackages', () => {
     ]);
   });
 
-  it('should handle and workspace packages when defined in dependencies', () => {
-    const result = getTouchedNpmPackages(
-      [
-        {
-          file: 'package.json',
-          hash: 'some-hash',
-          getChanges: () => [
+  it('should handle and workspace packages when defined in dependencies', async () => {
+    const result = [
+      ...(
+        await getTouchedNpmPackages(
+          [
             {
-              type: 'JsonPropertyAdded',
-              path: ['devDependencies', 'changed-test-pkg-name-1'],
-              value: { rhs: 'workspace:*' },
+              file: 'package.json',
+              hash: 'some-hash',
+              getChanges: () => [
+                {
+                  type: 'JsonPropertyAdded',
+                  path: ['devDependencies', 'changed-test-pkg-name-1'],
+                  value: { rhs: 'workspace:*' },
+                },
+              ],
             },
           ],
-        },
-      ],
-      projectsConfigurations,
-      nxJson,
-      {
-        dependencies: {
-          'happy-nrwl': '0.0.1',
-          'awesome-nrwl': '0.0.1',
-        },
-      },
-      {
-        ...projectGraph,
-        nodes: {
-          ...projectGraph.nodes,
-          'any-random-name': {
-            name: 'changed-test-pkg-name-1',
-            type: 'lib',
-            data: {} as any,
+          projectsConfigurations,
+          nxJson,
+          {
+            dependencies: {
+              'happy-nrwl': '0.0.1',
+              'awesome-nrwl': '0.0.1',
+            },
           },
-        },
-      }
-    );
+          {
+            ...projectGraph,
+            nodes: {
+              ...projectGraph.nodes,
+              'any-random-name': {
+                name: 'changed-test-pkg-name-1',
+                type: 'lib',
+                data: {} as any,
+              },
+            },
+          }
+        )
+      ).keys(),
+    ];
     expect(result).toEqual(['changed-test-pkg-name-1']);
   });
 

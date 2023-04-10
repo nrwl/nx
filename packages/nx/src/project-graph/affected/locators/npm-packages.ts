@@ -13,11 +13,11 @@ import {
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, _, nxJson, packageJson, projectGraph): string[] => {
+> = (touchedFiles, _, nxJson, packageJson, projectGraph) => {
   const packageJsonChange = touchedFiles.find((f) => f.file === 'package.json');
-  if (!packageJsonChange) return [];
+  if (!packageJsonChange) return new Map();
 
-  let touched = [];
+  let touched: Map<string, string[]> = new Map();
   const changes = packageJsonChange.getChanges();
 
   const npmPackages = Object.values(projectGraph.externalNodes);
@@ -32,7 +32,14 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
     ) {
       // A package was deleted so mark all workspace projects as touched.
       if (c.type === JsonDiffType.Deleted) {
-        touched = Object.keys(projectGraph.nodes);
+        touched = new Map(
+          Object.values(projectGraph.nodes).map((n) => [
+            n.name,
+            [
+              `A package was removed from package.json. This can affect any project.`,
+            ],
+          ])
+        );
         break;
       } else {
         let npmPackage: ProjectGraphProjectNode | ProjectGraphExternalNode =
@@ -46,20 +53,40 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
           missingTouchedNpmPackages.push(c.path[1]);
           continue;
         }
-        touched.push(npmPackage.name);
+        const existing = touched.get(npmPackage.name);
+        const message =
+          'The package.json specification for this package was changed.';
+        if (existing) {
+          existing.push(message);
+        } else {
+          touched.set(npmPackage.name, [message]);
+        }
         // If it was a type declarations package then also mark its corresponding implementation package as affected
         if (npmPackage.name.startsWith('npm:@types/')) {
           const implementationNpmPackage = npmPackages.find(
             (pkg) => pkg.data.packageName === c.path[1].substring(7)
           );
           if (implementationNpmPackage) {
-            touched.push(implementationNpmPackage.name);
+            const existing = touched.get(implementationNpmPackage.name);
+            const message = `The package.json specification for the @types/${implementationNpmPackage} package was changed.`;
+            if (existing) {
+              existing.push(message);
+            } else {
+              touched.set(implementationNpmPackage.name, [message]);
+            }
           }
         }
       }
     } else if (isWholeFileChange(c)) {
       // Whole file was touched, so all npm packages are touched.
-      touched = npmPackages.map((pkg) => pkg.name);
+      touched = new Map(
+        npmPackages.map((pkg) => [
+          pkg.name,
+          [
+            'The package.json file detected a whole file change - this affects all NPM dependencies.',
+          ],
+        ])
+      );
       break;
     }
   }

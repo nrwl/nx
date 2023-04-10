@@ -13,11 +13,15 @@ import { performance } from 'perf_hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { projectHasTarget } from '../utils/project-graph-utils';
-import { filterAffected } from '../project-graph/affected/affected-project-graph';
+import {
+  filterAffected,
+  getReasonsAffected,
+} from '../project-graph/affected/affected-project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
 import { findMatchingProjects } from '../utils/find-matching-projects';
+import { NxJsonConfiguration } from '../devkit-exports';
 
 export async function affected(
   command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
@@ -47,6 +51,64 @@ export async function affected(
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  if (!nxArgs.why) {
+    await runAffectedCommand(
+      command,
+      nxArgs,
+      overrides,
+      extraTargetDependencies,
+      projectGraph,
+      nxJson
+    );
+  } else {
+    await printReasonsAffected(projectGraph, nxArgs);
+  }
+}
+
+async function printReasonsAffected(
+  projectGraph: ProjectGraph,
+  nxArgs: NxArgs
+) {
+  const reasonMap = await getReasonsAffected(
+    projectGraph,
+    calculateFileChanges(
+      parseFiles(nxArgs).files,
+      projectGraph.allWorkspaceFiles,
+      nxArgs
+    )
+  );
+  const sortedKeys =
+    nxArgs.why === 'affected'
+      ? Array.from(reasonMap.keys()).sort()
+      : [nxArgs.why];
+  for (const project of sortedKeys) {
+    const reasons = reasonMap.get(project);
+    console.log(`${project}:`);
+    for (const reason of reasons) {
+      if (typeof reason === 'string') {
+        console.log(`\t- ${reason}`);
+      } else {
+        console.log(`\t- ${reason.reason}`);
+        for (const occurrence of reason.occurences) {
+          console.log(`\t\t- ${occurrence}`);
+        }
+      }
+    }
+    console.log();
+  }
+}
+
+async function runAffectedCommand(
+  command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
+  nxArgs: NxArgs,
+  overrides: { [k: string]: any },
+  extraTargetDependencies: Record<
+    string,
+    (TargetDependencyConfig | string)[]
+  > = {},
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+) {
   const projects = await projectsToRun(nxArgs, projectGraph);
 
   try {
@@ -55,7 +117,7 @@ export async function affected(
         const apps = projects
           .filter((p) => p.type === 'app')
           .map((p) => p.name);
-        if (args.plain) {
+        if (nxArgs.plain) {
           console.log(apps.join(' '));
         } else {
           if (apps.length) {
@@ -75,7 +137,7 @@ export async function affected(
         const libs = projects
           .filter((p) => p.type === 'lib')
           .map((p) => p.name);
-        if (args.plain) {
+        if (nxArgs.plain) {
           console.log(libs.join(' '));
         } else {
           if (libs.length) {
@@ -93,7 +155,7 @@ export async function affected(
 
       case 'graph':
         const projectNames = projects.map((p) => p.name);
-        await generateGraph(args as any, projectNames);
+        await generateGraph(nxArgs as any, projectNames);
         break;
 
       case 'print-affected':
@@ -103,7 +165,7 @@ export async function affected(
             projectGraph,
             { nxJson },
             nxArgs,
-            overrides
+            overrides as any
           );
         } else {
           await printAffected(
@@ -111,7 +173,7 @@ export async function affected(
             projectGraph,
             { nxJson },
             nxArgs,
-            overrides
+            overrides as any
           );
         }
         break;
@@ -148,7 +210,7 @@ export async function affected(
     }
     await output.drain();
   } catch (e) {
-    printError(e, args.verbose);
+    printError(e, nxArgs.verbose);
     process.exit(1);
   }
 }

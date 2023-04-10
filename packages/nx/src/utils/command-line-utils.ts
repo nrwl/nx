@@ -35,6 +35,7 @@ export interface NxArgs {
   nxBail?: boolean;
   nxIgnoreCycles?: boolean;
   type?: string;
+  why?: string;
 }
 
 export function splitArgsIntoNxArgsAndOverrides(

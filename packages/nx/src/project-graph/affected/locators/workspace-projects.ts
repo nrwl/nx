@@ -1,31 +1,40 @@
 import * as minimatch from 'minimatch';
-import { TouchedProjectLocator } from '../affected-project-graph-models';
+import {
+  LocatorResult,
+  TouchedProjectLocator,
+} from '../affected-project-graph-models';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import {
   createProjectRootMappings,
   findProjectForPath,
 } from '../../utils/find-project-for-path';
+import { addReasonForProject } from './locator-utils';
 
 export const getTouchedProjects: TouchedProjectLocator = (
   touchedFiles,
   projectGraphNodes
-): string[] => {
+) => {
   const projectRootMap = createProjectRootMappings(projectGraphNodes);
 
   return touchedFiles.reduce((affected, f) => {
     const matchingProject = findProjectForPath(f.file, projectRootMap);
     if (matchingProject) {
-      affected.push(matchingProject);
+      addReasonForProject(
+        matchingProject,
+        `Project files changed:`,
+        f.file,
+        affected
+      );
     }
     return affected;
-  }, []);
+  }, new Map<string, string[]>());
 };
 
 export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
   fileChanges,
   projectGraphNodes,
   nxJson
-): string[] => {
+) => {
   const implicits = {};
   const globalFiles = [
     ...extractGlobalFilesFromInputs(nxJson),
@@ -52,25 +61,37 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
     });
   });
 
-  const touched = new Set<string>();
+  const touched: LocatorResult = new Map();
 
   for (const [pattern, projects] of Object.entries(implicits)) {
-    const implicitDependencyWasChanged = fileChanges.some((f) =>
-      minimatch(f.file, pattern)
-    );
-    if (!implicitDependencyWasChanged) {
+    const changedFile = fileChanges.find((f) => minimatch(f.file, pattern));
+    if (!changedFile) {
       continue;
     }
 
     // File change affects all projects, just return all projects.
     if (projects === '*') {
-      return Object.keys(projectGraphNodes);
+      for (const project of Object.keys(projectGraphNodes)) {
+        addReasonForProject(
+          project,
+          'A global input was changed:',
+          `${changedFile} matches ${pattern}`,
+          touched
+        );
+      }
     } else if (Array.isArray(projects)) {
-      projects.forEach((project) => touched.add(project));
+      for (const project of projects) {
+        addReasonForProject(
+          project,
+          'A global input was changed:',
+          `${changedFile} matches ${pattern}`,
+          touched
+        );
+      }
     }
   }
 
-  return Array.from(touched);
+  return touched;
 };
 
 export function extractGlobalFilesFromInputs(nxJson: NxJsonConfiguration) {

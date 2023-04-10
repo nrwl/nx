@@ -579,6 +579,10 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'string',
       requiresArg: true,
     })
+    .option('why', {
+      describe: 'Print the reasons that a project is marked as affected.',
+      type: 'string',
+    })
     .group(
       ['base'],
       'Run command using --base=[SHA1] (affected by the committed, uncommitted and untracked changes):'
@@ -594,6 +598,16 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
       uncommitted: ['files', 'untracked', 'base', 'head', 'all'],
       all: ['files', 'untracked', 'uncommitted', 'base', 'head'],
+    })
+    .middleware((argv) => {
+      if (argv.why !== null && argv.why !== undefined) {
+        argv.target = '_';
+        if (argv.why === 'false') {
+          delete argv['why'];
+        } else if (argv.why === 'true' || argv.why === '') {
+          argv['why'] = 'affected';
+        }
+      }
     });
 }
 

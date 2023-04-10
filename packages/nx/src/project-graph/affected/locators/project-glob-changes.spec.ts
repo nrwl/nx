@@ -30,22 +30,26 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
   });
 
   it('should affect all projects if a project is removed', async () => {
-    const result = await getTouchedProjectsFromProjectGlobChanges(
-      [
-        {
-          file: 'libs/proj1/project.json',
-          hash: 'some-hash',
-          getChanges: () => [new DeletedFileChange()],
-        },
-      ],
-      {
-        proj2: makeProjectGraphNode('proj2'),
-        proj3: makeProjectGraphNode('proj3'),
-      },
-      {
-        plugins: [],
-      }
-    );
+    const result = [
+      ...(
+        await getTouchedProjectsFromProjectGlobChanges(
+          [
+            {
+              file: 'libs/proj1/project.json',
+              hash: 'some-hash',
+              getChanges: () => [new DeletedFileChange()],
+            },
+          ],
+          {
+            proj2: makeProjectGraphNode('proj2'),
+            proj3: makeProjectGraphNode('proj3'),
+          },
+          {
+            plugins: [],
+          }
+        )
+      ).keys(),
+    ];
     expect(result).toEqual(['proj2', 'proj3']);
   });
 });

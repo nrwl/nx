@@ -170,3 +170,9 @@ Type: `boolean`
 Default: `false`
 
 Watch for changes to project graph and update in-browser
+
+### why
+
+Type: `string`
+
+Print the reasons that a project is marked as affected.

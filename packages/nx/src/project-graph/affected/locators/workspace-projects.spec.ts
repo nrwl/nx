@@ -19,62 +19,72 @@ function getFileChanges(files: string[]) {
 }
 
 describe('getTouchedProjects', () => {
-  it('should return a list of projects for the given changes', () => {
+  it('should return a list of projects for the given changes', async () => {
     const fileChanges = getFileChanges(['libs/a/index.ts', 'libs/b/index.ts']);
     const projects = {
       a: { root: 'libs/a' },
       b: { root: 'libs/b' },
       c: { root: 'libs/c' },
     };
-    expect(
-      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
-    ).toEqual(['a', 'b']);
+    expect([
+      ...(
+        await getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+      ).keys(),
+    ]).toEqual(['a', 'b']);
   });
 
-  it('should return projects with the root matching a whole directory name in the file path', () => {
+  it('should return projects with the root matching a whole directory name in the file path', async () => {
     const fileChanges = getFileChanges(['libs/a-b/index.ts']);
     const projects = {
       a: { root: 'libs/a' },
       abc: { root: 'libs/a-b-c' },
       ab: { root: 'libs/a-b' },
     };
-    expect(
-      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
-    ).toEqual(['ab']);
+    expect([
+      ...(
+        await getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+      ).keys(),
+    ]).toEqual(['ab']);
   });
 
-  it('should return projects with the root matching a whole directory name in the file path', () => {
+  it('should return projects with the root matching a whole directory name in the file path', async () => {
     const fileChanges = getFileChanges(['libs/a-b/index.ts']);
     const projects = {
       aaaaa: { root: 'libs/a' },
       abc: { root: 'libs/a-b-c' },
       ab: { root: 'libs/a-b' },
     };
-    expect(
-      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
-    ).toEqual(['ab']);
+    expect([
+      ...(
+        await getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+      ).keys(),
+    ]).toEqual(['ab']);
   });
 
-  it('should return the most qualifying match with the file path', () => {
+  it('should return the most qualifying match with the file path', async () => {
     const fileChanges = getFileChanges(['libs/a/b/index.ts']);
     const projects = {
       aaaaa: { root: 'libs/a' },
       ab: { root: 'libs/a/b' },
     };
-    expect(
-      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
-    ).toEqual(['ab']);
+    expect([
+      ...(
+        await getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+      ).keys(),
+    ]).toEqual(['ab']);
   });
 
-  it('should not return parent project if nested project is touched', () => {
+  it('should not return parent project if nested project is touched', async () => {
     const fileChanges = getFileChanges(['libs/a/b/index.ts']);
     const projects = {
       a: { root: 'libs/a' },
       b: { root: 'libs/a/b' },
     };
-    expect(
-      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
-    ).toEqual(['b']);
+    expect([
+      ...(
+        await getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+      ).keys(),
+    ]).toEqual(['b']);
   });
 });
 
@@ -88,7 +98,7 @@ describe('getImplicitlyTouchedProjects', () => {
     };
   });
 
-  it('should return projects which have touched files in their named inputs', () => {
+  it('should return projects which have touched files in their named inputs', async () => {
     const graph = buildProjectGraphNodes({
       a: {
         root: 'a',
@@ -101,12 +111,14 @@ describe('getImplicitlyTouchedProjects', () => {
       },
     });
     let fileChanges = getFileChanges(['a.txt']);
-    expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual([
-      'a',
-    ]);
+    expect([
+      ...(
+        await getImplicitlyTouchedProjects(fileChanges, graph, nxJson)
+      ).keys(),
+    ]).toEqual(['a']);
   });
 
-  it('should return projects which have touched files in their target inputs', () => {
+  it('should return projects which have touched files in their target inputs', async () => {
     const graph = buildProjectGraphNodes({
       a: {
         root: 'a',
@@ -121,9 +133,11 @@ describe('getImplicitlyTouchedProjects', () => {
       },
     });
     let fileChanges = getFileChanges(['a.txt']);
-    expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual([
-      'a',
-    ]);
+    expect([
+      ...(
+        await getImplicitlyTouchedProjects(fileChanges, graph, nxJson)
+      ).keys(),
+    ]).toEqual(['a']);
   });
 });
 
