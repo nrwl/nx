@@ -11,7 +11,7 @@ export function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/core-tutorial/01-create-blog`],
+        bodyLines: [`https://nx.dev/tutorials/package-based-repo-tutorial`],
       });
       break;
 
@@ -19,7 +19,7 @@ export function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/getting-started/nx-and-typescript`],
+        bodyLines: [`https://nx.dev/tutorials/integrated-repo-tutorial`],
       });
       break;
     case Preset.ReactStandalone:
@@ -56,7 +56,7 @@ export function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/node-server-tutorial/1-code-generation`],
+        bodyLines: [`https://nx.dev/tutorials/node-server-tutorial`],
       });
       break;
   }
