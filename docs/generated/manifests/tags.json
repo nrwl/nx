@@ -361,13 +361,6 @@
       "id": "format-write",
       "name": "format:write",
       "path": "/nx-api/nx/documents/format-write"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/workspace-lint",
-      "id": "workspace-lint",
-      "name": "workspace-lint",
-      "path": "/nx-api/nx/documents/workspace-lint"
     }
   ],
   "integrate-with-editors": [

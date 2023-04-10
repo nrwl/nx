@@ -499,7 +499,6 @@
       - [migrate](/nx-api/nx/documents/migrate)
       - [report](/nx-api/nx/documents/report)
       - [list](/nx-api/nx/documents/list)
-      - [workspace-lint](/nx-api/nx/documents/workspace-lint)
       - [connect-to-nx-cloud](/nx-api/nx/documents/connect-to-nx-cloud)
       - [reset](/nx-api/nx/documents/reset)
       - [repair](/nx-api/nx/documents/repair)

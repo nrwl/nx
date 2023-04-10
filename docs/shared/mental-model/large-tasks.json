@@ -24996,10 +24996,6 @@
             "hash": "c602609d311a8f3b028cdde9d83a1bd860a53870"
           },
           {
-            "file": "docs/generated/cli/workspace-lint.md",
-            "hash": "c5bc40d3a8198ca5eebdcd851dff5e85d9ce3912"
-          },
-          {
             "file": "docs/generated/devkit/index.md",
             "hash": "0d2ed5a146246b4ead2e2ed41f1fccb36f744f2b"
           },
@@ -25434,10 +25430,6 @@
           {
             "file": "docs/nx-cloud/set-up/record-report.png",
             "hash": "53bc7135364d69e45ba9c9c03ae5dc369ff8770f"
-          },
-          {
-            "file": "docs/nx-cloud/set-up/record-workspace-lint.png",
-            "hash": "c5f64a0d41f8e206e0ba69f3aa256fd418dbb9c5"
           },
           {
             "file": "docs/packages.json",
