@@ -3,6 +3,15 @@ import { performance } from 'perf_hooks';
 import { workspaceRoot } from '../utils/app-root';
 
 export class NativeFileHasher extends FileHasherBase {
+  static available() {
+    try {
+      require('../native');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async init(): Promise<void> {
     performance.mark('init hashing:start');
     // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
