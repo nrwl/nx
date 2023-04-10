@@ -74,7 +74,7 @@ export async function buildProjectGraphUsingProjectFileMap(
 
   let filesToProcess;
   let cachedFileData;
-  if (
+  const useCacheData =
     cache &&
     !shouldRecomputeWholeGraph(
       cache,
@@ -82,8 +82,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       projectsConfigurations,
       nxJson,
       rootTsConfig
-    )
-  ) {
+    );
+  if (useCacheData) {
     const fromCache = extractCachedFileData(projectFileMap, cache);
     filesToProcess = fromCache.filesToProcess;
     cachedFileData = fromCache.cachedFileData;
@@ -103,7 +103,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     context,
     cachedFileData,
     projectGraphVersion,
-    cache
+    useCacheData ? cache : null
   );
   const projectGraphCache = createCache(
     nxJson,
