@@ -108,7 +108,7 @@ machine. I.e., Nx Cloud doesn't manage your agents--you need to do it in your CI
 Nx Cloud is an orchestrator. The main job tells Nx Cloud what you want to run, and Nx Cloud will distribute those tasks
 across the agents. Nx Cloud will automatically move files from one agent to another, from the agents to the main job.
 
-The end result is that when say `nx affected --target=build` completes on the main job, all the file artifacts created
+The end result is that when say `nx affected -t build` completes on the main job, all the file artifacts created
 on agents are copied over to the main job, as if the main job had built everything locally.
 
 ## Running Things in Parallel

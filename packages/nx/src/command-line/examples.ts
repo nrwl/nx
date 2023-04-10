@@ -16,56 +16,56 @@ export const examples: Record<string, Example[]> = {
         'Print information about the projects affected by the changes between main and HEAD (e.g,. PR)',
     },
     {
-      command: 'print-affected --target=test',
+      command: 'print-affected -t test',
       description:
         'Prints information about the affected projects and a list of tasks to test them',
     },
     {
-      command: 'print-affected --target=build --select=projects',
+      command: 'print-affected -t build --select=projects',
       description:
         'Prints the projects property from the print-affected output',
     },
     {
-      command: 'print-affected --target=build --select=tasks.target.project',
+      command: 'print-affected -t build --select=tasks.target.project',
       description:
         'Prints the tasks.target.project property from the print-affected output',
     },
   ],
   affected: [
     {
-      command: 'affected --target=custom-target',
+      command: 'affected -t custom-target',
       description: 'Run custom target for all affected projects',
     },
     {
-      command: 'affected --target=test --parallel=5',
+      command: 'affected -t test --parallel=5',
       description: 'Run tests in parallel',
     },
     {
-      command: 'affected --target=test --all',
+      command: 'affected -t test --all',
       description: 'Run the test target for all projects',
     },
     {
-      command: 'affected --targets=lint,test,build',
+      command: 'affected -t lint test build',
       description:
         'Run lint, test, and build targets for affected projects. Requires Nx v15.4+',
     },
     {
-      command: 'affected --target=test --files=libs/mylib/src/index.ts',
+      command: 'affected -t test --files=libs/mylib/src/index.ts',
       description:
         'Run tests for all the projects affected by changing the index.ts file',
     },
     {
-      command: 'affected --target=test --base=main --head=HEAD',
+      command: 'affected -t test --base=main --head=HEAD',
       description:
         'Run tests for all the projects affected by the changes between main and HEAD (e.g., PR)',
     },
     {
-      command: 'affected --target=test --base=main~1 --head=main',
+      command: 'affected -t test --base=main~1 --head=main',
       description:
         'Run tests for all the projects affected by the last commit on main',
     },
     {
-      command: 'affected --target=build --tag=$NX_TARGET_TASK_PROJECT:latest',
+      command: 'affected -t build --tag=$NX_TARGET_TASK_PROJECT:latest',
       description: 'Use the currently executing project name in your command.',
     },
   ],
@@ -289,28 +289,28 @@ export const examples: Record<string, Example[]> = {
   ],
   'run-many': [
     {
-      command: 'run-many --target=test',
+      command: 'run-many -t test',
       description: 'Test all projects',
     },
     {
-      command: 'run-many --target=test --projects=proj1,proj2',
+      command: 'run-many -t test -p proj1 proj2',
       description: 'Test proj1 and proj2 in parallel',
     },
     {
-      command: 'run-many --target=test --projects=proj1,proj2 --parallel=5',
+      command: 'run-many -t test -p proj1 proj2 --parallel=5',
       description: 'Test proj1 and proj2 in parallel using 5 workers',
     },
     {
-      command: 'run-many --target=test --projects=proj1,proj2 --parallel=false',
+      command: 'run-many -t test -p proj1 proj2 --parallel=false',
       description: 'Test proj1 and proj2 in sequence',
     },
     {
-      command: 'run-many --target=test --projects=*-app --exclude=excluded-app',
+      command: 'run-many -t test --projects=*-app --exclude excluded-app',
       description:
         'Test all projects ending with `*-app` except `excluded-app`.  Note: your shell may require you to escape the `*` like this: `\\*`',
     },
     {
-      command: 'run-many --target=test --projects=tag:api-*',
+      command: 'run-many -t test --projects=tag:api-*',
       description:
         'Test all projects with tags starting with `api-`.  Note: your shell may require you to escape the `*` like this: `\\*`',
     },
@@ -378,7 +378,7 @@ export const examples: Record<string, Example[]> = {
     },
     {
       command:
-        'watch --projects=app1,app2 --includeDependentProjects -- echo \\$NX_PROJECT_NAME',
+        'watch --projects=app1,app2 --includeDependencies -- echo \\$NX_PROJECT_NAME',
       description:
         'Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change',
     },

@@ -69,7 +69,7 @@ In a package-based monorepo, Nx only manages the scheduling and caching of your 
 For example, use Nx to run your builds:
 
 ```shell
-npx nx run-many --target=build
+npx nx run-many -t build
 ```
 
 But instead keep using NPM/Yarn/PNPM workspace commands for your tests and other scripts. Here's an example of using PNPM commands to run tests across packages

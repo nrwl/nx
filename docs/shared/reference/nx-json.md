@@ -210,7 +210,7 @@ pass `--buildable=true` when creating new libraries.
 > A task is an invocation of a target.
 
 Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx affected`, and so on. The tasks runner
-named "default" is used by default. Specify a different one like this `nx run-many --target=build --all --runner=another`.
+named "default" is used by default. Specify a different one like this `nx run-many -t build --all --runner=another`.
 
 Tasks runners can accept different options. The following are the options supported
 by `"nx/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
@@ -226,4 +226,4 @@ by `"nx/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 | selectivelyHashTsConfig | only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                                                                              |
 
 You can configure `parallel` in `nx.json`, but you can also pass them in the
-terminal `nx run-many --target=test --parallel=5`.
+terminal `nx run-many -t test --parallel=5`.

@@ -35,10 +35,10 @@ target: `npx nx-cloud start-ci-run --stop-agents-after=e2e`.
 Invoking `npx nx-cloud start-ci-run` will tell Nx to distribute by default. You can enable/disable distribution for
 individual commands as follows:
 
-- `nx affected --target=build --dte` (explicitly enable distribution, Nx >= 14.7)
-- `nx affected --target=build --no-dte` (explicitly disable distribution, Nx >= 14.7)
-- `NX_CLOUD_DISTRIBUTED_EXECUTION=true nx affected --target=build` (explicitly enable distribution)
-- `NX_CLOUD_DISTRIBUTED_EXECUTION=false nx affected --target=build` (explicitly disable distribution)
+- `nx affected -t build --dte` (explicitly enable distribution, Nx >= 14.7)
+- `nx affected -t build --no-dte` (explicitly disable distribution, Nx >= 14.7)
+- `NX_CLOUD_DISTRIBUTED_EXECUTION=true nx affected -t build` (explicitly enable distribution)
+- `NX_CLOUD_DISTRIBUTED_EXECUTION=false nx affected -t build` (explicitly disable distribution)
 
 ## npx nx-cloud stop-all-agents
 

@@ -86,7 +86,7 @@ Snapshot files should be checked in with your code.
 
 ### Performance in CI
 
-Typically, in CI it's recommended to use `nx affected --target=test --parallel=[# CPUs] -- --runInBand` for the best performance.
+Typically, in CI it's recommended to use `nx affected -t test --parallel=[# CPUs] -- --runInBand` for the best performance.
 
 This is because each [jest process creates a workers based on system resources](https://jestjs.io/docs/cli#--maxworkersnumstring), running multiple projects via nx and using jest workers will create too many process overall causing the system to run slower than desired. Using the `--runInBand` flag tells jest to run in a single process.
 

@@ -115,7 +115,7 @@ commands are identical from the caching perspective.
 
 ```shell
 npx nx build remixapp
-npx nx run-many --target=build --projects=remixapp
+npx nx run-many -t build -p remixapp
 ```
 
 In other words, Nx does not cache what the developer types into the terminal.
@@ -125,7 +125,7 @@ from
 cache or run. This means that from the caching point of view, the following command:
 
 ```shell
-npx nx run-many --target=build --projects=header,footer
+npx nx run-many -t build -p header footer
 ```
 
 is identical to the following two commands:

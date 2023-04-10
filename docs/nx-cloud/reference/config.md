@@ -25,7 +25,7 @@ Only operations listed in `cacheableOperations` can be cached using Nx Cloud and
 By default, Nx Cloud requests will time out after 10 seconds. `NX_CLOUD_NO_TIMEOUTS` disables the timeout.
 
 ```shell
-NX_CLOUD_NO_TIMEOUTS=true nx run-many --target=build --all
+NX_CLOUD_NO_TIMEOUTS=true nx run-many -t build --all
 ```
 
 ## Logging

@@ -257,7 +257,7 @@ The change made to the `cart` project is also affecting the `store` project. Thi
 To run the `test` targets only for affected projects, run the command:
 
 ```shell
-npx nx affected --target=test
+npx nx affected -t test
 ```
 
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.

@@ -65,12 +65,12 @@ npx nx test header
 To run the `build` target for all projects in the repo, run:
 
 ```shell
-npx nx run-many --target=build
+npx nx run-many -t build
 ```
 
 This will build the projects in the right order: `footer` and `header` and then `myapp`.
 
-```{% command="npx nx run-many --target=build" %}
+```{% command="npx nx run-many -t build" %}
     ✔  nx run header:build (501ms)
     ✔  nx run footer:build (503ms)
     ✔  nx run myapp:build (670ms)
@@ -88,7 +88,7 @@ the name of the target.
 You can also run a command for all the projects affected by your PR like this:
 
 ```shell
-npx nx affected --target=test
+npx nx affected -t test
 ```
 
 Learn more about the affected command [here](/concepts/affected).
