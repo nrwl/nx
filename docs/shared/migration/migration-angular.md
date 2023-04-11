@@ -1,10 +1,10 @@
 # Migrating an Angular CLI project to Nx
 
-Within an Nx workspace, you gain many capabilities that help you build applications and libraries using a monorepo approach. If you are currently using an Angular CLI workspace, you can transform it into an Nx workspace.
+Within an Nx workspace, you gain many capabilities that help you build applications and libraries. If you are currently using an Angular CLI workspace, you can transform it into an Nx workspace.
 
 ## Migrating to a Standalone Angular App with Nx
 
-You can migrate to a [Standalone Angular App](/angular-standalone-tutorial/1-code-generation) with the command:
+You can migrate to a [Standalone Angular App](/concepts/integrated-vs-package-based#standalone-applications) with the command:
 
 ```shell
 npx nx init
@@ -27,7 +27,7 @@ Your workspace is now powered by Nx! You can verify that your application still 
 - To run unit tests, run `nx test <app name>`.
 - To see your project graph, run `nx graph`.
 
-> Your project graph will grow as you add and use more applications and libraries. You can add the `--watch` flag to `nx graph` to see the changes in-browser as you add them.
+> Your project graph will grow as you add and use more applications and libraries.
 
 Learn more about the advantages of Nx in the following guides:
 
@@ -43,7 +43,7 @@ src="https://www.youtube.com/embed/vRj9SNVYKrE"
 title="Nx Console Updates 17.15.0"
 width="100%" /%}
 
-As of Nx Console version 17.15.0, Angular CLI users will receive a notice periodically when running commands via Nx Console, asking if they want to use Nx to make their Angular commands faster.
+Nx Console no longer supports the Angular CLI. Angular CLI users will receive a notice, asking if they want to switch to Nx.
 
 When you click this button, we’ll run the `nx init` command to set up the Nx CLI, allowing for cached builds, and for you to share this cache with your teammates via Nx Cloud.
 
@@ -60,7 +60,7 @@ Once the script has run, commit the changes. Reverting this commit will effectiv
 
 If you're not ready to make the change yet, you can come back to this later:
 
-- If you're using Nx Console: open the Vs Code command palette and start typing "Make ng faster".
+- If you're using Nx Console: open the Vs Code command palette and start typing "Convert Angular CLI to Nx Workspace".
 - Regardless of using Nx Console (or your IDE): run `npx nx init` from the root of your project.
 
 {% cards %}
