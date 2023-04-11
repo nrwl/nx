@@ -40,7 +40,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: windows-modules-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
@@ -268,7 +268,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
@@ -280,7 +280,7 @@ jobs:
         with:
           path: '${{ github.workspace }}/.cypress'
           key: ${{ runner.os }}-cypress
-          
+
       - name: Install Cypress
         if: steps.cache-cypress.outputs.cache-hit != 'true'
         run: npx cypress install
@@ -292,7 +292,7 @@ jobs:
 
       - name: Run e2e tests
         id: e2e-run
-        run: yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1
+        run: yarn nx run ${{ matrix.project }}:e2e
         timeout-minutes: 120
         env:
           GIT_AUTHOR_EMAIL: test@test.com

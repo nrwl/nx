@@ -50,7 +50,7 @@ jobs:
         with:
           lookup-only: true
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
@@ -350,7 +350,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
@@ -412,9 +412,7 @@ jobs:
 
       - name: Run e2e tests
         id: e2e-run
-        run: |
-          yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1
-          yarn nx run-many --target=e2e-macos --projects="${{ join(matrix.project) }}" --parallel=1
+        run: yarn nx run-many -t e2e,e2e-macos -p ${{ matrix.project }}
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
           GIT_AUTHOR_EMAIL: test@test.com
