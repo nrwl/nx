@@ -369,7 +369,7 @@ export const commandsObject = yargs
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
       }),
-    handler: async (args) =>
+    handler: async (args: yargs.ArgumentsCamelCase<{ verbose: boolean }>) =>
       process.exit(await (await import('./repair')).repair(args)),
   })
   .command({
