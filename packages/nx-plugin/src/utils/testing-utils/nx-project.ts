@@ -1,28 +1,24 @@
-import { workspaceRoot } from '@nrwl/devkit';
-import {
-  getPackageManagerCommand,
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/devkit';
-import { execSync } from 'child_process';
-import { dirname } from 'path';
 import { ensureDirSync } from 'fs-extra';
+import {
+  createProjectGraphAsync,
+  getDependentPackagesForProject,
+  getLibraryImportPath,
+  getOutputPath,
+  ProjectGraph,
+  WorkspaceLibrary,
+  workspaceRoot,
+} from '@nrwl/devkit';
+import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
+
+import { runNxNewCommand } from './async-commands';
 import { tmpProjPath } from './paths';
 import { cleanup } from './utils';
+import { runPackageManagerInstall } from './run-package-manager-install';
 
-function runNxNewCommand(args?: string, silent?: boolean) {
-  const localTmpDir = dirname(tmpProjPath());
-  return execSync(
-    `node ${require.resolve(
-      'nx'
-    )} new proj --nx-workspace-root=${localTmpDir} --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj --preset=empty ${
-      args || ''
-    }`,
-    {
-      cwd: localTmpDir,
-      ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
-    }
-  );
+interface Plugin {
+  npmPackageName: string;
+  pluginDistPath: string;
+  workspaceLibraries: WorkspaceLibrary[];
 }
 
 export function patchPackageJsonForPlugin(
@@ -46,42 +42,125 @@ export function uniq(prefix: string) {
 }
 
 /**
- * Run the appropriate package manager install command in the e2e directory
- * @param silent silent output from the install
- */
-export function runPackageManagerInstall(silent: boolean = true) {
-  const pmc = getPackageManagerCommand();
-  const install = execSync(pmc.install, {
-    cwd: tmpProjPath(),
-    ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
-  });
-  return install ? install.toString() : '';
-}
-
-/**
  * Creates a new nx project in the e2e directory
  *
  * @param npmPackageName package name to test
  * @param pluginDistPath dist path where the plugin was outputted to
  */
-export function newNxProject(
-  npmPackageName: string,
-  pluginDistPath: string
-): void {
+export async function newNxProject(...projectNames: string[]): Promise<void> {
   cleanup();
   runNxNewCommand('', true);
-  patchPackageJsonForPlugin(npmPackageName, pluginDistPath);
+
+  const projectGraph = await createProjectGraphAsync();
+  const projectDependencyMap = new Map<string, Plugin>();
+  projectNames.forEach((name) =>
+    patchProjectDistFolder(projectGraph, projectDependencyMap, name)
+  );
+  projectNames.forEach((name) =>
+    updatePackageInRoot(projectDependencyMap, name)
+  );
+
   runPackageManagerInstall();
 }
 
 /**
  * Ensures that a project has been setup in the e2e directory
  * It will also copy `@nrwl` packages to the e2e directory
+ * @param projectNames list of project names that need to be configured before a given e2e test can be run
  */
-export function ensureNxProject(
-  npmPackageName?: string,
-  pluginDistPath?: string
-): void {
+export async function ensureNxProject(
+  ...projectNames: string[]
+): Promise<void> {
   ensureDirSync(tmpProjPath());
-  newNxProject(npmPackageName, pluginDistPath);
+  await newNxProject(...projectNames);
+}
+
+function patchProjectDistFolder(
+  projectGraph: ProjectGraph,
+  projectDependencyMap: Map<string, Plugin>,
+  name: string
+) {
+  if (projectDependencyMap.has(name)) {
+    return;
+  }
+
+  const plugin = getPlugin(projectGraph, name);
+  projectDependencyMap.set(name, plugin);
+
+  plugin.workspaceLibraries.forEach((library) =>
+    patchProjectDistFolder(projectGraph, projectDependencyMap, library.name)
+  );
+
+  if (plugin.workspaceLibraries.length > 0) {
+    updatePackageInDist(projectDependencyMap, plugin);
+    runPackageManagerInstall(true, `${workspaceRoot}/${plugin.pluginDistPath}`);
+  }
+}
+
+function getPlugin(projectGraph: ProjectGraph, name: string): Plugin {
+  const npmPackageName = getLibraryImportPath(name, projectGraph);
+
+  if (npmPackageName == null) {
+    throw new Error(
+      `Project "${name}" does not have an import path in tsconfig`
+    );
+  }
+
+  return {
+    npmPackageName,
+    pluginDistPath: getOutputPath(projectGraph, name),
+    workspaceLibraries: getDependentPackagesForProject(projectGraph, name)
+      .workspaceLibraries,
+  };
+}
+
+function updatePackageInRoot(
+  projectDependencyMap: Map<string, Plugin>,
+  name: string
+) {
+  const plugin = projectDependencyMap.get(name);
+  if (plugin == null || plugin.workspaceLibraries.length === 0) {
+    return;
+  }
+
+  const packageJsonPath = tmpProjPath('package.json');
+  const packageJson = readJsonFile(packageJsonPath);
+
+  packageJson.devDependencies[
+    plugin.npmPackageName
+  ] = `file:${workspaceRoot}/${plugin.pluginDistPath}`;
+
+  writeJsonFile(packageJsonPath, packageJson);
+}
+
+function updatePackageInDist(
+  projectDependencyMap: Map<string, Plugin>,
+  plugin: Plugin
+) {
+  const packageJsonPath = `${workspaceRoot}/${plugin.pluginDistPath}/package.json`;
+  const packageJson = readJsonFile(packageJsonPath);
+
+  for (const {
+    npmPackageName,
+    pluginDistPath,
+  } of projectDependencyMap.values()) {
+    if (
+      packageJson.dependencies != null &&
+      npmPackageName in packageJson.dependencies
+    ) {
+      packageJson.dependencies[
+        npmPackageName
+      ] = `file:${workspaceRoot}/${pluginDistPath}`;
+    }
+    if (
+      packageJson.peerDependencies != null &&
+      npmPackageName in packageJson.peerDependencies
+    ) {
+      packageJson.peerDependencies[
+        npmPackageName
+      ] = `file:${workspaceRoot}/${pluginDistPath}`;
+    }
+  }
+
+  writeJsonFile(packageJsonPath, packageJson);
 }

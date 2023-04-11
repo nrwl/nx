@@ -103,7 +103,7 @@ We'll go over a few parts of a test file below:
 ```typescript
 it('should create my-plugin', async (done) => {
   const plugin = uniq('my-plugin');
-  ensureNxProject('@my-org/my-plugin', 'dist/packages/my-plugin');
+  await ensureNxProject('my-plugin');
   await runNxCommandAsync(`generate @my-org/my-plugin:myPlugin ${plugin}`);
 
   const result = await runNxCommandAsync(`build ${plugin}`);
@@ -114,7 +114,7 @@ it('should create my-plugin', async (done) => {
 ```
 
 - The `uniq` function creates a random name with the prefix and a random number.
-- The `ensureNxProject` is the function that will create the temporary directory. It takes two arguments, the plugin package name and the dist directory of when it's built.
+- The `ensureNxProject` is the function that will create the temporary directory. It takes a list of dependant projects needed to execute the `nx` command. Any transient dependencies within the workspace are also prepared.
 - The `runNxCommandAsync` will execute a `nx` command in the E2E directory.
 
 There are additional functions that the `@nrwl/nx-plugin/testing` package exports. Most of them are file utilities to manipulate and read files in the E2E directory.

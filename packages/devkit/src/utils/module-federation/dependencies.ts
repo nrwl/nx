@@ -53,7 +53,7 @@ function collectDependencies(
   return dependencies;
 }
 
-function getLibraryImportPath(
+export function getLibraryImportPath(
   library: string,
   projectGraph: ProjectGraph
 ): string | undefined {

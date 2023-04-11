@@ -13,14 +13,14 @@ describe('<%= pluginName %> e2e', () => {
   // consumes 1 workspace. The tests should each operate
   // on a unique project in the workspace, such that they
   // are not dependant on one another.
-  beforeAll(() => {
-    ensureNxProject('<%= npmPackageName %>', '<%= pluginOutputPath %>');
+  beforeAll(async () => {
+    await ensureNxProject('<%= pluginName %>');
   });
 
-  afterAll(() => {
+  afterAll(async () => {
     // `nx reset` kills the daemon, and performs
     // some work which can help clean up e2e leftovers
-    runNxCommandAsync('reset');
+    await runNxCommandAsync('reset');
   });
 
   <% if(!minimal) { %>
@@ -49,7 +49,7 @@ describe('<%= pluginName %> e2e', () => {
   describe('--tags', () => {
     it('should add tags to the project', async () => {
       const projectName = uniq('<%= pluginName %>');
-      ensureNxProject('<%= npmPackageName %>', '<%= pluginOutputPath %>');
+      await ensureNxProject('<%= pluginName %>');
       await runNxCommandAsync(
         `generate <%=npmPackageName%>:<%= pluginName %> ${projectName} --tags e2etag,e2ePackage`
       );
