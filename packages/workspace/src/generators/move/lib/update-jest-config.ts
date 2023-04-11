@@ -22,7 +22,11 @@ export function updateJestConfig(
   if (tree.exists(jestConfigPath)) {
     const oldContent = tree.read(jestConfigPath, 'utf-8');
 
-    const findName = new RegExp(`'${schema.projectName}'`, 'g');
+    // ensure both single and double quotes are replaced
+    const findName = new RegExp(
+      `'${schema.projectName}'|"${schema.projectName}"|\`${schema.projectName}\``,
+      'g'
+    );
     const findDir = new RegExp(project.root, 'g');
 
     const newContent = oldContent

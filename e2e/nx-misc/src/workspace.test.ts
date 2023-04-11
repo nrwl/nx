@@ -867,13 +867,15 @@ describe('workspace-generator', () => {
     const dryRunOutput = runCLI(
       `workspace-generator ${custom} ${workspace} --no-interactive --directory=dir --skipTsConfig=true -d`
     );
-    expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
-    expect(dryRunOutput).toContain(`CREATE libs/dir/${workspace}/src/index.ts`);
+    expect(exists(`packages/dir/${workspace}/src/index.ts`)).toEqual(false);
+    expect(dryRunOutput).toContain(
+      `CREATE packages/dir/${workspace}/src/index.ts`
+    );
 
     runCLI(
       `workspace-generator ${custom} ${workspace} --no-interactive --directory=dir`
     );
-    checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
+    checkFilesExist(`packages/dir/${workspace}/src/index.ts`);
 
     const jsonFailing = readJson(`tools/generators/${failing}/schema.json`);
     jsonFailing.properties = {};
