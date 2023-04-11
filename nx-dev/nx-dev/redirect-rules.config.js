@@ -508,6 +508,7 @@ const packagesDocuments = {
   '/linter/eslint-plugin-nx': '/packages/linter/documents/eslint-plugin-nx',
   '/packages/add-nx-to-monorepo': '/packages/nx/documents/init',
   '/packages/cra-to-nx': '/packages/nx/documents/init',
+  '/packages/make-angular-cli-faster': '/packages/nx/documents/init',
 };
 
 /**
