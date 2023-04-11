@@ -43,14 +43,13 @@ export default async function* serveExecutor(
   if (options.customServerTarget) {
     yield* runCustomServer(root, options, buildOptions, context);
   } else {
-    yield* runNextDevServer(root, options, buildOptions, context);
+    yield* runNextDevServer(root, options, context);
   }
 }
 
 async function* runNextDevServer(
   root: string,
   options: NextServeBuilderOptions,
-  buildOptions: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
   const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
