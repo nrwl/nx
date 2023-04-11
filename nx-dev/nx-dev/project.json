@@ -8,7 +8,7 @@
       "dependsOn": [
         {
           "target": "build-base",
-          "projects": "self"
+          "projects": "{self}"
         }
       ],
       "executor": "nx:run-commands",

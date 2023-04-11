@@ -8,7 +8,7 @@
       "dependsOn": [
         {
           "target": "build-base",
-          "projects": "dependencies"
+          "projects": "{dependencies}"
         }
       ],
       "executor": "@nrwl/cypress:cypress",
