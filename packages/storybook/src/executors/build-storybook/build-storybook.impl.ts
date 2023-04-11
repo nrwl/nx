@@ -51,15 +51,22 @@ export default async function buildStorybookExecutor(
   }
 }
 
-function runInstance(options: CLIOptions, storybook7: boolean): Promise<void> {
+function runInstance(
+  options: CLIOptions,
+  storybook7: boolean
+): Promise<void | {
+  port: number;
+  address: string;
+  networkAddress: string;
+}> {
   const env = process.env.NODE_ENV ?? 'production';
   process.env.NODE_ENV = env;
 
   if (storybook7) {
-    return build['build']({
+    return build.build({
       ...options,
       mode: 'static',
-    } as any); // TODO(katerina): Change to actual types when Storybook 7
+    });
   } else {
     const nodeVersion = process.version.slice(1).split('.');
     if (+nodeVersion[0] === 18) {

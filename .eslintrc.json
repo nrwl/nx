@@ -6,7 +6,7 @@
   },
   "ignorePatterns": ["**/*.ts"],
   "plugins": ["@typescript-eslint", "@nrwl/nx"],
-  "extends": [],
+  "extends": ["plugin:storybook/recommended"],
   "rules": {
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "no-restricted-imports": ["error", "create-nx-workspace"]
