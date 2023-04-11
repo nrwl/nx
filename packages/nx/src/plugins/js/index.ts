@@ -23,24 +23,23 @@ export const processProjectGraph: ProjectGraphProcessor = async (
   context
 ) => {
   const builder = new ProjectGraphBuilder(graph);
+  const pluginConfig = jsPluginConfig(readNxJson());
 
-  // during the create-nx-workspace lock file might not exists yet
-  if (lockFileExists()) {
-    const lockHash = lockFileHash() ?? 'n/a';
-    if (lockFileNeedsReprocessing(lockHash)) {
-      removeNpmNodes(graph, builder);
-      parseLockFile(builder);
+  if (pluginConfig.analyzePackageJson) {
+    // during the create-nx-workspace lock file might not exists yet
+    if (lockFileExists()) {
+      const lockHash = lockFileHash() ?? 'n/a';
+      if (lockFileNeedsReprocessing(lockHash)) {
+        removeNpmNodes(graph, builder);
+        parseLockFile(builder);
+      }
+      writeLastProcessedLockfileHash(lockHash);
     }
-    writeLastProcessedLockfileHash(lockHash);
+
+    buildNpmPackageNodes(builder);
   }
 
-  buildNpmPackageNodes(builder);
-
-  await buildExplicitDependencies(
-    jsPluginConfig(readNxJson()),
-    context,
-    builder
-  );
+  await buildExplicitDependencies(pluginConfig, context, builder);
 
   return builder.getUpdatedProjectGraph();
 };
