@@ -507,6 +507,7 @@ const packagesDocuments = {
     '/packages/storybook/generators/migrate-7',
   '/linter/eslint-plugin-nx': '/packages/linter/documents/eslint-plugin-nx',
   '/packages/add-nx-to-monorepo': '/packages/nx/documents/init',
+  '/packages/cra-to-nx': '/packages/nx/documents/init',
 };
 
 /**
