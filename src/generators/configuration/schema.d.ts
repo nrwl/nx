@@ -1,4 +1,4 @@
-import { Framework, InitGeneratorSchema } from '../init/schema';
+import { InitGeneratorSchema } from '../init/schema';
 
 export interface ConfigurationSchema extends InitGeneratorSchema {
   project: string;
@@ -9,5 +9,4 @@ export interface ConfigurationSchema extends InitGeneratorSchema {
   newProject?: boolean;
   buildTarget?: string;
   serveTarget?: string;
-  framework?: Framework;
 }

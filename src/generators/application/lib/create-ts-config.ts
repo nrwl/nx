@@ -1,9 +1,11 @@
-import { Tree, writeJson } from '@nrwl/devkit';
-import { NormalizedSchema } from '../schema';
+import { Tree, workspaceRoot, writeJson } from '@nrwl/devkit';
+import { relative } from 'path';
+import { Framework } from '../../init/schema';
 
-export function createTsConfig(
+export function editTsConfig(
   tree: Tree,
-  options: NormalizedSchema,
+  projectRoot: string,
+  framework: Framework,
   relativePathToRootTsConfig: string
 ) {
   // Nx 15.8 moved util to @nrwl/js, but it is in @nrwl/workspace in 15.7
@@ -14,34 +16,40 @@ export function createTsConfig(
     shared = require('@nrwl/workspace/src/utils/create-ts-config');
   }
 
-  const json = {
-    compilerOptions: {
-      jsx: 'react-jsx',
-      allowJs: false,
-      esModuleInterop: false,
-      allowSyntheticDefaultImports: true,
-      strict: true,
-    },
-    files: [],
-    include: [],
-    references: [
-      {
-        path: './tsconfig.app.json',
+  if (framework === 'react') {
+    const json = {
+      compilerOptions: {
+        jsx: 'react-jsx',
+        allowJs: false,
+        esModuleInterop: false,
+        allowSyntheticDefaultImports: true,
+        strict: true,
       },
-    ],
-  } as any;
+      files: [],
+      include: [],
+      references: [
+        {
+          path: './tsconfig.app.json',
+        },
+      ],
+    } as any;
 
-  // inline tsconfig.base.json into the project
-  if (options.rootProject) {
-    json.compileOnSave = false;
-    json.compilerOptions = {
-      ...shared.tsConfigBaseOptions,
-      ...json.compilerOptions,
-    };
-    json.exclude = ['node_modules', 'tmp'];
-  } else {
-    json.extends = relativePathToRootTsConfig;
+    // inline tsconfig.base.json into the project
+    if (projectIsRootProjectInStandaloneWorkspace(projectRoot)) {
+      json.compileOnSave = false;
+      json.compilerOptions = {
+        ...shared.tsConfigBaseOptions,
+        ...json.compilerOptions,
+      };
+      json.exclude = ['node_modules', 'tmp'];
+    } else {
+      json.extends = relativePathToRootTsConfig;
+    }
+
+    writeJson(tree, `${projectRoot}/tsconfig.json`, json);
   }
+}
 
-  writeJson(tree, `${options.appProjectRoot}/tsconfig.json`, json);
+function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
+  return relative(workspaceRoot, projectRoot).length === 0;
 }
