@@ -257,13 +257,6 @@ function createConfig(
     const { composePlugins, withNx } = require('@nrwl/rspack');
 
     module.exports = composePlugins(withNx(), (config) => {
-      ${
-        options.main
-          ? `config.entry = {
-          main: './${options.main}',
-          };`
-          : ``
-      }
       return config;
     });
     `;

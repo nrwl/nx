@@ -26,17 +26,18 @@ export function withNx(_opts = {}) {
     }, {});
 
     const externals: ExternalItem = {};
+    let externalsType: Configuration['externalsType'];
     if (options.target === 'node') {
       const projectDeps =
         context.projectGraph.dependencies[context.projectName];
       for (const dep of Object.values(projectDeps)) {
         const externalNode = context.projectGraph.externalNodes[dep.target];
         if (externalNode) {
-          externals[
-            externalNode.data.packageName
-          ] = `"${externalNode.data.packageName}"`;
+          externals[externalNode.data.packageName] =
+            externalNode.data.packageName;
         }
       }
+      externalsType = 'commonjs';
     }
 
     const updated: Configuration = {
@@ -95,6 +96,7 @@ export function withNx(_opts = {}) {
         progress: {},
       },
       externals,
+      externalsType,
       stats: {
         colors: true,
         preset: 'normal',

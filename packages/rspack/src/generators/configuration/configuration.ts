@@ -1,4 +1,10 @@
-import { formatFiles, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  formatFiles,
+  joinPathFragments,
+  offsetFromRoot,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import {
   addOrChangeBuildTarget,
   addOrChangeServeTarget,
@@ -11,6 +17,7 @@ import {
   UserProvidedTargetName,
   writeRspackConfigFile,
 } from '../../utils/generator-utils';
+import { editTsConfig } from '../application/lib/create-ts-config';
 import rspackInitGenerator from '../init/init';
 import { ConfigurationSchema } from './schema';
 
@@ -112,6 +119,13 @@ export async function configurationGenerator(
       tree,
       root,
       targets?.[buildTargetName]?.options?.webpackConfig
+    );
+
+    editTsConfig(
+      tree,
+      root,
+      options.framework,
+      joinPathFragments(offsetFromRoot(root), 'tsconfig.base.json')
     );
   }
 

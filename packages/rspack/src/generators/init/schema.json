@@ -14,7 +14,11 @@
     "style": {
       "type": "string",
       "description": "The style solution to use.",
-      "enum": ["none", "css", "scss", "less"]
+      "enum": ["none", "css", "scss", "less", "styl"]
+    },
+    "rootProject": {
+      "type": "boolean",
+      "x-priority": "internal"
     }
   },
   "required": []

@@ -14,6 +14,14 @@
       },
       "x-priority": "important"
     },
+    "framework": {
+      "type": "string",
+      "description": "The framework to use for the application.",
+      "enum": ["none", "react", "web", "nest"],
+      "alias": ["uiFramework"],
+      "x-priority": "important",
+      "default": "react"
+    },
     "less": {
       "type": "boolean",
       "description": "Use less for styling."
@@ -43,12 +51,9 @@
       "description": "The directory to nest the app under."
     },
     "tags": {
-      "type": "array",
-      "description": "The tags to assign to the project.",
-      "items": {
-        "type": "string"
-      },
-      "default": []
+      "type": "string",
+      "description": "Add tags to the project (used for linting).",
+      "alias": "t"
     },
     "monorepo": {
       "type": "boolean",

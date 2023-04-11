@@ -1,111 +1,101 @@
 import {
-  addDependenciesToPackageJson,
-  addProjectConfiguration,
   ensurePackage,
   formatFiles,
-  generateFiles,
-  joinPathFragments,
-  names,
-  offsetFromRoot as _offsetFromRoot,
+  runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { version as nxVersion } from 'nx/package.json';
-import * as path from 'path';
-import {
-  lessVersion,
-  reactDomVersion,
-  reactVersion,
-  sassVersion,
-  stylusVersion,
-  typesReactDomVersion,
-  typesReactVersion,
-} from '../../utils/versions';
-import { configurationGenerator } from '../configuration/configuration';
-import { addCypress } from './lib/add-cypress';
-import { addJest } from './lib/add-jest';
-import { addLinting } from './lib/add-linting';
-import { createTsConfig } from './lib/create-ts-config';
+import configurationGenerator from '../configuration/configuration';
+import rspackInitGenerator from '../init/init';
 import { normalizeOptions } from './lib/normalize-options';
-import { ApplicationGeneratorSchema, NormalizedSchema } from './schema';
+import { ApplicationGeneratorSchema } from './schema';
 
 export default async function (
   tree: Tree,
   _options: ApplicationGeneratorSchema
 ) {
-  await ensurePackage(tree, '@nrwl/react', nxVersion);
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { reactInitGenerator } = require('@nrwl/react');
-
   const tasks = [];
+  const initTask = await rspackInitGenerator(tree, _options);
+  tasks.push(initTask);
+
   const options = normalizeOptions(tree, _options);
 
   options.style ??= 'css';
 
-  addProjectConfiguration(tree, options.name, {
-    root: options.appProjectRoot,
-    projectType: 'application',
-    sourceRoot: `${options.appProjectRoot}/src`,
-    targets: {},
-  });
+  if (options.framework === 'nest') {
+    const { applicationGenerator: nestAppGenerator } = ensurePackage(
+      '@nrwl/nest',
+      nxVersion
+    );
+    const createAppTask = await nestAppGenerator(tree, {
+      ...options,
+      skipFormat: true,
+      tags: options.tags ?? '',
+    });
 
-  const offsetFromRoot = _offsetFromRoot(options.appProjectRoot);
-  generateFiles(tree, path.join(__dirname, 'files'), options.appProjectRoot, {
-    ...options,
-    ...names(options.name),
-    offsetFromRoot,
-    template: '',
-  });
+    const convertAppTask = await configurationGenerator(tree, {
+      project: options.name,
+      target: 'node',
+      newProject: false,
+      buildTarget: 'build',
+      framework: 'nest',
+    });
 
-  createTsConfig(
-    tree,
-    options,
-    joinPathFragments(offsetFromRoot, 'tsconfig.base.json')
-  );
-
-  const projectTask = await configurationGenerator(tree, {
-    project: options.name,
-    devServer: true,
-    tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-    framework: 'react',
-    target: 'web',
-    main: joinPathFragments(options.appProjectRoot, 'src/main.tsx'),
-    newProject: true,
-  });
-  tasks.push(projectTask);
-
-  const jestTask = await addJest(tree, options);
-  tasks.push(jestTask);
-
-  const cypressTask = await addCypress(tree, options);
-  tasks.push(cypressTask);
-
-  const lintTask = await addLinting(tree, options);
-  tasks.push(lintTask);
-
-  const installTask = addDependenciesToPackageJson(
-    tree,
-    { react: reactVersion, 'react-dom': reactDomVersion },
-    {
-      ...getStyleDependency(options),
-      '@nrwl/react': nxVersion,
-      '@types/react': typesReactVersion,
-      '@types/react-dom': typesReactDomVersion,
-    }
-  );
-  tasks.push(installTask);
-
-  const reactInitTask = await reactInitGenerator(tree, options);
-  tasks.push(reactInitTask);
+    tasks.push(createAppTask, convertAppTask);
+  } else if (options.framework === 'web') {
+    const { applicationGenerator: webAppGenerator } = ensurePackage(
+      '@nrwl/web',
+      nxVersion
+    );
+    const createAppTask = await webAppGenerator(tree, {
+      bundler: 'webpack',
+      name: options.name,
+      style: options.style,
+      directorsy: options.directory,
+      tags: options.tags ?? '',
+      unitTestRunner: options.unitTestRunner,
+      e2eTestRunner: options.e2eTestRunner,
+      rootProject: options.rootProject,
+      skipFormat: true,
+    });
+    const convertAppTask = await configurationGenerator(tree, {
+      project: options.name,
+      target: 'web',
+      newProject: false,
+      buildTarget: 'build',
+      serveTarget: 'serve',
+      framework: 'web',
+    });
+    tasks.push(createAppTask, convertAppTask);
+  } else {
+    // default to react
+    const { applicationGenerator: reactAppGenerator } = ensurePackage(
+      '@nrwl/react',
+      nxVersion
+    );
+    const createAppTask = await reactAppGenerator(tree, {
+      bundler: 'webpack',
+      name: options.name,
+      style: options.style,
+      directorsy: options.directory,
+      tags: options.tags ?? '',
+      unitTestRunner: options.unitTestRunner,
+      e2eTestRunner: options.e2eTestRunner,
+      rootProject: options.rootProject,
+      skipFormat: true,
+    });
+    const convertAppTask = await configurationGenerator(tree, {
+      project: options.name,
+      target: 'web',
+      newProject: false,
+      buildTarget: 'build',
+      serveTarget: 'serve',
+      framework: 'react',
+    });
+    tasks.push(createAppTask, convertAppTask);
+  }
 
   await formatFiles(tree);
 
   return runTasksInSerial(...tasks);
-}
-
-function getStyleDependency(options: NormalizedSchema): Record<string, string> {
-  if (options.style === 'scss') return { sass: sassVersion };
-  if (options.style === 'less') return { less: lessVersion };
-  if (options.style === 'styl') return { stylus: stylusVersion };
-  return {};
 }
