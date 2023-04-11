@@ -6,7 +6,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import { RspackExecutorSchema } from '../executors/rspack/schema';
 import { ConfigurationSchema } from '../generators/configuration/schema';
 import { Framework } from '../generators/init/schema';
@@ -510,6 +510,10 @@ export function determineFrameworkAndTarget(
     [targetName: string]: TargetConfiguration<any>;
   }
 ): { target: 'node' | 'web'; framework?: Framework } {
+  ensureTypescript();
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+
   // First try to infer if the target is node
   if (options.target !== 'node') {
     // Try to infer from jest config if the env is node
