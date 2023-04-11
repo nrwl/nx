@@ -2179,6 +2179,79 @@
         "disableCollapsible": false
       },
       {
+        "name": "Adopting Nx From Angular CLI",
+        "path": "/recipes/adopting-nx-angular",
+        "id": "adopting-nx-angular",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "From Angular CLI",
+            "path": "/recipes/adopting-nx-angular/migration-angular",
+            "id": "migration-angular",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "From Angular CLI to Integrated",
+            "path": "/recipes/adopting-nx-angular/angular-integrated",
+            "id": "angular-integrated",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "From Angular CLI Manually",
+            "path": "/recipes/adopting-nx-angular/angular-manual",
+            "id": "angular-manual",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "From Multiple Angular CLI Repos",
+            "path": "/recipes/adopting-nx-angular/angular-multiple",
+            "id": "angular-multiple",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "From Angular CLI",
+        "path": "/recipes/adopting-nx-angular/migration-angular",
+        "id": "migration-angular",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "From Angular CLI to Integrated",
+        "path": "/recipes/adopting-nx-angular/angular-integrated",
+        "id": "angular-integrated",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "From Angular CLI Manually",
+        "path": "/recipes/adopting-nx-angular/angular-manual",
+        "id": "angular-manual",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "From Multiple Angular CLI Repos",
+        "path": "/recipes/adopting-nx-angular/angular-multiple",
+        "id": "angular-multiple",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Executors",
         "path": "/recipes/executors",
         "id": "executors",
