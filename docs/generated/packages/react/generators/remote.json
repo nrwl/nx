@@ -38,10 +38,6 @@
               "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
             },
             {
-              "value": "styl",
-              "label": "Stylus(.styl)     [ http://stylus-lang.com                   ]"
-            },
-            {
               "value": "less",
               "label": "LESS              [ http://lesscss.org                       ]"
             },
@@ -56,6 +52,10 @@
             {
               "value": "styled-jsx",
               "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+            },
+            {
+              "value": "styl",
+              "label": "DEPRECATD: Stylus(.styl) [ http://stylus-lang.com            ]"
             },
             { "value": "none", "label": "None" }
           ]

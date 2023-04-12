@@ -48,10 +48,6 @@
             "label": "SASS(.scss)       [ http://sass-lang.com          ]"
           },
           {
-            "value": "styl",
-            "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
-          },
-          {
             "value": "less",
             "label": "LESS              [ http://lesscss.org            ]"
           },
@@ -70,6 +66,10 @@
           {
             "value": "none",
             "label": "None"
+          },
+          {
+            "value": "styl",
+            "label": "Stylus(.styl)     [ http://stylus-lang.com        ] (DEPRECATED)"
           }
         ]
       }
