@@ -87,46 +87,46 @@ exports[`Helper functions for the Storybook 7 migration generator changeCoreComm
 `;
 
 exports[`Helper functions for the Storybook 7 migration generator getAllStorybookInfo and onlyShowGuide should return all info for all projects with Storybook 1`] = `
-Object {
-  "nextapp": Object {
+{
+  "nextapp": {
     "configDir": "apps/nextapp/.storybook",
     "uiFramework": "@storybook/react",
     "viteConfigFilePath": undefined,
   },
-  "nextapp-ts": Object {
+  "nextapp-ts": {
     "configDir": "apps/nextapp-ts/.storybook",
     "uiFramework": "@storybook/react",
     "viteConfigFilePath": undefined,
   },
-  "ngapp": Object {
+  "ngapp": {
     "configDir": "apps/ngapp/.storybook",
     "uiFramework": "@storybook/angular",
   },
-  "ngapp-ts": Object {
+  "ngapp-ts": {
     "configDir": "apps/ngapp-ts/.storybook",
     "uiFramework": "@storybook/angular",
   },
-  "rv1": Object {
+  "rv1": {
     "configDir": "apps/rv1/.storybook",
     "uiFramework": "@storybook/react",
     "viteConfigFilePath": "apps/rv1/vite.config.js",
   },
-  "rv2-ts": Object {
+  "rv2-ts": {
     "configDir": "apps/rv2-ts/.storybook",
     "uiFramework": "@storybook/react",
     "viteConfigFilePath": "apps/rv2-ts/vite.config.ts",
   },
-  "rw1": Object {
+  "rw1": {
     "configDir": "apps/rw1/.storybook",
     "uiFramework": "@storybook/react",
     "viteConfigFilePath": undefined,
   },
-  "wv1": Object {
+  "wv1": {
     "configDir": "apps/wv1/.storybook",
     "uiFramework": "@storybook/web-components",
     "viteConfigFilePath": "apps/wv1/vite.config.ts",
   },
-  "ww1": Object {
+  "ww1": {
     "configDir": "apps/ww1/.storybook",
     "uiFramework": "@storybook/web-components",
     "viteConfigFilePath": undefined,

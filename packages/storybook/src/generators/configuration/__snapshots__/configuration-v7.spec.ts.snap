@@ -21,69 +21,69 @@ export default config;
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 1`] = `
-Object {
+{
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "test-ui-lib",
   "projectType": "library",
   "root": "libs/test-ui-lib",
   "sourceRoot": "libs/test-ui-lib/src",
-  "tags": Array [],
-  "targets": Object {
-    "build-storybook": Object {
-      "configurations": Object {
-        "ci": Object {
+  "tags": [],
+  "targets": {
+    "build-storybook": {
+      "configurations": {
+        "ci": {
           "quiet": true,
         },
       },
       "executor": "@storybook/angular:build-storybook",
-      "options": Object {
+      "options": {
         "browserTarget": "test-ui-lib:build-storybook",
         "compodoc": false,
         "configDir": "libs/test-ui-lib/.storybook",
         "outputDir": "dist/storybook/test-ui-lib",
       },
-      "outputs": Array [
+      "outputs": [
         "{options.outputDir}",
       ],
     },
-    "lint": Object {
+    "lint": {
       "executor": "@nrwl/linter:eslint",
-      "options": Object {
-        "lintFilePatterns": Array [
+      "options": {
+        "lintFilePatterns": [
           "libs/test-ui-lib/**/*.ts",
         ],
       },
-      "outputs": Array [
+      "outputs": [
         "{options.outputFile}",
       ],
     },
-    "storybook": Object {
-      "configurations": Object {
-        "ci": Object {
+    "storybook": {
+      "configurations": {
+        "ci": {
           "quiet": true,
         },
       },
       "executor": "@storybook/angular:start-storybook",
-      "options": Object {
+      "options": {
         "browserTarget": "test-ui-lib:build-storybook",
         "compodoc": false,
         "configDir": "libs/test-ui-lib/.storybook",
         "port": 4400,
       },
     },
-    "test": Object {
-      "configurations": Object {
-        "ci": Object {
+    "test": {
+      "configurations": {
+        "ci": {
           "ci": true,
           "codeCoverage": true,
         },
       },
       "executor": "@nrwl/jest:jest",
-      "options": Object {
+      "options": {
         "jestConfig": "libs/test-ui-lib/jest.config.ts",
         "passWithNoTests": true,
       },
-      "outputs": Array [
+      "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
       ],
     },
@@ -95,20 +95,20 @@ exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities sh
 
 exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 3`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true
   },
 
-  \\"exclude\\": [\\"../**/*.spec.ts\\"],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.ts\\",
-    \\"*.js\\"
+  "exclude": ["../**/*.spec.ts"],
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.ts",
+    "*.js"
   ]
 }
 "
@@ -136,29 +136,29 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities should have the proper typings 1`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -188,29 +188,29 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -242,30 +242,30 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.ts\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.ts",
+    "*.js"
   ]
 }
 "
@@ -291,29 +291,29 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -339,19 +339,19 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true
   },
 
-  \\"exclude\\": [\\"../**/*.spec.ts\\"],
-  \\"include\\": [
-    \\"../components/**/*.stories.ts\\",
-    \\"../components/**/*.stories.js\\",
-    \\"../components/**/*.stories.jsx\\",
-    \\"../components/**/*.stories.tsx\\",
-    \\"../components/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "exclude": ["../**/*.spec.ts"],
+  "include": [
+    "../components/**/*.stories.ts",
+    "../components/**/*.stories.js",
+    "../components/**/*.stories.jsx",
+    "../components/**/*.stories.tsx",
+    "../components/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -381,29 +381,29 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -433,29 +433,29 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -481,29 +481,29 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -533,19 +533,19 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true
   },
 
-  \\"exclude\\": [\\"../**/*.spec.ts\\"],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "exclude": ["../**/*.spec.ts"],
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -571,19 +571,19 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/ww1/.storybook/" 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true
   },
 
-  \\"exclude\\": [\\"../**/*.spec.ts\\"],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "exclude": ["../**/*.spec.ts"],
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -609,29 +609,29 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -661,29 +661,29 @@ export default config;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -691,288 +691,288 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should have updated all their target configurations correctly 1`] = `
 Map {
-  "main-vite" => Object {
+  "main-vite" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "main-vite",
     "projectType": "application",
     "root": "apps/main-vite",
     "sourceRoot": "apps/main-vite/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "development": {
             "mode": "development",
           },
-          "production": Object {
+          "production": {
             "mode": "production",
           },
         },
         "defaultConfiguration": "production",
         "executor": "@nrwl/vite:build",
-        "options": Object {
+        "options": {
           "configFile": "apps/main-vite/vite.config.ts",
           "outputPath": "dist/apps/main-vite",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:build",
-        "options": Object {
+        "options": {
           "configDir": "apps/main-vite/.storybook",
           "outputDir": "dist/storybook/main-vite",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/main-vite/**/*.{ts,tsx,js,jsx}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "serve": Object {
-        "configurations": Object {
-          "development": Object {
+      "serve": {
+        "configurations": {
+          "development": {
             "buildTarget": "main-vite:build:development",
             "hmr": true,
           },
-          "production": Object {
+          "production": {
             "buildTarget": "main-vite:build:production",
             "hmr": false,
           },
         },
         "defaultConfiguration": "development",
         "executor": "@nrwl/vite:dev-server",
-        "options": Object {
+        "options": {
           "buildTarget": "main-vite:build",
         },
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:storybook",
-        "options": Object {
+        "options": {
           "configDir": "apps/main-vite/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/vite:test",
-        "options": Object {
+        "options": {
           "passWithNoTests": true,
           "reportsDirectory": "../../coverage/apps/main-vite",
         },
-        "outputs": Array [
+        "outputs": [
           "coverage/apps/main-vite",
         ],
       },
     },
   },
-  "main-vite-e2e" => Object {
+  "main-vite-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "main-vite",
     ],
     "name": "main-vite-e2e",
     "projectType": "application",
     "root": "apps/main-vite-e2e",
     "sourceRoot": "apps/main-vite-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "production": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "production": {
             "devServerTarget": "main-vite:serve:production",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/main-vite-e2e/cypress.config.ts",
           "devServerTarget": "main-vite:serve:development",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/main-vite-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "main-vite-ts" => Object {
+  "main-vite-ts" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "main-vite-ts",
     "projectType": "application",
     "root": "apps/main-vite-ts",
     "sourceRoot": "apps/main-vite-ts/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "development": {
             "mode": "development",
           },
-          "production": Object {
+          "production": {
             "mode": "production",
           },
         },
         "defaultConfiguration": "production",
         "executor": "@nrwl/vite:build",
-        "options": Object {
+        "options": {
           "configFile": "apps/main-vite-ts/vite.config.custom.ts",
           "outputPath": "dist/apps/main-vite-ts",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:build",
-        "options": Object {
+        "options": {
           "configDir": "apps/main-vite-ts/.storybook",
           "outputDir": "dist/storybook/main-vite-ts",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/main-vite-ts/**/*.{ts,tsx,js,jsx}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "serve": Object {
-        "configurations": Object {
-          "development": Object {
+      "serve": {
+        "configurations": {
+          "development": {
             "buildTarget": "main-vite-ts:build:development",
             "hmr": true,
           },
-          "production": Object {
+          "production": {
             "buildTarget": "main-vite-ts:build:production",
             "hmr": false,
           },
         },
         "defaultConfiguration": "development",
         "executor": "@nrwl/vite:dev-server",
-        "options": Object {
+        "options": {
           "buildTarget": "main-vite-ts:build",
         },
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:storybook",
-        "options": Object {
+        "options": {
           "configDir": "apps/main-vite-ts/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/vite:test",
-        "options": Object {
+        "options": {
           "passWithNoTests": true,
           "reportsDirectory": "../../coverage/apps/main-vite-ts",
         },
-        "outputs": Array [
+        "outputs": [
           "coverage/apps/main-vite-ts",
         ],
       },
     },
   },
-  "main-vite-ts-e2e" => Object {
+  "main-vite-ts-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "main-vite-ts",
     ],
     "name": "main-vite-ts-e2e",
     "projectType": "application",
     "root": "apps/main-vite-ts-e2e",
     "sourceRoot": "apps/main-vite-ts-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "production": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "production": {
             "devServerTarget": "main-vite-ts:serve:production",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/main-vite-ts-e2e/cypress.config.ts",
           "devServerTarget": "main-vite-ts:serve:development",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/main-vite-ts-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "main-webpack" => Object {
+  "main-webpack" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "main-webpack",
     "projectType": "application",
     "root": "apps/main-webpack",
     "sourceRoot": "apps/main-webpack/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "development": {
             "extractLicenses": false,
             "optimization": false,
             "sourceMap": true,
             "vendorChunk": true,
           },
-          "production": Object {
+          "production": {
             "extractLicenses": true,
-            "fileReplacements": Array [
-              Object {
+            "fileReplacements": [
+              {
                 "replace": "apps/main-webpack/src/environments/environment.ts",
                 "with": "apps/main-webpack/src/environments/environment.prod.ts",
               },
@@ -986,8 +986,8 @@ Map {
         },
         "defaultConfiguration": "production",
         "executor": "@nrwl/webpack:webpack",
-        "options": Object {
-          "assets": Array [
+        "options": {
+          "assets": [
             "apps/main-webpack/src/favicon.ico",
             "apps/main-webpack/src/assets",
           ],
@@ -997,289 +997,289 @@ Map {
           "main": "apps/main-webpack/src/main.tsx",
           "outputPath": "dist/apps/main-webpack",
           "polyfills": "apps/main-webpack/src/polyfills.ts",
-          "scripts": Array [],
-          "styles": Array [
+          "scripts": [],
+          "styles": [
             "apps/main-webpack/src/styles.css",
           ],
           "tsConfig": "apps/main-webpack/tsconfig.app.json",
           "webpackConfig": "@nrwl/react/plugins/webpack",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:build",
-        "options": Object {
+        "options": {
           "configDir": "apps/main-webpack/.storybook",
           "outputDir": "dist/storybook/main-webpack",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/main-webpack/**/*.{ts,tsx,js,jsx}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "serve": Object {
-        "configurations": Object {
-          "development": Object {
+      "serve": {
+        "configurations": {
+          "development": {
             "buildTarget": "main-webpack:build:development",
           },
-          "production": Object {
+          "production": {
             "buildTarget": "main-webpack:build:production",
             "hmr": false,
           },
         },
         "defaultConfiguration": "development",
         "executor": "@nrwl/webpack:dev-server",
-        "options": Object {
+        "options": {
           "buildTarget": "main-webpack:build",
           "hmr": true,
         },
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:storybook",
-        "options": Object {
+        "options": {
           "configDir": "apps/main-webpack/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "apps/main-webpack/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "main-webpack-e2e" => Object {
+  "main-webpack-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "main-webpack",
     ],
     "name": "main-webpack-e2e",
     "projectType": "application",
     "root": "apps/main-webpack-e2e",
     "sourceRoot": "apps/main-webpack-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "production": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "production": {
             "devServerTarget": "main-webpack:serve:production",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/main-webpack-e2e/cypress.config.ts",
           "devServerTarget": "main-webpack:serve:development",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/main-webpack-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "my-plugin-e2e" => Object {
+  "my-plugin-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "my-plugin",
     ],
     "name": "my-plugin-e2e",
     "projectType": "application",
     "root": "apps/my-plugin-e2e",
     "sourceRoot": "apps/my-plugin-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
         "executor": "@nrwl/nx-plugin:e2e",
-        "options": Object {
+        "options": {
           "jestConfig": "apps/my-plugin-e2e/jest.config.ts",
           "target": "my-plugin:build",
         },
       },
     },
   },
-  "nextapp" => Object {
+  "nextapp" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "nextapp",
     "projectType": "application",
     "root": "apps/nextapp",
     "sourceRoot": "apps/nextapp",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "development": {
             "outputPath": "apps/nextapp",
           },
-          "production": Object {},
+          "production": {},
         },
         "defaultConfiguration": "production",
         "executor": "@nrwl/next:build",
-        "options": Object {
+        "options": {
           "outputPath": "dist/apps/nextapp",
           "root": "apps/nextapp",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:build",
-        "options": Object {
+        "options": {
           "configDir": "apps/nextapp/.storybook",
           "outputDir": "dist/storybook/nextapp",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "export": Object {
+      "export": {
         "executor": "@nrwl/next:export",
-        "options": Object {
+        "options": {
           "buildTarget": "nextapp:build:production",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/nextapp/**/*.{ts,tsx,js,jsx}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "serve": Object {
-        "configurations": Object {
-          "development": Object {
+      "serve": {
+        "configurations": {
+          "development": {
             "buildTarget": "nextapp:build:development",
             "dev": true,
           },
-          "production": Object {
+          "production": {
             "buildTarget": "nextapp:build:production",
             "dev": false,
           },
         },
         "defaultConfiguration": "development",
         "executor": "@nrwl/next:server",
-        "options": Object {
+        "options": {
           "buildTarget": "nextapp:build",
           "dev": true,
         },
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:storybook",
-        "options": Object {
+        "options": {
           "configDir": "apps/nextapp/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "apps/nextapp/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "nextapp-e2e" => Object {
+  "nextapp-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "nextapp",
     ],
     "name": "nextapp-e2e",
     "projectType": "application",
     "root": "apps/nextapp-e2e",
     "sourceRoot": "apps/nextapp-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "production": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "production": {
             "devServerTarget": "nextapp:serve:production",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/nextapp-e2e/cypress.config.ts",
           "devServerTarget": "nextapp:serve:development",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/nextapp-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "ngapp" => Object {
+  "ngapp" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "ngapp",
     "prefix": "imported-libs",
     "projectType": "application",
     "root": "apps/ngapp",
     "sourceRoot": "apps/ngapp/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "development": {
             "buildOptimizer": false,
             "extractLicenses": false,
             "namedChunks": true,
@@ -1287,14 +1287,14 @@ Map {
             "sourceMap": true,
             "vendorChunk": true,
           },
-          "production": Object {
-            "budgets": Array [
-              Object {
+          "production": {
+            "budgets": [
+              {
                 "maximumError": "1mb",
                 "maximumWarning": "500kb",
                 "type": "initial",
               },
-              Object {
+              {
                 "maximumError": "4kb",
                 "maximumWarning": "2kb",
                 "type": "anyComponentStyle",
@@ -1305,231 +1305,231 @@ Map {
         },
         "defaultConfiguration": "production",
         "executor": "@angular-devkit/build-angular:browser",
-        "options": Object {
-          "assets": Array [
+        "options": {
+          "assets": [
             "apps/ngapp/src/favicon.ico",
             "apps/ngapp/src/assets",
           ],
           "index": "apps/ngapp/src/index.html",
           "main": "apps/ngapp/src/main.ts",
           "outputPath": "dist/apps/ngapp",
-          "polyfills": Array [
+          "polyfills": [
             "zone.js",
           ],
-          "scripts": Array [],
-          "styles": Array [
+          "scripts": [],
+          "styles": [
             "apps/ngapp/src/styles.css",
           ],
           "tsConfig": "apps/ngapp/tsconfig.app.json",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@storybook/angular:build-storybook",
-        "options": Object {
+        "options": {
           "browserTarget": "ngapp:build",
           "compodoc": false,
           "configDir": "apps/ngapp/.storybook",
           "outputDir": "dist/storybook/ngapp",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "extract-i18n": Object {
+      "extract-i18n": {
         "executor": "@angular-devkit/build-angular:extract-i18n",
-        "options": Object {
+        "options": {
           "browserTarget": "ngapp:build",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/ngapp/**/*.ts",
             "apps/ngapp/**/*.html",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "serve": Object {
-        "configurations": Object {
-          "development": Object {
+      "serve": {
+        "configurations": {
+          "development": {
             "browserTarget": "ngapp:build:development",
           },
-          "production": Object {
+          "production": {
             "browserTarget": "ngapp:build:production",
           },
         },
         "defaultConfiguration": "development",
         "executor": "@angular-devkit/build-angular:dev-server",
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@storybook/angular:start-storybook",
-        "options": Object {
+        "options": {
           "browserTarget": "ngapp:build",
           "compodoc": false,
           "configDir": "apps/ngapp/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "apps/ngapp/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "ngapp-e2e" => Object {
+  "ngapp-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "ngapp",
     ],
     "name": "ngapp-e2e",
     "projectType": "application",
     "root": "apps/ngapp-e2e",
     "sourceRoot": "apps/ngapp-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "production": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "production": {
             "devServerTarget": "ngapp:serve:production",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/ngapp-e2e/cypress.config.ts",
           "devServerTarget": "ngapp:serve:development",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/ngapp-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "nglib-e2e" => Object {
+  "nglib-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "nglib",
     ],
     "name": "nglib-e2e",
     "projectType": "application",
     "root": "apps/nglib-e2e",
     "sourceRoot": "apps/nglib-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "ci": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "ci": {
             "devServerTarget": "nglib:storybook:ci",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/nglib-e2e/cypress.config.ts",
           "devServerTarget": "nglib:storybook",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/nglib-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "react-rollup-e2e" => Object {
+  "react-rollup-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "react-rollup",
     ],
     "name": "react-rollup-e2e",
     "projectType": "application",
     "root": "apps/react-rollup-e2e",
     "sourceRoot": "apps/react-rollup-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "ci": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "ci": {
             "devServerTarget": "react-rollup:storybook:ci",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/react-rollup-e2e/cypress.config.ts",
           "devServerTarget": "react-rollup:storybook",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/react-rollup-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "react-swc" => Object {
+  "react-swc" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "react-swc",
     "projectType": "application",
     "root": "apps/react-swc",
     "sourceRoot": "apps/react-swc/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "development": {
             "extractLicenses": false,
             "optimization": false,
             "sourceMap": true,
             "vendorChunk": true,
           },
-          "production": Object {
+          "production": {
             "extractLicenses": true,
-            "fileReplacements": Array [
-              Object {
+            "fileReplacements": [
+              {
                 "replace": "apps/react-swc/src/environments/environment.ts",
                 "with": "apps/react-swc/src/environments/environment.prod.ts",
               },
@@ -1543,8 +1543,8 @@ Map {
         },
         "defaultConfiguration": "production",
         "executor": "@nrwl/webpack:webpack",
-        "options": Object {
-          "assets": Array [
+        "options": {
+          "assets": [
             "apps/react-swc/src/favicon.ico",
             "apps/react-swc/src/assets",
           ],
@@ -1553,309 +1553,309 @@ Map {
           "index": "apps/react-swc/src/index.html",
           "main": "apps/react-swc/src/main.tsx",
           "outputPath": "dist/apps/react-swc",
-          "scripts": Array [],
-          "styles": Array [
+          "scripts": [],
+          "styles": [
             "apps/react-swc/src/styles.css",
           ],
           "tsConfig": "apps/react-swc/tsconfig.app.json",
           "webpackConfig": "apps/react-swc/webpack.config.js",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:build",
-        "options": Object {
+        "options": {
           "configDir": "apps/react-swc/.storybook",
           "outputDir": "dist/storybook/react-swc",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/react-swc/**/*.{ts,tsx,js,jsx}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "serve": Object {
-        "configurations": Object {
-          "development": Object {
+      "serve": {
+        "configurations": {
+          "development": {
             "buildTarget": "react-swc:build:development",
           },
-          "production": Object {
+          "production": {
             "buildTarget": "react-swc:build:production",
             "hmr": false,
           },
         },
         "defaultConfiguration": "development",
         "executor": "@nrwl/webpack:dev-server",
-        "options": Object {
+        "options": {
           "buildTarget": "react-swc:build",
           "hmr": true,
         },
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:storybook",
-        "options": Object {
+        "options": {
           "configDir": "apps/react-swc/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "apps/react-swc/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "react-swc-e2e" => Object {
+  "react-swc-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "react-swc",
     ],
     "name": "react-swc-e2e",
     "projectType": "application",
     "root": "apps/react-swc-e2e",
     "sourceRoot": "apps/react-swc-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "production": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "production": {
             "devServerTarget": "react-swc:serve:production",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/react-swc-e2e/cypress.config.ts",
           "devServerTarget": "react-swc:serve:development",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/react-swc-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "react-vite-e2e" => Object {
+  "react-vite-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "react-vite",
     ],
     "name": "react-vite-e2e",
     "projectType": "application",
     "root": "apps/react-vite-e2e",
     "sourceRoot": "apps/react-vite-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "ci": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "ci": {
             "devServerTarget": "react-vite:storybook:ci",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/react-vite-e2e/cypress.config.ts",
           "devServerTarget": "react-vite:storybook",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/react-vite-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "reapp" => Object {
+  "reapp" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "reapp",
     "projectType": "application",
     "root": "apps/reapp",
     "sourceRoot": "apps/reapp/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "development": {
             "mode": "development",
           },
-          "production": Object {
+          "production": {
             "mode": "production",
           },
         },
         "defaultConfiguration": "production",
         "executor": "@nrwl/vite:build",
-        "options": Object {
+        "options": {
           "configFile": "apps/reapp/vite.config.ts",
           "outputPath": "dist/apps/reapp",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:build",
-        "options": Object {
+        "options": {
           "configDir": "apps/reapp/.storybook",
           "outputDir": "dist/storybook/reapp",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/reapp/**/*.{ts,tsx,js,jsx}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "serve": Object {
-        "configurations": Object {
-          "development": Object {
+      "serve": {
+        "configurations": {
+          "development": {
             "buildTarget": "reapp:build:development",
             "hmr": true,
           },
-          "production": Object {
+          "production": {
             "buildTarget": "reapp:build:production",
             "hmr": false,
           },
         },
         "defaultConfiguration": "development",
         "executor": "@nrwl/vite:dev-server",
-        "options": Object {
+        "options": {
           "buildTarget": "reapp:build",
         },
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:storybook",
-        "options": Object {
+        "options": {
           "configDir": "apps/reapp/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/vite:test",
-        "options": Object {
+        "options": {
           "passWithNoTests": true,
           "reportsDirectory": "../../coverage/apps/reapp",
         },
-        "outputs": Array [
+        "outputs": [
           "coverage/apps/reapp",
         ],
       },
     },
   },
-  "reapp-e2e" => Object {
+  "reapp-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "reapp",
     ],
     "name": "reapp-e2e",
     "projectType": "application",
     "root": "apps/reapp-e2e",
     "sourceRoot": "apps/reapp-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "production": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "production": {
             "devServerTarget": "reapp:serve:production",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/reapp-e2e/cypress.config.ts",
           "devServerTarget": "reapp:serve:development",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/reapp-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "reappw" => Object {
+  "reappw" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "reappw",
     "projectType": "application",
     "root": "apps/reappw",
     "sourceRoot": "apps/reappw/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "development": {
             "extractLicenses": false,
             "optimization": false,
             "sourceMap": true,
             "vendorChunk": true,
           },
-          "production": Object {
+          "production": {
             "extractLicenses": true,
-            "fileReplacements": Array [
-              Object {
+            "fileReplacements": [
+              {
                 "replace": "apps/reappw/src/environments/environment.ts",
                 "with": "apps/reappw/src/environments/environment.prod.ts",
               },
@@ -1869,8 +1869,8 @@ Map {
         },
         "defaultConfiguration": "production",
         "executor": "@nrwl/webpack:webpack",
-        "options": Object {
-          "assets": Array [
+        "options": {
+          "assets": [
             "apps/reappw/src/favicon.ico",
             "apps/reappw/src/assets",
           ],
@@ -1879,266 +1879,266 @@ Map {
           "index": "apps/reappw/src/index.html",
           "main": "apps/reappw/src/main.tsx",
           "outputPath": "dist/apps/reappw",
-          "scripts": Array [],
-          "styles": Array [
+          "scripts": [],
+          "styles": [
             "apps/reappw/src/styles.css",
           ],
           "tsConfig": "apps/reappw/tsconfig.app.json",
           "webpackConfig": "@nrwl/react/plugins/webpack",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:build",
-        "options": Object {
+        "options": {
           "configDir": "apps/reappw/.storybook",
           "outputDir": "dist/storybook/reappw",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/reappw/**/*.{ts,tsx,js,jsx}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "serve": Object {
-        "configurations": Object {
-          "development": Object {
+      "serve": {
+        "configurations": {
+          "development": {
             "buildTarget": "reappw:build:development",
           },
-          "production": Object {
+          "production": {
             "buildTarget": "reappw:build:production",
             "hmr": false,
           },
         },
         "defaultConfiguration": "development",
         "executor": "@nrwl/webpack:dev-server",
-        "options": Object {
+        "options": {
           "buildTarget": "reappw:build",
           "hmr": true,
         },
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:storybook",
-        "options": Object {
+        "options": {
           "configDir": "apps/reappw/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "apps/reappw/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "reappw-e2e" => Object {
+  "reappw-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "reappw",
     ],
     "name": "reappw-e2e",
     "projectType": "application",
     "root": "apps/reappw-e2e",
     "sourceRoot": "apps/reappw-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "production": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "production": {
             "devServerTarget": "reappw:serve:production",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/reappw-e2e/cypress.config.ts",
           "devServerTarget": "reappw:serve:development",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/reappw-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "wv1" => Object {
+  "wv1" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "wv1",
     "projectType": "application",
     "root": "apps/wv1",
     "sourceRoot": "apps/wv1/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "development": {
             "mode": "development",
           },
-          "production": Object {
+          "production": {
             "mode": "production",
           },
         },
         "defaultConfiguration": "production",
         "executor": "@nrwl/vite:build",
-        "options": Object {
+        "options": {
           "configFile": "apps/wv1/vite.config.custom.ts",
           "outputPath": "dist/apps/wv1",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:build",
-        "options": Object {
+        "options": {
           "configDir": "apps/wv1/.storybook",
           "outputDir": "dist/storybook/wv1",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/wv1/**/*.ts",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "serve": Object {
-        "configurations": Object {
-          "development": Object {
+      "serve": {
+        "configurations": {
+          "development": {
             "buildTarget": "wv1:build:development",
             "hmr": true,
           },
-          "production": Object {
+          "production": {
             "buildTarget": "wv1:build:production",
             "hmr": false,
           },
         },
         "defaultConfiguration": "development",
         "executor": "@nrwl/vite:dev-server",
-        "options": Object {
+        "options": {
           "buildTarget": "wv1:build",
         },
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:storybook",
-        "options": Object {
+        "options": {
           "configDir": "apps/wv1/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "apps/wv1/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "wv1-e2e" => Object {
+  "wv1-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "wv1",
     ],
     "name": "wv1-e2e",
     "projectType": "application",
     "root": "apps/wv1-e2e",
     "sourceRoot": "apps/wv1-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "production": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "production": {
             "devServerTarget": "wv1:serve:production",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/wv1-e2e/cypress.config.ts",
           "devServerTarget": "wv1:serve:development",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/wv1-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "ww1" => Object {
+  "ww1" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "ww1",
     "projectType": "application",
     "root": "apps/ww1",
     "sourceRoot": "apps/ww1/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "production": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "production": {
             "extractLicenses": true,
-            "fileReplacements": Array [
-              Object {
+            "fileReplacements": [
+              {
                 "replace": "apps/ww1/src/environments/environment.ts",
                 "with": "apps/ww1/src/environments/environment.prod.ts",
               },
@@ -2152,8 +2152,8 @@ Map {
         },
         "defaultConfiguration": "production",
         "executor": "@nrwl/webpack:webpack",
-        "options": Object {
-          "assets": Array [
+        "options": {
+          "assets": [
             "apps/ww1/src/favicon.ico",
             "apps/ww1/src/assets",
           ],
@@ -2162,144 +2162,144 @@ Map {
           "index": "apps/ww1/src/index.html",
           "main": "apps/ww1/src/main.ts",
           "outputPath": "dist/apps/ww1",
-          "scripts": Array [],
-          "styles": Array [
+          "scripts": [],
+          "styles": [
             "apps/ww1/src/styles.css",
           ],
           "tsConfig": "apps/ww1/tsconfig.app.json",
           "webpackConfig": "apps/ww1/webpack.config.js",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:build",
-        "options": Object {
+        "options": {
           "configDir": "apps/ww1/.storybook",
           "outputDir": "dist/storybook/ww1",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/ww1/**/*.ts",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "serve": Object {
-        "configurations": Object {
-          "production": Object {
+      "serve": {
+        "configurations": {
+          "production": {
             "buildTarget": "ww1:build:production",
           },
         },
         "executor": "@nrwl/webpack:dev-server",
-        "options": Object {
+        "options": {
           "buildTarget": "ww1:build",
         },
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:storybook",
-        "options": Object {
+        "options": {
           "configDir": "apps/ww1/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "apps/ww1/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "ww1-e2e" => Object {
+  "ww1-e2e" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "implicitDependencies": Array [
+    "implicitDependencies": [
       "ww1",
     ],
     "name": "ww1-e2e",
     "projectType": "application",
     "root": "apps/ww1-e2e",
     "sourceRoot": "apps/ww1-e2e/src",
-    "tags": Array [],
-    "targets": Object {
-      "e2e": Object {
-        "configurations": Object {
-          "production": Object {
+    "tags": [],
+    "targets": {
+      "e2e": {
+        "configurations": {
+          "production": {
             "devServerTarget": "ww1:serve:production",
           },
         },
         "executor": "@nrwl/cypress:cypress",
-        "options": Object {
+        "options": {
           "cypressConfig": "apps/ww1-e2e/cypress.config.ts",
           "devServerTarget": "ww1:serve",
           "testingType": "e2e",
         },
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "apps/ww1-e2e/**/*.{js,ts}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
     },
   },
-  "my-plugin" => Object {
+  "my-plugin" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "my-plugin",
     "projectType": "library",
     "root": "libs/my-plugin",
     "sourceRoot": "libs/my-plugin/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
+    "tags": [],
+    "targets": {
+      "build": {
         "executor": "@nrwl/js:tsc",
-        "options": Object {
-          "assets": Array [
+        "options": {
+          "assets": [
             "libs/my-plugin/*.md",
-            Object {
+            {
               "glob": "**/!(*.ts)",
               "input": "./libs/my-plugin/src",
               "output": "./src",
             },
-            Object {
+            {
               "glob": "**/*.d.ts",
               "input": "./libs/my-plugin/src",
               "output": "./src",
             },
-            Object {
+            {
               "glob": "generators.json",
               "input": "./libs/my-plugin",
               "output": ".",
             },
-            Object {
+            {
               "glob": "executors.json",
               "input": "./libs/my-plugin",
               "output": ".",
@@ -2309,126 +2309,126 @@ Map {
           "outputPath": "dist/libs/my-plugin",
           "tsConfig": "libs/my-plugin/tsconfig.lib.json",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "libs/my-plugin/**/*.ts",
             "libs/my-plugin/generators.json",
             "libs/my-plugin/executors.json",
             "libs/my-plugin/package.json",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "libs/my-plugin/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "mylib" => Object {
+  "mylib" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "mylib",
     "projectType": "library",
     "root": "libs/mylib",
     "sourceRoot": "libs/mylib/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
+    "tags": [],
+    "targets": {
+      "build": {
         "executor": "@imported-libs/my-plugin:build",
       },
     },
   },
-  "nglib" => Object {
+  "nglib" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "nglib",
     "prefix": "imported-libs",
     "projectType": "library",
     "root": "libs/nglib",
     "sourceRoot": "libs/nglib/src",
-    "tags": Array [],
-    "targets": Object {
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+    "tags": [],
+    "targets": {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@storybook/angular:build-storybook",
-        "options": Object {
+        "options": {
           "browserTarget": "nglib:build-storybook",
           "compodoc": false,
           "configDir": "libs/nglib/.storybook",
           "outputDir": "dist/storybook/nglib",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "libs/nglib/**/*.ts",
             "libs/nglib/**/*.html",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@storybook/angular:start-storybook",
-        "options": Object {
+        "options": {
           "browserTarget": "nglib:build-storybook",
           "compodoc": false,
           "configDir": "libs/nglib/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "libs/nglib/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "react-rollup" => Object {
+  "react-rollup" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "react-rollup",
     "projectType": "library",
     "root": "libs/react-rollup",
     "sourceRoot": "libs/react-rollup/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
+    "tags": [],
+    "targets": {
+      "build": {
         "executor": "@nrwl/rollup:rollup",
-        "options": Object {
-          "assets": Array [
-            Object {
+        "options": {
+          "assets": [
+            {
               "glob": "libs/react-rollup/README.md",
               "input": ".",
               "output": ".",
@@ -2436,7 +2436,7 @@ Map {
           ],
           "compiler": "babel",
           "entryFile": "libs/react-rollup/src/index.ts",
-          "external": Array [
+          "external": [
             "react/jsx-runtime",
           ],
           "outputPath": "dist/libs/react-rollup",
@@ -2444,73 +2444,73 @@ Map {
           "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
           "tsConfig": "libs/react-rollup/tsconfig.lib.json",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:build",
-        "options": Object {
+        "options": {
           "configDir": "libs/react-rollup/.storybook",
           "outputDir": "dist/storybook/react-rollup",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "libs/react-rollup/**/*.{ts,tsx,js,jsx}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:storybook",
-        "options": Object {
+        "options": {
           "configDir": "libs/react-rollup/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "libs/react-rollup/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "react-rollup-2" => Object {
+  "react-rollup-2" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "react-rollup-2",
     "projectType": "library",
     "root": "libs/react-rollup-2",
     "sourceRoot": "libs/react-rollup-2/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
+    "tags": [],
+    "targets": {
+      "build": {
         "executor": "@nrwl/rollup:rollup",
-        "options": Object {
-          "assets": Array [
-            Object {
+        "options": {
+          "assets": [
+            {
               "glob": "libs/react-rollup-2/README.md",
               "input": ".",
               "output": ".",
@@ -2518,7 +2518,7 @@ Map {
           ],
           "compiler": "babel",
           "entryFile": "libs/react-rollup-2/src/index.ts",
-          "external": Array [
+          "external": [
             "react/jsx-runtime",
           ],
           "outputPath": "dist/libs/react-rollup-2",
@@ -2526,279 +2526,279 @@ Map {
           "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
           "tsConfig": "libs/react-rollup-2/tsconfig.lib.json",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "libs/react-rollup-2/**/*.{ts,tsx,js,jsx}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "libs/react-rollup-2/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "react-vite" => Object {
+  "react-vite" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "react-vite",
     "projectType": "library",
     "root": "libs/react-vite",
     "sourceRoot": "libs/react-vite/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "development": {
             "mode": "development",
           },
-          "production": Object {
+          "production": {
             "mode": "production",
           },
         },
         "defaultConfiguration": "production",
         "executor": "@nrwl/vite:build",
-        "options": Object {
+        "options": {
           "outputPath": "dist/libs/react-vite",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "build-storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:build",
-        "options": Object {
+        "options": {
           "configDir": "libs/react-vite/.storybook",
           "outputDir": "dist/storybook/react-vite",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputDir}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "libs/react-vite/**/*.{ts,tsx,js,jsx}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
+      "storybook": {
+        "configurations": {
+          "ci": {
             "quiet": true,
           },
         },
         "executor": "@nrwl/storybook:storybook",
-        "options": Object {
+        "options": {
           "configDir": "libs/react-vite/.storybook",
           "port": 4400,
         },
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/vite:test",
-        "options": Object {
+        "options": {
           "passWithNoTests": true,
           "reportsDirectory": "../../coverage/libs/react-vite",
         },
-        "outputs": Array [
+        "outputs": [
           "coverage/libs/react-vite",
         ],
       },
     },
   },
-  "react-vite-2" => Object {
+  "react-vite-2" => {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "react-vite-2",
     "projectType": "library",
     "root": "libs/react-vite-2",
     "sourceRoot": "libs/react-vite-2/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
+    "tags": [],
+    "targets": {
+      "build": {
+        "configurations": {
+          "development": {
             "mode": "development",
           },
-          "production": Object {
+          "production": {
             "mode": "production",
           },
         },
         "defaultConfiguration": "production",
         "executor": "@nrwl/vite:build",
-        "options": Object {
+        "options": {
           "outputPath": "dist/libs/react-vite-2",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "libs/react-vite-2/**/*.{ts,tsx,js,jsx}",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/vite:test",
-        "options": Object {
+        "options": {
           "passWithNoTests": true,
           "reportsDirectory": "../../coverage/libs/react-vite-2",
         },
-        "outputs": Array [
+        "outputs": [
           "coverage/libs/react-vite-2",
         ],
       },
     },
   },
-  "utils-one" => Object {
+  "utils-one" => {
     "$schema": "../../../node_modules/nx/schemas/project-schema.json",
     "name": "utils-one",
     "projectType": "library",
     "root": "libs/utils/one",
     "sourceRoot": "libs/utils/one/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
+    "tags": [],
+    "targets": {
+      "build": {
         "executor": "@nrwl/webpack:webpack",
-        "options": Object {
-          "assets": Array [],
+        "options": {
+          "assets": [],
           "main": "libs/utils/one/src/index.ts",
           "outputPath": "dist/libs/utils/one",
           "tsConfig": "libs/utils/one/tsconfig.lib.json",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "libs/utils/one/**/*.ts",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "libs/utils/one/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "utils-three-vite" => Object {
+  "utils-three-vite" => {
     "$schema": "../../../node_modules/nx/schemas/project-schema.json",
     "name": "utils-three-vite",
     "projectType": "library",
     "root": "libs/utils/three-vite",
     "sourceRoot": "libs/utils/three-vite/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
+    "tags": [],
+    "targets": {
+      "build": {
         "executor": "@nrwl/vite:build",
-        "options": Object {
+        "options": {
           "outputPath": "dist/libs/utils/three-vite",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "libs/utils/three-vite/**/*.ts",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "libs/utils/three-vite/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },
   },
-  "utils-two" => Object {
+  "utils-two" => {
     "$schema": "../../../node_modules/nx/schemas/project-schema.json",
     "name": "utils-two",
     "projectType": "library",
     "root": "libs/utils/two",
     "sourceRoot": "libs/utils/two/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
+    "tags": [],
+    "targets": {
+      "build": {
         "executor": "@nrwl/webpack:webpack",
-        "options": Object {
-          "assets": Array [],
+        "options": {
+          "assets": [],
           "main": "libs/utils/two/src/index.ts",
           "outputPath": "dist/libs/utils/two",
           "tsConfig": "libs/utils/two/tsconfig.lib.json",
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputPath}",
         ],
       },
-      "lint": Object {
+      "lint": {
         "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
+        "options": {
+          "lintFilePatterns": [
             "libs/utils/two/**/*.ts",
           ],
         },
-        "outputs": Array [
+        "outputs": [
           "{options.outputFile}",
         ],
       },
-      "test": Object {
+      "test": {
         "executor": "@nrwl/jest:jest",
-        "options": Object {
+        "options": {
           "jestConfig": "libs/utils/two/jest.config.ts",
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },

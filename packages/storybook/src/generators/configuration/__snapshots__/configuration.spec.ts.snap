@@ -14,12 +14,12 @@ exports[`@nrwl/storybook:configuration basic functionalities should generate a w
 `;
 
 exports[`@nrwl/storybook:configuration basic functionalities should generate files 1`] = `
-Object {
-  "affected": Object {
+{
+  "affected": {
     "defaultBase": "main",
   },
-  "namedInputs": Object {
-    "production": Array [
+  "namedInputs": {
+    "production": [
       "default",
       "!{projectRoot}/.eslintrc.json",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
@@ -30,39 +30,39 @@ Object {
     ],
   },
   "npmScope": "proj",
-  "targetDefaults": Object {
-    "build-storybook": Object {
-      "inputs": Array [
+  "targetDefaults": {
+    "build-storybook": {
+      "inputs": [
         "default",
         "^production",
         "!{projectRoot}/.storybook/**/*",
       ],
     },
-    "e2e": Object {
-      "inputs": Array [
+    "e2e": {
+      "inputs": [
         "default",
         "^production",
       ],
     },
-    "lint": Object {
-      "inputs": Array [
+    "lint": {
+      "inputs": [
         "default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/.eslintignore",
       ],
     },
-    "test": Object {
-      "inputs": Array [
+    "test": {
+      "inputs": [
         "default",
         "^production",
         "{workspaceRoot}/jest.preset.js",
       ],
     },
   },
-  "tasksRunnerOptions": Object {
-    "default": Object {
-      "options": Object {
-        "cacheableOperations": Array [
+  "tasksRunnerOptions": {
+    "default": {
+      "options": {
+        "cacheableOperations": [
           "build",
           "lint",
           "test",
@@ -77,7 +77,7 @@ Object {
 `;
 
 exports[`@nrwl/storybook:configuration basic functionalities should have the proper typings 1`] = `
-Array [
+[
   "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
   "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
   "../../../node_modules/@nrwl/react/typings/image.d.ts",
@@ -114,29 +114,29 @@ module.exports = {
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for NextJS buildable libs 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -172,29 +172,29 @@ module.exports = {
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for React apps using the swc compiler 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -230,29 +230,29 @@ module.exports = {
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for React buildable libs 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -292,30 +292,30 @@ module.exports = config;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJS libs 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.ts\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.ts",
+    "*.js"
   ]
 }
 "
@@ -365,30 +365,30 @@ module.exports = config;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJs apps 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../components/**/*.stories.ts\\",
-    \\"../components/**/*.stories.js\\",
-    \\"../components/**/*.stories.jsx\\",
-    \\"../components/**/*.stories.tsx\\",
-    \\"../components/**/*.stories.mdx\\",
-    \\"*.ts\\",
-    \\"*.js\\"
+  "include": [
+    "../components/**/*.stories.ts",
+    "../components/**/*.stories.js",
+    "../components/**/*.stories.jsx",
+    "../components/**/*.stories.tsx",
+    "../components/**/*.stories.mdx",
+    "*.ts",
+    "*.js"
   ]
 }
 "
@@ -428,30 +428,30 @@ module.exports = config;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for React apps 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.ts\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.ts",
+    "*.js"
   ]
 }
 "
@@ -479,30 +479,30 @@ module.exports = config;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS buildable libs 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.ts\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.ts",
+    "*.js"
   ]
 }
 "
@@ -530,30 +530,30 @@ module.exports = config;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS libs 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.ts\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.ts",
+    "*.js"
   ]
 }
 "
@@ -593,30 +593,30 @@ module.exports = config;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJs apps 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../components/**/*.stories.ts\\",
-    \\"../components/**/*.stories.js\\",
-    \\"../components/**/*.stories.jsx\\",
-    \\"../components/**/*.stories.tsx\\",
-    \\"../components/**/*.stories.mdx\\",
-    \\"*.ts\\",
-    \\"*.js\\"
+  "include": [
+    "../components/**/*.stories.ts",
+    "../components/**/*.stories.js",
+    "../components/**/*.stories.jsx",
+    "../components/**/*.stories.tsx",
+    "../components/**/*.stories.mdx",
+    "*.ts",
+    "*.js"
   ]
 }
 "
@@ -644,30 +644,30 @@ module.exports = config;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.ts\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.ts",
+    "*.js"
   ]
 }
 "
@@ -699,30 +699,30 @@ module.exports = config;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps using the swc compiler 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.ts\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.ts",
+    "*.js"
   ]
 }
 "
@@ -750,30 +750,30 @@ module.exports = config;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React buildable libs 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.ts\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.ts",
+    "*.js"
   ]
 }
 "
@@ -797,29 +797,29 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS buildable libs 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -843,29 +843,29 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS libs 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -902,29 +902,29 @@ module.exports = {
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJs apps 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../components/**/*.stories.ts\\",
-    \\"../components/**/*.stories.js\\",
-    \\"../components/**/*.stories.jsx\\",
-    \\"../components/**/*.stories.tsx\\",
-    \\"../components/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../components/**/*.stories.ts",
+    "../components/**/*.stories.js",
+    "../components/**/*.stories.jsx",
+    "../components/**/*.stories.tsx",
+    "../components/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -948,29 +948,29 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -998,29 +998,29 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps using the swc compiler 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
@@ -1044,29 +1044,29 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React buildable libs 2`] = `
 "{
-  \\"extends\\": \\"../tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"emitDecoratorMetadata\\": true,
-    \\"outDir\\": \\"\\"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "outDir": ""
   },
-  \\"files\\": [
-    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
-    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  "files": [
+    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nrwl/react/typings/image.d.ts"
   ],
-  \\"exclude\\": [
-    \\"../**/*.spec.ts\\",
-    \\"../**/*.spec.js\\",
-    \\"../**/*.spec.tsx\\",
-    \\"../**/*.spec.jsx\\"
+  "exclude": [
+    "../**/*.spec.ts",
+    "../**/*.spec.js",
+    "../**/*.spec.tsx",
+    "../**/*.spec.jsx"
   ],
-  \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
-    \\"*.js\\"
+  "include": [
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.js"
   ]
 }
 "
