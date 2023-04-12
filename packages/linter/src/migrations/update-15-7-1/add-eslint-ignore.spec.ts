@@ -84,15 +84,15 @@ describe('15.7.1 migration (add-eslintignore)', () => {
 
     expect(tree.exists('.eslintignore')).toBeTruthy();
     expect(readJson(tree, 'nx.json').targetDefaults).toMatchInlineSnapshot(`
-      Object {
-        "lint": Object {
-          "inputs": Array [
+      {
+        "lint": {
+          "inputs": [
             "default",
             "{workspaceRoot}/.eslintrc.json",
           ],
         },
-        "lint2": Object {
-          "inputs": Array [
+        "lint2": {
+          "inputs": [
             "default",
             "{workspaceRoot}/.eslintrc.json",
           ],

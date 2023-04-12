@@ -74,25 +74,25 @@ describe('@nrwl/linter:workspace-rules-project', () => {
 
     expect(readProjectConfiguration(tree, WORKSPACE_RULES_PROJECT_NAME))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "$schema": "../../node_modules/nx/schemas/project-schema.json",
         "name": "eslint-rules",
         "root": "tools/eslint-rules",
         "sourceRoot": "tools/eslint-rules",
-        "targets": Object {
-          "test": Object {
-            "configurations": Object {
-              "ci": Object {
+        "targets": {
+          "test": {
+            "configurations": {
+              "ci": {
                 "ci": true,
                 "codeCoverage": true,
               },
             },
             "executor": "@nrwl/jest:jest",
-            "options": Object {
+            "options": {
               "jestConfig": "tools/eslint-rules/jest.config.ts",
               "passWithNoTests": true,
             },
-            "outputs": Array [
+            "outputs": [
               "{workspaceRoot}/coverage/{projectRoot}",
             ],
           },

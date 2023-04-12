@@ -50,14 +50,14 @@ describe('@nrwl/linter:lint-project', () => {
 
         const projectConfig = readProjectConfiguration(tree, 'test-lib');
         expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
-          Object {
+          {
             "executor": "@nrwl/linter:eslint",
-            "options": Object {
-              "lintFilePatterns": Array [
+            "options": {
+              "lintFilePatterns": [
                 "**/*.ts",
               ],
             },
-            "outputs": Array [
+            "outputs": [
               "{options.outputFile}",
             ],
           }
