@@ -46,7 +46,7 @@ export function createGlobPatternsForDependencies(
 
     if (!projectName) {
       throw new Error(
-        `Could not find any project containing the file "${filenameRelativeToWorkspaceRoot}" among it's project files`
+        `createGlobPatternsForDependencies: Could not find any project containing the file "${filenameRelativeToWorkspaceRoot}" among it's project files`
       );
     }
   } catch (e) {
