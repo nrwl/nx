@@ -42,7 +42,7 @@ describe('nx wrapper / .nx installation', () => {
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
       json.tasksRunnerOptions.default.options.cacheableOperations = ['echo'];
       json.installation.plugins = {
-        '@nrwl/nest': getPublishedVersion(),
+        '@nrwl/js': getPublishedVersion(),
       };
       return json;
     });
@@ -66,9 +66,7 @@ describe('nx wrapper / .nx installation', () => {
   it('should work with nx report', () => {
     const output = runNxWrapper('report');
     expect(output).toMatch(new RegExp(`nx.*:.*${getPublishedVersion()}`));
-    expect(output).toMatch(
-      new RegExp(`@nrwl/nest.*:.*${getPublishedVersion()}`)
-    );
+    expect(output).toMatch(new RegExp(`@nrwl/js.*:.*${getPublishedVersion()}`));
     expect(output).not.toContain('@nrwl/express');
   });
 
@@ -87,12 +85,10 @@ describe('nx wrapper / .nx installation', () => {
     );
 
     expect(installedPluginLines.some((x) => x.includes(`${bold('nx')}`)));
-    expect(
-      installedPluginLines.some((x) => x.includes(`${bold('@nrwl/nest')}`))
-    );
+    expect(installedPluginLines.some((x) => x.includes(`${bold('@nrwl/js')}`)));
 
-    output = runNxWrapper('list @nrwl/nest');
-    expect(output).toContain('Capabilities in @nrwl/nest');
+    output = runNxWrapper('list @nrwl/js');
+    expect(output).toContain('Capabilities in @nrwl/js');
   });
 
   it('should work with basic generators', () => {
@@ -118,13 +114,6 @@ describe('nx wrapper / .nx installation', () => {
     updateFile(
       `.nx/installation/node_modules/migrate-parent-package/migrations.json`,
       JSON.stringify({
-        schematics: {
-          run11: {
-            version: '1.1.0',
-            description: '1.1.0',
-            factory: './run11',
-          },
-        },
         generators: {
           run20: {
             version: '2.0.0',
@@ -133,18 +122,6 @@ describe('nx wrapper / .nx installation', () => {
           },
         },
       })
-    );
-
-    updateFile(
-      `.nx/installation/node_modules/migrate-parent-package/run11.js`,
-      `
-        var angular_devkit_core1 = require("@angular-devkit/core");
-        exports.default = function default_1() {
-          return function(host) {
-            host.create('file-11', 'content11')
-          }
-        }
-        `
     );
 
     updateFile(
@@ -182,9 +159,6 @@ describe('nx wrapper / .nx installation', () => {
                   return Promise.resolve({
                     version: '2.0.0',
                     generators: {
-                      'run11': {
-                        version: '1.1.0'
-                      },
                       'run20': {
                         version: '2.0.0',
                         cli: 'nx'
@@ -238,11 +212,6 @@ describe('nx wrapper / .nx installation', () => {
       migrations: [
         {
           package: 'migrate-parent-package',
-          version: '1.1.0',
-          name: 'run11',
-        },
-        {
-          package: 'migrate-parent-package',
           version: '2.0.0',
           name: 'run20',
           cli: 'nx',
@@ -259,7 +228,6 @@ describe('nx wrapper / .nx installation', () => {
         NX_WRAPPER_SKIP_INSTALL: 'true',
       },
     });
-    expect(readFile('file-11')).toEqual('content11');
     expect(readFile('file-20')).toEqual('content20');
   });
 });

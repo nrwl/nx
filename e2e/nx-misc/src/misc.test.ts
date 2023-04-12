@@ -55,10 +55,10 @@ describe('Nx Commands', () => {
 
       expect(reportOutput).toEqual(
         expect.stringMatching(
-          new RegExp(`\@nx\/workspace.*:.*${getPublishedVersion()}`)
+          new RegExp(`\@nrwl\/workspace.*:.*${getPublishedVersion()}`)
         )
       );
-      expect(reportOutput).toContain('@nx/workspace');
+      expect(reportOutput).toContain('@nrwl/workspace');
     }, 120000);
 
     it(`should list plugins`, async () => {
@@ -67,12 +67,12 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('NX   Installed plugins');
 
       // just check for some, not all
-      expect(listOutput).toContain('@nx/angular');
+      expect(listOutput).toContain('@nrwl/workspace');
 
       // temporarily make it look like this isn't installed
       renameSync(
-        tmpProjPath('node_modules/@nx/angular'),
-        tmpProjPath('node_modules/@nx/angular_tmp')
+        tmpProjPath('node_modules/@nrwl/angular'),
+        tmpProjPath('node_modules/@nrwl/angular_tmp')
       );
 
       listOutput = runCLI('list');
@@ -107,8 +107,8 @@ describe('Nx Commands', () => {
 
       // put back the @nx/angular module (or all the other e2e tests after this will fail)
       renameSync(
-        tmpProjPath('node_modules/@nx/angular_tmp'),
-        tmpProjPath('node_modules/@nx/angular')
+        tmpProjPath('node_modules/@nrwl/angular_tmp'),
+        tmpProjPath('node_modules/@nrwl/angular')
       );
     }, 120000);
   });
