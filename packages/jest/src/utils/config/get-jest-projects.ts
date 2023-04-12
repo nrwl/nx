@@ -8,6 +8,18 @@ function getJestConfigProjectPath(projectJestConfigPath: string): string {
   return join('<rootDir>', projectJestConfigPath);
 }
 
+/**
+ * Get a list of paths to all the jest config files
+ * using the Nx Jest executor.
+ *
+ * This is used to configure Jest multi-project support.
+ *
+ * To add a project not using the Nx Jest executor:
+ * export default {
+ *   projects: [...getJestProjects(), '<rootDir>/path/to/jest.config.ts'];
+ * }
+ *
+ **/
 export function getJestProjects() {
   const ws = readWorkspaceConfig({
     format: 'nx',

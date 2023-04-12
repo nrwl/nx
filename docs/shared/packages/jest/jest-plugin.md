@@ -96,6 +96,21 @@ This is because each [jest process creates a workers based on system resources](
 
 Primary configurations for Jest will be via the `jest.config.ts` file that generated for your project. This file will extend the root `jest.preset.js` file. Learn more about [Jest configurations](https://jestjs.io/docs/configuration#options).
 
+The root level `jest.config.ts` file configures [Jest multi project support](https://jestjs.io/docs/configuration#projects-arraystring--projectconfig).
+This configuration allows editor/IDE integrations to pick up individual project's configurations rather than the one at the root.
+
+The set of Jest projects within Nx workspaces tends to change. Instead of statically defining a list in `jest.config.ts`, Nx provides a utility function called `getJestProjects` which queries for Jest configurations defined for targets which use the `@nrwl/jest:jest` executor.
+
+You can add Jest projects which are not included in `getJestProjects()`, because they do not use the Nx Jest executor, by doing something like the following:
+
+```typescript {% fileName="jest.config.ts"}
+import { getJestProjects } from '@nrwl/jest';
+
+export default {
+  projects: [...getJestProjects(), '<rootDir>/path/to/jest.config.ts'],
+};
+```
+
 ### Nx
 
 Nx Jest Plugin options can be configured via the [project config file](/reference/project-configuration) or via the [command line flags](/packages/jest).
