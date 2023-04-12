@@ -70,7 +70,7 @@ export async function reportHandler() {
     `Node   : ${process.versions.node}`,
     `OS     : ${process.platform} ${process.arch}`,
     `${pm.padEnd(7)}: ${pmVersion}`,
-    `hasher : ${currentHasherImplementation}`,
+    `Hasher : ${currentHasherImplementation}`,
     ``,
   ];
 
