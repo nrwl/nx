@@ -1361,6 +1361,15 @@
         "originalFilePath": "/packages/next/src/generators/custom-server/schema.json",
         "path": "next/generators/custom-server",
         "type": "generator"
+      },
+      {
+        "description": "cypress-component-configuration generator",
+        "file": "generated/packages/next/generators/cypress-component-configuration.json",
+        "hidden": false,
+        "name": "cypress-component-configuration",
+        "originalFilePath": "/packages/next/src/generators/cypress-component-configuration/schema.json",
+        "path": "next/generators/cypress-component-configuration",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

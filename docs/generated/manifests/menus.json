@@ -5183,6 +5183,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "cypress-component-configuration",
+                "path": "/packages/next/generators/cypress-component-configuration",
+                "name": "cypress-component-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

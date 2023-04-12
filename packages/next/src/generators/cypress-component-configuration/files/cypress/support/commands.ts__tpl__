@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+import { mount } from 'cypress/react18'
 
 // ***********************************************
 // This example commands.ts shows you how to
@@ -16,13 +17,12 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
       login(email: string, password: string): void;
-      // TODO: define a mount command
-      // mount: typeof mount;
+      mount: typeof mount;
     }
   }
 }
 
-// Cypress.Commands.add('mount', mount)
+Cypress.Commands.add('mount', mount)
 
 //
 // -- This is a parent command --
