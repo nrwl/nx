@@ -164,6 +164,12 @@
       "version": "15.9.0-beta.9",
       "description": "Update the file-server executor to use @nrwl/web:file-server",
       "factory": "./src/migrations/update-15-9-0/update-file-server-executor"
+    },
+    "remove-library-generator-simple-module-name-option": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace the deprecated library generator 'simpleModuleName' option from generator defaults with 'simpleName'",
+      "factory": "./src/migrations/update-16-0-0/remove-library-generator-simple-module-name-option"
     }
   },
   "packageJsonUpdates": {

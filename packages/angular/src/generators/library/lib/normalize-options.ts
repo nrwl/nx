@@ -47,8 +47,7 @@ export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
   const projectName = fullProjectDirectory
     .replace(new RegExp('/', 'g'), '-')
     .replace(/-\d+/g, '');
-  const fileName =
-    options.simpleName || options.simpleModuleName ? name : projectName;
+  const fileName = options.simpleName ? name : projectName;
   const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
   const moduleName = `${names(fileName).className}Module`;
