@@ -11,7 +11,7 @@ export function createGlobPatternsForDependencies(
 ) {
   try {
     return jsGenerateGlobs(dirPath, fileGlobPattern);
-  } catch {
+  } catch (e) {
     /**
      * It should not be possible to reach this point when the utility is invoked as part of the normal
      * lifecycle of Nx executors. However, other tooling, such as the VSCode Tailwind IntelliSense plugin
@@ -22,7 +22,8 @@ export function createGlobPatternsForDependencies(
      * fundamently unavailable in this tailwind-specific context.
      */
     console.warn(
-      '\n[createGlobPatternsForDependencies] WARNING: There was no ProjectGraph available to read from, returning an empty array of glob patterns\n'
+      '\nWARNING: There was an error creating glob patterns, returning an empty array\n' +
+        `${e.message}\n`
     );
     return [];
   }
