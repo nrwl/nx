@@ -52,7 +52,7 @@ import NxWelcome from './nx-welcome';
 export function App() {
   return (
     <>
-      <NxWelcome title=\\"my-app\\" />
+      <NxWelcome title="my-app" />
 
       <div />
     </>
@@ -72,7 +72,7 @@ import NxWelcome from './nx-welcome';
 export function App() {
   return (
     <>
-      <NxWelcome title=\\"my-dir-my-app\\" />
+      <NxWelcome title="my-dir-my-app" />
 
       <div />
     </>
