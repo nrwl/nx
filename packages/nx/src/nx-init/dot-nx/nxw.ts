@@ -78,7 +78,7 @@ function ensureUpToDateInstallation() {
           },
         })
       );
-      cp.execSync('npm i --legacy-peer-deps', {
+      cp.execSync('npm i', {
         cwd: path.dirname(installationPath),
         stdio: 'inherit',
       });

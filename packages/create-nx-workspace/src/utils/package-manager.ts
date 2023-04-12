@@ -62,8 +62,6 @@ export function getPackageManagerCommand(
       };
 
     case 'npm':
-      process.env.npm_config_legacy_peer_deps =
-        process.env.npm_config_legacy_peer_deps ?? 'true';
       return {
         install: 'npm install --silent --ignore-scripts',
         exec: 'npx',
