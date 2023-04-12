@@ -24,9 +24,9 @@ describe('Static serve configuration generator', () => {
 
     expect(readProjectConfiguration(tree, 'react-app').targets['serve-static'])
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "executor": "@nrwl/web:file-server",
-        "options": Object {
+        "options": {
           "buildTarget": "react-app:build",
         },
       }
@@ -38,9 +38,9 @@ describe('Static serve configuration generator', () => {
     expect(
       readProjectConfiguration(tree, 'angular-app').targets['serve-static']
     ).toMatchInlineSnapshot(`
-      Object {
+      {
         "executor": "@nrwl/web:file-server",
-        "options": Object {
+        "options": {
           "buildTarget": "angular-app:build",
         },
       }
@@ -51,9 +51,9 @@ describe('Static serve configuration generator', () => {
     });
     expect(readProjectConfiguration(tree, 'storybook').targets['serve-static'])
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "executor": "@nrwl/web:file-server",
-        "options": Object {
+        "options": {
           "buildTarget": "storybook:build-storybook",
           "staticFilePath": "dist/apps/storybook/storybook",
         },
@@ -71,9 +71,9 @@ describe('Static serve configuration generator', () => {
     expect(
       readProjectConfiguration(tree, 'react-app').targets['serve-static-custom']
     ).toMatchInlineSnapshot(`
-      Object {
+      {
         "executor": "@nrwl/web:file-server",
-        "options": Object {
+        "options": {
           "buildTarget": "react-app:build",
         },
       }
@@ -96,9 +96,9 @@ describe('Static serve configuration generator', () => {
     expect(
       readProjectConfiguration(tree, 'angular-app').targets['serve-static']
     ).toMatchInlineSnapshot(`
-      Object {
+      {
         "executor": "@nrwl/web:file-server",
-        "options": Object {
+        "options": {
           "buildTarget": "angular-app:build",
           "staticFilePath": "dist/apps/angular-app",
         },
