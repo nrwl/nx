@@ -3,10 +3,10 @@ import { createLockFile, createPackageJson } from '@nx/js';
 import { ExecutorContext, type ProjectGraph, serializeJson } from '@nx/devkit';
 import {
   getHelperDependenciesFromProjectGraph,
+  getLockFileName,
   HelperDependency,
   readTsConfig,
 } from '@nx/js';
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 

@@ -33,7 +33,7 @@ import {
   isComboDepConstraint,
 } from '../utils/runtime-lint-utils';
 import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
-import { TargetProjectLocator } from 'nx/src/plugins/js/project-graph/build-dependencies/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/plugins/js';
 import { basename, dirname, relative } from 'path';
 import {
   getBarrelEntryPointByImportScope,

@@ -1,5 +1,5 @@
 import { dirname, join } from 'path';
-import type { CompilerOptions, ModuleResolutionKind } from 'typescript';
+import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from './logger';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');

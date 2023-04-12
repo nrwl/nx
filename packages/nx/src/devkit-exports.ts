@@ -226,8 +226,8 @@ export { Hash, Hasher } from './hasher/hasher';
  */
 export { cacheDir } from './utils/cache-directory';
 
-import { createLockFile as _createLockFile } from './plugins/js/lock-file/lock-file';
-import { createPackageJson as _createPackageJson } from './plugins/js/package-json/create-package-json';
+import { createLockFile as _createLockFile } from './plugins/js';
+import { createPackageJson as _createPackageJson } from './plugins/js';
 
 /**
  * @category Package Manager

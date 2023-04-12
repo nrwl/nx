@@ -8,10 +8,10 @@ jest.doMock('../utils/workspace-root', () => {
 });
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../plugins/js/utils/typescript');
+jest.mock('../plugins/js');
 
 import { vol } from 'memfs';
-import tsUtils = require('../plugins/js/utils/typescript');
+import tsUtils = require('../plugins/js');
 import {
   expandNamedInput,
   filterUsingGlobPatterns,

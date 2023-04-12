@@ -1,8 +1,5 @@
-import {
-  createLockFile,
-  getLockFileName,
-} from 'nx/src/plugins/js/lock-file/lock-file';
-import { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
+import { createLockFile, getLockFileName } from 'nx/src/plugins/js';
+import { createPackageJson } from 'nx/src/plugins/js';
 import {
   ExecutorContext,
   getOutputsForTargetAndConfiguration,

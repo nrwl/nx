@@ -18,7 +18,7 @@ import { createNextConfigFile } from './lib/create-next-config-file';
 import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
 
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
+import { getLockFileName } from 'nx/src/plugins/js';
 
 export default async function buildExecutor(
   options: NextBuildBuilderOptions,

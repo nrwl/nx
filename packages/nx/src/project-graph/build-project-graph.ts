@@ -16,7 +16,7 @@ import { buildWorkspaceProjectNodes } from './build-nodes';
 import { loadNxPlugins } from '../utils/nx-plugin';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { createProjectFileMap } from './file-map-utils';
-import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
+import { getRootTsConfigPath } from '../plugins/js';
 import {
   ProjectFileMap,
   ProjectGraph,

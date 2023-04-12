@@ -16,14 +16,22 @@ import { projectGraphCacheDirectory } from '../../utils/cache-directory';
 import { readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ensureDirSync } from 'fs-extra';
-import { removeNpmNodes } from 'nx/src/plugins/js/lock-file/remove-npm-nodes';
+import { removeNpmNodes } from './lock-file/remove-npm-nodes';
 
+/**
+ * Exports section
+ */
 export {
   findNodes,
   getRootTsConfigPath,
   getRootTsConfigFileName,
+  readTsConfig,
   resolveModuleByImport,
 } from './utils/typescript';
+export { getLockFileName, createLockFile } from './lock-file/lock-file';
+export { createPackageJson } from './package-json/create-package-json';
+export { TargetProjectLocator } from './project-graph/build-dependencies/target-project-locator';
+export { getTouchedProjects } from './project-graph/affected/touched-projects';
 
 export const processProjectGraph: ProjectGraphProcessor = async (
   graph,
