@@ -14,7 +14,7 @@ export async function setupNxCloud(
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
-      `${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics --installationSource=create-nx-workspace`,
+      `${pmc.exec} nx g nx-cloud:init --no-analytics --installationSource=create-nx-workspace`,
       join(process.cwd(), getFileName(name))
     );
     nxCloudSpinner.succeed('NxCloud has been set up successfully');

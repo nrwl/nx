@@ -17,7 +17,7 @@ job where the `NX_CI_EXECUTION_ENV` is set to, say, `macos`, will connect to the
 
 #### NX_RUN_GROUP
 
-Older versions of `@nrwl/nx-cloud` used `NX_RUN_GROUP` instead of `NX_CI_EXECUTION_ID` and `NX_CI_EXECUTION_ENV`. It
+Older versions of `nx-cloud` used `NX_RUN_GROUP` instead of `NX_CI_EXECUTION_ID` and `NX_CI_EXECUTION_ENV`. It
 served the same purpose.
 
 ### NX_CLOUD_ACCESS_TOKEN

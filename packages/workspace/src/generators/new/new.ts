@@ -122,7 +122,7 @@ function addCloudDependencies(host: Tree, options: Schema) {
     return addDependenciesToPackageJson(
       host,
       {},
-      { '@nrwl/nx-cloud': 'latest' },
+      { 'nx-cloud': 'latest' },
       join(options.directory, 'package.json')
     );
   }

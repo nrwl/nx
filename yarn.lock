@@ -5349,19 +5349,12 @@
     url-loader "^4.1.1"
     webpack-merge "^5.8.0"
 
-"@nrwl/nx-cloud@15.3.5":
-  version "15.3.5"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-15.3.5.tgz#c44825b45cd7e624aa0956c129eace81f17c0e82"
-  integrity sha512-JMKLY0HhdzQ/6jEvfL/EecPPdsdBIM0SyFrWAjikSJAh5MqhpFJWnr6FfTc5P57PJZ+IUNLkJ21VMuoTrA4+4w==
+"@nrwl/nx-cloud@16.0.0-beta.8":
+  version "16.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-16.0.0-beta.8.tgz#1f7f44053130568a7cdf071a9d013458f6fa0fa7"
+  integrity sha512-ecQkNQN9D5CiWQx6DqYCyIcmjLJWRzzFKupf/15UYZMOccmWeJWtqYY+7PJh+ZJkwhf3ab5I8O/4lHmvaTfYKA==
   dependencies:
-    axios "^0.21.2"
-    chalk "4.1.0"
-    dotenv "~10.0.0"
-    fs-extra "^10.1.0"
-    node-machine-id "^1.1.12"
-    strip-json-comments "^3.1.1"
-    tar "6.1.11"
-    yargs-parser ">=21.0.1"
+    nx-cloud "16.0.0-beta.8"
 
 "@nrwl/nx-darwin-arm64@15.8.0":
   version "15.8.0"
@@ -9467,7 +9460,7 @@ axe-core@^4.4.3:
   resolved "https://registry.yarnpkg.com/axe-core/-/axe-core-4.5.0.tgz#6efe2ecdba205fcc9d7ddb3d48c2cf630f70eb5e"
   integrity sha512-4+rr8eQ7+XXS5nZrKcMO/AikHL0hVqy+lHWAnE3xdHl+aguag8SOQ6eEqLexwLNWgXIMfunGuD3ON1/6Kyet0A==
 
-axios@0.21.4, axios@^0.21.2:
+axios@0.21.4:
   version "0.21.4"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
   integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
@@ -17982,6 +17975,21 @@ nwsapi@^2.2.0, nwsapi@^2.2.2:
   resolved "https://registry.yarnpkg.com/nwsapi/-/nwsapi-2.2.2.tgz#e5418863e7905df67d51ec95938d67bf801f0bb0"
   integrity sha512-90yv+6538zuvUMnN+zCr8LuV6bPFdq50304114vJYJ8RDyK8D5O9Phpbd6SZWgI7PwzmmfN1upeOJlvybDSgCw==
 
+nx-cloud@16.0.0-beta.8:
+  version "16.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/nx-cloud/-/nx-cloud-16.0.0-beta.8.tgz#cc3440204b91a156413d558a84dd09a967fc2bd7"
+  integrity sha512-0ivNYm3aPrGMNPGTt2e9YuAtOsA/KpG+roOdedYpynLvwkT4iEi4CQaRzXpXMxNbxD+yKrOF7Ntw5aa19N84VA==
+  dependencies:
+    "@nrwl/nx-cloud" "16.0.0-beta.8"
+    axios "^1.0.0"
+    chalk "^4.1.0"
+    dotenv "~10.0.0"
+    fs-extra "^11.1.0"
+    node-machine-id "^1.1.12"
+    strip-json-comments "^3.1.1"
+    tar "6.1.11"
+    yargs-parser ">=21.1.1"
+
 nx@15.0.3, "nx@>=14.8.1 < 16":
   version "15.0.3"
   resolved "https://registry.yarnpkg.com/nx/-/nx-15.0.3.tgz#070845a871c63f5e009c5bf22ce005d5bbc2612d"
@@ -23636,7 +23644,7 @@ yargs-parser@21.0.1:
   resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-21.0.1.tgz#0267f286c877a4f0f728fceb6f8a3e4cb95c6e35"
   integrity sha512-9BK1jFpLzJROCI5TzwZL/TU4gqjK5xiHV/RfWLOahrjAko/e4DJkRDZQXfvqAsiZzzYhgAzbgz6lg48jcm4GLg==
 
-yargs-parser@21.1.1, yargs-parser@>=21.0.1, yargs-parser@^21.0.0, yargs-parser@^21.0.1, yargs-parser@^21.1.1:
+yargs-parser@21.1.1, yargs-parser@>=21.1.1, yargs-parser@^21.0.0, yargs-parser@^21.0.1, yargs-parser@^21.1.1:
   version "21.1.1"
   resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-21.1.1.tgz#9096bceebf990d21bb31fa9516e0ede294a77d35"
   integrity sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==

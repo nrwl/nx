@@ -30,7 +30,7 @@ export const tasksRunnerV2 = (
 ): any => {
   if (!options.lifeCycle.startCommand) {
     throw new Error(
-      `If you are using Nx Cloud, update the version of @nrwl/nx-cloud to >=13.0.0`
+      `If you are using Nx Cloud, update the version of nx-cloud to >=13.0.0`
     );
   }
 

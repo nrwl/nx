@@ -80,7 +80,7 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/reference/server-api',
     },
     {
-      title: '@nrwl/nx-cloud - Release notes',
+      title: 'nx-cloud - Release notes',
       path: '/nx-cloud/reference/release-notes',
     },
   ]).forEach((page) => assertTextOnPage(page.path, page.title));

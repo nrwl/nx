@@ -194,7 +194,7 @@ spec:
 
 ### Step 5: Connect Your Workspace
 
-Run `NX_CLOUD_API=https://nx-cloud.myorg.com nx g @nrwl/nx-cloud:init`. Click on the link to connect the workspace
+Run `NX_CLOUD_API=https://nx-cloud.myorg.com nx connect`. Click on the link to connect the workspace
 to your admin account.
 
 ## Variations

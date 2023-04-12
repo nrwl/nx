@@ -107,10 +107,10 @@ async function installDependencies(
   }
 
   if (useNxCloud) {
-    // get the latest @nrwl/nx-cloud version compatible with the Nx major
+    // get the latest nx-cloud version compatible with the Nx major
     // version being installed
-    json.devDependencies['@nrwl/nx-cloud'] = await resolvePackageVersion(
-      '@nrwl/nx-cloud',
+    json.devDependencies['nx-cloud'] = await resolvePackageVersion(
+      'nx-cloud',
       `^${major(pkgVersion)}.0.0`
     );
   }

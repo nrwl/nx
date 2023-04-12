@@ -119,7 +119,7 @@ using `admin/ADMIN_PASSWORD`.
 
 ### Step 4: Connect Your Workspace
 
-Run `NX_CLOUD_API=https://nxcloud.privateurl.com` nx g @nrwl/nx-cloud:init. Click on the link to connect the workspace
+Run `NX_CLOUD_API=https://nxcloud.privateurl.com` nx connect. Click on the link to connect the workspace
 to your admin account.
 
 ### Optional step 5: set up GitHub auth

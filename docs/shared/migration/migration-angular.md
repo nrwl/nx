@@ -50,7 +50,7 @@ When you click this button, we’ll run the `nx init` command to set up the Nx C
 The script will make the following changes:
 
 - Installs the `@nrwl/workspace` and `nx` packages.
-  - If you opted into Nx Cloud, `@nrwl/nx-cloud` will be installed as well.
+  - If you opted into Nx Cloud, `nx-cloud` will be installed as well.
   - If your project's Angular version is greater than or equal to version 13, then the `@nrwl/angular` package will be installed as well.
 - Creates an `nx.json` file in the root of your workspace.
 

@@ -119,6 +119,10 @@
       {
         "package": "@nrwl/nx-cloud",
         "version": "latest"
+      },
+      {
+        "package": "nx-cloud",
+        "version": "latest"
       }
     ]
   },

@@ -109,7 +109,7 @@ export function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
   if (!json.devDependencies) json.devDependencies = {};
   json.devDependencies['nx'] = require('../../package.json').version;
   if (useCloud) {
-    json.devDependencies['@nrwl/nx-cloud'] = 'latest';
+    json.devDependencies['nx-cloud'] = 'latest';
   }
   writeJsonFile(path, json);
 }
@@ -130,13 +130,10 @@ export function initCloud(
     | 'nx-init-nest'
     | 'nx-init-npm-repo'
 ) {
-  runNxSync(
-    `g @nrwl/nx-cloud:init --installationSource=${installationSource}`,
-    {
-      stdio: [0, 1, 2],
-      cwd: repoRoot,
-    }
-  );
+  runNxSync(`g nx-cloud:init --installationSource=${installationSource}`, {
+    stdio: [0, 1, 2],
+    cwd: repoRoot,
+  });
 }
 
 export function addVsCodeRecommendedExtensions(

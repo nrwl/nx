@@ -27,7 +27,7 @@ If you open your `nx.json`, you will see something like this:
 {
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/nx-cloud",
+      "runner": "nx-cloud",
       "options": {
         "accessToken": "SOMETOKEN",
         "cacheableOperations": ["build", "test", "lint", "e2e"]

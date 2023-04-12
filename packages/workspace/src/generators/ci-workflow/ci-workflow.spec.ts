@@ -91,7 +91,7 @@ function setNxCloud(tree: Tree) {
       ...json,
       tasksRunnerOptions: {
         default: {
-          runner: '@nrwl/nx-cloud',
+          runner: 'nx-cloud',
         },
       },
     };
