@@ -304,8 +304,9 @@ export const commandsObject = yargs
   .command({
     command: 'init',
     describe: 'Adds nx.json file and installs nx if not installed already',
-    handler: async () => {
-      await (await import('./init')).initHandler();
+    builder: (yargs) => withIntegratedOption(yargs),
+    handler: async (args: any) => {
+      await (await import('./init')).initHandler(args);
       process.exit(0);
     },
   })
@@ -1114,6 +1115,16 @@ function withListOptions(yargs) {
   return yargs.positional('plugin', {
     type: 'string',
     description: 'The name of an installed plugin to query',
+  });
+}
+
+function withIntegratedOption(yargs) {
+  return yargs.option('integrated', {
+    type: 'boolean',
+    description:
+      'Migrate to an Nx integrated layout workspace. Only for CRA and Angular projects.',
+    // TODO(leo): keep it hidden until feature is released
+    hidden: true,
   });
 }
 
