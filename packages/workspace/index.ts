@@ -16,9 +16,6 @@ export {
   readPackageJson,
 } from 'nx/src/project-graph/file-utils';
 export { ProjectGraphCache } from 'nx/src/project-graph/nx-deps-cache';
-export {
-  findNodes, // TODO(v16): remove this
-} from './src/utils/ast-utils';
 
 export {
   getWorkspacePath,
@@ -37,7 +34,6 @@ export { Linter } from './src/utils/lint';
 export { addInstallTask } from './src/utils/rules/add-install-task';
 export { formatFiles } from './src/utils/rules/format-files';
 export { deleteFile } from './src/utils/rules/deleteFile';
-export * from './src/utils/rules/ng-add';
 
 export { visitNotIgnoredFiles } from './src/utils/rules/visit-not-ignored-files';
 import * as strings from './src/utils/strings';
