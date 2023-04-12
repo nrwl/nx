@@ -140,9 +140,6 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/workspace-create/** @FrozenPandaz @AgentEnder @vsavkin
 /e2e/workspace-create-npm/** @FrozenPandaz @vsavkin
 
-/packages/add-nx-to-monorepo/** @vsavkin @FrozenPandaz @AgentEnder
-/e2e/add-nx-to-monorepo/** @vsavkin @FrozenPandaz @AgentEnder
-
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
 /e2e/utils/** @meeroslav @barbados-clemens @vsavkin @mandarini

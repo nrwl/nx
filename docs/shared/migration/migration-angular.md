@@ -7,7 +7,7 @@ Within an Nx workspace, you gain many capabilities that help you build applicati
 You can migrate to a [Standalone Angular App](/concepts/integrated-vs-package-based#standalone-applications) with the command:
 
 ```shell
-npx nx init
+npx nx@latest init
 ```
 
 This command will install the correct version of Nx based on your Angular version.

@@ -42,11 +42,8 @@ function main() {
           `To create a workspace run:`,
           chalk.bold.white(`npx create-nx-workspace@latest <workspace name>`),
           '',
-          `To add Nx to existing workspace run with a workspace-specific nx.json:`,
-          chalk.bold.white(`npx add-nx-to-monorepo@latest`),
-          '',
-          `To add the default nx.json file run:`,
-          chalk.bold.white(`nx init`),
+          `To add Nx to an existing workspace with a workspace-specific nx.json, run:`,
+          chalk.bold.white(`npx nx@latest init`),
         ],
       });
 

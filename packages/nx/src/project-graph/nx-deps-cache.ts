@@ -94,7 +94,7 @@ export function createCache(
   const newValue: ProjectGraphCache = {
     version: projectGraph.version || '5.1',
     deps: packageJsonDeps,
-    // compilerOptions may not exist, especially for repos converted through add-nx-to-monorepo
+    // compilerOptions may not exist, especially for package-based repos
     pathMappings: tsConfig?.compilerOptions?.paths || {},
     nxJsonPlugins,
     pluginsConfig: nxJson.pluginsConfig,
