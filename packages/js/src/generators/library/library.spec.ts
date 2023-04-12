@@ -128,29 +128,29 @@ describe('lib', () => {
         await libraryGenerator(tree, { ...defaultOptions, name: 'myLib' });
         const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
         expect(tsconfigJson).toMatchInlineSnapshot(`
-                  Object {
-                    "compilerOptions": Object {
-                      "forceConsistentCasingInFileNames": true,
-                      "module": "commonjs",
-                      "noFallthroughCasesInSwitch": true,
-                      "noImplicitOverride": true,
-                      "noImplicitReturns": true,
-                      "noPropertyAccessFromIndexSignature": true,
-                      "strict": true,
-                    },
-                    "extends": "../../tsconfig.base.json",
-                    "files": Array [],
-                    "include": Array [],
-                    "references": Array [
-                      Object {
-                        "path": "./tsconfig.lib.json",
-                      },
-                      Object {
-                        "path": "./tsconfig.spec.json",
-                      },
-                    ],
-                  }
-              `);
+          {
+            "compilerOptions": {
+              "forceConsistentCasingInFileNames": true,
+              "module": "commonjs",
+              "noFallthroughCasesInSwitch": true,
+              "noImplicitOverride": true,
+              "noImplicitReturns": true,
+              "noPropertyAccessFromIndexSignature": true,
+              "strict": true,
+            },
+            "extends": "../../tsconfig.base.json",
+            "files": [],
+            "include": [],
+            "references": [
+              {
+                "path": "./tsconfig.lib.json",
+              },
+              {
+                "path": "./tsconfig.spec.json",
+              },
+            ],
+          }
+        `);
       });
 
       it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -451,40 +451,40 @@ describe('lib', () => {
 
         const eslintJson = readJson(tree, 'libs/my-lib/.eslintrc.json');
         expect(eslintJson).toMatchInlineSnapshot(`
-            Object {
-              "extends": Array [
-                "../../.eslintrc.json",
-              ],
-              "ignorePatterns": Array [
-                "!**/*",
-              ],
-              "overrides": Array [
-                Object {
-                  "files": Array [
-                    "*.ts",
-                    "*.tsx",
-                    "*.js",
-                    "*.jsx",
-                  ],
-                  "rules": Object {},
-                },
-                Object {
-                  "files": Array [
-                    "*.ts",
-                    "*.tsx",
-                  ],
-                  "rules": Object {},
-                },
-                Object {
-                  "files": Array [
-                    "*.js",
-                    "*.jsx",
-                  ],
-                  "rules": Object {},
-                },
-              ],
-            }
-          `);
+          {
+            "extends": [
+              "../../.eslintrc.json",
+            ],
+            "ignorePatterns": [
+              "!**/*",
+            ],
+            "overrides": [
+              {
+                "files": [
+                  "*.ts",
+                  "*.tsx",
+                  "*.js",
+                  "*.jsx",
+                ],
+                "rules": {},
+              },
+              {
+                "files": [
+                  "*.ts",
+                  "*.tsx",
+                ],
+                "rules": {},
+              },
+              {
+                "files": [
+                  "*.js",
+                  "*.jsx",
+                ],
+                "rules": {},
+              },
+            ],
+          }
+        `);
       });
     });
 
@@ -516,40 +516,40 @@ describe('lib', () => {
 
         const eslintJson = readJson(tree, 'libs/my-dir/my-lib/.eslintrc.json');
         expect(eslintJson).toMatchInlineSnapshot(`
-            Object {
-              "extends": Array [
-                "../../../.eslintrc.json",
-              ],
-              "ignorePatterns": Array [
-                "!**/*",
-              ],
-              "overrides": Array [
-                Object {
-                  "files": Array [
-                    "*.ts",
-                    "*.tsx",
-                    "*.js",
-                    "*.jsx",
-                  ],
-                  "rules": Object {},
-                },
-                Object {
-                  "files": Array [
-                    "*.ts",
-                    "*.tsx",
-                  ],
-                  "rules": Object {},
-                },
-                Object {
-                  "files": Array [
-                    "*.js",
-                    "*.jsx",
-                  ],
-                  "rules": Object {},
-                },
-              ],
-            }
-          `);
+          {
+            "extends": [
+              "../../../.eslintrc.json",
+            ],
+            "ignorePatterns": [
+              "!**/*",
+            ],
+            "overrides": [
+              {
+                "files": [
+                  "*.ts",
+                  "*.tsx",
+                  "*.js",
+                  "*.jsx",
+                ],
+                "rules": {},
+              },
+              {
+                "files": [
+                  "*.ts",
+                  "*.tsx",
+                ],
+                "rules": {},
+              },
+              {
+                "files": [
+                  "*.js",
+                  "*.jsx",
+                ],
+                "rules": {},
+              },
+            ],
+          }
+        `);
       });
     });
 
@@ -631,40 +631,40 @@ describe('lib', () => {
         ).toEqual(['libs/my-dir/my-lib/**/*.js']);
         expect(readJson(tree, 'libs/my-dir/my-lib/.eslintrc.json'))
           .toMatchInlineSnapshot(`
-                  Object {
-                    "extends": Array [
-                      "../../../.eslintrc.json",
-                    ],
-                    "ignorePatterns": Array [
-                      "!**/*",
-                    ],
-                    "overrides": Array [
-                      Object {
-                        "files": Array [
-                          "*.ts",
-                          "*.tsx",
-                          "*.js",
-                          "*.jsx",
-                        ],
-                        "rules": Object {},
-                      },
-                      Object {
-                        "files": Array [
-                          "*.ts",
-                          "*.tsx",
-                        ],
-                        "rules": Object {},
-                      },
-                      Object {
-                        "files": Array [
-                          "*.js",
-                          "*.jsx",
-                        ],
-                        "rules": Object {},
-                      },
-                    ],
-                  }
-              `);
+          {
+            "extends": [
+              "../../../.eslintrc.json",
+            ],
+            "ignorePatterns": [
+              "!**/*",
+            ],
+            "overrides": [
+              {
+                "files": [
+                  "*.ts",
+                  "*.tsx",
+                  "*.js",
+                  "*.jsx",
+                ],
+                "rules": {},
+              },
+              {
+                "files": [
+                  "*.ts",
+                  "*.tsx",
+                ],
+                "rules": {},
+              },
+              {
+                "files": [
+                  "*.js",
+                  "*.jsx",
+                ],
+                "rules": {},
+              },
+            ],
+          }
+        `);
       });
     });
   });
@@ -692,7 +692,7 @@ describe('lib', () => {
           displayName: 'my-lib',
           preset: '../../jest.preset.js',
           transform: {
-            '^.+\\\\\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+            '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/libs/my-lib',
@@ -1029,11 +1029,11 @@ describe('lib', () => {
 
         const babelRc = readJson(tree, 'libs/my-lib/.babelrc');
         expect(babelRc).toMatchInlineSnapshot(`
-          Object {
-            "presets": Array [
-              Array [
+          {
+            "presets": [
+              [
                 "@nrwl/js/babel",
-                Object {
+                {
                   "useBuiltIns": "usage",
                 },
               ],

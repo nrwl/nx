@@ -385,7 +385,7 @@ describe('updatePackageJson', () => {
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson).toMatchInlineSnapshot(`
-      Object {
+      {
         "main": "./main.js",
         "name": "@org/lib1",
         "types": "./main.d.ts",
@@ -438,8 +438,8 @@ describe('updatePackageJson', () => {
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson).toMatchInlineSnapshot(`
-      Object {
-        "dependencies": Object {
+      {
+        "dependencies": {
           "external1": "1.0.0",
           "external2": "4.5.6",
         },
