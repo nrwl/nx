@@ -1,7 +1,9 @@
 import { readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { moveGenerator } from './move';
-import { libraryGenerator } from '../library/library';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 describe('move', () => {
   let tree: Tree;

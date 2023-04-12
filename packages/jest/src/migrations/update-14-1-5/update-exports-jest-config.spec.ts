@@ -7,7 +7,7 @@ import {
   readJson,
 } from '@nrwl/devkit';
 import { createTree, createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
+import { libraryGenerator as workspaceLib } from '@nrwl/js';
 import {
   updateExportsJestConfig,
   updateRootFiles,
@@ -172,8 +172,8 @@ module.exports = {
       stripIndents`
   const { getJestProjects } = require('@nrwl/jest');
   const nxPreset = require('@nrwl/jest/preset');
-  
-  
+
+
   const someFn = () => ({more: 'stuff'});
   module.export.abc = someFn;
   module.exports = {

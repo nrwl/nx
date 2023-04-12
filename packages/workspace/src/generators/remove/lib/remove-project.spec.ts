@@ -1,8 +1,10 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
-import { libraryGenerator } from '../../library/library';
 import { removeProject } from '@nrwl/workspace/src/generators/remove/lib/remove-project';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 describe('moveProject', () => {
   let schema: Schema;

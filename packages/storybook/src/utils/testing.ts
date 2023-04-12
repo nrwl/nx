@@ -5,7 +5,7 @@ import { Tree as NrwlTree } from '@nrwl/devkit';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import libraryGenerator from '@nrwl/workspace/src/generators/library/library';
+import { libraryGenerator } from '@nrwl/js';
 import { Linter } from '@nrwl/linter';
 
 const testRunner = new SchematicTestRunner(
@@ -60,7 +60,6 @@ export async function createTestUILibNoNgDevkit(
     skipTsConfig: false,
     unitTestRunner: 'none',
     name: libName,
-    standaloneConfig: false,
   });
 
   return appTree;

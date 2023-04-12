@@ -434,6 +434,11 @@ function normalizeOptions(
 
   options.bundler = options.bundler ?? options.compiler ?? 'tsc';
 
+  // ensure programmatic runs have an expected default
+  if (!options.config) {
+    options.config = 'project';
+  }
+
   if (options.publishable) {
     if (!options.importPath) {
       throw new Error(

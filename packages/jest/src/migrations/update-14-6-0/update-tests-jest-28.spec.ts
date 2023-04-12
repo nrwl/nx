@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
+import { libraryGenerator as workspaceLib } from '@nrwl/js';
 import {
   readProjectConfiguration,
   updateProjectConfiguration,
@@ -139,10 +139,10 @@ describe('Jest Migration - jest 28 test files', () => {
     const { somethingElse } = require('ts-jest/utils');
     import * from ts from 'typescript'
     const mockTs = mocked(ts);
-    
+
     describe('something expected', () => {
       it('should do something', () => {
-        const actual = somethingExpected('abc'); 
+        const actual = somethingExpected('abc');
         expect(1 + 1).toBe(2);
       });
     })
@@ -155,10 +155,10 @@ describe('Jest Migration - jest 28 test files', () => {
     const { somethingElse } = require('ts-jest/utils');
     import * from ts from 'typescript'
     const mockTs = mocked(ts);
-    
+
     describe('something expected', () => {
       it('should do something', () => {
-        const actual = somethingExpected('abc'); 
+        const actual = somethingExpected('abc');
         expect(1 + 1).toBe(2);
       });
     })
@@ -176,7 +176,7 @@ describe('Jest Migration - jest 28 test files', () => {
 
     describe('something expected', () => {
       it('should do something', () => {
-        const actual = somethingExpected('abc'); 
+        const actual = somethingExpected('abc');
         expect(1 + 1).toBe(2);
       });
     })
@@ -190,7 +190,7 @@ describe('Jest Migration - jest 28 test files', () => {
 
     describe('something expected', () => {
       it('should do something', () => {
-        const actual = somethingExpected('abc'); 
+        const actual = somethingExpected('abc');
         expect(1 + 1).toBe(2);
       });
     })

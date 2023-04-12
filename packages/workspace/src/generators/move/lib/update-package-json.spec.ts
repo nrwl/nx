@@ -1,8 +1,10 @@
 import { readJson, Tree, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updatePackageJson } from './update-package-json';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 describe('updatePackageJson', () => {
   let tree: Tree;

@@ -1,6 +1,5 @@
 import {
   getProjects,
-  NxJsonConfiguration,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -95,6 +94,9 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toMatchInlineSnapshot(`
         Object {
+          "compilerOptions": Object {
+            "module": "commonjs",
+          },
           "extends": "../../tsconfig.base.json",
           "files": Array [],
           "include": Array [],
@@ -461,9 +463,9 @@ describe('lib', () => {
           preset: '../../jest.preset.js',
           testEnvironment: 'node',
           transform: {
-            '^.+\\\\\\\\.[tj]sx?$': 'babel-jest',
+            '^.+\\\\\\\\.[tj]s$': 'babel-jest',
           },
-          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/libs/my-lib',
         };
         "
@@ -486,6 +488,7 @@ describe('lib', () => {
         readJson(tree, 'libs/my-lib/tsconfig.json').compilerOptions
       ).toEqual({
         allowJs: true,
+        module: 'commonjs',
       });
       expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').include).toEqual([
         'src/**/*.ts',

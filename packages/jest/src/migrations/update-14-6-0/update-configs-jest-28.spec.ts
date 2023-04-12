@@ -1,6 +1,6 @@
 import { readJson, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
+import { libraryGenerator as workspaceLib } from '@nrwl/js';
 import {
   checkDeps,
   updateConfigsJest28,

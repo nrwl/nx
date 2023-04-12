@@ -1,5 +1,5 @@
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { libraryGenerator } from '@nrwl/workspace';
+import { libraryGenerator } from '@nrwl/js';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import updateToCypress11 from './cypress-11';
 import { installedCypressVersion } from '../../utils/cypress-version';

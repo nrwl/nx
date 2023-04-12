@@ -7,7 +7,9 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { updateTsconfig } from './update-tsconfig';
-import { libraryGenerator } from '../../library/library';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 let graph: ProjectGraph;
 jest.mock('@nrwl/devkit', () => {

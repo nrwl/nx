@@ -13,7 +13,7 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import * as enquirer from 'enquirer';
 
 import { Linter } from '@nrwl/linter';
-import { libraryGenerator } from '@nrwl/workspace/generators';
+import { libraryGenerator } from '@nrwl/js';
 import { TsConfig } from '../../utils/utilities';
 import { storybook7Version } from '../../utils/versions';
 import configurationGenerator from './configuration';
@@ -44,7 +44,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
       });
       await libraryGenerator(tree, {
         name: 'test-ui-lib',
-        standaloneConfig: false,
+        bundler: 'none',
       });
       writeJson(tree, 'package.json', {
         devDependencies: {
@@ -130,7 +130,6 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
-        standaloneConfig: false,
       });
 
       updateJson(tree, 'libs/test-ui-lib2/.eslintrc.json', (json) => {
@@ -160,7 +159,6 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
-        standaloneConfig: false,
       });
 
       await configurationGenerator(tree, {

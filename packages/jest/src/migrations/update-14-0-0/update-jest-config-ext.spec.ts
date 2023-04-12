@@ -6,7 +6,7 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
+import { libraryGenerator as workspaceLib } from '@nrwl/js';
 import jestInitGenerator from '../../generators/init/init';
 import { updateJestConfigExt } from './update-jest-config-ext';
 

@@ -1,6 +1,5 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
-import { readJsonFile } from '../utils/fileutils';
 
 import { readNxJson } from '../config/configuration';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
@@ -232,10 +231,6 @@ async function convertToGenerateOptions(
   } else {
     collectionName = generatorOptions.collection as string;
     generatorName = 'new';
-  }
-
-  if (!collectionName) {
-    throwInvalidInvocation(['@nrwl/workspace:library']);
   }
 
   const res = {

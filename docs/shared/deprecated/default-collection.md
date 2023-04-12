@@ -34,7 +34,6 @@ This property is no longer needed because the Nx cli automatically will prompt y
 @nrwl/js:library
 @nrwl/next:library
 @nrwl/react:library
-@nrwl/workspace:library
 
 None of the above
 ```

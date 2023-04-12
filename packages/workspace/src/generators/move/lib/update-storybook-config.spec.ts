@@ -1,8 +1,10 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateStorybookConfig } from './update-storybook-config';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 describe('updateStorybookConfig', () => {
   let tree: Tree;

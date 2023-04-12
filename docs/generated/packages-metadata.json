@@ -2975,15 +2975,6 @@
         "type": "generator"
       },
       {
-        "description": "Create a library.",
-        "file": "generated/packages/workspace/generators/library.json",
-        "hidden": false,
-        "name": "library",
-        "originalFilePath": "/packages/workspace/src/generators/library/schema.json",
-        "path": "workspace/generators/library",
-        "type": "generator"
-      },
-      {
         "description": "Generates a workspace generator.",
         "file": "generated/packages/workspace/generators/workspace-generator.json",
         "hidden": false,

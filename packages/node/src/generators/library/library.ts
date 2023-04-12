@@ -17,7 +17,7 @@ import {
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from './schema';
-import { libraryGenerator as workspaceLibraryGenerator } from '@nrwl/workspace/generators';
+import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
 
 import { join } from 'path';
 import { addSwcDependencies } from '@nrwl/js/src/utils/swc/add-swc-dependencies';
@@ -49,8 +49,10 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     );
   }
 
-  const libraryInstall = await workspaceLibraryGenerator(tree, {
+  const libraryInstall = await jsLibraryGenerator(tree, {
     ...schema,
+    bundler: schema.buildable ? 'tsc' : 'none',
+    includeBabelRc: schema.babelJest,
     importPath: options.importPath,
     testEnvironment: 'node',
     skipFormat: true,

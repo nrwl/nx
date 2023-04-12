@@ -3006,15 +3006,6 @@
         "path": "/packages/workspace/generators/new",
         "type": "generator"
       },
-      "/packages/workspace/generators/library": {
-        "description": "Create a library.",
-        "file": "generated/packages/workspace/generators/library.json",
-        "hidden": false,
-        "name": "library",
-        "originalFilePath": "/packages/workspace/src/generators/library/schema.json",
-        "path": "/packages/workspace/generators/library",
-        "type": "generator"
-      },
       "/packages/workspace/generators/workspace-generator": {
         "description": "Generates a workspace generator.",
         "file": "generated/packages/workspace/generators/workspace-generator.json",

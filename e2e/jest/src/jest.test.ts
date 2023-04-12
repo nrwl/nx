@@ -4,12 +4,9 @@ import {
   runCLI,
   runCLIAsync,
   uniq,
-  readJson,
   updateFile,
   expectJestTestsToPass,
   cleanupProject,
-  readFile,
-  checkFilesExist,
 } from '@nrwl/e2e/utils';
 
 describe('Jest', () => {
@@ -20,7 +17,6 @@ describe('Jest', () => {
   afterAll(() => cleanupProject());
 
   it('should be able test projects using jest', async () => {
-    await expectJestTestsToPass('@nrwl/workspace:lib');
     await expectJestTestsToPass('@nrwl/js:lib');
   }, 500000);
 
@@ -28,10 +24,8 @@ describe('Jest', () => {
     const testGlobal = `'My Test Global'`;
     const mylib = uniq('mylib');
     const utilLib = uniq('util-lib');
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
-    runCLI(
-      `generate @nrwl/workspace:lib ${utilLib} --importPath=@global-fun/globals`
-    );
+    runCLI(`generate @nrwl/js:lib ${mylib} --unit-test-runner jest`);
+    runCLI(`generate @nrwl/js:lib ${utilLib} --importPath=@global-fun/globals`);
     updateFile(
       `libs/${utilLib}/src/index.ts`,
       stripIndents`
@@ -102,13 +96,13 @@ describe('Jest', () => {
 
   it('should set the NODE_ENV to `test`', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
+    runCLI(`generate @nrwl/js:lib ${mylib} --unit-test-runner jest`);
 
     updateFile(
       `libs/${mylib}/src/lib/${mylib}.spec.ts`,
       `
         test('can access jest global', () => {
-          expect(process.env.NODE_ENV).toBe('test');
+          expect(process.env['NODE_ENV']).toBe('test');
         });
         `
     );
@@ -120,7 +114,7 @@ describe('Jest', () => {
 
   it('should support multiple `coverageReporters` through CLI', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
+    runCLI(`generate @nrwl/js:lib ${mylib} --unit-test-runner jest`);
 
     updateFile(
       `libs/${mylib}/src/lib/${mylib}.spec.ts`,

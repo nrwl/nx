@@ -1,4 +1,3 @@
-export { libraryGenerator } from './src/generators/library/library';
 export { npmPackageGenerator } from './src/generators/npm-package/npm-package';
 export { moveGenerator } from './src/generators/move/move';
 export { removeGenerator } from './src/generators/remove/remove';

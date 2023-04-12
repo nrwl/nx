@@ -99,7 +99,7 @@ describe('Extra Nx Misc Tests', () => {
   describe('Run Commands', () => {
     const mylib = uniq('lib');
     beforeAll(() => {
-      runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+      runCLI(`generate @nrwl/js:lib ${mylib}`);
     });
 
     it('should not override environment variables already set when setting a custom env file path', async () => {
@@ -229,7 +229,7 @@ describe('Extra Nx Misc Tests', () => {
 
       const folder = `dist/libs/${mylib}/some-folder`;
 
-      runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+      runCLI(`generate @nrwl/js:lib ${mylib}`);
 
       runCLI(
         `generate @nrwl/workspace:run-commands build --command=echo --outputs=${folder}/ --project=${mylib}`

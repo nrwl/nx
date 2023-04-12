@@ -1,8 +1,10 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateJestConfig } from './update-jest-config';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 describe('updateJestConfig', () => {
   let tree: Tree;
@@ -148,7 +150,7 @@ describe('updateJestConfig', () => {
     tree.write(
       rootJestConfigPath,
       `const { getJestProjects } = require('@nrwl/jest');
-      
+
 module.exports = {
   projects: [...getJestProjects(), '<rootDir>/libs/some/test/dir/my-source']
 };
@@ -187,7 +189,7 @@ module.exports = {
     tree.write(
       rootJestConfigPath,
       `const { getJestProjects } = require('@nrwl/jest');
-      
+
 module.exports = {
   projects: [...getJestProjects(), '<rootDir>/libs/some/test/dir/my-source', '<rootDir>/libs/foo']
 };

@@ -15,7 +15,6 @@ type GeneratorsWithDefaultTests =
   | '@nrwl/react:app'
   | '@nrwl/next:app'
   | '@nrwl/angular:app'
-  | '@nrwl/workspace:lib'
   | '@nrwl/web:app';
 
 /**

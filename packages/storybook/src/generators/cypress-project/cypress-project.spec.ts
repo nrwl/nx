@@ -2,7 +2,7 @@ import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version
 import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import { libraryGenerator } from '@nrwl/workspace/generators';
+import { libraryGenerator } from '@nrwl/js';
 import { cypressProjectGenerator } from './cypress-project';
 
 jest.mock('@nrwl/cypress/src/utils/cypress-version');

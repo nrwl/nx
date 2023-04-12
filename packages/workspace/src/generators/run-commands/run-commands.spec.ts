@@ -1,7 +1,9 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import runCommands from './run-commands';
-import { libraryGenerator } from '../library/library';
 import { readProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 describe('run-commands', () => {
   it('should generate a target', async () => {

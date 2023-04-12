@@ -6,7 +6,9 @@ import { join } from 'path';
 
 import { Schema } from '../schema';
 import { updateJestConfig } from './update-jest-config';
-import { libraryGenerator } from '../../library/library';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 describe('updateRootJestConfig', () => {
   let tree: Tree;

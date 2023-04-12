@@ -144,7 +144,7 @@ describe('cache', () => {
 
   it('should support using globs as outputs', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nrwl/workspace:library ${mylib}`);
+    runCLI(`generate @nrwl/js:library ${mylib}`);
     updateProjectConfig(mylib, (c) => {
       c.targets.build = {
         executor: 'nx:run-commands',

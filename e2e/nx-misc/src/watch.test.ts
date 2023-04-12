@@ -17,9 +17,9 @@ describe('Nx Commands', () => {
   let proj3 = uniq('proj3');
   beforeAll(() => {
     newProject({ packageManager: 'npm' });
-    runCLI(`generate @nrwl/workspace:lib ${proj1}`);
-    runCLI(`generate @nrwl/workspace:lib ${proj2}`);
-    runCLI(`generate @nrwl/workspace:lib ${proj3}`);
+    runCLI(`generate @nrwl/js:lib ${proj1}`);
+    runCLI(`generate @nrwl/js:lib ${proj2}`);
+    runCLI(`generate @nrwl/js:lib ${proj3}`);
   });
 
   afterAll(() => cleanupProject());

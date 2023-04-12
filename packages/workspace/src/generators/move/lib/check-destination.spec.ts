@@ -6,7 +6,9 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { checkDestination } from './check-destination';
-import { libraryGenerator } from '../../library/library';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nrwl/js');
 
 describe('checkDestination', () => {
   let tree: Tree;
@@ -36,7 +38,6 @@ describe('checkDestination', () => {
   it('should throw an error if the path already exists', async () => {
     await libraryGenerator(tree, {
       name: 'my-other-lib',
-      standaloneConfig: false,
     });
 
     const schema: Schema = {
