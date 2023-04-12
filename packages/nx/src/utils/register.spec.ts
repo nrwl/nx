@@ -1,4 +1,4 @@
-import { ModuleKind, ScriptTarget } from 'typescript';
+import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
 import { getTsNodeCompilerOptions } from './register';
 
 describe('getTsNodeCompilerOptions', () => {
@@ -16,5 +16,21 @@ describe('getTsNodeCompilerOptions', () => {
         target: ScriptTarget.ES2020,
       }).target
     ).toEqual('ES2020');
+  });
+
+  it('should remove jsx option', () => {
+    expect(
+      getTsNodeCompilerOptions({
+        jsx: JsxEmit.ReactJSX,
+      }).jsx
+    ).toBeUndefined();
+  });
+
+  it('should use correct lib value', () => {
+    expect(
+      getTsNodeCompilerOptions({
+        lib: ['lib.es2022.d.ts'],
+      }).lib
+    ).toEqual(['es2022']);
   });
 });
