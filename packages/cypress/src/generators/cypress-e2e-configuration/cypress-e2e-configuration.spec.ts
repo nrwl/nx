@@ -51,14 +51,14 @@ describe('Cypress e2e configuration', () => {
       `);
       expect(readProjectConfiguration(tree, 'my-app').targets.e2e)
         .toMatchInlineSnapshot(`
-        Object {
-          "configurations": Object {
-            "production": Object {
+        {
+          "configurations": {
+            "production": {
               "devServerTarget": "my-app:serve:production",
             },
           },
           "executor": "@nrwl/cypress:cypress",
-          "options": Object {
+          "options": {
             "cypressConfig": "apps/my-app/cypress.config.ts",
             "devServerTarget": "my-app:serve",
             "testingType": "e2e",
@@ -68,18 +68,18 @@ describe('Cypress e2e configuration', () => {
 
       expect(readJson(tree, 'apps/my-app/tsconfig.json'))
         .toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
+        {
+          "compilerOptions": {
             "allowJs": true,
             "outDir": "../../dist/out-tsc",
             "sourceMap": false,
-            "types": Array [
+            "types": [
               "cypress",
               "node",
             ],
           },
           "extends": "../../tsconfig.base.json",
-          "include": Array [
+          "include": [
             "src/**/*.ts",
             "src/**/*.js",
             "cypress.config.ts",
@@ -187,18 +187,18 @@ describe('Cypress e2e configuration', () => {
       assertCypressFiles(tree, 'apps/my-app/e2e/something');
       expect(readJson(tree, 'apps/my-app/tsconfig.cy.json'))
         .toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
+        {
+          "compilerOptions": {
             "allowJs": true,
             "outDir": "../../dist/out-tsc",
             "sourceMap": false,
-            "types": Array [
+            "types": [
               "cypress",
               "node",
             ],
           },
           "extends": "./tsconfig.json",
-          "include": Array [
+          "include": [
             "e2e/something/**/*.ts",
             "e2e/something/**/*.js",
             "cypress.config.ts",
@@ -291,7 +291,7 @@ describe('Cypress e2e configuration', () => {
         readProjectConfiguration(tree, 'my-lib').targets['e2e'].configurations
           .ci
       ).toMatchInlineSnapshot(`
-        Object {
+        {
           "devServerTarget": "my-app:serve-static",
         }
       `);
@@ -306,7 +306,7 @@ describe('Cypress e2e configuration', () => {
 
       expect(readProjectConfiguration(tree, 'my-app').targets['e2e'].options)
         .toMatchInlineSnapshot(`
-        Object {
+        {
           "cypressConfig": "apps/my-app/cypress.config.ts",
           "devServerTarget": "my-app:serve",
           "port": 0,

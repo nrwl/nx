@@ -47,17 +47,17 @@ export default defineConfig({
 `;
 
 exports[`convertToCypressTen convertCypressProject should handle multiple configurations 2`] = `
-Object {
-  "configurations": Object {
-    "production": Object {
+{
+  "configurations": {
+    "production": {
       "devServerTarget": "target:serve:production",
     },
-    "static": Object {
+    "static": {
       "baseUrl": "http://localhost:3000",
     },
   },
   "executor": "@nrwl/cypress:cypress",
-  "options": Object {
+  "options": {
     "cypressConfig": "apps/app-e2e/cypress.config.ts",
     "devServerTarget": "app:serve",
     "testingType": "e2e",
@@ -89,19 +89,19 @@ export default defineConfig({
 `;
 
 exports[`convertToCypressTen convertCypressProject should handle multiple configurations with no default cypressConfig option 2`] = `
-Object {
-  "configurations": Object {
-    "production": Object {
+{
+  "configurations": {
+    "production": {
       "cypressConfig": "apps/app-e2e/cypress.production.config.ts",
       "devServerTarget": "target:serve:production",
     },
-    "static": Object {
+    "static": {
       "baseUrl": "http://localhost:3000",
       "cypressConfig": "apps/app-e2e/cypress.config.ts",
     },
   },
   "executor": "@nrwl/cypress:cypress",
-  "options": Object {
+  "options": {
     "baseUrl": "http://localhost:4200",
     "testingType": "e2e",
   },
@@ -153,41 +153,41 @@ export default defineConfig({
 `;
 
 exports[`convertToCypressTen convertCypressProject should infer targets with --all flag 2`] = `
-Object {
-  "e2e": Object {
-    "configurations": Object {
-      "production": Object {
+{
+  "e2e": {
+    "configurations": {
+      "production": {
         "devServerTarget": "app:serve:production",
       },
     },
     "executor": "@nrwl/cypress:cypress",
-    "options": Object {
+    "options": {
       "cypressConfig": "apps/app-e2e/cypress.config.ts",
       "devServerTarget": "app:serve",
       "testingType": "e2e",
     },
   },
-  "e2e-custom": Object {
-    "configurations": Object {
-      "production": Object {
+  "e2e-custom": {
+    "configurations": {
+      "production": {
         "devServerTarget": "app:serve:production",
       },
     },
     "executor": "@nrwl/cypress:cypress",
-    "options": Object {
+    "options": {
       "cypressConfig": "apps/app-e2e/cypress.config.ts",
       "devServerTarget": "app:serve",
       "testingType": "e2e",
     },
   },
-  "lint": Object {
+  "lint": {
     "executor": "@nrwl/linter:eslint",
-    "options": Object {
-      "lintFilePatterns": Array [
+    "options": {
+      "lintFilePatterns": [
         "apps/app-e2e/**/*.{js,ts}",
       ],
     },
-    "outputs": Array [
+    "outputs": [
       "{options.outputFile}",
     ],
   },
@@ -218,41 +218,41 @@ export default defineConfig({
 `;
 
 exports[`convertToCypressTen convertCypressProject should not break when an invalid target is passed in 2`] = `
-Object {
-  "e2e": Object {
-    "configurations": Object {
-      "production": Object {
+{
+  "e2e": {
+    "configurations": {
+      "production": {
         "devServerTarget": "app:serve:production",
       },
     },
     "executor": "@nrwl/cypress:cypress",
-    "options": Object {
+    "options": {
       "cypressConfig": "apps/app-e2e/cypress.config.ts",
       "devServerTarget": "app:serve",
       "testingType": "e2e",
     },
   },
-  "e2e-custom": Object {
-    "configurations": Object {
-      "production": Object {
+  "e2e-custom": {
+    "configurations": {
+      "production": {
         "devServerTarget": "app:serve:production",
       },
     },
     "executor": "@nrwl/cypress:cypress",
-    "options": Object {
+    "options": {
       "cypressConfig": "apps/app-e2e/cypress.config.ts",
       "devServerTarget": "app:serve",
       "testingType": "e2e",
     },
   },
-  "lint": Object {
+  "lint": {
     "executor": "@nrwl/linter:eslint",
-    "options": Object {
-      "lintFilePatterns": Array [
+    "options": {
+      "lintFilePatterns": [
         "apps/app-e2e/**/*.{js,ts}",
       ],
     },
-    "outputs": Array [
+    "outputs": [
       "{options.outputFile}",
     ],
   },
@@ -326,10 +326,10 @@ describe('a', () => {
   });
 
   it('should display welcome message', () => {
-    // Custom command example, see \\\\\`../support/commands.ts\\\\\` file
+    // Custom command example, see \\\`../support/commands.ts\\\` file
     cy.login('my-email@something.com', 'myPassword');
 
-    // Function helper example, see \\\\\`../support/app.po.ts\\\\\` file
+    // Function helper example, see \\\`../support/app.po.ts\\\` file
     getGreeting().contains('Welcome a');
   });
 });

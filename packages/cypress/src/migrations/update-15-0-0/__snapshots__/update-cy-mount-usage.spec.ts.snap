@@ -2,7 +2,7 @@
 
 exports[`update cy.mount usage should add the mount command 1`] = `
 "import { mount } from 'cypress/angular'
-/// <reference types=\\"cypress\\" />
+/// <reference types="cypress" />
 
 // ***********************************************
 // This example commands.ts shows you how to
@@ -32,15 +32,15 @@ Cypress.Commands.add('login', (email, password) => {
 });
 //
 // -- This is a child command --
-// Cypress.Commands.add(\\"drag\\", { prevSubject: 'element'}, (subject, options) => { ... })
+// Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })
 //
 //
 // -- This is a dual command --
-// Cypress.Commands.add(\\"dismiss\\", { prevSubject: 'optional'}, (subject, options) => { ... })
+// Cypress.Commands.add("dismiss", { prevSubject: 'optional'}, (subject, options) => { ... })
 //
 //
 // -- This will overwrite an existing command --
-// Cypress.Commands.overwrite(\\"visit\\", (originalFn, url, options) => { ... })
+// Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 Cypress.Commands.add('mount', mount);"
 `;
@@ -71,7 +71,7 @@ exports[`update cy.mount usage should update angular react test file 1`] = `
       });
 
       it('should work with config', () => {
-        cy.mount(<MyComponent title={\\"blah\\"}/>,);
+        cy.mount(<MyComponent title={"blah"}/>,);
       });
     });
     "
@@ -87,7 +87,7 @@ exports[`update cy.mount usage should update angular react18 test file 1`] = `
       });
 
       it('should work with config', () => {
-        cy.mount(<MyComponent title={\\"blah\\"}/>);
+        cy.mount(<MyComponent title={"blah"}/>);
       });
     });
     "
