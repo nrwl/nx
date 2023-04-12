@@ -252,13 +252,13 @@ describe('SuperUsers Selectors', () => {
       expect(selId).toBe('PRODUCT-BBB');
     });
 
-    it('selectSuperUsersLoaded() should return the current \\"loaded\\" status', () => {
+    it('selectSuperUsersLoaded() should return the current "loaded" status', () => {
       const result = SuperUsersSelectors.selectSuperUsersLoaded(state);
 
       expect(result).toBe(true);
     });
 
-    it('selectSuperUsersError() should return the current \\"error\\" state', () => {
+    it('selectSuperUsersError() should return the current "error" state', () => {
       const result = SuperUsersSelectors.selectSuperUsersError(state);
 
       expect(result).toBe(ERROR_MSG);

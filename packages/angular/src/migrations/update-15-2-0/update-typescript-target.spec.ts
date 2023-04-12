@@ -55,7 +55,7 @@ describe('Migration to update target and add useDefineForClassFields', () => {
       'tsconfig.base.json'
     ).compilerOptions;
     expect(compilerOptions).toMatchInlineSnapshot(`
-      Object {
+      {
         "module": "es2020",
         "target": "es2015",
       }
@@ -85,7 +85,7 @@ describe('Migration to update target and add useDefineForClassFields', () => {
       'apps/karma/tsconfig.spec.json'
     ).compilerOptions;
     expect(compilerOptions).toMatchInlineSnapshot(`
-      Object {
+      {
         "module": "es2020",
         "target": "ES2022",
         "useDefineForClassFields": false,
