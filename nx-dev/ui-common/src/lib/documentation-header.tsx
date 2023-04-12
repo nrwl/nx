@@ -44,7 +44,7 @@ export function DocumentationHeader({
   const isNx: boolean = !isNxCloud && !isPackages && !isPlugins && !isRecipes;
 
   const sections = [
-    { name: 'Home', href: '/getting-started/intro', current: isNx },
+    { name: 'Nx', href: '/getting-started/intro', current: isNx },
     {
       name: 'Nx Cloud',
       href: '/nx-cloud/intro/what-is-nx-cloud',
