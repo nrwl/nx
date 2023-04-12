@@ -21,7 +21,7 @@ import {
 import {
   getRootTsConfigFileName,
   resolveModuleByImport,
-} from 'nx/src/utils/typescript';
+} from 'nx/src/plugins/js';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 type SingleSourceTagConstraint = {

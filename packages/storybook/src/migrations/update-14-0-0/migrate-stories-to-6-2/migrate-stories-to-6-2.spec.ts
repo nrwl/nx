@@ -6,7 +6,7 @@ import {
 import { joinPathFragments, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { storybookVersion } from '@nx/storybook';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from 'nx/src/plugins/js';
 import * as ts from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { nxVersion } from '../../../utils/versions';

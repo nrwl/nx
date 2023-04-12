@@ -18,6 +18,13 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { ensureDirSync } from 'fs-extra';
 import { removeNpmNodes } from 'nx/src/plugins/js/lock-file/remove-npm-nodes';
 
+export {
+  findNodes,
+  getRootTsConfigPath,
+  getRootTsConfigFileName,
+  resolveModuleByImport,
+} from './utils/typescript';
+
 export const processProjectGraph: ProjectGraphProcessor = async (
   graph,
   context

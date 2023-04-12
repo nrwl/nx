@@ -1,12 +1,12 @@
-import { WholeFileChange } from '../../file-utils';
+import { WholeFileChange } from '../../../../project-graph/file-utils';
 import {
   JsonDiffType,
   isJsonChange,
   JsonChange,
-} from '../../../utils/json-diff';
-import { getRootTsConfigFileName } from '../../../utils/typescript';
-import { TouchedProjectLocator } from '../affected-project-graph-models';
-import { ProjectGraphProjectNode } from '../../../config/project-graph';
+} from '../../../../utils/json-diff';
+import { getRootTsConfigFileName } from '../../utils/typescript';
+import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
+import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 
 export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
   WholeFileChange | JsonChange

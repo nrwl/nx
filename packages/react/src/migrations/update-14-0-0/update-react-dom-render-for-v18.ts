@@ -7,7 +7,7 @@ import {
   Tree,
   formatFiles,
 } from '@nx/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from 'nx/src/plugins/js';
 import * as ts from 'typescript';
 
 export async function update(tree: Tree) {

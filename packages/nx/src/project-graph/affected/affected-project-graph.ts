@@ -3,12 +3,11 @@ import {
   getImplicitlyTouchedProjects,
   getTouchedProjects,
 } from './locators/workspace-projects';
-import { getTouchedNpmPackages } from './locators/npm-packages';
+import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
 import {
   AffectedProjectGraphContext,
   TouchedProjectLocator,
 } from './affected-project-graph-models';
-import { getTouchedProjectsFromTsConfig } from './locators/tsconfig-json-changes';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
@@ -25,9 +24,8 @@ export async function filterAffected(
   const touchedProjectLocators: TouchedProjectLocator[] = [
     getTouchedProjects,
     getImplicitlyTouchedProjects,
-    getTouchedNpmPackages,
-    getTouchedProjectsFromTsConfig,
     getTouchedProjectsFromProjectGlobChanges,
+    getJSTouchedProjects,
   ];
 
   const touchedProjects = [];

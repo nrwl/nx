@@ -1,7 +1,7 @@
 import {
   getRootTsConfigFileName,
   resolveModuleByImport,
-} from '../../../../utils/typescript';
+} from '../../utils/typescript';
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
 import { dirname, join, posix } from 'path';
 import { workspaceRoot } from '../../../../utils/workspace-root';

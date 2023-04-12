@@ -5,7 +5,7 @@ import {
   stripIndents,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from 'nx/src/plugins/js';
 import { extname } from 'path';
 import type {
   ClassDeclaration,

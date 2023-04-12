@@ -1,8 +1,8 @@
-import { WholeFileChange } from '../../file-utils';
-import { jsonDiff } from '../../../utils/json-diff';
+import { WholeFileChange } from '../../../../project-graph/file-utils';
+import { jsonDiff } from '../../../../utils/json-diff';
 import { getTouchedProjectsFromTsConfig } from './tsconfig-json-changes';
-import * as tsUtils from '../../../utils/typescript';
-import { DependencyType, ProjectGraph } from '../../../config/project-graph';
+import * as tsUtils from '../../utils/typescript';
+import { DependencyType, ProjectGraph } from '../../../../config/project-graph';
 
 describe('getTouchedProjectsFromTsConfig', () => {
   let graph: ProjectGraph;

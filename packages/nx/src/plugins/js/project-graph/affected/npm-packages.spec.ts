@@ -1,8 +1,8 @@
-import { NxJsonConfiguration } from '../../../config/nx-json';
-import { ProjectGraph } from '../../../config/project-graph';
-import { JsonDiffType } from '../../../utils/json-diff';
-import { logger } from '../../../utils/logger';
-import { WholeFileChange } from '../../file-utils';
+import { NxJsonConfiguration } from '../../../../config/nx-json';
+import { ProjectGraph } from '../../../../config/project-graph';
+import { JsonDiffType } from '../../../../utils/json-diff';
+import { logger } from '../../../../utils/logger';
+import { WholeFileChange } from '../../../../project-graph/file-utils';
 import { getTouchedNpmPackages } from './npm-packages';
 
 describe('getTouchedNpmPackages', () => {

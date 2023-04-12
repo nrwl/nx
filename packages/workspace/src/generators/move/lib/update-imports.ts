@@ -14,7 +14,7 @@ import {
 } from '@nx/devkit';
 import type * as ts from 'typescript';
 import { getRootTsConfigPathInTree } from '../../../utilities/ts-config';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from 'nx/src/plugins/js';
 import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
 import { relative } from 'path';

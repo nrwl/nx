@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import * as minimatch from 'minimatch';
-import { getRootTsConfigFileName } from '../utils/typescript';
+import { getRootTsConfigFileName } from '../plugins/js/utils/typescript';
 import { defaultHashing, HashingImpl } from './hashing-impl';
 import {
   FileData,

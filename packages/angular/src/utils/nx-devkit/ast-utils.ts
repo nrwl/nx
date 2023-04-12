@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from 'nx/src/plugins/js';
 import {
   getImport,
   getSourceNodes,

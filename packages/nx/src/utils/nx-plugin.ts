@@ -24,7 +24,7 @@ import {
 import { normalizePath } from './path';
 import { join } from 'path';
 import { getNxRequirePaths } from './installation-directory';
-import { readTsConfig } from './typescript';
+import { readTsConfig } from '../plugins/js/utils/typescript';
 
 import type * as ts from 'typescript';
 

@@ -3,7 +3,7 @@ import {
   ProjectGraphProjectNode,
   readJsonFile,
 } from '@nx/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from 'nx/src/plugins/js';
 import { existsSync, readFileSync } from 'fs';
 import { dirname } from 'path';
 import ts = require('typescript');
