@@ -116,18 +116,18 @@ describe('app', () => {
 
       const tsconfig = readJson(tree, 'my-node-app/tsconfig.json');
       expect(tsconfig).toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
+        {
+          "compilerOptions": {
             "esModuleInterop": true,
           },
           "extends": "../tsconfig.base.json",
-          "files": Array [],
-          "include": Array [],
-          "references": Array [
-            Object {
+          "files": [],
+          "include": [],
+          "references": [
+            {
               "path": "./tsconfig.app.json",
             },
-            Object {
+            {
               "path": "./tsconfig.spec.json",
             },
           ],
@@ -144,36 +144,36 @@ describe('app', () => {
       ]);
       const eslintrc = readJson(tree, 'my-node-app/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
-        Object {
-          "extends": Array [
+        {
+          "extends": [
             "../.eslintrc.json",
           ],
-          "ignorePatterns": Array [
+          "ignorePatterns": [
             "!**/*",
           ],
-          "overrides": Array [
-            Object {
-              "files": Array [
+          "overrides": [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
           ],
         }
@@ -292,14 +292,14 @@ describe('app', () => {
       const project = readProjectConfiguration(tree, 'my-node-app');
       expect(project.targets.test).toBeUndefined();
       expect(project.targets.lint).toMatchInlineSnapshot(`
-        Object {
+        {
           "executor": "@nrwl/linter:eslint",
-          "options": Object {
-            "lintFilePatterns": Array [
+          "options": {
+            "lintFilePatterns": [
               "my-node-app/**/*.ts",
             ],
           },
-          "outputs": Array [
+          "outputs": [
             "{options.outputFile}",
           ],
         }
@@ -374,7 +374,7 @@ describe('app', () => {
           preset: '../jest.preset.js',
           testEnvironment: 'node',
           transform: {
-            '^.+\\\\\\\\.[tj]s$': 'babel-jest',
+            '^.+\\\\.[tj]s$': 'babel-jest',
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../coverage/my-node-app',

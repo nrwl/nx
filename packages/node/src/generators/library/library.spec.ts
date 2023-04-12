@@ -93,18 +93,18 @@ describe('lib', () => {
       await libraryGenerator(tree, baseLibraryConfig);
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
+        {
+          "compilerOptions": {
             "module": "commonjs",
           },
           "extends": "../../tsconfig.base.json",
-          "files": Array [],
-          "include": Array [],
-          "references": Array [
-            Object {
+          "files": [],
+          "include": [],
+          "references": [
+            {
               "path": "./tsconfig.lib.json",
             },
-            Object {
+            {
               "path": "./tsconfig.spec.json",
             },
           ],
@@ -142,36 +142,36 @@ describe('lib', () => {
 
       const eslintrc = readJson(tree, 'libs/my-lib/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
-        Object {
-          "extends": Array [
+        {
+          "extends": [
             "../../.eslintrc.json",
           ],
-          "ignorePatterns": Array [
+          "ignorePatterns": [
             "!**/*",
           ],
-          "overrides": Array [
-            Object {
-              "files": Array [
+          "overrides": [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
           ],
         }
@@ -360,10 +360,10 @@ describe('lib', () => {
       expect(projectConfiguration.root).toEqual('libs/my-lib');
 
       expect(projectConfiguration.targets.build).toMatchInlineSnapshot(`
-        Object {
+        {
           "executor": "@nrwl/js:tsc",
-          "options": Object {
-            "assets": Array [
+          "options": {
+            "assets": [
               "libs/my-lib/*.md",
             ],
             "main": "libs/my-lib/src/index.ts",
@@ -371,7 +371,7 @@ describe('lib', () => {
             "packageJson": "libs/my-lib/package.json",
             "tsConfig": "libs/my-lib/tsconfig.lib.json",
           },
-          "outputs": Array [
+          "outputs": [
             "{options.outputPath}",
           ],
         }
@@ -463,7 +463,7 @@ describe('lib', () => {
           preset: '../../jest.preset.js',
           testEnvironment: 'node',
           transform: {
-            '^.+\\\\\\\\.[tj]s$': 'babel-jest',
+            '^.+\\\\.[tj]s$': 'babel-jest',
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/libs/my-lib',
