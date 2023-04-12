@@ -128,7 +128,7 @@ export function getPackageManagerCommand({
       } create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `npm run ${script} -- ${args}`,
       runNx: `npx nx`,
-      runNxSilent: `npx nx`,
+      runNxSilent: `npx --quiet nx`,
       runUninstalledPackage: `npx --yes`,
       install: 'npm install',
       ciInstall: 'npm ci',
