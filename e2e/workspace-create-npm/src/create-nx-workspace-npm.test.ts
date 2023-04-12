@@ -136,6 +136,7 @@ describe('create-nx-workspace --preset=npm', () => {
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
       [libName]: [`packages/${libName}/src/index.ts`],
+      [`${libName}/server`]: [`packages/${libName}/src/server.ts`],
     });
   });
 

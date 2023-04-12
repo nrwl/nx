@@ -4,9 +4,11 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import libraryGenerator from './library';
 import { Schema } from './schema';
+
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
+
 describe('next library', () => {
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
@@ -132,5 +134,32 @@ describe('next library', () => {
       readJson(appTree, 'libs/my-lib2/tsconfig.json').compilerOptions
         .jsxImportSource
     ).toEqual('@emotion/react');
+  });
+
+  it('should generate a server-only entry point', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      name: 'myLib',
+      linter: Linter.EsLint,
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+    });
+
+    expect(appTree.read('my-lib/src/index.ts', 'utf-8')).toContain(
+      'React client components'
+    );
+    expect(appTree.read('my-lib/src/server.ts', 'utf-8')).toContain(
+      'React server components'
+    );
+    expect(
+      readJson(appTree, 'tsconfig.base.json').compilerOptions.paths
+    ).toMatchObject({
+      '@proj/my-lib': ['my-lib/src/index.ts'],
+      '@proj/my-lib/server': ['my-lib/src/server.ts'],
+    });
   });
 });
