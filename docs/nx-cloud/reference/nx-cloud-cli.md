@@ -26,7 +26,7 @@ run.
 You can fix it by telling Nx Cloud that it can terminate agents after it sees a certain
 target: `npx nx-cloud start-ci-run --stop-agents-after=e2e`.
 
-> Earlier versions of `@nrwl/nx-cloud` required you to set the `NX_CLOUD_DISTRIBUTED_EXECUTION` env variable to `true`
+> Earlier versions of `nx-cloud` required you to set the `NX_CLOUD_DISTRIBUTED_EXECUTION` env variable to `true`
 > to
 > enable DTE, but in the latest version `npx nx-cloud start-ci-run` does it automatically.
 

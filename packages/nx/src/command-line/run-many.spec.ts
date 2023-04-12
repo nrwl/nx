@@ -1,6 +1,6 @@
-import { ProjectGraph } from '@nrwl/nx-cloud/lib/core/models/run-context.model';
 import { projectsToRun } from './run-many';
 import { performance } from 'perf_hooks';
+import { ProjectGraph } from '../config/project-graph';
 
 describe('run-many', () => {
   describe('projectsToRun', () => {
@@ -31,7 +31,7 @@ describe('run-many', () => {
               },
             },
           },
-        },
+        } as any,
         dependencies: {},
       };
     });
@@ -184,7 +184,7 @@ describe('run-many', () => {
               targets: {
                 test: {},
               },
-            },
+            } as any,
           };
         }
       });

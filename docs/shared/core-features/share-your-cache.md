@@ -18,10 +18,6 @@ npx nx connect-to-nx-cloud
 ```{% command="npx nx connect-to-nx-cloud"%}
 ✔ Enable distributed caching to make your CI faster · Yes
 
->  NX  Generating @nrwl/nx-cloud:init
-
-UPDATE nx.json
-
  >  NX   Distributed caching via Nx Cloud has been enabled
 
    In addition to the caching, Nx Cloud provides config-free distributed execution,

@@ -47,7 +47,7 @@
       "@nrwl/nest": "*",
       "@nrwl/next": "*",
       "@nrwl/node": "*",
-      "@nrwl/nx-cloud": "latest",
+      "nx-cloud": "latest",
       "@nrwl/nx-plugin": "*",
       "@nrwl/react-native": "*",
       "@nrwl/react": "*",

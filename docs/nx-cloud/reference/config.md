@@ -6,7 +6,7 @@ The Nx Cloud runner is configured in `nx.json`.
 {
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/nx-cloud",
+      "runner": "nx-cloud",
       "options": {
         "accessToken": "SOMETOKEN",
         "cacheableOperations": ["build", "test", "lint", "e2e"]
@@ -52,7 +52,7 @@ In `nx.json`, locate the `taskRunnerOptions` property. It will look something li
 {
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/nx-cloud",
+      "runner": "nx-cloud",
       "options": {
         "accessToken": "SOMETOKEN",
         "cacheableOperations": ["build", "test", "lint", "e2e"],

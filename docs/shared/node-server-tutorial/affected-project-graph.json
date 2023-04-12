@@ -226,7 +226,7 @@
               "npm:@nrwl/js",
               "npm:@nrwl/linter",
               "npm:@nrwl/node",
-              "npm:@nrwl/nx-cloud",
+              "npm:nx-cloud",
               "npm:@nrwl/workspace",
               "npm:@types/express",
               "npm:@types/jest",

@@ -37,7 +37,7 @@ nx connect
 ```
 
 {% callout type="note" title="Use the latest version of Nx Cloud" %}
-This command installs the latest version of `@nrwl/nx-cloud`. The latest version works with any version of Nx >= 13.0.
+This command installs the latest version of `nx-cloud`. The latest version works with any version of Nx >= 13.0.
 {% /callout %}
 
 If you have a new workspace, you can generate the CI configuration as follows:

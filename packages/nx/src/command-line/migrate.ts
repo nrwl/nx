@@ -610,7 +610,7 @@ const LEGACY_NRWL_PACKAGE_GROUP: ArrayPackageGroup = [
   { package: '@nrwl/storybook', version: '*' },
   { package: '@nrwl/web', version: '*' },
   { package: '@nrwl/js', version: '*' },
-  { package: '@nrwl/nx-cloud', version: 'latest' },
+  { package: 'nx-cloud', version: 'latest' },
   { package: '@nrwl/react-native', version: '*' },
   { package: '@nrwl/detox', version: '*' },
   { package: '@nrwl/expo', version: '*' },

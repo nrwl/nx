@@ -22861,7 +22861,7 @@
           {
             "file": "packages/nx/src/command-line/run-many.spec.ts",
             "hash": "84ef3acaa7671c0b3507df3d0ac82d252d59ed68",
-            "deps": ["npm:@nrwl/nx-cloud"]
+            "deps": ["npm:nx-cloud"]
           },
           {
             "file": "packages/nx/src/command-line/run-many.ts",
@@ -27012,7 +27012,7 @@
               "js",
               "linter",
               "next",
-              "npm:@nrwl/nx-cloud",
+              "npm:nx-cloud",
               "react",
               "storybook",
               "web",

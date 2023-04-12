@@ -56,17 +56,17 @@ export async function connectToNxCloudCommand(
   if (!res) return false;
   const pmc = getPackageManagerCommand();
   if (pmc) {
-    execSync(`${pmc.addDev} @nrwl/nx-cloud@latest`);
+    execSync(`${pmc.addDev} nx-cloud@latest`);
   } else {
     const nxJson = readNxJson();
     if (nxJson.installation) {
       nxJson.installation.plugins ??= {};
-      nxJson.installation.plugins['@nrwl/nx-cloud'] = execSync(
-        `npm view @nrwl/nx-cloud@latest version`
+      nxJson.installation.plugins['nx-cloud'] = execSync(
+        `npm view nx-cloud@latest version`
       ).toString();
     }
   }
-  runNxSync(`g @nrwl/nx-cloud:init`, {
+  runNxSync(`g nx-cloud:init`, {
     stdio: [0, 1, 2],
   });
   return true;
