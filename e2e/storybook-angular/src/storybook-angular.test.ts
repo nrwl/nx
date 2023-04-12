@@ -15,7 +15,7 @@ describe('Storybook executors for Angular', () => {
   const angularStorybookLib = uniq('test-ui-ng-lib');
   beforeAll(() => {
     newProject();
-    createTestUILib(angularStorybookLib);
+    runCLI(`g @nrwl/angular:library ${angularStorybookLib} --no-interactive`);
     runCLI(
       `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
     );
@@ -25,8 +25,7 @@ describe('Storybook executors for Angular', () => {
     cleanupProject();
   });
 
-  // TODO: Enable on SB7
-  xdescribe('serve and build storybook', () => {
+  describe('serve and build storybook', () => {
     afterAll(() => killPorts());
 
     it('should serve an Angular based Storybook setup', async () => {
@@ -49,6 +48,7 @@ describe('Storybook executors for Angular', () => {
   xdescribe('run cypress tests using storybook', () => {
     it('should execute e2e tests using Cypress running against Storybook', async () => {
       if (runCypressTests()) {
+        addTestButtonToUILib(angularStorybookLib);
         writeFileSync(
           tmpProjPath(
             `apps/${angularStorybookLib}-e2e/src/e2e/test-button/test-button.component.cy.ts`
@@ -82,8 +82,7 @@ describe('Storybook executors for Angular', () => {
   });
 });
 
-export function createTestUILib(libName: string): void {
-  runCLI(`g @nrwl/angular:library ${libName} --no-interactive`);
+function addTestButtonToUILib(libName: string): void {
   runCLI(
     `g @nrwl/angular:component test-button --project=${libName} --no-interactive`
   );
