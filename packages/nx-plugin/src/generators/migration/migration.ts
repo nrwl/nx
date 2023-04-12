@@ -14,13 +14,7 @@ import type { Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 import * as path from 'path';
 import { addMigrationJsonChecks } from '../lint-checks/generator';
-import type { Linter as EsLint } from 'eslint';
-import {
-  NxMigrationsConfiguration,
-  PackageJson,
-  PackageJsonTargetConfiguration,
-  readNxMigrateConfig,
-} from 'nx/src/utils/package-json';
+import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectSourceRoot: string;
