@@ -18,14 +18,14 @@ describe('Update Report Directory Vitest Migration', () => {
     updateReportDirectoryPlaceholders(tree);
     expect(readProjectConfiguration(tree, 'project-one').targets)
       .toMatchInlineSnapshot(`
-      Object {
-        "test": Object {
+      {
+        "test": {
           "executor": "@nrwl/vite:test",
-          "options": Object {
+          "options": {
             "passWithNoTests": true,
             "reportsDirectory": "../../coverge/packages/project-one",
           },
-          "outputs": Array [
+          "outputs": [
             "coverage/packages/project-one",
           ],
         },
@@ -33,25 +33,25 @@ describe('Update Report Directory Vitest Migration', () => {
     `);
     expect(readProjectConfiguration(tree, 'project-two').targets)
       .toMatchInlineSnapshot(`
-      Object {
-        "custom-test": Object {
-          "configurations": Object {
-            "ci": Object {
+      {
+        "custom-test": {
+          "configurations": {
+            "ci": {
               "reportsDirectory": "coverge/project-two",
             },
           },
           "executor": "@nrwl/vite:test",
-          "options": Object {
+          "options": {
             "passWithNoTests": true,
           },
-          "outputs": Array [
+          "outputs": [
             "coverage/project-two",
             "dist/coverage/else.txt",
           ],
         },
-        "test": Object {
+        "test": {
           "executor": "@nrwl/vite:test",
-          "options": Object {
+          "options": {
             "passWithNoTests": true,
             "reportsDirectory": "coverge/project-two",
           },
