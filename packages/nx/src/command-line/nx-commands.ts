@@ -303,12 +303,8 @@ export const commandsObject = yargs
   })
   .command({
     command: 'init',
-    describe: `Adds Nx to any type of workspace. It performs the following changes:
-
-- Installs nx
-- Creates an nx.json configuration file
-- Sets up distributed caching (optional)
-- If migrating an Angular CLI, CRA or NestJS workspace, it installs the relevant Nx plugins for better developer experience`,
+    describe:
+      'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up distributed caching. For more info, check https://nx.dev/recipes/adopting-nx.',
     builder: (yargs) => withIntegratedOption(yargs),
     handler: async (args: any) => {
       await (await import('./init')).initHandler(args);
