@@ -70,9 +70,9 @@ describe('15.0.0 migration (prefix-outputs)', () => {
     const updated = readNxJson(tree);
 
     expect(updated.targetDefaults).toMatchInlineSnapshot(`
-      Object {
-        "build": Object {
-          "outputs": Array [
+      {
+        "build": {
+          "outputs": [
             "{workspaceRoot}/dist",
             "{projectRoot}/build",
             "{options.outputPath}",

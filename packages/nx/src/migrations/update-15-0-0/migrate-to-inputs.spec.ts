@@ -43,23 +43,23 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
           ],
-          "sharedGlobals": Array [],
+          "sharedGlobals": [],
         },
-        "targetDefaults": Object {
-          "build": Object {
-            "dependsOn": Array [
+        "targetDefaults": {
+          "build": {
+            "dependsOn": [
               "^build",
             ],
-            "inputs": Array [
+            "inputs": [
               "production",
               "^production",
             ],
@@ -95,20 +95,20 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
           ],
-          "sharedGlobals": Array [],
+          "sharedGlobals": [],
         },
-        "targetDefaults": Object {
-          "prepare": Object {
-            "dependsOn": Array [
+        "targetDefaults": {
+          "prepare": {
+            "dependsOn": [
               "^prepare",
             ],
           },
@@ -307,20 +307,20 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
             "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
             "!{projectRoot}/tsconfig.spec.json",
             "!{projectRoot}/jest.config.[jt]s",
             "!{projectRoot}/.eslintrc.json",
           ],
-          "sharedGlobals": Array [
+          "sharedGlobals": [
             "{workspaceRoot}/nx.json",
           ],
         },
@@ -350,20 +350,20 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
             "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
             "!{projectRoot}/tsconfig.spec.json",
             "!{projectRoot}/jest.config.[jt]s",
             "!{projectRoot}/.eslintrc.json",
           ],
-          "sharedGlobals": Array [
+          "sharedGlobals": [
             "{workspaceRoot}/nx.json",
           ],
         },
@@ -392,15 +392,15 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "production": Array [
+      {
+        "namedInputs": {
+          "production": [
             "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
             "!{projectRoot}/tsconfig.spec.json",
             "!{projectRoot}/jest.config.[jt]s",
             "!{projectRoot}/.eslintrc.json",
           ],
-          "sharedGlobals": Array [
+          "sharedGlobals": [
             "{workspaceRoot}/nx.json",
           ],
         },

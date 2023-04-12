@@ -48,7 +48,7 @@ describe('printHelp', () => {
       .map((x) => x.replace('--', ''));
 
     expect(flagsFromOutput).toMatchInlineSnapshot(`
-      Array [
+      [
         "aReq",
         "bReq",
         "aImp",
