@@ -1,11 +1,21 @@
 ---
-title: 'init - CLI command'
-description: 'Adds nx.json file and installs nx if not installed already'
+title: "init - CLI command"
+description: "Adds Nx to any type of workspace. It performs the following changes:
+
+- Installs nx
+- Creates an nx.json configuration file
+- Sets up distributed caching (optional)
+- If migrating an Angular CLI, CRA or NestJS workspace, it installs the relevant Nx plugins for better developer experience"
 ---
 
 # init
 
-Adds nx.json file and installs nx if not installed already
+Adds Nx to any type of workspace. It performs the following changes:
+
+- Installs nx
+- Creates an nx.json configuration file
+- Sets up distributed caching (optional)
+- If migrating an Angular CLI, CRA or NestJS workspace, it installs the relevant Nx plugins for better developer experience
 
 ## Usage
 
