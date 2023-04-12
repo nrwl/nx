@@ -68,11 +68,6 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
     ? readJson(host, migrationsPath)
     : {};
 
-  if (migrations.schematics) {
-    migrations.generators = migrations.schematics;
-    delete migrations.schematics;
-  }
-
   const generators = migrations.generators ?? {};
   generators[options.name] = {
     version: options.packageVersion,

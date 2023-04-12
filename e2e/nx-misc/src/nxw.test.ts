@@ -124,6 +124,8 @@ describe('nx wrapper / .nx installation', () => {
             description: '1.1.0',
             factory: './run11',
           },
+        },
+        generators: {
           run20: {
             version: '2.0.0',
             description: '2.0.0',
@@ -136,6 +138,7 @@ describe('nx wrapper / .nx installation', () => {
     updateFile(
       `.nx/installation/node_modules/migrate-parent-package/run11.js`,
       `
+        var angular_devkit_core1 = require("@angular-devkit/core");
         exports.default = function default_1() {
           return function(host) {
             host.create('file-11', 'content11')
