@@ -6,7 +6,7 @@ export default {
   displayName: 'my-lib',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/my-lib',
@@ -21,7 +21,7 @@ export default {
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
-    '^.+\\\\\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/my-lib',
@@ -30,15 +30,15 @@ export default {
 `;
 
 exports[`lib --unit-test-runner none should not generate test configuration 1`] = `
-Object {
-  "compilerOptions": Object {
+{
+  "compilerOptions": {
     "module": "commonjs",
   },
   "extends": "../../tsconfig.base.json",
-  "files": Array [],
-  "include": Array [],
-  "references": Array [
-    Object {
+  "files": [],
+  "include": [],
+  "references": [
+    {
       "path": "./tsconfig.lib.json",
     },
   ],
@@ -46,32 +46,32 @@ Object {
 `;
 
 exports[`lib --unit-test-runner none should not generate test configuration 2`] = `
-Object {
+{
   "executor": "@nrwl/linter:eslint",
-  "options": Object {
-    "lintFilePatterns": Array [
+  "options": {
+    "lintFilePatterns": [
       "libs/my-lib/**/*.ts",
     ],
   },
-  "outputs": Array [
+  "outputs": [
     "{options.outputFile}",
   ],
 }
 `;
 
 exports[`lib nested should create a local tsconfig.json 1`] = `
-Object {
-  "compilerOptions": Object {
+{
+  "compilerOptions": {
     "module": "commonjs",
   },
   "extends": "../../../tsconfig.base.json",
-  "files": Array [],
-  "include": Array [],
-  "references": Array [
-    Object {
+  "files": [],
+  "include": [],
+  "references": [
+    {
       "path": "./tsconfig.lib.json",
     },
-    Object {
+    {
       "path": "./tsconfig.spec.json",
     },
   ],
@@ -92,18 +92,18 @@ export class MyLibModule {}
 `;
 
 exports[`lib not nested should create a local tsconfig.json 1`] = `
-Object {
-  "compilerOptions": Object {
+{
+  "compilerOptions": {
     "module": "commonjs",
   },
   "extends": "../../tsconfig.base.json",
-  "files": Array [],
-  "include": Array [],
-  "references": Array [
-    Object {
+  "files": [],
+  "include": [],
+  "references": [
+    {
       "path": "./tsconfig.lib.json",
     },
-    Object {
+    {
       "path": "./tsconfig.spec.json",
     },
   ],
@@ -111,36 +111,36 @@ Object {
 `;
 
 exports[`lib not nested should generate files 1`] = `
-Object {
-  "extends": Array [
+{
+  "extends": [
     "../../.eslintrc.json",
   ],
-  "ignorePatterns": Array [
+  "ignorePatterns": [
     "!**/*",
   ],
-  "overrides": Array [
-    Object {
-      "files": Array [
+  "overrides": [
+    {
+      "files": [
         "*.ts",
         "*.tsx",
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.ts",
         "*.tsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
   ],
 }
