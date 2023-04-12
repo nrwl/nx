@@ -334,51 +334,51 @@ describe('app', () => {
 
         const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
         expect(eslintJson).toMatchInlineSnapshot(`
-          Object {
-            "env": Object {
+          {
+            "env": {
               "jest": true,
             },
-            "extends": Array [
+            "extends": [
               "plugin:@nrwl/nx/react-typescript",
               "next",
               "next/core-web-vitals",
               "../../.eslintrc.json",
             ],
-            "ignorePatterns": Array [
+            "ignorePatterns": [
               "!**/*",
               ".next/**/*",
             ],
-            "overrides": Array [
-              Object {
-                "files": Array [
+            "overrides": [
+              {
+                "files": [
                   "*.ts",
                   "*.tsx",
                   "*.js",
                   "*.jsx",
                 ],
-                "rules": Object {
-                  "@next/next/no-html-link-for-pages": Array [
+                "rules": {
+                  "@next/next/no-html-link-for-pages": [
                     "error",
                     "apps/my-app/pages",
                   ],
                 },
               },
-              Object {
-                "files": Array [
+              {
+                "files": [
                   "*.ts",
                   "*.tsx",
                 ],
-                "rules": Object {},
+                "rules": {},
               },
-              Object {
-                "files": Array [
+              {
+                "files": [
                   "*.js",
                   "*.jsx",
                 ],
-                "rules": Object {},
+                "rules": {},
               },
             ],
-            "rules": Object {
+            "rules": {
               "@next/next/no-html-link-for-pages": "off",
             },
           }
