@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Nx Plugin Migration - ensureNxProject usage in e2e tests should be idempotent 1`] = `
+"import { runNxCommandAsync, uniq } from '@nrwl/nx-plugin/testing';
+
+import { ensureNxProject } from '@nrwl/devkit';
+
+describe('my-lib e2e', () => {
+  // Setting up individual workspaces per
+  // test can cause e2e runs to take a long time.
+  // For this reason, we recommend each suite only
+  // consumes 1 workspace. The tests should each operate
+  // on a unique project in the workspace, such that they
+  // are not dependant on one another.
+  beforeAll(async () => {
+    await ensureNxProject('my-lib');
+  });
+
+  beforeAll(async () => {
+    await ensureNxProject('my-lib');
+  });
+
+  afterAll(() => {
+    // nx reset kills the daemon, and performs
+    // some work which can help clean up e2e leftovers
+    runNxCommandAsync('reset');
+  });
+});
+"
+`;
+
+exports[`Nx Plugin Migration - ensureNxProject usage in e2e tests should update calls to ensureNxProject and use project instead of package name 1`] = `
+"import { runNxCommandAsync, uniq } from '@nrwl/nx-plugin/testing';
+
+import { ensureNxProject } from '@nrwl/devkit';
+
+describe('my-lib e2e', () => {
+  // Setting up individual workspaces per
+  // test can cause e2e runs to take a long time.
+  // For this reason, we recommend each suite only
+  // consumes 1 workspace. The tests should each operate
+  // on a unique project in the workspace, such that they
+  // are not dependant on one another.
+  beforeAll(async () => {
+    await ensureNxProject('my-lib');
+  });
+
+  beforeAll(async () => {
+    await ensureNxProject('my-lib');
+  });
+
+  afterAll(() => {
+    // nx reset kills the daemon, and performs
+    // some work which can help clean up e2e leftovers
+    runNxCommandAsync('reset');
+  });
+});
+"
+`;
