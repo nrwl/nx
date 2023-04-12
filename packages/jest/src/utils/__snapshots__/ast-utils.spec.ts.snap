@@ -2,7 +2,7 @@
 
 exports[`Jest AST Utils addTransformerToConfig should add transformer to export default config 1`] = `
 "export default {
-  transform: { '^.+\\\\\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}], '^(?!.*\\\\\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest' },
+  transform: { '^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}], '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest' },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'blah',
   preset: '../../jest.preset.js'
@@ -14,13 +14,13 @@ exports[`Jest AST Utils addTransformerToConfig should add transformer to export 
 moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
 displayName: 'blah',
 preset: '../../jest.preset.js',
-transform: { '^.+\\\\\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}] }
+transform: { '^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}] }
 };"
 `;
 
 exports[`Jest AST Utils addTransformerToConfig should add transformer to module.exports config 1`] = `
 "module.exports = {
-  transform: { '^.+\\\\\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}], '^(?!.*\\\\\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest' },
+  transform: { '^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}], '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest' },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'blah',
   preset: '../../jest.preset.js'
@@ -32,6 +32,6 @@ exports[`Jest AST Utils addTransformerToConfig should add transformer to module.
 moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
 displayName: 'blah',
 preset: '../../jest.preset.js',
-transform: { '^.+\\\\\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}] }
+transform: { '^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}] }
 };"
 `;
