@@ -1,7 +1,7 @@
 export const nxVersion = require('../../package.json').version;
 
 export const typescriptVersion = '~4.9.5';
-export const typescriptESLintVersion = '^5.36.1';
+export const typescriptESLintVersion = '^5.58.0';
 export const eslintVersion = '~8.15.0';
 export const eslintConfigPrettierVersion = '8.1.0';
 

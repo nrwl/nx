@@ -221,6 +221,20 @@
           "version": "^5.36.1"
         }
       }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "^5.58.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^5.58.0"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^5.58.0"
+        }
+      }
     }
   }
 }
