@@ -2,28 +2,47 @@ import {
   checkFilesExist,
   cleanupProject,
   killPorts,
-  newProject,
   runCLI,
   runCommandUntil,
   tmpProjPath,
   uniq,
+  getPackageManagerCommand,
+  runCommand,
+  newProject,
+  updateJson,
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-// TODO: re-enable once the issue is fixed with long build times
-describe.skip('Storybook generators and executors for monorepos', () => {
+describe('Storybook generators and executors for monorepos', () => {
+  const previousPM = process.env.SELECTED_PM;
   const reactStorybookLib = uniq('test-ui-lib-react');
   let proj;
   beforeAll(() => {
-    proj = newProject();
+    process.env.SELECTED_PM = 'yarn';
+    proj = newProject({
+      packageManager: 'yarn',
+    });
     runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
     runCLI(
       `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive --bundler=webpack`
     );
+
+    // TODO(jack): Overriding enhanced-resolve to 5.10.0 now until the package is fixed.
+    // TODO: Use --storybook7Configuration and remove this
+    // See: https://github.com/webpack/enhanced-resolve/issues/362
+    updateJson('package.json', (json) => {
+      json['overrides'] = {
+        'enhanced-resolve': '5.10.0',
+      };
+
+      return json;
+    });
+    runCommand(getPackageManagerCommand().install);
   });
 
   afterAll(() => {
     cleanupProject();
+    process.env.SELECTED_PM = previousPM;
   });
 
   describe('serve and build storybook', () => {
@@ -38,13 +57,13 @@ describe.skip('Storybook generators and executors for monorepos', () => {
         }
       );
       p.kill();
-    }, 60000);
+    }, 50000);
 
     it('should build a React based storybook setup that uses webpack', () => {
       // build
       runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
-    }, 60000);
+    }, 50000);
 
     // This test makes sure path resolution works
     it('should build a React based storybook that references another lib and uses webpack', () => {
@@ -98,6 +117,6 @@ describe.skip('Storybook generators and executors for monorepos', () => {
       // build React lib
       runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
-    }, 60000);
+    }, 50000);
   });
 });

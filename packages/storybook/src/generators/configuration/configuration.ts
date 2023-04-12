@@ -53,7 +53,7 @@ export async function configurationGenerator(
    */
 
   let storybook7 =
-    storybookMajorVersion() === 7 || rawSchema.storybook7Configuration;
+    storybookMajorVersion() === 7 ?? rawSchema.storybook7Configuration;
 
   if (storybookMajorVersion() === 6 && rawSchema.storybook7Configuration) {
     logger.error(
