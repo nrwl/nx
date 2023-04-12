@@ -7,6 +7,9 @@ import {
   convertNxGenerator,
   formatFiles,
   updateProjectConfiguration,
+  updateJson,
+  GeneratorCallback,
+  runTasksInSerial,
 } from '@nrwl/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
 import { join } from 'path';
@@ -14,11 +17,14 @@ import { nxVersion } from '../../utils/versions';
 import generatorGenerator from '../generator/generator';
 import { CreatePackageSchema } from './schema';
 import { NormalizedSchema, normalizeSchema } from './utils/normalize-schema';
+import e2eProjectGenerator from '../e2e-project/e2e';
 
 export async function createPackageGenerator(
   host: Tree,
   schema: CreatePackageSchema
 ) {
+  const tasks: GeneratorCallback[] = [];
+
   const options = normalizeSchema(host, schema);
   const pluginPackageName = await addPresetGenerator(host, {
     ...options,
@@ -27,20 +33,23 @@ export async function createPackageGenerator(
 
   const installTask = addDependenciesToPackageJson(
     host,
-    {},
     {
       'create-nx-workspace': nxVersion,
-    }
+    },
+    {}
   );
+  tasks.push(installTask);
 
   await createCliPackage(host, options, pluginPackageName);
-  addTestsToE2eProject(host, options, pluginPackageName);
+  if (options.e2eTestRunner !== 'none') {
+    tasks.push(await addE2eProject(host, options, pluginPackageName));
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 /**
@@ -74,24 +83,24 @@ async function createCliPackage(
     ...options,
     rootProject: false,
     config: 'project',
-    buildable: true,
     publishable: true,
     bundler: options.bundler,
     importPath: options.importPath,
+    skipTsConfig: true,
   });
 
   host.delete(join(options.projectRoot, 'src'));
 
   // Add the bin entry to the package.json
-  const packageJsonPath = join(options.projectRoot, 'package.json');
-  const packageJson = readJson(host, packageJsonPath);
-  packageJson.bin = {
-    [options.name]: './bin/index.js',
-  };
-  packageJson.dependencies = {
-    'create-nx-workspace': nxVersion,
-  };
-  host.write(packageJsonPath, JSON.stringify(packageJson));
+  updateJson(host, join(options.projectRoot, 'package.json'), (packageJson) => {
+    packageJson.bin = {
+      [options.name]: './bin/index.js',
+    };
+    packageJson.dependencies = {
+      'create-nx-workspace': nxVersion,
+    };
+    return packageJson;
+  });
 
   // update project build target to use the bin entry
   const projectConfiguration = readProjectConfiguration(
@@ -105,13 +114,19 @@ async function createCliPackage(
   );
   projectConfiguration.targets.build.options.buildableProjectDepsInPackageJsonType =
     'dependencies';
+  projectConfiguration.targets.build.dependsOn = ['^build'];
+  projectConfiguration.implicitDependencies = [options.project];
   updateProjectConfiguration(host, options.projectName, projectConfiguration);
 
   // Add bin files to tsconfg.lib.json
-  const tsConfigPath = join(options.projectRoot, 'tsconfig.lib.json');
-  const tsConfig = readJson(host, tsConfigPath);
-  tsConfig.include.push('bin/**/*.ts');
-  host.write(tsConfigPath, JSON.stringify(tsConfig));
+  updateJson(
+    host,
+    join(options.projectRoot, 'tsconfig.lib.json'),
+    (tsConfig) => {
+      tsConfig.include.push('bin/**/*.ts');
+      return tsConfig;
+    }
+  );
 
   generateFiles(
     host,
@@ -125,21 +140,13 @@ async function createCliPackage(
   );
 }
 
-function getE2eProjectConfiguration(host: Tree, e2eProjectName: string) {
-  try {
-    return readProjectConfiguration(host, e2eProjectName);
-  } catch (e) {
-    return;
-  }
-}
-
 /**
  * Add a test file to plugin e2e project
  * @param host
  * @param options
  * @returns
  */
-function addTestsToE2eProject(
+async function addE2eProject(
   host: Tree,
   options: NormalizedSchema,
   pluginPackageName: string
@@ -158,12 +165,30 @@ function addTestsToE2eProject(
   const cliOutputPath =
     cliProjectConfiguration.targets.build.options.outputPath;
 
-  const e2eProjectConfiguration =
-    getE2eProjectConfiguration(host, 'e2e') ??
-    getE2eProjectConfiguration(host, `${options.project}-e2e`);
-  if (!e2eProjectConfiguration) {
-    return; // e2e project does not exist, do not add tests
-  }
+  const e2eTask = await e2eProjectGenerator(host, {
+    pluginName: options.projectName,
+    projectDirectory: options.projectDirectory,
+    pluginOutputPath,
+    npmPackageName: options.name,
+    minimal: false,
+    skipFormat: true,
+    rootProject: false,
+  });
+
+  const e2eProjectConfiguration = readProjectConfiguration(
+    host,
+    `${options.projectName}-e2e`
+  );
+  e2eProjectConfiguration.targets.e2e.dependsOn = ['^build'];
+  updateProjectConfiguration(
+    host,
+    e2eProjectConfiguration.name,
+    e2eProjectConfiguration
+  );
+
+  // delete the default e2e test file
+  host.delete(e2eProjectConfiguration.sourceRoot);
+
   generateFiles(
     host,
     join(__dirname, './files/e2e'),
@@ -176,6 +201,8 @@ function addTestsToE2eProject(
       tmpl: '',
     }
   );
+
+  return e2eTask;
 }
 
 export default createPackageGenerator;

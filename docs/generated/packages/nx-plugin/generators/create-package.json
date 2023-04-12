@@ -70,12 +70,18 @@
       "importPath": {
         "type": "string",
         "description": "How the plugin will be published, like `create-framework-app`. Note this must be a valid NPM name. Will use name if not provided."
+      },
+      "e2eTestRunner": {
+        "type": "string",
+        "enum": ["jest", "none"],
+        "description": "Test runner to use for end to end (E2E) tests.",
+        "default": "jest"
       }
     },
     "required": ["name", "project"],
     "presets": []
   },
-  "description": "Create a framework package that uses Nx CLI",
+  "description": "Create a package which can be used by npx to create a new workspace",
   "implementation": "/packages/nx-plugin/src/generators/create-package/create-package.ts",
   "aliases": [],
   "hidden": false,

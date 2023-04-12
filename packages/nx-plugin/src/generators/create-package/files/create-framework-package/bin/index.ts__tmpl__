@@ -4,11 +4,18 @@ import { createWorkspace } from 'create-nx-workspace';
 
 async function main() {
   const name = process.argv[2]; // TODO: use libraries like yargs or enquirer to set your workspace name
+  if (!name) {
+    throw new Error('Please provide a name for the workspace');
+  }
+
   // TODO: update below to customize the workspace
   await createWorkspace('<%= preset %>', {
     name, 
     nxCloud: false,
     packageManager: 'npm',
+    // This assumes "<%= preset %>" and "<%= projectName %>" are at the same version
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    presetVersion: require('../package.json').version,
   });
 
   console.log(`Successfully created the workspace: ${name}.`);

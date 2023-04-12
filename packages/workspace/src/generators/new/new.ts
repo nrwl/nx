@@ -30,6 +30,7 @@ interface Schema {
   standaloneApi?: boolean;
   routing?: boolean;
   packageManager?: PackageManager;
+  presetVersion?: string;
 }
 
 export interface NormalizedSchema extends Schema {

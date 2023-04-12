@@ -14,7 +14,6 @@ export function runNxCommand(
   command?: string,
   opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
     silenceError: false,
-    cwd: tmpProjPath(),
   }
 ): string {
   function _runNxCommand(c) {
@@ -51,11 +50,11 @@ export function runNxCommand(
 
 export function runCommand(
   command: string,
-  opts: { env?: NodeJS.ProcessEnv; cwd?: string } = { cwd: tmpProjPath() }
+  opts: { env?: NodeJS.ProcessEnv; cwd?: string }
 ): string {
   try {
     return execSync(command, {
-      cwd: opts.cwd,
+      cwd: opts.cwd ?? tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, ...opts?.env },
     }).toString();

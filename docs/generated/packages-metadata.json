@@ -1811,7 +1811,7 @@
         "type": "generator"
       },
       {
-        "description": "Create a framework package that uses Nx CLI",
+        "description": "Create a package which can be used by npx to create a new workspace",
         "file": "generated/packages/nx-plugin/generators/create-package.json",
         "hidden": false,
         "name": "create-package",

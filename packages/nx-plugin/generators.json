@@ -11,7 +11,7 @@
     "create-package": {
       "factory": "./src/generators/create-package/create-package",
       "schema": "./src/generators/create-package/schema.json",
-      "description": "Create a framework package that uses Nx CLI"
+      "description": "Create a package which can be used by npx to create a new workspace"
     },
     "e2e-project": {
       "factory": "./src/generators/e2e-project/e2e",
@@ -55,7 +55,7 @@
     "create-package": {
       "factory": "./src/generators/create-package/create-package#createPackageSchematic",
       "schema": "./src/generators/create-package/schema.json",
-      "description": "Create a framework package that uses Nx CLI"
+      "description": "Create a package which can be used by npx to create a new workspace"
     },
     "e2e-project": {
       "factory": "./src/generators/e2e-project/e2e#e2eProjectSchematic",

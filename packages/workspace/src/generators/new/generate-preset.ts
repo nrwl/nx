@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   getPackageManagerCommand,
   Tree,
+  names,
 } from '@nx/devkit';
 import { Preset } from '../utils/presets';
 import {
@@ -150,7 +151,9 @@ function getPresetDependencies({
 
     default: {
       presetVersion =
-        presetVersion ?? getNpmPackageVersion(preset) ?? process.env?.[preset]; // read from env variable for e2e testing
+        process.env?.[`NX_E2E_${names(preset).constantName}_VERSION`] ?? // read from env variable for e2e testing
+        presetVersion ??
+        getNpmPackageVersion(preset);
       return {
         dev: {},
         dependencies: {

@@ -21,6 +21,7 @@ describe('create-nx-plugin', () => {
 
     runCreatePlugin(pluginName, {
       packageManager,
+      extraArgs: `--createPackageName=create-${wsName}-package`,
     });
 
     checkFilesExist(
@@ -53,5 +54,6 @@ describe('create-nx-plugin', () => {
     checkFilesExist(`dist/create-${pluginName}-package/bin/index.js`);
 
     expect(() => runCLI(`e2e e2e`)).not.toThrow();
+    expect(() => runCLI(`e2e create-${wsName}-package-e2e`)).not.toThrow();
   });
 });

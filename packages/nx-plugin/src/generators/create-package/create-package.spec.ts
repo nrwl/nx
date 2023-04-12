@@ -56,6 +56,7 @@ describe('NxPlugin Create Package Generator', () => {
         assets: [],
         buildableProjectDepsInPackageJsonType: 'dependencies',
       },
+      dependsOn: ['^build'],
     });
   });
 

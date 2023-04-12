@@ -13,14 +13,13 @@ export function runCommandAsync(
   command: string,
   opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
     silenceError: false,
-    cwd: tmpProjPath(),
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     exec(
       command,
       {
-        cwd: opts.cwd,
+        cwd: opts.cwd ?? tmpProjPath(),
         env: { ...process.env, ...opts.env },
       },
       (err, stdout, stderr) => {
@@ -42,7 +41,6 @@ export function runNxCommandAsync(
   command: string,
   opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
     silenceError: false,
-    cwd: tmpProjPath(),
   }
 ): Promise<{ stdout: string; stderr: string }> {
   if (fileExists(tmpProjPath('package.json'))) {

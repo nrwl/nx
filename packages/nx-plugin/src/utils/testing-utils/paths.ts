@@ -1,3 +1,7 @@
+export function tmpFolder() {
+  return `${process.cwd()}/tmp`;
+}
+
 /**
  * The directory where the e2e workspace resides in.
  *
@@ -6,8 +10,8 @@
  */
 export function tmpProjPath(path?: string) {
   return path
-    ? `${process.cwd()}/tmp/nx-e2e/proj/${path}`
-    : `${process.cwd()}/tmp/nx-e2e/proj`;
+    ? `${tmpFolder()}/nx-e2e/proj/${path}`
+    : `${tmpFolder()}/nx-e2e/proj`;
 }
 
 /**

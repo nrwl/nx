@@ -69,9 +69,7 @@ export function newNxProject(
   pluginDistPath: string
 ): void {
   cleanup();
-  if (!directoryExists(tmpProjPath())) {
-    runNxNewCommand('', true);
-  }
+  runNxNewCommand('', true);
   patchPackageJsonForPlugin(npmPackageName, pluginDistPath);
   runPackageManagerInstall();
 }

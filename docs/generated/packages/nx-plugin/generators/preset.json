@@ -14,10 +14,9 @@
         "description": "Plugin name",
         "aliases": ["name"]
       },
-      "cliName": {
+      "createPackageName": {
         "type": "string",
-        "description": "Name of cli command to create workspace with plugin",
-        "aliases": ["name"]
+        "description": "Name of package which creates a workspace"
       }
     },
     "required": ["pluginName"],
