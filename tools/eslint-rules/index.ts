@@ -1,4 +1,8 @@
 import {
+  RULE_NAME as restrictJsPluginDeepImportName,
+  rule as restrictJsPluginDeepImport,
+} from './rules/restrict-js-plugin-deep-import';
+import {
   RULE_NAME as validSchemaDescriptionName,
   rule as validSchemaDescription,
 } from './rules/valid-schema-description';
@@ -27,5 +31,8 @@ module.exports = {
    *  [myCustomRuleName]: myCustomRule
    * }
    */
-  rules: { [validSchemaDescriptionName]: validSchemaDescription },
+  rules: {
+    [validSchemaDescriptionName]: validSchemaDescription,
+    [restrictJsPluginDeepImportName]: restrictJsPluginDeepImport,
+  },
 };

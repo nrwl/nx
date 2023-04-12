@@ -18,6 +18,12 @@
       "rules": {
         "@nrwl/nx/workspace/valid-schema-description": "error"
       }
+    },
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "@nrwl/nx/workspace/restrict-js-plugin-deep-import": "error"
+      }
     }
   ]
 }
