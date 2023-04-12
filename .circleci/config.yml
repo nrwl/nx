@@ -195,6 +195,9 @@ jobs:
           command: |
             pids=()
 
+            npx nx-cloud record -- nx run nx-dev:deploy-build --verbose &
+            pids+=($!)
+
             npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
             pids+=($!)
 
@@ -203,7 +206,7 @@ jobs:
 
             yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
             pids+=($!)
-            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
+            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &ghf
             pids+=($!)
             (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
             npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
