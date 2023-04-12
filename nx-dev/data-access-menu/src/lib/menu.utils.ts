@@ -45,7 +45,6 @@ export function getPackagesSections(items: MenuItem[]): MenuSection[] {
   return items
     .filter(
       (m) =>
-        m.id !== 'cra-to-nx' &&
         m.id !== 'create-nx-plugin' &&
         m.id !== 'create-nx-workspace' &&
         m.id !== 'make-angular-cli-faster' &&

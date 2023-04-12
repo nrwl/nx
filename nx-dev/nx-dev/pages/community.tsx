@@ -33,7 +33,6 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
 
   const officialPluginList = (nxPackagesApi.getRootPackageIndex() ?? []).filter(
     (m) =>
-      m.name !== 'cra-to-nx' &&
       m.name !== 'create-nx-plugin' &&
       m.name !== 'create-nx-workspace' &&
       m.name !== 'make-angular-cli-faster' &&

@@ -30,7 +30,6 @@ export function filterMigrationPackages<ItemType extends { name: string }>(
   const nxPackageNames = [
     'create-nx-workspace',
     'create-nx-plugin',
-    'cra-to-nx',
     'make-angular-cli-faster',
     'tao',
   ];

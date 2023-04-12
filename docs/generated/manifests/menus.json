@@ -4103,14 +4103,6 @@
         "disableCollapsible": false
       },
       {
-        "id": "cra-to-nx",
-        "path": "/packages/cra-to-nx",
-        "name": "cra-to-nx",
-        "children": [],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
         "id": "create-nx-plugin",
         "path": "/packages/create-nx-plugin",
         "name": "create-nx-plugin",

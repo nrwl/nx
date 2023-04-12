@@ -38,8 +38,6 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/react/** @jaysoo @mandarini @xiongemi @ndcunningham
 /packages/next/** @ndcunningham @jaysoo @xiongemi
 /e2e/next/** @ndcunningham @jaysoo @xiongemi
-/packages/cra-to-nx/** @jaysoo @xiongemi @mandarini
-/e2e/cra-to-nx/** @jaysoo @xiongemi @mandarini @ndcunningham
 /packages/react/plugins/component-testing/** @jaysoo @ndcunningham @barbados-clemens
 /packages/react/src/generators/cypress-component-configuration/** @jaysoo @ndcunningham @barbados-clemens
 /packages/react/src/generators/component-test/** @jaysoo @ndcunningham @barbados-clemens
