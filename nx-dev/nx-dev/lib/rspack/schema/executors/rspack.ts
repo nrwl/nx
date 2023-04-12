@@ -51,11 +51,6 @@ export const schema = {
           },
         ],
       },
-      mode: {
-        type: 'string',
-        description: 'Mode to run the build in.',
-        enum: ['development', 'production', 'none'],
-      },
       assets: {
         type: 'array',
         description: 'List of static application assets.',
@@ -63,6 +58,11 @@ export const schema = {
         items: {
           $ref: '#/definitions/assetPattern',
         },
+      },
+      mode: {
+        type: 'string',
+        description: 'Mode to run the build in.',
+        enum: ['development', 'production', 'none'],
       },
     },
     required: ['target', 'main', 'outputPath', 'tsConfig', 'rspackConfig'],

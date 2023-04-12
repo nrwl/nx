@@ -8,15 +8,20 @@ export const schema = {
     title: '',
     type: 'object',
     properties: {
-      uiFramework: {
+      framework: {
         type: 'string',
         description: 'The UI framework used by the project.',
-        enum: ['none', 'react', 'web'],
+        enum: ['none', 'react', 'web', 'nest'],
+        alias: ['uiFramework'],
       },
       style: {
         type: 'string',
         description: 'The style solution to use.',
-        enum: ['none', 'css', 'scss', 'less'],
+        enum: ['none', 'css', 'scss', 'less', 'styl'],
+      },
+      rootProject: {
+        type: 'boolean',
+        'x-priority': 'internal',
       },
     },
     required: [],
