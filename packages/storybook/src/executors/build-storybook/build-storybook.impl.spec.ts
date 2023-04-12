@@ -24,35 +24,27 @@ describe('Build storybook', () => {
   beforeEach(async () => {
     options = {
       configDir: join(__dirname, `/../../utils/test-configs/.storybook`),
+      uiFramework: '@storybook/react',
       outputDir: `/root/dist/storybook`,
     };
 
     context = executorContext as ExecutorContext;
   });
 
-  it('should call the storybook build', async () => {
+  it('should call the storybook buildStaticStandalone', async () => {
     const loggerSpy = jest.spyOn(logger, 'info');
 
-    const buildSpy = jest
-      .spyOn(build, 'build')
+    const standaloneSpy = jest
+      .spyOn(build, 'buildStaticStandalone')
       .mockImplementation(() => Promise.resolve());
 
     const result = await storybookBuilder(options, context);
 
-    expect(buildSpy).toHaveBeenCalled();
-    expect(loggerSpy).toHaveBeenNthCalledWith(
-      1,
-      'NX Storybook builder starting ...'
+    expect(standaloneSpy).toHaveBeenCalled();
+    expect(loggerSpy).toHaveBeenCalledWith(`NX ui framework: @storybook/react`);
+    expect(loggerSpy).toHaveBeenCalledWith(
+      `NX Storybook files available in /root/dist/storybook`
     );
-    expect(loggerSpy).toHaveBeenNthCalledWith(
-      2,
-      'NX Storybook builder finished ...'
-    );
-    expect(loggerSpy).toHaveBeenNthCalledWith(
-      3,
-      'NX Storybook files available in /root/dist/storybook'
-    );
-
     expect(result.success).toBeTruthy();
   });
 });

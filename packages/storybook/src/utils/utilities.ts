@@ -9,7 +9,7 @@ import { storybookVersion } from './versions';
 import { statSync } from 'fs';
 import { findNodes } from 'nx/src/utils/typescript';
 import ts = require('typescript');
-import { gte, major } from 'semver';
+import { gte, lt, major } from 'semver';
 import { join } from 'path';
 
 export const Constants = {

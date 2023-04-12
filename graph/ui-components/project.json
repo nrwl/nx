@@ -10,6 +10,7 @@
     "storybook": {
       "executor": "@nrwl/storybook:storybook",
       "options": {
+        "uiFramework": "@storybook/react",
         "port": 4400,
         "configDir": "graph/ui-components/.storybook"
       },
@@ -23,6 +24,7 @@
       "executor": "@nrwl/storybook:build",
       "outputs": ["{options.outputDir}"],
       "options": {
+        "uiFramework": "@storybook/react",
         "configDir": "graph/ui-components/.storybook",
         "outputDir": "dist/storybook/graph-ui-components"
       },
