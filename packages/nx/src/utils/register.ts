@@ -130,7 +130,7 @@ function readCompilerOptionsWithTypescript(tsConfigPath) {
   const { readConfigFile, parseJsonConfigFileContent, sys } = ts;
   const jsonContent = readConfigFile(tsConfigPath, sys.readFile);
   const { options } = parseJsonConfigFileContent(
-    jsonContent,
+    jsonContent.config,
     sys,
     dirname(tsConfigPath)
   );
@@ -203,6 +203,15 @@ export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
 
   delete result.pathsBasePath;
   delete result.configFilePath;
+
+  // instead of mapping to enum value we just remove it as it shouldn't ever need to be set for ts-node
+  delete result.jsx;
+
+  // lib option is in the format `lib.es2022.d.ts`, so we need to remove the leading `lib.` and trailing `.d.ts` to make it valid
+  result.lib = result.lib?.map((value) => {
+    return value.replace(/^lib\./, '').replace(/\.d\.ts$/, '');
+  });
+
   if (result.moduleResolution) {
     result.moduleResolution =
       result.moduleResolution === 'NodeJs'
