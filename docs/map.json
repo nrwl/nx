@@ -746,6 +746,62 @@
       ]
     },
     {
+      "name": "Plugins",
+      "id": "plugins",
+      "description": "Learn more about creating your own plugin, extending Nx.",
+      "itemList": [
+        {
+          "name": "Intro",
+          "id": "intro",
+          "description": "Learn about basic Nx Cloud knowledge.",
+          "itemList": [
+            {
+              "name": "What is Nx Cloud?",
+              "id": "what-is-nx-cloud",
+              "file": "nx-cloud/intro/nx-cloud"
+            }
+          ]
+        },
+        {
+          "name": "Advanced",
+          "id": "advanced",
+          "description": "Advanced Plugin",
+          "itemList": [
+            {
+              "name": "Share Your Plugin",
+              "id": "share-your-plugin",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/share-your-plugin"
+            },
+            {
+              "name": "Create a Preset",
+              "id": "create-preset",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/create-preset"
+            },
+            {
+              "name": "Migration Generators",
+              "id": "migration-generators",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/migration-generators"
+            },
+            {
+              "name": "Project Graph Plugins",
+              "id": "project-graph-plugins",
+              "tags": ["create-your-own-plugin", "explore-graph"],
+              "file": "shared/recipes/plugins/project-graph-plugins"
+            },
+            {
+              "name": "Project Inference Plugins",
+              "id": "project-inference-plugins",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/project-inference-plugins"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Nx Recipes",
       "id": "nx-recipes",
       "description": "Learn quickly how to do things with Nx.",
@@ -999,43 +1055,6 @@
               "id": "modifying-files",
               "tags": ["use-code-generators"],
               "file": "shared/recipes/generators/modifying-files"
-            }
-          ]
-        },
-        {
-          "name": "Advanced Plugins",
-          "id": "advanced-plugins",
-          "description": "Learn more about creating your own plugin, extending Nx.",
-          "itemList": [
-            {
-              "name": "Share Your Plugin",
-              "id": "share-your-plugin",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/share-your-plugin"
-            },
-            {
-              "name": "Create a Preset",
-              "id": "create-preset",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/create-preset"
-            },
-            {
-              "name": "Migration Generators",
-              "id": "migration-generators",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/migration-generators"
-            },
-            {
-              "name": "Project Graph Plugins",
-              "id": "project-graph-plugins",
-              "tags": ["create-your-own-plugin", "explore-graph"],
-              "file": "shared/recipes/plugins/project-graph-plugins"
-            },
-            {
-              "name": "Project Inference Plugins",
-              "id": "project-inference-plugins",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/project-inference-plugins"
             }
           ]
         },

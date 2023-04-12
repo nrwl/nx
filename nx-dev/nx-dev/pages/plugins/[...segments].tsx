@@ -1,17 +1,17 @@
+import { getBasicPluginsSection } from '@nrwl/nx-dev/data-access-menu';
+import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import {
-  getBasicNxCloudSection,
-  getDeepDiveNxCloudSection,
-} from '@nx/nx-dev/data-access-menu';
-import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
-import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
-import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
-import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
+  ProcessedDocument,
+  RelatedDocument,
+} from '@nrwl/nx-dev/models-document';
+import { Menu, MenuItem } from '@nrwl/nx-dev/models-menu';
+import { DocumentationHeader, SidebarContainer } from '@nrwl/nx-dev/ui-common';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
-import { nxCloudApi } from '../../lib/cloud.api';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
+import { nxPluginsApi } from '../../lib/plugins.api';
 import { tagsApi } from '../../lib/tags.api';
 
 export default function Pages({
@@ -22,7 +22,7 @@ export default function Pages({
   document: ProcessedDocument;
   menu: MenuItem[];
   relatedDocuments: RelatedDocument[];
-}) {
+}): JSX.Element {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
   const wrapperElement = useRef(null);
@@ -50,7 +50,7 @@ export default function Pages({
   } = {
     document,
     menu: {
-      sections: [getBasicNxCloudSection(menu), getDeepDiveNxCloudSection(menu)],
+      sections: [getBasicPluginsSection(menu)],
     },
     relatedDocuments,
   };
@@ -84,7 +84,7 @@ export default function Pages({
 
 export const getStaticPaths: GetStaticPaths = () => {
   return {
-    paths: nxCloudApi.getSlugsStaticDocumentPaths(),
+    paths: nxPluginsApi.getSlugsStaticDocumentPaths(),
     fallback: 'blocking',
   };
 };
@@ -94,15 +94,15 @@ export const getStaticProps: GetStaticProps = async ({
   params: { segments: string[] };
 }) => {
   try {
-    const segments = ['nx-cloud', ...params.segments];
-    const document = nxCloudApi.getDocument(segments);
+    const segments = ['plugins', ...params.segments];
+    const document = nxPluginsApi.getDocument(segments);
     return {
       props: {
         document,
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item
-        menu: menusApi.getMenu('cloud', ''),
+        menu: menusApi.getMenu('plugins', ''),
       },
     };
   } catch (e) {

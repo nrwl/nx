@@ -18,11 +18,11 @@ Nx plugins contain [executors](/plugin-features/use-task-executors) and [generat
 
 {% personas %}
 
-{% persona type="browse" title="Browse Existing Plugins" url="/community#plugin-directory" %}
+{% persona type="browse" title="Browse Existing Plugins" url="/plugins" %}
 
 Browse through plugins built by Nx and the community.
 
-- [Plugin Directory](/community#plugin-directory)
+- [Plugin Directory](/plugins)
 
 {% /persona %}
 

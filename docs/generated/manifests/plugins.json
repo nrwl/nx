@@ -1,0 +1,144 @@
+{
+  "/plugins/intro": {
+    "id": "intro",
+    "name": "Intro",
+    "description": "Learn about basic Nx Cloud knowledge.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "what-is-nx-cloud",
+        "name": "What is Nx Cloud?",
+        "description": "",
+        "file": "nx-cloud/intro/nx-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/intro/what-is-nx-cloud",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/plugins/intro",
+    "tags": []
+  },
+  "/plugins/intro/what-is-nx-cloud": {
+    "id": "what-is-nx-cloud",
+    "name": "What is Nx Cloud?",
+    "description": "",
+    "file": "nx-cloud/intro/nx-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/intro/what-is-nx-cloud",
+    "tags": []
+  },
+  "/plugins/advanced": {
+    "id": "advanced",
+    "name": "Advanced",
+    "description": "Advanced Plugin",
+    "file": "",
+    "itemList": [
+      {
+        "id": "share-your-plugin",
+        "name": "Share Your Plugin",
+        "description": "",
+        "file": "shared/recipes/plugins/share-your-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/advanced/share-your-plugin",
+        "tags": ["create-your-own-plugin"]
+      },
+      {
+        "id": "create-preset",
+        "name": "Create a Preset",
+        "description": "",
+        "file": "shared/recipes/plugins/create-preset",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/advanced/create-preset",
+        "tags": ["create-your-own-plugin"]
+      },
+      {
+        "id": "migration-generators",
+        "name": "Migration Generators",
+        "description": "",
+        "file": "shared/recipes/plugins/migration-generators",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/advanced/migration-generators",
+        "tags": ["create-your-own-plugin"]
+      },
+      {
+        "id": "project-graph-plugins",
+        "name": "Project Graph Plugins",
+        "description": "",
+        "file": "shared/recipes/plugins/project-graph-plugins",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/advanced/project-graph-plugins",
+        "tags": ["create-your-own-plugin", "explore-graph"]
+      },
+      {
+        "id": "project-inference-plugins",
+        "name": "Project Inference Plugins",
+        "description": "",
+        "file": "shared/recipes/plugins/project-inference-plugins",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/advanced/project-inference-plugins",
+        "tags": ["create-your-own-plugin"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/plugins/advanced",
+    "tags": []
+  },
+  "/plugins/advanced/share-your-plugin": {
+    "id": "share-your-plugin",
+    "name": "Share Your Plugin",
+    "description": "",
+    "file": "shared/recipes/plugins/share-your-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/advanced/share-your-plugin",
+    "tags": ["create-your-own-plugin"]
+  },
+  "/plugins/advanced/create-preset": {
+    "id": "create-preset",
+    "name": "Create a Preset",
+    "description": "",
+    "file": "shared/recipes/plugins/create-preset",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/advanced/create-preset",
+    "tags": ["create-your-own-plugin"]
+  },
+  "/plugins/advanced/migration-generators": {
+    "id": "migration-generators",
+    "name": "Migration Generators",
+    "description": "",
+    "file": "shared/recipes/plugins/migration-generators",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/advanced/migration-generators",
+    "tags": ["create-your-own-plugin"]
+  },
+  "/plugins/advanced/project-graph-plugins": {
+    "id": "project-graph-plugins",
+    "name": "Project Graph Plugins",
+    "description": "",
+    "file": "shared/recipes/plugins/project-graph-plugins",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/advanced/project-graph-plugins",
+    "tags": ["create-your-own-plugin", "explore-graph"]
+  },
+  "/plugins/advanced/project-inference-plugins": {
+    "id": "project-inference-plugins",
+    "name": "Project Inference Plugins",
+    "description": "",
+    "file": "shared/recipes/plugins/project-inference-plugins",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/advanced/project-inference-plugins",
+    "tags": ["create-your-own-plugin"]
+  }
+}

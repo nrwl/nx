@@ -1,20 +1,20 @@
+import { getBasicPluginsSection } from '@nrwl/nx-dev/data-access-menu';
+import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import {
-  getBasicNxCloudSection,
-  getDeepDiveNxCloudSection,
-} from '@nx/nx-dev/data-access-menu';
-import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
-import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
-import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
-import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
-import { GetStaticPaths, GetStaticProps } from 'next';
+  ProcessedDocument,
+  RelatedDocument,
+} from '@nrwl/nx-dev/models-document';
+import { Menu, MenuItem } from '@nrwl/nx-dev/models-menu';
+import { DocumentationHeader, SidebarContainer } from '@nrwl/nx-dev/ui-common';
+import { GetStaticProps } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
-import { nxCloudApi } from '../../lib/cloud.api';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
+import { nxPluginsApi } from '../../lib/plugins.api';
 import { tagsApi } from '../../lib/tags.api';
 
-export default function Pages({
+export default function PluginsRoot({
   document,
   menu,
   relatedDocuments,
@@ -50,7 +50,7 @@ export default function Pages({
   } = {
     document,
     menu: {
-      sections: [getBasicNxCloudSection(menu), getDeepDiveNxCloudSection(menu)],
+      sections: [getBasicPluginsSection(menu)],
     },
     relatedDocuments,
   };
@@ -73,7 +73,7 @@ export default function Pages({
           className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
         >
           <DocViewer
-            document={vm.document}
+            document={document}
             relatedDocuments={vm.relatedDocuments}
           />
         </div>
@@ -82,35 +82,18 @@ export default function Pages({
   );
 }
 
-export const getStaticPaths: GetStaticPaths = () => {
+export const getStaticProps: GetStaticProps = async () => {
+  const document = nxPluginsApi.generateRootDocumentIndex({
+    name: 'Plugins',
+    description: 'Learn quickly how to do things with Nx.',
+  });
   return {
-    paths: nxCloudApi.getSlugsStaticDocumentPaths(),
-    fallback: 'blocking',
+    props: {
+      document,
+      menu: menusApi.getMenu('plugins', ''),
+      relatedDocuments: document.tags
+        .map((t) => tagsApi.getAssociatedItems(t))
+        .flat(),
+    },
   };
-};
-export const getStaticProps: GetStaticProps = async ({
-  params,
-}: {
-  params: { segments: string[] };
-}) => {
-  try {
-    const segments = ['nx-cloud', ...params.segments];
-    const document = nxCloudApi.getDocument(segments);
-    return {
-      props: {
-        document,
-        relatedDocuments: tagsApi
-          .getAssociatedItemsFromTags(document.tags)
-          .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item
-        menu: menusApi.getMenu('cloud', ''),
-      },
-    };
-  } catch (e) {
-    return {
-      notFound: true,
-      props: {
-        statusCode: 404,
-      },
-    };
-  }
 };

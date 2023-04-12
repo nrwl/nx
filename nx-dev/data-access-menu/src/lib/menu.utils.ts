@@ -41,6 +41,22 @@ export function getBasicRecipesSection(items: MenuItem[]): MenuSection {
   };
 }
 
+export function getBasicPluginsSection(items: MenuItem[]): MenuSection {
+  return {
+    id: 'basic',
+    name: 'Basic',
+    hideSectionHeader: true,
+    itemList: items
+      // .filter((m) => m.id === 'getting-started')
+      .map((m) => {
+        return {
+          ...m,
+          disableCollapsible: true,
+        };
+      }),
+  };
+}
+
 export function getPackagesSections(items: MenuItem[]): MenuSection[] {
   return items
     .filter(

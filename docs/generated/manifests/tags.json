@@ -162,13 +162,6 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/plugins/project-graph-plugins",
-      "id": "project-graph-plugins",
-      "name": "Project Graph Plugins",
-      "path": "/recipes/advanced-plugins/project-graph-plugins"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/analyze-source-files",
       "id": "analyze-source-files",
       "name": "Disable Graph Links Created from Analyzing Source Files",
@@ -187,6 +180,13 @@
       "id": "resolve-circular-dependencies",
       "name": "Resolve Circular Dependencies",
       "path": "/recipes/other/resolve-circular-dependencies"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/project-graph-plugins",
+      "id": "project-graph-plugins",
+      "name": "Project Graph Plugins",
+      "path": "/plugins/advanced/project-graph-plugins"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -641,35 +641,35 @@
       "file": "shared/recipes/plugins/share-your-plugin",
       "id": "share-your-plugin",
       "name": "Share Your Plugin",
-      "path": "/recipes/advanced-plugins/share-your-plugin"
+      "path": "/plugins/advanced/share-your-plugin"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/create-preset",
       "id": "create-preset",
       "name": "Create a Preset",
-      "path": "/recipes/advanced-plugins/create-preset"
+      "path": "/plugins/advanced/create-preset"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/migration-generators",
       "id": "migration-generators",
       "name": "Migration Generators",
-      "path": "/recipes/advanced-plugins/migration-generators"
+      "path": "/plugins/advanced/migration-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
       "name": "Project Graph Plugins",
-      "path": "/recipes/advanced-plugins/project-graph-plugins"
+      "path": "/plugins/advanced/project-graph-plugins"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/project-inference-plugins",
       "id": "project-inference-plugins",
       "name": "Project Inference Plugins",
-      "path": "/recipes/advanced-plugins/project-inference-plugins"
+      "path": "/plugins/advanced/project-inference-plugins"
     }
   ],
   "intro": [
