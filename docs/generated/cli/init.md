@@ -1,11 +1,11 @@
 ---
 title: 'init - CLI command'
-description: 'Adds nx.json file and installs nx if not installed already'
+description: 'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up distributed caching. For more info, check https://nx.dev/recipes/adopting-nx.'
 ---
 
 # init
 
-Adds nx.json file and installs nx if not installed already
+Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up distributed caching. For more info, check https://nx.dev/recipes/adopting-nx.
 
 ## Usage
 
