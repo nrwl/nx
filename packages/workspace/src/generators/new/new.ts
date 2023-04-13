@@ -21,6 +21,7 @@ interface Schema {
   style?: string;
   nxCloud?: boolean;
   preset: string;
+  presetVersion?: string | number; // number is needed so that generator doesn't fail on numeric-like strings (e.g. "14")
   defaultBase: string;
   framework?: string;
   docker?: boolean;
@@ -92,23 +93,38 @@ function validateOptions(options: Schema, host: Tree) {
   }
 }
 
+function parsePresetName(input: string): { package: string; version?: string } {
+  // If the preset already contains a version in the name
+  // -- my-package@2.0.1
+  // -- @scope/package@version
+  const SCOPED_PACKAGE = /^(@[^\/]+\/[^@\/]+)(?:@([^\/]+))?$/;
+  const NON_SCOPED_PACKAGE = /^([^@\/]+)(?:@([^\/]+))?$/;
+  const match = input.match(SCOPED_PACKAGE) || input.match(NON_SCOPED_PACKAGE);
+  if (!match?.[0]) {
+    throw new Error(`Invalid package name: ${input}`);
+  }
+  return {
+    package: match[1],
+    version: match[2],
+  };
+}
+
 function normalizeOptions(options: Schema): NormalizedSchema {
-  const normalized: Partial<NormalizedSchema> = { ...options };
+  const normalized: Partial<NormalizedSchema> = {
+    ...options,
+    presetVersion: options.presetVersion?.toString(),
+  };
+
   normalized.name = names(options.name).fileName;
   if (!options.directory) {
     normalized.directory = options.name;
   }
 
-  // If the preset already contains a version in the name
-  // -- my-package@2.0.1
-  // -- @scope/package@version
-  const match = options.preset.match(
-    /^(?<package>(@.+\/)?[^@]+)(@(?<version>\d+\.\d+\.\d+))?$/
-  );
-  if (match) {
-    normalized.preset = match.groups.package;
-    normalized.presetVersion = match.groups.version;
-  }
+  const parsed = parsePresetName(options.preset);
+
+  normalized.preset = parsed.package;
+  // explicitly specified "presetVersion" takes priority over the one from the package name
+  normalized.presetVersion ??= parsed.version;
 
   normalized.isCustomPreset = !Object.values(Preset).includes(
     options.preset as any

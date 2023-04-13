@@ -47,6 +47,10 @@
       "description": "What to create in the new workspace.",
       "type": "string"
     },
+    "presetVersion": {
+      "description": "Version of the custom preset to be used.",
+      "oneOf": [{ "type": "string" }, { "type": "number" }]
+    },
     "appName": {
       "type": "string",
       "description": "Application name."

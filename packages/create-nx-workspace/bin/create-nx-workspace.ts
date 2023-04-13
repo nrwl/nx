@@ -31,6 +31,7 @@ import {
 
 interface Arguments extends CreateWorkspaceOptions {
   preset: string;
+  presetVersion: string;
   appName: string;
   style: string;
   framework: Framework;
@@ -65,6 +66,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
               .join(
                 ', '
               )}]. To build your own see https://nx.dev/packages/nx-plugin#preset`,
+            type: 'string',
+          })
+          .option('presetVersion', {
+            describe: chalk.dim`Version of the custom preset to be used.`,
             type: 'string',
           })
           .option('appName', {

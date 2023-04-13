@@ -131,6 +131,12 @@ Type: `string`
 
 Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "react-native", "expo", "next", "nest", "express", "react", "angular", "node-standalone"]. To build your own see https://nx.dev/packages/nx-plugin#preset
 
+### presetVersion
+
+Type: `string`
+
+Version of the custom preset to be used.
+
 ### routing
 
 Type: `boolean`

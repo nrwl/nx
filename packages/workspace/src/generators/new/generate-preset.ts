@@ -150,7 +150,7 @@ function getPresetDependencies({
       return {
         dev: {},
         dependencies: {
-          [preset]: presetVersion ?? getNpmPackageVersion(preset),
+          [preset]: getNpmPackageVersion(preset, presetVersion),
         },
       };
     }
