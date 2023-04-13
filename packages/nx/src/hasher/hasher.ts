@@ -10,7 +10,7 @@ import {
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import { InputDefinition } from '../config/workspace-json-project-json';
-import { hashTsConfig } from '../plugins/js';
+import { hashTsConfig } from '../plugins/js/hasher/hasher';
 
 type ExpandedSelfInput =
   | { fileset: string }

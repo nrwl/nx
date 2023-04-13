@@ -3,7 +3,7 @@ import {
   getImplicitlyTouchedProjects,
   getTouchedProjects,
 } from './locators/workspace-projects';
-import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js';
+import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
 import {
   AffectedProjectGraphContext,
   TouchedProjectLocator,

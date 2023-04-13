@@ -30,9 +30,6 @@ export {
 } from './utils/typescript';
 export { getLockFileName, createLockFile } from './lock-file/lock-file';
 export { createPackageJson } from './package-json/create-package-json';
-export { TargetProjectLocator } from './project-graph/build-dependencies/target-project-locator';
-export { getTouchedProjects } from './project-graph/affected/touched-projects';
-export { hashTsConfig } from './hasher/hasher';
 
 export const processProjectGraph: ProjectGraphProcessor = async (
   graph,
