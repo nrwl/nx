@@ -2,14 +2,12 @@ import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as yargs from 'yargs';
-import { nxVersion } from '../utils/versions';
-import { examples } from './examples';
-import { workspaceRoot } from '../utils/workspace-root';
-import { getPackageManagerCommand } from '../utils/package-manager';
-import { writeJsonFile } from '../utils/fileutils';
-import { WatchArguments } from './watch';
 import { runNxSync } from '../utils/child-process';
-import { stripIndents } from '../utils/strip-indents';
+import { writeJsonFile } from '../utils/fileutils';
+import { getPackageManagerCommand } from '../utils/package-manager';
+import { workspaceRoot } from '../utils/workspace-root';
+import { examples } from './examples';
+import { WatchArguments } from './watch';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -305,7 +303,7 @@ export const commandsObject = yargs
     command: 'init',
     describe:
       'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up distributed caching. For more info, check https://nx.dev/recipes/adopting-nx.',
-    builder: (yargs) => withIntegratedOption(yargs),
+    builder: (yargs) => withInitOptions(yargs),
     handler: async (args: any) => {
       await (await import('./init')).initHandler(args);
       process.exit(0);
@@ -1122,14 +1120,47 @@ function withListOptions(yargs) {
   });
 }
 
-function withIntegratedOption(yargs) {
-  return yargs.option('integrated', {
-    type: 'boolean',
-    description:
-      'Migrate to an Nx integrated layout workspace. Only for CRA and Angular projects.',
-    // TODO(leo): keep it hidden until feature is released
-    hidden: true,
-  });
+function withInitOptions(yargs: yargs.Argv) {
+  // TODO(leo): make them visible in docs/help once the feature is released in Nx 16
+  return yargs
+    .options('nxCloud', {
+      type: 'boolean',
+      description: 'Set up distributed caching with Nx Cloud.',
+      hidden: true,
+    })
+    .option('interactive', {
+      describe: 'When false disables interactive input prompts for options.',
+      type: 'boolean',
+      default: true,
+      hidden: true,
+    })
+    .option('integrated', {
+      type: 'boolean',
+      description:
+        'Migrate to an Nx integrated layout workspace. Only for Angular CLI workspaces and CRA projects.',
+      default: false,
+      hidden: true,
+    })
+    .option('addE2e', {
+      describe:
+        'Set up Cypress E2E tests in integrated workspaces. Only for CRA projects.',
+      type: 'boolean',
+      default: false,
+      hidden: true,
+    })
+    .option('force', {
+      describe:
+        'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
+      type: 'boolean',
+      default: false,
+      hidden: true,
+    })
+    .options('vite', {
+      type: 'boolean',
+      description: 'Use Vite as the bundler. Only for CRA projects.',
+      default: true,
+      hidden: true,
+    });
 }
 
 function runMigration() {

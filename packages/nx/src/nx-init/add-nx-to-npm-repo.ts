@@ -1,5 +1,6 @@
 import * as enquirer from 'enquirer';
 import * as yargsParser from 'yargs-parser';
+import { InitArgs } from '../command-line/init';
 import { readJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
@@ -13,15 +14,13 @@ import {
   runInstall,
 } from './utils';
 
+type Options = Pick<InitArgs, 'nxCloud' | 'interactive'>;
+
 const parsedArgs = yargsParser(process.argv, {
-  boolean: ['yes'],
   string: ['cacheable'], // only used for testing
-  alias: {
-    yes: ['y'],
-  },
 });
 
-export async function addNxToNpmRepo() {
+export async function addNxToNpmRepo(options: Options) {
   const repoRoot = process.cwd();
 
   output.log({ title: '🐳 Nx initialization' });
@@ -35,7 +34,7 @@ export async function addNxToNpmRepo() {
     (s) => !s.startsWith('pre') && !s.startsWith('post')
   );
 
-  if (parsedArgs.yes !== true) {
+  if (options.interactive) {
     output.log({
       title:
         '🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration',
@@ -66,12 +65,12 @@ export async function addNxToNpmRepo() {
       )[scriptName];
     }
 
-    useNxCloud = await askAboutNxCloud();
+    useNxCloud = options.nxCloud ?? (await askAboutNxCloud());
   } else {
     cacheableOperations = parsedArgs.cacheable
       ? parsedArgs.cacheable.split(',')
       : [];
-    useNxCloud = false;
+    useNxCloud = options.nxCloud ?? false;
   }
 
   createNxJsonFile(repoRoot, [], cacheableOperations, {});

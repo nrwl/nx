@@ -30,7 +30,9 @@ describe('nx init (Angular CLI)', () => {
 
   it('should successfully convert an Angular CLI workspace to an Nx standalone workspace', () => {
     const output = runCommand(
-      `${pmc.runUninstalledPackage} nx@${getPublishedVersion()} init -y`
+      `${
+        pmc.runUninstalledPackage
+      } nx@${getPublishedVersion()} init --no-interactive`
     );
 
     expect(output).toContain('🎉 Done!');
@@ -64,7 +66,7 @@ describe('nx init (Angular CLI)', () => {
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init -y --integrated`
+      } nx@${getPublishedVersion()} init --integrated --no-interactive`
     );
 
     expect(output).toContain('🎉 Done!');

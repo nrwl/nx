@@ -1,10 +1,14 @@
-import { unlinkSync, writeFileSync } from 'fs-extra';
-import * as yargsParser from 'yargs-parser';
 import * as enquirer from 'enquirer';
+import { unlinkSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
+import * as yargsParser from 'yargs-parser';
+import { InitArgs } from '../command-line/init';
+import { NrwlJsPluginConfig, NxJsonConfiguration } from '../config/nx-json';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { PackageJson } from '../utils/package-json';
-import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
+import { getPackageManagerCommand } from '../utils/package-manager';
 import {
   addDepsToPackageJson,
   askAboutNxCloud,
@@ -14,20 +18,15 @@ import {
   printFinalMessage,
   runInstall,
 } from './utils';
-import { getPackageManagerCommand } from '../utils/package-manager';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { NrwlJsPluginConfig, NxJsonConfiguration } from '../config/nx-json';
 
+type Options = Pick<InitArgs, 'nxCloud' | 'interactive'>;
 type NestCLIConfiguration = any;
+
 const parsedArgs = yargsParser(process.argv, {
-  boolean: ['yes'],
   string: ['cacheable'], // only used for testing
-  alias: {
-    yes: ['y'],
-  },
 });
 
-export async function addNxToNest(packageJson: PackageJson) {
+export async function addNxToNest(options: Options, packageJson: PackageJson) {
   const repoRoot = process.cwd();
 
   output.log({ title: '🐳 Nx initialization' });
@@ -69,7 +68,7 @@ export async function addNxToNest(packageJson: PackageJson) {
   let scriptOutputs = {};
   let useNxCloud: boolean;
 
-  if (parsedArgs.yes !== true) {
+  if (options.interactive) {
     output.log({
       title:
         '🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration',
@@ -98,12 +97,12 @@ export async function addNxToNest(packageJson: PackageJson) {
       )[scriptName];
     }
 
-    useNxCloud = await askAboutNxCloud();
+    useNxCloud = options.nxCloud ?? (await askAboutNxCloud());
   } else {
     cacheableOperations = parsedArgs.cacheable
       ? parsedArgs.cacheable.split(',')
       : [];
-    useNxCloud = false;
+    useNxCloud = options.nxCloud ?? false;
   }
 
   createNxJsonFile(

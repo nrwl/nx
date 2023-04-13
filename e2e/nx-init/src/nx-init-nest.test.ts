@@ -34,7 +34,7 @@ describe('nx init (for NestCLI)', () => {
     const output = execSync(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init -y --cacheable=format`,
+      } nx@${getPublishedVersion()} init --cacheable=format --no-interactive`,
       {
         cwd: projectRoot,
         encoding: 'utf-8',

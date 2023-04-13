@@ -32,7 +32,7 @@ describe('nx init (NPM repo)', () => {
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init -y --cacheable=echo`
+      } nx@${getPublishedVersion()} init --cacheable=echo --no-interactive`
     );
     console.log(output);
     expect(output).toContain('Enabled computation caching');
@@ -61,7 +61,7 @@ describe('nx init (NPM repo)', () => {
     runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init -y --cacheable=compound`
+      } nx@${getPublishedVersion()} init --cacheable=compound --no-interactive`
     );
 
     const output = runCommand('npm run compound TEST');
