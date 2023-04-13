@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-imports */
-import type { Architect } from '@angular-devkit/architect';
 import {
   fragment,
   logging,
@@ -13,11 +11,19 @@ import {
 } from '@angular-devkit/core';
 import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
+
+/* eslint-disable no-restricted-imports */
+import type { Architect } from '@angular-devkit/architect';
+import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
+import { NodeModulesBuilderInfo } from '@angular-devkit/architect/node/node-modules-architect-host';
+
 import * as chalk from 'chalk';
 import { Stats } from 'fs';
 import { dirname, extname, join, resolve } from 'path';
+
 import { concat, from, Observable, of, zip } from 'rxjs';
 import { catchError, concatMap, map, tap } from 'rxjs/operators';
+
 import { GenerateOptions } from '../command-line/generate';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
@@ -36,6 +42,36 @@ import { NX_ERROR, NX_PREFIX } from '../utils/logger';
 import { readModulePackageJson } from '../utils/package-json';
 import { detectPackageManager } from '../utils/package-manager';
 import { toNewFormat, toOldFormat } from './angular-json';
+import { Workspaces } from '../config/workspaces';
+import { ExecutorsJson } from '../config/misc-interfaces';
+
+class WrappedWorkspaceNodeModulesArchitectHost extends WorkspaceNodeModulesArchitectHost {
+  private workspaces = new Workspaces(this.root);
+
+  constructor(private workspace, private root) {
+    super(workspace, root);
+  }
+  async resolveBuilder(builderStr: string): Promise<NodeModulesBuilderInfo> {
+    const [packageName, builderName] = builderStr.split(':');
+
+    const { executorsFilePath, executorConfig } = this.workspaces[
+      'readExecutorsJson'
+    ](packageName, builderName);
+    const builderInfo = this.workspaces.readExecutor(packageName, builderName);
+    return {
+      name: builderStr,
+      builderName,
+      description:
+        readJsonFile<ExecutorsJson>(executorsFilePath).builders[builderName]
+          .description,
+      optionSchema: builderInfo.schema,
+      import: this.workspaces['resolveImplementation'](
+        executorConfig.implementation,
+        dirname(executorsFilePath)
+      ),
+    };
+  }
+}
 
 export async function scheduleTarget(
   root: string,
@@ -48,9 +84,6 @@ export async function scheduleTarget(
   verbose: boolean
 ): Promise<Observable<import('@angular-devkit/architect').BuilderOutput>> {
   const { Architect } = require('@angular-devkit/architect');
-  const {
-    WorkspaceNodeModulesArchitectHost,
-  } = require('@angular-devkit/architect/node');
 
   const logger = getLogger(verbose);
   const fsHost = new NxScopedHost(root);
@@ -65,7 +98,10 @@ export async function scheduleTarget(
     // This happens when context.scheduleTarget is used to run a target using nx:run-commands
     return [];
   });
-  const architectHost = new WorkspaceNodeModulesArchitectHost(workspace, root);
+  const architectHost = new WrappedWorkspaceNodeModulesArchitectHost(
+    workspace,
+    root
+  );
   const architect: Architect = new Architect(architectHost, registry);
   const run = await architect.scheduleTarget(
     {
