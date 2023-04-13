@@ -33,7 +33,7 @@ describe('nx init (Angular CLI)', () => {
       `${pmc.runUninstalledPackage} nx@${getPublishedVersion()} init -y`
     );
 
-    expect(output).toContain('Nx is now enabled in your workspace!');
+    expect(output).toContain('🎉 Done!');
     // angular.json should have been deleted
     checkFilesDoNotExist('angular.json');
     // check nx config files exist
@@ -67,7 +67,7 @@ describe('nx init (Angular CLI)', () => {
       } nx@${getPublishedVersion()} init -y --integrated`
     );
 
-    expect(output).toContain('Nx is now enabled in your workspace!');
+    expect(output).toContain('🎉 Done!');
     // angular.json should have been deleted
     checkFilesDoNotExist('angular.json');
     // check nx config files exist
