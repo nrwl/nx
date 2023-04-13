@@ -205,11 +205,6 @@ export {
 /**
  * @category Utils
  */
-export { getOutputPath } from './project-graph/utils/get-output-path';
-
-/**
- * @category Utils
- */
 export { getOutputsForTargetAndConfiguration } from './tasks-runner/utils';
 
 /**

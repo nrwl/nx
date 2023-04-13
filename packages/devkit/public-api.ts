@@ -132,5 +132,4 @@ export {
   SharedFunction,
   WorkspaceLibrarySecondaryEntryPoint,
   Remotes,
-  getLibraryImportPath,
 } from './src/utils/module-federation';

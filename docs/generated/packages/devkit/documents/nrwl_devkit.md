@@ -113,9 +113,7 @@ It only uses language primitives and immutable objects
 - [generateFiles](../../devkit/documents/nrwl_devkit#generatefiles)
 - [getDependentPackagesForProject](../../devkit/documents/nrwl_devkit#getdependentpackagesforproject)
 - [getImportPath](../../devkit/documents/nrwl_devkit#getimportpath)
-- [getLibraryImportPath](../../devkit/documents/nrwl_devkit#getlibraryimportpath)
 - [getNpmPackageSharedConfig](../../devkit/documents/nrwl_devkit#getnpmpackagesharedconfig)
-- [getOutputPath](../../devkit/documents/nrwl_devkit#getoutputpath)
 - [getOutputsForTargetAndConfiguration](../../devkit/documents/nrwl_devkit#getoutputsfortargetandconfiguration)
 - [getPackageManagerCommand](../../devkit/documents/nrwl_devkit#getpackagemanagercommand)
 - [getPackageManagerVersion](../../devkit/documents/nrwl_devkit#getpackagemanagerversion)
@@ -1394,23 +1392,6 @@ Prefixes project name with npm scope
 
 ---
 
-### getLibraryImportPath
-
-▸ **getLibraryImportPath**(`library`, `projectGraph`): `string` \| `undefined`
-
-#### Parameters
-
-| Name           | Type                                                              |
-| :------------- | :---------------------------------------------------------------- |
-| `library`      | `string`                                                          |
-| `projectGraph` | [`ProjectGraph`](../../devkit/documents/nrwl_devkit#projectgraph) |
-
-#### Returns
-
-`string` \| `undefined`
-
----
-
 ### getNpmPackageSharedConfig
 
 ▸ **getNpmPackageSharedConfig**(`pkgName`, `version`): [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig) \| `undefined`
@@ -1428,23 +1409,6 @@ specified version of that package.
 #### Returns
 
 [`SharedLibraryConfig`](../../devkit/documents/nrwl_devkit#sharedlibraryconfig) \| `undefined`
-
----
-
-### getOutputPath
-
-▸ **getOutputPath**(`projectGraph`, `name`): `string`
-
-#### Parameters
-
-| Name           | Type                                                              |
-| :------------- | :---------------------------------------------------------------- |
-| `projectGraph` | [`ProjectGraph`](../../devkit/documents/nrwl_devkit#projectgraph) |
-| `name`         | `string`                                                          |
-
-#### Returns
-
-`string`
 
 ---
 

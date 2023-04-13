@@ -2,13 +2,14 @@ import { ensureDirSync } from 'fs-extra';
 import {
   createProjectGraphAsync,
   getDependentPackagesForProject,
-  getLibraryImportPath,
-  getOutputPath,
   ProjectGraph,
   WorkspaceLibrary,
   workspaceRoot,
+  readJsonFile,
+  writeJsonFile,
 } from '@nrwl/devkit';
-import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import { getLibraryImportPath } from '@nrwl/devkit/src/utils/module-federation/dependencies';
+import { getOutputPath } from 'nx/src/project-graph/utils/get-output-path';
 
 import { runNxNewCommand } from './async-commands';
 import { tmpProjPath } from './paths';

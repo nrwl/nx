@@ -2,10 +2,10 @@ import { ensureDirSync } from 'fs-extra';
 import {
   createProjectGraphAsync,
   getDependentPackagesForProject,
-  getLibraryImportPath,
   readJsonFile,
   writeJsonFile,
 } from '@nrwl/devkit';
+import { getLibraryImportPath } from '@nrwl/devkit/src/utils/module-federation/dependencies';
 
 import { tmpProjPath } from './paths';
 import { ensureNxProject } from './nx-project';
@@ -15,11 +15,11 @@ import { runNxNewCommand } from './async-commands';
 
 jest.mock('fs-extra');
 
+jest.mock('@nrwl/devkit/src/utils/module-federation/dependencies');
 jest.mock('@nrwl/devkit', () => ({
   ...jest.requireActual('@nrwl/devkit'),
   createProjectGraphAsync: jest.fn(),
   getDependentPackagesForProject: jest.fn(),
-  getLibraryImportPath: jest.fn(),
   readJsonFile: jest.fn(),
   writeJsonFile: jest.fn(),
   workspaceRoot: 'root',
