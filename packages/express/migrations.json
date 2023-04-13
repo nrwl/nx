@@ -1,5 +1,5 @@
 {
-  "schematics": {},
+  "generators": {},
   "packageJsonUpdates": {
     "13.7.0": {
       "version": "13.7.0",

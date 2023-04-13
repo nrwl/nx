@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "update-jest-preset-angular-8-4-0": {
       "version": "12.1.0-beta.1",
       "cli": "nx",

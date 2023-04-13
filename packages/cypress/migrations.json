@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "remove-typescript-plugin": {
       "cli": "nx",
       "version": "12.8.0-beta.0",

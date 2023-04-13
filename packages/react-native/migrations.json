@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "update-jest-for-react-native": {
       "version": "12.5.0-beta.0",
       "cli": "nx",
