@@ -1,4 +1,4 @@
-import { Tree, readJson, updateJson } from '@nx/devkit';
+import { Tree, readJson, updateJson, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import replacePackage from './update-16-0-0-add-nx-packages';
 
@@ -33,5 +33,30 @@ describe('update-16-0-0-add-nx-packages', () => {
       packageJson.dependencies['@nx/eslint-plugin-nx'];
 
     expect(newDependencyVersion).toBeDefined();
+  });
+
+  it('should replace the eslint plugin', async () => {
+    writeJson(tree, '.eslintrc.json', {
+      plugins: ['@nrwl/nx'],
+      rules: {
+        '@nrwl/nx/enforce-module-boundaries': ['error', {}],
+      },
+    });
+
+    await replacePackage(tree);
+
+    expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
+      {
+        "plugins": [
+          "@nx/nx",
+        ],
+        "rules": {
+          "@nx/nx/enforce-module-boundaries": [
+            "error",
+            {},
+          ],
+        },
+      }
+    `);
   });
 });

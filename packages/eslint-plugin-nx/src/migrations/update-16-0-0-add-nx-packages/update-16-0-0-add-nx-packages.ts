@@ -8,5 +8,7 @@ export default async function replacePackage(tree: Tree): Promise<void> {
     '@nx/eslint-plugin-nx'
   );
 
+  await replaceNrwlPackageWithNxPackage(tree, '@nrwl/nx', '@nx/nx');
+
   await formatFiles(tree);
 }
