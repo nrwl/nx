@@ -2866,15 +2866,6 @@
     "root": "/packages/workspace",
     "source": "/packages/workspace/src",
     "executors": {
-      "/packages/workspace/executors/run-commands": {
-        "description": "Run any custom commands with Nx.",
-        "file": "generated/packages/workspace/executors/run-commands.json",
-        "hidden": false,
-        "name": "run-commands",
-        "originalFilePath": "/packages/workspace/src/executors/run-commands/schema.json",
-        "path": "/packages/workspace/executors/run-commands",
-        "type": "executor"
-      },
       "/packages/workspace/executors/counter": {
         "description": "A dummy executor useful for E2E tests.",
         "file": "generated/packages/workspace/executors/counter.json",
@@ -2882,15 +2873,6 @@
         "name": "counter",
         "originalFilePath": "/packages/workspace/src/executors/counter/schema.json",
         "path": "/packages/workspace/executors/counter",
-        "type": "executor"
-      },
-      "/packages/workspace/executors/run-script": {
-        "description": "Run an NPM script using Nx.",
-        "file": "generated/packages/workspace/executors/run-script.json",
-        "hidden": false,
-        "name": "run-script",
-        "originalFilePath": "/packages/workspace/src/executors/run-script/schema.json",
-        "path": "/packages/workspace/executors/run-script",
         "type": "executor"
       }
     },
