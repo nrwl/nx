@@ -246,6 +246,16 @@
         "isExternal": false,
         "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
         "tags": []
+      },
+      {
+        "id": "troubleshoot-nx-install-issues",
+        "name": "Troubleshooting Nx Install Issues",
+        "description": "",
+        "file": "shared/installation/troubleshoot-installation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/ci/troubleshoot-nx-install-issues",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -330,6 +340,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
+    "tags": []
+  },
+  "/recipes/ci/troubleshoot-nx-install-issues": {
+    "id": "troubleshoot-nx-install-issues",
+    "name": "Troubleshooting Nx Install Issues",
+    "description": "",
+    "file": "shared/installation/troubleshoot-installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/ci/troubleshoot-nx-install-issues",
     "tags": []
   },
   "/recipes/adopting-nx": {

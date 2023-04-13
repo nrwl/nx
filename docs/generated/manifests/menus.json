@@ -1973,6 +1973,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting Nx Install Issues",
+            "path": "/recipes/ci/troubleshoot-nx-install-issues",
+            "id": "troubleshoot-nx-install-issues",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2037,6 +2045,14 @@
         "name": "Setting up Bitbucket",
         "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
         "id": "monorepo-ci-bitbucket-pipelines",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshooting Nx Install Issues",
+        "path": "/recipes/ci/troubleshoot-nx-install-issues",
+        "id": "troubleshoot-nx-install-issues",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

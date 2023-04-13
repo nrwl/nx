@@ -809,6 +809,11 @@
               "name": "Setting up Bitbucket",
               "id": "monorepo-ci-bitbucket-pipelines",
               "file": "shared/monorepo-ci-bitbucket-pipelines"
+            },
+            {
+              "name": "Troubleshooting Nx Install Issues",
+              "id": "troubleshoot-nx-install-issues",
+              "file": "shared/installation/troubleshoot-installation"
             }
           ]
         },
