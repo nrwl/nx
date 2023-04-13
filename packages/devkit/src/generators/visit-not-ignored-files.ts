@@ -1,5 +1,5 @@
 import type { Tree } from 'nx/src/generators/tree';
-import ignore, { Ignore } from 'ignore';
+import ignore from 'ignore';
 import { join, relative, sep } from 'path';
 
 /**
@@ -10,7 +10,7 @@ export function visitNotIgnoredFiles(
   dirPath: string = tree.root,
   visitor: (path: string) => void
 ): void {
-  let ig: Ignore;
+  let ig: ReturnType<typeof ignore>;
   if (tree.exists('.gitignore')) {
     ig = ignore();
     ig.add('.git');

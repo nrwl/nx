@@ -37,7 +37,9 @@ export function getAlwaysIgnore(root?: string) {
   return root ? paths.map((x) => joinPathFragments(root, x)) : paths;
 }
 
-export function getIgnoreObject(root: string = workspaceRoot) {
+export function getIgnoreObject(
+  root: string = workspaceRoot
+): ReturnType<typeof ignore> {
   const ig = ignore();
   ig.add(readFileIfExisting(`${root}/.gitignore`));
   ig.add(readFileIfExisting(`${root}/.nxignore`));
