@@ -112,7 +112,6 @@ jobs:
           - e2e-js
           - e2e-lerna-smoke-tests
           - e2e-linter
-          - e2e-make-angular-cli-faster
           - e2e-next
           - e2e-node
           - e2e-nx-init
@@ -161,8 +160,6 @@ jobs:
             codeowners: 'S04TNCVEETS'
           - project: e2e-linter
             codeowners: 'S04SYJGKSCT'
-          - project: e2e-make-angular-cli-faster
-            codeowners: 'S04SS457V38'
           - project: e2e-next
             codeowners: 'S04TNCNJG5N'
           - project: e2e-node
@@ -223,8 +220,6 @@ jobs:
           - node_version: 16
             project: e2e-linter
           - node_version: 16
-            project: e2e-make-angular-cli-faster
-          - node_version: 16
             project: e2e-next
           - node_version: 16
             project: e2e-node
@@ -270,8 +265,6 @@ jobs:
             project: e2e-js
           - node_version: 19
             project: e2e-linter
-          - node_version: 19
-            project: e2e-make-angular-cli-faster
           - node_version: 19
             project: e2e-next
           - node_version: 19

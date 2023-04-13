@@ -35,7 +35,6 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
     (m) =>
       m.name !== 'create-nx-plugin' &&
       m.name !== 'create-nx-workspace' &&
-      m.name !== 'make-angular-cli-faster' &&
       m.name !== 'tao'
   );
 

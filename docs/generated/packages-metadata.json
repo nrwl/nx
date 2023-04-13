@@ -1121,17 +1121,6 @@
     "source": "/packages/linter/src"
   },
   {
-    "description": "Make Angular CLI faster by enabling distributed computation caching",
-    "documents": [],
-    "executors": [],
-    "generators": [],
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "make-angular-cli-faster",
-    "packageName": "make-angular-cli-faster",
-    "root": "/packages/make-angular-cli-faster",
-    "source": "/packages/make-angular-cli-faster/src"
-  },
-  {
     "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
     "documents": [
       {

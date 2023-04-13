@@ -1133,18 +1133,6 @@
     },
     "path": "/packages/linter"
   },
-  "make-angular-cli-faster": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "make-angular-cli-faster",
-    "packageName": "make-angular-cli-faster",
-    "description": "Make Angular CLI faster by enabling distributed computation caching",
-    "documents": {},
-    "root": "/packages/make-angular-cli-faster",
-    "source": "/packages/make-angular-cli-faster/src",
-    "executors": {},
-    "generators": {},
-    "path": "/packages/make-angular-cli-faster"
-  },
   "nest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nest",

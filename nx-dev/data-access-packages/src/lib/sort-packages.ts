@@ -27,12 +27,7 @@ export function sortCorePackagesFirst<ItemType extends object>(
 export function filterMigrationPackages<ItemType extends { name: string }>(
   itemList: ItemType[]
 ): ItemType[] {
-  const nxPackageNames = [
-    'create-nx-workspace',
-    'create-nx-plugin',
-    'make-angular-cli-faster',
-    'tao',
-  ];
+  const nxPackageNames = ['create-nx-workspace', 'create-nx-plugin', 'tao'];
   return itemList.filter(
     (item): item is ItemType => !nxPackageNames.includes(item.name)
   );
