@@ -22,7 +22,7 @@
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
-        "@nrwl/nx/workspace/restrict-js-plugin-deep-import": "error"
+        "@nrwl/nx/workspace/restrict-nx-imports": "error"
       }
     }
   ]

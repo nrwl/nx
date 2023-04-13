@@ -1,5 +1,5 @@
 import { TSESLint } from '@typescript-eslint/utils';
-import { rule, RULE_NAME } from './restrict-js-plugin-deep-import';
+import { rule, RULE_NAME } from './restrict-nx-imports';
 
 const ruleTester = new TSESLint.RuleTester({
   parser: require.resolve('@typescript-eslint/parser'),
@@ -20,6 +20,10 @@ ruleTester.run(RULE_NAME, rule, {
       code: `import { createLockFile } from '../plugins/js';`,
       filename: '/root/packages/nx/src/path/to.ts',
     },
+    {
+      code: `import { updateJson } from '../../generators/utils/json';`,
+      filename: '/root/packages/nx/src/path/to.ts',
+    },
   ],
   invalid: [
     {
@@ -30,6 +34,11 @@ ruleTester.run(RULE_NAME, rule, {
     {
       errors: [{ messageId: 'noDeepRelativeImport' }],
       code: `import { createLockFile } from '../plugins/js/lock-file/lock-file';`,
+      filename: '/root/packages/nx/src/path/to.ts',
+    },
+    {
+      errors: [{ messageId: 'noCircularNx' }],
+      code: `import { updateJson } from 'nx/src/devkit-exports';`,
       filename: '/root/packages/nx/src/path/to.ts',
     },
   ],

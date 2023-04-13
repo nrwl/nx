@@ -21,8 +21,8 @@ import {
   TSESTree,
 } from '@typescript-eslint/utils';
 
-// NOTE: The rule will be available in ESLint configs as "@nrwl/nx/workspace/restrict-js-plugin-deep-import"
-export const RULE_NAME = 'restrict-js-plugin-deep-import';
+// NOTE: The rule will be available in ESLint configs as "@nrwl/nx/workspace/restrict-nx-imports"
+export const RULE_NAME = 'restrict-nx-imports';
 
 export const rule = ESLintUtils.RuleCreator(() => __filename)({
   name: RULE_NAME,
@@ -34,6 +34,8 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     },
     schema: [],
     messages: {
+      noCircularNx:
+        'Functions within "nx" should be imported with relative path. Alias import found: {{imp}}',
       noDeepImport:
         'Functions from "nx/src/plugins/js" should be imported via barrel import. Deep import found: {{imp}}',
       noDeepRelativeImport:
@@ -79,6 +81,15 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
         context.report({
           node,
           messageId: 'noDeepRelativeImport',
+          data: {
+            imp,
+          },
+        });
+      }
+      if (imp.includes('nx/src') && fileName.startsWith('packages/nx/')) {
+        context.report({
+          node,
+          messageId: 'noCircularNx',
           data: {
             imp,
           },

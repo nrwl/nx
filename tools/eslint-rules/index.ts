@@ -1,7 +1,7 @@
 import {
-  RULE_NAME as restrictJsPluginDeepImportName,
-  rule as restrictJsPluginDeepImport,
-} from './rules/restrict-js-plugin-deep-import';
+  RULE_NAME as restrictNxImportsName,
+  rule as restrictNxImports,
+} from './rules/restrict-nx-imports';
 import {
   RULE_NAME as validSchemaDescriptionName,
   rule as validSchemaDescription,
@@ -33,6 +33,6 @@ module.exports = {
    */
   rules: {
     [validSchemaDescriptionName]: validSchemaDescription,
-    [restrictJsPluginDeepImportName]: restrictJsPluginDeepImport,
+    [restrictNxImportsName]: restrictNxImports,
   },
 };
