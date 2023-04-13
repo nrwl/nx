@@ -86,6 +86,11 @@
             "output": {
               "type": "string",
               "description": "Absolute path within the output."
+            },
+            "watch": {
+              "type": "boolean",
+              "description": "Enable re-building when files change.",
+              "default": false
             }
           },
           "additionalProperties": false,
