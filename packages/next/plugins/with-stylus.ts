@@ -1,6 +1,6 @@
 // Adapted from https://raw.githubusercontent.com/elado/next-with-less/main/src/index.js
 import { merge } from 'webpack-merge';
-import { NextConfigFn } from './with-nx';
+import { NextConfigFn } from '../src/utils/config';
 
 const addStylusToRegExp = (rx) =>
   new RegExp(rx.source.replace('|sass', '|sass|styl'), rx.flags);

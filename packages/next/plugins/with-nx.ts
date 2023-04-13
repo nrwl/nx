@@ -16,17 +16,13 @@ import type { NextConfig } from 'next';
 import { PHASE_PRODUCTION_SERVER } from 'next/constants';
 
 import * as path from 'path';
-import { createWebpackConfig } from '../src/utils/config';
+import { createWebpackConfig, NextConfigFn } from '../src/utils/config';
 import { NextBuildBuilderOptions } from '../src/utils/types';
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
     svgr?: boolean;
   };
-}
-
-export interface NextConfigFn {
-  (phase: string): Promise<NextConfig>;
 }
 
 export interface WithNxContext {

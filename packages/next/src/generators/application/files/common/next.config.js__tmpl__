@@ -1,7 +1,7 @@
 //@ts-check
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { withNx } = require('@nrwl/next/plugins/with-nx');
+const { composePlugins, withNx } = require('@nrwl/next');
 
 <% if (style === 'less') { %>
 // This plugin is needed until this PR is merged.
@@ -24,7 +24,13 @@ const nextConfig = {
   <% } %>
 };
 
-module.exports = withLess(withNx(nextConfig));
+const plugins = [
+  // Add more Next.js plugins to this list if needed.
+  withLess,
+  withNx,
+];
+
+module.exports = composePlugins(...plugins)(nextConfig));
 <% } else if (style === 'styl') { %>
 const { withStylus } = require('@nrwl/next/plugins/with-stylus');
 
@@ -44,7 +50,13 @@ const nextConfig = {
   <% } %>
 };
 
-module.exports = withStylus(withNx(nextConfig));
+const plugins = [
+  // Add more Next.js plugins to this list if needed.
+  withStylus,
+  withNx,
+];
+
+module.exports = composePlugins(...plugins)(nextConfig);
 <% } else if (
   style === 'styled-components'
   ||style === '@emotion/styled'
@@ -67,7 +79,12 @@ const nextConfig = {
   <% } %>
 };
 
-module.exports = withNx(nextConfig);
+const plugins = [
+  // Add more Next.js plugins to this list if needed.
+  withNx,
+];
+
+module.exports = composePlugins(...plugins)(nextConfig);
 <% } else {
 // Defaults to CSS/SASS (which don't need plugin as of Next 9.3) %>
 /**
@@ -86,5 +103,10 @@ const nextConfig = {
   <% } %>
 };
 
-module.exports = withNx(nextConfig);
+const plugins = [
+  // Add more Next.js plugins to this list if needed.
+  withNx,
+];
+
+module.exports = composePlugins(...plugins)(nextConfig);
 <% } %>
