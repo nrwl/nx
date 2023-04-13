@@ -874,7 +874,7 @@ function createFetcher() {
     migrations = fetchMigrations(packageName, packageVersion, setCache).then(
       (result) => {
         if (result.schematics) {
-          result.generators = result.schematics;
+          result.generators = { ...result.schematics, ...result.generators };
           delete result.schematics;
         }
         resolvedVersion = result.version;
@@ -903,12 +903,14 @@ async function getPackageMigrationsUsingRegistry(
 
   if (!migrationsConfig) {
     return {
+      name: packageName,
       version: packageVersion,
     };
   }
 
   if (!migrationsConfig.migrations) {
     return {
+      name: packageName,
       version: packageVersion,
       packageGroup: migrationsConfig.packageGroup,
     };
@@ -1560,8 +1562,10 @@ function readMigrationCollection(packageName: string, root: string) {
     packageName,
     root
   ).migrations;
+  const collection = readJsonFile<MigrationsJson>(collectionPath);
+  collection.name ??= packageName;
   return {
-    collection: readJsonFile<MigrationsJson>(collectionPath),
+    collection,
     collectionPath,
   };
 }
@@ -1637,20 +1641,20 @@ function isAngularMigration(
 
   if (useAngularDevkitToRunMigration && shouldBeNx) {
     output.warn({
-      title: `The migration '${collectionPath}:${name}' appears to be an Angular CLI migration, but is located in the 'generators' section of migrations.json.`,
+      title: `The migration '${collection.name}:${name}' appears to be an Angular CLI migration, but is located in the 'generators' section of migrations.json.`,
       bodyLines: [
-        'In the future, migrations in the generators section will be assumed to be Nx migrations.',
-        "Please open an issue on the Nx repository if you believe this is an error, or on the plugin's repository so that the author can move it to the appropriate section.",
+        'In Nx 17, migrations inside `generators` will be treated as Angular Devkit migrations.',
+        "Please open an issue on the plugin's repository if you believe this is an error.",
       ],
     });
   }
 
   if (!useAngularDevkitToRunMigration && entry.cli === 'nx' && shouldBeNg) {
     output.warn({
-      title: `The migration '${collectionPath}:${name}' appears to be an Nx migration, but is located in the 'schematics' section of migrations.json.`,
+      title: `The migration '${collection.name}:${name}' appears to be an Nx migration, but is located in the 'schematics' section of migrations.json.`,
       bodyLines: [
-        'In the future, migrations in the schematics section will be assumed to be Angular CLI migrations.',
-        "Please open an issue on the Nx repository if you believe this is an error, or on the plugin's repository so that the author can move it to the appropriate section.",
+        'In Nx 17, migrations inside `generators` will be treated as nx devkit migrations.',
+        "Please open an issue on the plugin's repository if you believe this is an error.",
       ],
     });
   }
