@@ -1,11 +1,14 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nrwl/devkit';
+import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
+import { Stats } from '@rspack/core';
+import Watching from '@rspack/core/dist/watching';
 import { rmSync } from 'fs';
 import * as path from 'path';
 import { createCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { RspackExecutorSchema } from './schema';
 
-export default async function runExecutor(
+export default async function* runExecutor(
   options: RspackExecutorSchema,
   context: ExecutorContext
 ) {
@@ -22,33 +25,90 @@ export default async function runExecutor(
 
   const compiler = await createCompiler(options, context);
 
-  return new Promise<{ success: boolean; outfile?: string }>((res) => {
-    compiler.run((error, stats) => {
-      compiler.close(() => {
-        if (error) {
-          console.error(error);
-          res({ success: false });
-          return;
-        }
-        if (!compiler || !stats) {
-          res({ success: false });
-          return;
-        }
+  const iterable = createAsyncIterable<{
+    success: boolean;
+    outfile?: string;
+  }>(async ({ next, done }) => {
+    if (options.watch) {
+      const watcher: Watching = compiler.watch(
+        {},
+        async (err, stats: Stats) => {
+          if (err) {
+            logger.error(err);
+            next({ success: false });
+            return;
+          }
+          if (!compiler || !stats) {
+            logger.error(new Error('Compiler or stats not available'));
+            next({ success: false });
+            return;
+          }
 
-        // TODO: Handle MultipleCompiler
-        const statsOptions = compiler.options
-          ? compiler.options.stats
-          : undefined;
-        const printedStats = stats.toString(statsOptions);
-        // Avoid extra empty line when `stats: 'none'`
-        if (printedStats) {
-          console.error(printedStats);
+          const statsOptions = compiler.options
+            ? compiler.options.stats
+            : undefined;
+          const printedStats = stats.toString(statsOptions);
+          // Avoid extra empty line when `stats: 'none'`
+          if (printedStats) {
+            console.error(printedStats);
+          }
+          next({
+            success: !stats.hasErrors(),
+            outfile: path.resolve(context.root, options.outputPath, 'main.js'),
+          });
         }
-        res({
-          success: !stats.hasErrors(),
-          outfile: path.resolve(context.root, options.outputPath, 'main.js'),
+      );
+
+      registerCleanupCallback(() => {
+        watcher.close(() => {
+          logger.info('Watcher closed');
         });
       });
-    });
+    } else {
+      compiler.run(async (err, stats: Stats) => {
+        compiler.close(() => {
+          if (err) {
+            logger.error(err);
+            next({ success: false });
+            return;
+          }
+          if (!compiler || !stats) {
+            logger.error(new Error('Compiler or stats not available'));
+            next({ success: false });
+            return;
+          }
+
+          const statsOptions = compiler.options
+            ? compiler.options.stats
+            : undefined;
+          const printedStats = stats.toString(statsOptions);
+          // Avoid extra empty line when `stats: 'none'`
+          if (printedStats) {
+            console.error(printedStats);
+          }
+          next({
+            success: !stats.hasErrors(),
+            outfile: path.resolve(context.root, options.outputPath, 'main.js'),
+          });
+          done();
+        });
+      });
+    }
   });
+
+  yield* iterable;
+}
+
+// copied from packages/esbuild/src/executors/esbuild/esbuild.impl.ts
+function registerCleanupCallback(callback: () => void) {
+  const wrapped = () => {
+    callback();
+    process.off('SIGINT', wrapped);
+    process.off('SIGTERM', wrapped);
+    process.off('exit', wrapped);
+  };
+
+  process.on('SIGINT', wrapped);
+  process.on('SIGTERM', wrapped);
+  process.on('exit', wrapped);
 }

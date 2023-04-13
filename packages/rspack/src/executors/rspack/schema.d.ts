@@ -6,6 +6,7 @@ export interface RspackExecutorSchema {
   outputPath: string;
   indexHtml?: string;
   mode?: Mode;
+  watch?: boolean;
 
   rspackConfig: string;
   optimization?: boolean;
