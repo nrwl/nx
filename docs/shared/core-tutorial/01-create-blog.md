@@ -48,6 +48,13 @@ The `package.json` file contains this property:
 
 ```json
   "workspaces": [
+    "packages/*"
+  ]
+```
+
+You need to amend it to the following:
+```json
+  "workspaces": [
     "packages/**"
   ]
 ```
