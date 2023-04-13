@@ -42,7 +42,7 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
   let hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
 
   if (!hostRootRoutingFile) {
-    pathToHostRootRoutingFile = (0, devkit_1.joinPathFragments)(sourceRoot, 'app/app-routing.module.ts');
+    pathToHostRootRoutingFile = joinPathFragments(sourceRoot, 'app/app-routing.module.ts');
     hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
   }
 
