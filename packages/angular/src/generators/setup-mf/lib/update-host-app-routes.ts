@@ -34,12 +34,17 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
 `
   );
 
-  const pathToHostRootRoutingFile = joinPathFragments(
+  let pathToHostRootRoutingFile = joinPathFragments(
     sourceRoot,
     'app/app.routes.ts'
   );
 
-  const hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
+  let hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
+
+  if (!hostRootRoutingFile) {
+    pathToHostRootRoutingFile = (0, devkit_1.joinPathFragments)(sourceRoot, 'app/app-routing.module.ts');
+    hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
+  }
 
   let sourceFile = tsModule.createSourceFile(
     pathToHostRootRoutingFile,
