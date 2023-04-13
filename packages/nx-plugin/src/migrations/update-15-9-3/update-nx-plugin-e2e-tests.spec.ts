@@ -1,5 +1,4 @@
 import {
-  logger,
   ProjectGraph,
   readProjectConfiguration,
   Tree,
@@ -82,11 +81,11 @@ describe('${name} e2e', () => {
   // on a unique project in the workspace, such that they
   // are not dependant on one another.
   beforeAll(() => {
-    ensureNxProject('@lib/${name}', 'dist/packages/${name}');
+    ensureNxProject('@proj/${name}', 'dist/packages/${name}');
   });
 
   beforeAll(async () => {
-    await ensureNxProject('@lib/${name}', 'dist/packages/${name}');
+    await ensureNxProject('@proj/${name}', 'dist/packages/${name}');
   });
 
   afterAll(() => {

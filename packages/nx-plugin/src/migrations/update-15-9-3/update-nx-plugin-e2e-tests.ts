@@ -1,6 +1,9 @@
 import {
   createProjectGraphAsync,
   formatFiles,
+  logger,
+  ProjectGraph,
+  readJson,
   readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
@@ -8,11 +11,18 @@ import {
 import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
 import { TEST_FILE_PATTERN } from '@nrwl/jest/src/utils/ast-utils';
 import { forEachExecutorOptionsInGraph } from '@nrwl/devkit/src/generators/executor-options-utils';
+import {
+  createProjectRootMappings,
+  findProjectForPath,
+  ProjectRootMappings,
+} from 'nx/src/project-graph/utils/find-project-for-path';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { CallExpression, Node, StringLiteral, SyntaxKind } from 'typescript';
 
 export async function updateNxPluginE2eTests(tree: Tree) {
   const graph = await createProjectGraphAsync();
+  const fileMappings = createProjectRootMappings(graph.nodes);
+
   forEachExecutorOptionsInGraph<JestExecutorOptions>(
     graph,
     '@nrwl/nx-plugin:e2e',
@@ -23,14 +33,19 @@ export async function updateNxPluginE2eTests(tree: Tree) {
         if (!TEST_FILE_PATTERN.test(file)) {
           return;
         }
-        updateEnsureNxProject(tree, file);
+        updateEnsureNxProject(tree, graph, fileMappings, file);
       });
     }
   );
   await formatFiles(tree);
 }
 
-export function updateEnsureNxProject(tree: Tree, filePath: string) {
+export function updateEnsureNxProject(
+  tree: Tree,
+  graph: ProjectGraph,
+  fileMappings: ProjectRootMappings,
+  filePath: string
+) {
   let contents = tree.read(filePath, 'utf-8');
 
   if (!contents.includes('ensureNxProject')) {
@@ -55,16 +70,21 @@ export function updateEnsureNxProject(tree: Tree, filePath: string) {
       if (node.arguments.length !== 2 || !text.startsWith('ensureNxProject(')) {
         return;
       }
-      //TODO: resolve packages to libraries
+
       const npmPackage = (node.arguments[0] as StringLiteral).text;
-      if (npmPackage !== '@lib/my-lib') {
-        return;
+      if (graph.nodes[npmPackage] != null) {
+        return; // Call already migrated to a project
+      }
+
+      const project = getProjectForNpmPackage(tree, fileMappings, npmPackage);
+      if (project == null) {
+        return; // Could not resolve the project
       }
 
       if (node.parent.kind === SyntaxKind.AwaitExpression) {
-        return `ensureNxProject('my-lib')`;
+        return `ensureNxProject('${project}')`;
       }
-      return `await ensureNxProject('my-lib')`;
+      return `await ensureNxProject('${project}')`;
     }
   );
 
@@ -90,6 +110,23 @@ export function updateEnsureNxProject(tree: Tree, filePath: string) {
   });
 
   tree.write(filePath, contents);
+}
+
+function getProjectForNpmPackage(
+  tree: Tree,
+  fileMappings: ProjectRootMappings,
+  npmPackageName: string
+): string | undefined {
+  const compilerOptions = readJson(tree, 'tsconfig.base.json').compilerOptions;
+  const paths: Record<string, string[]> = compilerOptions.paths ?? {};
+  const srcPath = paths[npmPackageName];
+
+  if (srcPath == null || srcPath.length === 0) {
+    logger.warn(`Could not find mapping to package: "${npmPackageName}"`);
+    return;
+  }
+
+  return findProjectForPath(srcPath[0], fileMappings);
 }
 
 export default updateNxPluginE2eTests;
