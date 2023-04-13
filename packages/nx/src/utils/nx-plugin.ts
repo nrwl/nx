@@ -10,7 +10,10 @@ import {
   PackageJson,
   readModulePackageJsonWithoutFallbacks,
 } from './package-json';
-import { registerTranspiler, registerTsConfigPaths } from './register';
+import {
+  registerTranspiler,
+  registerTsConfigPaths,
+} from '../plugins/js/utils/register';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,

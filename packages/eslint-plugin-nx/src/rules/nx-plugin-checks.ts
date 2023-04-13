@@ -8,7 +8,7 @@ import {
 } from '@nx/devkit';
 import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
 import { existsSync } from 'fs';
-import { registerTsProject } from 'nx/src/utils/register';
+import { registerTsProject } from 'nx/src/plugins/js/utils/register';
 import * as path from 'path';
 
 import { createESLintRule } from '../utils/create-eslint-rule';

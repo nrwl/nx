@@ -4,7 +4,7 @@ import {
   installPackagesTask,
   Tree,
 } from '@nx/devkit';
-import { swcCoreVersion, swcNodeVersion } from 'nx/src/utils/versions';
+import { swcCoreVersion, swcNodeVersion } from '../../utils/versions';
 
 export default async function addSwcNodeIfNeeded(tree: Tree) {
   addDependenciesToPackageJson(

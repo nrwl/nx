@@ -135,7 +135,7 @@ In order to use Jest's global setup/teardown functions that reference nx librari
 Nx provides a helper function that you can import within your setup/teardown file.
 
 ```typescript {% fileName="global-setup.ts" %}
-import { registerTsProject } from 'nx/src/utils/register';
+import { registerTsProject } from 'nx/src/plugins/js/utils/register';
 const cleanupRegisteredPaths = registerTsProject('.', 'tsconfig.base.json');
 
 import { yourFancyFunction } from '@some-org/my-util-library';

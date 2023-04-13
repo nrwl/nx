@@ -1,5 +1,5 @@
 import { addDependenciesToPackageJson, formatFiles, Tree } from '@nx/devkit';
-import { swcCoreVersion, swcNodeVersion } from 'nx/src/utils/versions';
+import { swcCoreVersion, swcNodeVersion } from '../../utils/versions';
 import { WORKSPACE_PLUGIN_DIR } from '../../generators/workspace-rules-project/workspace-rules-project';
 
 export default async function addSwcNodeIfNeeded(tree: Tree) {
