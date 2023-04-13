@@ -4,8 +4,6 @@ Here are some common scenarios we came across while trying to run Nx on CIs
 
 ## Native Modules
 
-<!-- NX   Cannot find module '@nrwl/nx-linux-x64-gnu' -->
-
 With more recent versions of Nx, we publish native binaries that should be automatically downloaded and installed when Nx is used.
 
 Some npm users are experiencing errors like the following:
