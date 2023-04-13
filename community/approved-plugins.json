@@ -423,5 +423,10 @@
     "name": "nx-ngrok",
     "description": "Ngrok support for Nx",
     "url": "https://github.com/domjtalbot/nx-ngrok"
+  },
+  {
+    "name": "nx-size-limit",
+    "description": "Adds size-limit support for Nx (performance budget tool for JavaScript)",
+    "url": "https://github.com/LironHazan/nx-size-limit"
   }
 ]
