@@ -60,11 +60,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   implicitDependencies?: ImplicitDependencyEntry<T>;
   /**
-   * @deprecated use targetDefaults instead
-   * Dependencies between different target names across all projects
-   */
-  targetDependencies?: TargetDependencies;
-  /**
    * Named inputs targets can refer to reduce duplication
    */
   namedInputs?: { [inputName: string]: (string | InputDefinition)[] };

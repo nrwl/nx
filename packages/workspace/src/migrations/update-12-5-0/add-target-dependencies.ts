@@ -1,8 +1,18 @@
-import { formatFiles, readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
+import {
+  formatFiles,
+  NxJsonConfiguration,
+  readNxJson,
+  TargetDependencyConfig,
+  Tree,
+  updateNxJson,
+} from '@nrwl/devkit';
 import { output } from '../../utilities/output';
 
 export async function setTargetDependencies(host: Tree) {
-  const config = readNxJson(host);
+  const config: NxJsonConfiguration & {
+    targetDependencies?: Record<string, TargetDependencyConfig[]>;
+  } = readNxJson(host);
+
   const strictlyOrderedTargets = config.tasksRunnerOptions?.['default']?.options
     ?.strictlyOrderedTargets || ['build'];
   delete config.tasksRunnerOptions?.['default']?.options

@@ -43,13 +43,6 @@
         "$ref": "#/definitions/targetDefaultsConfig"
       }
     },
-    "targetDependencies": {
-      "type": "object",
-      "description": "Dependencies between different target names across all projects.",
-      "additionalProperties": {
-        "$ref": "#/definitions/targetDependencyConfig"
-      }
-    },
     "workspaceLayout": {
       "type": "object",
       "description": "Where new apps + libs should be placed.",
@@ -172,38 +165,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "targetDependencyConfig": {
-      "type": "array",
-      "items": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "projects": {
-                "type": "string",
-                "description": "The projects that the targets belong to.",
-                "enum": ["self", "dependencies"]
-              },
-              "target": {
-                "type": "string",
-                "description": "The name of the target."
-              },
-              "params": {
-                "type": "string",
-                "description": "Configuration for params handling.",
-                "enum": ["ignore", "forward"],
-                "default": "ignore"
-              }
-            },
-            "additionalProperties": false,
-            "required": ["projects", "target"]
-          }
-        ]
-      }
     },
     "targetDefaultsConfig": {
       "type": "object",
