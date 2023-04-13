@@ -87,11 +87,6 @@
       "factory": "./src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator",
       "schema": "./src/generators/ci-workflow/schema.json",
       "description": "Generate a CI workflow."
-    },
-    "migrate-to-nx-scope": {
-      "factory": "./src/generators/migrate-to-nx-scope/generator",
-      "schema": "./src/generators/migrate-to-nx-scope/schema.json",
-      "description": "Migrate packages to use @nx scope"
     }
   }
 }
