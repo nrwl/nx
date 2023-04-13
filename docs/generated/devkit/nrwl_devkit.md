@@ -114,7 +114,6 @@ It only uses language primitives and immutable objects
 - [getDependentPackagesForProject](../../devkit/documents/nrwl_devkit#getdependentpackagesforproject)
 - [getImportPath](../../devkit/documents/nrwl_devkit#getimportpath)
 - [getNpmPackageSharedConfig](../../devkit/documents/nrwl_devkit#getnpmpackagesharedconfig)
-- [getOutputPath](../../devkit/documents/nrwl_devkit#getoutputpath)
 - [getOutputsForTargetAndConfiguration](../../devkit/documents/nrwl_devkit#getoutputsfortargetandconfiguration)
 - [getPackageManagerCommand](../../devkit/documents/nrwl_devkit#getpackagemanagercommand)
 - [getPackageManagerVersion](../../devkit/documents/nrwl_devkit#getpackagemanagerversion)
