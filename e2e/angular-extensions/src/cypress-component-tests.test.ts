@@ -9,8 +9,10 @@ import {
   updateFile,
   updateProjectConfig,
   removeFile,
+  checkFilesExist,
 } from '../../utils';
 import { names } from '@nrwl/devkit';
+import { join } from 'path';
 
 describe('Angular Cypress Component Tests', () => {
   let projectName: string;
@@ -107,6 +109,20 @@ describe('Angular Cypress Component Tests', () => {
     useBuildableLibInLib(projectName, buildableLibName, usedInAppLibName);
 
     updateBuilableLibTestsToAssertAppStyles(appName, buildableLibName);
+
+    if (runCypressTests()) {
+      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
+  });
+
+  it('should use root level tailwinds config', () => {
+    useRootLevelTailwindConfig(
+      join('libs', buildableLibName, 'tailwind.config.js')
+    );
+    checkFilesExist('tailwind.config.js');
+    checkFilesDoNotExist(`libs/${buildableLibName}/tailwind.config.js`);
 
     if (runCypressTests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
@@ -385,4 +401,22 @@ function updateBuilableLibTestsToAssertAppStyles(
       return content.replace('rgb(34, 197, 94)', 'rgb(255, 192, 203)');
     }
   );
+}
+
+function useRootLevelTailwindConfig(existingConfigPath: string) {
+  createFile(
+    'tailwind.config.js',
+    `const { join } = require('path');
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [join(__dirname, '**/*.{html,js,ts}')],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+`
+  );
+  removeFile(existingConfigPath);
 }
