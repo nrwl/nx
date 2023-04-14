@@ -468,16 +468,8 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/workspace/generators/ci-workflow',
     },
     {
-      title: '@nrwl/workspace:run-commands',
-      path: '/packages/workspace/executors/run-commands',
-    },
-    {
       title: '@nrwl/workspace:counter',
       path: '/packages/workspace/executors/counter',
-    },
-    {
-      title: '@nrwl/workspace:run-script',
-      path: '/packages/workspace/executors/run-script',
     },
   ]).forEach((page) => assertTextOnPage(page.path, page.title));
 });

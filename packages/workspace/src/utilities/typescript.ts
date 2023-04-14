@@ -4,7 +4,6 @@ import type * as ts from 'typescript';
 import { typescriptVersion } from '../utils/versions';
 export { compileTypeScript } from './typescript/compilation';
 export type { TypeScriptCompilationOptions } from './typescript/compilation';
-export { findNodes } from './typescript/find-nodes'; // TODO(v16): remove this
 export { getSourceNodes } from './typescript/get-source-nodes';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');

@@ -12,9 +12,14 @@ const schemaUrls = {
     '/packages/workspace/generators/workspace-generator',
   '/workspace/convert-to-nx-project-generator':
     '/packages/workspace/generators/convert-to-nx-project',
-  '/workspace/run-commands-executor':
-    '/packages/workspace/executors/run-commands',
-  '/workspace/run-script': '/packages/workspace/executors/run-script',
+
+  '/workspace/run-commands-executor': '/packages/nx/executors/run-commands',
+  '/workspace/run-script': '/packages/nx/executors/run-script',
+  '/packages/workspace/executors/run-commands':
+    '/packages/nx/executors/run-commands',
+  '/packages/workspace/executors/run-script':
+    '/packages/nx/executors/run-script',
+
   '/js/library': '/packages/js/generators/library',
   '/js/convert-to-swc': '/packages/js/generators/convert-to-swc',
   '/js/tsc': '/packages/js/executors/tsc',

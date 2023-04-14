@@ -6650,25 +6650,9 @@
             "name": "executors",
             "children": [
               {
-                "id": "run-commands",
-                "path": "/packages/workspace/executors/run-commands",
-                "name": "run-commands",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "counter",
                 "path": "/packages/workspace/executors/counter",
                 "name": "counter",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "run-script",
-                "path": "/packages/workspace/executors/run-script",
-                "name": "run-script",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
