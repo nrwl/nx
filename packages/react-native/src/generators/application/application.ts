@@ -7,7 +7,7 @@ import {
   joinPathFragments,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { runPodInstall } from '../../utils/pod-install-task';
 import { runSymlink } from '../../utils/symlink-task';

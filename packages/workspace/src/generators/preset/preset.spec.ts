@@ -1,6 +1,6 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { overrideCollectionResolutionForTesting } from '@nx/devkit/ngcli-adapter';
 import { presetGenerator } from './preset';
 import * as path from 'path';
 import { Preset } from '../utils/presets';

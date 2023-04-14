@@ -1,10 +1,10 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   stripIndents,
   Tree,
   readJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   shouldNotOverrideCommands,
   shouldNotUseCyInShouldCB,

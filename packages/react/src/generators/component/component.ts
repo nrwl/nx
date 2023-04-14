@@ -12,7 +12,7 @@ import {
   runTasksInSerial,
   toJS,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import { assertValidStyle } from '../../utils/assertion';
@@ -25,7 +25,7 @@ import {
 import { getComponentTests } from './get-component-tests';
 import { NormalizedSchema } from './noramlized-schema';
 import { Schema } from './schema';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);

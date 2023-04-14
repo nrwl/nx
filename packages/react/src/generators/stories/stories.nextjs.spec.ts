@@ -2,11 +2,11 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import storiesGenerator from './stories';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 describe('nextjs:stories for applications', () => {
   let tree: Tree;

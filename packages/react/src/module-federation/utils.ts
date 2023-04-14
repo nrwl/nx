@@ -11,7 +11,7 @@ import {
   readCachedProjectGraph,
   sharePackages,
   shareWorkspaceLibraries,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export async function getModuleFederationConfig(
   mfConfig: ModuleFederationConfig,

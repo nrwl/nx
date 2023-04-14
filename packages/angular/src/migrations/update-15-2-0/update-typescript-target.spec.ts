@@ -4,8 +4,8 @@ import {
   Tree,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../../generators/utils/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import updateTypescriptTarget from './update-typescript-target';

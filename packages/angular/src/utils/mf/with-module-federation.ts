@@ -1,4 +1,4 @@
-import { ModuleFederationConfig } from '@nrwl/devkit';
+import { ModuleFederationConfig } from '@nx/devkit';
 import { getModuleFederationConfig } from './utils';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');

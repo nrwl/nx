@@ -1,9 +1,5 @@
 import type { Schema } from './schema';
-import {
-  readCachedProjectGraph,
-  workspaceRoot,
-  Workspaces,
-} from '@nrwl/devkit';
+import { readCachedProjectGraph, workspaceRoot, Workspaces } from '@nx/devkit';
 import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
 import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';

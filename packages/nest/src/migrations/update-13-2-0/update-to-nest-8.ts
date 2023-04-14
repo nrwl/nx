@@ -1,5 +1,5 @@
-import { formatFiles, logger, readJson, Tree, updateJson } from '@nrwl/devkit';
-import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
+import { formatFiles, logger, readJson, Tree, updateJson } from '@nx/devkit';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { satisfies } from 'semver';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 

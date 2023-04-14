@@ -1,6 +1,6 @@
-import { ExecutorContext, logger, workspaceRoot } from '@nrwl/devkit';
-import { composePluginsSync } from '@nrwl/webpack/src/utils/config';
-import { NormalizedWebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
+import { ExecutorContext, logger, workspaceRoot } from '@nx/devkit';
+import { composePluginsSync } from '@nx/webpack/src/utils/config';
+import { NormalizedWebpackExecutorOptions } from '@nx/webpack/src/executors/webpack/schema';
 import { join } from 'path';
 import {
   Configuration,
@@ -68,14 +68,14 @@ export const webpack = async (
   // In case anyone is missing dep and did not run migrations.
   // See: https://github.com/nrwl/nx/issues/14455
   try {
-    require.resolve('@nrwl/webpack');
+    require.resolve('@nx/webpack');
   } catch {
     throw new Error(
-      `'@nrwl/webpack' package is not installed. Install it and try again.`
+      `'@nx/webpack' package is not installed. Install it and try again.`
     );
   }
 
-  const { withNx, withWeb } = require('@nrwl/webpack');
+  const { withNx, withWeb } = require('@nx/webpack');
   const tsconfigPath = join(options.configDir, 'tsconfig.json');
 
   const builderOptions: NormalizedWebpackExecutorOptions = {

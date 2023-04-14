@@ -4,10 +4,10 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { basename } from 'path';
-import type { WebpackExecutorOptions } from '@nrwl/webpack';
+import type { WebpackExecutorOptions } from '@nx/webpack';
 
 export default async function (tree: Tree) {
   // Since projects can have multiple configurations, we need to know if the default options

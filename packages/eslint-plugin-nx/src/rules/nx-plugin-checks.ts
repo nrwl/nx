@@ -5,7 +5,7 @@ import {
   ProjectGraphProjectNode,
   readJsonFile,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
 import { existsSync } from 'fs';
 import { registerTsProject } from 'nx/src/utils/register';

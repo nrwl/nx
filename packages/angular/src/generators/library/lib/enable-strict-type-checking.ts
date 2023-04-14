@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { readNxJson, updateJson, updateNxJson } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { readNxJson, updateJson, updateNxJson } from '@nx/devkit';
 import { NormalizedSchema } from './normalized-schema';
 
 /**

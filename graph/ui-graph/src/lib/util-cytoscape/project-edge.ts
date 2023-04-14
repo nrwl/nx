@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-import type { ProjectGraphDependency } from '@nrwl/devkit';
+import type { ProjectGraphDependency } from '@nx/devkit';
 import * as cy from 'cytoscape';
 
 export interface ProjectEdgeDataDefinition extends cy.NodeDataDefinition {

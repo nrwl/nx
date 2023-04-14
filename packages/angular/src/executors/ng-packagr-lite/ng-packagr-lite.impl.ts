@@ -1,8 +1,8 @@
-import type { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
 import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nrwl/js/src/utils/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils';
 import { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
 import { createLibraryExecutor } from '../package/package.impl';

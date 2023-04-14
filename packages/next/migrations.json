@@ -59,6 +59,12 @@
       "version": "15.8.8-beta.0",
       "description": "Add less and stylus packages if used.",
       "factory": "./src/migrations/update-15-8-8/add-style-packages"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/next with @nx/next",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },
   "packageJsonUpdates": {

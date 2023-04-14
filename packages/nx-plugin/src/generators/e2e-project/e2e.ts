@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   convertNxGenerator,
@@ -12,13 +12,13 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { jestProjectGenerator } from '@nrwl/jest';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+} from '@nx/devkit';
+import { jestProjectGenerator } from '@nx/jest';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 import * as path from 'path';
 
 import type { Schema } from './schema';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nx/linter';
 
 interface NormalizedSchema extends Schema {
   projectRoot: string;

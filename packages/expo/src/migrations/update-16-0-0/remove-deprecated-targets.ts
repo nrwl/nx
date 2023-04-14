@@ -3,7 +3,7 @@ import {
   formatFiles,
   getProjects,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * Remove deprecated @expo/cli targets

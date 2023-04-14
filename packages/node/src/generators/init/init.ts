@@ -6,10 +6,10 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { jestInitGenerator } from '@nrwl/jest';
+} from '@nx/devkit';
+import { jestInitGenerator } from '@nx/jest';
 
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   nxVersion,
   tslibVersion,

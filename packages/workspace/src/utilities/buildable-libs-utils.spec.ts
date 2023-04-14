@@ -1,4 +1,4 @@
-import { DependencyType, ProjectGraph } from '@nrwl/devkit';
+import { DependencyType, ProjectGraph } from '@nx/devkit';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,

@@ -58,6 +58,7 @@
     "@ngrx/router-store": "~15.3.0",
     "@ngrx/store": "~15.3.0",
     "@nguniversal/builders": "~15.2.0",
+    "@nrwl/angular": "16.0.0-beta.0",
     "@nrwl/cypress": "16.0.0-beta.0",
     "@nrwl/devkit": "16.0.0-beta.0",
     "@nrwl/eslint-plugin-nx": "16.0.0-beta.0",

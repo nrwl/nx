@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import type { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   e2eCwd,
@@ -67,7 +67,7 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('NX   Installed plugins');
 
       // just check for some, not all
-      expect(listOutput).toContain('@nrwl/angular');
+      expect(listOutput).toContain('@nrwl/workspace');
 
       // temporarily make it look like this isn't installed
       renameSync(
@@ -79,9 +79,9 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('NX   Also available');
 
       // look for specific plugin
-      listOutput = runCLI('list @nrwl/workspace');
+      listOutput = runCLI('list @nx/workspace');
 
-      expect(listOutput).toContain('Capabilities in @nrwl/workspace');
+      expect(listOutput).toContain('Capabilities in @nx/workspace');
 
       // check for schematics
       expect(listOutput).toContain('workspace');
@@ -92,10 +92,10 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('run-commands');
 
       // // look for uninstalled core plugin
-      listOutput = runCLI('list @nrwl/angular');
+      listOutput = runCLI('list @nx/angular');
 
       expect(listOutput).toContain(
-        'NX   @nrwl/angular is not currently installed'
+        'NX   @nx/angular is not currently installed'
       );
 
       // look for an unknown plugin
@@ -105,7 +105,7 @@ describe('Nx Commands', () => {
         'NX   @wibble/fish is not currently installed'
       );
 
-      // put back the @nrwl/angular module (or all the other e2e tests after this will fail)
+      // put back the @nx/angular module (or all the other e2e tests after this will fail)
       renameSync(
         tmpProjPath('node_modules/@nrwl/angular_tmp'),
         tmpProjPath('node_modules/@nrwl/angular')

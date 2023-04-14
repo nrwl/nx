@@ -3,9 +3,9 @@ import {
   convertNxGenerator,
   formatFiles,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema } from './schema';
-import { esbuildVersion } from '@nrwl/js/src/utils/versions';
+import { esbuildVersion } from '@nx/js/src/utils/versions';
 
 export async function esbuildInitGenerator(tree: Tree, schema: Schema) {
   const task = addDependenciesToPackageJson(

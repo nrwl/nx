@@ -1,5 +1,5 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { addDependenciesToPackageJson } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { addDependenciesToPackageJson } from '@nx/devkit';
 import { versions } from '../../utils/version-utils';
 
 export function addAngularEsLintDependencies(tree: Tree): GeneratorCallback {

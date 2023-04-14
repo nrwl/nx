@@ -1,5 +1,5 @@
-import { Linter } from '@nrwl/linter';
-import { SupportedStyles } from '@nrwl/react';
+import { Linter } from '@nx/linter';
+import { SupportedStyles } from '@nx/react';
 
 export interface Schema {
   name: string;

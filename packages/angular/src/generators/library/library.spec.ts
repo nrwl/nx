@@ -7,9 +7,9 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
@@ -22,9 +22,9 @@ import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { Schema } from './schema';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/devkit', () => {
+jest.mock('@nx/devkit', () => {
   return {
-    ...jest.requireActual('@nrwl/devkit'),
+    ...jest.requireActual('@nx/devkit'),
     createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
   };
 });

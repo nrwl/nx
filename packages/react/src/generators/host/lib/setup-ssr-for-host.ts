@@ -1,4 +1,4 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   generateFiles,
@@ -7,7 +7,7 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import type { Schema } from '../schema';
 import { moduleFederationNodeVersion } from '../../../utils/versions';

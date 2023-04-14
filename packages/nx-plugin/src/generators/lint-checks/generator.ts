@@ -10,11 +10,11 @@ import {
   updateJson,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import type { Linter as ESLint } from 'eslint';
 
-import { Schema as EsLintExecutorOptions } from '@nrwl/linter/src/executors/eslint/schema';
+import { Schema as EsLintExecutorOptions } from '@nx/linter/src/executors/eslint/schema';
 
 import { jsoncEslintParserVersion } from '../../utils/versions';
 import { PluginLintChecksGeneratorSchema } from './schema';

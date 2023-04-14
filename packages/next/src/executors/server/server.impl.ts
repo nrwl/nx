@@ -5,7 +5,7 @@ import {
   parseTargetString,
   readTargetOptions,
   runExecutor,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import * as chalk from 'chalk';
 import { existsSync } from 'fs';
 import { join, resolve } from 'path';

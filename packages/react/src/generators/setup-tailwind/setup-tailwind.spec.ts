@@ -4,8 +4,8 @@ import {
   readProjectConfiguration,
   stripIndents,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './setup-tailwind';
 
 describe('setup-tailwind', () => {

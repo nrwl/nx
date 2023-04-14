@@ -28,10 +28,15 @@ export function shouldMergeAngularProjects(
 
 function isNrwlAngularInstalled() {
   try {
-    require.resolve('@nrwl/angular');
+    require.resolve('@nx/angular');
     return true;
   } catch {
-    return false;
+    try {
+      require.resolve('@nrwl/angular');
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 

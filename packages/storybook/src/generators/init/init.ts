@@ -8,8 +8,8 @@ import {
   Tree,
   updateJson,
   updateNxJson,
-} from '@nrwl/devkit';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+} from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
   babelCoreVersion,

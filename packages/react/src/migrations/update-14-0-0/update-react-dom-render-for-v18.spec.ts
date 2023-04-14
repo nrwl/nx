@@ -1,10 +1,10 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   readJson,
   stripIndents,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import update from './update-react-dom-render-for-v18';
 
 describe('React update for Nx 14', () => {

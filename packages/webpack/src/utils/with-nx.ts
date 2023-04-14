@@ -2,7 +2,7 @@ import * as path from 'path';
 import { Configuration, WebpackPluginInstance, ProgressPlugin } from 'webpack';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import { readTsConfig } from '@nrwl/js';
+import { readTsConfig } from '@nx/js';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
@@ -326,7 +326,7 @@ export function createLoaderFromCompiler(
         },
       };
     case 'tsc':
-      const { loadTsTransformers } = require('@nrwl/js');
+      const { loadTsTransformers } = require('@nx/js');
       const { compilerPluginHooks, hasPlugin } = loadTsTransformers(
         options.transformers
       );

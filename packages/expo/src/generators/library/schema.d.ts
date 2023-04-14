@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 /**
  * Same as the @nrwl/react library schema, except it removes keys: style, component, routing, appProject

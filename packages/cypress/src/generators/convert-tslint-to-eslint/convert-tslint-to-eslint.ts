@@ -3,12 +3,12 @@ import {
   formatFiles,
   GeneratorCallback,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   ConvertTSLintToESLintSchema,
   Linter,
   ProjectConverter,
-} from '@nrwl/linter';
+} from '@nx/linter';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import type { Linter as ESLinter } from 'eslint';
 

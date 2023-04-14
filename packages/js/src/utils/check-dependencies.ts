@@ -1,4 +1,4 @@
-import { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
+import { ExecutorContext, ProjectGraphProjectNode } from '@nx/devkit';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,

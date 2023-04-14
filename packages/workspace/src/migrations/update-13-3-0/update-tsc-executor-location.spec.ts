@@ -3,8 +3,8 @@ import {
   addProjectConfiguration,
   getProjects,
   readJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { updateTscExecutorLocation } from './update-tsc-executor-location';
 
 describe('add `defaultBase` in nx.json', () => {

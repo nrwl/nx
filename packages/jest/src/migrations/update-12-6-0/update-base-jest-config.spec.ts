@@ -6,8 +6,8 @@ const mockResolveConfig = jest.fn(() =>
   Promise.resolve({ singleQuote: true, endOfLine: 'lf' })
 );
 
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './update-base-jest-config';
 
 describe('update 12.6.0', () => {
@@ -34,7 +34,7 @@ describe('update 12.6.0', () => {
 
     const result = tree.read('jest.config.js').toString();
     expect(result).toMatchInlineSnapshot(`
-      "const { getJestProjects } = require('@nrwl/jest');
+      "const { getJestProjects } = require('@nx/jest');
 
       module.exports = { projects: getJestProjects() };
       "
@@ -46,7 +46,7 @@ describe('update 12.6.0', () => {
     await update(tree);
     const result = tree.read('jest.config.js').toString();
     expect(result).toMatchInlineSnapshot(`
-      "const { getJestProjects } = require('@nrwl/jest');
+      "const { getJestProjects } = require('@nx/jest');
 
       module.exports = { projects: getJestProjects() };
       "
@@ -58,7 +58,7 @@ describe('update 12.6.0', () => {
     await update(tree);
     const result = tree.read('jest.config.js').toString();
     expect(result).toMatchInlineSnapshot(`
-      "const { getJestProjects } = require('@nrwl/jest');
+      "const { getJestProjects } = require('@nx/jest');
 
       module.exports = { projects: [...getJestProjects(), '<rootDir>/test-1'] };
       "
@@ -83,7 +83,7 @@ module.exports = {
     await update(tree);
     const result = tree.read('jest.config.js').toString();
     expect(result).toMatchInlineSnapshot(`
-"const { getJestProjects } = require('@nrwl/jest');
+"const { getJestProjects } = require('@nx/jest');
 
 module.exports = {
   projects: [

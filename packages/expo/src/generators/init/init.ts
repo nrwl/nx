@@ -6,7 +6,7 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema } from './schema';
 import {
   babelPresetExpoVersion,
@@ -31,9 +31,9 @@ import {
   typesReactVersion,
 } from '../../utils/versions';
 
-import { jestInitGenerator } from '@nrwl/jest';
-import { detoxInitGenerator } from '@nrwl/detox';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { jestInitGenerator } from '@nx/jest';
+import { detoxInitGenerator } from '@nx/detox';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { initRootBabelConfig } from './lib/init-root-babel-config';

@@ -1,5 +1,5 @@
-import { Tree, readJson, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree, readJson, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { expoInitGenerator } from './init';
 
 describe('init', () => {

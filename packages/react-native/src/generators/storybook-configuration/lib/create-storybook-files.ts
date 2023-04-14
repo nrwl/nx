@@ -5,7 +5,7 @@ import {
   readProjectConfiguration,
   toJS,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import * as chalk from 'chalk';
 

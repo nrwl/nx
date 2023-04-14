@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 
 import { copyFileSync, existsSync } from 'fs';
 import { join } from 'path';

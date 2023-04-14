@@ -3,9 +3,9 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { pluginGenerator } from '../plugin/plugin';
 import { generatorGenerator } from './generator';
 

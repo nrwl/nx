@@ -3,7 +3,10 @@
   "lib": {
     "entryFile": "index.ts"
   },
+  "dest": "../../build/packages/angular",
+  "deleteDestPath": false,
   "allowedNonPeerDependencies": [
+    "@nx/",
     "@nrwl/",
     "@angular-devkit",
     "@angular-eslint/",

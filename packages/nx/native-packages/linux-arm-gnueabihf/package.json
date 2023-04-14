@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/nx-linux-arm-gnueabihf",
+  "name": "@nx/nx-linux-arm-gnueabihf",
   "version": "0.0.0",
   "os": [
     "linux"

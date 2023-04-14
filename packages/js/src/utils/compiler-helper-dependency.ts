@@ -3,7 +3,7 @@ import {
   ProjectGraph,
   ProjectGraphDependency,
   readJsonFile,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { DependentBuildableProjectNode } from './buildable-libs-utils';
 import { join } from 'path';
 import { readTsConfig } from './typescript/ts-config';

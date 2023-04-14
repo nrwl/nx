@@ -1,8 +1,8 @@
-import { Tree, readJson, readProjectConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { executorGenerator } from './executor';
 import { pluginGenerator } from '../plugin/plugin';
-import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 
 describe('NxPlugin Executor Generator', () => {
   let tree: Tree;

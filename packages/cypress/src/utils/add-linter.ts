@@ -6,9 +6,9 @@ import {
   runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { globalJavaScriptOverrides } from '@nrwl/linter/src/generators/init/global-eslint-config';
+} from '@nx/devkit';
+import { Linter, lintProjectGenerator } from '@nx/linter';
+import { globalJavaScriptOverrides } from '@nx/linter/src/generators/init/global-eslint-config';
 import { installedCypressVersion } from './cypress-version';
 import { eslintPluginCypressVersion } from './versions';
 

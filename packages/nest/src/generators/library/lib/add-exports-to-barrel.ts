@@ -1,7 +1,7 @@
-import type { Tree } from '@nrwl/devkit';
-import { addGlobal, removeChange } from '@nrwl/js';
+import type { Tree } from '@nx/devkit';
+import { addGlobal, removeChange } from '@nx/js';
 import type { NormalizedOptions } from '../schema';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

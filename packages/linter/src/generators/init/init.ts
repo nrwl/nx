@@ -1,4 +1,4 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   readNxJson,
@@ -6,7 +6,7 @@ import {
   updateJson,
   updateNxJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   eslintConfigPrettierVersion,
   eslintVersion,

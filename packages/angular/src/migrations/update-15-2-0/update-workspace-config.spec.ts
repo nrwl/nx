@@ -1,4 +1,4 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Builders } from '@schematics/angular/utility/workspace-models';
 import {
   readProjectConfiguration,

@@ -1,4 +1,4 @@
-import { joinPathFragments, logger } from '@nrwl/devkit';
+import { joinPathFragments, logger } from '@nx/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';

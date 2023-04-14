@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nrwl/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { XMLParser } from 'fast-xml-parser';
 import * as glob from 'glob';
 import { readFileSync } from 'node:fs';

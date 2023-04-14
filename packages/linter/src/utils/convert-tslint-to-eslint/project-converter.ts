@@ -1,8 +1,4 @@
-import type {
-  GeneratorCallback,
-  ProjectConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import type { GeneratorCallback, ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   getProjects,
   installPackagesTask,
@@ -16,7 +12,7 @@ import {
   updateJson,
   updateNxJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Linter } from 'eslint';
 import { removeParserOptionsProjectIfNotRequired } from '../rules-requiring-type-checking';
 import { convertTSLintDisableCommentsForProject } from './convert-to-eslint-config';

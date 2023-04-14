@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import type { Schema } from '../schema';
 
 import {
   updateJson,
   readProjectConfiguration,
   joinPathFragments,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function updateTsConfigTarget(tree: Tree, schema: Schema) {
   const { root } = readProjectConfiguration(tree, schema.appName);

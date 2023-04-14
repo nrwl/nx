@@ -1,5 +1,5 @@
-import { detectPackageManager, joinPathFragments } from '@nrwl/devkit';
-import { capitalize } from '@nrwl/devkit/src/utils/string-utils';
+import { detectPackageManager, joinPathFragments } from '@nx/devkit';
+import { capitalize } from '@nx/devkit/src/utils/string-utils';
 import {
   checkFilesExist,
   cleanupProject,
@@ -292,7 +292,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-        const { withNx } = require('@nrwl/next/plugins/with-nx');
+        const { withNx } = require('@nx/next/plugins/with-nx');
         const nextConfig = {
           nx: {
             svgr: false,
@@ -327,7 +327,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-        const { withNx } = require('@nrwl/next/plugins/with-nx');
+        const { withNx } = require('@nx/next/plugins/with-nx');
         // Not including "nx" entry should still work.
         const nextConfig = {};
 

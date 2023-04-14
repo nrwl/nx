@@ -1,13 +1,13 @@
 import { dirname, join, relative } from 'path';
 import { directoryExists, fileExists } from 'nx/src/utils/fileutils';
-import type { ProjectGraph, ProjectGraphProjectNode } from '@nrwl/devkit';
+import type { ProjectGraph, ProjectGraphProjectNode } from '@nx/devkit';
 import {
   getOutputsForTargetAndConfiguration,
   ProjectGraphExternalNode,
   readJsonFile,
   stripIndents,
   writeJsonFile,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from 'nx/src/utils/output';

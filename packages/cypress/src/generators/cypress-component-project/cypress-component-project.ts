@@ -11,7 +11,7 @@ import {
   updateJson,
   updateProjectConfiguration,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
 import {

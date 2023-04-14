@@ -1,0 +1,37 @@
+{
+  "name": "linter-legacy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages-legacy/linter",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "dependsOn": ["^build"],
+      "options": {
+        "main": "packages-legacy/linter/index.ts",
+        "tsConfig": "packages-legacy/linter/tsconfig.json",
+        "outputPath": "build/packages/linter-legacy",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages-legacy/linter",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages-legacy/linter",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    }
+  },
+  "implicitDependencies": ["eslint-plugin-nx"]
+}

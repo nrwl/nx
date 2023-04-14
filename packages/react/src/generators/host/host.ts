@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import applicationGenerator from '../application/application';
 import { normalizeOptions } from '../application/lib/normalize-options';

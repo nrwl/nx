@@ -13,7 +13,7 @@ export async function withNxWebpack(config) {
       test: /\.(mjs|[jt]sx?)$/,
       exclude: /node_modules/,
       use: {
-        loader: require.resolve('@nrwl/webpack/src/utils/web-babel-loader.js'),
+        loader: require.resolve('@nx/webpack/src/utils/web-babel-loader.js'),
         options: {
           presets: [
             [

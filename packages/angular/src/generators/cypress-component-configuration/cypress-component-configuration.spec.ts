@@ -1,4 +1,4 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
   DependencyType,
   joinPathFragments,
@@ -6,17 +6,17 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),

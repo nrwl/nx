@@ -1,5 +1,5 @@
 // mock so we can test multiple versions
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
 // mock bc the nxE2EPreset uses fs for path normalization
 jest.mock('fs', () => {
   return {
@@ -10,16 +10,16 @@ jest.mock('fs', () => {
   };
 });
 
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
   readJson,
   readProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Logger, MigrationProjectConfiguration } from '../../utilities';
 import { E2eMigrator } from './e2e.migrator';
 

@@ -1,7 +1,7 @@
 import { Tree } from 'nx/src/generators/tree';
 import { readProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
-import { generateFiles, joinPathFragments, names } from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { generateFiles, joinPathFragments, names } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
 import { Schema } from '../schema';
 

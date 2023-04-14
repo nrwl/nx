@@ -4,7 +4,7 @@ import {
   readNxJson,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema } from './schema';
 import { Preset } from '../utils/presets';
 
@@ -25,7 +25,7 @@ async function createPreset(tree: Tree, options: Schema) {
   } else if (options.preset === Preset.AngularMonorepo) {
     const {
       applicationGenerator: angularApplicationGenerator,
-    } = require('@nrwl' + '/angular/generators');
+    } = require('@nx' + '/angular/generators');
 
     return angularApplicationGenerator(tree, {
       name: options.name,
@@ -37,7 +37,7 @@ async function createPreset(tree: Tree, options: Schema) {
   } else if (options.preset === Preset.AngularStandalone) {
     const {
       applicationGenerator: angularApplicationGenerator,
-    } = require('@nrwl' + '/angular/generators');
+    } = require('@nx' + '/angular/generators');
 
     return angularApplicationGenerator(tree, {
       name: options.name,
@@ -48,9 +48,8 @@ async function createPreset(tree: Tree, options: Schema) {
       standalone: options.standaloneApi,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
-    const {
-      applicationGenerator: reactApplicationGenerator,
-    } = require('@nrwl' + '/react');
+    const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
+      '/react');
 
     return reactApplicationGenerator(tree, {
       name: options.name,
@@ -59,9 +58,8 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler: options.bundler ?? 'webpack',
     });
   } else if (options.preset === Preset.ReactStandalone) {
-    const {
-      applicationGenerator: reactApplicationGenerator,
-    } = require('@nrwl' + '/react');
+    const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
+      '/react');
 
     return reactApplicationGenerator(tree, {
       name: options.name,
@@ -73,7 +71,7 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner: options.bundler === 'vite' ? 'vitest' : 'jest',
     });
   } else if (options.preset === Preset.NextJs) {
-    const { applicationGenerator: nextApplicationGenerator } = require('@nrwl' +
+    const { applicationGenerator: nextApplicationGenerator } = require('@nx' +
       '/next');
 
     return nextApplicationGenerator(tree, {
@@ -82,7 +80,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
     });
   } else if (options.preset === Preset.WebComponents) {
-    const { applicationGenerator: webApplicationGenerator } = require('@nrwl' +
+    const { applicationGenerator: webApplicationGenerator } = require('@nx' +
       '/web');
 
     return webApplicationGenerator(tree, {
@@ -92,7 +90,7 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler: 'vite',
     });
   } else if (options.preset === Preset.Nest) {
-    const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
+    const { applicationGenerator: nestApplicationGenerator } = require('@nx' +
       '/nest');
 
     return nestApplicationGenerator(tree, {
@@ -102,13 +100,13 @@ async function createPreset(tree: Tree, options: Schema) {
   } else if (options.preset === Preset.Express) {
     const {
       applicationGenerator: expressApplicationGenerator,
-    } = require('@nrwl' + '/express');
+    } = require('@nx' + '/express');
     return expressApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
     });
   } else if (options.preset === Preset.ReactNative) {
-    const { reactNativeApplicationGenerator } = require('@nrwl' +
+    const { reactNativeApplicationGenerator } = require('@nx' +
       '/react-native');
     return reactNativeApplicationGenerator(tree, {
       name: options.name,
@@ -116,7 +114,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: 'detox',
     });
   } else if (options.preset === Preset.Expo) {
-    const { expoApplicationGenerator } = require('@nrwl' + '/expo');
+    const { expoApplicationGenerator } = require('@nx' + '/expo');
     return expoApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
@@ -124,7 +122,7 @@ async function createPreset(tree: Tree, options: Schema) {
     });
   } else if (options.preset === Preset.TS) {
     const c = readNxJson(tree);
-    const { initGenerator } = require('@nrwl' + '/js');
+    const { initGenerator } = require('@nx' + '/js');
     c.workspaceLayout = {
       appsDir: 'packages',
       libsDir: 'packages',
@@ -132,7 +130,7 @@ async function createPreset(tree: Tree, options: Schema) {
     updateNxJson(tree, c);
     return initGenerator(tree, {});
   } else if (options.preset === Preset.NodeStandalone) {
-    const { applicationGenerator: nodeApplicationGenerator } = require('@nrwl' +
+    const { applicationGenerator: nodeApplicationGenerator } = require('@nx' +
       '/node');
     return nodeApplicationGenerator(tree, {
       name: options.name,

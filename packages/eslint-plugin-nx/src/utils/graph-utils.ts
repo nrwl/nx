@@ -2,7 +2,7 @@ import type {
   FileData,
   ProjectGraph,
   ProjectGraphProjectNode,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 interface Reach {
   graph: ProjectGraph;

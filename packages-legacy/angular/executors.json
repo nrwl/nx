@@ -1,0 +1,61 @@
+{
+  "executors": {
+    "delegate-build": {
+      "implementation": "@nx/angular/src/executors/delegate-build/delegate-build.impl",
+      "schema": "@nx/angular/src/executors/delegate-build/schema.json",
+      "description": "Delegates the build to a different target while supporting incremental builds."
+    },
+    "ng-packagr-lite": {
+      "implementation": "@nx/angular/src/executors/ng-packagr-lite/ng-packagr-lite.impl",
+      "schema": "@nx/angular/src/executors/ng-packagr-lite/schema.json",
+      "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).\n- It only produces ESM2020 bundles.\n- It doesn't generate package exports in the `package.json`."
+    },
+    "package": {
+      "implementation": "@nx/angular/src/executors/package/package.impl",
+      "schema": "@nx/angular/src/executors/package/schema.json",
+      "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\nThis executor is similar to the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds."
+    }
+  },
+  "builders": {
+    "delegate-build": {
+      "implementation": "@nx/angular/src/executors/delegate-build/compat",
+      "schema": "@nx/angular/src/executors/delegate-build/schema.json",
+      "description": "Delegates the build to a different target while supporting incremental builds."
+    },
+    "ng-packagr-lite": {
+      "implementation": "@nx/angular/src/executors/ng-packagr-lite/compat",
+      "schema": "@nx/angular/src/executors/ng-packagr-lite/schema.json",
+      "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`)\n- It only produces ESM2020 bundles\n- It doesn't generate package exports in the `package.json`"
+    },
+    "package": {
+      "implementation": "@nx/angular/src/executors/package/compat",
+      "schema": "@nx/angular/src/executors/package/schema.json",
+      "description": "Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds."
+    },
+    "webpack-browser": {
+      "implementation": "@nx/angular/src/builders/webpack-browser/webpack-browser.impl",
+      "schema": "@nx/angular/src/builders/webpack-browser/schema.json",
+      "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building"
+    },
+    "webpack-dev-server": {
+      "implementation": "@nx/angular/src/builders/webpack-dev-server/webpack-dev-server.impl",
+      "schema": "@nx/angular/src/builders/webpack-dev-server/schema.json",
+      "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
+    },
+    "webpack-server": {
+      "implementation": "@nx/angular/src/builders/webpack-server/webpack-server.impl",
+      "schema": "@nx/angular/src/builders/webpack-server/schema.json",
+      "description": "The `webpack-server` executor is very similar to the standard `server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR."
+    },
+    "module-federation-dev-server": {
+      "implementation": "@nx/angular/src/builders/module-federation-dev-server/module-federation-dev-server.impl",
+      "schema": "@nx/angular/src/builders/module-federation-dev-server/schema.json",
+      "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host."
+    },
+    "module-federation-dev-ssr": {
+      "implementation": "@nx/angular/src/builders/module-federation-dev-ssr/module-federation-dev-ssr.impl",
+      "schema": "@nx/angular/src/builders/module-federation-dev-ssr/schema.json",
+      "description": "The module-federation-dev-ssr executor is reserved exclusively for use with host Module Federation applications that use SSR. It allows the user to specify which remote applications should be served with the host."
+    }
+  }
+}

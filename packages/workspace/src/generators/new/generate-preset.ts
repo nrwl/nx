@@ -2,7 +2,7 @@ import {
   addDependenciesToPackageJson,
   getPackageManagerCommand,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Preset } from '../utils/presets';
 import {
   angularCliVersion,

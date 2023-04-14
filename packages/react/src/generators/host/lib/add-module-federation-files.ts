@@ -1,5 +1,5 @@
 import { NormalizedSchema } from '../schema';
-import { generateFiles, names } from '@nrwl/devkit';
+import { generateFiles, names } from '@nx/devkit';
 import { join } from 'path';
 import { normalizeProjectName } from '../../application/lib/normalize-options';
 

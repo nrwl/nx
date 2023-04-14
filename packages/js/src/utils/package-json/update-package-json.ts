@@ -12,7 +12,7 @@ import {
   readJsonFile,
   workspaceRoot,
   writeJsonFile,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { basename, dirname, join, parse, relative } from 'path';
 import { writeFileSync } from 'fs-extra';

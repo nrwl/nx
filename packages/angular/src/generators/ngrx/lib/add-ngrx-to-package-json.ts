@@ -1,5 +1,5 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { addDependenciesToPackageJson } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { addDependenciesToPackageJson } from '@nx/devkit';
 import { gte } from 'semver';
 import { versions } from '../../utils/version-utils';
 import { NormalizedNgRxGeneratorOptions } from './normalize-options';

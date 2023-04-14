@@ -7,8 +7,8 @@ import { createCopyPlugin } from './create-copy-plugin';
 import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nrwl/js/src/utils/buildable-libs-utils';
-import { NxWebpackExecutionContext } from '@nrwl/webpack';
+} from '@nx/js/src/utils/buildable-libs-utils';
+import { NxWebpackExecutionContext } from '@nx/webpack';
 
 export function createWebpackConfig(
   workspaceRoot: string,

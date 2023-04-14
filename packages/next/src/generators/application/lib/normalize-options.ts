@@ -1,12 +1,12 @@
-import { assertValidStyle } from '@nrwl/react/src/utils/assertion';
+import { assertValidStyle } from '@nx/react/src/utils/assertion';
 import {
   extractLayoutDirectory,
   getWorkspaceLayout,
   joinPathFragments,
   names,
   Tree,
-} from '@nrwl/devkit';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { Linter } from '@nx/linter';
 
 import { Schema } from '../schema';
 

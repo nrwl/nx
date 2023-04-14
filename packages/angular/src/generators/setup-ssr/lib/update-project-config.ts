@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   readNxJson,
   readProjectConfiguration,
   updateNxJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Schema } from '../schema';
 
 export function updateProjectConfig(tree: Tree, schema: Schema) {

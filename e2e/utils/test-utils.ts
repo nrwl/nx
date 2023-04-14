@@ -1,4 +1,4 @@
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import {
   getPackageManagerCommand,
   runCLI,

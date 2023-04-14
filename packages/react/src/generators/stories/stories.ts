@@ -13,10 +13,10 @@ import {
   ProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename, join } from 'path';
 import minimatch = require('minimatch');
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -34,7 +34,7 @@ export async function projectRootPath(
   config: ProjectConfiguration
 ): Promise<string> {
   const { findStorybookAndBuildTargetsAndCompiler } = await import(
-    '@nrwl/storybook/src/utils/utilities'
+    '@nx/storybook/src/utils/utilities'
   );
   let projectDir: string;
   if (config.projectType === 'application') {
@@ -89,9 +89,7 @@ export async function createAllStories(
   cypressProject?: string,
   ignorePaths?: string[]
 ) {
-  const { isTheFileAStory } = await import(
-    '@nrwl/storybook/src/utils/utilities'
-  );
+  const { isTheFileAStory } = await import('@nx/storybook/src/utils/utilities');
   const projects = getProjects(tree);
   const projectConfiguration = projects.get(projectName);
   const { sourceRoot, root } = projectConfiguration;

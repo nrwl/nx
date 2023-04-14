@@ -48,7 +48,10 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/node"],
       "options": {
-        "command": "node ./scripts/copy-readme.js node"
+        "commands": [
+          "node ./scripts/copy-readme.js node",
+          "node ./scripts/add-dependency-to-build.js node @nrwl/node"
+        ]
       }
     },
     "lint": {}

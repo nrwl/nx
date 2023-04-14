@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/nx-plugin",
+  "name": "@nx/nx-plugin",
   "version": "0.0.1",
   "private": false,
   "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
@@ -28,14 +28,14 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/jest": "file:../jest",
-    "@nrwl/js": "file:../js",
-    "@nrwl/linter": "file:../linter",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "dotenv": "~10.0.0",
     "fs-extra": "^11.1.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "@nx/devkit": "file:../devkit",
+    "@nx/jest": "file:../jest",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter"
   },
   "publishConfig": {
     "access": "public"

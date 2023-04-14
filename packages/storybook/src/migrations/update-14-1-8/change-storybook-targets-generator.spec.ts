@@ -1,5 +1,5 @@
-import { addProjectConfiguration, readNxJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, readNxJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import changeStorybookTargetsGenerator from './change-storybook-targets-generator';
 import * as defaultConfig from './test-configs/default-config.json';
 import * as customNames from './test-configs/custom-names-config.json';

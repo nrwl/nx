@@ -19,11 +19,11 @@ import {
   Tree,
   updateNxJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
-import type { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { swcCoreVersion } from '@nx/js/src/utils/versions';
+import type { Linter } from '@nx/linter';
 
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 
 import { nxVersion, swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
@@ -73,10 +73,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
   ];
 
   if (options.bundler === 'webpack') {
-    const { webpackProjectGenerator } = ensurePackage(
-      '@nrwl/webpack',
-      nxVersion
-    );
+    const { webpackProjectGenerator } = ensurePackage('@nx/webpack', nxVersion);
     await webpackProjectGenerator(tree, {
       project: options.projectName,
       main,
@@ -197,8 +194,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
   if (options.bundler === 'vite') {
     const { viteConfigurationGenerator } = ensurePackage<
-      typeof import('@nrwl/vite')
-    >('@nrwl/vite', nxVersion);
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     if (
@@ -221,8 +218,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { vitestGenerator } = ensurePackage<typeof import('@nrwl/vite')>(
-      '@nrwl/vite',
+    const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
+      '@nx/vite',
       nxVersion
     );
     const vitestTask = await vitestGenerator(host, {
@@ -246,7 +243,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
   if (options.linter === 'eslint') {
     const { lintProjectGenerator } = await ensurePackage(
-      '@nrwl/linter',
+      '@nx/linter',
       nxVersion
     );
     const lintTask = await lintProjectGenerator(host, {
@@ -265,8 +262,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
   if (options.e2eTestRunner === 'cypress') {
     const { cypressProjectGenerator } = await ensurePackage<
-      typeof import('@nrwl/cypress')
-    >('@nrwl/cypress', nxVersion);
+      typeof import('@nx/cypress')
+    >('@nx/cypress', nxVersion);
     const cypressTask = await cypressProjectGenerator(host, {
       ...options,
       name: `${options.name}-e2e`,
@@ -278,8 +275,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   }
   if (options.unitTestRunner === 'jest') {
     const { jestProjectGenerator } = await ensurePackage<
-      typeof import('@nrwl/jest')
-    >('@nrwl/jest', nxVersion);
+      typeof import('@nx/jest')
+    >('@nx/jest', nxVersion);
     const jestTask = await jestProjectGenerator(host, {
       project: options.projectName,
       skipSerializers: true,

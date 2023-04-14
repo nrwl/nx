@@ -1,8 +1,4 @@
-import {
-  addProjectConfiguration,
-  TargetConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import { addProjectConfiguration, TargetConfiguration, Tree } from '@nx/devkit';
 import {
   expoBuildTarget,
   expoTestTarget,

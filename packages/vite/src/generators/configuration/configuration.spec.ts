@@ -3,8 +3,8 @@ import {
   addProjectConfiguration,
   readJson,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
 import { viteConfigurationGenerator } from './configuration';

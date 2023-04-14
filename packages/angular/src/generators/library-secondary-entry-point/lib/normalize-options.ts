@@ -4,7 +4,7 @@ import {
   names,
   readJson,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { GeneratorOptions, NormalizedGeneratorOptions } from '../schema';
 
 export function normalizeOptions(

@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { readProjectConfiguration } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { readProjectConfiguration } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import { normalizeNameAndPaths } from '../../utils/path';
 import { buildSelector } from '../../utils/selector';

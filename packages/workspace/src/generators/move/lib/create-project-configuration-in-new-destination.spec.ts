@@ -3,8 +3,8 @@ import {
   ProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { NormalizedSchema } from '../schema';
 import { createProjectConfigurationInNewDestination } from './create-project-configuration-in-new-destination';
 

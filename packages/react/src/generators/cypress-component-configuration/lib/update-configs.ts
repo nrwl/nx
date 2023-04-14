@@ -3,7 +3,7 @@ import {
   TargetConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { CypressComponentConfigurationSchema } from '../schema';
 
 export interface FoundTarget {
@@ -16,7 +16,7 @@ export async function updateProjectConfig(
   options: CypressComponentConfigurationSchema
 ): Promise<FoundTarget> {
   const { findBuildConfig } = await import(
-    '@nrwl/cypress/src/utils/find-target-options'
+    '@nx/cypress/src/utils/find-target-options'
   );
   const found = await findBuildConfig(tree, {
     project: options.project,

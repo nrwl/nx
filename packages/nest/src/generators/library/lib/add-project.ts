@@ -1,8 +1,8 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { NormalizedOptions } from '../schema';
 
 export function addProject(tree: Tree, options: NormalizedOptions): void {

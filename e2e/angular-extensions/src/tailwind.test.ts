@@ -75,7 +75,7 @@ describe('Tailwind support', () => {
     tailwindConfigFile = 'tailwind.config.js',
     libSpacing: typeof spacing['projectVariant1']
   ) => {
-    const tailwindConfig = `const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+    const tailwindConfig = `const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
     const { join } = require('path');
   
     module.exports = {

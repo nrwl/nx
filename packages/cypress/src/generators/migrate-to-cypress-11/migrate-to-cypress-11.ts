@@ -1,7 +1,7 @@
 import {
   assertMinimumCypressVersion,
   installedCypressVersion,
-} from '@nrwl/cypress/src/utils/cypress-version';
+} from '../../utils/cypress-version';
 import {
   formatFiles,
   installPackagesTask,
@@ -12,8 +12,8 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
 import {
   addConfigToTsConfig,

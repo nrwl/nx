@@ -17,7 +17,7 @@ import {
 } from './get-env-info';
 import * as isCI from 'is-ci';
 
-import { angularCliVersion as defaultAngularCliVersion } from '@nrwl/workspace/src/utils/versions';
+import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'child_process';
 
@@ -28,7 +28,7 @@ import {
   RunCmdOpts,
   runCommand,
 } from './command-utils';
-import { output } from '@nrwl/devkit';
+import { output } from '@nx/devkit';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 

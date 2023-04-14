@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   names,
   normalizePath,
   readProjectConfiguration,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename, dirname, relative } from 'path';
 import { parseNameWithPath } from './names';
 

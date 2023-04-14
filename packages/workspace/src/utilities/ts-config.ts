@@ -1,4 +1,4 @@
-import { offsetFromRoot, Tree, workspaceRoot } from '@nrwl/devkit';
+import { offsetFromRoot, Tree, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { ensureTypescript } from './typescript';

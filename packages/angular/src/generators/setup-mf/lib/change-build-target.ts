@@ -1,10 +1,10 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import type { Schema } from '../schema';
 
 import {
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function changeBuildTarget(host: Tree, options: Schema) {
   const appConfig = readProjectConfiguration(host, options.appName);

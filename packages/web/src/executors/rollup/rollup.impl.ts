@@ -5,7 +5,7 @@
 import {
   rollupExecutor as _rollupExecutor,
   RollupExecutorOptions as WebRollupOptions,
-} from '@nrwl/rollup';
+} from '@nx/rollup';
 import { logger } from 'nx/src/utils/logger';
 
 export { WebRollupOptions };

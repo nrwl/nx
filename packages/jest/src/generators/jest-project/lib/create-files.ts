@@ -3,7 +3,7 @@ import {
   offsetFromRoot,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import { NormalizedJestProjectSchema } from '../schema';
 

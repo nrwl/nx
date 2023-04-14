@@ -1,6 +1,6 @@
-import { getE2eProjectName } from '@nrwl/cypress/src/utils/project-name';
-import type { Tree } from '@nrwl/devkit';
-import { readProjectConfiguration } from '@nrwl/devkit';
+import { getE2eProjectName } from '@nx/cypress/src/utils/project-name';
+import type { Tree } from '@nx/devkit';
+import { readProjectConfiguration } from '@nx/devkit';
 import { angularStoriesGenerator } from '../../stories/stories';
 import type { StorybookConfigurationOptions } from '../schema';
 

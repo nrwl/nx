@@ -2,7 +2,7 @@
 import type {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { TracingAlgorithmType } from '../feature-projects/machines/interfaces';
 
 // The events that the graph actor handles

@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -6,7 +6,7 @@ import {
   readNxJson,
   updateNxJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 
 export default async function updateFileServerExecutor(tree: Tree) {

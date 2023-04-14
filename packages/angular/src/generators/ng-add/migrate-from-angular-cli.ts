@@ -1,5 +1,5 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { installPackagesTask, readJson, updateJson } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { installPackagesTask, readJson, updateJson } from '@nx/devkit';
 import type { ProjectMigrator } from './migrators';
 import { AppMigrator, LibMigrator } from './migrators';
 import type { GeneratorOptions } from './schema';

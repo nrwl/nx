@@ -4,8 +4,8 @@ import type {
   FileData,
   ProjectGraph,
   ProjectGraphDependency,
-} from '@nrwl/devkit';
-import { DependencyType } from '@nrwl/devkit';
+} from '@nx/devkit';
+import { DependencyType } from '@nx/devkit';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';
@@ -15,8 +15,8 @@ import enforceModuleBoundaries, {
 } from '../../src/rules/enforce-module-boundaries';
 import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
 
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   workspaceRoot: '/root',
 }));
 

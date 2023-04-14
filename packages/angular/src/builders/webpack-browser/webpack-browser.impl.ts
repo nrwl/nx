@@ -2,9 +2,9 @@ import {
   joinPathFragments,
   ProjectGraph,
   readCachedProjectGraph,
-} from '@nrwl/devkit';
-import type { DependentBuildableProjectNode } from '@nrwl/js/src/utils/buildable-libs-utils';
-import { WebpackNxBuildCoordinationPlugin } from '@nrwl/webpack/src/plugins/webpack-nx-build-coordination-plugin';
+} from '@nx/devkit';
+import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
+import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
 import { existsSync } from 'fs';
 import { readNxJson } from 'nx/src/project-graph/file-utils';
 import { isNpmProject } from 'nx/src/project-graph/operators';

@@ -1,5 +1,5 @@
-import { logger } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
 import * as postcssImport from 'postcss-import';

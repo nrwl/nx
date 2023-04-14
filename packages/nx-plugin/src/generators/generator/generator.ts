@@ -1,9 +1,4 @@
-import {
-  GeneratorsJson,
-  joinPathFragments,
-  Tree,
-  writeJson,
-} from '@nrwl/devkit';
+import { GeneratorsJson, joinPathFragments, Tree, writeJson } from '@nx/devkit';
 import {
   convertNxGenerator,
   generateFiles,
@@ -12,7 +7,7 @@ import {
   readJson,
   readProjectConfiguration,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 import type { Schema } from './schema';

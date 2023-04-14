@@ -1,12 +1,12 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   readJson,
   readProjectConfiguration,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import * as linter from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import * as linter from '@nx/linter';
 import { addLintingGenerator } from './add-linting';
 
 describe('addLinting generator', () => {

@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   updateJson,
   convertNxGenerator,
@@ -8,7 +8,7 @@ import {
   offsetFromRoot,
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { CustomServerSchema } from './schema';
 
 export async function customServerGenerator(

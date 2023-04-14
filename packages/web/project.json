@@ -53,7 +53,10 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/web"],
       "options": {
-        "command": "node ./scripts/copy-readme.js web"
+        "commands": [
+          "node ./scripts/copy-readme.js web",
+          "node ./scripts/add-dependency-to-build.js web @nrwl/web"
+        ]
       }
     },
     "lint": {}

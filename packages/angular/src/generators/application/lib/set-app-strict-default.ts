@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { readNxJson, updateNxJson } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { readNxJson, updateNxJson } from '@nx/devkit';
 
 export function setApplicationStrictDefault(host: Tree, strict: boolean) {
   const nxJson = readNxJson(host);

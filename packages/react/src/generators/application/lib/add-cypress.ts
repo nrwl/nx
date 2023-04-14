@@ -1,4 +1,4 @@
-import { ensurePackage, joinPathFragments, Tree } from '@nrwl/devkit';
+import { ensurePackage, joinPathFragments, Tree } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 
@@ -7,15 +7,15 @@ export async function addCypress(host: Tree, options: NormalizedSchema) {
     return () => {};
   }
 
-  const { webStaticServeGenerator } = ensurePackage('@nrwl/web', nxVersion);
+  const { webStaticServeGenerator } = ensurePackage('@nx/web', nxVersion);
   await webStaticServeGenerator(host, {
     buildTarget: `${options.projectName}:build`,
     targetName: 'serve-static',
   });
 
   const { cypressProjectGenerator } = ensurePackage<
-    typeof import('@nrwl/cypress')
-  >('@nrwl/cypress', nxVersion);
+    typeof import('@nx/cypress')
+  >('@nx/cypress', nxVersion);
 
   return await cypressProjectGenerator(host, {
     ...options,

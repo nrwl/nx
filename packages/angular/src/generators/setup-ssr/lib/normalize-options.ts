@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { readNxJson } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { readNxJson } from '@nx/devkit';
 import type { Schema } from '../schema';
 
 export function normalizeOptions(tree: Tree, options: Schema) {

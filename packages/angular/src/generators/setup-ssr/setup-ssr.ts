@@ -1,9 +1,9 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { versions } from '../utils/version-utils';
 import {
   generateSSRFiles,

@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { stripIndents } from '@nrwl/devkit';
+import { stripIndents } from '@nx/devkit';
 import { builderIsWebpackButNotWebpack5 } from './utils';
 
 describe('testing utilities', () => {

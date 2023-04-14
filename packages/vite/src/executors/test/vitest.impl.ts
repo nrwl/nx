@@ -3,7 +3,7 @@ import {
   logger,
   stripIndents,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { CoverageOptions, File, Reporter } from 'vitest';
 import { loadConfigFromFile } from 'vite';
 import { VitestExecutorOptions } from './schema';

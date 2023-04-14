@@ -6,7 +6,7 @@ import {
   joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { maybeJs } from './maybe-js';
 import { NormalizedSchema } from '../schema';
@@ -20,8 +20,8 @@ export async function addRollupBuildTarget(
   host: Tree,
   options: NormalizedSchema
 ) {
-  const { rollupInitGenerator } = ensurePackage<typeof import('@nrwl/rollup')>(
-    '@nrwl/rollup',
+  const { rollupInitGenerator } = ensurePackage<typeof import('@nx/rollup')>(
+    '@nx/rollup',
     nxVersion
   );
 

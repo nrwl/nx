@@ -17,6 +17,12 @@
       "cli": "nx",
       "description": "Update jest.config.json under detox project, add key verbsoe: true",
       "factory": "./src/migrations/update-13-10-3/add-verbose-jest-config-13-10-3"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/detox with @nx/detox",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },
   "packageJsonUpdates": {

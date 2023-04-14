@@ -1,4 +1,4 @@
-import { ExecutorContext, readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import { ExecutorContext, readJsonFile, writeJsonFile } from '@nx/devkit';
 import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
 import { removeSync } from 'fs-extra';
 import { dirname, join, relative, resolve } from 'path';

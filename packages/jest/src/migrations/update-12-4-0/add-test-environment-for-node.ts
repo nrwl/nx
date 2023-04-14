@@ -5,8 +5,8 @@ import {
   readProjectConfiguration,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { join } from 'path';
 import { JestExecutorOptions } from '../../executors/jest/schema';
 import { addPropertyToJestConfig } from '../../utils/config/update-config';

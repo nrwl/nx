@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { names, readNxJson } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { names, readNxJson } from '@nx/devkit';
 
 export function buildSelector(
   tree: Tree,

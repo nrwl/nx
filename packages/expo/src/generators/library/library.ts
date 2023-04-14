@@ -13,9 +13,9 @@ import {
   toJS,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import { addTsConfigPath } from '@nrwl/js';
+import { addTsConfigPath } from '@nx/js';
 
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';

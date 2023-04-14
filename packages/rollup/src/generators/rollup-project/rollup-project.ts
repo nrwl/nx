@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   convertNxGenerator,
   formatFiles,
@@ -8,7 +8,7 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { rollupInitGenerator } from '../init/init';
 import { RollupExecutorOptions } from '../../executors/rollup/schema';

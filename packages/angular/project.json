@@ -5,6 +5,15 @@
   "projectType": "library",
   "targets": {
     "test": {},
+    "build-ng": {
+      "dependsOn": ["build-base"],
+      "executor": "@nrwl/angular:package",
+      "options": {
+        "project": "packages/angular/ng-package.json",
+        "tsConfig": "packages/angular/tsconfig.lib.json"
+      },
+      "outputs": ["build/packages/angular"]
+    },
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
@@ -52,14 +61,13 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/angular"],
+      "dependsOn": ["build-ng", "build-base", "^build"],
       "options": {
         "commands": [
           {
-            "command": "node ./scripts/build-angular"
-          },
-          {
             "command": "node ./scripts/copy-readme.js angular"
-          }
+          },
+          "node ./scripts/add-dependency-to-build.js angular @nrwl/angular"
         ],
         "parallel": false
       }

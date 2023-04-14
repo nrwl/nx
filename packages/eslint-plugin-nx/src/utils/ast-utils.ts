@@ -2,12 +2,12 @@ import {
   joinPathFragments,
   ProjectGraphProjectNode,
   readJsonFile,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
 import { existsSync, readFileSync } from 'fs';
 import { dirname } from 'path';
 import ts = require('typescript');
-import { logger, workspaceRoot } from '@nrwl/devkit';
+import { logger, workspaceRoot } from '@nx/devkit';
 
 function tryReadBaseJson() {
   try {

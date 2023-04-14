@@ -48,7 +48,10 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/jest"],
       "options": {
-        "command": "node ./scripts/copy-readme.js jest"
+        "commands": [
+          "node ./scripts/copy-readme.js jest",
+          "node ./scripts/add-dependency-to-build.js jest @nrwl/jest"
+        ]
       }
     },
     "lint": {}

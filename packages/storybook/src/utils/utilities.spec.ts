@@ -1,9 +1,9 @@
-import { joinPathFragments, Tree, writeJson } from '@nrwl/devkit';
+import { joinPathFragments, Tree, writeJson } from '@nx/devkit';
 import {
   overrideCollectionResolutionForTesting,
   wrapAngularDevkitSchematic,
-} from '@nrwl/devkit/ngcli-adapter';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit/ngcli-adapter';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   isTheFileAStory,
@@ -28,7 +28,7 @@ const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
   'library'
 );
 const runAngularStorybookSchematic = wrapAngularDevkitSchematic(
-  '@nrwl/angular',
+  '@nx/angular',
   'storybook-configuration'
 );
 

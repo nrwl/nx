@@ -1,5 +1,5 @@
-import { addProjectConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   STANDARD_HOST_MFE_CONFIG,
   STANDARD_REMOTE_MFE_CONFIG,

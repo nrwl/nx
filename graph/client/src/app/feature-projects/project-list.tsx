@@ -5,7 +5,7 @@ import {
   MapPinIcon,
 } from '@heroicons/react/24/outline';
 // nx-ignore-next-line
-import type { ProjectGraphNode } from '@nrwl/devkit';
+import type { ProjectGraphNode } from '@nx/devkit';
 import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import {
   allProjectsSelector,

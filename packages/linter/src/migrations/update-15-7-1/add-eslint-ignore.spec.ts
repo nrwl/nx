@@ -4,8 +4,8 @@ import {
   readNxJson,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import addEslintIgnore from './add-eslint-ignore';
 
 describe('15.7.1 migration (add-eslintignore)', () => {

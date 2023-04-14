@@ -1,6 +1,6 @@
 import { join } from 'path';
-import { ExecutorContext, logger } from '@nrwl/devkit';
-import { fileExists } from '@nrwl/workspace/src/utilities/fileutils';
+import { ExecutorContext, logger } from '@nx/devkit';
+import { fileExists } from '@nx/workspace/src/utilities/fileutils';
 import * as chalk from 'chalk';
 
 import { ReactNativeStorybookOptions } from './schema';

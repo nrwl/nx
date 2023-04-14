@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { ExecutorContext, logger } from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nx/devkit';
 import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';

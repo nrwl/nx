@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { logger } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
 
 const formatBytes = (bytes) => {
   if (bytes === 0) return '0 Byte';

@@ -4,7 +4,7 @@ import {
   logger,
   parseTargetString,
   readTargetOptions,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
 import {

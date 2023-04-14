@@ -7,10 +7,10 @@ import {
   updateJson,
   visitNotIgnoredFiles,
   normalizePath,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename, dirname, extname, relative } from 'path';
 import type { StringLiteral } from 'typescript';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;

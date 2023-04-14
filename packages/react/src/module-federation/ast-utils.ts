@@ -1,12 +1,12 @@
 import type * as ts from 'typescript';
-import { ChangeType, StringChange } from '@nrwl/devkit';
+import { ChangeType, StringChange } from '@nx/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
 import {
   findClosestOpening,
   findElements,
   addImport,
 } from '../utils/ast-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

@@ -6,12 +6,12 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
 
-import { Linter } from '@nrwl/linter';
-import { libraryGenerator } from '@nrwl/js';
+import { Linter } from '@nx/linter';
+import { libraryGenerator } from '@nx/js';
 import { nxVersion } from '../../utils/versions';
 import { TsConfig } from '../../utils/utilities';
 import configurationGenerator from './configuration';

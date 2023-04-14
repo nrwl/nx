@@ -1,4 +1,4 @@
-import { ProjectConfiguration, Tree, visitNotIgnoredFiles } from '@nrwl/devkit';
+import { ProjectConfiguration, Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { join, relative } from 'path';
 import { NormalizedSchema } from '../schema';
 

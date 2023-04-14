@@ -2,7 +2,7 @@ import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { versions } from '../../utils/version-utils';
 
 export function addTailwindRequiredPackages(tree: Tree): GeneratorCallback {

@@ -3,7 +3,7 @@ import {
   formatFiles,
   installPackagesTask,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { swcCoreVersion, swcNodeVersion } from 'nx/src/utils/versions';
 
 export default async function addSwcNodeIfNeeded(tree: Tree) {

@@ -7,7 +7,7 @@ import {
   readJson,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   ExecutorsJsonEntry,
   GeneratorsJsonEntry,

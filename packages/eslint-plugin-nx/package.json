@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/eslint-plugin-nx",
+  "name": "@nx/eslint-plugin-nx",
   "version": "0.0.1",
   "private": false,
   "description": "The eslint-plugin-nx package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
@@ -33,13 +33,16 @@
     }
   },
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
     "@typescript-eslint/utils": "^5.58.0",
     "chalk": "^4.1.0",
     "confusing-browser-globals": "^1.0.9",
-    "semver": "7.3.4"
+    "semver": "7.3.4",
+    "@nx/devkit": "file:../devkit"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
   }
 }

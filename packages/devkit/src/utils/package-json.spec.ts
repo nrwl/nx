@@ -459,8 +459,8 @@ describe('ensurePackage', () => {
   it('should return package when present', async () => {
     writeJson(tree, 'package.json', {});
 
-    expect(ensurePackage('@nrwl/devkit', '>=15.0.0')).toEqual(
-      require('@nrwl/devkit')
+    expect(ensurePackage('@nx/devkit', '>=15.0.0')).toEqual(
+      require('@nx/devkit')
     ); // return void
   });
 });

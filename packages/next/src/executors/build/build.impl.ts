@@ -4,14 +4,14 @@ import {
   readJsonFile,
   workspaceRoot,
   writeJsonFile,
-} from '@nrwl/devkit';
-import { createLockFile, createPackageJson } from '@nrwl/js';
+} from '@nx/devkit';
+import { createLockFile, createPackageJson } from '@nx/js';
 import build from 'next/dist/build';
 import { join, resolve } from 'path';
 import { copySync, existsSync, mkdir, writeFileSync } from 'fs-extra';
 import { gte } from 'semver';
-import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
+import { directoryExists } from '@nx/workspace/src/utilities/fileutils';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 
 import { updatePackageJson } from './lib/update-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';

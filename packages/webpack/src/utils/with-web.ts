@@ -8,9 +8,9 @@ import {
 import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
 import * as path from 'path';
 import { basename, join } from 'path';
-import { getOutputHashFormat } from '@nrwl/webpack/src/utils/hash-format';
-import { PostcssCliResources } from '@nrwl/webpack/src/utils/webpack/plugins/postcss-cli-resources';
-import { normalizeExtraEntryPoints } from '@nrwl/webpack/src/utils/webpack/normalize-entry';
+import { getOutputHashFormat } from './hash-format';
+import { PostcssCliResources } from './webpack/plugins/postcss-cli-resources';
+import { normalizeExtraEntryPoints } from './webpack/normalize-entry';
 
 import { NxWebpackPlugin } from './config';
 import {
@@ -21,12 +21,11 @@ import { getClientEnvironment } from './get-client-environment';
 import { ScriptsWebpackPlugin } from './webpack/plugins/scripts-webpack-plugin';
 import { getCSSModuleLocalIdent } from './get-css-module-local-ident';
 import { WriteIndexHtmlPlugin } from '../plugins/write-index-html-plugin';
-import { ExecutorContext } from '@nrwl/devkit';
 import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
-import { NxWebpackExecutionContext } from '@nrwl/webpack/src/utils/config';
+import { NxWebpackExecutionContext } from './config';
 
 interface PostcssOptions {
   (loader: any): any;

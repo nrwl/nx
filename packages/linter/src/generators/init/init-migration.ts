@@ -6,7 +6,7 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { dirname } from 'path';
 import { findEslintFile } from '../utils/eslint-file';
 import { getGlobalEsLintConfiguration } from './global-eslint-config';

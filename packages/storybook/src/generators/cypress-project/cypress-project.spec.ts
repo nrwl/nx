@@ -1,11 +1,11 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
-import { libraryGenerator } from '@nrwl/js';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
+import { libraryGenerator } from '@nx/js';
 import { cypressProjectGenerator } from './cypress-project';
 
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
 describe('@nrwl/storybook:cypress-project', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<

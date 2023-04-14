@@ -3,8 +3,8 @@ import {
   readJson,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { migrateStorybookToWebPack5 } from './migrate-storybook-to-webpack-5';
 
 describe('migrateStorybookToWebPack5', () => {

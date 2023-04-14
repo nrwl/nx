@@ -1,4 +1,4 @@
-import { getWorkspaceLayout, names, Tree } from '@nrwl/devkit';
+import { getWorkspaceLayout, names, Tree } from '@nx/devkit';
 import { join } from 'path';
 import { Schema } from '../schema';
 

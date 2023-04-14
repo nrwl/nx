@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import * as chalk from 'chalk';
-import type { ExecutorContext } from '@nrwl/devkit';
-import { cacheDir, joinPathFragments, logger } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
+import { cacheDir, joinPathFragments, logger } from '@nx/devkit';
 import {
   copyAssets,
   copyPackageJson,
@@ -9,20 +9,20 @@ import {
   printDiagnostics,
   runTypeCheck as _runTypeCheck,
   TypeCheckOptions,
-} from '@nrwl/js';
+} from '@nx/js';
 import * as esbuild from 'esbuild';
 import { normalizeOptions } from './lib/normalize';
 
 import { EsBuildExecutorOptions } from './schema';
 import { removeSync, writeJsonSync } from 'fs-extra';
-import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   buildEsbuildOptions,
   getOutExtension,
   getOutfile,
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
-import { DependentBuildableProjectNode } from '@nrwl/js/src/utils/buildable-libs-utils';
+import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { join } from 'path';
 
 const BUILD_WATCH_FAILED = `[ ${chalk.red(

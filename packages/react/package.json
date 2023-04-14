@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/react",
+  "name": "@nx/react",
   "version": "0.0.1",
   "private": false,
   "description": "The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
@@ -31,15 +31,14 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/js": "file:../js",
-    "@nrwl/linter": "file:../linter",
-    "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@svgr/webpack": "^6.1.2",
     "chalk": "^4.1.0",
     "file-loader": "^6.2.0",
-    "minimatch": "3.0.5"
+    "minimatch": "3.0.5",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter"
   },
   "publishConfig": {
     "access": "public"

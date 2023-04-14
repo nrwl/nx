@@ -3,7 +3,7 @@ import {
   applyChangesToString,
   getWorkspaceLayout,
   names,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Tree } from 'nx/src/generators/tree';
 import { getImportPath, joinPathFragments } from 'nx/src/utils/path';
 import type * as ts from 'typescript';
@@ -20,7 +20,7 @@ import {
   reactRouterDomVersion,
   typesReactRouterDomVersion,
 } from '../../../utils/versions';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

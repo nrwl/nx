@@ -1,5 +1,5 @@
-import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { NxJsonConfiguration, readJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintWorkspaceRuleGenerator } from './workspace-rule';
 
 describe('@nrwl/linter:workspace-rule', () => {

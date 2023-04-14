@@ -89,6 +89,12 @@
       "cli": "nx",
       "description": "Update jest test files to support jest 29 changes (https://jestjs.io/docs/upgrading-to-jest29)",
       "factory": "./src/migrations/update-15-8-0/update-tests-jest-29"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/jest with @nx/jest",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },
   "packageJsonUpdates": {

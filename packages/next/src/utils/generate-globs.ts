@@ -1,5 +1,5 @@
-import { joinPathFragments, logger } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import { joinPathFragments, logger } from '@nx/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { getSourceDirOfDependentProjects } from 'nx/src/utils/project-graph-utils';
 import { resolve } from 'path';
 

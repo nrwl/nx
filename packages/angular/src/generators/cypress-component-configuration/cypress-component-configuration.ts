@@ -1,5 +1,5 @@
-import { cypressComponentProject } from '@nrwl/cypress';
-import { findBuildConfig } from '@nrwl/cypress/src/utils/find-target-options';
+import { cypressComponentProject } from '@nx/cypress';
+import { findBuildConfig } from '@nx/cypress/src/utils/find-target-options';
 import {
   formatFiles,
   generateFiles,
@@ -8,7 +8,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { relative } from 'path';
 import { componentTestGenerator } from '../component-test/component-test';
 import {

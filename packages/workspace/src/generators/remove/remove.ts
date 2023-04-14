@@ -3,7 +3,7 @@ import {
   formatFiles,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { checkProjectIsSafeToRemove } from './lib/check-project-is-safe-to-remove';
 import { checkDependencies } from './lib/check-dependencies';

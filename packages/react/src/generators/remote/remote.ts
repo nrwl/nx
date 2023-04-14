@@ -9,7 +9,7 @@ import {
   runTasksInSerial,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { normalizeOptions } from '../application/lib/normalize-options';
 import applicationGenerator from '../application/application';

@@ -1,0 +1,46 @@
+{
+  "builders": {
+    "dev-server": {
+      "implementation": "@nx/vite/src/executors/dev-server/compat",
+      "schema": "@nx/vite/src/executors/dev-server/schema.json",
+      "description": "Vite dev server."
+    },
+    "build": {
+      "implementation": "@nx/vite/src/executors/build/compat",
+      "schema": "@nx/vite/src/executors/build/schema.json",
+      "description": "Build with Vite."
+    },
+    "test": {
+      "implementation": "@nx/vite/src/executors/test/compat",
+      "schema": "@nx/vite/src/executors/test/schema.json",
+      "description": "Test with Vitest"
+    },
+    "preview-server": {
+      "implementation": "@nx/vite/src/executors/preview-server/compat",
+      "schema": "@nx/vite/src/executors/preview-server/schema.json",
+      "description": "Vite preview server"
+    }
+  },
+  "executors": {
+    "dev-server": {
+      "implementation": "@nx/vite/src/executors/dev-server/dev-server.impl",
+      "schema": "@nx/vite/src/executors/dev-server/schema.json",
+      "description": "Vite dev server."
+    },
+    "build": {
+      "implementation": "@nx/vite/src/executors/build/build.impl",
+      "schema": "@nx/vite/src/executors/build/schema.json",
+      "description": "Build with Vite."
+    },
+    "test": {
+      "implementation": "@nx/vite/src/executors/test/vitest.impl",
+      "schema": "@nx/vite/src/executors/test/schema.json",
+      "description": "Test with Vitest"
+    },
+    "preview-server": {
+      "implementation": "@nx/vite/src/executors/preview-server/preview-server.impl",
+      "schema": "@nx/vite/src/executors/preview-server/schema.json",
+      "description": "Vite preview server"
+    }
+  }
+}

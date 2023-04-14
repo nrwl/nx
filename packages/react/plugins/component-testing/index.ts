@@ -1,8 +1,8 @@
 import {
   nxBaseCypressPreset,
   NxComponentTestingOptions,
-} from '@nrwl/cypress/plugins/cypress-preset';
-import type { CypressExecutorOptions } from '@nrwl/cypress/src/executors/cypress/cypress.impl';
+} from '@nx/cypress/plugins/cypress-preset';
+import type { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
 import {
   ExecutorContext,
   logger,
@@ -13,11 +13,11 @@ import {
   stripIndents,
   Target,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   createExecutorContext,
   getProjectConfigByPath,
-} from '@nrwl/cypress/src/utils/ct-helpers';
+} from '@nx/cypress/src/utils/ct-helpers';
 
 import type { Configuration } from 'webpack';
 type ViteDevServer = {
@@ -188,13 +188,13 @@ function buildTargetWebpack(
 
   const {
     normalizeOptions,
-  } = require('@nrwl/webpack/src/executors/webpack/lib/normalize-options');
+  } = require('@nx/webpack/src/executors/webpack/lib/normalize-options');
   const {
     resolveCustomWebpackConfig,
-  } = require('@nrwl/webpack/src/utils/webpack/custom-webpack');
+  } = require('@nx/webpack/src/utils/webpack/custom-webpack');
   const {
     getWebpackConfig,
-  } = require('@nrwl/webpack/src/executors/webpack/lib/get-webpack-config');
+  } = require('@nx/webpack/src/executors/webpack/lib/get-webpack-config');
 
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),

@@ -1,5 +1,5 @@
-import { formatFiles, getProjects, Tree } from '@nrwl/devkit';
-import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
+import { formatFiles, getProjects, Tree } from '@nx/devkit';
+import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
 
 export default async function update(tree: Tree) {
   const projects = getProjects(tree);

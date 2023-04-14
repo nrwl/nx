@@ -4,8 +4,8 @@ import {
   readNxJson,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { Schema } from '../schema';
 import { removeProjectReferencesInConfig } from './remove-project-references-in-config';

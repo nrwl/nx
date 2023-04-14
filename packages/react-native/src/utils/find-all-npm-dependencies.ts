@@ -1,4 +1,4 @@
-import { ProjectGraph } from '@nrwl/devkit';
+import { ProjectGraph } from '@nx/devkit';
 
 export function findAllNpmDependencies(
   graph: ProjectGraph,

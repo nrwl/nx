@@ -5,9 +5,9 @@ import {
   updateProjectConfiguration,
   updateJson,
   readJson,
-} from '@nrwl/devkit';
-import { createTree, createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator as workspaceLib } from '@nrwl/js';
+} from '@nx/devkit';
+import { createTree, createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { libraryGenerator as workspaceLib } from '@nx/js';
 import {
   updateExportsJestConfig,
   updateRootFiles,
@@ -172,8 +172,8 @@ module.exports = {
       stripIndents`
   const { getJestProjects } = require('@nrwl/jest');
   const nxPreset = require('@nrwl/jest/preset');
-
-
+  
+  
   const someFn = () => ({more: 'stuff'});
   module.export.abc = someFn;
   module.exports = {

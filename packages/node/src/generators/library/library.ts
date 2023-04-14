@@ -14,14 +14,14 @@ import {
   Tree,
   updateProjectConfiguration,
   updateTsConfigsToJs,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from './schema';
-import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 
 import { join } from 'path';
-import { addSwcDependencies } from '@nrwl/js/src/utils/swc/add-swc-dependencies';
-import { addSwcConfig } from '@nrwl/js/src/utils/swc/add-swc-config';
+import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { initGenerator } from '../init/init';
 
 export interface NormalizedSchema extends Schema {

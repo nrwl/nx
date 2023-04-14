@@ -1,4 +1,4 @@
-import { joinPathFragments, logger } from '@nrwl/devkit';
+import { joinPathFragments, logger } from '@nx/devkit';
 import { rmSync } from 'fs';
 import type * as ts from 'typescript';
 import type { CustomTransformers, Diagnostic, Program } from 'typescript';

@@ -1,10 +1,10 @@
-import { getProjects, Tree } from '@nrwl/devkit';
+import { getProjects, Tree } from '@nx/devkit';
 import {
   logger,
   formatFiles,
   applyChangesToString,
   ChangeType,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import ts = require('typescript');
 import { findNodes } from 'nx/src/utils/typescript';

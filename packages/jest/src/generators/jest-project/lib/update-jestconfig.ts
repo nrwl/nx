@@ -1,7 +1,7 @@
 import { findRootJestConfig } from '../../../utils/config/find-root-jest-files';
 import { NormalizedJestProjectSchema } from '../schema';
 import { addPropertyToJestConfig } from '../../../utils/config/update-config';
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
 
 function isUsingUtilityFunction(host: Tree) {
   const rootConfig = findRootJestConfig(host);

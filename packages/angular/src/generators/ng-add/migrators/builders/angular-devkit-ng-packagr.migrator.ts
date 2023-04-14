@@ -2,14 +2,14 @@ import type {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { getRootTsConfigPathInTree } from '@nrwl/js';
+} from '@nx/devkit';
+import { getRootTsConfigPathInTree } from '@nx/js';
 import { basename } from 'path';
 import { addBuildableLibrariesPostCssDependencies } from '../../../utils/dependencies';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';

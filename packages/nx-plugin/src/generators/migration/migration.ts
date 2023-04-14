@@ -9,8 +9,8 @@ import {
   writeJson,
   joinPathFragments,
   formatFiles,
-} from '@nrwl/devkit';
-import type { Tree } from '@nrwl/devkit';
+} from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 import type { Schema } from './schema';
 import * as path from 'path';
 import { addMigrationJsonChecks } from '../lint-checks/generator';
@@ -154,7 +154,9 @@ export async function migrationGenerator(host: Tree, schema: Schema) {
     );
   }
 
-  await formatFiles(host);
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default migrationGenerator;

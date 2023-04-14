@@ -9,9 +9,9 @@ import {
   Tree,
   updateNxJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   babelPresetReactVersion,
   nxVersion,
@@ -100,9 +100,9 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
   setDefault(host);
 
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    ensurePackage('@nrwl/cypress', nxVersion);
+    ensurePackage('@nx/cypress', nxVersion);
     const { cypressInitGenerator } = await import(
-      '@nrwl/cypress/src/generators/init/init'
+      '@nx/cypress/src/generators/init/init'
     );
     const cypressTask = await cypressInitGenerator(host, {});
     tasks.push(cypressTask);

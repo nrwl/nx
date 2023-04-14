@@ -1,0 +1,46 @@
+{
+  "builders": {
+    "webpack": {
+      "implementation": "@nx/web/src/executors/webpack/compat",
+      "schema": "@nx/web/src/executors/webpack/schema.json",
+      "description": "Build an application using Webpack."
+    },
+    "rollup": {
+      "implementation": "@nx/web/src/executors/rollup/compat",
+      "schema": "@nx/web/src/executors/rollup/schema.json",
+      "description": "Package a library using Rollup."
+    },
+    "dev-server": {
+      "implementation": "@nx/web/src/executors/dev-server/compat",
+      "schema": "@nx/web/src/executors/dev-server/schema.json",
+      "description": "Serve a web application."
+    },
+    "file-server": {
+      "implementation": "@nx/web/src/executors/file-server/compat",
+      "schema": "@nx/web/src/executors/file-server/schema.json",
+      "description": "Serve a web application from a folder."
+    }
+  },
+  "executors": {
+    "webpack": {
+      "implementation": "@nx/web/src/executors/webpack/webpack.impl",
+      "schema": "@nx/web/src/executors/webpack/schema.json",
+      "description": "Build an application using Webpack."
+    },
+    "rollup": {
+      "implementation": "@nx/web/src/executors/rollup/rollup.impl",
+      "schema": "@nx/web/src/executors/rollup/schema.json",
+      "description": "Package a library using Rollup."
+    },
+    "dev-server": {
+      "implementation": "@nx/web/src/executors/dev-server/dev-server.impl",
+      "schema": "@nx/web/src/executors/dev-server/schema.json",
+      "description": "Serve a web application."
+    },
+    "file-server": {
+      "implementation": "@nx/web/src/executors/file-server/file-server.impl",
+      "schema": "@nx/web/src/executors/file-server/schema.json",
+      "description": "Serve a web application from a folder."
+    }
+  }
+}

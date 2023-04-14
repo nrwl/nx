@@ -3,9 +3,9 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
+import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
 import * as WebpackDevServer from 'webpack-dev-server';
 
@@ -13,7 +13,7 @@ import { getDevServerConfig } from './lib/get-dev-server-config';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
-} from '@nrwl/js/src/utils/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils';
 import { runWebpackDevServer } from '../../utils/run-webpack';
 import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 import { normalizeOptions } from '../webpack/lib/normalize-options';

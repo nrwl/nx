@@ -10,8 +10,8 @@ import {
 } from 'fs-extra';
 import { dirname, isAbsolute } from 'path';
 import { tmpProjPath } from './paths';
-import { parseJson } from '@nrwl/devkit';
-import type { JsonParseOptions } from '@nrwl/devkit';
+import { parseJson } from '@nx/devkit';
+import type { JsonParseOptions } from '@nx/devkit';
 import { directoryExists, fileExists } from 'nx/src/utils/fileutils';
 
 export { directoryExists, fileExists };

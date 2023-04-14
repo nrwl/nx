@@ -1,13 +1,13 @@
 // mock stuff that relies or make changes to the filesystem
 jest.mock('child_process');
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
   getPackageManagerCommand: jest.fn(() => ({ install: '' })),
   writeJsonFile: jest.fn(),
 }));
 
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, updateJson } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { readJson, updateJson } from '@nx/devkit';
 import installRequiredPackages from './install-required-packages';
 
 describe('installed-required-packages', () => {

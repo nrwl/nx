@@ -8,7 +8,7 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { join, join as pathJoin } from 'path';
 import { Preset } from '../utils/presets';

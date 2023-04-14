@@ -7,7 +7,7 @@ import {
   stripIndents,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { angularInitGenerator } from '../init/init';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';

@@ -2,7 +2,7 @@ import { Tree } from 'nx/src/generators/tree';
 import { Schema } from '../schema';
 import { readProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
 import { joinPathFragments } from 'nx/src/utils/path';
-import { readNxJson } from '@nrwl/devkit';
+import { readNxJson } from '@nx/devkit';
 
 export function removeDeadCodeFromRemote(tree: Tree, options: Schema) {
   const projectName = options.appName;

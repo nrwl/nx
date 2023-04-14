@@ -9,7 +9,7 @@ import {
   Target,
   targetToTargetString,
   output,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import 'dotenv/config';
 import { existsSync, readdirSync, unlinkSync, writeFileSync } from 'fs';
 import { basename, dirname, join } from 'path';

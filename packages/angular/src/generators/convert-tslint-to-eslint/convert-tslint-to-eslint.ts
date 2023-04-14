@@ -1,12 +1,12 @@
-import { conversionGenerator as cypressConversionGenerator } from '@nrwl/cypress';
+import { conversionGenerator as cypressConversionGenerator } from '@nx/cypress';
 import {
   convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   logger,
   Tree,
-} from '@nrwl/devkit';
-import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nx/linter';
 import type { Linter } from 'eslint';
 import type { AngularProjectConfiguration } from '../../utils/types';
 import { addLintingGenerator } from '../add-linting/add-linting';

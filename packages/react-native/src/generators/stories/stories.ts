@@ -5,14 +5,14 @@ import {
   getProjects,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import componentStoryGenerator from '../component-story/component-story';
 import { StorybookStoriesSchema } from './schema';
 import {
   containsComponentDeclaration,
   projectRootPath,
-} from '@nrwl/react/src/generators/stories/stories';
+} from '@nx/react/src/generators/stories/stories';
 import minimatch = require('minimatch');
 import { nxVersion } from '../../utils/versions';
 
@@ -21,10 +21,8 @@ export async function createAllStories(
   projectName: string,
   ignorePaths?: string[]
 ) {
-  ensurePackage('@nrwl/storybook', nxVersion);
-  const { isTheFileAStory } = await import(
-    '@nrwl/storybook/src/utils/utilities'
-  );
+  ensurePackage('@nx/storybook', nxVersion);
+  const { isTheFileAStory } = await import('@nx/storybook/src/utils/utilities');
 
   const projects = getProjects(tree);
   const projectConfiguration = projects.get(projectName);

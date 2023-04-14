@@ -3,8 +3,8 @@ import {
   stripIndents,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from './component';
 
 describe('component Generator', () => {

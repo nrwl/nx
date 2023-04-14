@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, stripIndents } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, stripIndents } from '@nx/devkit';
 
 export function addSnippet(tree: Tree, name: string, path: string) {
   const fileRegExp = new RegExp(`^${name}.*\\.ts`);

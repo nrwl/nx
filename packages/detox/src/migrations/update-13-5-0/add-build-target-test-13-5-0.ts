@@ -3,7 +3,7 @@ import {
   formatFiles,
   getProjects,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * This function buildTarget to test-ios and test-android

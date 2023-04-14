@@ -4,8 +4,8 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
 
 import configurationGenerator from './configuration';

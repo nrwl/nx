@@ -1,5 +1,5 @@
-import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, readJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './update-react-native-typing-svg-13-5-0';
 
 describe('Update svg typings in tsconfig for react native app', () => {

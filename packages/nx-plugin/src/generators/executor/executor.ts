@@ -9,8 +9,8 @@ import {
   writeJson,
   readJson,
   ExecutorsJson,
-} from '@nrwl/devkit';
-import type { Tree } from '@nrwl/devkit';
+} from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 import type { Schema } from './schema';
 import * as path from 'path';
 import { PackageJson } from 'nx/src/utils/package-json';

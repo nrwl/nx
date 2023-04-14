@@ -1,4 +1,4 @@
-import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
+import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
 import { TargetFlags } from './generator-utils';
 import type { Node, ReturnStatement } from 'typescript';

@@ -11,8 +11,8 @@ import {
   updateJson,
   updateNxJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+} from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { findRootJestConfig } from '../../utils/config/find-root-jest-files';
 import {

@@ -1,5 +1,5 @@
 import { Preset } from '../utils/presets';
-import { PackageManager } from '@nrwl/devkit';
+import { PackageManager } from '@nx/devkit';
 
 export interface Schema {
   name: string;

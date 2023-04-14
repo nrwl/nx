@@ -2,12 +2,12 @@
  * For backwards compat.
  * TODO(v16): Remove in Nx 16.
  */
-import { ExecutorContext, logger } from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nx/devkit';
 
 export async function* webpackExecutor(options: any, context: ExecutorContext) {
-  const { webpackExecutor: baseWebpackExecutor } = require('@nrwl/webpack');
+  const { webpackExecutor: baseWebpackExecutor } = require('@nx/webpack');
   logger.warn(
-    '"@nrwl/web:webpack" executor is deprecated. Use "@nrwl/webpack:webpack" instead in your project.json.'
+    '"@nx/web:webpack" executor is deprecated. Use "@nx/webpack:webpack" instead in your project.json.'
   );
   yield* baseWebpackExecutor(
     {

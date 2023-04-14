@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nrwl/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { join } from 'path';
 
 export const WORKSPACE_PLUGIN_DIR = join(workspaceRoot, 'tools/eslint-rules');

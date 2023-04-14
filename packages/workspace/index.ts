@@ -7,7 +7,7 @@ export {
   createDirectory,
 } from './src/utilities/fileutils';
 
-export { names } from '@nrwl/devkit';
+export { names } from '@nx/devkit';
 
 export { output } from './src/utilities/output';
 

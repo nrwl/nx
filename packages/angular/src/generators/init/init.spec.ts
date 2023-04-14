@@ -1,5 +1,5 @@
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
   // need to mock so it doesn't resolve what the workspace has installed
   // and be able to test with different versions
   ensurePackage: jest.fn(),
@@ -11,9 +11,9 @@ import {
   Tree,
   updateJson,
   updateNxJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import { angularDevkitVersion, angularVersion } from '../../utils/versions';

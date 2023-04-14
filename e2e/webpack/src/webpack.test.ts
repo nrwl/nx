@@ -27,7 +27,7 @@ describe('Webpack Plugin', () => {
     updateFile(
       `libs/${myPkg}/webpack.config.js`,
       `
-const { composePlugins, withNx } = require('@nrwl/webpack');
+const { composePlugins, withNx } = require('@nx/webpack');
 
 module.exports = composePlugins(withNx(), (config) => {
   console.log('scriptType is ' + config.output.scriptType);

@@ -4,4 +4,5 @@ export interface Schema {
   description?: string;
   packageVersion: string;
   packageJsonUpdates?: boolean;
+  skipFormat?: boolean;
 }

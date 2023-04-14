@@ -1,12 +1,12 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   generateFiles,
   getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,
-} from '@nrwl/devkit';
-import { getRootTsConfigFileName } from '@nrwl/js';
+} from '@nx/devkit';
+import { getRootTsConfigFileName } from '@nx/js';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import type { NormalizedSchema } from './normalized-schema';

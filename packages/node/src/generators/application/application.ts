@@ -21,11 +21,11 @@ import {
   updateJson,
   updateProjectConfiguration,
   updateTsConfigsToJs,
-} from '@nrwl/devkit';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { jestProjectGenerator } from '@nrwl/jest';
+} from '@nx/devkit';
+import { Linter, lintProjectGenerator } from '@nx/linter';
+import { jestProjectGenerator } from '@nx/jest';
 
-import { getRelativePathToRootTsConfig, tsConfigBaseOptions } from '@nrwl/js';
+import { getRelativePathToRootTsConfig, tsConfigBaseOptions } from '@nx/js';
 import { join } from 'path';
 
 import { initGenerator } from '../init/init';
@@ -45,7 +45,7 @@ import { e2eProjectGenerator } from '../e2e-project/e2e-project';
 import { setupDockerGenerator } from '../setup-docker/setup-docker';
 
 import { Schema } from './schema';
-import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
+import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -370,7 +370,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   if (options.framework === 'nest') {
-    const { applicationGenerator } = ensurePackage('@nrwl/nest', nxVersion);
+    const { applicationGenerator } = ensurePackage('@nx/nest', nxVersion);
     return await applicationGenerator(tree, { ...options, skipFormat: true });
   }
 

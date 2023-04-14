@@ -16,7 +16,7 @@ import {
   updateJson,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
-import { names } from '@nrwl/devkit';
+import { names } from '@nx/devkit';
 
 describe('Build React libraries and apps', () => {
   /**

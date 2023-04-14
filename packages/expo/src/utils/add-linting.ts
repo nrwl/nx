@@ -1,12 +1,12 @@
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nx/linter';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
   runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
+} from '@nx/devkit';
+import { extendReactEslintJson, extraEslintDependencies } from '@nx/react';
 import type { Linter as ESLintLinter } from 'eslint';
 
 export async function addLinting(

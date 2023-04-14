@@ -1,0 +1,116 @@
+{
+  "executors": {
+    "update": {
+      "implementation": "@nx/expo/src/executors/update/update.impl",
+      "schema": "@nx/expo/src/executors/update/schema.json",
+      "description": "Start an EAS update for your expo project"
+    },
+    "build": {
+      "implementation": "@nx/expo/src/executors/build/build.impl",
+      "schema": "@nx/expo/src/executors/build/schema.json",
+      "description": "Start an EAS build for your expo project"
+    },
+    "build-list": {
+      "implementation": "@nx/expo/src/executors/build-list/build-list.impl",
+      "schema": "@nx/expo/src/executors/build-list/schema.json",
+      "description": "List all EAS builds for your Expo project"
+    },
+    "download": {
+      "implementation": "@nx/expo/src/executors/download/download.impl",
+      "schema": "@nx/expo/src/executors/download/schema.json",
+      "description": "Download an EAS build"
+    },
+    "run": {
+      "implementation": "@nx/expo/src/executors/run/run.impl",
+      "schema": "@nx/expo/src/executors/run/schema.json",
+      "description": "Run the Android app binary locally or run the iOS app binary locally"
+    },
+    "start": {
+      "implementation": "@nx/expo/src/executors/start/start.impl",
+      "schema": "@nx/expo/src/executors/start/schema.json",
+      "description": "Start a local dev server for the app or start a Webpack dev server for the web app"
+    },
+    "sync-deps": {
+      "implementation": "@nx/expo/src/executors/sync-deps/sync-deps.impl",
+      "schema": "@nx/expo/src/executors/sync-deps/schema.json",
+      "description": "Syncs dependencies to package.json (required for autolinking)."
+    },
+    "ensure-symlink": {
+      "implementation": "@nx/expo/src/executors/ensure-symlink/ensure-symlink.impl",
+      "schema": "@nx/expo/src/executors/ensure-symlink/schema.json",
+      "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
+    },
+    "prebuild": {
+      "implementation": "@nx/expo/src/executors/prebuild/prebuild.impl",
+      "schema": "@nx/expo/src/executors/prebuild/schema.json",
+      "description": "Create native iOS and Android project files for building natively."
+    },
+    "install": {
+      "implementation": "@nx/expo/src/executors/install/install.impl",
+      "schema": "@nx/expo/src/executors/install/schema.json",
+      "description": "Install a module or other package to a project."
+    },
+    "export": {
+      "implementation": "@nx/expo/src/executors/export/export.impl",
+      "schema": "@nx/expo/src/executors/export/schema.json",
+      "description": "Export the JavaScript and assets for your app using Metro/webpack bundler"
+    }
+  },
+  "builders": {
+    "update": {
+      "implementation": "@nx/expo/src/executors/update/compat",
+      "schema": "@nx/expo/src/executors/update/schema.json",
+      "description": "Start an EAS update for your expo project"
+    },
+    "build": {
+      "implementation": "@nx/expo/src/executors/build/compat",
+      "schema": "@nx/expo/src/executors/build/schema.json",
+      "description": "Start an EAS build for your expo project"
+    },
+    "build-list": {
+      "implementation": "@nx/expo/src/executors/build-list/compat",
+      "schema": "@nx/expo/src/executors/build-list/schema.json",
+      "description": "List all EAS builds for your Expo project"
+    },
+    "download": {
+      "implementation": "@nx/expo/src/executors/download/compat",
+      "schema": "@nx/expo/src/executors/download/schema.json",
+      "description": "Download an EAS build"
+    },
+    "run": {
+      "implementation": "@nx/expo/src/executors/run/compat",
+      "schema": "@nx/expo/src/executors/run/schema.json",
+      "description": "Run the Android app binary locally or run the iOS app binary locally"
+    },
+    "start": {
+      "implementation": "@nx/expo/src/executors/start/compat",
+      "schema": "@nx/expo/src/executors/start/schema.json",
+      "description": "Start a local dev server for the app or start a Webpack dev server for the web app"
+    },
+    "sync-deps": {
+      "implementation": "@nx/expo/src/executors/sync-deps/compat",
+      "schema": "@nx/expo/src/executors/sync-deps/schema.json",
+      "description": "Syncs dependencies to package.json (required for autolinking)."
+    },
+    "ensure-symlink": {
+      "implementation": "@nx/expo/src/executors/ensure-symlink/compat",
+      "schema": "@nx/expo/src/executors/ensure-symlink/schema.json",
+      "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
+    },
+    "prebuild": {
+      "implementation": "@nx/expo/src/executors/prebuild/compat",
+      "schema": "@nx/expo/src/executors/prebuild/schema.json",
+      "description": "Create native iOS and Android project files for building natively."
+    },
+    "install": {
+      "implementation": "@nx/expo/src/executors/install/compat",
+      "schema": "@nx/expo/src/executors/install/schema.json",
+      "description": "Install a module or other package to a project."
+    },
+    "export": {
+      "implementation": "@nx/expo/src/executors/export/compat",
+      "schema": "@nx/expo/src/executors/export/schema.json",
+      "description": "Export the JavaScript and assets for your app using Metro/webpack bundler"
+    }
+  }
+}

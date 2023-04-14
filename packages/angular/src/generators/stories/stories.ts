@@ -1,4 +1,4 @@
-import { formatFiles, joinPathFragments, logger, Tree } from '@nrwl/devkit';
+import { formatFiles, joinPathFragments, logger, Tree } from '@nx/devkit';
 import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
 import componentStoryGenerator from '../component-story/component-story';
 import type { ComponentInfo } from '../utils/storybook-ast/component-info';

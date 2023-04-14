@@ -1,10 +1,5 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import {
-  writeJson,
-  readJson,
-  Tree,
-  addProjectConfiguration,
-} from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { writeJson, readJson, Tree, addProjectConfiguration } from '@nx/devkit';
 import update from './add-style-packages';
 
 describe('Add less and stylus if needed', () => {

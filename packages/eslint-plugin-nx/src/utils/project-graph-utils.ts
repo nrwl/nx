@@ -1,4 +1,4 @@
-import { ProjectGraph, readCachedProjectGraph } from '@nrwl/devkit';
+import { ProjectGraph, readCachedProjectGraph } from '@nx/devkit';
 import { isTerminalRun } from './runtime-lint-utils';
 import * as chalk from 'chalk';
 import {

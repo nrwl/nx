@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-import { ProjectGraphDependency } from '@nrwl/devkit';
+import { ProjectGraphDependency } from '@nx/devkit';
 
 export function trimBackSlash(value: string): string {
   return value.replace(/\/$/, '');

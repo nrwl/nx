@@ -1,4 +1,4 @@
-import { SupportedStyles } from '@nrwl/react';
+import { SupportedStyles } from '@nx/react';
 
 export interface Schema {
   name: string;

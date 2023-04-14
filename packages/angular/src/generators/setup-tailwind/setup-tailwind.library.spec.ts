@@ -1,4 +1,4 @@
-import * as devkit from '@nrwl/devkit';
+import * as devkit from '@nx/devkit';
 import {
   addProjectConfiguration,
   readJson,
@@ -6,8 +6,8 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { setupTailwindGenerator } from './setup-tailwind';
 import {
   autoprefixerVersion,

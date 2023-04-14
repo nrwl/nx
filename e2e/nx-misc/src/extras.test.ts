@@ -56,7 +56,7 @@ describe('Extra Nx Misc Tests', () => {
         `
       module.exports = {
         processProjectGraph: (graph) => {
-          const Builder = require('@nrwl/devkit').ProjectGraphBuilder;
+          const Builder = require('@nx/devkit').ProjectGraphBuilder;
           const builder = new Builder(graph);
           builder.addNode({
             name: 'plugin-node',

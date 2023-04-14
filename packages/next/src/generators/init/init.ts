@@ -5,11 +5,11 @@ import {
   GeneratorCallback,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import { reactDomVersion, reactVersion } from '@nrwl/react/src/utils/versions';
-import reactInitGenerator from '@nrwl/react/src/generators/init/init';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
+import reactInitGenerator from '@nx/react/src/generators/init/init';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
   eslintConfigNextVersion,
@@ -47,8 +47,8 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   );
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const { jestInitGenerator } = ensurePackage<typeof import('@nrwl/jest')>(
-      '@nrwl/jest',
+    const { jestInitGenerator } = ensurePackage<typeof import('@nx/jest')>(
+      '@nx/jest',
       nxVersion
     );
     const jestTask = await jestInitGenerator(host, schema);
@@ -56,8 +56,8 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
     const { cypressInitGenerator } = ensurePackage<
-      typeof import('@nrwl/cypress')
-    >('@nrwl/cypress', nxVersion);
+      typeof import('@nx/cypress')
+    >('@nx/cypress', nxVersion);
     const cypressTask = await cypressInitGenerator(host, {});
     tasks.push(cypressTask);
   }

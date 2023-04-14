@@ -1,5 +1,5 @@
-import { addProjectConfiguration, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { exportScam } from './export-scam';
 
 describe('exportScam', () => {

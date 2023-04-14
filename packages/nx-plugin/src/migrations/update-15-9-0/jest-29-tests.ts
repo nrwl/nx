@@ -4,10 +4,10 @@ import {
   readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
-import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
-import { TEST_FILE_PATTERN } from '@nrwl/jest/src/utils/ast-utils';
-import { forEachExecutorOptionsInGraph } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { JestExecutorOptions } from '@nx/jest/src/executors/jest/schema';
+import { TEST_FILE_PATTERN } from '@nx/jest/src/utils/ast-utils';
+import { forEachExecutorOptionsInGraph } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import {
   CallExpression,

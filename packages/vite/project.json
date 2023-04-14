@@ -60,7 +60,10 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/vite"],
       "options": {
-        "command": "node ./scripts/copy-readme.js vite"
+        "commands": [
+          "node ./scripts/copy-readme.js vite",
+          "node ./scripts/add-dependency-to-build.js vite @nrwl/vite"
+        ]
       }
     },
     "lint": {

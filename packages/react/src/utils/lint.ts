@@ -1,4 +1,4 @@
-import { offsetFromRoot } from '@nrwl/devkit';
+import { offsetFromRoot } from '@nx/devkit';
 import type { Linter } from 'eslint';
 import {
   eslintPluginImportVersion,

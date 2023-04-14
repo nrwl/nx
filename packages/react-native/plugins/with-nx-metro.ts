@@ -1,4 +1,4 @@
-import { workspaceLayout, workspaceRoot } from '@nrwl/devkit';
+import { workspaceLayout, workspaceRoot } from '@nx/devkit';
 import { join } from 'path';
 import { existsSync } from 'fs-extra';
 

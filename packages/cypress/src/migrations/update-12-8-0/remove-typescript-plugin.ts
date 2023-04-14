@@ -8,7 +8,7 @@ import {
   StringDeletion,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   createSourceFile,
   isCallExpression,

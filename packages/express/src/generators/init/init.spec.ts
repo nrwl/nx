@@ -3,10 +3,10 @@ import {
   readJson,
   NxJsonConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { expressVersion } from '../../utils/versions';
 import initGenerator from './init';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('init', () => {
   let tree: Tree;

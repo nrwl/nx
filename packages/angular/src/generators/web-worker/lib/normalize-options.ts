@@ -1,10 +1,10 @@
 import type { WebWorkerGeneratorOptions } from '../schema';
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   getProjects,
   joinPathFragments,
   readProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function normalizeOptions(
   tree: Tree,

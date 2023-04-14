@@ -5,7 +5,7 @@ import {
   NX_VERSION,
   readNxJson,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export default async function addDroppedDependencies(tree: Tree) {
   const devDependencies = {};

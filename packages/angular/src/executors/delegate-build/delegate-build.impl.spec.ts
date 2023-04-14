@@ -1,6 +1,6 @@
-jest.mock('@nrwl/devkit');
-jest.mock('@nrwl/devkit');
-jest.mock('@nrwl/js/src/utils/buildable-libs-utils');
+jest.mock('@nx/devkit');
+jest.mock('@nx/devkit');
+jest.mock('@nx/js/src/utils/buildable-libs-utils');
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
@@ -9,9 +9,9 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
 
-import type { ExecutorContext, Target } from '@nrwl/devkit';
-import * as devkit from '@nrwl/devkit';
-import * as buildableLibsUtils from '@nrwl/js/src/utils/buildable-libs-utils';
+import type { ExecutorContext, Target } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import * as buildableLibsUtils from '@nx/js/src/utils/buildable-libs-utils';
 import delegateBuildExecutor from './delegate-build.impl';
 import type { DelegateBuildExecutorSchema } from './schema';
 
@@ -32,7 +32,7 @@ describe('DelegateBuild executor', () => {
       () => '/my-app/tsconfig.app.generated.json'
     );
     (devkit.parseTargetString as jest.Mock).mockImplementation(
-      jest.requireActual('@nrwl/devkit').parseTargetString
+      jest.requireActual('@nx/devkit').parseTargetString
     );
 
     context = {

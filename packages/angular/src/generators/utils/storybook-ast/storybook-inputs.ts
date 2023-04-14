@@ -1,9 +1,9 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
-import { getSourceNodes } from '@nrwl/js';
+import { getSourceNodes } from '@nx/js';
 import type { PropertyDeclaration } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

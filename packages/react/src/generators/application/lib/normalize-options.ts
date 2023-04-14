@@ -6,7 +6,7 @@ import {
   names,
   normalizePath,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { findFreePort } from './find-free-port';
 
 export function normalizeDirectory(options: Schema) {

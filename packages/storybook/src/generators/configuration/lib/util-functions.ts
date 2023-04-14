@@ -16,9 +16,9 @@ import {
   updateProjectConfiguration,
   workspaceRoot,
   writeJson,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import { Linter } from '@nx/linter';
 import { join, relative } from 'path';
 import {
   dedupe,
@@ -143,10 +143,7 @@ export function addAngularStorybookTask(
 }
 
 export function addStaticTarget(tree: Tree, opts: StorybookConfigureSchema) {
-  const nrwlWeb = ensurePackage<typeof import('@nrwl/web')>(
-    '@nrwl/web',
-    nxVersion
-  );
+  const nrwlWeb = ensurePackage<typeof import('@nx/web')>('@nx/web', nxVersion);
   nrwlWeb.webStaticServeGenerator(tree, {
     buildTarget: `${opts.name}:build-storybook`,
     outputPath: joinPathFragments('dist/storybook', opts.name),
