@@ -21,7 +21,6 @@ interface Schema {
   style?: string;
   nxCloud?: boolean;
   preset: string;
-  presetVersion?: string | number; // number is needed so that generator doesn't fail on numeric-like strings (e.g. "14")
   defaultBase: string;
   framework?: string;
   docker?: boolean;
@@ -97,22 +96,24 @@ function parsePresetName(input: string): { package: string; version?: string } {
   // If the preset already contains a version in the name
   // -- my-package@2.0.1
   // -- @scope/package@version
-  const SCOPED_PACKAGE = /^(@[^\/]+\/[^@\/]+)(?:@([^\/]+))?$/;
-  const NON_SCOPED_PACKAGE = /^([^@\/]+)(?:@([^\/]+))?$/;
-  const match = input.match(SCOPED_PACKAGE) || input.match(NON_SCOPED_PACKAGE);
-  if (!match?.[0]) {
-    throw new Error(`Invalid package name: ${input}`);
+  const atIndex = input.indexOf('@', 1); // Skip the beginning @ because it denotes a scoped package.
+
+  if (atIndex > 0) {
+    return {
+      package: input.slice(0, atIndex),
+      version: input.slice(atIndex + 1),
+    };
+  } else {
+    if (!input) {
+      throw new Error(`Invalid package name: ${input}`);
+    }
+    return { package: input };
   }
-  return {
-    package: match[1],
-    version: match[2],
-  };
 }
 
 function normalizeOptions(options: Schema): NormalizedSchema {
   const normalized: Partial<NormalizedSchema> = {
     ...options,
-    presetVersion: options.presetVersion?.toString(),
   };
 
   normalized.name = names(options.name).fileName;

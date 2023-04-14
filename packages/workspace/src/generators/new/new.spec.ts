@@ -104,6 +104,18 @@ describe('new', () => {
     });
 
     describe('custom presets', () => {
+      let originalValue;
+      beforeEach(() => {
+        originalValue = process.env['NX_E2E_PRESET_VERSION'];
+      });
+
+      afterEach(() => {
+        if (originalValue) {
+          process.env['NX_E2E_PRESET_VERSION'] = originalValue;
+        } else {
+          delete process.env['NX_E2E_PRESET_VERSION'];
+        }
+      });
       // the process of actual resolving of a version relies on npm and is mocked here,
       // thus "package@2" is expected to be resolved with version "2" instead of "2.0.0"
       const versionAsPath =
@@ -120,6 +132,10 @@ describe('new', () => {
       `(
         'should add custom preset "$preset" with a correct expectedVersion "$expectedVersion" when presetVersion is "$presetVersion"',
         async ({ presetVersion, preset, expectedVersion }) => {
+          if (presetVersion) {
+            process.env['NX_E2E_PRESET_VERSION'] = presetVersion;
+          }
+
           await newGenerator(tree, {
             ...defaultOptions,
             name: 'my-workspace',
@@ -127,7 +143,6 @@ describe('new', () => {
             npmScope: 'npmScope',
             appName: 'app',
             preset,
-            presetVersion,
           });
 
           const { devDependencies, dependencies } = readJson(

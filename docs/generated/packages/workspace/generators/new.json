@@ -47,10 +47,6 @@
         "description": "What to create in the new workspace.",
         "type": "string"
       },
-      "presetVersion": {
-        "description": "Version of the custom preset to be used.",
-        "oneOf": [{ "type": "string" }, { "type": "number" }]
-      },
       "appName": { "type": "string", "description": "Application name." },
       "nxCloud": {
         "description": "Connect the workspace to the free tier of the distributed cache provided by Nx Cloud.",
