@@ -21,7 +21,6 @@ export interface Schema {
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   skipTsConfig?: boolean;
-  standaloneConfig?: boolean;
   strict?: boolean;
   style: SupportedStyles;
   tags?: string;

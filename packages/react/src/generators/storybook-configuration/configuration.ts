@@ -62,7 +62,6 @@ export async function storybookConfigurationGenerator(
     js: schema.js,
     linter: schema.linter,
     cypressDirectory: schema.cypressDirectory,
-    standaloneConfig: schema.standaloneConfig,
     tsConfiguration: schema.tsConfiguration,
     configureTestRunner: schema.configureTestRunner,
     configureStaticServe: schema.configureStaticServe,
