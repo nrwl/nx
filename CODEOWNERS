@@ -160,3 +160,7 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 project.json @FrozenPandaz @vsavkin
 jest.config.ts @barbados-clemens @FrozenPandaz
 jest.preset.ts @barbados-clemens @FrozenPandaz
+
+# Overrides - These are applied last, so override any matches above.
+docs/generated/manifests/* @bcabanes @FrozenPandaz @jaysoo @AgentEnder @isaacplmann @juristr
+docs/generated/packages-metadata.json @bcabanes @FrozenPandaz @jaysoo @AgentEnder @isaacplmann @juristr
