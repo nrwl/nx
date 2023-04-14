@@ -65,6 +65,21 @@ describe('NxPlugin Generator Generator', () => {
     );
   });
 
+  it('should throw if recreating an existing generator', async () => {
+    await generatorGenerator(tree, {
+      project: projectName,
+      name: 'my-generator',
+      unitTestRunner: 'jest',
+    });
+    expect(
+      generatorGenerator(tree, {
+        project: projectName,
+        name: 'my-generator',
+        unitTestRunner: 'jest',
+      })
+    ).rejects.toThrow('Generator my-generator already exists');
+  });
+
   it('should update generators.json with the same path as where the generator files folder is located', async () => {
     const generatorName = 'myGenerator';
     const generatorFileName = 'my-generator';

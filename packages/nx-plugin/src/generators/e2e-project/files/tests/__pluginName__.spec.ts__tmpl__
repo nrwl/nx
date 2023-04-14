@@ -27,11 +27,11 @@ describe('<%= pluginName %> e2e', () => {
 
   // Add some tests here to check that your plugin functionality works as expected.
   // A sample test is included below to give you some ideas.
-  //
-  // it('should be able to build generated projects', async () => {
-  //   const name = uniq('proj')
-  //   await runNxCommandAsync(`generate <%= npmPackageName %>:{my-generator} --name ${name}`);
-  //   expect(() => runNxCommand('build ${proj}')).not.toThrow();
-  //   expect(() => checkFilesExist([`dist/${name}/index.js`])).not.toThrow();
-  // });
+  xit('should be able to build generated projects', async () => {
+    const name = uniq('proj');
+    const generator = 'PLACEHOLDER';
+    await runNxCommandAsync(`generate <%= npmPackageName %>:${generator} --name ${name}`);
+    expect(() => runNxCommand('build ${proj}')).not.toThrow();
+    expect(() => checkFilesExist([`dist/${name}/index.js`])).not.toThrow();
+  });
 });

@@ -4,4 +4,5 @@ export interface Schema {
   description?: string;
   unitTestRunner: 'jest' | 'none';
   skipLintChecks?: boolean;
+  skipFormat?: boolean;
 }

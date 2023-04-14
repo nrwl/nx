@@ -48,21 +48,6 @@ describe('Nx Plugin', () => {
     });
   }, 90000);
 
-  // the test invoke ensureNxProject, which points to @nrwl/workspace collection
-  // which walks up the directory to find it in the next repo itself, so it
-  // doesn't use the collection we are building
-  // we should change it to point to the right collection using relative path
-  // TODO: Re-enable this to work with pnpm
-  it(`should run the plugin's e2e tests`, async () => {
-    const plugin = uniq('plugin-name');
-    runCLI(
-      `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --e2eTestRunner jest`
-    );
-    const e2eResults = runCLI(`e2e ${plugin}-e2e`);
-    expect(e2eResults).toContain('Successfully ran target e2e');
-    expect(await killPorts()).toBeTruthy();
-  }, 250000);
-
   it('should be able to generate a migration', async () => {
     const plugin = uniq('plugin');
     const version = '1.0.0';

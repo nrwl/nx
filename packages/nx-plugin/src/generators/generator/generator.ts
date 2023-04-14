@@ -1,4 +1,10 @@
-import { GeneratorsJson, joinPathFragments, Tree, writeJson } from '@nx/devkit';
+import {
+  formatFiles,
+  GeneratorsJson,
+  joinPathFragments,
+  Tree,
+  writeJson,
+} from '@nx/devkit';
 import {
   convertNxGenerator,
   generateFiles,
@@ -10,6 +16,7 @@ import {
 } from '@nx/devkit';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
+import { hasGenerator } from '../../utils/has-generator';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
 
@@ -86,7 +93,8 @@ export async function createGeneratorsJson(
   host: Tree,
   projectRoot: string,
   projectName: string,
-  skipLintChecks?: boolean
+  skipLintChecks?: boolean,
+  skipFormat?: boolean
 ) {
   updateJson<PackageJson>(
     host,
@@ -106,6 +114,7 @@ export async function createGeneratorsJson(
   if (!skipLintChecks) {
     await pluginLintCheckGenerator(host, {
       projectName,
+      skipFormat,
     });
   }
 }
@@ -129,9 +138,9 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
       host,
       options.projectRoot,
       options.project,
-      options.skipLintChecks
+      options.skipLintChecks,
+      options.skipFormat
     );
-    console.log('CREATED GENERATORS.JSON');
   }
 
   updateJson<GeneratorsJson>(host, generatorsPath, (json) => {
@@ -153,10 +162,17 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
 
 export async function generatorGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
+  if (hasGenerator(host, options.project, options.name)) {
+    throw new Error(`Generator ${options.name} already exists.`);
+  }
 
   addFiles(host, options);
 
   await updateGeneratorJson(host, options);
+
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default generatorGenerator;

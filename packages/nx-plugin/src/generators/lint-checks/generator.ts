@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  formatFiles,
   joinPathFragments,
   logger,
   ProjectConfiguration,
@@ -60,6 +61,11 @@ export default async function pluginLintCheckGenerator(
     {},
     { 'jsonc-eslint-parser': jsoncEslintParserVersion }
   );
+
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
+
   return () => installTask;
 }
 
@@ -186,27 +192,35 @@ function updateProjectEslintConfig(
   const eslintPath = `${options.root}/.eslintrc.json`;
   const eslintConfig = readJson<ESLint.Config>(host, eslintPath);
   eslintConfig.overrides ??= [];
-  if (
-    !eslintConfig.overrides.some(
+  let entry: ESLint.ConfigOverride<ESLint.RulesRecord> =
+    eslintConfig.overrides.find(
       (x) =>
         Object.keys(x.rules ?? {}).includes('@nx/nx/nx-plugin-checks') ||
         Object.keys(x.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks')
-    )
-  ) {
-    eslintConfig.overrides.push({
-      files: [
+    );
+  const newentry = !entry;
+  entry ??= { files: [] };
+  entry.files = [
+    ...new Set([
+      ...(entry.files ?? []),
+      ...[
         './package.json',
         packageJson.generators,
         packageJson.executors,
         packageJson.schematics,
         packageJson.builders,
       ].filter((f) => !!f),
-      parser: 'jsonc-eslint-parser',
-      rules: {
-        '@nx/nx/nx-plugin-checks': 'error',
-      },
-    });
+    ]),
+  ];
+  entry.parser = 'jsonc-eslint-parser';
+  entry.rules ??= {
+    '@nx/nx/nx-plugin-checks': 'error',
+  };
+
+  if (newentry) {
+    eslintConfig.overrides.push(entry);
   }
+
   writeJson(host, eslintPath, eslintConfig);
 }
 

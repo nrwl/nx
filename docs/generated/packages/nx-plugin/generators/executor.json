@@ -48,7 +48,7 @@
       "skipLintChecks": {
         "type": "boolean",
         "default": false,
-        "description": "Do not eslint configuration for plugin json files."
+        "description": "Do not add an eslint configuration for plugin json files."
       }
     },
     "required": ["project", "name"],

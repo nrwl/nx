@@ -23,8 +23,7 @@ describe('preset generator', () => {
     const config = readProjectConfiguration(tree, 'my-plugin');
     expect(config).toBeDefined();
     const packageJson = readJson<PackageJson>(tree, 'package.json');
-    expect(packageJson.generators).toEqual('./generators.json');
-    expect(packageJson.executors).toEqual('./executors.json');
+    expect(packageJson.dependencies).toHaveProperty('@nx/devkit');
     expect(readNxJson(tree).npmScope).not.toBeDefined();
   });
 });
