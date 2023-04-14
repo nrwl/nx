@@ -295,7 +295,9 @@ async function runCypress(
   options.testingType = opts.testingType;
 
   if (opts.video !== undefined) {
-    options.config[opts.testingType ?? 'e2e'] = {
+    const testingType = opts.testingType ?? 'e2e';
+    options.config[testingType] = {
+      ...options.config[testingType],
       video: opts.video,
     };
   }

@@ -462,11 +462,13 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
   });
 
   it('should forward video option to the correct testingType config', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(12);
     const { success } = await cypressExecutor(
       {
         ...cypressOptions,
         video: false,
         testingType: 'component',
+        ignoreTestFiles: '**/*.spec.ts',
       },
       mockContext
     );
@@ -477,6 +479,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
           baseUrl: 'http://localhost:4200',
           component: {
             video: false,
+            excludeSpecPattern: '**/*.spec.ts',
           },
         },
       })
