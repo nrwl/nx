@@ -2,7 +2,7 @@ import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import { CreateNxPlugin, PluginDirectory } from '@nrwl/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { nxPackagesApi } from '../lib/packages.api';
+import { nxPackagesApi } from '../../lib/packages.api';
 
 declare const fetch: any;
 
@@ -12,11 +12,11 @@ interface PluginInfo {
   url: string;
   isOfficial: boolean;
 }
-interface CommunityProps {
+interface BrowseProps {
   pluginList: PluginInfo[];
 }
 
-export async function getStaticProps(): Promise<{ props: CommunityProps }> {
+export async function getStaticProps(): Promise<{ props: BrowseProps }> {
   const res = await fetch(
     'https://raw.githubusercontent.com/nrwl/nx/master/community/approved-plugins.json'
   );
@@ -50,19 +50,18 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
   };
 }
 
-export default function Community(props: CommunityProps): JSX.Element {
+export default function Browse(props: BrowseProps): JSX.Element {
   const router = useRouter();
 
   return (
     <>
       <NextSeo
-        title="Nx Community and Plugin Listing"
-        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter"
+        title="Nx Plugin Listing"
+        description="Browse the list of Nx Plugins"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx Community and Plugin Listing',
-          description:
-            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter',
+          title: 'Nx Plugin Listing',
+          description: 'Browse the list of Nx Plugins',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
@@ -79,10 +78,6 @@ export default function Community(props: CommunityProps): JSX.Element {
       <Header />
       <main id="main" role="main">
         <div className="w-full">
-          <div id="create-nx-plugin" className="py-28">
-            <CreateNxPlugin />
-          </div>
-
           <div id="plugin-directory" className="py-28">
             <PluginDirectory pluginList={props.pluginList} />
           </div>

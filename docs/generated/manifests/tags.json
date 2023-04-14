@@ -473,20 +473,6 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/plugins/local-executors",
-      "id": "creating-custom-executors",
-      "name": "Local Executors",
-      "path": "/recipes/executors/creating-custom-executors"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/compose-executors",
-      "id": "compose-executors",
-      "name": "Compose Executors",
-      "path": "/recipes/executors/compose-executors"
-    },
-    {
-      "description": "",
       "file": "shared/guides/module-federation/faster-builds",
       "id": "faster-builds",
       "name": "Faster Builds with Module Federation",
@@ -512,6 +498,20 @@
       "id": "performance-profiling",
       "name": "Profiling Build Performance",
       "path": "/recipes/other/performance-profiling"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/local-executors",
+      "id": "creating-custom-executors",
+      "name": "Local Executors",
+      "path": "/plugins/executors/creating-custom-executors"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/compose-executors",
+      "id": "compose-executors",
+      "name": "Compose Executors",
+      "path": "/plugins/executors/compose-executors"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -562,35 +562,35 @@
       "file": "shared/recipes/generators/local-generators",
       "id": "local-generators",
       "name": "Local Generators",
-      "path": "/recipes/generators/local-generators"
+      "path": "/plugins/generators/local-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/composing-generators",
       "id": "composing-generators",
       "name": "Composing Generators",
-      "path": "/recipes/generators/composing-generators"
+      "path": "/plugins/generators/composing-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/generator-options",
       "id": "generator-options",
       "name": "Generator Options",
-      "path": "/recipes/generators/generator-options"
+      "path": "/plugins/generators/generator-options"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/creating-files",
       "id": "creating-files",
       "name": "Creating Files",
-      "path": "/recipes/generators/creating-files"
+      "path": "/plugins/generators/creating-files"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/modifying-files",
       "id": "modifying-files",
       "name": "Modifying Files",
-      "path": "/recipes/generators/modifying-files"
+      "path": "/plugins/generators/modifying-files"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -627,14 +627,14 @@
       "file": "shared/recipes/plugins/local-executors",
       "id": "creating-custom-executors",
       "name": "Local Executors",
-      "path": "/recipes/executors/creating-custom-executors"
+      "path": "/plugins/executors/creating-custom-executors"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/local-generators",
       "id": "local-generators",
       "name": "Local Generators",
-      "path": "/recipes/generators/local-generators"
+      "path": "/plugins/generators/local-generators"
     },
     {
       "description": "",
@@ -645,17 +645,17 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/plugins/create-preset",
-      "id": "create-preset",
-      "name": "Create a Preset",
-      "path": "/plugins/advanced/create-preset"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/plugins/migration-generators",
       "id": "migration-generators",
       "name": "Migration Generators",
       "path": "/plugins/advanced/migration-generators"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/create-preset",
+      "id": "create-preset",
+      "name": "Create a Preset",
+      "path": "/plugins/advanced/create-preset"
     },
     {
       "description": "",

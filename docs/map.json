@@ -753,12 +753,81 @@
         {
           "name": "Intro",
           "id": "intro",
-          "description": "Learn about basic Nx Cloud knowledge.",
+          "description": "Learn about plugins.",
           "itemList": [
             {
-              "name": "What is Nx Cloud?",
-              "id": "what-is-nx-cloud",
-              "file": "nx-cloud/intro/nx-cloud"
+              "name": "Plugin Use Cases",
+              "id": "use-cases",
+              "file": "shared/plugins/intro"
+            },
+            {
+              "name": "Create a Plugin",
+              "id": "create-plugin",
+              "file": "shared/plugins/create-plugin"
+            },
+            {
+              "name": "Plugin Registry",
+              "description": "Browse official and community plugins",
+              "id": "registry",
+              "file": "",
+              "path": "/plugins/registry",
+              "isExternal": false
+            }
+          ]
+        },
+        {
+          "name": "Executors",
+          "id": "executors",
+          "description": "Use, extend and compose executors.",
+          "itemList": [
+            {
+              "name": "Local Executors",
+              "id": "creating-custom-executors",
+              "tags": ["use-task-executors", "create-your-own-plugin"],
+              "file": "shared/recipes/plugins/local-executors"
+            },
+            {
+              "name": "Compose Executors",
+              "id": "compose-executors",
+              "tags": ["use-task-executors"],
+              "file": "shared/recipes/plugins/compose-executors"
+            }
+          ]
+        },
+        {
+          "name": "Generators",
+          "id": "generators",
+          "description": "Use, extend and compose generators.",
+          "itemList": [
+            {
+              "name": "Local Generators",
+              "id": "local-generators",
+              "tags": ["use-code-generators", "create-your-own-plugin"],
+              "file": "shared/recipes/generators/local-generators"
+            },
+            {
+              "name": "Composing Generators",
+              "id": "composing-generators",
+              "tags": ["use-code-generators"],
+              "file": "shared/recipes/generators/composing-generators"
+            },
+            {
+              "name": "Generator Options",
+              "id": "generator-options",
+              "tags": ["use-code-generators"],
+              "file": "shared/recipes/generators/generator-options"
+            },
+            {
+              "name": "Creating Files",
+              "id": "creating-files",
+              "tags": ["use-code-generators"],
+              "file": "shared/recipes/generators/creating-files"
+            },
+            {
+              "name": "Modifying Files",
+              "id": "modifying-files",
+              "tags": ["use-code-generators"],
+              "file": "shared/recipes/generators/modifying-files"
             }
           ]
         },
@@ -774,16 +843,16 @@
               "file": "shared/recipes/plugins/share-your-plugin"
             },
             {
-              "name": "Create a Preset",
-              "id": "create-preset",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/create-preset"
-            },
-            {
               "name": "Migration Generators",
               "id": "migration-generators",
               "tags": ["create-your-own-plugin"],
               "file": "shared/recipes/plugins/migration-generators"
+            },
+            {
+              "name": "Create a Preset",
+              "id": "create-preset",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/create-preset"
             },
             {
               "name": "Project Graph Plugins",
@@ -1006,55 +1075,6 @@
               "id": "run-commands-executor",
               "tags": ["use-task-executors"],
               "file": "shared/running-custom-commands"
-            },
-            {
-              "name": "Local Executors",
-              "id": "creating-custom-executors",
-              "tags": ["use-task-executors", "create-your-own-plugin"],
-              "file": "shared/recipes/plugins/local-executors"
-            },
-            {
-              "name": "Compose Executors",
-              "id": "compose-executors",
-              "tags": ["use-task-executors"],
-              "file": "shared/recipes/plugins/compose-executors"
-            }
-          ]
-        },
-        {
-          "name": "Generators",
-          "id": "generators",
-          "description": "Use, extend and compose generators.",
-          "itemList": [
-            {
-              "name": "Local Generators",
-              "id": "local-generators",
-              "tags": ["use-code-generators", "create-your-own-plugin"],
-              "file": "shared/recipes/generators/local-generators"
-            },
-            {
-              "name": "Composing Generators",
-              "id": "composing-generators",
-              "tags": ["use-code-generators"],
-              "file": "shared/recipes/generators/composing-generators"
-            },
-            {
-              "name": "Generator Options",
-              "id": "generator-options",
-              "tags": ["use-code-generators"],
-              "file": "shared/recipes/generators/generator-options"
-            },
-            {
-              "name": "Creating Files",
-              "id": "creating-files",
-              "tags": ["use-code-generators"],
-              "file": "shared/recipes/generators/creating-files"
-            },
-            {
-              "name": "Modifying Files",
-              "id": "modifying-files",
-              "tags": ["use-code-generators"],
-              "file": "shared/recipes/generators/modifying-files"
             }
           ]
         },

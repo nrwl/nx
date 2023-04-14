@@ -18,35 +18,35 @@ Nx plugins contain [executors](/plugin-features/use-task-executors) and [generat
 
 {% personas %}
 
-{% persona type="browse" title="Browse Existing Plugins" url="/plugins" %}
+{% persona type="browse" title="Browse Existing Plugins" url="/plugins/registry" %}
 
 Browse through plugins built by Nx and the community.
 
-- [Plugin Directory](/plugins)
+- [Plugin Directory](/plugins/registry)
 
 {% /persona %}
 
-{% persona type="create" title="Build a Plugin" url="/packages/plugin" %}
+{% persona type="create" title="Build a Plugin" url="/plugins/intro/use-cases#create-a-local-plugin" %}
 
 Build a plugin for use in your own repo or to share with others.
 
-- [Build a plugin](/packages/plugin)
+- [Build a plugin](/plugins/intro/use-cases#create-a-local-plugin)
 
 {% /persona %}
 
-{% persona type="share" title="Share Your Plugin" url="/recipes/advanced-plugins/share-your-plugin" %}
+{% persona type="share" title="Share Your Plugin" url="/plugins/intro/use-cases#maintain-a-published-plugin" %}
 
 Publish your plugin to npm and keep your plugin users up to date with migration generators.
 
-- [Share your plugin](/recipes/advanced-plugins/share-your-plugin)
+- [Share your plugin](/plugins/intro/use-cases#maintain-a-published-plugin)
 
 {% /persona %}
 
-{% persona type="extend" title="Extend Core Nx Functionality" url="/recipes/advanced-plugins/project-graph-plugins" %}
+{% persona type="extend" title="Use Nx as Your Framework CLI" url="/plugins/intro/use-cases#use-nx-as-your-framework-cli" %}
 
-Extend the Nx graph logic to understand other languages and custom setups.
+Nx can scaffold a new repository with the optimum tooling for your framework and you can hook into the core of Nx to correctly parse your configuration files.
 
-- [Extend Core Nx Functionality](/recipes/advanced-plugins/project-graph-plugins)
+- [Use Nx as Your Framework CLI](/plugins/intro/use-cases#use-nx-as-your-framework-cli)
 
 {% /persona %}
 
@@ -56,13 +56,13 @@ All the core plugins are written using [Nx Devkit](/packages/devkit), and you ca
 executors.
 
 {% callout type="check" title="Plugins!" %}
-The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [generators](/recipes/generators/local-generators) and [executors](/recipes/executors/creating-custom-executors) in a plugin to use in your own repo or share it with the community. The [Nx Plugin](/packages/plugin) plugin provides guidance on how you can build your own custom plugins.
+The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [generators](/plugins/generators/local-generators) and [executors](/plugins/executors/creating-custom-executors) in a plugin to use in your own repo or share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
 {% /callout %}
 
 ### Pay as you go
 
 As with most things in Nx, the core of Nx Devkit is very simple. It only uses language primitives and immutable
-objects (the tree being the only exception). See [Simplest Generator](/recipes/generators/creating-files)
+objects (the tree being the only exception). See [Simplest Generator](/plugins/generators/creating-files)
 and [Simplest Executor](/plugin-features/use-task-executors#simplest-executor) for examples on creating generators
 and executors. The [Using Executors](/plugin-features/use-task-executors)
 and [Using Generators](/plugin-features/use-code-generators) guides also have additional information on executors
@@ -72,6 +72,6 @@ and generators.
 
 - [Creating and Publishing Your Own Nx Plugin - Youtube](https://www.youtube.com/watch?v=vVT7Al01VZc)
 - [Walkthrough Creating an Nx Plugin for tRPC](https://blog.nrwl.io/create-your-own-trpc-stack-de42209f83a3)
-- [Local generators](/recipes/generators/local-generators)
-- [Local executors](/recipes/executors/creating-custom-executors)
-- [Nx Community Plugins](/community)
+- [Local generators](/plugins/generators/local-generators)
+- [Local executors](/plugins/executors/creating-custom-executors)
+- [Nx Community Plugins](/plugins/registry)

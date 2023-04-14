@@ -34,8 +34,11 @@ function removeAnchors(linkPath: string): string {
 function extractAllLinks(basePath: string): Record<string, string[]> {
   return glob.sync(`${basePath}/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
-
+    const cardLinks = (fileContents.match(/url="(.*)"/g) || []).map((v) =>
+      v.slice(5, -1)
+    );
     const links = parseLinks(fileContents)
+      .concat(cardLinks)
       .filter(isLinkInternal)
       .filter(isNotAsset)
       .filter(isNotImage)

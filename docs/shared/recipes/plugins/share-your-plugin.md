@@ -28,4 +28,4 @@ We will then verify the plugin, offer suggestions or merge the pull request!
 
 ## Write Migrations
 
-Once other repos are using your plugin, it would help them if you write migrations to automatically update their configuration files whenever you make breaking changes. Read the [migration generators guide](/recipes/advanced-plugins/migration-generators) to find out how.
+Once other repos are using your plugin, it would help them if you write migrations to automatically update their configuration files whenever you make breaking changes. Read the [migration generators guide](/plugins/advanced/migration-generators) to find out how.
