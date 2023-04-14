@@ -18,7 +18,6 @@ export interface NextServerOptions {
   staticMarkup: boolean;
   quiet: boolean;
   port: number;
-  path: string;
   hostname: string;
   customServer?: boolean;
 }
@@ -47,9 +46,6 @@ export interface NextServeBuilderOptions {
   quiet: boolean;
   buildTarget: string;
   customServerTarget?: string;
-  /** @deprecated Use customServerTarget
-   */
-  customServerPath?: string;
   hostname?: string;
   proxyConfig?: string;
   buildLibsFromSource?: boolean;
