@@ -5157,6 +5157,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "How to configure Next.js plugins",
+                "path": "/packages/next/documents/next-config-setup",
+                "id": "next-config-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

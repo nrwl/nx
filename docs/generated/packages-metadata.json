@@ -1327,7 +1327,18 @@
         "isExternal": false,
         "path": "next/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/next/next-plugin"
+        "originalFilePath": "shared/packages/next/plugin-overview"
+      },
+      {
+        "id": "next-config-setup",
+        "name": "How to configure Next.js plugins",
+        "description": "A guide for configuring Next.js plugins with Nx",
+        "file": "generated/packages/next/documents/next-config-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "next/documents/next-config-setup",
+        "tags": [],
+        "originalFilePath": "shared/packages/next/next-config-setup"
       }
     ],
     "executors": [

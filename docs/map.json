@@ -2007,7 +2007,13 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/next",
-              "file": "shared/packages/next/next-plugin"
+              "file": "shared/packages/next/plugin-overview"
+            },
+            {
+              "id": "next-config-setup",
+              "name": "How to configure Next.js plugins",
+              "description": "A guide for configuring Next.js plugins with Nx",
+              "file": "shared/packages/next/next-config-setup"
             }
           ]
         },
