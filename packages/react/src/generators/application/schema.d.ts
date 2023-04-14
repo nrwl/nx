@@ -23,7 +23,6 @@ export interface Schema {
   globalCss?: boolean;
   strict?: boolean;
   setParserOptionsProject?: boolean;
-  standaloneConfig?: boolean;
   compiler?: 'babel' | 'swc';
   remotes?: string[];
   devServerPort?: number;

@@ -24,7 +24,6 @@ describe('app', () => {
     linter: Linter.EsLint,
     style: 'css',
     strict: true,
-    standaloneConfig: false,
   };
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>

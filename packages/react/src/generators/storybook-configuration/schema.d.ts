@@ -9,7 +9,6 @@ export interface StorybookConfigureSchema {
   tsConfiguration?: boolean;
   linter?: Linter;
   cypressDirectory?: string;
-  standaloneConfig?: boolean;
   ignorePaths?: string[];
   bundler?: 'webpack' | 'vite';
   configureTestRunner?: boolean;

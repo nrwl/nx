@@ -17,7 +17,6 @@ export interface Schema {
   skipFormat?: boolean;
   skipWorkspaceJson?: boolean;
   ssr?: boolean;
-  standaloneConfig?: boolean;
   strict?: boolean;
   style: SupportedStyles;
   tags?: string;
