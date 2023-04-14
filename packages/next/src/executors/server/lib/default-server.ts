@@ -19,9 +19,6 @@ export async function defaultServer(
   const server: express.Express = express();
   server.disable('x-powered-by');
 
-  // Serve shared assets copied to `public` folder
-  server.use(express.static(path.resolve(settings.dir, 'public')));
-
   // Set up the proxy.
   if (proxyConfig) {
     const proxyMiddleware =
