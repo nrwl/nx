@@ -6,6 +6,6 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   maxWorkers: 1,
   globals: {},
-  displayName: 'e2e-react',
+  displayName: 'e2e-react-extensions',
   preset: '../../jest.preset.js',
 };

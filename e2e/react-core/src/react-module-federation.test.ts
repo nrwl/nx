@@ -15,9 +15,9 @@ import {
 describe('React Module Federation', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
+  beforeAll(() => (proj = newProject()));
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should generate host and remote apps', async () => {
     const shell = uniq('shell');

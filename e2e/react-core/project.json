@@ -1,7 +1,7 @@
 {
-  "name": "e2e-react",
+  "name": "e2e-react-core",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/react",
+  "sourceRoot": "e2e/react-core",
   "projectType": "application",
   "targets": {
     "e2e": {},
