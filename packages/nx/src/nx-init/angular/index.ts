@@ -8,6 +8,7 @@ import {
   addDepsToPackageJson,
   askAboutNxCloud,
   initCloud,
+  printFinalMessage,
   runInstall,
 } from '../utils';
 import { setupIntegratedWorkspace } from './integrated-workspace';
@@ -70,11 +71,10 @@ export async function addNxToAngularCliRepo(integrated: boolean) {
     initCloud(repoRoot, 'nx-init-angular');
   }
 
-  output.success({
-    title: '🎉 Nx is now enabled in your workspace!',
+  printFinalMessage({
+    learnMoreLink: 'https://nx.dev/recipes/adopting-nx/migration-angular',
     bodyLines: [
-      `Execute 'npx nx build' twice to see the computation caching in action.`,
-      'Learn more about the changes done to your workspace at https://nx.dev/recipes/adopting-nx/migration-angular.',
+      '- Execute "npx nx build" twice to see the computation caching in action.',
     ],
   });
 }
@@ -89,7 +89,8 @@ async function collectCacheableOperations(): Promise<string[]> {
 
   if (parsedArgs.yes !== true) {
     output.log({
-      title: `🧑‍🔧 Please answer the following questions about the targets found in your angular.json in order to generate task runner configuration`,
+      title:
+        '🧑‍🔧 Please answer the following questions about the targets found in your angular.json in order to generate task runner configuration',
     });
 
     cacheableOperations = (

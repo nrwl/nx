@@ -1,20 +1,17 @@
-import { output } from '../utils/output';
-import * as yargsParser from 'yargs-parser';
 import * as enquirer from 'enquirer';
-import { readJsonFile, writeJsonFile } from '../utils/fileutils';
+import * as yargsParser from 'yargs-parser';
+import { readJsonFile } from '../utils/fileutils';
+import { output } from '../utils/output';
+import { getPackageManagerCommand } from '../utils/package-manager';
 import {
   addDepsToPackageJson,
   askAboutNxCloud,
   createNxJsonFile,
   initCloud,
+  markRootPackageJsonAsNxProject,
+  printFinalMessage,
   runInstall,
 } from './utils';
-import { joinPathFragments } from '../utils/path';
-import { PackageJson } from '../utils/package-json';
-import {
-  getPackageManagerCommand,
-  PackageManagerCommands,
-} from '../utils/package-manager';
 
 const parsedArgs = yargsParser(process.argv, {
   boolean: ['yes'],
@@ -27,11 +24,11 @@ const parsedArgs = yargsParser(process.argv, {
 export async function addNxToNpmRepo() {
   const repoRoot = process.cwd();
 
-  output.log({ title: `🐳 Nx initialization` });
+  output.log({ title: '🐳 Nx initialization' });
 
   let cacheableOperations: string[];
   let scriptOutputs = {};
-  let useCloud: boolean;
+  let useNxCloud: boolean;
 
   const packageJson = readJsonFile('package.json');
   const scripts = Object.keys(packageJson.scripts).filter(
@@ -40,7 +37,8 @@ export async function addNxToNpmRepo() {
 
   if (parsedArgs.yes !== true) {
     output.log({
-      title: `🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration`,
+      title:
+        '🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration',
     });
 
     cacheableOperations = (
@@ -68,19 +66,19 @@ export async function addNxToNpmRepo() {
       )[scriptName];
     }
 
-    useCloud = await askAboutNxCloud();
+    useNxCloud = await askAboutNxCloud();
   } else {
     cacheableOperations = parsedArgs.cacheable
       ? parsedArgs.cacheable.split(',')
       : [];
-    useCloud = false;
+    useNxCloud = false;
   }
 
   createNxJsonFile(repoRoot, [], cacheableOperations, {});
 
   const pmc = getPackageManagerCommand();
 
-  addDepsToPackageJson(repoRoot, useCloud);
+  addDepsToPackageJson(repoRoot, useNxCloud);
   markRootPackageJsonAsNxProject(
     repoRoot,
     cacheableOperations,
@@ -88,57 +86,17 @@ export async function addNxToNpmRepo() {
     pmc
   );
 
-  output.log({ title: `📦 Installing dependencies` });
+  output.log({ title: '📦 Installing dependencies' });
 
   runInstall(repoRoot, pmc);
 
-  if (useCloud) {
+  if (useNxCloud) {
+    output.log({ title: '🛠️ Setting up Nx Cloud' });
     initCloud(repoRoot, 'nx-init-npm-repo');
   }
 
-  printFinalMessage();
-}
-
-function printFinalMessage() {
-  output.success({
-    title: `🎉 Done!`,
-    bodyLines: [
-      `- Enabled computation caching!`,
-      `- Learn more at https://nx.dev/recipes/adopting-nx/adding-to-monorepo`,
-    ],
+  printFinalMessage({
+    learnMoreLink:
+      'https://nx.dev/recipes/adopting-nx/adding-to-existing-project',
   });
-}
-
-export function markRootPackageJsonAsNxProject(
-  repoRoot: string,
-  cacheableScripts: string[],
-  scriptOutputs: { [script: string]: string },
-  pmc: PackageManagerCommands
-) {
-  const json = readJsonFile<PackageJson>(
-    joinPathFragments(repoRoot, `package.json`)
-  );
-  json.nx = { targets: {} };
-  for (let script of Object.keys(scriptOutputs)) {
-    if (scriptOutputs[script]) {
-      json.nx.targets[script] = {
-        outputs: [`{projectRoot}/${scriptOutputs[script]}`],
-      };
-    }
-  }
-  for (let script of cacheableScripts) {
-    const scriptDefinition = json.scripts[script];
-    if (!scriptDefinition) {
-      continue;
-    }
-
-    if (scriptDefinition.includes('&&') || scriptDefinition.includes('||')) {
-      let backingScriptName = `_${script}`;
-      json.scripts[backingScriptName] = scriptDefinition;
-      json.scripts[script] = `nx exec -- ${pmc.run(backingScriptName, '')}`;
-    } else {
-      json.scripts[script] = `nx exec -- ${json.scripts[script]}`;
-    }
-  }
-  writeJsonFile(`package.json`, json);
 }

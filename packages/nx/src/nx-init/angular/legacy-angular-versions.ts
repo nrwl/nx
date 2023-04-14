@@ -6,12 +6,12 @@ import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
 import { readModulePackageJson } from '../../utils/package-json';
 import {
-  PackageManagerCommands,
   getPackageManagerCommand,
+  PackageManagerCommands,
   resolvePackageVersionUsingInstallation,
   resolvePackageVersionUsingRegistry,
 } from '../../utils/package-manager';
-import { askAboutNxCloud, initCloud } from '../utils';
+import { askAboutNxCloud, initCloud, printFinalMessage } from '../utils';
 
 // map of Angular major versions to Nx versions to use for legacy `nx init` migrations,
 // key is major Angular version and value is Nx version to use
@@ -84,11 +84,10 @@ export async function getLegacyMigrationFunctionIfApplicable(
       initCloud(repoRoot, 'nx-init-angular');
     }
 
-    output.success({
-      title: '🎉 Nx is now enabled in your workspace!',
+    printFinalMessage({
+      learnMoreLink: 'https://nx.dev/recipes/adopting-nx/migration-angular',
       bodyLines: [
-        `Execute 'npx nx build' twice to see the computation caching in action.`,
-        'Learn more about the changes done to your workspace at https://nx.dev/recipes/adopting-nx/migration-angular.',
+        '- Execute "npx nx build" twice to see the computation caching in action.',
       ],
     });
   };

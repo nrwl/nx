@@ -9,6 +9,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
 } from '../../utils/package-manager';
+import { askAboutNxCloud, printFinalMessage } from '../utils';
 import { checkForCustomWebpackSetup } from './check-for-custom-webpack-setup';
 import { checkForUncommittedChanges } from './check-for-uncommitted-changes';
 import { cleanUpFiles } from './clean-up-files';
@@ -26,6 +27,7 @@ export interface Options {
   nxCloud: boolean;
   vite: boolean;
   integrated: boolean;
+  interactive: boolean;
 }
 
 interface NormalizedOptions extends Options {
@@ -40,9 +42,9 @@ interface NormalizedOptions extends Options {
 }
 
 const parsedArgs = yargsParser(process.argv, {
-  boolean: ['force', 'e2e', 'nxCloud', 'vite'],
+  boolean: ['force', 'e2e', 'nxCloud', 'vite', 'interactive'],
   default: {
-    nxCloud: true,
+    interactive: true,
     vite: true,
   },
   configuration: {
@@ -56,25 +58,42 @@ export async function addNxToCraRepo(integrated: boolean) {
     checkForCustomWebpackSetup();
   }
 
-  output.log({ title: '✨ Nx initialization' });
+  output.log({ title: '🐳 Nx initialization' });
 
-  const normalizedOptions = normalizeOptions(
+  const normalizedOptions = await normalizeOptions(
     parsedArgs as unknown as Options,
     integrated
   );
   await reorgnizeWorkspaceStructure(normalizedOptions);
 }
 
-function addDependencies(pmc: PackageManagerCommands, ...deps: string[]) {
-  const depsArg = deps.join(' ');
-  output.log({ title: `📦 Adding dependencies: ${depsArg}` });
-  execSync(`${pmc.addDev} ${depsArg}`, { stdio: [0, 1, 2] });
+function installDependencies(options: NormalizedOptions) {
+  const dependencies = [
+    '@testing-library/jest-dom',
+    'eslint-config-react-app',
+    'web-vitals',
+    'jest-watch-typeahead',
+  ];
+  if (options.isVite) {
+    dependencies.push('vite', 'vitest', '@vitejs/plugin-react');
+  } else {
+    dependencies.push(
+      '@craco/craco',
+      'cross-env',
+      'react-scripts',
+      'tsconfig-paths-webpack-plugin'
+    );
+  }
+
+  execSync(`${options.pmc.addDev} ${dependencies.join(' ')}`, {
+    stdio: [0, 1, 2],
+  });
 }
 
-function normalizeOptions(
+async function normalizeOptions(
   options: Options,
   integrated: boolean
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
   const packageManager = detectPackageManager();
   const pmc = getPackageManagerCommand(packageManager);
 
@@ -92,6 +111,10 @@ function normalizeOptions(
   const npxYesFlagNeeded = !npmVersion.startsWith('6'); // npm 7 added -y flag to npx
   const isVite = options.vite;
   const isStandalone = !integrated;
+  options.nxCloud =
+    options.interactive && options.nxCloud === undefined
+      ? await askAboutNxCloud()
+      : options.nxCloud ?? false;
 
   return {
     ...options,
@@ -127,31 +150,19 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   output.log({ title: '🙂 Please be patient, one final step remaining!' });
 
-  output.log({
-    title: '🧶  Adding npm packages to your new Nx workspace',
+  output.log({ title: '📦 Installing dependencies' });
+  installDependencies(options);
+
+  const buildCommand = options.integrated
+    ? `npx nx build ${options.reactAppName}`
+    : 'npm run build';
+  printFinalMessage({
+    learnMoreLink: 'https://nx.dev/recipes/adopting-nx/migration-cra',
+    bodyLines: [
+      `- Execute "${buildCommand}" twice to see the computation caching in action.`,
+    ],
   });
 
-  addDependencies(
-    options.pmc,
-    '@testing-library/jest-dom',
-    'eslint-config-react-app',
-    'web-vitals',
-    'jest-watch-typeahead'
-  );
-
-  if (options.isVite) {
-    addDependencies(options.pmc, 'vite', 'vitest', '@vitejs/plugin-react');
-  } else {
-    addDependencies(
-      options.pmc,
-      '@craco/craco',
-      'cross-env',
-      'react-scripts',
-      'tsconfig-paths-webpack-plugin'
-    );
-  }
-
-  output.log({ title: '🎉 Done!' });
   output.note({
     title: 'First time using Nx? Check out this interactive Nx tutorial.',
     bodyLines: [
@@ -173,19 +184,6 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
       title: `A new ${indexPath} has been created. Compare it to the previous ${oldIndexPath} file and make any changes needed, then delete the previous file.`,
     });
   }
-
-  output.note({
-    title: 'Or, you can try the commands!',
-    bodyLines: [
-      options.integrated ? `npx nx serve ${options.reactAppName}` : 'npm start',
-      options.integrated
-        ? `npx nx build ${options.reactAppName}`
-        : 'npm run build',
-      options.integrated ? `npx nx test ${options.reactAppName}` : `npm test`,
-      ` `,
-      `https://nx.dev/getting-started/intro#10-try-the-commands`,
-    ],
-  });
 }
 
 function createTempWorkspace(options: NormalizedOptions) {
