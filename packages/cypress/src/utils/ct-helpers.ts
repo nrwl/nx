@@ -39,7 +39,7 @@ export function getTempTailwindPath(context: ExecutorContext) {
 }
 
 /**
- * Checks if the childProjectName is a decendent of the parentProjectName
+ * Checks if the childProjectName is a descendent of the parentProjectName
  * in the project graph
  **/
 export function isCtProjectUsingBuildProject(

@@ -52,6 +52,8 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'sass',
     'stylus',
     'tailwindcss',
+    // used in the CT angular plugin where Cy is already installed to use it.
+    'cypress',
   ],
   cli: ['nx'],
   cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress', 'vite'],
