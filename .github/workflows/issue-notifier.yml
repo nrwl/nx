@@ -18,24 +18,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Use Node.js ${{ matrix.node_version }}
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.2
+
+      - name: Set node
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'pnpm'
+          registry-url: http://localhost:4872
 
-      - name: Yarn cache directory path
-        id: yarn-cache-dir-path
-        shell: bash
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache yarn
+      - name: Cache node_modules
+        id: cache-modules
         uses: actions/cache@v3
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: yarn-${{ hashFiles('yarn.lock') }}
+          lookup-only: true
+          path: '**/node_modules'
+          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install packages
-        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+        run: pnpm install --frozen-lockfile
 
       - name: Download artifact
         id: download-artifact

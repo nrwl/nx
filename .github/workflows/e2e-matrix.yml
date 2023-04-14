@@ -39,10 +39,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.2
+
       - name: Set node
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
+          cache: 'pnpm'
 
       - name: Cache node_modules
         id: cache-modules
@@ -54,7 +59,7 @@ jobs:
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+        run: pnpm install --frozen-lockfile
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -319,16 +324,15 @@ jobs:
       - name: Prepare dir for output
         run: mkdir -p outputs
 
-      - name: Install PNPM
-        if: ${{ matrix.package_manager == 'pnpm' }}
-        uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v2
         with:
-          version: 7.30.5
+          version: 8.2
 
-      - name: Use Node.js ${{ matrix.node_version }}
+      - name: Set node
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
+          cache: 'pnpm'
           registry-url: http://localhost:4872
 
       - name: Cache node_modules
@@ -339,8 +343,7 @@ jobs:
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
 
       - name: Install packages
-        if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+        run: pnpm install --frozen-lockfile
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
