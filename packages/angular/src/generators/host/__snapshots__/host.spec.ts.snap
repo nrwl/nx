@@ -161,24 +161,24 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 9`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
     },
-    "production": Object {
+    "production": {
       "outputHashing": "media",
     },
   },
   "defaultConfiguration": "production",
-  "dependsOn": Array [
+  "dependsOn": [
     "build",
   ],
   "executor": "@nrwl/angular:webpack-server",
-  "options": Object {
-    "customWebpackConfig": Object {
+  "options": {
+    "customWebpackConfig": {
       "path": "apps/test/webpack.server.config.js",
     },
     "main": "apps/test/server.ts",
@@ -189,13 +189,13 @@ Object {
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 10`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
       "browserTarget": "test:build:development",
       "serverTarget": "test:server:development",
     },
-    "production": Object {
+    "production": {
       "browserTarget": "test:build:production",
       "serverTarget": "test:server:production",
     },

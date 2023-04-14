@@ -77,7 +77,7 @@ describe('checkTargets', () => {
       .toThrowErrorMatchingInlineSnapshot(`
       "ng-app is still targeted by some projects:
 
-      \\"ng-app:serve\\" is used by \\"ng-app-e2e\\"
+      "ng-app:serve" is used by "ng-app-e2e"
       "
     `);
   });

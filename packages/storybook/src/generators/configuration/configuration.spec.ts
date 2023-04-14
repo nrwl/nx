@@ -280,18 +280,18 @@ describe('@nrwl/storybook:configuration', () => {
 
       expect(enquirer.prompt).toHaveBeenCalled();
       expect(tsconfigJson.references).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "path": "./tsconfig.lib.json",
-        },
-        Object {
-          "path": "./tsconfig.spec.json",
-        },
-        Object {
-          "path": "./.storybook/tsconfig.json",
-        },
-      ]
-    `);
+        [
+          {
+            "path": "./tsconfig.lib.json",
+          },
+          {
+            "path": "./tsconfig.spec.json",
+          },
+          {
+            "path": "./.storybook/tsconfig.json",
+          },
+        ]
+      `);
     });
 
     it("should update the project's .eslintrc.json if config exists", async () => {
@@ -321,12 +321,12 @@ describe('@nrwl/storybook:configuration', () => {
       expect(enquirer.prompt).toHaveBeenCalled();
       expect(readJson(tree, 'libs/test-ui-lib2/.eslintrc.json').parserOptions)
         .toMatchInlineSnapshot(`
-      Object {
-        "project": Array [
-          "libs/test-ui-lib2/.storybook/tsconfig.json",
-        ],
-      }
-    `);
+        {
+          "project": [
+            "libs/test-ui-lib2/.storybook/tsconfig.json",
+          ],
+        }
+      `);
     });
 
     it('should have the proper typings', async () => {
@@ -408,14 +408,14 @@ describe('@nrwl/storybook:configuration', () => {
           'static-storybook'
         ]
       ).toMatchInlineSnapshot(`
-        Object {
-          "configurations": Object {
-            "ci": Object {
+        {
+          "configurations": {
+            "ci": {
               "buildTarget": "test-ui-lib:build-storybook:ci",
             },
           },
           "executor": "@nrwl/web:file-server",
-          "options": Object {
+          "options": {
             "buildTarget": "test-ui-lib:build-storybook",
             "staticFilePath": "dist/storybook/test-ui-lib",
           },
@@ -439,14 +439,14 @@ describe('@nrwl/storybook:configuration', () => {
           'static-storybook'
         ]
       ).toMatchInlineSnapshot(`
-        Object {
-          "configurations": Object {
-            "ci": Object {
+        {
+          "configurations": {
+            "ci": {
               "buildTarget": "test-ui-lib:build-storybook:ci",
             },
           },
           "executor": "@nrwl/web:file-server",
-          "options": Object {
+          "options": {
             "buildTarget": "test-ui-lib:build-storybook",
             "staticFilePath": "dist/storybook/test-ui-lib",
           },
@@ -454,14 +454,14 @@ describe('@nrwl/storybook:configuration', () => {
       `);
       expect(readProjectConfiguration(tree, 'test-ui-lib-e2e').targets.e2e)
         .toMatchInlineSnapshot(`
-        Object {
-          "configurations": Object {
-            "ci": Object {
+        {
+          "configurations": {
+            "ci": {
               "devServerTarget": "test-ui-lib:static-storybook:ci",
             },
           },
           "executor": "@nrwl/cypress:cypress",
-          "options": Object {
+          "options": {
             "cypressConfig": "apps/test-ui-lib-e2e/cypress.config.ts",
             "devServerTarget": "test-ui-lib:storybook",
             "testingType": "e2e",

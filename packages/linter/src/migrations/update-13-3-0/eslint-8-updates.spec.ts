@@ -90,7 +90,7 @@ describe('eslint8Updates()', () => {
     ).toMatchInlineSnapshot(`
       "import { ESLintUtils } from '@typescript-eslint/experimental-utils';
 
-      // NOTE: The rule will be available in ESLint configs as \\"@nrwl/nx/workspace/existing-rule\\"
+      // NOTE: The rule will be available in ESLint configs as "@nrwl/nx/workspace/existing-rule"
       export const RULE_NAME = 'existing-rule';
 
       export const rule = ESLintUtils.RuleCreator(() => __filename)({

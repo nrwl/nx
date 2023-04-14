@@ -44,29 +44,29 @@ describe('15.0.0 migration (add-storybook-inputs)', () => {
 
     const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
             "!{projectRoot}/.storybook/**/*",
             "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
           ],
-          "sharedGlobals": Array [],
+          "sharedGlobals": [],
         },
-        "targetDefaults": Object {
-          "build-storybook": Object {
-            "inputs": Array [
+        "targetDefaults": {
+          "build-storybook": {
+            "inputs": [
               "default",
               "^production",
               "{workspaceRoot}/.storybook/**/*",
             ],
           },
-          "build-storybook2": Object {
-            "inputs": Array [
+          "build-storybook2": {
+            "inputs": [
               "default",
               "^production",
               "{workspaceRoot}/.storybook/**/*",
@@ -107,29 +107,29 @@ describe('15.0.0 migration (add-storybook-inputs)', () => {
 
     const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
             "!{projectRoot}/.storybook/**/*",
             "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
           ],
-          "sharedGlobals": Array [],
+          "sharedGlobals": [],
         },
-        "targetDefaults": Object {
-          "build-storybook": Object {
-            "inputs": Array [
+        "targetDefaults": {
+          "build-storybook": {
+            "inputs": [
               "default",
               "^production",
               "{workspaceRoot}/.storybook/**/*",
             ],
           },
-          "build-storybook2": Object {
-            "inputs": Array [
+          "build-storybook2": {
+            "inputs": [
               "default",
               "^production",
               "{workspaceRoot}/.storybook/**/*",

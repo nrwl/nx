@@ -246,9 +246,9 @@ projects: getJestProjects()
 };`);
       expect(readProjectConfiguration(tree, 'my-project').targets.test)
         .toMatchInlineSnapshot(`
-        Object {
+        {
           "executor": "@nrwl/jest:jest",
-          "options": Object {
+          "options": {
             "jestConfig": "jest.config.app.ts",
           },
         }
@@ -312,8 +312,8 @@ projects: getJestProjects()
       await jestInitGenerator(tree, {});
       const extensionsJson = readJson(tree, '.vscode/extensions.json');
       expect(extensionsJson).toMatchInlineSnapshot(`
-        Object {
-          "recommendations": Array [
+        {
+          "recommendations": [
             "nrwl.angular-console",
             "angular.ng-template",
             "dbaeumer.vscode-eslint",

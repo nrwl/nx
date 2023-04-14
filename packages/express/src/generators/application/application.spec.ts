@@ -20,18 +20,18 @@ describe('app', () => {
 
     const tsconfig = readJson(appTree, 'apps/my-node-app/tsconfig.json');
     expect(tsconfig).toMatchInlineSnapshot(`
-      Object {
-        "compilerOptions": Object {
+      {
+        "compilerOptions": {
           "esModuleInterop": true,
         },
         "extends": "../../tsconfig.base.json",
-        "files": Array [],
-        "include": Array [],
-        "references": Array [
-          Object {
+        "files": [],
+        "include": [],
+        "references": [
+          {
             "path": "./tsconfig.app.json",
           },
-          Object {
+          {
             "path": "./tsconfig.spec.json",
           },
         ],
@@ -40,36 +40,36 @@ describe('app', () => {
 
     const eslintrcJson = readJson(appTree, 'apps/my-node-app/.eslintrc.json');
     expect(eslintrcJson).toMatchInlineSnapshot(`
-      Object {
-        "extends": Array [
+      {
+        "extends": [
           "../../.eslintrc.json",
         ],
-        "ignorePatterns": Array [
+        "ignorePatterns": [
           "!**/*",
         ],
-        "overrides": Array [
-          Object {
-            "files": Array [
+        "overrides": [
+          {
+            "files": [
               "*.ts",
               "*.tsx",
               "*.js",
               "*.jsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
-          Object {
-            "files": Array [
+          {
+            "files": [
               "*.ts",
               "*.tsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
-          Object {
-            "files": Array [
+          {
+            "files": [
               "*.js",
               "*.jsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
         ],
       }
@@ -83,26 +83,26 @@ describe('app', () => {
     const tsconfig = readJson(appTree, 'apps/my-node-app/tsconfig.app.json');
     expect(tsconfig.compilerOptions.types).toContain('express');
     expect(tsconfig).toMatchInlineSnapshot(`
-Object {
-  "compilerOptions": Object {
-    "module": "commonjs",
-    "outDir": "../../dist/out-tsc",
-    "types": Array [
-      "node",
-      "express",
-    ],
-  },
-  "exclude": Array [
-    "jest.config.ts",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts",
-  ],
-  "extends": "./tsconfig.json",
-  "include": Array [
-    "src/**/*.ts",
-  ],
-}
-`);
+      {
+        "compilerOptions": {
+          "module": "commonjs",
+          "outDir": "../../dist/out-tsc",
+          "types": [
+            "node",
+            "express",
+          ],
+        },
+        "exclude": [
+          "jest.config.ts",
+          "src/**/*.spec.ts",
+          "src/**/*.test.ts",
+        ],
+        "extends": "./tsconfig.json",
+        "include": [
+          "src/**/*.ts",
+        ],
+      }
+    `);
   });
 
   describe('--js flag', () => {

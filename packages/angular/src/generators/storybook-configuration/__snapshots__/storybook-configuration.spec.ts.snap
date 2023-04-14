@@ -14,7 +14,7 @@ exports[`StorybookConfiguration generator should configure storybook to use webp
 `;
 
 exports[`StorybookConfiguration generator should generate in the correct folder 1`] = `
-Array [
+[
   ".eslintignore",
   ".eslintrc.json",
   ".gitignore",
@@ -146,7 +146,7 @@ Array [
 `;
 
 exports[`StorybookConfiguration generator should generate the right files 1`] = `
-Array [
+[
   ".eslintignore",
   ".eslintrc.json",
   ".gitignore",

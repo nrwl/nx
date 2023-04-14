@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`preset should create files (preset = angular-monorepo) 1`] = `
-Array [
+[
   "project.json",
   "src",
   "tsconfig.app.json",
@@ -14,7 +14,7 @@ Array [
 `;
 
 exports[`preset should create files (preset = angular-monorepo) 2`] = `
-Array [
+[
   "assets",
   "favicon.ico",
   "index.html",
@@ -26,7 +26,7 @@ Array [
 `;
 
 exports[`preset should create files (preset = angular-monorepo) 3`] = `
-Array [
+[
   "app.component.css",
   "app.component.html",
   "app.component.spec.ts",
@@ -37,39 +37,39 @@ Array [
 `;
 
 exports[`preset should create files (preset = react-standalone bundler = vite) 1`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
       "buildTarget": "proj:build:development",
       "hmr": true,
     },
-    "production": Object {
+    "production": {
       "buildTarget": "proj:build:production",
       "hmr": false,
     },
   },
   "defaultConfiguration": "development",
   "executor": "@nrwl/vite:dev-server",
-  "options": Object {
+  "options": {
     "buildTarget": "proj:build",
   },
 }
 `;
 
 exports[`preset should create files (preset = react-standalone bundler = webpack) 1`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
       "buildTarget": "proj:build:development",
     },
-    "production": Object {
+    "production": {
       "buildTarget": "proj:build:production",
       "hmr": false,
     },
   },
   "defaultConfiguration": "development",
   "executor": "@nrwl/webpack:dev-server",
-  "options": Object {
+  "options": {
     "buildTarget": "proj:build",
     "hmr": true,
   },

@@ -230,8 +230,8 @@ describe('pnpm LockFile utility', () => {
       expect(Object.keys(graph.externalNodes).length).toEqual(213);
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==",
             "packageName": "minimatch",
             "version": "3.1.2",
@@ -241,8 +241,8 @@ describe('pnpm LockFile utility', () => {
         }
       `);
       expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "sha512-362NP+zlprccbEt/SkxKfRMHnNY85V74mVnpUpNyr3F35covl09Kec7/sEFLt3RA4oXmewtoaanoIf67SE5Y5g==",
             "packageName": "minimatch",
             "version": "5.1.1",
@@ -252,8 +252,8 @@ describe('pnpm LockFile utility', () => {
         }
       `);
       expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "e33995295353137d0e2a79cad3efec01f9bae57a41f44a882c3eb57212cad3d3",
             "packageName": "postgres",
             "version": "github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
@@ -264,8 +264,8 @@ describe('pnpm LockFile utility', () => {
       `);
       expect(graph.externalNodes['npm:eslint-plugin-disable-autofix'])
         .toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "sha512-zYDdpaj+1Al8Ki3WpY2I9bOAd8NSgFWGT7yR6KemSi25qWwDMNArnR2q6gDEDKSw+KuYY4shFxkY/JpoNF64tg==",
             "packageName": "eslint-plugin-disable-autofix",
             "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",

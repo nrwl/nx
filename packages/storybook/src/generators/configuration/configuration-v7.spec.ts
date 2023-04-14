@@ -112,18 +112,18 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
       );
 
       expect(tsconfigJson.references).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "path": "./tsconfig.lib.json",
-        },
-        Object {
-          "path": "./tsconfig.spec.json",
-        },
-        Object {
-          "path": "./.storybook/tsconfig.json",
-        },
-      ]
-    `);
+        [
+          {
+            "path": "./tsconfig.lib.json",
+          },
+          {
+            "path": "./tsconfig.spec.json",
+          },
+          {
+            "path": "./.storybook/tsconfig.json",
+          },
+        ]
+      `);
     });
 
     it("should update the project's .eslintrc.json if config exists", async () => {
@@ -147,12 +147,12 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
 
       expect(readJson(tree, 'libs/test-ui-lib2/.eslintrc.json').parserOptions)
         .toMatchInlineSnapshot(`
-      Object {
-        "project": Array [
-          "libs/test-ui-lib2/.storybook/tsconfig.json",
-        ],
-      }
-    `);
+        {
+          "project": [
+            "libs/test-ui-lib2/.storybook/tsconfig.json",
+          ],
+        }
+      `);
     });
 
     it('should have the proper typings', async () => {

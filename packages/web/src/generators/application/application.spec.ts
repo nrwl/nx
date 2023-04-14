@@ -78,18 +78,18 @@ describe('app', () => {
       expect(tree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = readJson(tree, 'apps/my-app-e2e/tsconfig.json');
       expect(tsconfigE2E).toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
+        {
+          "compilerOptions": {
             "allowJs": true,
             "outDir": "../../dist/out-tsc",
             "sourceMap": false,
-            "types": Array [
+            "types": [
               "cypress",
               "node",
             ],
           },
           "extends": "../../tsconfig.base.json",
-          "include": Array [
+          "include": [
             "src/**/*.ts",
             "src/**/*.js",
             "cypress.config.ts",
@@ -99,36 +99,36 @@ describe('app', () => {
 
       const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
       expect(eslintJson).toMatchInlineSnapshot(`
-        Object {
-          "extends": Array [
+        {
+          "extends": [
             "../../.eslintrc.json",
           ],
-          "ignorePatterns": Array [
+          "ignorePatterns": [
             "!**/*",
           ],
-          "overrides": Array [
-            Object {
-              "files": Array [
+          "overrides": [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
           ],
         }
@@ -437,14 +437,14 @@ describe('app', () => {
       const projectConfiguration = readProjectConfiguration(tree, 'my-app');
       expect(projectConfiguration.targets.test).toBeUndefined();
       expect(projectConfiguration.targets.lint).toMatchInlineSnapshot(`
-        Object {
+        {
           "executor": "@nrwl/linter:eslint",
-          "options": Object {
-            "lintFilePatterns": Array [
+          "options": {
+            "lintFilePatterns": [
               "apps/my-app/**/*.ts",
             ],
           },
-          "outputs": Array [
+          "outputs": [
             "{options.outputFile}",
           ],
         }
@@ -462,7 +462,7 @@ describe('app', () => {
         readJson(tree, 'apps/my-cool-app/tsconfig.spec.json').compilerOptions
           .types
       ).toMatchInlineSnapshot(`
-        Array [
+        [
           "jest",
           "node",
         ]
@@ -488,7 +488,7 @@ describe('app', () => {
         readJson(tree, 'apps/my-vite-app/tsconfig.spec.json').compilerOptions
           .types
       ).toMatchInlineSnapshot(`
-        Array [
+        [
           "jest",
           "node",
         ]
@@ -511,7 +511,7 @@ describe('app', () => {
         readJson(tree, 'apps/my-webpack-app/tsconfig.spec.json').compilerOptions
           .types
       ).toMatchInlineSnapshot(`
-        Array [
+        [
           "vitest/globals",
           "vitest/importMeta",
           "vite/client",
@@ -549,7 +549,7 @@ describe('app', () => {
           preset: '../../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
-            '^.+\\\\\\\\.[tj]s$': 'babel-jest',
+            '^.+\\\\.[tj]s$': 'babel-jest',
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/apps/my-app',
@@ -572,7 +572,7 @@ describe('app', () => {
           preset: '../../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
-            '^.+\\\\\\\\.[tj]s$': '@swc/jest',
+            '^.+\\\\.[tj]s$': '@swc/jest',
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/apps/my-app',

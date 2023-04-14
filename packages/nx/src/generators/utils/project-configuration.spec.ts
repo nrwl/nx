@@ -34,14 +34,14 @@ describe('project configuration', () => {
     addProjectConfiguration(tree, 'test', projectConfiguration);
 
     expect(readProjectConfiguration(tree, 'test')).toMatchInlineSnapshot(`
-        Object {
-          "$schema": "../../node_modules/nx/schemas/project-schema.json",
-          "name": "test",
-          "root": "libs/test",
-          "sourceRoot": "libs/test/src",
-          "targets": Object {},
-        }
-      `);
+      {
+        "$schema": "../../node_modules/nx/schemas/project-schema.json",
+        "name": "test",
+        "root": "libs/test",
+        "sourceRoot": "libs/test/src",
+        "targets": {},
+      }
+    `);
     expect(tree.exists('libs/test/project.json')).toBeTruthy();
   });
 

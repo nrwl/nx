@@ -1,11 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`@nrwl/vite:init dependencies for package.json should add vite packages and react-related dependencies for vite 1`] = `
-Object {
-  "dependencies": Object {
+{
+  "dependencies": {
     "existing": "1.0.0",
   },
-  "devDependencies": Object {
+  "devDependencies": {
     "@nrwl/js": "0.0.1",
     "@nrwl/vite": "0.0.1",
     "@vitejs/plugin-react": "^3.0.0",

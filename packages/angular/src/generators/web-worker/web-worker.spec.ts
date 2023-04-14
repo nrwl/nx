@@ -88,7 +88,7 @@ describe('webWorker generator', () => {
     `);
     expect(tree.read(`apps/${appName}/src/app/test-worker.worker.ts`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "/// <reference lib=\\"webworker\\" />
+      "/// <reference lib="webworker" />
 
       addEventListener('message', ({ data }) => {
         const response = \`worker response to \${data}\`;

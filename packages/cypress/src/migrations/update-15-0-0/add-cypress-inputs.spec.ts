@@ -44,26 +44,26 @@ describe('15.0.0 migration (add-cypress-inputs)', () => {
 
     const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
           ],
-          "sharedGlobals": Array [],
+          "sharedGlobals": [],
         },
-        "targetDefaults": Object {
-          "e2e": Object {
-            "inputs": Array [
+        "targetDefaults": {
+          "e2e": {
+            "inputs": [
               "default",
               "^production",
             ],
           },
-          "e2e2": Object {
-            "inputs": Array [
+          "e2e2": {
+            "inputs": [
               "default",
               "^production",
             ],
@@ -107,29 +107,29 @@ describe('15.0.0 migration (add-cypress-inputs)', () => {
 
     const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
             "!{projectRoot}/cypress/**/*",
             "!{projectRoot}/**/*.cy.[jt]s?(x)",
             "!{projectRoot}/cypress.config.[jt]s",
           ],
-          "sharedGlobals": Array [],
+          "sharedGlobals": [],
         },
-        "targetDefaults": Object {
-          "e2e": Object {
-            "inputs": Array [
+        "targetDefaults": {
+          "e2e": {
+            "inputs": [
               "default",
               "^production",
             ],
           },
-          "e2e2": Object {
-            "inputs": Array [
+          "e2e2": {
+            "inputs": [
               "default",
               "^production",
             ],

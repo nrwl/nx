@@ -65,13 +65,13 @@ describe('setupSSR', () => {
       .toMatchInlineSnapshot(`
       "/* To learn more about this file see: https://angular.io/config/tsconfig. */
       {
-        \\"extends\\": \\"./tsconfig.app.json\\",
-        \\"compilerOptions\\": {
-          \\"outDir\\": \\"../../out-tsc/server\\",
-          \\"target\\": \\"es2019\\",
-          \\"types\\": [\\"node\\"]
+        "extends": "./tsconfig.app.json",
+        "compilerOptions": {
+          "outDir": "../../out-tsc/server",
+          "target": "es2019",
+          "types": ["node"]
         },
-        \\"files\\": [\\"src/main.server.ts\\", \\"server.ts\\"]
+        "files": ["src/main.server.ts", "server.ts"]
       }
       "
     `);
@@ -122,10 +122,10 @@ describe('setupSSR', () => {
     }
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
     expect(nxJson.tasksRunnerOptions).toMatchInlineSnapshot(`
-      Object {
-        "default": Object {
-          "options": Object {
-            "cacheableOperations": Array [
+      {
+        "default": {
+          "options": {
+            "cacheableOperations": [
               "build",
               "lint",
               "test",

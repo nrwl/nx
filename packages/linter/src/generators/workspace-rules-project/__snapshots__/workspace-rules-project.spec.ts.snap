@@ -33,18 +33,18 @@ module.exports = {
 
 exports[`@nrwl/linter:workspace-rules-project should generate the required files 2`] = `
 "{
-  \\"extends\\": \\"../../tsconfig.base.json\\",
-  \\"compilerOptions\\": {
-    \\"module\\": \\"commonjs\\"
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs"
   },
-  \\"files\\": [],
-  \\"include\\": [],
-  \\"references\\": [
+  "files": [],
+  "include": [],
+  "references": [
     {
-      \\"path\\": \\"./tsconfig.lint.json\\"
+      "path": "./tsconfig.lint.json"
     },
     {
-      \\"path\\": \\"./tsconfig.spec.json\\"
+      "path": "./tsconfig.spec.json"
     }
   ]
 }
@@ -53,26 +53,26 @@ exports[`@nrwl/linter:workspace-rules-project should generate the required files
 
 exports[`@nrwl/linter:workspace-rules-project should generate the required files 3`] = `
 "{
-  \\"extends\\": \\"./tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"outDir\\": \\"../../dist/out-tsc\\",
-    \\"types\\": [\\"node\\"]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": ["node"]
   },
-  \\"exclude\\": [\\"**/*.spec.ts\\"],
-  \\"include\\": [\\"**/*.ts\\"]
+  "exclude": ["**/*.spec.ts"],
+  "include": ["**/*.ts"]
 }
 "
 `;
 
 exports[`@nrwl/linter:workspace-rules-project should generate the required files 4`] = `
 "{
-  \\"extends\\": \\"./tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"outDir\\": \\"../../dist/out-tsc\\",
-    \\"module\\": \\"commonjs\\",
-    \\"types\\": [\\"jest\\", \\"node\\"]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "module": "commonjs",
+    "types": ["jest", "node"]
   },
-  \\"include\\": [\\"jest.config.ts\\", \\"**/*.test.ts\\", \\"**/*.spec.ts\\", \\"**/*.d.ts\\"]
+  "include": ["jest.config.ts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"]
 }
 "
 `;
@@ -83,7 +83,7 @@ export default {
   displayName: 'eslint-rules',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/tools/eslint-rules',

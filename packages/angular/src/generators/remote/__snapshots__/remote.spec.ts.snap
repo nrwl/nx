@@ -190,24 +190,24 @@ export const remoteRoutes: Route[] = [
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 11`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
     },
-    "production": Object {
+    "production": {
       "outputHashing": "media",
     },
   },
   "defaultConfiguration": "production",
-  "dependsOn": Array [
+  "dependsOn": [
     "build",
   ],
   "executor": "@nrwl/angular:webpack-server",
-  "options": Object {
-    "customWebpackConfig": Object {
+  "options": {
+    "customWebpackConfig": {
       "path": "apps/test/webpack.server.config.js",
     },
     "main": "apps/test/server.ts",
@@ -228,13 +228,13 @@ export const remoteRoutes: Route[] = [
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 13`] = `
-Object {
-  "dependsOn": Array [
+{
+  "dependsOn": [
     "build",
     "server",
   ],
   "executor": "nx:run-commands",
-  "options": Object {
+  "options": {
     "command": "PORT=4201 node dist/apps/test/server/main.js",
   },
 }

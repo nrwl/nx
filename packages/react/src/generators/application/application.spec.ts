@@ -139,18 +139,18 @@ describe('app', () => {
       expect(appTree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = readJson(appTree, 'apps/my-app-e2e/tsconfig.json');
       expect(tsconfigE2E).toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
+        {
+          "compilerOptions": {
             "allowJs": true,
             "outDir": "../../dist/out-tsc",
             "sourceMap": false,
-            "types": Array [
+            "types": [
               "cypress",
               "node",
             ],
           },
           "extends": "../../tsconfig.base.json",
-          "include": Array [
+          "include": [
             "src/**/*.ts",
             "src/**/*.js",
             "cypress.config.ts",
@@ -446,14 +446,14 @@ describe('app', () => {
       expect(projectsConfigurations.get('my-app').targets.test).toBeUndefined();
       expect(projectsConfigurations.get('my-app').targets.lint)
         .toMatchInlineSnapshot(`
-        Object {
+        {
           "executor": "@nrwl/linter:eslint",
-          "options": Object {
-            "lintFilePatterns": Array [
+          "options": {
+            "lintFilePatterns": [
               "apps/my-app/**/*.{ts,tsx,js,jsx}",
             ],
           },
-          "outputs": Array [
+          "outputs": [
             "{options.outputFile}",
           ],
         }
@@ -531,37 +531,37 @@ describe('app', () => {
 
     const eslintJson = readJson(appTree, '/apps/my-app/.eslintrc.json');
     expect(eslintJson).toMatchInlineSnapshot(`
-      Object {
-        "extends": Array [
+      {
+        "extends": [
           "plugin:@nrwl/nx/react",
           "../../.eslintrc.json",
         ],
-        "ignorePatterns": Array [
+        "ignorePatterns": [
           "!**/*",
         ],
-        "overrides": Array [
-          Object {
-            "files": Array [
+        "overrides": [
+          {
+            "files": [
               "*.ts",
               "*.tsx",
               "*.js",
               "*.jsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
-          Object {
-            "files": Array [
+          {
+            "files": [
               "*.ts",
               "*.tsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
-          Object {
-            "files": Array [
+          {
+            "files": [
               "*.js",
               "*.jsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
         ],
       }

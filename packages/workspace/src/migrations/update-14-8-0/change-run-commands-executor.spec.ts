@@ -31,18 +31,18 @@ describe('changeRunCommandsExecutor', () => {
     await changeRunCommandsExecutor(tree);
 
     expect(readProjectConfiguration(tree, 'proj1')).toMatchInlineSnapshot(`
-      Object {
+      {
         "$schema": "../node_modules/nx/schemas/project-schema.json",
         "name": "proj1",
         "root": "proj1",
-        "targets": Object {
-          "notScriptTarget": Object {
+        "targets": {
+          "notScriptTarget": {
             "executor": "@nrwl/workspace:something",
-            "options": Object {},
+            "options": {},
           },
-          "scriptTarget": Object {
+          "scriptTarget": {
             "executor": "nx:run-commands",
-            "options": Object {},
+            "options": {},
           },
         },
       }

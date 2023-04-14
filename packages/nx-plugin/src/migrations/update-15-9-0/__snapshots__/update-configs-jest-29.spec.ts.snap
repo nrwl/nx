@@ -17,7 +17,7 @@ module.exports = {
    * It's recommend you update to the latest format.
    * You can do this by removing snapshotFormat property
    * and running tests with --update-snapshot flag.
-   * Example: \\"nx affected --targets=test --update-snapshot\\"
+   * Example: "nx affected --targets=test --update-snapshot"
    * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
    */
   snapshotFormat: { escapeString: true, printBasicPrototype: true },
@@ -32,7 +32,7 @@ export default {
   preset: '../../jest.preset.js',
   globals: {},
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -47,7 +47,7 @@ export default {
    * It's recommend you update to the latest format.
    * You can do this by removing snapshotFormat property
    * and running tests with --update-snapshot flag.
-   * Example: From within the project directory, run \\"nx test --update-snapshot\\"
+   * Example: From within the project directory, run "nx test --update-snapshot"
    * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
    */
   snapshotFormat: { escapeString: true, printBasicPrototype: true },
@@ -58,7 +58,7 @@ export default {
 exports[`Nx Plugin Migration - jest 29 update configs should add snapshot config with no root preset 2`] = `
 "module.exports = {
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -80,7 +80,7 @@ exports[`Nx Plugin Migration - jest 29 update configs should add snapshot config
    * It's recommend you update to the latest format.
    * You can do this by removing snapshotFormat property
    * and running tests with --update-snapshot flag.
-   * Example: From within the project directory, run \\"nx test --update-snapshot\\"
+   * Example: From within the project directory, run "nx test --update-snapshot"
    * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
    */
   snapshotFormat: { escapeString: true, printBasicPrototype: true },
@@ -95,7 +95,7 @@ export default {
   preset: '../../jest.preset.js',
   globals: {},
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -111,7 +111,7 @@ export default {
 exports[`Nx Plugin Migration - jest 29 update configs should be idempotent 2`] = `
 "module.exports = {
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -189,7 +189,7 @@ export default {
   preset: '../../jest.preset.js',
   globals: {},
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -205,7 +205,7 @@ export default {
 exports[`Nx Plugin Migration - jest 29 update configs should update jest.config.ts 2`] = `
 "module.exports = {
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -236,7 +236,7 @@ module.exports = {
    * It's recommend you update to the latest format.
    * You can do this by removing snapshotFormat property
    * and running tests with --update-snapshot flag.
-   * Example: \\"nx affected --targets=test --update-snapshot\\"
+   * Example: "nx affected --targets=test --update-snapshot"
    * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
    */
   snapshotFormat: { escapeString: true, printBasicPrototype: true },
@@ -251,7 +251,7 @@ export default {
   preset: '../../jest.preset.js',
   globals: {},
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -267,7 +267,7 @@ export default {
 exports[`Nx Plugin Migration - jest 29 update configs should update root preset 3`] = `
 "module.exports = {
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -310,7 +310,7 @@ module.exports = {
    * It's recommend you update to the latest format.
    * You can do this by removing snapshotFormat property
    * and running tests with --update-snapshot flag.
-   * Example: \\"nx affected --targets=test --update-snapshot\\"
+   * Example: "nx affected --targets=test --update-snapshot"
    * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
    */
   snapshotFormat: { escapeString: true, printBasicPrototype: true },
@@ -321,7 +321,7 @@ module.exports = {
 exports[`Nx Plugin Migration - jest 29 update configs should work if not using ts-jest transformer 1`] = `
 "export default {
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': 'babel-jest',
+    '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
   displayName: 'jest',
@@ -333,7 +333,7 @@ exports[`Nx Plugin Migration - jest 29 update configs should work if not using t
 exports[`Nx Plugin Migration - jest 29 update configs should work if not using ts-jest transformer 2`] = `
 "module.exports = {
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': 'babel-jest',
+    '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
   displayName: 'jest',
@@ -345,7 +345,7 @@ exports[`Nx Plugin Migration - jest 29 update configs should work if not using t
 exports[`Nx Plugin Migration - jest 29 update configs should work snapshotFormat is defined 1`] = `
 "export default {
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': 'babel-jest',
+    '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
   globals: { something: 'else',
 abc: [1234, true, {abc: 'yes'}] },
@@ -360,7 +360,7 @@ abc: [1234, true, {abc: 'yes'}] },
 exports[`Nx Plugin Migration - jest 29 update configs should work snapshotFormat is defined 2`] = `
 "module.exports = {
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': ['ts-jest', {
+    '^.+\\\\.[tj]sx?$': ['ts-jest', {
           tsconfig: '<rootDir>/tsconfig.spec.json'
       }],
   },
@@ -380,7 +380,7 @@ exports[`Nx Plugin Migration - jest 29 update configs should work with jest-pres
   transform: {
     '^.+.(ts|mjs|js|html)$': ['jest-preset-angular', {
       tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\\\.(html|svg)$',
+      stringifyContentPathRegex: '\\.(html|svg)$',
     }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
@@ -396,7 +396,7 @@ exports[`Nx Plugin Migration - jest 29 update configs should work with jest-pres
   transform: {
     '^.+.(ts|mjs|js|html)$': ['jest-preset-angular', {
       tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\\\.(html|svg)$',
+      stringifyContentPathRegex: '\\.(html|svg)$',
     }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
@@ -413,7 +413,7 @@ export default {
   preset: '../../jest.preset.js',
   globals: {},
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -429,7 +429,7 @@ export default {
 exports[`Nx Plugin Migration - jest 29 update configs should work with multiple projects + configs 2`] = `
 "module.exports = {
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -456,7 +456,7 @@ export default {
   preset: '../../jest.preset.js',
   globals: {},
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -472,7 +472,7 @@ export default {
 exports[`Nx Plugin Migration - jest 29 update configs should work with multiple projects + configs 4`] = `
 "module.exports = {
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',

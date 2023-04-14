@@ -4,7 +4,7 @@ exports[`ensureViteConfigIsCorrect should add build and test options if defineCo
 "import dts from 'vite-plugin-dts';
 import { join } from 'path';
 
-    /// <reference types=\\"vitest\\" />
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -25,7 +25,7 @@ import { join } from 'path';
       },
       rollupOptions: {
         // External packages that should not be bundled into your library.
-        external: [\\"'react', 'react-dom', 'react/jsx-runtime'\\"]
+        external: ["'react', 'react-dom', 'react/jsx-runtime'"]
       }
     },plugins: [
       dts({
@@ -72,7 +72,7 @@ import { defineConfig } from 'vite';
       },
       rollupOptions: {
         // External packages that should not be bundled into your library.
-        external: [\\"'react', 'react-dom', 'react/jsx-runtime'\\"]
+        external: ["'react', 'react-dom', 'react/jsx-runtime'"]
       }
     },plugins: [
                     ...[
@@ -124,7 +124,7 @@ import { defineConfig } from 'vite';
       },
       rollupOptions: {
         // External packages that should not be bundled into your library.
-        external: [\\"'react', 'react-dom', 'react/jsx-runtime'\\"]
+        external: ["'react', 'react-dom', 'react/jsx-runtime'"]
       }
     },plugins: [
                     ...[
@@ -175,7 +175,7 @@ import { defineConfig } from 'vite';
       },
       rollupOptions: {
         // External packages that should not be bundled into your library.
-        external: [\\"'react', 'react-dom', 'react/jsx-runtime'\\"]
+        external: ["'react', 'react-dom', 'react/jsx-runtime'"]
       }
     },test: {
         globals: true,
@@ -204,7 +204,7 @@ import { defineConfig } from 'vite';
 
 exports[`ensureViteConfigIsCorrect should add build options if it is using conditional config - do nothing for test 1`] = `
 "
-    /// <reference types=\\"vitest\\" />
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     export default defineConfig(({ command, mode, ssrBuild }) => {
       if (command === 'serve') {
@@ -218,7 +218,7 @@ exports[`ensureViteConfigIsCorrect should add build options if it is using condi
         ...{
           my: 'option',
         },
-        ...\\"\\\\n    // Configuration for building your library.\\\\n    // See: https://vitejs.dev/guide/build.html#library-mode\\\\n    build: {\\\\n      lib: {\\\\n        // Could also be a dictionary or array of multiple entry points.\\\\n        entry: 'src/index.ts',\\\\n        name: 'my-app',\\\\n        fileName: 'index',\\\\n        // Change this to the formats you want to support.\\\\n        // Don't forgot to update your package.json as well.\\\\n        formats: ['es', 'cjs']\\\\n      },\\\\n      rollupOptions: {\\\\n        // External packages that should not be bundled into your library.\\\\n        external: [\\\\\\"'react', 'react-dom', 'react/jsx-runtime'\\\\\\"]\\\\n      }\\\\n    },\\"
+        ..."\\n    // Configuration for building your library.\\n    // See: https://vitejs.dev/guide/build.html#library-mode\\n    build: {\\n      lib: {\\n        // Could also be a dictionary or array of multiple entry points.\\n        entry: 'src/index.ts',\\n        name: 'my-app',\\n        fileName: 'index',\\n        // Change this to the formats you want to support.\\n        // Don't forgot to update your package.json as well.\\n        formats: ['es', 'cjs']\\n      },\\n      rollupOptions: {\\n        // External packages that should not be bundled into your library.\\n        external: [\\"'react', 'react-dom', 'react/jsx-runtime'\\"]\\n      }\\n    },"
      }
       }
     })
@@ -260,7 +260,7 @@ import { defineConfig } from 'vite';
                   ...{
         my: 'option',
       },
-                  ...{\\"lib\\":{\\"entry\\":\\"src/index.ts\\",\\"name\\":\\"my-app\\",\\"fileName\\":\\"index\\",\\"formats\\":[\\"es\\",\\"cjs\\"]},\\"rollupOptions\\":{\\"external\\":[\\"'react', 'react-dom', 'react/jsx-runtime'\\"]}}
+                  ...{"lib":{"entry":"src/index.ts","name":"my-app","fileName":"index","formats":["es","cjs"]},"rollupOptions":{"external":["'react', 'react-dom', 'react/jsx-runtime'"]}}
                }
 
     });
@@ -271,7 +271,7 @@ exports[`ensureViteConfigIsCorrect should not do anything if cannot understand s
 
 exports[`ensureViteConfigIsCorrect should not do anything if project has everything setup already 1`] = `
 "
-    /// <reference types=\\"vitest\\" />
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -347,14 +347,14 @@ import { defineConfig } from 'vite';
                   ...{
         my: 'option',
       },
-                  ...{\\"globals\\":true,\\"cache\\":{\\"dir\\":\\"../node_modules/.vitest\\"},\\"environment\\":\\"jsdom\\",\\"include\\":[\\"src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}\\"]}
+                  ...{"globals":true,"cache":{"dir":"../node_modules/.vitest"},"environment":"jsdom","include":["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"]}
                },
 
       build: {
                   ...{
         my: 'option',
       },
-                  ...{\\"lib\\":{\\"entry\\":\\"src/index.ts\\",\\"name\\":\\"my-app\\",\\"fileName\\":\\"index\\",\\"formats\\":[\\"es\\",\\"cjs\\"]},\\"rollupOptions\\":{\\"external\\":[\\"'react', 'react-dom', 'react/jsx-runtime'\\"]}}
+                  ...{"lib":{"entry":"src/index.ts","name":"my-app","fileName":"index","formats":["es","cjs"]},"rollupOptions":{"external":["'react', 'react-dom', 'react/jsx-runtime'"]}}
                }
 
     });

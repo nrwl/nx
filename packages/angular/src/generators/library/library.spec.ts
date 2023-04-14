@@ -1107,15 +1107,15 @@ describe('lib', () => {
         expect(tree.exists('libs/my-lib/tslint.json')).toBe(false);
         expect(readProjectConfiguration(tree, 'my-lib').targets['lint'])
           .toMatchInlineSnapshot(`
-          Object {
+          {
             "executor": "@nrwl/linter:eslint",
-            "options": Object {
-              "lintFilePatterns": Array [
+            "options": {
+              "lintFilePatterns": [
                 "libs/my-lib/**/*.ts",
                 "libs/my-lib/**/*.html",
               ],
             },
-            "outputs": Array [
+            "outputs": [
               "{options.outputFile}",
             ],
           }
@@ -1130,34 +1130,34 @@ describe('lib', () => {
 
         const eslintConfig = readJson(tree, 'libs/my-lib/.eslintrc.json');
         expect(eslintConfig).toMatchInlineSnapshot(`
-          Object {
-            "extends": Array [
+          {
+            "extends": [
               "../../.eslintrc.json",
             ],
-            "ignorePatterns": Array [
+            "ignorePatterns": [
               "!**/*",
             ],
-            "overrides": Array [
-              Object {
-                "extends": Array [
+            "overrides": [
+              {
+                "extends": [
                   "plugin:@nrwl/nx/angular",
                   "plugin:@angular-eslint/template/process-inline-templates",
                 ],
-                "files": Array [
+                "files": [
                   "*.ts",
                 ],
-                "rules": Object {
-                  "@angular-eslint/component-selector": Array [
+                "rules": {
+                  "@angular-eslint/component-selector": [
                     "error",
-                    Object {
+                    {
                       "prefix": "proj",
                       "style": "kebab-case",
                       "type": "element",
                     },
                   ],
-                  "@angular-eslint/directive-selector": Array [
+                  "@angular-eslint/directive-selector": [
                     "error",
-                    Object {
+                    {
                       "prefix": "proj",
                       "style": "camelCase",
                       "type": "attribute",
@@ -1165,14 +1165,14 @@ describe('lib', () => {
                   ],
                 },
               },
-              Object {
-                "extends": Array [
+              {
+                "extends": [
                   "plugin:@nrwl/nx/angular-template",
                 ],
-                "files": Array [
+                "files": [
                   "*.html",
                 ],
-                "rules": Object {},
+                "rules": {},
               },
             ],
           }
@@ -1369,7 +1369,7 @@ describe('lib', () => {
         tree.read('libs/my-lib/src/lib/lib.routes.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.children('libs/my-lib/src/lib')).toMatchInlineSnapshot(`
-        Array [
+        [
           "lib.routes.ts",
           "my-lib.component.css",
           "my-lib.component.html",
@@ -1378,7 +1378,7 @@ describe('lib', () => {
         ]
       `);
       expect(tree.children('libs/my-lib/src')).toMatchInlineSnapshot(`
-        Array [
+        [
           "index.ts",
           "lib",
           "test-setup.ts",
