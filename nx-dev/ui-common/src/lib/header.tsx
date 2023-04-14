@@ -70,7 +70,7 @@ export function Header(): JSX.Element {
     {
       name: 'Plugins registry',
       description: 'Add capabilities to your workspace with plugins.',
-      href: '/plugins',
+      href: '/plugins/intro/use-cases',
     },
     {
       name: 'Nx Conf',

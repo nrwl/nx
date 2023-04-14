@@ -194,7 +194,7 @@ export function SidebarMobile({
     },
     {
       name: 'Plugins',
-      href: '/plugins',
+      href: '/plugins/intro/use-cases',
       current: isPlugins,
     },
     {
