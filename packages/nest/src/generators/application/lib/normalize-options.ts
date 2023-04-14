@@ -1,7 +1,7 @@
-import { extractLayoutDirectory, Tree } from '@nrwl/devkit';
-import { getWorkspaceLayout, joinPathFragments, names } from '@nrwl/devkit';
-import { Linter } from '@nrwl/linter';
-import type { Schema as NodeApplicationGeneratorOptions } from '@nrwl/node/src/generators/application/schema';
+import { extractLayoutDirectory, Tree } from '@nx/devkit';
+import { getWorkspaceLayout, joinPathFragments, names } from '@nx/devkit';
+import { Linter } from '@nx/linter';
+import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/src/generators/application/schema';
 import type { ApplicationGeneratorOptions, NormalizedOptions } from '../schema';
 
 export function normalizeOptions(

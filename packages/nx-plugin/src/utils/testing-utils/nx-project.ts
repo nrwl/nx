@@ -1,9 +1,9 @@
-import { workspaceRoot } from '@nrwl/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import {
   getPackageManagerCommand,
   readJsonFile,
   writeJsonFile,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { execSync } from 'child_process';
 import { dirname } from 'path';
 import { ensureDirSync } from 'fs-extra';

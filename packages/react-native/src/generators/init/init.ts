@@ -7,14 +7,14 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema } from './schema';
 
-import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
-import { jestInitGenerator } from '@nrwl/jest';
-import { detoxInitGenerator } from '@nrwl/detox';
-import { babelPresetReactVersion } from '@nrwl/react/src/utils/versions';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
+import { jestInitGenerator } from '@nx/jest';
+import { detoxInitGenerator } from '@nx/detox';
+import { babelPresetReactVersion } from '@nx/react/src/utils/versions';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
   babelRuntimeVersion,

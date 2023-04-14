@@ -1,10 +1,6 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import {
-  convertNxGenerator,
-  formatFiles,
-  runTasksInSerial,
-} from '@nrwl/devkit';
-import { applicationGenerator as nodeApplicationGenerator } from '@nrwl/node';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { convertNxGenerator, formatFiles, runTasksInSerial } from '@nx/devkit';
+import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 
 import { initGenerator } from '../init/init';
 import {

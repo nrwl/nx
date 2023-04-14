@@ -2,9 +2,9 @@
  * For backwards compat.
  * TODO(v16): Remove in Nx 16.
  */
-import { ExecutorContext, logger } from '@nrwl/devkit';
-import type { WebpackExecutorOptions } from '@nrwl/webpack';
-import { webpackExecutor as baseWebpackExecutor } from '@nrwl/webpack';
+import { ExecutorContext, logger } from '@nx/devkit';
+import type { WebpackExecutorOptions } from '@nx/webpack';
+import { webpackExecutor as baseWebpackExecutor } from '@nx/webpack';
 
 export async function* webpackExecutor(
   options: WebpackExecutorOptions,

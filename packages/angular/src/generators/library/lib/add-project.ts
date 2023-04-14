@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { addProjectConfiguration, joinPathFragments } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { addProjectConfiguration, joinPathFragments } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import type { NormalizedSchema } from './normalized-schema';
 

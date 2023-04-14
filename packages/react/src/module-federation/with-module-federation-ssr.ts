@@ -1,4 +1,4 @@
-import { ModuleFederationConfig } from '@nrwl/devkit';
+import { ModuleFederationConfig } from '@nx/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { getModuleFederationConfig } from './utils';
 

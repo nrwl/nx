@@ -11,8 +11,8 @@ import {
   updateJson,
   updateNxJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+} from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { findRootJestConfig } from '../../utils/config/find-root-jest-files';
 import {
@@ -40,7 +40,7 @@ const schemaDefaults = {
 function generateGlobalConfig(tree: Tree, isJS: boolean) {
   const contents = isJS
     ? stripIndents`
-    const { getJestProjects } = require('@nrwl/jest');
+    const { getJestProjects } = require('@nx/jest');
 
     module.exports = {
       projects: getJestProjects()
@@ -60,7 +60,7 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
     tree.write(
       `jest.preset.js`,
       `
-      const nxPreset = require('@nrwl/jest/preset').default;
+      const nxPreset = require('@nx/jest/preset').default;
 
       module.exports = { ...nxPreset }`
     );

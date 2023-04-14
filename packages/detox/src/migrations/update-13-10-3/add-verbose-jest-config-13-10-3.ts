@@ -4,7 +4,7 @@ import {
   getProjects,
   updateJson,
   ProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * Update jest.config.json under detox project, add key verbsoe: true

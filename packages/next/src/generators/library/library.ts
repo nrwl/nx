@@ -6,9 +6,9 @@ import {
   runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { libraryGenerator as reactLibraryGenerator } from '@nrwl/react/src/generators/library/library';
-import { addTsConfigPath } from '@nrwl/js';
+} from '@nx/devkit';
+import { libraryGenerator as reactLibraryGenerator } from '@nx/react/src/generators/library/library';
+import { addTsConfigPath } from '@nx/js';
 
 import { nextInitGenerator } from '../init/init';
 import { Schema } from './schema';

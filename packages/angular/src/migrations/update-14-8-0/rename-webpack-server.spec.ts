@@ -1,5 +1,5 @@
-import { readJson, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readJson, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestRemoteApplication } from '../../generators/utils/testing';
 import renameWebpackServer from './rename-webpack-server';
 

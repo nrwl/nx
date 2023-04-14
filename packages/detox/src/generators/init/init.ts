@@ -6,8 +6,8 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { jestVersion, typesNodeVersion } from '@nrwl/jest/src/utils/versions';
+} from '@nx/devkit';
+import { jestVersion, typesNodeVersion } from '@nx/jest/src/utils/versions';
 
 import { Schema } from './schema';
 import {

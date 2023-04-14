@@ -3,14 +3,14 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
 import { updateEslintrcJson } from './update-eslintrc-json';
 
 // nx-ignore-next-line
-const { libraryGenerator } = require('@nrwl/js');
+const { libraryGenerator } = require('@nx/js');
 
 describe('updateEslint', () => {
   let tree: Tree;

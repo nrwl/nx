@@ -1,6 +1,6 @@
-import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { libraryGenerator } from '@nrwl/js';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, Tree } from '@nx/devkit';
+import { libraryGenerator } from '@nx/js';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateToCypress11 from './cypress-11';
 import { installedCypressVersion } from '../../utils/cypress-version';
 jest.mock('../../utils/cypress-version');

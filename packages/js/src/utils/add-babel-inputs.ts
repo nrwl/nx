@@ -5,7 +5,7 @@ import {
   Tree,
   updateNxJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function addBabelInputs(tree: Tree) {
   const nxJson = readNxJson(tree);

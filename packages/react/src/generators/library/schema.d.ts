@@ -1,4 +1,4 @@
-import type { Linter } from '@nrwl/linter';
+import type { Linter } from '@nx/linter';
 import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {

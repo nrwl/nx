@@ -16,7 +16,7 @@ import {
   updateProjectConfiguration,
   visitNotIgnoredFiles,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename, extname, join, relative } from 'path';
 import {
   createSourceFile,

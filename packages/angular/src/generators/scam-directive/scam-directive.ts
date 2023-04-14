@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { formatFiles } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { formatFiles } from '@nx/devkit';
 import { directiveGenerator } from '../directive/directive';
 import { exportScam } from '../utils/export-scam';
 import {

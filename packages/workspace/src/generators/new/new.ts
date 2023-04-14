@@ -4,7 +4,7 @@ import {
   names,
   PackageManager,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { join } from 'path';
 import { Preset } from '../utils/presets';

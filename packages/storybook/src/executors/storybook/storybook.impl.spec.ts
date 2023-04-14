@@ -1,7 +1,7 @@
 import { fs as fsMock, vol } from 'memfs';
 import * as fs from 'fs';
 
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 
 jest.mock('@storybook/core-server', () => ({
   buildDev: jest.fn().mockImplementation(() => Promise.resolve()),

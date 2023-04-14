@@ -1,4 +1,4 @@
-import type { GeneratorCallback } from '@nrwl/devkit';
+import type { GeneratorCallback } from '@nx/devkit';
 
 /**
  * Run tasks in serial

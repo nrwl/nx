@@ -170,7 +170,7 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
       module.exports = composePlugins(withNx(), withWeb(), (config, context) => {
         return config;
       });
@@ -185,7 +185,7 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
       module.exports = composePlugins(withNx(), withWeb(), async (config, context) => {
         return config;
       });
@@ -200,7 +200,7 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
       module.exports = composePlugins(withNx(), withWeb(), Promise.resolve((config, context) => {
         return config;
       }));

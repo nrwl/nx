@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../utils/versions';
 
 export function updateModuleFederationProject(

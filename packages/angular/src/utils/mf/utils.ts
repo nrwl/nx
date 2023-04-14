@@ -11,7 +11,7 @@ import {
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function applyDefaultEagerPackages(
   sharedConfig: Record<string, SharedLibraryConfig>

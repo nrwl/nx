@@ -5,9 +5,9 @@ import {
   readProjectConfiguration,
   Tree,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { exampleRootTslintJson } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { exampleRootTslintJson } from '@nx/linter';
 import { conversionGenerator } from './convert-tslint-to-eslint';
 
 /**

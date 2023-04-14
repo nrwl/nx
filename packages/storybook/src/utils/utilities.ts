@@ -1,9 +1,4 @@
-import {
-  readJson,
-  readJsonFile,
-  TargetConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import { readJson, readJsonFile, TargetConfiguration, Tree } from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
 import { storybookVersion } from './versions';
 import { statSync } from 'fs';

@@ -1,6 +1,6 @@
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import type { Schema } from '../schema';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 export interface NormalizedSchema extends Schema {
   linter: Linter;

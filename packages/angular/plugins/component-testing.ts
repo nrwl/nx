@@ -1,13 +1,13 @@
 import {
   nxBaseCypressPreset,
   NxComponentTestingOptions,
-} from '@nrwl/cypress/plugins/cypress-preset';
+} from '@nx/cypress/plugins/cypress-preset';
 import {
   createExecutorContext,
   getProjectConfigByPath,
   getTempTailwindPath,
   isCtProjectUsingBuildProject,
-} from '@nrwl/cypress/src/utils/ct-helpers';
+} from '@nx/cypress/src/utils/ct-helpers';
 import {
   ExecutorContext,
   joinPathFragments,
@@ -19,7 +19,7 @@ import {
   readCachedProjectGraph,
   readTargetOptions,
   stripIndents,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { existsSync, lstatSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
 import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/schema';

@@ -1,6 +1,6 @@
-import { readJson, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator as workspaceLib } from '@nrwl/js';
+import { readJson, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { libraryGenerator as workspaceLib } from '@nx/js';
 import {
   checkDeps,
   updateConfigsJest28,
@@ -114,7 +114,7 @@ describe('Jest Migration - jest 28 config support', () => {
     tree.write(
       'jest.preset.js',
       `
-const nxPreset = require('@nrwl/jest/preset').default;
+const nxPreset = require('@nx/jest/preset').default;
 module.exports = {
   ...nxPreset,
   testRunner: 'jest-jasmine2',

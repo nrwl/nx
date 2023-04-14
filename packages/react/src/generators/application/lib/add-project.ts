@@ -4,7 +4,7 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   TargetConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function addProject(host, options: NormalizedSchema) {
   const project: ProjectConfiguration = {

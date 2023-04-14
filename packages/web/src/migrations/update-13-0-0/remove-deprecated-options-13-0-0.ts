@@ -4,7 +4,7 @@ import {
   logger,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 const deprecatedOptions = ['showCircularDependencies', 'budgets'];
 

@@ -2,15 +2,15 @@ import type {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
   readJson,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { hasRulesRequiringTypeChecking } from '@nrwl/linter';
+} from '@nx/devkit';
+import { hasRulesRequiringTypeChecking } from '@nx/linter';
 import { dirname } from 'path';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';
 import { BuilderMigrator } from './builder.migrator';

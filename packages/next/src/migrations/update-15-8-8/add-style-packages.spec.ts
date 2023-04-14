@@ -1,10 +1,5 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import {
-  writeJson,
-  readJson,
-  Tree,
-  addProjectConfiguration,
-} from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { writeJson, readJson, Tree, addProjectConfiguration } from '@nx/devkit';
 import update from './add-style-packages';
 
 describe('Add less and stylus if needed', () => {
@@ -27,10 +22,7 @@ describe('Add less and stylus if needed', () => {
         },
       },
     });
-    tree.write(
-      `myapp/next.config.js`,
-      `require('@nrwl/next/plugins/with-less')`
-    );
+    tree.write(`myapp/next.config.js`, `require('@nx/next/plugins/with-less')`);
 
     await update(tree);
 
@@ -56,7 +48,7 @@ describe('Add less and stylus if needed', () => {
     });
     tree.write(
       `myapp/next.config.js`,
-      `require('@nrwl/next/plugins/with-stylus')`
+      `require('@nx/next/plugins/with-stylus')`
     );
 
     await update(tree);
@@ -81,7 +73,7 @@ describe('Add less and stylus if needed', () => {
         },
       },
     });
-    tree.write(`myapp/next.config.js`, `require('@nrwl/next/plugins/with-nx')`);
+    tree.write(`myapp/next.config.js`, `require('@nx/next/plugins/with-nx')`);
 
     await update(tree);
 

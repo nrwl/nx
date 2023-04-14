@@ -7,9 +7,9 @@ import {
   Tree,
   updateJson,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
   jsdomVersion,

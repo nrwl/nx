@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, normalizePath } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, normalizePath } from '@nx/devkit';
 import { basename, dirname } from 'path';
 import type { NormalizedSchema } from '../schema';
 

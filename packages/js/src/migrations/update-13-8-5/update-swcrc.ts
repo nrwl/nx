@@ -4,7 +4,7 @@ import {
   readJson,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import { defaultExclude } from '../../utils/swc/add-swc-config';
 

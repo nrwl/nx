@@ -1,4 +1,4 @@
-import type { ProjectGraph } from '@nrwl/devkit';
+import type { ProjectGraph } from '@nx/devkit';
 import { checkCircularPath } from './graph-utils';
 
 describe('should find the path between nodes', () => {

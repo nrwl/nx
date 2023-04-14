@@ -2,8 +2,8 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { updateReportDirectoryPlaceholders } from './update-report-directory';
 
 describe('Update Report Directory Vitest Migration', () => {

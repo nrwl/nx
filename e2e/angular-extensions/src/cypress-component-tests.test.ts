@@ -11,7 +11,7 @@ import {
   removeFile,
   checkFilesExist,
 } from '../../utils';
-import { names } from '@nrwl/devkit';
+import { names } from '@nx/devkit';
 import { join } from 'path';
 
 describe('Angular Cypress Component Tests', () => {

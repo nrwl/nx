@@ -4,7 +4,7 @@ import {
   ProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import { NormalizedSchema } from '../schema';
 

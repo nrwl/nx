@@ -1,6 +1,6 @@
 import { ensureNodeModulesSymlink } from './ensure-node-modules-symlink';
 import * as chalk from 'chalk';
-import { GeneratorCallback, logger } from '@nrwl/devkit';
+import { GeneratorCallback, logger } from '@nx/devkit';
 
 export function runSymlink(
   workspaceRoot: string,

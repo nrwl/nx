@@ -2,8 +2,8 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
-} from '@nrwl/devkit';
-import { names } from '@nrwl/devkit';
+} from '@nx/devkit';
+import { names } from '@nx/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 

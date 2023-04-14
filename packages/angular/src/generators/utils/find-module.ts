@@ -1,8 +1,8 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import { dirname } from 'path';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
-import { insertImport } from '@nrwl/js';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { insertImport } from '@nx/js';
 import {
   insertNgModuleProperty,
   ngModuleDecoratorProperty,

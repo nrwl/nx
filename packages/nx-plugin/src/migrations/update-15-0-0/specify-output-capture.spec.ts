@@ -1,6 +1,6 @@
-import { readJson, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+import { readJson, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { ExecutorConfig } from 'nx/src/config/misc-interfaces';
 import pluginGenerator from '../../generators/plugin/plugin';
 import update from './specify-output-capture';

@@ -3,8 +3,8 @@ import {
   convertNxGenerator,
   formatFiles,
   Tree,
-} from '@nrwl/devkit';
-import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
+} from '@nx/devkit';
+import { swcCoreVersion } from '@nx/js/src/utils/versions';
 
 import { Schema } from './schema';
 import {
@@ -17,7 +17,7 @@ import {
   tsLibVersion,
   urlLoaderVersion,
 } from '../../utils/versions';
-import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
+import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
 
 export async function webpackInitGenerator(tree: Tree, schema: Schema) {
   if (schema.compiler === 'babel') {

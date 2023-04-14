@@ -4,7 +4,7 @@ import {
   EsBuildExecutorOptions,
   NormalizedEsBuildExecutorOptions,
 } from '../schema';
-import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
+import { ExecutorContext, joinPathFragments, logger } from '@nx/devkit';
 import chalk = require('chalk');
 import * as esbuild from 'esbuild';
 

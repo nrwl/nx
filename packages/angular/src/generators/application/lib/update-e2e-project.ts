@@ -1,12 +1,12 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   offsetFromRoot,
   readProjectConfiguration,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+} from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function updateE2eProject(tree: Tree, options: NormalizedSchema) {

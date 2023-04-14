@@ -48,7 +48,10 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/nest"],
       "options": {
-        "command": "node ./scripts/copy-readme.js nest"
+        "commands": [
+          "node ./scripts/copy-readme.js nest",
+          "node ./scripts/add-dependency-to-build.js nest @nrwl/nest"
+        ]
       }
     },
     "lint": {}

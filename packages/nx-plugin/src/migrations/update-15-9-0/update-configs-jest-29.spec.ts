@@ -1,16 +1,16 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   ProjectGraph,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { updateConfigsJest29 } from './jest-29-configs';
-import { libraryGenerator } from '@nrwl/js';
+import { libraryGenerator } from '@nx/js';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   createProjectGraphAsync: jest.fn().mockImplementation(async () => {
     return projectGraph;
   }),
@@ -51,7 +51,7 @@ describe('Nx Plugin Migration - jest 29 update configs', () => {
     await setup(tree, 'my-lib');
     tree.write(
       'jest.preset.js',
-      `const nxPreset = require('@nrwl/jest/preset').default;
+      `const nxPreset = require('@nx/jest/preset').default;
 module.exports = {
   ...nxPreset,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
@@ -82,7 +82,7 @@ module.exports = {
     await setup(tree, 'my-lib');
     tree.write(
       'jest.preset.js',
-      `const nxPreset = require('@nrwl/jest/preset').default;
+      `const nxPreset = require('@nx/jest/preset').default;
 module.exports = {
   ...nxPreset,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],

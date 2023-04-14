@@ -1,5 +1,5 @@
-import { Tree, readProjectConfiguration, readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree, readProjectConfiguration, readJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { migrationGenerator } from './migration';
 import { pluginGenerator } from '../plugin/plugin';
 

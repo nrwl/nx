@@ -1,5 +1,5 @@
-import { ProjectGraph } from '@nrwl/devkit';
-import { DependentBuildableProjectNode } from '@nrwl/js/src/utils/buildable-libs-utils';
+import { ProjectGraph } from '@nx/devkit';
+import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 
 export function getExtraDependencies(
   projectName: string,

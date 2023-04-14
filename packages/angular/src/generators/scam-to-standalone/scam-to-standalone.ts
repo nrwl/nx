@@ -1,10 +1,10 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   formatFiles,
   getProjects,
   joinPathFragments,
   stripIndents,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Schema } from './schema';
 import {
   convertScamToStandalone,

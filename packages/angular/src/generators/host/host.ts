@@ -5,7 +5,7 @@ import {
   runTasksInSerial,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Schema } from './schema';
 import applicationGenerator from '../application/application';
 import remoteGenerator from '../remote/remote';

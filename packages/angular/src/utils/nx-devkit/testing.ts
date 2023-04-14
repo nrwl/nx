@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { addProjectConfiguration, names, updateJson } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { addProjectConfiguration, names, updateJson } from '@nx/devkit';
 
 export interface AppConfig {
   appName: string; // name of app

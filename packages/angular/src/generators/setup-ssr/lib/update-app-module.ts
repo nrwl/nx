@@ -1,7 +1,7 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, readProjectConfiguration } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, readProjectConfiguration } from '@nx/devkit';
 import type { Schema } from '../schema';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 export function updateAppModule(tree: Tree, schema: Schema) {
   ensureTypescript();

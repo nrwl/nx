@@ -4,11 +4,11 @@ import {
   joinPathFragments,
   names,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 import {
   normalizeDirectory,
   normalizePrefix,

@@ -1,11 +1,11 @@
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Schema } from '../schema';
 import { updateImports } from './update-imports';
 import { normalizeSchema } from './normalize-schema';
 
 // nx-ignore-next-line
-const { libraryGenerator } = require('@nrwl/js');
+const { libraryGenerator } = require('@nx/js');
 
 describe('updateImports', () => {
   let tree: Tree;

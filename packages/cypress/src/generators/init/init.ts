@@ -7,14 +7,14 @@ import {
   runTasksInSerial,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   cypressVersion,
   nxVersion,
   typesNodeVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
-import { initGenerator } from '@nrwl/js';
+import { initGenerator } from '@nx/js';
 
 function setupE2ETargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);

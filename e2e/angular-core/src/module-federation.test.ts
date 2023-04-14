@@ -1,4 +1,4 @@
-import { names } from '@nrwl/devkit';
+import { names } from '@nx/devkit';
 import {
   cleanupProject,
   killProcessAndPorts,

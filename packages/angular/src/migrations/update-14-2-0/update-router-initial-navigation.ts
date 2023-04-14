@@ -1,10 +1,10 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   createProjectGraphAsync,
   formatFiles,
   readProjectConfiguration,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import type {
   CallExpression,

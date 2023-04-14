@@ -6,13 +6,13 @@ import {
   joinPathFragments,
   normalizePath,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
   getComponentPropsInterface,
-} from '@nrwl/react/src/utils/ast-utils';
+} from '@nx/react/src/utils/ast-utils';
 import { CreateComponentStoriesFileSchema } from './schema';
 
 export function getArgsDefaultValue(property: ts.SyntaxKind): string {

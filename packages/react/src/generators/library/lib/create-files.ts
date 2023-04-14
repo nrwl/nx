@@ -1,12 +1,12 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   generateFiles,
   joinPathFragments,
   names,
   offsetFromRoot,
   toJS,
-} from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+} from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 
 import { NormalizedSchema } from '../schema';
 import { createTsConfig } from '../../../utils/create-ts-config';

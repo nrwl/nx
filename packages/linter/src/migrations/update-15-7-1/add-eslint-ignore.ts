@@ -4,7 +4,7 @@ import {
   readJson,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { eslintConfigFileWhitelist } from '../../generators/utils/eslint-file';
 import { getEslintTargets } from '../../generators/utils/eslint-targets';
 

@@ -3,8 +3,8 @@ import {
   visitNotIgnoredFiles,
   writeJsonFile,
   getPackageManagerCommand,
-} from '@nrwl/devkit';
-import type { Tree } from '@nrwl/devkit';
+} from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 import { execSync } from 'child_process';
 import type { Linter as ESLintLinter } from 'eslint';
 import { dirSync } from 'tmp';

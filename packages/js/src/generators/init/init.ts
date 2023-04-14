@@ -10,7 +10,7 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
   nxVersion,

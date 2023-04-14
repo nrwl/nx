@@ -4,7 +4,7 @@ import * as fse from 'fs-extra';
 import ignore, { Ignore } from 'ignore';
 import * as fg from 'fast-glob';
 import { AssetGlob } from './assets';
-import { logger } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
 import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
 
 export type FileEventType = 'create' | 'update' | 'delete';

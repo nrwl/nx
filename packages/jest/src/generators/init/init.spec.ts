@@ -7,8 +7,8 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { jestInitGenerator } from './init';
 
 describe('jest', () => {
@@ -288,7 +288,7 @@ module.exports = {
       await jestInitGenerator(tree, { js: true, rootProject: false });
       expect(tree.exists('jest.config.app.js')).toBeTruthy();
       expect(tree.read('jest.config.js', 'utf-8'))
-        .toEqual(`const { getJestProjects } = require('@nrwl/jest');
+        .toEqual(`const { getJestProjects } = require('@nx/jest');
 
 module.exports = {
 projects: getJestProjects()

@@ -1,8 +1,8 @@
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
-import { readJson } from '@nrwl/devkit';
+import type { NxJsonConfiguration, Tree } from '@nx/devkit';
+import { readJson } from '@nx/devkit';
 import Ajv from 'ajv';
 import { generateWorkspaceFiles } from './generate-workspace-files';
-import { createTree } from '@nrwl/devkit/testing';
+import { createTree } from '@nx/devkit/testing';
 import { Preset } from '../utils/presets';
 import * as nxSchema from '../../../../nx/schemas/nx-schema.json';
 

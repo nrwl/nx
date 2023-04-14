@@ -2,10 +2,10 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { Linter } from '../utils/linter';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintProjectGenerator } from './lint-project';
 
 describe('@nrwl/linter:lint-project', () => {

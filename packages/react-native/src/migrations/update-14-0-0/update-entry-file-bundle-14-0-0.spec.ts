@@ -1,5 +1,5 @@
-import { addProjectConfiguration, Tree, getProjects } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, Tree, getProjects } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import update from './update-entry-file-bundle-14-0-0';
 

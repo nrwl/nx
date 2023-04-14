@@ -12,7 +12,7 @@ import {
   stripIndents,
   TaskGraph,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getSummary } from './summary';
 import { readFileSync } from 'fs';
 import type { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';

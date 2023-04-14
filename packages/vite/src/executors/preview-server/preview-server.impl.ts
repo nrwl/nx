@@ -1,4 +1,4 @@
-import { ExecutorContext, parseTargetString, runExecutor } from '@nrwl/devkit';
+import { ExecutorContext, parseTargetString, runExecutor } from '@nx/devkit';
 import { InlineConfig, mergeConfig, preview, PreviewServer } from 'vite';
 import {
   getNxTargetOptions,

@@ -1,4 +1,4 @@
-import { formatFiles, getProjects, Tree, updateJson } from '@nrwl/devkit';
+import { formatFiles, getProjects, Tree, updateJson } from '@nx/devkit';
 
 export async function updateNextEslint(host: Tree) {
   const projects = getProjects(host);

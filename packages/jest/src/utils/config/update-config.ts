@@ -1,4 +1,4 @@
-import { Tree, applyChangesToString, ChangeType, logger } from '@nrwl/devkit';
+import { Tree, applyChangesToString, ChangeType, logger } from '@nx/devkit';
 import {
   addOrUpdateProperty,
   jestConfigObjectAst,

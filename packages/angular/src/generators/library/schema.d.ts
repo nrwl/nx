@@ -1,5 +1,5 @@
 import { UnitTestRunner } from '../../utils/test-runners';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 export interface Schema {
   name: string;

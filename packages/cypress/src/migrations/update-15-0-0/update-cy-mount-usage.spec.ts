@@ -3,14 +3,14 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addMountCommand,
   updateCyFile,
   updateCyMountUsage,
 } from './update-cy-mount-usage';
-import { libraryGenerator } from '@nrwl/js';
+import { libraryGenerator } from '@nx/js';
 import { cypressComponentProject } from '../../generators/cypress-component-project/cypress-component-project';
 
 jest.mock('../../utils/cypress-version');

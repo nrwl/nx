@@ -1,4 +1,4 @@
-import { readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
+import { readNxJson, Tree, updateNxJson } from '@nx/devkit';
 import { NormalizedSchema } from '../schema';
 
 /**

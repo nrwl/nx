@@ -3,8 +3,8 @@ import {
   getProjects,
   readJson,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './change-webpack-to-metro';
 
 describe('change-webpack-to-metro', () => {

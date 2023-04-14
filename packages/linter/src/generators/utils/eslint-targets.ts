@@ -1,5 +1,5 @@
-import { Tree } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+import { Tree } from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 
 export function getEslintTargets(tree: Tree) {
   const eslintTargetNames = new Set<string>();

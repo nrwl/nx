@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { getRootTsConfigPathInTree } from '@nrwl/js';
+} from '@nx/devkit';
+import { getRootTsConfigPathInTree } from '@nx/js';
 import { basename } from 'path';
 import type { GeneratorOptions } from '../../schema';
 import type {

@@ -1,4 +1,4 @@
-import { createGlobPatternsForDependencies as jsGenerateGlobs } from '@nrwl/js/src/utils/generate-globs';
+import { createGlobPatternsForDependencies as jsGenerateGlobs } from '@nx/js/src/utils/generate-globs';
 
 /**
  * Generates a set of glob patterns based off the source root of the app and its dependencies

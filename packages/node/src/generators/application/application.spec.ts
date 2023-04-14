@@ -1,17 +1,17 @@
-import * as devkit from '@nrwl/devkit';
+import * as devkit from '@nx/devkit';
 import {
   getProjects,
   readJson,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 // nx-ignore-next-line
-import { applicationGenerator as angularApplicationGenerator } from '@nrwl/angular/generators';
+import { applicationGenerator as angularApplicationGenerator } from '@nx/angular/generators';
 import { Schema } from './schema';
 import { applicationGenerator } from './application';
-import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
+import { overrideCollectionResolutionForTesting } from '@nx/devkit/ngcli-adapter';
 import { join } from 'path';
 
 describe('app', () => {

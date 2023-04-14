@@ -49,7 +49,10 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/eslint-plugin-nx"],
       "options": {
-        "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
+        "commands": [
+          "node ./scripts/copy-readme.js eslint-plugin-nx",
+          "node ./scripts/add-dependency-to-build.js eslint-plugin-nx @nrwl/eslint-plugin-nx"
+        ]
       }
     },
     "lint": {}

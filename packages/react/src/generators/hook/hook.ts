@@ -10,11 +10,11 @@ import {
   names,
   toJS,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { Schema } from './schema';
 import { addImport } from '../../utils/ast-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: string;

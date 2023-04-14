@@ -3,7 +3,7 @@ import {
   getProjects,
   joinPathFragments,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 
 // Add @nrwl/webpack as needed.

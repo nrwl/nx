@@ -10,7 +10,7 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getPath, pathExists } from './graph-utils';
 import { readFileIfExisting } from 'nx/src/utils/fileutils';
 import { TargetProjectLocator } from 'nx/src/plugins/js/project-graph/build-dependencies/target-project-locator';

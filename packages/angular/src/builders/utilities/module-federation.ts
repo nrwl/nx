@@ -1,7 +1,7 @@
 import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
-import { Remotes } from '@nrwl/devkit';
+import { Remotes } from '@nx/devkit';
 
 export function getDynamicRemotes(
   project: ProjectConfiguration,

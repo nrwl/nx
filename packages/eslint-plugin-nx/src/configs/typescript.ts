@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nrwl/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { packageExists } from '../utils/config-utils';
 
 const isPrettierAvailable =

@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/node",
+  "name": "@nx/node",
   "version": "0.0.1",
   "private": false,
   "description": "The Node Plugin for Nx contains generators and executors to manage Node applications within an Nx workspace.",
@@ -31,13 +31,13 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/jest": "file:../jest",
-    "@nrwl/js": "file:../js",
-    "@nrwl/linter": "file:../linter",
-    "@nrwl/webpack": "file:../webpack",
-    "@nrwl/workspace": "file:../workspace",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "@nx/devkit": "file:../devkit",
+    "@nx/jest": "file:../jest",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter",
+    "@nx/webpack": "file:../webpack",
+    "@nx/workspace": "file:../workspace"
   },
   "publishConfig": {
     "access": "public"

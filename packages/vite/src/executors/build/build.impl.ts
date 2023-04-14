@@ -1,15 +1,15 @@
 import 'dotenv/config';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { build, InlineConfig, mergeConfig } from 'vite';
 import {
   getViteBuildOptions,
   getViteSharedConfig,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
-import { copyAssets } from '@nrwl/js';
+import { copyAssets } from '@nx/js';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
-import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 
 import { registerTsConfigPaths } from 'nx/src/utils/register';
 

@@ -1,7 +1,7 @@
-import type { Tree } from '@nrwl/devkit';
-import { names } from '@nrwl/devkit';
-import { insertImport } from '@nrwl/js';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import type { Tree } from '@nx/devkit';
+import { names } from '@nx/devkit';
+import { insertImport } from '@nx/js';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type { SourceFile } from 'typescript';
 import {
   addImportToModule,

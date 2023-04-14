@@ -3,7 +3,7 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { Schema } from '../schema';
 

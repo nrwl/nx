@@ -5,7 +5,7 @@ import {
   joinPathFragments,
   names,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {

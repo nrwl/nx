@@ -1,13 +1,13 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { getProjects, readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { getProjects, readJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
 describe('app', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<

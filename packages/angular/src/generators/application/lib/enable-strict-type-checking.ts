@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { updateJson } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { updateJson } from '@nx/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function enableStrictTypeChecking(

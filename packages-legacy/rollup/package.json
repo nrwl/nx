@@ -1,0 +1,36 @@
+{
+  "name": "@nrwl/rollup",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages-legacy/rollup"
+  },
+  "keywords": [
+    "Monorepo",
+    "Rollup",
+    "Web",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "dependencies": {
+    "@nx/rollup": "file:../../packages/rollup"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "nx-migrations": {
+    "migrations": "@nx/rollup/migrations.json"
+  }
+}

@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { convertNxGenerator } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NormalizedOptions,

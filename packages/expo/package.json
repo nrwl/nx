@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/expo",
+  "name": "@nx/expo",
   "version": "0.0.1",
   "private": false,
   "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
@@ -26,14 +26,6 @@
   "main": "./index",
   "types": "index.d.ts",
   "dependencies": {
-    "@nrwl/detox": "file:../detox",
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/jest": "file:../jest",
-    "@nrwl/js": "file:../js",
-    "@nrwl/linter": "file:../linter",
-    "@nrwl/react": "file:../react",
-    "@nrwl/webpack": "file:../webpack",
-    "@nrwl/workspace": "file:../workspace",
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.8.3",
     "fs-extra": "^11.1.0",
@@ -41,7 +33,15 @@
     "node-fetch": "^2.6.7",
     "tar-fs": "^2.1.1",
     "tsconfig-paths": "^4.1.2",
-    "tsconfig-paths-webpack-plugin": "^4.0.0"
+    "tsconfig-paths-webpack-plugin": "^4.0.0",
+    "@nx/detox": "file:../detox",
+    "@nx/devkit": "file:../devkit",
+    "@nx/jest": "file:../jest",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter",
+    "@nx/react": "file:../react",
+    "@nx/webpack": "file:../webpack",
+    "@nx/workspace": "file:../workspace"
   },
   "peerDependencies": {
     "expo": "^48.0.6"

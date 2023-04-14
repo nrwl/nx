@@ -1,5 +1,5 @@
-import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { cypressVersion } from '../../utils/versions';
 import { cypressInitGenerator } from './init';

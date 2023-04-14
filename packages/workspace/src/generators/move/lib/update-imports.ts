@@ -11,7 +11,7 @@ import {
   writeJson,
   readJson,
   getImportPath,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type * as ts from 'typescript';
 import { getRootTsConfigPathInTree } from '../../../utilities/ts-config';
 import { findNodes } from 'nx/src/utils/typescript';

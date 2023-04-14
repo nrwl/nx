@@ -7,7 +7,7 @@ import {
   TargetConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema as FileServerExecutorSchema } from '../../executors/file-server/schema.d';
 interface WebStaticServeSchema {
   buildTarget: string;

@@ -3,9 +3,9 @@ import {
   logger,
   runExecutor,
   workspaceRoot,
-} from '@nrwl/devkit';
-import ssrDevServerExecutor from '@nrwl/webpack/src/executors/ssr-dev-server/ssr-dev-server.impl';
-import { WebSsrDevServerOptions } from '@nrwl/webpack/src/executors/ssr-dev-server/schema';
+} from '@nx/devkit';
+import ssrDevServerExecutor from '@nx/webpack/src/executors/ssr-dev-server/ssr-dev-server.impl';
+import { WebSsrDevServerOptions } from '@nx/webpack/src/executors/ssr-dev-server/schema';
 import { join } from 'path';
 import * as chalk from 'chalk';
 import {
@@ -13,7 +13,7 @@ import {
   createAsyncIterable,
   mapAsyncIterable,
   tapAsyncIterable,
-} from '@nrwl/devkit/src/utils/async-iterable';
+} from '@nx/devkit/src/utils/async-iterable';
 import { execSync, fork } from 'child_process';
 
 type ModuleFederationDevServerOptions = WebSsrDevServerOptions & {

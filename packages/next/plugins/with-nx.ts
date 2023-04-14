@@ -7,11 +7,11 @@ import {
   ProjectGraphProjectNode,
   Target,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
-} from '@nrwl/js/src/utils/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils';
 import type { NextConfig } from 'next';
 import { PHASE_PRODUCTION_SERVER } from 'next/constants';
 
@@ -46,7 +46,7 @@ function regexEqual(x, y) {
  * To this function that hard-codes the libsDir.
  */
 function getWithNxContext(): WithNxContext {
-  const { workspaceRoot, workspaceLayout } = require('@nrwl/devkit');
+  const { workspaceRoot, workspaceLayout } = require('@nx/devkit');
   return {
     workspaceRoot,
     libsDir: workspaceLayout().libsDir,
@@ -394,7 +394,7 @@ function addNxEnvVariables(config: any) {
   }
 }
 
-// Support for older generated code: `const withNx = require('@nrwl/next/plugins/with-nx');`
+// Support for older generated code: `const withNx = require('@nx/next/plugins/with-nx');`
 module.exports = withNx;
 // Support for newer generated code: `const { withNx } = require(...);`
 module.exports.withNx = withNx;

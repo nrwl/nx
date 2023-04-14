@@ -1,5 +1,5 @@
 /* eslint-disable */
-import nxPreset from '@nrwl/jest/preset';
+import nxPreset from '@nx/jest/preset';
 
 module.exports = {
   ...nxPreset,

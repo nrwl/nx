@@ -1,10 +1,5 @@
-import {
-  addProjectConfiguration,
-  readJson,
-  Tree,
-  writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, readJson, Tree, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import removeESLintProjectConfigIfNoTypeCheckingRules from './remove-eslint-project-config-if-no-type-checking-rules';
 import type { Linter } from 'eslint';
 const KNOWN_RULE_REQUIRING_TYPE_CHECKING = '@typescript-eslint/await-thenable';

@@ -1,10 +1,10 @@
-import { componentGenerator as reactComponentGenerator } from '@nrwl/react';
+import { componentGenerator as reactComponentGenerator } from '@nx/react';
 import {
   convertNxGenerator,
   formatFiles,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { addStyleDependencies } from '../../utils/styles';
 import { Schema } from './schema';

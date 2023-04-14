@@ -1,4 +1,4 @@
-import { addDependenciesToPackageJson, Tree } from '@nrwl/devkit';
+import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
 import { swcCliVersion, swcCoreVersion, swcHelpersVersion } from '../versions';
 
 export function addSwcDependencies(tree: Tree) {

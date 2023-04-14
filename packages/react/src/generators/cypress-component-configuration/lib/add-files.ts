@@ -10,13 +10,13 @@ import {
   readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from 'nx/src/utils/versions';
 import { getComponentNode } from '../../../utils/ast-utils';
 import { componentTestGenerator } from '../../component-test/component-test';
 import { CypressComponentConfigurationSchema } from '../schema';
 import { FoundTarget } from './update-configs';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

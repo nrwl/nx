@@ -6,7 +6,7 @@ import {
   addProviderToBootstrapApplication,
   isStandalone,
 } from './ast-utils';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { createSourceFile, ScriptTarget } from 'typescript';
 
 describe('Angular AST Utils', () => {

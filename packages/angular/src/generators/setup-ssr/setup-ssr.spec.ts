@@ -4,8 +4,8 @@ import {
   readProjectConfiguration,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { angularVersion, ngUniversalVersion } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';

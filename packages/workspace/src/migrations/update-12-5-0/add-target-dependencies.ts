@@ -5,7 +5,7 @@ import {
   TargetDependencyConfig,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { output } from '../../utilities/output';
 
 export async function setTargetDependencies(host: Tree) {

@@ -1,10 +1,10 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   formatFiles,
   generateFiles,
   joinPathFragments,
   names,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { addToNgModule } from '../utils';
 import {
   exportComponentInEntryPoint,

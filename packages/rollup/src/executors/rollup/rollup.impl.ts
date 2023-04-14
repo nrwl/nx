@@ -6,15 +6,15 @@ import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import { dirname, join, parse, resolve } from 'path';
 import { from, Observable, of } from 'rxjs';
 import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
-import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
+import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
-import type { ExecutorContext } from '@nrwl/devkit';
-import { joinPathFragments, logger, names, readJsonFile } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
+import { joinPathFragments, logger, names, readJsonFile } from '@nx/devkit';
 import {
   calculateProjectDependencies,
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
-} from '@nrwl/js/src/utils/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils';
 import nodeResolve from '@rollup/plugin-node-resolve';
 
 import { AssetGlobPattern, RollupExecutorOptions } from './schema';

@@ -1,5 +1,5 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
-import { joinPathFragments, updateProjectConfiguration } from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nx/devkit';
+import { joinPathFragments, updateProjectConfiguration } from '@nx/devkit';
 
 import { SetupTailwindOptions } from '../schema';
 

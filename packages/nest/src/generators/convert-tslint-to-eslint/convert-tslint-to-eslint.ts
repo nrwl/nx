@@ -3,16 +3,16 @@ import {
   formatFiles,
   GeneratorCallback,
   Tree,
-} from '@nrwl/devkit';
-import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nx/linter';
 import {
   addLintingToApplication,
   NormalizedSchema as AddLintForApplicationSchema,
-} from '@nrwl/node/src/generators/application/application';
+} from '@nx/node/src/generators/application/application';
 import {
   addLint as addLintingToLibraryGenerator,
   NormalizedSchema as AddLintForLibrarySchema,
-} from '@nrwl/js/src/generators/library/library';
+} from '@nx/js/src/generators/library/library';
 import type { Linter } from 'eslint';
 
 export async function conversionGenerator(

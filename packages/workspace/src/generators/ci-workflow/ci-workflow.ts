@@ -8,7 +8,7 @@ import {
   NxJsonConfiguration,
   formatFiles,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
 
 export interface Schema {

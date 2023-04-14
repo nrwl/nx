@@ -1,7 +1,7 @@
-import { Tree } from '@nrwl/devkit';
+import { Tree } from '@nx/devkit';
 
-import { libraryGenerator } from '@nrwl/js';
-import { Linter } from '@nrwl/linter';
+import { libraryGenerator } from '@nx/js';
+import { Linter } from '@nx/linter';
 
 export async function createTestUILibNoNgDevkit(
   appTree: Tree,

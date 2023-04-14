@@ -15,8 +15,8 @@ import {
   runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+} from '@nx/devkit';
+import { Linter, lintProjectGenerator } from '@nx/linter';
 
 import { Schema } from './schema';
 import { axiosVersion } from '../../utils/versions';
@@ -24,7 +24,7 @@ import { join } from 'path';
 import {
   globalJavaScriptOverrides,
   globalTypeScriptOverrides,
-} from '@nrwl/linter/src/generators/init/global-eslint-config';
+} from '@nx/linter/src/generators/init/global-eslint-config';
 
 export async function e2eProjectGenerator(host: Tree, _options: Schema) {
   const tasks: GeneratorCallback[] = [];

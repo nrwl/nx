@@ -3,7 +3,7 @@ import 'nx/src/utils/testing/mock-fs';
 import { composePlugins, createWebpackConfig, NextConfigFn } from './config';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
-jest.mock('@nrwl/webpack', () => ({}));
+jest.mock('@nx/webpack', () => ({}));
 jest.mock('tsconfig-paths-webpack-plugin');
 jest.mock('next/dist/server/config', () => ({
   __esModule: true,

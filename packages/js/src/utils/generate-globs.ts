@@ -1,4 +1,4 @@
-import { joinPathFragments, logger, normalizePath } from '@nrwl/devkit';
+import { joinPathFragments, logger, normalizePath } from '@nx/devkit';
 import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { dirname, join, relative, resolve } from 'path';
 import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';

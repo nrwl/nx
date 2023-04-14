@@ -1,8 +1,5 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import {
-  addProjectConfiguration,
-  readProjectConfiguration,
-} from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { addProjectConfiguration, readProjectConfiguration } from '@nx/devkit';
 import update from './update-dev-output-path';
 
 describe('React default development configuration', () => {

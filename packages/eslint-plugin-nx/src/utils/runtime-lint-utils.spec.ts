@@ -4,7 +4,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   DepConstraint,
   findConstraintsFor,

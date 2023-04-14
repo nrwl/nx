@@ -3,7 +3,7 @@ import {
   formatFiles,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { addFiles } from './lib/add-files';
 import { FoundTarget, updateProjectConfig } from './lib/update-configs';
@@ -18,7 +18,7 @@ export async function cypressComponentConfigGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  const { cypressComponentProject } = ensurePackage('@nrwl/cypress', nxVersion);
+  const { cypressComponentProject } = ensurePackage('@nx/cypress', nxVersion);
   const projectConfig = readProjectConfiguration(tree, options.project);
   const installTask = await cypressComponentProject(tree, {
     project: options.project,

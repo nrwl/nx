@@ -4,15 +4,15 @@ import {
   formatFiles,
   GeneratorCallback,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema } from './schema';
-import { swcCoreVersion, swcHelpersVersion } from '@nrwl/js/src/utils/versions';
+import { swcCoreVersion, swcHelpersVersion } from '@nx/js/src/utils/versions';
 import {
   nxVersion,
   swcLoaderVersion,
   tsLibVersion,
 } from '../../utils/versions';
-import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
+import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
 
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   let task: GeneratorCallback;

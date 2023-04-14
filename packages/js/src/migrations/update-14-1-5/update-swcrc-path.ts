@@ -4,8 +4,8 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { SwcExecutorOptions } from '../../utils/schema';
 
 type OldSwcExecutorOptions = SwcExecutorOptions & { swcrcPath?: string };

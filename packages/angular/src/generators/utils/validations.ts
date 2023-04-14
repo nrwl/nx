@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { getProjects, stripIndents } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { getProjects, stripIndents } from '@nx/devkit';
 import { lt } from 'semver';
 import { getInstalledAngularVersionInfo } from './version-utils';
 

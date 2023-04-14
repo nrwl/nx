@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import { checkPathUnderProjectRoot } from '../../utils/path';
 import { validateProject } from '../../utils/validations';
 import type { Schema } from '../schema';

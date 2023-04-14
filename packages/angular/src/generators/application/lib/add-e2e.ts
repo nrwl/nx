@@ -1,10 +1,10 @@
-import { cypressProjectGenerator } from '@nrwl/cypress';
-import type { Tree } from '@nrwl/devkit';
+import { cypressProjectGenerator } from '@nx/cypress';
+import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
 import type { NormalizedSchema } from './normalized-schema';
 import { removeScaffoldedE2e } from './remove-scaffolded-e2e';

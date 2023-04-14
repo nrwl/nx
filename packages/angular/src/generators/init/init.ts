@@ -1,4 +1,4 @@
-import { cypressInitGenerator } from '@nrwl/cypress';
+import { cypressInitGenerator } from '@nx/cypress';
 import {
   addDependenciesToPackageJson,
   ensurePackage,
@@ -9,10 +9,10 @@ import {
   runTasksInSerial,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
-import { jestInitGenerator } from '@nrwl/jest';
-import { Linter } from '@nrwl/linter';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+} from '@nx/devkit';
+import { jestInitGenerator } from '@nx/jest';
+import { Linter } from '@nx/linter';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   addDependenciesToPackageJsonIfDontExist,

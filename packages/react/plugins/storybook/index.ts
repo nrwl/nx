@@ -1,6 +1,6 @@
-import { ExecutorContext, logger, workspaceRoot } from '@nrwl/devkit';
-import { composePluginsSync } from '@nrwl/webpack/src/utils/config';
-import { NormalizedWebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
+import { ExecutorContext, logger, workspaceRoot } from '@nx/devkit';
+import { composePluginsSync } from '@nx/webpack/src/utils/config';
+import { NormalizedWebpackExecutorOptions } from '@nx/webpack/src/executors/webpack/schema';
 import { join } from 'path';
 import {
   Configuration,
@@ -75,7 +75,7 @@ export const webpack = async (
     );
   }
 
-  const { withNx, withWeb } = require('@nrwl/webpack');
+  const { withNx, withWeb } = require('@nx/webpack');
   const tsconfigPath = join(options.configDir, 'tsconfig.json');
 
   const builderOptions: NormalizedWebpackExecutorOptions = {

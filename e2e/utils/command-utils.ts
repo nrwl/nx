@@ -1,4 +1,4 @@
-import { output, PackageManager } from '@nrwl/devkit';
+import { output, PackageManager } from '@nx/devkit';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   detectPackageManager,
@@ -8,7 +8,7 @@ import {
   getStrippedEnvironmentVariables,
   isVerboseE2ERun,
 } from './get-env-info';
-import { TargetConfiguration } from '@nrwl/devkit';
+import { TargetConfiguration } from '@nx/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { join } from 'path';
 import * as isCI from 'is-ci';

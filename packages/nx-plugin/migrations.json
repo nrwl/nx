@@ -35,6 +35,12 @@
       "cli": "nx",
       "description": "Removes CLI property within schema.json files and moves generators and schematics to the proper root node in migrations.json",
       "factory": "./src/migrations/update-16-0-0/cli-in-schema-json"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/nx-plugin with @nx/nx-plugin",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   }
 }

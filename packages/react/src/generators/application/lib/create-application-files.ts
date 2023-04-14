@@ -1,5 +1,5 @@
-import { names, offsetFromRoot, Tree, toJS, generateFiles } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+import { names, offsetFromRoot, Tree, toJS, generateFiles } from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
 import { createTsConfig } from '../../../utils/create-ts-config';
 import { getInSourceVitestTestsTemplate } from '../../../utils/get-in-source-vitest-tests-template';

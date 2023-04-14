@@ -1,6 +1,6 @@
 import { getJestProjects } from './get-jest-projects';
 import * as Workspace from 'nx/src/project-graph/file-utils';
-import type { WorkspaceJsonConfiguration } from '@nrwl/devkit';
+import type { WorkspaceJsonConfiguration } from '@nx/devkit';
 
 describe('getJestProjects', () => {
   test('single project', () => {

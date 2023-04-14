@@ -5,9 +5,9 @@ import {
   updateProjectConfiguration,
   updateJson,
   readJson,
-} from '@nrwl/devkit';
-import { createTree, createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator as workspaceLib } from '@nrwl/js';
+} from '@nx/devkit';
+import { createTree, createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { libraryGenerator as workspaceLib } from '@nx/js';
 import {
   updateExportsJestConfig,
   updateRootFiles,
@@ -24,7 +24,7 @@ describe('Jest Migration (v14.1.2)', () => {
     tree.write(
       'jest.config.ts',
       stripIndents`
-      const { getJestProjects } = require('@nrwl/jest');
+      const { getJestProjects } = require('@nx/jest');
 
       module.exports = {
         projects: getJestProjects()
@@ -34,7 +34,7 @@ describe('Jest Migration (v14.1.2)', () => {
     tree.write(
       'jest.preset.ts',
       stripIndents`
-      const nxPreset = require('@nrwl/jest/preset');
+      const nxPreset = require('@nx/jest/preset');
 
       module.exports = { ...nxPreset };`
     );
@@ -43,14 +43,14 @@ describe('Jest Migration (v14.1.2)', () => {
 
     expect(status).toEqual({ didUpdateRootPreset: true });
     expect(tree.read('jest.config.ts', 'utf-8')).toEqual(stripIndents`
-      const { getJestProjects } = require('@nrwl/jest');
+      const { getJestProjects } = require('@nx/jest');
 
       export default {
         projects: getJestProjects()
       };
     `);
     expect(tree.read('jest.preset.js', 'utf-8')).toEqual(stripIndents`
-      const nxPreset = require('@nrwl/jest/preset').default;
+      const nxPreset = require('@nx/jest/preset').default;
 
       module.exports = { ...nxPreset };`);
   });
@@ -61,7 +61,7 @@ describe('Jest Migration (v14.1.2)', () => {
     tree.write(
       'libs/lib-one/jest.config.ts',
       `
-const nxPreset = require('@nrwl/jest/preset');
+const nxPreset = require('@nx/jest/preset');
 const someOtherImport = require('../something/else.js');
 module.exports = {
   ...someOtherImport,
@@ -128,7 +128,7 @@ module.exports = {
     tree.write(
       'libs/lib-one/jest.config.ts',
       `
-const nxPreset = require('@nrwl/jest/preset');
+const nxPreset = require('@nx/jest/preset');
 const someOtherImport = require('../something/else.js');
 module.exports = {
   ...someOtherImport,
@@ -170,8 +170,8 @@ module.exports = {
     tree.write(
       'jest.config.js',
       stripIndents`
-  const { getJestProjects } = require('@nrwl/jest');
-  const nxPreset = require('@nrwl/jest/preset');
+  const { getJestProjects } = require('@nx/jest');
+  const nxPreset = require('@nx/jest/preset');
 
 
   const someFn = () => ({more: 'stuff'});

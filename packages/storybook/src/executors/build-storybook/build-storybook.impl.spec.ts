@@ -1,4 +1,4 @@
-import { ExecutorContext, logger } from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nx/devkit';
 import { join } from 'path';
 import storybookBuilder from './build-storybook.impl';
 import * as executorContext from '../../utils/test-configs/executor-context.json';

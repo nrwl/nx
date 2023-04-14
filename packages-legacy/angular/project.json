@@ -1,0 +1,37 @@
+{
+  "name": "angular-legacy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages-legacy/angular",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "dependsOn": ["^build"],
+      "options": {
+        "main": "packages-legacy/angular/index.ts",
+        "tsConfig": "packages-legacy/angular/tsconfig.json",
+        "outputPath": "build/packages/angular-legacy",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages-legacy/angular",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages-legacy/angular",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    }
+  },
+  "implicitDependencies": ["workspace", "cypress", "jest"]
+}

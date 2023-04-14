@@ -19,10 +19,10 @@ import {
   toJS,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { Linter } from '@nx/linter';
 
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 
 import { join } from 'path';
 import { installedCypressVersion } from '../../utils/cypress-version';

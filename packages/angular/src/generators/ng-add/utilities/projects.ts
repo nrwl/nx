@@ -4,7 +4,7 @@ import {
   readJson,
   Tree,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { toNewFormat } from 'nx/src/adapter/angular-json';
 import type { MigrationProjectConfiguration, WorkspaceProjects } from './types';
 

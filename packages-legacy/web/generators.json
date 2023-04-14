@@ -1,0 +1,4 @@
+{
+  "extends": ["@nx/web"],
+  "schematics": {}
+}

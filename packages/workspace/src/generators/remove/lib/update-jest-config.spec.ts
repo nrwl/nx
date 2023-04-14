@@ -1,5 +1,5 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -8,7 +8,7 @@ import { Schema } from '../schema';
 import { updateJestConfig } from './update-jest-config';
 
 // nx-ignore-next-line
-const { libraryGenerator } = require('@nrwl/js');
+const { libraryGenerator } = require('@nx/js');
 
 describe('updateRootJestConfig', () => {
   let tree: Tree;

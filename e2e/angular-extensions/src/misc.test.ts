@@ -7,7 +7,7 @@ import {
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
-import { classify } from '@nrwl/devkit/src/utils/string-utils';
+import { classify } from '@nx/devkit/src/utils/string-utils';
 
 describe('Move Angular Project', () => {
   let proj: string;

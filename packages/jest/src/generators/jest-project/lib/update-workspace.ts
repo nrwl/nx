@@ -5,7 +5,7 @@ import {
   updateProjectConfiguration,
   joinPathFragments,
   normalizePath,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function updateWorkspace(
   tree: Tree,

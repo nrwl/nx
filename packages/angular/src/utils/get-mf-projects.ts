@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+import type { Tree } from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 
 export function getMFProjects(
   tree: Tree,

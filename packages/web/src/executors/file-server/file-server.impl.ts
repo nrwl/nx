@@ -6,7 +6,7 @@ import {
   parseTargetString,
   readTargetOptions,
   workspaceLayout,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import ignore from 'ignore';
 import { copyFileSync, readFileSync, unlinkSync } from 'fs';
 import { Schema } from './schema';

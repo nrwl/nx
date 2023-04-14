@@ -5,8 +5,8 @@ import {
   Tree,
   updateNxJson,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { npmPackageGenerator } from './npm-package';
 
 describe('@nrwl/workspace:npm-package', () => {

@@ -22,11 +22,11 @@ import {
   runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import reactInitGenerator from '../init/init';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
+import { Linter, lintProjectGenerator } from '@nx/linter';
+import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
 import {
   nxVersion,
   swcCoreVersion,
@@ -107,8 +107,8 @@ export async function applicationGenerator(
 
   if (options.bundler === 'vite') {
     const { viteConfigurationGenerator } = ensurePackage<
-      typeof import('@nrwl/vite')
-    >('@nrwl/vite', nxVersion);
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     if (
@@ -130,8 +130,8 @@ export async function applicationGenerator(
     tasks.push(viteTask);
   } else if (options.bundler === 'webpack') {
     const { webpackInitGenerator } = ensurePackage<
-      typeof import('@nrwl/webpack')
-    >('@nrwl/webpack', nxVersion);
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
     const webpackInitTask = await webpackInitGenerator(host, {
       uiFramework: 'react',
       skipFormat: true,
@@ -140,8 +140,8 @@ export async function applicationGenerator(
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { vitestGenerator } = ensurePackage<typeof import('@nrwl/vite')>(
-      '@nrwl/vite',
+    const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
+      '@nx/vite',
       nxVersion
     );
 

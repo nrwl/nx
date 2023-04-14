@@ -3,7 +3,7 @@ import {
   getProjects,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export default async function addOutputs(tree: Tree) {
   for (const [projectName, project] of getProjects(tree)) {

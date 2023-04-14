@@ -1,10 +1,10 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   formatFiles,
   generateFiles,
   joinPathFragments,
   names,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { addToNgModule, findModule } from '../utils';
 import { normalizeOptions, validateOptions } from './lib';
 import type { Schema } from './schema';

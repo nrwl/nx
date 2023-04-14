@@ -3,8 +3,8 @@ import {
   readJson,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { excludeJestConfigSwcrc } from './exclude-jest-config-swcrc';
 import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 

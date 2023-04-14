@@ -4,7 +4,7 @@ import {
   Tree,
   updateJson,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 

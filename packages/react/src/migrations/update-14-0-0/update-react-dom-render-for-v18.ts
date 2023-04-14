@@ -6,7 +6,7 @@ import {
   stripIndents,
   Tree,
   formatFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
 import * as ts from 'typescript';
 

@@ -7,7 +7,7 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
@@ -27,7 +27,7 @@ import {
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   storybookMajorVersion,

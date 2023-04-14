@@ -2,10 +2,10 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { joinPathFragments, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { storybookVersion } from '@nrwl/storybook';
+} from '@nx/devkit';
+import { joinPathFragments, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { storybookVersion } from '@nx/storybook';
 import { findNodes } from 'nx/src/utils/typescript';
 import * as ts from 'typescript';
 import { SyntaxKind } from 'typescript';
@@ -14,8 +14,8 @@ import { migrateStoriesTo62Generator } from './migrate-stories-to-6-2';
 import {
   overrideCollectionResolutionForTesting,
   wrapAngularDevkitSchematic,
-} from '@nrwl/devkit/ngcli-adapter';
-import { getTsSourceFile } from '@nrwl/storybook/src/utils/utilities';
+} from '@nx/devkit/ngcli-adapter';
+import { getTsSourceFile } from '@nx/storybook/src/utils/utilities';
 
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({

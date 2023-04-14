@@ -1,5 +1,5 @@
-import { readJson, Tree, writeJson } from '@nrwl/devkit';
-import { createTree } from '@nrwl/devkit/testing';
+import { readJson, Tree, writeJson } from '@nx/devkit';
+import { createTree } from '@nx/devkit/testing';
 import { Linter } from '../../utils/lint';
 import {
   angularCliVersion,

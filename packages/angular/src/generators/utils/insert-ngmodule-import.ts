@@ -1,4 +1,4 @@
-import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
+import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
 import type {
   __String,
   CallExpression,
@@ -9,7 +9,7 @@ import type {
   PropertyAssignment,
   SourceFile,
 } from 'typescript';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

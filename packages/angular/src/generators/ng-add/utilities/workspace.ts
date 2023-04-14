@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import type { NxJsonConfiguration, Tree } from '@nx/devkit';
 import {
   generateFiles,
   getProjects,
@@ -8,14 +8,14 @@ import {
   updateJson,
   updateNxJson,
   writeJson,
-} from '@nrwl/devkit';
-import { Linter, lintInitGenerator } from '@nrwl/linter';
+} from '@nx/devkit';
+import { Linter, lintInitGenerator } from '@nx/linter';
 import {
   getRootTsConfigPathInTree,
   initGenerator as jsInitGenerator,
-} from '@nrwl/js';
+} from '@nx/js';
 import { deduceDefaultBase } from 'nx/src/utils/default-base';
-import { prettierVersion } from '@nrwl/js/src/utils/versions';
+import { prettierVersion } from '@nx/js/src/utils/versions';
 import { toNewFormat } from 'nx/src/adapter/angular-json';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';

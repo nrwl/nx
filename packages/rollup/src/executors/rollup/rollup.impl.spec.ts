@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import * as rollup from 'rollup';
 import { RollupExecutorOptions } from './schema';
 import { createRollupOptions } from './rollup.impl';

@@ -4,7 +4,7 @@ import {
   stripIndents,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { NormalizedGeneratorOptions } from '../schema';
 
 export function addTailwindConfigPathToProject(

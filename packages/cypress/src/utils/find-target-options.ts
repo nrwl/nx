@@ -12,7 +12,7 @@ import {
   readTargetOptions,
   ExecutorContext,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { readNxJson } from 'nx/src/project-graph/file-utils';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 

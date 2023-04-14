@@ -77,6 +77,12 @@
       "version": "15.9.1-beta.0",
       "description": "Add target build-ios and pod-install for react native apps",
       "factory": "./src/migrations/update-15-9-1/add-build-ios-target"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/react-native with @nx/react-native",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },
   "packageJsonUpdates": {

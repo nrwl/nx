@@ -5,7 +5,7 @@ import {
   Tree,
   updateJson,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getNewProjectName } from '../../utils/get-new-project-name';
 import { join, relative } from 'path';
 import { Schema } from '../schema';

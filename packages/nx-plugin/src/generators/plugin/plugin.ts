@@ -8,10 +8,10 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
-import { addSwcDependencies } from '@nrwl/js/src/utils/swc/add-swc-dependencies';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { Linter } from '@nx/linter';
 import { swcNodeVersion } from 'nx/src/utils/versions';
 import * as path from 'path';
 

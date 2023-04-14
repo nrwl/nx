@@ -1,4 +1,4 @@
-const nxJsBabelPreset = require('@nrwl/js/babel');
+const nxJsBabelPreset = require('@nx/js/babel');
 
 /** @deprecated Use `@nrwl/js/babel`. */
 module.exports = function (api: any, options: any = {}) {

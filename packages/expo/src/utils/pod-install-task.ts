@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { platform } from 'os';
 import * as chalk from 'chalk';
-import { GeneratorCallback, logger } from '@nrwl/devkit';
+import { GeneratorCallback, logger } from '@nx/devkit';
 
 const podInstallErrorMessage = `
 Running ${chalk.bold('pod install')} failed, see above.

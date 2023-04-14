@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   readJson,
   readProjectConfiguration,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
-import { createTree } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTree } from '@nx/devkit/testing';
 import { migrateFromAngularCli } from './migrate-from-angular-cli';
 
 describe('workspace', () => {

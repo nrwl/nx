@@ -1,4 +1,4 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   Tree,
   readProjectConfiguration,
@@ -6,14 +6,14 @@ import {
   updateJson,
   joinPathFragments,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import type { Linter as ESLint } from 'eslint';
-import { Schema as EsLintExecutorOptions } from '@nrwl/linter/src/executors/eslint/schema';
+import { Schema as EsLintExecutorOptions } from '@nx/linter/src/executors/eslint/schema';
 
 import generator from './generator';
 import pluginGenerator from '../plugin/plugin';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 describe('lint-checks generator', () => {

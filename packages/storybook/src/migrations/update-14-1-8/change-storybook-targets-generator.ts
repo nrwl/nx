@@ -8,7 +8,7 @@ import {
   ProjectConfiguration,
   Target,
   convertNxGenerator,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { findStorybookAndBuildTargetsAndCompiler } from '../../utils/utilities';
 
 export async function changeStorybookTargetsGenerator(tree: Tree) {

@@ -10,7 +10,7 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { existsSync } from 'fs';
 
 import { runPodInstall } from '../../utils/pod-install-task';

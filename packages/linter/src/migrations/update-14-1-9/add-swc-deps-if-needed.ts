@@ -1,4 +1,4 @@
-import { addDependenciesToPackageJson, formatFiles, Tree } from '@nrwl/devkit';
+import { addDependenciesToPackageJson, formatFiles, Tree } from '@nx/devkit';
 import { swcCoreVersion, swcNodeVersion } from 'nx/src/utils/versions';
 import { WORKSPACE_PLUGIN_DIR } from '../../generators/workspace-rules-project/workspace-rules-project';
 

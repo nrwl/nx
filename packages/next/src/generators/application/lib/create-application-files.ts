@@ -1,6 +1,6 @@
 import { join } from 'path';
-import { generateFiles, names, toJS, Tree } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+import { generateFiles, names, toJS, Tree } from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 
 import { NormalizedSchema } from './normalize-options';
 import {

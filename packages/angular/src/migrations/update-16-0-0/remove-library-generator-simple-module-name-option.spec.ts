@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   readNxJson,
   readProjectConfiguration,
   updateNxJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import removeLibraryGeneratorSimpleModuleNameOption from './remove-library-generator-simple-module-name-option';
 
 describe('removeLibraryGeneratorSimpleModuleNameOption', () => {

@@ -1,10 +1,10 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   getPackageManagerCommand,
   readJson,
   writeJsonFile,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { execSync } from 'child_process';
 import { join } from 'path';
 import { getInstalledAngularMajorVersion } from '../../generators/utils/version-utils';

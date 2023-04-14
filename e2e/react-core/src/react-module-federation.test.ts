@@ -1,4 +1,4 @@
-import { stripIndents } from '@nrwl/devkit';
+import { stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,

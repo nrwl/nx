@@ -1,10 +1,10 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   generateFiles,
   joinPathFragments,
   readNxJson,
   readProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import type { Schema } from '../schema';

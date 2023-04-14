@@ -1,5 +1,5 @@
-import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import update from './add-project-root-metro-config-14-0-0';
 
@@ -26,7 +26,7 @@ describe('Add projectRoot option in metro.config.js', () => {
     tree.write(
       'apps/products/metro.config.js',
       `
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 
 module.exports = (async () => {
@@ -66,7 +66,7 @@ module.exports = (async () => {
 
     expect(tree.read('apps/products/metro.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { withNxMetro } = require('@nrwl/react-native');
+      "const { withNxMetro } = require('@nx/react-native');
       const { getDefaultConfig } = require('metro-config');
 
       module.exports = (async () => {
@@ -110,7 +110,7 @@ module.exports = (async () => {
     tree.write(
       'apps/products/metro.config.js',
       `
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 
 module.exports = (async () => {
@@ -151,7 +151,7 @@ module.exports = (async () => {
 
     expect(tree.read('apps/products/metro.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { withNxMetro } = require('@nrwl/react-native');
+      "const { withNxMetro } = require('@nx/react-native');
       const { getDefaultConfig } = require('metro-config');
 
       module.exports = (async () => {

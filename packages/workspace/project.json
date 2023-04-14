@@ -87,7 +87,8 @@
           },
           {
             "command": "node ./scripts/add-dependency-to-build.js workspace nx"
-          }
+          },
+          "node ./scripts/add-dependency-to-build.js workspace @nrwl/workspace"
         ],
         "parallel": false
       }

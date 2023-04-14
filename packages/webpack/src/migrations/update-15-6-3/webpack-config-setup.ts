@@ -4,8 +4,8 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { basename } from 'path';
 
@@ -65,7 +65,7 @@ export default async function (tree: Tree) {
         tree.write(
           options.webpackConfig,
           `
-        const { composePlugins, withNx } = require('@nrwl/webpack');
+        const { composePlugins, withNx } = require('@nx/webpack');
 
         // Nx plugins for webpack.
         module.exports = composePlugins(withNx(), (config, { options, context }) => {
@@ -111,7 +111,7 @@ export default async function (tree: Tree) {
         tree.write(
           options.webpackConfig,
           `
-        const { composePlugins, withNx } = require('@nrwl/webpack');
+        const { composePlugins, withNx } = require('@nx/webpack');
       
         // Nx plugins for webpack.
         module.exports = composePlugins(withNx(), (config) => {

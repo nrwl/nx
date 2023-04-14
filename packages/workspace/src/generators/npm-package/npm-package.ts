@@ -7,7 +7,7 @@ import {
   names,
   Tree,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import { getImportPath } from 'nx/src/utils/path';
 

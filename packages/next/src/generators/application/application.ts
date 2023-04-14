@@ -3,7 +3,7 @@ import {
   formatFiles,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';

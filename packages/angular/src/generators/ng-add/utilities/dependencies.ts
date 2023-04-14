@@ -1,4 +1,4 @@
-import { addDependenciesToPackageJson, readJson, Tree } from '@nrwl/devkit';
+import { addDependenciesToPackageJson, readJson, Tree } from '@nx/devkit';
 import { getPkgVersionForAngularMajorVersion } from '../../../utils/version-utils';
 import { getInstalledAngularMajorVersion } from '../../utils/version-utils';
 

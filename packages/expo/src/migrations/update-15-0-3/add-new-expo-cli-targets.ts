@@ -4,7 +4,7 @@ import {
   getProjects,
   updateProjectConfiguration,
   offsetFromRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * Add new @expo/cli targets:

@@ -8,8 +8,8 @@ import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builde
 
 jest.mock('fs', () => require('memfs').fs);
 
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   workspaceRoot: '/root',
 }));
 

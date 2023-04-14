@@ -1,4 +1,4 @@
-import { ExecutorContext, logger } from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nx/devkit';
 import * as build from '@storybook/core-server';
 import { CLIOptions } from '@storybook/types'; // TODO(katerina): Remove when Storybook 7
 import 'dotenv/config';

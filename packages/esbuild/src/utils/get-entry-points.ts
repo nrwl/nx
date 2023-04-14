@@ -1,4 +1,4 @@
-import { ExecutorContext, readJsonFile } from '@nrwl/devkit';
+import { ExecutorContext, readJsonFile } from '@nx/devkit';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as glob from 'fast-glob';

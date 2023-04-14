@@ -5,7 +5,7 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import {
   addOrChangeBuildTarget,

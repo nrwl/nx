@@ -17,6 +17,12 @@
       "version": "15.4.3-beta.0",
       "description": "Update @nrwl/vite:test reportsDirectory and outputs properties to point to correct paths.",
       "factory": "./src/migrations/update-15-4-3/update-report-directory"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/vite with @nx/vite",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },
   "packageJsonUpdates": {

@@ -11,7 +11,7 @@ import {
   Tree,
   updateNxJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import initGenerator from '../init/init';
 
 import type { Schema } from './schema';
@@ -23,7 +23,7 @@ import {
   typesExpressVersion,
 } from '../../utils/versions';
 import { addStaticRouter } from '../../utils/ast-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

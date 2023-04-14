@@ -1,6 +1,6 @@
-import { convertNxGenerator, formatFiles, Tree } from '@nrwl/devkit';
+import { convertNxGenerator, formatFiles, Tree } from '@nx/devkit';
 import { warnForSchematicUsage } from '../utils/warn-for-schematic-usage';
-import { moveGenerator } from '@nrwl/workspace/generators';
+import { moveGenerator } from '@nx/workspace/generators';
 import { updateModuleName } from './lib/update-module-name';
 import { updateNgPackage } from './lib/update-ng-package';
 import { Schema } from './schema';

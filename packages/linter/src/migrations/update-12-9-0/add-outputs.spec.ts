@@ -3,8 +3,8 @@ import {
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import addOutputs from './add-outputs';
 
 describe('addOutputs', () => {

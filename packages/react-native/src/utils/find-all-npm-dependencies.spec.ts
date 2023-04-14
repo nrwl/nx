@@ -1,5 +1,5 @@
 import { findAllNpmDependencies } from './find-all-npm-dependencies';
-import { ProjectGraph } from '@nrwl/devkit';
+import { ProjectGraph } from '@nx/devkit';
 
 test('findAllNpmDependencies', () => {
   const graph: ProjectGraph = {

@@ -1,11 +1,11 @@
-import type { ExecutorContext, ProjectGraph } from '@nrwl/devkit';
+import type { ExecutorContext, ProjectGraph } from '@nx/devkit';
 import {
   normalizePath,
   ProjectConfiguration,
   stripIndents,
   TargetConfiguration,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { extname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 import {

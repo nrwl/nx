@@ -5,8 +5,8 @@ import {
   updateJson,
   updateNxJson,
   readNxJson,
-} from '@nrwl/devkit';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { Linter } from '@nx/linter';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { pluginGenerator } from '../plugin/plugin';
 import { PresetGeneratorSchema } from './schema';

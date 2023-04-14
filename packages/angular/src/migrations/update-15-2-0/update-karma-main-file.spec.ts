@@ -1,6 +1,6 @@
-import type { Tree } from '@nrwl/devkit';
-import { addProjectConfiguration, stripIndents } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing-pre16';
+import type { Tree } from '@nx/devkit';
+import { addProjectConfiguration, stripIndents } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing-pre16';
 import { Builders } from '@schematics/angular/utility/workspace-models';
 import updateKarmaMainFile from './update-karma-main-file';
 

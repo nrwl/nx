@@ -12,8 +12,8 @@ import {
   Tree,
   updateJson,
   updateNxJson,
-} from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+} from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 import { swcCoreVersion, swcNodeVersion } from 'nx/src/utils/versions';
@@ -32,7 +32,7 @@ export async function lintWorkspaceRulesProjectGenerator(
   options: LintWorkspaceRulesProjectGeneratorOptions = {}
 ) {
   const { addPropertyToJestConfig, jestProjectGenerator } = ensurePackage(
-    '@nrwl/jest',
+    '@nx/jest',
     nxVersion
   );
 

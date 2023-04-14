@@ -1,11 +1,11 @@
-import type { ProjectType, Tree } from '@nrwl/devkit';
+import type { ProjectType, Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   normalizePath,
   readJson,
   readProjectConfiguration,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename, dirname } from 'path';
 
 export type EntryPoint = { name: string; path: string; excludeDirs?: string[] };

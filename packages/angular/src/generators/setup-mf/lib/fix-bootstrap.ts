@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import type { Schema } from '../schema';
 import { getInstalledAngularMajorVersion } from '../../utils/version-utils';
 

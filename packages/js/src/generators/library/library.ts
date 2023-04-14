@@ -17,7 +17,7 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getImportPath } from 'nx/src/utils/path';
 
 import {
@@ -73,10 +73,7 @@ export async function projectGenerator(
   tasks.push(addProjectDependencies(tree, options));
 
   if (options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage(
-      '@nrwl/vite',
-      nxVersion
-    );
+    const { viteConfigurationGenerator } = ensurePackage('@nx/vite', nxVersion);
     const viteTask = await viteConfigurationGenerator(tree, {
       project: options.name,
       newProject: true,
@@ -106,7 +103,7 @@ export async function projectGenerator(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    const { vitestGenerator } = ensurePackage('@nrwl/vite', nxVersion);
+    const { vitestGenerator } = ensurePackage('@nx/vite', nxVersion);
     const vitestTask = await vitestGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
@@ -231,7 +228,7 @@ export async function addLint(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const { lintProjectGenerator } = ensurePackage('@nrwl/linter', nxVersion);
+  const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
   return lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
@@ -363,7 +360,7 @@ async function addJest(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const { jestProjectGenerator } = ensurePackage('@nrwl/jest', nxVersion);
+  const { jestProjectGenerator } = ensurePackage('@nx/jest', nxVersion);
   return await jestProjectGenerator(tree, {
     ...options,
     project: options.name,
@@ -456,7 +453,7 @@ function normalizeOptions(
     options.bundler = 'none';
   }
 
-  const { Linter } = ensurePackage('@nrwl/linter', nxVersion);
+  const { Linter } = ensurePackage('@nx/linter', nxVersion);
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;

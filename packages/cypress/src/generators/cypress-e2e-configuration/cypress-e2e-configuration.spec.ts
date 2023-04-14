@@ -5,8 +5,8 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { cypressE2EConfigurationGenerator } from './cypress-e2e-configuration';
 
 import { installedCypressVersion } from '../../utils/cypress-version';

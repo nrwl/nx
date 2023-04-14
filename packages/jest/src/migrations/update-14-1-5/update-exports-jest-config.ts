@@ -1,6 +1,6 @@
-import type { Tree } from '@nrwl/devkit';
-import { addDependenciesToPackageJson } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+import type { Tree } from '@nx/devkit';
+import { addDependenciesToPackageJson } from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsNodeVersion } from '../../utils/versions';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import type { BinaryExpression } from 'typescript';
@@ -69,7 +69,7 @@ export function updateRootFiles(tree: Tree): { didUpdateRootPreset: boolean } {
 function updateNxPresetImport(fileContents: string): string {
   return fileContents.replace(
     /require\(['"]@nrwl\/jest\/preset['"]\)[;\s]*?[\n\r]/g,
-    `require('@nrwl/jest/preset').default;
+    `require('@nx/jest/preset').default;
 `
   );
 }

@@ -6,7 +6,7 @@ import {
   names,
   joinPathFragments,
   addDependenciesToPackageJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 
 export default async function (host: Tree, schema: Schema) {

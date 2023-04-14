@@ -2,14 +2,14 @@ import type {
   NxJsonConfiguration,
   ProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   formatFiles,
   getProjects,
   readNxJson,
   updateNxJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export default async function removeLibraryGeneratorSimpleModuleNameOption(
   tree: Tree

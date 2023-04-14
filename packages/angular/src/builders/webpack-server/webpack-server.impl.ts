@@ -1,4 +1,4 @@
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';

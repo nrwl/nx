@@ -2,13 +2,13 @@ import type {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   joinPathFragments,
   readNxJson,
   updateJson,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename } from 'path';
 import type { Logger } from '../utilities/logger';
 import type {

@@ -59,7 +59,8 @@
           },
           {
             "command": "node ./scripts/copy-readme.js angular"
-          }
+          },
+          "node ./scripts/add-dependency-to-build.js angular @nrwl/angular"
         ],
         "parallel": false
       }
