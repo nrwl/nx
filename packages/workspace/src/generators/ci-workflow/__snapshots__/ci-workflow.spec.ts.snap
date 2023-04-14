@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`lib should generate azure CI config 1`] = `
+exports[`CI Workflow generator should generate azure CI config 1`] = `
 "name: CI
 
 trigger:
@@ -28,7 +28,9 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - script: yarn install --frozen-lockfile
+      - script: npm install --prefix=$HOME/.local -g pnpm@8.2.0
+        displayName: Install PNPM
+      - script: pnpm install --frozen-lockfile
         displayName: NPM Install Dependencies
       - script: npx nx-cloud start-agent
         displayName: Start Nx-Cloud agent
@@ -38,25 +40,27 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - script: yarn install --frozen-lockfile
+      - script: npm install --prefix=$HOME/.local -g pnpm@8.2.0
+        displayName: Install PNPM
+      - script: pnpm install --frozen-lockfile
         displayName: NPM Install Dependencies
-      - script: yarn nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
+      - script: pnpm exec nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
         displayName: Start CI run
-      - script: yarn nx-cloud record -- yarn nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
+      - script: pnpm exec nx-cloud record -- pnpm exec nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
         displayName: Check format
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
+      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
         displayName: Run lint
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --ci --code-coverage
+      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --ci --code-coverage
         displayName: Run test
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3
+      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3
         displayName: Run build
-      - script: yarn nx-cloud stop-all-agents
+      - script: pnpm exec nx-cloud stop-all-agents
         condition: always()
         displayName: Stop all Nx-Cloud agents
 "
 `;
 
-exports[`lib should generate bitbucket pipelines config 1`] = `
+exports[`CI Workflow generator should generate bitbucket pipelines config 1`] = `
 "image: node:16.18
 
 clone:
@@ -69,8 +73,10 @@ definitions:
         script:
           - export NX_BRANCH=$BITBUCKET_PR_ID
 
-          - yarn install --frozen-lockfile
-          - yarn nx-cloud start-agent
+          - npm install --prefix=$HOME/.local -g pnpm@8.2.0
+
+          - pnpm install --frozen-lockfile
+          - pnpm exec nx-cloud start-agent
 
 pipelines:
   pull-requests:
@@ -81,18 +87,20 @@ pipelines:
               script:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
 
-                - yarn install --frozen-lockfile
-                - yarn nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
-                - yarn nx-cloud record -- yarn nx format:check
-                - yarn nx affected --target=lint & yarn nx affected --target=test & yarn nx affected --target=build
-                - yarn nx-cloud stop-all-agents
+                - npm install --prefix=$HOME/.local -g pnpm@8.2.0
+
+                - pnpm install --frozen-lockfile
+                - pnpm exec nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
+                - pnpm exec nx-cloud record -- yarn nx format:check
+                - pnpm exec nx affected --target=lint & pnpm exec nx affected --target=test & pnpm exec nx affected --target=build
+                - pnpm exec nx-cloud stop-all-agents
           - step: *agent
           - step: *agent
           - step: *agent
 "
 `;
 
-exports[`lib should generate circleci CI config 1`] = `
+exports[`CI Workflow generator should generate circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
@@ -107,12 +115,16 @@ jobs:
         type: integer
     steps:
       - checkout
+
+      - run:
+          name: Install PNPM
+          command: npm install --prefix=$HOME/.local -g pnpm@8.2.0
       - run:
           name: Install dependencies
-          command: yarn install --frozen-lockfile
+          command: pnpm install --frozen-lockfile
       - run:
           name: Start the agent << parameters.ordinal >>
-          command: yarn nx-cloud start-agent
+          command: pnpm exec nx-cloud start-agent
           no_output_timeout: 60m
   main:
     docker:
@@ -121,29 +133,33 @@ jobs:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
     steps:
       - checkout
+
+      - run:
+          name: Install PNPM
+          command: npm install --prefix=$HOME/.local -g pnpm@8.2.0
       - run:
           name: Install dependencies
-          command: yarn install --frozen-lockfile
+          command: pnpm install --frozen-lockfile
       - nx/set-shas:
           main-branch-name: 'main'
       - run:
           name: Initialize the Nx Cloud distributed CI run
-          command: yarn nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
+          command: pnpm exec nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
       - run:
           name: Check format
-          command: yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
+          command: pnpm exec nx-cloud record -- pnpm exec nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run:
           name: Run lint
-          command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
+          command: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
       - run:
           name: Run test
-          command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
+          command: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
       - run:
           name: Run build
-          command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+          command: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
       - run:
           name: Stop all agents
-          command: yarn nx-cloud stop-all-agents
+          command: pnpm exec nx-cloud stop-all-agents
           when: always
 
 workflows:
@@ -161,7 +177,7 @@ workflows:
 "
 `;
 
-exports[`lib should generate github CI config 1`] = `
+exports[`CI Workflow generator should generate github CI config 1`] = `
 "name: CI
 
 on:
@@ -178,13 +194,13 @@ jobs:
       main-branch-name: main
       number-of-agents: 3
       init-commands: |
-        yarn nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
+        pnpm exec nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
       parallel-commands: |
-        yarn nx-cloud record -- yarn nx format:check
+        pnpm exec nx-cloud record -- pnpm exec nx format:check
       parallel-commands-on-agents: |
-        yarn nx affected --target=lint --parallel=3
-        yarn nx affected --target=test --parallel=3 --ci --code-coverage
-        yarn nx affected --target=build --parallel=3
+        pnpm exec nx affected --target=lint --parallel=3
+        pnpm exec nx affected --target=test --parallel=3 --ci --code-coverage
+        pnpm exec nx affected --target=build --parallel=3
 
   agents:
     name: Nx Cloud - Agents
@@ -194,7 +210,7 @@ jobs:
 "
 `;
 
-exports[`lib should generate github CI config with custom name 1`] = `
+exports[`CI Workflow generator should generate github CI config with custom name 1`] = `
 "name: My custom-workflow
 
 on:
@@ -227,7 +243,7 @@ jobs:
 "
 `;
 
-exports[`lib should generate gitlab config 1`] = `
+exports[`CI Workflow generator should generate gitlab config 1`] = `
 "image: node:18
 variables:
   CI: 'true'
@@ -236,8 +252,10 @@ variables:
 .dte-agent:
   interruptible: true
   script:
-    - yarn install --frozen-lockfile
-    - yarn nx-cloud start-agent
+    - npm install --prefix=$HOME/.local -g pnpm@8.2.0
+
+    - pnpm install --frozen-lockfile
+    - pnpm exec nx-cloud start-agent
 
 # Creating template for a job running DTE (orchestrator)
 .base-pipeline:
@@ -246,7 +264,9 @@ variables:
     - main
     - merge_requests
   before_script:
-    - yarn install --frozen-lockfile
+    - npm install --prefix=$HOME/.local -g pnpm@8.2.0
+
+    - pnpm install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
@@ -255,9 +275,9 @@ CI:
   stage: affected
   extends: .base-pipeline
   script:
-    - yarn nx-cloud start-ci-run --stop-agents-after="build"
-    - yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+    - pnpm exec nx-cloud start-ci-run --stop-agents-after="build"
+    - pnpm exec nx-cloud record -- pnpm exec nx format:check --base=$NX_BASE --head=$NX_HEAD
+    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3 & pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage & pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage & pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 
 # Create as many agents as you want
 nx-dte-agent1:
@@ -272,4 +292,4 @@ nx-dte-agent3:
 "
 `;
 
-exports[`lib should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
+exports[`CI Workflow generator should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;

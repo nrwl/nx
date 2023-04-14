@@ -17,8 +17,8 @@ jest.mock('child_process', () => {
   return {
     ...jest.requireActual<any>('child_process'),
     execSync: jest.fn((command: string) => {
-      if (command.includes('yarn --version')) {
-        return '1.22.0';
+      if (command.includes('pnpm --version')) {
+        return '8.2.0';
       }
       return;
     }),

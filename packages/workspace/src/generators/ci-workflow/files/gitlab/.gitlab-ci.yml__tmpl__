@@ -7,7 +7,7 @@ variables:
   interruptible: true
   script:
     <% if(packageManagerPrefix == 'pnpm exec'){ %>
-    - npm install --prefix=$HOME/.local -g pnpm@6.32.4
+    - npm install --prefix=$HOME/.local -g pnpm@8.2.0
     <% } %>
     - <%= packageManagerInstall %>
     - <%= packageManagerPrefix %> nx-cloud start-agent
@@ -20,7 +20,7 @@ variables:
     - merge_requests
   before_script:
     <% if(packageManagerPrefix == 'pnpm exec'){ %>
-    - npm install --prefix=$HOME/.local -g pnpm@6.32.4
+    - npm install --prefix=$HOME/.local -g pnpm@8.2.0
     <% } %>
     - <%= packageManagerInstall %>
     - NX_HEAD=$CI_COMMIT_SHA

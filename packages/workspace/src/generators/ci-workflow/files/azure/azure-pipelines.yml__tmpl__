@@ -26,7 +26,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       <% if(packageManagerPrefix == 'pnpm exec'){ %>
-      - script: npm install --prefix=$HOME/.local -g pnpm@6.32.4
+      - script: npm install --prefix=$HOME/.local -g pnpm@8.2.0
         displayName: Install PNPM
       <% } %>- script: <%= packageManagerInstall %>
         displayName: NPM Install Dependencies
@@ -39,7 +39,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       <% if(packageManagerPrefix == 'pnpm exec'){ %>
-      - script: npm install --prefix=$HOME/.local -g pnpm@6.32.4
+      - script: npm install --prefix=$HOME/.local -g pnpm@8.2.0
         displayName: Install PNPM
       <% } %>- script: <%= packageManagerInstall %>
         displayName: NPM Install Dependencies
