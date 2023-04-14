@@ -132,6 +132,11 @@
         "description": "A comma delimited list to identify a run with.",
         "aliases": ["t"]
       },
+      "video": {
+        "type": "boolean",
+        "description": "Whether Cypress will capture a video of the tests run with cypress run.",
+        "default": true
+      },
       "port": {
         "oneOf": [
           { "type": "string", "enum": ["cypress-auto"] },

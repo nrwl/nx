@@ -51,6 +51,7 @@ export interface CypressExecutorOptions extends Json {
   skipServe?: boolean;
   testingType?: 'component' | 'e2e';
   tag?: string;
+  video?: boolean;
   port?: number | 'cypress-auto';
 }
 
@@ -291,8 +292,13 @@ async function runCypress(
   if (opts.reporterOptions) {
     options.reporterOptions = opts.reporterOptions;
   }
-
   options.testingType = opts.testingType;
+
+  if (opts.video !== undefined) {
+    options.config[opts.testingType ?? 'e2e'] = {
+      video: opts.video,
+    };
+  }
 
   const result = await (opts.watch
     ? Cypress.open(options)

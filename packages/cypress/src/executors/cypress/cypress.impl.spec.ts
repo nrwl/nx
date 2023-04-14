@@ -440,6 +440,49 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
     );
   });
 
+  it('should forward video option', async () => {
+    const { success } = await cypressExecutor(
+      {
+        ...cypressOptions,
+        video: false,
+      },
+      mockContext
+    );
+    expect(success).toEqual(true);
+    expect(cypressRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: {
+          baseUrl: 'http://localhost:4200',
+          e2e: {
+            video: false,
+          },
+        },
+      })
+    );
+  });
+
+  it('should forward video option to the correct testingType config', async () => {
+    const { success } = await cypressExecutor(
+      {
+        ...cypressOptions,
+        video: false,
+        testingType: 'component',
+      },
+      mockContext
+    );
+    expect(success).toEqual(true);
+    expect(cypressRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: {
+          baseUrl: 'http://localhost:4200',
+          component: {
+            video: false,
+          },
+        },
+      })
+    );
+  });
+
   describe('Component Testing', () => {
     beforeEach(() => {
       mockGetTailwindPath.mockReturnValue(undefined);
