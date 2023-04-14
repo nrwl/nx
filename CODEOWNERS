@@ -44,6 +44,7 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /docs/generated/packages/detox/** @xiongemi @jaysoo @ndcunningham
 /docs/generated/packages/expo/** @xiongemi @jaysoo @ndcunningham
 /docs/generated/packages/react-native/** @xiongemi @jaysoo @ndcunningham
+/docs/shared/packages/react-native/** @xiongemi @jaysoo @ndcunningham @FrozenPandaz @isaacplmann @juristr
 /packages/detox/** @xiongemi @jaysoo @ndcunningham
 /e2e/detox/** @xiongemi @jaysoo @ndcunningham
 /packages/expo/** @xiongemi @jaysoo @ndcunningham
@@ -53,6 +54,11 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 
 ## Node
 /docs/generated/packages/node/** @nartc @ndcunningham @jaysoo
+/docs/generated/packages/nest/** @nartc @ndcunningham @jaysoo
+/docs/generated/packages/express/** @nartc @ndcunningham @jaysoo
+/docs/shared/packages/node/** @nartc @FrozenPandaz @isaacplmann @juristr
+/docs/shared/packages/express/** @ndcunningham @nartc @FrozenPandaz @isaacplmann @juristr
+/docs/shared/packages/nest/** @ndcunningham @nartc @FrozenPandaz @isaacplmann @juristr
 /packages/node/** @nartc @ndcunningham @jaysoo
 /packages/express/** @nartc @ndcunningham @jaysoo
 /packages/nest/** @nartc @ndcunningham @jaysoo
@@ -87,6 +93,8 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 ## Tools
 /docs/generated/packages/cypress/** @barbados-clemens @FrozenPandaz
 /docs/generated/packages/jest/** @barbados-clemens @FrozenPandaz
+/docs/shared/packages/jest/** @barbados-clemens @FrozenPandaz @isaacplmann @juristr
+/docs/shared/packages/cypress/** @barbados-clemens @FrozenPandaz @isaacplmann @juristr
 /packages/cypress/** @barbados-clemens @FrozenPandaz
 /e2e/cypress/** @barbados-clemens @FrozenPandaz
 /packages/jest/** @barbados-clemens @FrozenPandaz
@@ -95,6 +103,7 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 # Linter
 /docs/generated/packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz @JamesHenry
 /docs/generated/packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
+/docs/shared/packages/linter/** @meeroslav @FrozenPandaz @isaacplmann @juristr
 /packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz @JamesHenry
 /packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
 /e2e/linter/** @meeroslav @FrozenPandaz
@@ -116,6 +125,7 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 
 # Nx-Plugin
 /docs/generated/packages/nx-plugin/** @AgentEnder @FrozenPandaz
+/docs/shared/packages/nx-plugin/** @AgentEnder @FrozenPandaz @isaacplmann @juristr
 /packages/nx-plugin/** @AgentEnder @FrozenPandaz
 /e2e/nx-plugin/** @AgentEnder @FrozenPandaz
 
