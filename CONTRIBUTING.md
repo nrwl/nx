@@ -35,9 +35,24 @@ Source code and documentation are included in the top-level folders listed below
 - `scripts` - Miscellaneous scripts for project tasks such as building documentation, testing, and code formatting.
 - `tmp` - Folder used by e2e tests. If you are a WebStorm user, make sure to mark this folder as excluded.
 
+## Development Workstation Setup
+
+If you are using `VSCode`, and provided you have [Docker](https://docker.com) installed on your machine, then you can leverage [Dev Containers](https://containers.dev) through this [VSCode extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), to easily setup your development environment, with everything needed to contribute to Nx, already installed (namely `NodeJS`, `Yarn`, `Rust`, `Cargo`, plus some useful extensions like `Nx Console`).
+
+To do so, simply:
+
+- Checkout the repo
+- Open it with VSCode
+- Open the "Commands prompt" and select "Dev Containers: Open Folder in Container..."
+
+The repo comes with a preconfigured `devcontainer.json` file (located in `.devcontainer/` folder at root), that `VSCode` will automatically use to install the aforementioned tools, inside a Docker image. It will even run `yarn install` for you, so you can start contributing to Nx right after.
+
+If you open the repo in [Github Codespace](https://github.com/features/codespaces), it will also leverage this config file, to setup the codespace, with the same required tools.
+
 ## Building the Project
 
 > Nx uses Rust to build native bindings for Node. Please make sure that you have Rust installed via [rustup.rs](https://rustup.rs)
+> If you have VSCode + Docker, this can be automated for you, see [section](#development-workstation-setup) above
 
 After cloning the project to your machine, to install the dependencies, run:
 
