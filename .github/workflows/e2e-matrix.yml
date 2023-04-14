@@ -118,7 +118,8 @@ jobs:
           - e2e-nx-misc
           - e2e-nx-plugin
           - e2e-nx-run
-          - e2e-react
+          - e2e-react-core
+          - e2e-react-extensions
           - e2e-react-native
           - e2e-web
           - e2e-rollup
@@ -172,7 +173,9 @@ jobs:
             codeowners: 'S04SYHYKGNP'
           - project: e2e-nx-run
             codeowners: 'S04SYHYKGNP'
-          - project: e2e-react
+          - project: e2e-react-core
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-react-extensions
             codeowners: 'S04TNCNJG5N'
           - project: e2e-react-native
             codeowners: 'S04TNCNJG5N'
@@ -232,7 +235,9 @@ jobs:
           - node_version: 16
             project: e2e-lerna-smoke-tests
           - node_version: 16
-            project: e2e-react
+            project: e2e-react-core
+          - node_version: 16
+            project: e2e-react-extensions
           - node_version: 16
             project: e2e-react-native
           - node_version: 16
@@ -278,7 +283,9 @@ jobs:
           - node_version: 19
             project: e2e-lerna-smoke-tests
           - node_version: 19
-            project: e2e-react
+            project: e2e-react-core
+          - node_version: 19
+            project: e2e-react-extensions
           - node_version: 19
             project: e2e-react-native
           - node_version: 19

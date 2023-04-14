@@ -33,7 +33,8 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /docs/shared/packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
 /docs/shared/packages/next/** @jaysoo @ndcunningham @xiongemi
 /packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
-/e2e/react/** @jaysoo @mandarini @xiongemi @ndcunningham
+/e2e/react-core/** @jaysoo @mandarini @xiongemi @ndcunningham
+/e2e/react-extensions/** @jaysoo @mandarini @xiongemi @ndcunningham
 /packages/next/** @ndcunningham @jaysoo @xiongemi
 /e2e/next/** @ndcunningham @jaysoo @xiongemi
 /packages/react/plugins/component-testing/** @jaysoo @ndcunningham @barbados-clemens

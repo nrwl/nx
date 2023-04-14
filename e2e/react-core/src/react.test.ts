@@ -21,12 +21,12 @@ import { join } from 'path';
 describe('React Applications', () => {
   let proj: string;
 
-  beforeEach(() => {
+  beforeAll(() => {
     proj = newProject();
     ensureCypressInstallation();
   });
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should be able to generate a react app + lib (with CSR and SSR)', async () => {
     const appName = uniq('app');
@@ -187,152 +187,183 @@ describe('React Applications', () => {
     expect(await killPorts()).toBeTruthy();
   }, 250_000);
 
-  async function testGeneratedApp(
-    appName,
-    opts: {
-      checkStyles: boolean;
-      checkLinter: boolean;
-      checkE2E: boolean;
-      checkSourceMap?: boolean;
-    }
-  ) {
-    if (opts.checkLinter) {
-      const lintResults = runCLI(`lint ${appName}`);
-      expect(lintResults).toContain('All files pass linting.');
-    }
-
-    runCLI(
-      `build ${appName} --outputHashing none ${
-        opts.checkSourceMap ? '--sourceMap' : ''
-      }`
-    );
-    const filesToCheck = [
-      `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/main.js`,
-    ];
-
-    if (opts.checkSourceMap) {
-      filesToCheck.push(`dist/apps/${appName}/main.js.map`);
-    }
-
-    if (opts.checkStyles) {
-      filesToCheck.push(`dist/apps/${appName}/styles.css`);
-    }
-    checkFilesExist(...filesToCheck);
-
-    if (opts.checkStyles) {
-      expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
-        '<link rel="stylesheet" href="styles.css">'
-      );
-    }
-
-    const testResults = await runCLIAsync(`test ${appName}`);
-    expect(testResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-
-    if (opts.checkE2E && runCypressTests()) {
-      const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
-      expect(e2eResults).toContain('All specs passed!');
-      expect(await killPorts()).toBeTruthy();
-    }
-  }
-});
-
-describe('React Applications: --style option', () => {
-  // Only create workspace once
-  beforeAll(() => newProject());
-
-  it.each`
-    style
-    ${'css'}
-    ${'scss'}
-    ${'less'}
-    ${'styl'}
-  `('should support global and css modules', ({ style }) => {
+  it('should generate app with routing', async () => {
     const appName = uniq('app');
-    runCLI(
-      `generate @nrwl/react:app ${appName} --style=${style} --bundler=webpack --no-interactive`
-    );
 
-    // make sure stylePreprocessorOptions works
-    updateProjectConfig(appName, (config) => {
-      config.targets.build.options.stylePreprocessorOptions = {
-        includePaths: ['libs/shared/lib'],
-      };
-      return config;
-    });
-    updateFile(
-      `apps/${appName}/src/styles.${style}`,
-      `@import 'base.${style}';`
-    );
-    updateFile(
-      `apps/${appName}/src/app/app.module.${style}`,
-      (s) => `@import 'base.${style}';\n${s}`
-    );
-    updateFile(
-      `libs/shared/lib/base.${style}`,
-      `body { font-family: "Comic Sans MS"; }`
+    runCLI(
+      `generate @nrwl/react:app ${appName} --routing --bundler=webpack --no-interactive`
     );
 
     runCLI(`build ${appName} --outputHashing none`);
 
-    expect(readFile(`dist/apps/${appName}/styles.css`)).toMatch(
-      /Comic Sans MS/
+    checkFilesExist(
+      `dist/apps/${appName}/index.html`,
+      `dist/apps/${appName}/runtime.js`,
+      `dist/apps/${appName}/main.js`
     );
-  });
-});
+  }, 250_000);
 
-describe('React Applications and Libs with PostCSS', () => {
-  let proj: string;
-
-  beforeAll(() => (proj = newProject()));
-
-  it('should support single path or auto-loading of PostCSS config files', async () => {
+  it('should be able to add a redux slice', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
     runCLI(`g @nrwl/react:app ${appName} --bundler=webpack --no-interactive`);
+    runCLI(`g @nrwl/react:redux lemon --project=${appName}`);
     runCLI(
-      `g @nrwl/react:lib ${libName} --no-interactive --unit-test-runner=none`
+      `g @nrwl/react:lib ${libName} --unit-test-runner=jest --no-interactive`
+    );
+    runCLI(`g @nrwl/react:redux orange --project=${libName}`);
+
+    const appTestResults = await runCLIAsync(`test ${appName}`);
+    expect(appTestResults.combinedOutput).toContain(
+      'Test Suites: 2 passed, 2 total'
     );
 
-    const mainPath = `apps/${appName}/src/main.tsx`;
-    updateFile(
-      mainPath,
-      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
+    const libTestResults = await runCLIAsync(`test ${libName}`);
+    expect(libTestResults.combinedOutput).toContain(
+      'Test Suites: 2 passed, 2 total'
     );
+  }, 250_000);
 
-    createFile(
-      `apps/${appName}/postcss.config.js`,
-      `
+  describe('React Applications: --style option', () => {
+    it.each`
+      style
+      ${'css'}
+      ${'scss'}
+      ${'less'}
+      ${'styl'}
+    `('should support global and css modules', ({ style }) => {
+      const appName = uniq('app');
+      runCLI(
+        `generate @nrwl/react:app ${appName} --style=${style} --bundler=webpack --no-interactive`
+      );
+
+      // make sure stylePreprocessorOptions works
+      updateProjectConfig(appName, (config) => {
+        config.targets.build.options.stylePreprocessorOptions = {
+          includePaths: ['libs/shared/lib'],
+        };
+        return config;
+      });
+      updateFile(
+        `apps/${appName}/src/styles.${style}`,
+        `@import 'base.${style}';`
+      );
+      updateFile(
+        `apps/${appName}/src/app/app.module.${style}`,
+        (s) => `@import 'base.${style}';\n${s}`
+      );
+      updateFile(
+        `libs/shared/lib/base.${style}`,
+        `body { font-family: "Comic Sans MS"; }`
+      );
+
+      runCLI(`build ${appName} --outputHashing none`);
+
+      expect(readFile(`dist/apps/${appName}/styles.css`)).toMatch(
+        /Comic Sans MS/
+      );
+    });
+  });
+
+  describe('React Applications and Libs with PostCSS', () => {
+    it('should support single path or auto-loading of PostCSS config files', async () => {
+      const appName = uniq('app');
+      const libName = uniq('lib');
+
+      runCLI(`g @nrwl/react:app ${appName} --bundler=webpack --no-interactive`);
+      runCLI(
+        `g @nrwl/react:lib ${libName} --no-interactive --unit-test-runner=none`
+      );
+
+      const mainPath = `apps/${appName}/src/main.tsx`;
+      updateFile(
+        mainPath,
+        `import '@${proj}/${libName}';\n${readFile(mainPath)}`
+      );
+
+      createFile(
+        `apps/${appName}/postcss.config.js`,
+        `
       console.log('HELLO FROM APP'); // need this output for e2e test
       module.exports = {};
     `
-    );
-    createFile(
-      `libs/${libName}/postcss.config.js`,
-      `
+      );
+      createFile(
+        `libs/${libName}/postcss.config.js`,
+        `
       console.log('HELLO FROM LIB'); // need this output for e2e test
       module.exports = {};
     `
-    );
+      );
 
-    let buildResults = await runCLIAsync(`build ${appName}`);
+      let buildResults = await runCLIAsync(`build ${appName}`);
 
-    expect(buildResults.combinedOutput).toMatch(/HELLO FROM APP/);
-    expect(buildResults.combinedOutput).toMatch(/HELLO FROM LIB/);
+      expect(buildResults.combinedOutput).toMatch(/HELLO FROM APP/);
+      expect(buildResults.combinedOutput).toMatch(/HELLO FROM LIB/);
 
-    // Only load app PostCSS config
-    updateJson(`apps/${appName}/project.json`, (json) => {
-      json.targets.build.options.postcssConfig = `apps/${appName}/postcss.config.js`;
-      return json;
-    });
+      // Only load app PostCSS config
+      updateJson(`apps/${appName}/project.json`, (json) => {
+        json.targets.build.options.postcssConfig = `apps/${appName}/postcss.config.js`;
+        return json;
+      });
 
-    buildResults = await runCLIAsync(`build ${appName}`);
+      buildResults = await runCLIAsync(`build ${appName}`);
 
-    expect(buildResults.combinedOutput).toMatch(/HELLO FROM APP/);
-    expect(buildResults.combinedOutput).not.toMatch(/HELLO FROM LIB/);
-  }, 250_000);
+      expect(buildResults.combinedOutput).toMatch(/HELLO FROM APP/);
+      expect(buildResults.combinedOutput).not.toMatch(/HELLO FROM LIB/);
+    }, 250_000);
+  });
 });
+
+async function testGeneratedApp(
+  appName,
+  opts: {
+    checkStyles: boolean;
+    checkLinter: boolean;
+    checkE2E: boolean;
+    checkSourceMap?: boolean;
+  }
+) {
+  if (opts.checkLinter) {
+    const lintResults = runCLI(`lint ${appName}`);
+    expect(lintResults).toContain('All files pass linting.');
+  }
+
+  runCLI(
+    `build ${appName} --outputHashing none ${
+      opts.checkSourceMap ? '--sourceMap' : ''
+    }`
+  );
+  const filesToCheck = [
+    `dist/apps/${appName}/index.html`,
+    `dist/apps/${appName}/runtime.js`,
+    `dist/apps/${appName}/main.js`,
+  ];
+
+  if (opts.checkSourceMap) {
+    filesToCheck.push(`dist/apps/${appName}/main.js.map`);
+  }
+
+  if (opts.checkStyles) {
+    filesToCheck.push(`dist/apps/${appName}/styles.css`);
+  }
+  checkFilesExist(...filesToCheck);
+
+  if (opts.checkStyles) {
+    expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
+      '<link rel="stylesheet" href="styles.css">'
+    );
+  }
+
+  const testResults = await runCLIAsync(`test ${appName}`);
+  expect(testResults.combinedOutput).toContain(
+    'Test Suites: 1 passed, 1 total'
+  );
+
+  if (opts.checkE2E && runCypressTests()) {
+    const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
+    expect(e2eResults).toContain('All specs passed!');
+    expect(await killPorts()).toBeTruthy();
+  }
+}
