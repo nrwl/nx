@@ -11,7 +11,6 @@ import {
  * - change target export-web
  * - delete webpack.config.js
  * - delete @expo/webpack-config dependency
- * - add target update
  */
 export default async function update(tree: Tree) {
   const projects = getProjects(tree);

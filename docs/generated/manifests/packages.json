@@ -737,69 +737,6 @@
         "path": "/packages/expo/executors/download",
         "type": "executor"
       },
-      "/packages/expo/executors/build-ios": {
-        "description": "Build and sign a standalone IPA for the Apple App Store",
-        "file": "generated/packages/expo/executors/build-ios.json",
-        "hidden": false,
-        "name": "build-ios",
-        "originalFilePath": "/packages/expo/src/executors/build-ios/schema.json",
-        "path": "/packages/expo/executors/build-ios",
-        "type": "executor"
-      },
-      "/packages/expo/executors/build-android": {
-        "description": "Build and sign a standalone APK or App Bundle for the Google Play Store",
-        "file": "generated/packages/expo/executors/build-android.json",
-        "hidden": false,
-        "name": "build-android",
-        "originalFilePath": "/packages/expo/src/executors/build-android/schema.json",
-        "path": "/packages/expo/executors/build-android",
-        "type": "executor"
-      },
-      "/packages/expo/executors/build-web": {
-        "description": "Build the web app for production",
-        "file": "generated/packages/expo/executors/build-web.json",
-        "hidden": false,
-        "name": "build-web",
-        "originalFilePath": "/packages/expo/src/executors/build-web/schema.json",
-        "path": "/packages/expo/executors/build-web",
-        "type": "executor"
-      },
-      "/packages/expo/executors/build-status": {
-        "description": "Get the status of the latest build for the project",
-        "file": "generated/packages/expo/executors/build-status.json",
-        "hidden": false,
-        "name": "build-status",
-        "originalFilePath": "/packages/expo/src/executors/build-status/schema.json",
-        "path": "/packages/expo/executors/build-status",
-        "type": "executor"
-      },
-      "/packages/expo/executors/publish": {
-        "description": "Deploy a project to Expo hosting",
-        "file": "generated/packages/expo/executors/publish.json",
-        "hidden": false,
-        "name": "publish",
-        "originalFilePath": "/packages/expo/src/executors/publish/schema.json",
-        "path": "/packages/expo/executors/publish",
-        "type": "executor"
-      },
-      "/packages/expo/executors/publish-set": {
-        "description": "Specify the channel to serve a published release",
-        "file": "generated/packages/expo/executors/publish-set.json",
-        "hidden": false,
-        "name": "publish-set",
-        "originalFilePath": "/packages/expo/src/executors/publish-set/schema.json",
-        "path": "/packages/expo/executors/publish-set",
-        "type": "executor"
-      },
-      "/packages/expo/executors/rollback": {
-        "description": "Undo an update to a channel",
-        "file": "generated/packages/expo/executors/rollback.json",
-        "hidden": false,
-        "name": "rollback",
-        "originalFilePath": "/packages/expo/src/executors/rollback/schema.json",
-        "path": "/packages/expo/executors/rollback",
-        "type": "executor"
-      },
       "/packages/expo/executors/run": {
         "description": "Run the Android app binary locally or run the iOS app binary locally",
         "file": "generated/packages/expo/executors/run.json",
