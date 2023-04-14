@@ -44,13 +44,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     },
   };
 
-  if (options.server) {
-    targets.serve.options = {
-      ...targets.serve.options,
-      customServerPath: options.server,
-    };
-  }
-
   targets.export = {
     executor: '@nrwl/next:export',
     options: {
@@ -66,12 +59,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  addProjectConfiguration(
-    host,
-    options.projectName,
-    {
-      ...project,
-    },
-    options.standaloneConfig
-  );
+  addProjectConfiguration(host, options.projectName, {
+    ...project,
+  });
 }

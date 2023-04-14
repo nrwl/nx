@@ -11,7 +11,6 @@ import { addCypress } from './lib/add-cypress';
 import { addJest } from './lib/add-jest';
 import { addProject } from './lib/add-project';
 import { createApplicationFiles } from './lib/create-application-files';
-import { createNextServerFiles } from './lib/create-next-server-files';
 import { setDefaults } from './lib/set-defaults';
 import { updateJestConfig } from './lib/update-jest-config';
 import { nextInitGenerator } from '../init/init';
@@ -27,7 +26,6 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     skipFormat: true,
   });
   createApplicationFiles(host, options);
-  createNextServerFiles(host, options);
   addProject(host, options);
   const cypressTask = await addCypress(host, options);
   const jestTask = await addJest(host, options);
