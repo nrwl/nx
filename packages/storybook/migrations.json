@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "update-13.4.6": {
       "version": "13.4.6-beta.1",
       "cli": "nx",

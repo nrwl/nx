@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "update-vite-tsconfig-paths": {
       "cli": "nx",
       "version": "15.3.1-beta.0",

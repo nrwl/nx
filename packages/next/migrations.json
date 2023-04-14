@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "fix-nextjs-lib-babel-config-12.8.0": {
       "cli": "nx",
       "version": "12.8.0-beta.11",

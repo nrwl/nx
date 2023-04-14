@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "use-react-jsx-in-tsconfig-12.0.0": {
       "cli": "nx",
       "version": "12.0.0-beta.0",

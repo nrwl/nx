@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "add-swc-deps": {
       "cli": "nx",
       "version": "14.1.9-beta.0",

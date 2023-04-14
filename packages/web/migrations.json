@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "remove-node-sass-13-0-0": {
       "cli": "nx",
       "version": "13.0.0-beta.1",

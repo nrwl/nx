@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "remove-eslint-project-config-if-no-type-checking-rules": {
       "cli": "nx",
       "version": "12.4.0-beta.0",
