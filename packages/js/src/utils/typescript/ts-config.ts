@@ -42,9 +42,13 @@ export function getRelativePathToRootTsConfig(
   return offsetFromRoot(targetPath) + getRootTsConfigPathInTree(tree);
 }
 
-export function getRootTsConfigFileName(tree: Tree): string | null {
+export function getRootTsConfigFileName(tree?: Tree): string | null {
   for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
-    if (tree.exists(tsConfigName)) {
+    const pathExists = tree
+      ? tree.exists(tsConfigName)
+      : existsSync(join(workspaceRoot, tsConfigName));
+
+    if (pathExists) {
       return tsConfigName;
     }
   }

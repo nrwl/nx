@@ -1,5 +1,5 @@
 import { joinPathFragments, logger } from '@nx/devkit';
-import { findNodes } from 'nx/src/plugins/js';
+import { findNodes } from '@nx/js';
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';

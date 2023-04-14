@@ -1,6 +1,7 @@
 import type * as ts from 'typescript';
 import { ChangeType, StringChange } from '@nx/devkit';
-import { findNodes } from 'nx/src/plugins/js';
+import { findNodes } from '@nx/js';
+
 import {
   findClosestOpening,
   findElements,

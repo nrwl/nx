@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import { findNodes } from 'nx/src/plugins/js';
+import { findNodes } from '@nx/js';
 import { ChangeType, logger, StringChange, StringInsertion } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 

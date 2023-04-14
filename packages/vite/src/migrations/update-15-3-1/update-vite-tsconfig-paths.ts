@@ -7,7 +7,7 @@ import {
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { findNodes } from 'nx/src/plugins/js';
+import { findNodes } from '@nx/js';
 import { normalizeViteConfigFilePathWithTree } from '../../utils/generator-utils';
 import ts = require('typescript');
 

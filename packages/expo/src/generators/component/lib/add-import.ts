@@ -1,4 +1,4 @@
-import { findNodes } from 'nx/src/plugins/js';
+import { findNodes } from '@nx/js';
 import * as ts from 'typescript';
 import { ChangeType, StringChange } from '@nx/devkit';
 

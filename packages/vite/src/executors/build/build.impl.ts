@@ -11,7 +11,7 @@ import { existsSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 
-import { registerTsConfigPaths } from 'nx/src/plugins/js/utils/register';
+import { registerTsConfigPaths } from '@nx/js/src/internal';
 
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,

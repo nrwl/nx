@@ -12,10 +12,12 @@ import {
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { Linter } from '@nx/linter';
-import { swcNodeVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  tsLibVersion,
+  swcNodeVersion,
+} from '@nx/js/src/utils/versions';
 import * as path from 'path';
-
-import { nxVersion, tsLibVersion } from '../../utils/versions';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import { executorGenerator } from '../executor/executor';
 import { generatorGenerator } from '../generator/generator';

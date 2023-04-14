@@ -16,8 +16,11 @@ import {
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
-import { swcCoreVersion, swcNodeVersion } from '../../utils/versions';
-import { nxVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  swcCoreVersion,
+  swcNodeVersion,
+} from '@nx/js/src/utils/versions';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
 

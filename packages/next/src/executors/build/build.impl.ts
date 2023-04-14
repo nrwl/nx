@@ -5,7 +5,7 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { createLockFile, createPackageJson } from '@nx/js';
+import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
 import build from 'next/dist/build';
 import { join, resolve } from 'path';
 import { copySync, existsSync, mkdir, writeFileSync } from 'fs-extra';
@@ -17,8 +17,6 @@ import { updatePackageJson } from './lib/update-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';
 import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
-
-import { getLockFileName } from 'nx/src/plugins/js';
 
 export default async function buildExecutor(
   options: NextBuildBuilderOptions,

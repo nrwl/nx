@@ -1,5 +1,4 @@
 import type { Tree } from 'nx/src/generators/tree';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { typescriptVersion } from '../utils/versions';
 import { ensurePackage } from '../utils/package-json';
 

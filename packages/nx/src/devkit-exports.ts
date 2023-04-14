@@ -225,18 +225,3 @@ export { Hash, Hasher } from './hasher/hasher';
  * @category Utils
  */
 export { cacheDir } from './utils/cache-directory';
-
-import { createLockFile as _createLockFile } from './plugins/js';
-import { createPackageJson as _createPackageJson } from './plugins/js';
-
-/**
- * @category Package Manager
- */
-/**
- * @deprecated Import this from @nrwl/js instead
- */
-export const createLockFile = _createLockFile;
-/**
- * @deprecated Import this from @nrwl/js instead
- */
-export const createPackageJson = _createPackageJson;

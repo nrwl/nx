@@ -12,7 +12,10 @@ import * as yargs from 'yargs';
 
 import * as prettier from 'prettier';
 import { sortObjectByKeys } from '../utils/object-sort';
-import { getRootTsConfigFileName, getRootTsConfigPath } from '../plugins/js';
+import {
+  getRootTsConfigFileName,
+  getRootTsConfigPath,
+} from '../plugins/js/utils/typescript';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
 import { readNxJson } from '../config/configuration';

@@ -11,7 +11,7 @@ import {
 
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
-import { registerTsConfigPaths } from 'nx/src/plugins/js/utils/register';
+import { registerTsConfigPaths } from '@nx/js/src/internal';
 import { resolve } from 'path';
 
 export async function* viteDevServerExecutor(

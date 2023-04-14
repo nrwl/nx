@@ -18,19 +18,6 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { ensureDirSync } from 'fs-extra';
 import { removeNpmNodes } from './lock-file/remove-npm-nodes';
 
-/**
- * Exports section
- */
-export {
-  findNodes,
-  getRootTsConfigPath,
-  getRootTsConfigFileName,
-  readTsConfig,
-  resolveModuleByImport,
-} from './utils/typescript';
-export { getLockFileName, createLockFile } from './lock-file/lock-file';
-export { createPackageJson } from './package-json/create-package-json';
-
 export const processProjectGraph: ProjectGraphProcessor = async (
   graph,
   context

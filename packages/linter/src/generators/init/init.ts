@@ -10,9 +10,9 @@ import {
 import {
   eslintConfigPrettierVersion,
   eslintVersion,
-  nxVersion,
   typescriptESLintVersion,
 } from '../../utils/versions';
+import { nxVersion } from '@nx/js/src/utils/versions';
 
 import { Linter } from '../utils/linter';
 import { findEslintFile } from '../utils/eslint-file';
