@@ -1,6 +1,6 @@
 # Environment Variables
 
-## NX_BRANCH and NX_CI_EXECUTION_ID
+### NX_BRANCH and NX_CI_EXECUTION_ID
 
 When running commands on CI, `nx-cloud` needs to know the current branch and the current CI execution ID (something that
 uniquely identifies the current CI run or job). **For most CI providers, `nx-cloud` is able to determine both
@@ -15,7 +15,7 @@ main jobs (e.g., when running CI on both Linux and Windows or when running the s
 of Node.js or Java). In this case you can set the `NX_CI_EXECUTION_ENV` env variable on main jobs and agents. The main
 job where the `NX_CI_EXECUTION_ENV` is set to, say, `macos`, will connect to the agents with the same env name.
 
-#### NX_RUN_GROUP
+### NX_RUN_GROUP
 
 Older versions of `nx-cloud` used `NX_RUN_GROUP` instead of `NX_CI_EXECUTION_ID` and `NX_CI_EXECUTION_ENV`. It
 served the same purpose.
@@ -56,3 +56,7 @@ By default, Nx Cloud requests will time out after 10 seconds. `NX_CLOUD_NO_TIMEO
 
 Setting `NX_VERBOSE_LOGGING` to true will output the debug information about agents communicating with the main job.
 This can be useful for debugging unexpected cache misses and issues with on-prem setups.
+
+## See Also
+
+- [Nx Environment Variables](/reference/environment-variables)
