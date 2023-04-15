@@ -143,7 +143,6 @@ jobs:
       NX_E2E_RUN_CYPRESS: 'true'
       NX_VERBOSE_LOGGING: 'false'
       NX_PERF_LOGGING: 'false'
-      NX_E2E_SKIP_BUILD_CLEANUP: 'true'
     steps:
       - run:
           name: Configure git metadata (needed for lerna smoke tests)
@@ -171,7 +170,6 @@ jobs:
       NX_VERBOSE_LOGGING: 'false'
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
-      NX_E2E_SKIP_BUILD_CLEANUP: 'true'
     steps:
       - run:
           name: Set dynamic nx run variable
@@ -218,7 +216,6 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
-      NX_E2E_SKIP_BUILD_CLEANUP: 'true'
     steps:
       - run:
           name: Set dynamic nx run variable

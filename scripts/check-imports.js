@@ -15,7 +15,7 @@ function allFilesInDir(dirName) {
             name: child,
             content: fs.readFileSync(child).toString(),
           });
-        } else if (s.isDirectory() && !child.includes('node_modules')) {
+        } else if (s.isDirectory()) {
           res = [...res, ...allFilesInDir(child)];
         }
       } catch (e) {}

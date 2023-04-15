@@ -183,6 +183,7 @@
     "import-fresh": "^3.3.0",
     "injection-js": "^2.4.0",
     "is-ci": "^3.0.1",
+    "is-core-module": "2.11.0",
     "is-windows": "^1.0.2",
     "jasmine-core": "~2.99.1",
     "jasmine-spec-reporter": "~4.2.1",

@@ -6,7 +6,6 @@ const IGNORE_MATCHES = {
   '*': [] as string[],
   angular: ['webpack-merge', '@phenomnomnominal/tsquery'],
   cypress: ['webpack', '@babel/core', 'babel-loader'],
-  jest: ['@jest/reporters', 'jest-config', 'jest-resolve', 'jest-util'],
 };
 
 export default function getDiscrepancies(

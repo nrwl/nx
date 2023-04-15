@@ -27,6 +27,10 @@ describe('@nrwl/storybook:storybook', () => {
       rootPath,
       `node_modules/@storybook/react/package.json`
     );
+    const coreJsonPath = join(
+      rootPath,
+      `node_modules/resolve/node_modules/is-core-module/core.json`
+    );
     const storybookPath = join(rootPath, '.storybook');
 
     options = {
@@ -36,6 +40,7 @@ describe('@nrwl/storybook:storybook', () => {
     };
     vol.fromJSON({
       [packageJsonPath]: readFileSync(packageJsonPath).toString(),
+      [coreJsonPath]: readFileSync(coreJsonPath).toString(),
     });
     vol.mkdirSync(storybookPath, {
       recursive: true,
