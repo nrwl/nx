@@ -24,10 +24,7 @@ export default function getDiscrepancies(
       (p) =>
         devDependencies[p] &&
         projectDependencies[p] !== devDependencies[p] &&
-        !satisfies(
-          devDependencies[p].replace(/^\^|~/, ''),
-          projectDependencies[p]
-        )
+        !satisfies(devDependencies[p], projectDependencies[p])
     )
     .map(
       (p) => `${p}@${devDependencies[p]} ${chalk.dim(projectDependencies[p])}`

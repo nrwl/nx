@@ -27,11 +27,10 @@ describe('@nrwl/storybook:storybook', () => {
       rootPath,
       `node_modules/@storybook/react/package.json`
     );
-    const coreJsonPath = join(
-      rootPath,
-      `node_modules/resolve/node_modules/is-core-module/core.json`
-    );
     const storybookPath = join(rootPath, '.storybook');
+    const storybookReactPath =
+      require.resolve('@storybook/react').split('/@storybook/react')[0] +
+      '/@storybook/react/package.json';
 
     options = {
       uiFramework: '@storybook/react',
@@ -40,7 +39,8 @@ describe('@nrwl/storybook:storybook', () => {
     };
     vol.fromJSON({
       [packageJsonPath]: readFileSync(packageJsonPath).toString(),
-      [coreJsonPath]: readFileSync(coreJsonPath).toString(),
+      // pnpm keeps packages in a different location
+      [storybookReactPath]: readFileSync(packageJsonPath).toString(),
     });
     vol.mkdirSync(storybookPath, {
       recursive: true,

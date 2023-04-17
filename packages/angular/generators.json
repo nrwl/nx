@@ -1,7 +1,7 @@
 {
   "name": "Nx Angular",
   "version": "0.1",
-  "extends": ["@schematics/angular", "@nrwl/workspace"],
+  "extends": ["@schematics/angular", "@nx/workspace"],
   "schematics": {
     "add-linting": {
       "factory": "./src/generators/add-linting/compat",
