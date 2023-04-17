@@ -176,6 +176,14 @@ module.exports = withNx({
         permanent: true,
       });
     }
+    // Tutorials / Getting started
+    for (let s of Object.keys(redirectRules.conceptUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.conceptUrls[s],
+        permanent: true,
+      });
+    }
 
     // Packages Indexes
     for (let s of Object.keys(redirectRules.packagesIndexes)) {
