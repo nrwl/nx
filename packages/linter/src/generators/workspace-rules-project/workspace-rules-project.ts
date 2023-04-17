@@ -1,5 +1,4 @@
 import {
-  addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
   ensurePackage,
@@ -14,13 +13,10 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
+import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { join } from 'path';
+import { nxVersion } from '../../utils/versions';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
-import {
-  nxVersion,
-  swcCoreVersion,
-  swcNodeVersion,
-} from '@nx/js/src/utils/versions';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
 
@@ -108,11 +104,7 @@ export async function lintWorkspaceRulesProjectGenerator(
   );
 
   // Add swc dependencies
-  addDependenciesToPackageJson(
-    tree,
-    {},
-    { '@swc-node/register': swcNodeVersion, '@swc/core': swcCoreVersion }
-  );
+  addSwcRegisterDependencies(tree);
 
   // Add extra config to the jest.config.ts file to allow ESLint 8 exports mapping to work with jest
   addPropertyToJestConfig(

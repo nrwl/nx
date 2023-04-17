@@ -6,7 +6,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { nxVersion } from '@nx/js/src/utils/versions';
+import { nxVersion } from '../../utils/versions';
 
 export default async function eslint8Updates(tree: Tree) {
   try {
