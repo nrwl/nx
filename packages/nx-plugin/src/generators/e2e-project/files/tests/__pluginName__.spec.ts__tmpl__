@@ -32,6 +32,6 @@ describe('<%= pluginName %> e2e', () => {
     const generator = 'PLACEHOLDER';
     await runNxCommandAsync(`generate <%= npmPackageName %>:${generator} --name ${name}`);
     expect(() => runNxCommand('build ${proj}')).not.toThrow();
-    expect(() => checkFilesExist([`dist/${name}/index.js`])).not.toThrow();
+    expect(() => checkFilesExist(`dist/${name}/index.js`)).not.toThrow();
   });
 });

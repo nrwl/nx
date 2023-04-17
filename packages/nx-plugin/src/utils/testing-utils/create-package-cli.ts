@@ -1,4 +1,4 @@
-import { names, workspaceRoot } from '@nrwl/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { tmpFolder } from './paths';
 import { fork } from 'child_process';
 
@@ -6,30 +6,38 @@ import { fork } from 'child_process';
  * This function is used to run the create package CLI command.
  * It builds the plugin library and the create package library and run the create package command with for the plugin library.
  * It needs to be ran inside an Nx project. It would assume that an Nx project already exists.
- * @param pluginLibraryName e.g. my-plugin
+ * @param projectToBeCreated project name to be created using the cli
  * @param pluginLibraryBuildPath e.g. dist/packages/my-plugin
  * @param createPackageLibraryBuildPath e.g. dist/packages/create-my-plugin-package
- * @param projectToBeCreated project name to be created using the cli
+ * @param extraArguments extra arguments to be passed to the create package command
+ * @param verbose if true, NX_VERBOSE_LOGGING will be set to true
  * @returns results for the create package command
  */
 export function runCreatePackageCli(
-  pluginLibraryName: string,
-  pluginLibraryBuildPath: string,
-  createPackageLibraryBuildPath: string,
-  projectToBeCreated: string
+  projectToBeCreated: string,
+  {
+    pluginLibraryBuildPath,
+    createPackageLibraryBuildPath,
+    extraArguments,
+    verbose,
+  }: {
+    pluginLibraryBuildPath: string;
+    createPackageLibraryBuildPath: string;
+    extraArguments?: string[];
+    verbose?: boolean;
+  }
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const childProcess = fork(
       `${workspaceRoot}/${createPackageLibraryBuildPath}/bin/index.js`,
-      [projectToBeCreated, '--verbose'],
+      [projectToBeCreated, ...(extraArguments || [])],
       {
         stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
         env: {
           ...process.env,
-          [`NX_E2E_${
-            names(pluginLibraryName).constantName
-          }_VERSION`]: `file:${workspaceRoot}/${pluginLibraryBuildPath}`,
-          NX_VERBOSE_LOGGING: 'true',
+          [`NX_E2E_PRESET_VERSION`]: `file:${workspaceRoot}/${pluginLibraryBuildPath}`,
+          // only add NX_VERBOSE_LOGGING if verbose is true
+          ...(verbose && { NX_VERBOSE_LOGGING: 'true' }),
         },
         cwd: tmpFolder(),
       }

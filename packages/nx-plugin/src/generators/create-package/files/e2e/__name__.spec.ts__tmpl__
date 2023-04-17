@@ -2,7 +2,7 @@ import {
   uniq,
   runCreatePackageCli,
   removeTmpProject,
-} from '@nrwl/nx-plugin/testing';
+} from '@nx/nx-plugin/testing';
 
 describe('<%= name %> e2e', () => {
   const project = uniq('<%= name %>');
@@ -11,10 +11,11 @@ describe('<%= name %> e2e', () => {
   beforeAll(async () => {
     // Create project using CLI command
     createPackageResult = await runCreatePackageCli(
-      '<%= pluginPackageName %>',
-      '<%= pluginOutputPath %>',
-      '<%= cliOutputPath %>',
-      project
+      project,
+      {
+        pluginLibraryBuildPath: '<%= pluginOutputPath %>',
+        createPackageLibraryBuildPath: '<%= cliOutputPath %>',
+      }
     );
   }, 240_000);
 

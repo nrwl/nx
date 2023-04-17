@@ -5,4 +5,5 @@ export interface Schema {
   unitTestRunner: 'jest' | 'none';
   includeHasher: boolean;
   skipLintChecks?: boolean;
+  skipFormat?: boolean;
 }

@@ -3,9 +3,10 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
+import { PackageJson } from 'nx/src/utils/package-json';
 import pluginGenerator from '../plugin/plugin';
 import { createPackageGenerator } from './create-package';
 import { CreatePackageSchema } from './schema';
@@ -13,7 +14,7 @@ import { CreatePackageSchema } from './schema';
 const getSchema: (
   overrides?: Partial<CreatePackageSchema>
 ) => CreatePackageSchema = (overrides = {}) => ({
-  name: 'create-package',
+  name: 'create-a-workspace',
   project: 'my-plugin',
   compiler: 'tsc',
   skipTsConfig: false,
@@ -21,7 +22,6 @@ const getSchema: (
   skipLintChecks: false,
   linter: Linter.EsLint,
   unitTestRunner: 'jest',
-  minimal: true,
   ...overrides,
 });
 
@@ -43,20 +43,19 @@ describe('NxPlugin Create Package Generator', () => {
 
   it('should update the project.json file', async () => {
     await createPackageGenerator(tree, getSchema());
-    const project = readProjectConfiguration(tree, 'create-package');
-    expect(project.root).toEqual('libs/create-package');
-    expect(project.sourceRoot).toEqual('libs/create-package/bin');
+    const project = readProjectConfiguration(tree, 'create-a-workspace');
+    expect(project.root).toEqual('libs/create-a-workspace');
+    expect(project.sourceRoot).toEqual('libs/create-a-workspace/bin');
     expect(project.targets.build).toEqual({
-      executor: '@nrwl/js:tsc',
+      executor: '@nx/js:tsc',
       outputs: ['{options.outputPath}'],
       options: {
-        outputPath: 'dist/libs/create-package',
-        tsConfig: 'libs/create-package/tsconfig.lib.json',
-        main: 'libs/create-package/bin/index.ts',
-        assets: [],
-        buildableProjectDepsInPackageJsonType: 'dependencies',
+        outputPath: 'dist/libs/create-a-workspace',
+        tsConfig: 'libs/create-a-workspace/tsconfig.lib.json',
+        main: 'libs/create-a-workspace/bin/index.ts',
+        assets: ['libs/create-a-workspace/*.md'],
+        updateBuildableProjectDepsInPackageJson: false,
       },
-      dependsOn: ['^build'],
     });
   });
 
@@ -67,8 +66,11 @@ describe('NxPlugin Create Package Generator', () => {
         directory: 'plugins',
       } as Partial<CreatePackageSchema>)
     );
-    const project = readProjectConfiguration(tree, 'plugins-create-package');
-    expect(project.root).toEqual('libs/plugins/create-package');
+    const project = readProjectConfiguration(
+      tree,
+      'plugins-create-a-workspace'
+    );
+    expect(project.root).toEqual('libs/plugins/create-a-workspace');
   });
 
   it('should specify tsc as compiler', async () => {
@@ -79,9 +81,12 @@ describe('NxPlugin Create Package Generator', () => {
       })
     );
 
-    const { build } = readProjectConfiguration(tree, 'create-package').targets;
+    const { build } = readProjectConfiguration(
+      tree,
+      'create-a-workspace'
+    ).targets;
 
-    expect(build.executor).toEqual('@nrwl/js:tsc');
+    expect(build.executor).toEqual('@nx/js:tsc');
   });
 
   it('should specify swc as compiler', async () => {
@@ -92,35 +97,23 @@ describe('NxPlugin Create Package Generator', () => {
       })
     );
 
-    const { build } = readProjectConfiguration(tree, 'create-package').targets;
+    const { build } = readProjectConfiguration(
+      tree,
+      'create-a-workspace'
+    ).targets;
 
-    expect(build.executor).toEqual('@nrwl/js:swc');
+    expect(build.executor).toEqual('@nx/js:swc');
   });
 
   it("should use name as default for the package.json's name", async () => {
     await createPackageGenerator(tree, getSchema());
 
-    const { root } = readProjectConfiguration(tree, 'create-package');
-    const { name } = readJson<{ name: string }>(
+    const { root } = readProjectConfiguration(tree, 'create-a-workspace');
+    const { name } = readJson<PackageJson>(
       tree,
       joinPathFragments(root, 'package.json')
     );
 
-    expect(name).toEqual('create-package');
-  });
-
-  it('should use importPath as the package.json name', async () => {
-    await createPackageGenerator(
-      tree,
-      getSchema({ importPath: '@my-company/create-package' })
-    );
-
-    const { root } = readProjectConfiguration(tree, 'create-package');
-    const { name } = readJson<{ name: string }>(
-      tree,
-      joinPathFragments(root, 'package.json')
-    );
-
-    expect(name).toEqual('@my-company/create-package');
+    expect(name).toEqual('create-a-workspace');
   });
 });

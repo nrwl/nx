@@ -47,7 +47,7 @@ async function determinePluginName(
   parsedArgs: CreateNxPluginArguments
 ): Promise<string> {
   if (parsedArgs.pluginName) {
-    return Promise.resolve(parsedArgs.pluginName);
+    return parsedArgs.pluginName;
   }
 
   const results = await enquirer.prompt<{ pluginName: string }>([
@@ -55,16 +55,9 @@ async function determinePluginName(
       name: 'pluginName',
       message: `Plugin name                        `,
       type: 'input',
-      validate: (s_1) => (s_1.length ? true : 'Name cannot be empty'),
+      validate: (s_1) => (s_1.length ? true : 'Plugin name cannot be empty'),
     },
   ]);
-  if (!results.pluginName) {
-    output.error({
-      title: 'Invalid name',
-      bodyLines: [`Name cannot be empty`],
-    });
-    process.exit(1);
-  }
   return results.pluginName;
 }
 
@@ -72,13 +65,13 @@ async function determineCreatePackageName(
   parsedArgs: CreateNxPluginArguments
 ): Promise<string> {
   if (parsedArgs.createPackageName) {
-    return Promise.resolve(parsedArgs.createPackageName);
+    return parsedArgs.createPackageName;
   }
 
   const results = await enquirer.prompt<{ createPackageName: string }>([
     {
       name: 'createPackageName',
-      message: `Create package name (optional)           `,
+      message: `Create a package which can be used by npx to create a new workspace (Leave blank to not create this package)`,
       type: 'input',
     },
   ]);

@@ -22,8 +22,6 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
       ? options.pluginName.split('/')[1]
       : options.pluginName,
     skipFormat: true,
-    skipLintChecks: false,
-    skipTsConfig: false,
     unitTestRunner: 'jest',
     importPath: options.pluginName,
     rootProject: true,
@@ -39,10 +37,8 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
       name: options.createPackageName,
       project: options.pluginName,
       skipFormat: true,
-      skipTsConfig: false,
       unitTestRunner: 'jest',
       linter: Linter.EsLint,
-      setParserOptionsProject: false,
       compiler: 'tsc',
     });
     tasks.push(cliTask);

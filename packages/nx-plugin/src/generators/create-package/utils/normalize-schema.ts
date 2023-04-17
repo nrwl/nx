@@ -4,7 +4,7 @@ import {
   joinPathFragments,
   names,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { CreatePackageSchema } from '../schema';
 
 export interface NormalizedSchema extends CreatePackageSchema {
@@ -30,7 +30,6 @@ export function normalizeSchema(
     : name;
   const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
   const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
-  const importPath = schema.importPath ?? name;
   return {
     ...schema,
     bundler: schema.compiler ?? 'tsc',
@@ -39,6 +38,5 @@ export function normalizeSchema(
     projectRoot,
     name,
     projectDirectory: fullProjectDirectory,
-    importPath,
   };
 }

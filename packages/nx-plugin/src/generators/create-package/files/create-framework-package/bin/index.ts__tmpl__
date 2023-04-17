@@ -8,8 +8,10 @@ async function main() {
     throw new Error('Please provide a name for the workspace');
   }
 
+  console.log(`Creating the workspace: ${name}`);
+
   // TODO: update below to customize the workspace
-  await createWorkspace('<%= preset %>', {
+  const { directory } = await createWorkspace('<%= preset %>', {
     name, 
     nxCloud: false,
     packageManager: 'npm',
@@ -18,7 +20,7 @@ async function main() {
     presetVersion: require('../package.json').version,
   });
 
-  console.log(`Successfully created the workspace: ${name}.`);
+  console.log(`Successfully created the workspace: ${directory}.`);
 }
 
 main();

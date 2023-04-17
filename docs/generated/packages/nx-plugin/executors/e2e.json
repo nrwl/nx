@@ -117,7 +117,8 @@
       "runInBand": {
         "alias": "i",
         "description": "Run all tests serially in the current process (rather than creating a worker pool of child processes that run tests). This is sometimes useful for debugging, but such use cases are pretty rare. Useful for CI. (https://jestjs.io/docs/cli#--runinband)",
-        "type": "boolean"
+        "type": "boolean",
+        "default": true
       },
       "showConfig": {
         "description": "Print your Jest config and then exits. (https://jestjs.io/docs/en/cli#--showconfig)",

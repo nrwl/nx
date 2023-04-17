@@ -1,5 +1,7 @@
+import { workspaceRoot } from '@nx/devkit';
+
 export function tmpFolder() {
-  return `${process.cwd()}/tmp`;
+  return `${workspaceRoot}/tmp`;
 }
 
 /**
@@ -22,6 +24,6 @@ export function tmpProjPath(path?: string) {
  */
 export function tmpBackupProjPath(path?: string) {
   return path
-    ? `${process.cwd()}/tmp/nx-e2e/proj-backup/${path}`
-    : `${process.cwd()}/tmp/nx-e2e/proj-backup`;
+    ? `${workspaceRoot}/tmp/nx-e2e/proj-backup/${path}`
+    : `${workspaceRoot}/tmp/nx-e2e/proj-backup`;
 }
