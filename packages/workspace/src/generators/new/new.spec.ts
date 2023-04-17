@@ -153,7 +153,7 @@ describe('new', () => {
             '3rd-party-package': expectedVersion,
           });
           expect(devDependencies).toStrictEqual({
-            '@nrwl/workspace': nxVersion,
+            '@nx/workspace': nxVersion,
             nx: nxVersion,
           });
         }
