@@ -1,10 +1,9 @@
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { output } from './utils/output';
-import { printNxCloudSuccessMessage, setupNxCloud } from './utils/nx/nx-cloud';
+import { setupNxCloud } from './utils/nx/nx-cloud';
 import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
-import { showNxWarning } from './utils/nx/show-nx-warning';
 import { setupCI } from './utils/ci/setup-ci';
 import { messages, recordStat } from './utils/nx/ab-testing';
 import { initializeGitRepo } from './utils/git/git';
@@ -24,15 +23,12 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     skipGit = false,
     defaultBase = 'main',
     commit,
+    cliName,
   } = options;
 
-  output.log({
-    title: `Nx is creating your v${nxVersion} workspace.`,
-    bodyLines: [
-      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
-      `Nx will run "${options.packageManager} install" several times. Please wait.`,
-    ],
-  });
+  if (cliName) {
+    output.setCliName(cliName ?? 'NX');
+  }
 
   const tmpDir = await createSandbox(packageManager);
 
@@ -79,16 +75,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
   }
 
-  showNxWarning(name);
-
-  if (nxCloud && nxCloudInstallRes?.code === 0) {
-    printNxCloudSuccessMessage(nxCloudInstallRes.stdout);
-  }
-
-  await recordStat({
-    nxVersion,
-    command: 'create-nx-workspace',
-    useCloud: nxCloud,
-    meta: messages.codeOfSelectedPromptMessage('nxCloudCreation'),
-  });
+  return {
+    nxCloudInfo: nxCloudInstallRes?.stdout,
+    directory,
+  };
 }

@@ -52,10 +52,6 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
       ...command.split(' ')
     );
     await spawnAndWait(exec, args, directory);
-
-    output.log({
-      title: `Successfully applied preset: ${preset}.`,
-    });
   } catch (e) {
     output.error({
       title: `Failed to apply preset: ${preset}`,

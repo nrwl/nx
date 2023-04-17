@@ -21,6 +21,12 @@ import { createWorkspace, CreateWorkspaceOptions } from 'create-nx-workspace';
 import { output } from 'create-nx-workspace/src/utils/output';
 import { CI } from 'create-nx-workspace/src/utils/ci/ci-list';
 import type { PackageManager } from 'create-nx-workspace/src/utils/package-manager';
+import { showNxWarning } from 'create-nx-workspace/src/utils/nx/show-nx-warning';
+import { printNxCloudSuccessMessage } from 'create-nx-workspace/src/utils/nx/nx-cloud';
+import {
+  messages,
+  recordStat,
+} from 'create-nx-workspace/src/utils/nx/ab-testing';
 
 export const yargsDecorator = {
   'Options:': `${chalk.green`Options`}:`,
@@ -120,7 +126,32 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
       ? parsedArgs.pluginName.split('/')[1]
       : parsedArgs.pluginName,
   };
-  await createWorkspace('@nrwl/nx-plugin', populatedArguments);
+
+  output.log({
+    title: `Creating an Nx v${nxVersion} plugin.`,
+    bodyLines: [
+      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
+      `Nx will run "${parsedArgs.packageManager} install" several times. Please wait.`,
+    ],
+  });
+
+  const workspaceInfo = await createWorkspace(
+    '@nrwl/nx-plugin',
+    populatedArguments
+  );
+
+  showNxWarning(parsedArgs.pluginName);
+
+  await recordStat({
+    nxVersion,
+    command: 'create-nx-workspace',
+    useCloud: parsedArgs.nxCloud,
+    meta: messages.codeOfSelectedPromptMessage('nxCloudCreation'),
+  });
+
+  if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
+    printNxCloudSuccessMessage(workspaceInfo.nxCloudInfo);
+  }
 }
 
 /**

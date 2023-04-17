@@ -64,13 +64,13 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     await execAndWait(fullCommand, tmpDir);
 
     workspaceSetupSpinner.succeed(
-      `Nx has successfully created the workspace: ${getFileName(name)}.`
+      `Successfully created the workspace: ${getFileName(name)}.`
     );
   } catch (e) {
     workspaceSetupSpinner.fail();
     if (e instanceof Error) {
       output.error({
-        title: `Nx failed to create a workspace.`,
+        title: `Failed to create a workspace.`,
         bodyLines: mapErrorToBodyLines(e),
       });
     } else {

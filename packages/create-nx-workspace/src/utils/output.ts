@@ -10,13 +10,11 @@ import { isCI } from './ci/is-ci';
 export interface CLIErrorMessageConfig {
   title: string;
   bodyLines?: string[];
-  slug?: string;
 }
 
 export interface CLIWarnMessageConfig {
   title: string;
   bodyLines?: string[];
-  slug?: string;
 }
 
 export interface CLINoteMessageConfig {
@@ -82,7 +80,7 @@ class CLIOutput {
     color: string;
     title: string;
   }): void {
-    this.writeToStdOut(` ${this.applyNxPrefix(color, title)}${EOL}`);
+    this.writeToStdOut(` ${this.applyCLIPrefix(color, title)}${EOL}`);
   }
 
   private writeOptionalOutputBody(bodyLines?: string[]): void {
@@ -93,18 +91,24 @@ class CLIOutput {
     bodyLines.forEach((bodyLine) => this.writeToStdOut(`   ${bodyLine}${EOL}`));
   }
 
-  applyNxPrefix(color = 'cyan', text: string): string {
-    let nxPrefix = '';
+  private cliName = 'NX';
+
+  setCliName(name: string) {
+    this.cliName = name;
+  }
+
+  applyCLIPrefix(color = 'cyan', text: string): string {
+    let cliPrefix = '';
     if ((chalk as any)[color]) {
-      nxPrefix = `${(chalk as any)[color]('>')} ${(
+      cliPrefix = `${(chalk as any)[color]('>')} ${(
         chalk as any
-      ).reset.inverse.bold[color](' NX ')}`;
+      ).reset.inverse.bold[color](` ${this.cliName} `)}`;
     } else {
-      nxPrefix = `${chalk.keyword(color)(
+      cliPrefix = `${chalk.keyword(color)(
         '>'
-      )} ${chalk.reset.inverse.bold.keyword(color)(' NX ')}`;
+      )} ${chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `)}`;
     }
-    return `${nxPrefix}  ${text}`;
+    return `${cliPrefix}  ${text}`;
   }
 
   addNewline() {
@@ -125,7 +129,7 @@ class CLIOutput {
     );
   }
 
-  error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
+  error({ title, bodyLines }: CLIErrorMessageConfig) {
     this.addNewline();
 
     this.writeOutputTitle({
@@ -135,22 +139,10 @@ class CLIOutput {
 
     this.writeOptionalOutputBody(bodyLines);
 
-    /**
-     * Optional slug to be used in an Nx error message redirect URL
-     */
-    if (slug && typeof slug === 'string') {
-      this.addNewline();
-      this.writeToStdOut(
-        `${chalk.grey(
-          '  Learn more about this error: '
-        )}https://errors.nx.dev/${slug}${EOL}`
-      );
-    }
-
     this.addNewline();
   }
 
-  warn({ title, slug, bodyLines }: CLIWarnMessageConfig) {
+  warn({ title, bodyLines }: CLIWarnMessageConfig) {
     this.addNewline();
 
     this.writeOutputTitle({
@@ -159,18 +151,6 @@ class CLIOutput {
     });
 
     this.writeOptionalOutputBody(bodyLines);
-
-    /**
-     * Optional slug to be used in an Nx warning message redirect URL
-     */
-    if (slug && typeof slug === 'string') {
-      this.addNewline();
-      this.writeToStdOut(
-        `${chalk.grey(
-          '  Learn more about this warning: '
-        )}https://errors.nx.dev/${slug}\n`
-      );
-    }
 
     this.addNewline();
   }
@@ -211,8 +191,6 @@ class CLIOutput {
 
     this.addNewline();
   }
-
-  logCommand(message: string) {}
 
   log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
     this.addNewline();

@@ -24,7 +24,7 @@ export async function setupNxCloud(
 
     if (e instanceof Error) {
       output.error({
-        title: `Nx failed to setup NxCloud`,
+        title: `Failed to setup NxCloud`,
         bodyLines: mapErrorToBodyLines(e),
       });
     } else {
