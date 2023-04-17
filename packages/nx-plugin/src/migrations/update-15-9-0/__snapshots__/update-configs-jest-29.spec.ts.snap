@@ -323,11 +323,12 @@ exports[`Nx Plugin Migration - jest 29 update configs should work if not using t
   transform: {
     '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-};"
+};
+"
 `;
 
 exports[`Nx Plugin Migration - jest 29 update configs should work if not using ts-jest transformer 2`] = `
@@ -335,11 +336,12 @@ exports[`Nx Plugin Migration - jest 29 update configs should work if not using t
   transform: {
     '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-};"
+};
+"
 `;
 
 exports[`Nx Plugin Migration - jest 29 update configs should work snapshotFormat is defined 1`] = `
@@ -347,63 +349,74 @@ exports[`Nx Plugin Migration - jest 29 update configs should work snapshotFormat
   transform: {
     '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
-  globals: { something: 'else',
-abc: [1234, true, {abc: 'yes'}] },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  globals: { something: 'else', abc: [1234, true, { abc: 'yes' }] },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-  snapshotFormat: {escapeString: false, printBasicPrototype: true}
-};"
+  snapshotFormat: { escapeString: false, printBasicPrototype: true },
+};
+"
 `;
 
 exports[`Nx Plugin Migration - jest 29 update configs should work snapshotFormat is defined 2`] = `
 "module.exports = {
   transform: {
-    '^.+\\\\.[tj]sx?$': ['ts-jest', {
-          tsconfig: '<rootDir>/tsconfig.spec.json'
-      }],
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-  globals: { something: 'else',
-abc: [1234, true, {abc: 'yes'}] },
-  snapshotFormat: {escapeString: false, printBasicPrototype: true}
-};"
+  globals: { something: 'else', abc: [1234, true, { abc: 'yes' }] },
+  snapshotFormat: { escapeString: false, printBasicPrototype: true },
+};
+"
 `;
 
 exports[`Nx Plugin Migration - jest 29 update configs should work with jest-preset-angular 1`] = `
 "export default {
-  globals: {  },
+  globals: {},
   transform: {
-    '^.+.(ts|mjs|js|html)$': ['jest-preset-angular', {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\.(html|svg)$',
-    }],
+    '^.+.(ts|mjs|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '.(html|svg)$',
+      },
+    ],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-};"
+};
+"
 `;
 
 exports[`Nx Plugin Migration - jest 29 update configs should work with jest-preset-angular 2`] = `
 "module.exports = {
-  globals: {  },
+  globals: {},
   transform: {
-    '^.+.(ts|mjs|js|html)$': ['jest-preset-angular', {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\.(html|svg)$',
-    }],
+    '^.+.(ts|mjs|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '.(html|svg)$',
+      },
+    ],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-};"
+};
+"
 `;
 
 exports[`Nx Plugin Migration - jest 29 update configs should work with multiple projects + configs 1`] = `

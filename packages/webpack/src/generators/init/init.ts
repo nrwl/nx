@@ -24,7 +24,7 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
     addBabelInputs(tree);
   }
   const devDependencies = {
-    '@nrwl/webpack': nxVersion,
+    '@nx/webpack': nxVersion,
   };
 
   if (schema.compiler === 'swc') {

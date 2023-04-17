@@ -221,7 +221,7 @@ module.exports = {
   transform: {
     '^.+.(ts|mjs|js|html)$': 'jest-preset-angular',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
@@ -239,7 +239,7 @@ module.exports = {
   transform: {
     '^.+.(ts|mjs|js|html)$': 'jest-preset-angular',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
@@ -266,7 +266,7 @@ module.exports = {
   transform: {
     '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
@@ -278,7 +278,7 @@ module.exports = {
   transform: {
     '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
@@ -313,7 +313,7 @@ module.exports = {
       something: 'else',
       abc: [1234, true, {abc: 'yes'}]
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
@@ -326,7 +326,7 @@ module.exports = {
   transform: {
     '^.+\\\\.[tj]sx?$': 'ts-jest',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
@@ -446,6 +446,22 @@ testEnvironment: 'node',
 preset: '../../jest.preset.js'
 };
 `
+  );
+
+  tree.write(
+    'jest.config.ts',
+    tree
+      .read('jest.config.ts')
+      .toString()
+      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest')
+  );
+
+  tree.write(
+    'jest.preset.js',
+    tree
+      .read('jest.preset.js')
+      .toString()
+      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest')
   );
 
   projectGraph = {

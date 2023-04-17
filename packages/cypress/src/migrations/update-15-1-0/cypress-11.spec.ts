@@ -1,4 +1,9 @@
-import { addProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nx/devkit';
 import { libraryGenerator } from '@nx/js';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateToCypress11 from './cypress-11';
@@ -118,6 +123,9 @@ async function setup(tree: Tree) {
     project: 'my-react-lib',
     skipFormat: true,
   });
+  const projectConfig = readProjectConfiguration(tree, 'my-react-lib');
+  projectConfig.targets['component-test'].executor = '@nrwl/cypress:cypress';
+  updateProjectConfiguration(tree, 'my-react-lib', projectConfig);
   tree.write(
     'libs/my-react-lib/cypress/support/commands.ts',
     `/// <reference types="cypress" />
@@ -262,6 +270,9 @@ describe('again', () => {
     project: 'my-ng-lib',
     skipFormat: true,
   });
+  const projectConfig2 = readProjectConfiguration(tree, 'my-ng-lib');
+  projectConfig2.targets['component-test'].executor = '@nrwl/cypress:cypress';
+  updateProjectConfiguration(tree, 'my-ng-lib', projectConfig2);
   tree.write(
     'libs/my-ng-lib/cypress/support/commands.ts',
     `/// <reference types="cypress" />

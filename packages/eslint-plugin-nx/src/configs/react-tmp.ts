@@ -8,8 +8,8 @@
  */
 export default {
   extends: [
-    'plugin:@nrwl/nx/react-base',
-    'plugin:@nrwl/nx/react-typescript',
-    'plugin:@nrwl/nx/react-jsx',
+    'plugin:@nx/nx/react-base',
+    'plugin:@nx/nx/react-typescript',
+    'plugin:@nx/nx/react-jsx',
   ],
 };

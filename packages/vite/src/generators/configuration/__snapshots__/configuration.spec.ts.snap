@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nrwl/vite:configuration library mode should add config for building library 1`] = `
+exports[`@nx/vite:configuration library mode should add config for building library 1`] = `
 "/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -53,7 +53,7 @@ export default defineConfig({
 "
 `;
 
-exports[`@nrwl/vite:configuration library mode should set up non buildable library correctly 1`] = `
+exports[`@nx/vite:configuration library mode should set up non buildable library correctly 1`] = `
 "/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -115,7 +115,7 @@ export default defineConfig({
 "
 `;
 
-exports[`@nrwl/vite:configuration library mode should set up non buildable library correctly 2`] = `
+exports[`@nx/vite:configuration library mode should set up non buildable library correctly 2`] = `
 "{
   "projects": {
     "react-lib-nonb-jest": {
@@ -126,7 +126,7 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
       "projectType": "library",
       "targets": {
         "lint": {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": [
@@ -135,7 +135,7 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
           }
         },
         "test": {
-          "executor": "@nrwl/jest:jest",
+          "executor": "@nx/jest:jest",
           "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
           "options": {
             "jestConfig": "libs/react-lib-nonb-jest/jest.config.ts",
@@ -150,7 +150,7 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
 "
 `;
 
-exports[`@nrwl/vite:configuration library mode should set up non buildable library which already has vite.config.ts correctly 1`] = `
+exports[`@nx/vite:configuration library mode should set up non buildable library which already has vite.config.ts correctly 1`] = `
 "import dts from 'vite-plugin-dts';
 import { join } from 'path';
 import { defineConfig } from 'vite';
@@ -202,7 +202,7 @@ export default defineConfig({
 "
 `;
 
-exports[`@nrwl/vite:configuration library mode should set up non buildable library which already has vite.config.ts correctly 2`] = `
+exports[`@nx/vite:configuration library mode should set up non buildable library which already has vite.config.ts correctly 2`] = `
 "{
   "projects": {
     "react-lib-nonb-vitest": {
@@ -213,7 +213,7 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
       "projectType": "library",
       "targets": {
         "lint": {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": [
@@ -222,7 +222,7 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
           }
         },
         "test": {
-          "executor": "@nrwl/vite:test",
+          "executor": "@nx/vite:test",
           "outputs": ["{projectRoot}/coverage"],
           "options": {
             "passWithNoTests": true,
@@ -237,7 +237,7 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
 "
 `;
 
-exports[`@nrwl/vite:configuration transform React app to use Vite by providing custom targets transform React app if supported executor is provided should transform workspace.json project config 1`] = `
+exports[`@nx/vite:configuration transform React app to use Vite by providing custom targets transform React app if supported executor is provided should transform workspace.json project config 1`] = `
 "{
   "projects": {
     "my-test-mixed-react-app": {
@@ -248,15 +248,15 @@ exports[`@nrwl/vite:configuration transform React app to use Vite by providing c
       "projectType": "application",
       "targets": {
         "invalid-build": {
-          "executor": "@nrwl/js:tsc",
+          "executor": "@nx/js:tsc",
           "outputs": ["{options.outputPath}"]
         },
         "valid-build": {
-          "executor": "@nrwl/webpack:webpack",
+          "executor": "@nx/webpack:webpack",
           "outputs": ["{options.outputPath}"]
         },
         "serve": {
-          "executor": "@nrwl/webpack:dev-server",
+          "executor": "@nx/webpack:dev-server",
           "defaultConfiguration": "development",
           "options": {
             "buildTarget": "my-test-mixed-react-app:build",
@@ -273,7 +273,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite by providing c
           }
         },
         "lint": {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": [
@@ -282,7 +282,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite by providing c
           }
         },
         "test": {
-          "executor": "@nrwl/jest:jest",
+          "executor": "@nx/jest:jest",
           "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
           "options": {
             "jestConfig": "apps/my-test-mixed-react-app/jest.config.ts",
@@ -297,7 +297,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite by providing c
 "
 `;
 
-exports[`@nrwl/vite:configuration transform React app to use Vite should create vite.config file at the root of the app 1`] = `
+exports[`@nx/vite:configuration transform React app to use Vite should create vite.config file at the root of the app 1`] = `
 "/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -335,7 +335,7 @@ export default defineConfig({
 "
 `;
 
-exports[`@nrwl/vite:configuration transform React app to use Vite should move index.html to the root of the project 1`] = `
+exports[`@nx/vite:configuration transform React app to use Vite should move index.html to the root of the project 1`] = `
 "<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -354,7 +354,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should move in
 "
 `;
 
-exports[`@nrwl/vite:configuration transform React app to use Vite should transform workspace.json project config 1`] = `
+exports[`@nx/vite:configuration transform React app to use Vite should transform workspace.json project config 1`] = `
 "{
   "projects": {
     "my-test-react-app": {
@@ -365,7 +365,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
       "projectType": "application",
       "targets": {
         "build": {
-          "executor": "@nrwl/webpack:webpack",
+          "executor": "@nx/webpack:webpack",
           "outputs": ["{options.outputPath}"],
           "defaultConfiguration": "production",
           "options": {
@@ -382,7 +382,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
             ],
             "styles": ["apps/my-test-react-app/src/styles.css"],
             "scripts": [],
-            "webpackConfig": "@nrwl/react/plugins/webpack"
+            "webpackConfig": "@nx/react/plugins/webpack"
           },
           "configurations": {
             "development": {
@@ -408,7 +408,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
           }
         },
         "serve": {
-          "executor": "@nrwl/webpack:dev-server",
+          "executor": "@nx/webpack:dev-server",
           "defaultConfiguration": "development",
           "options": {
             "buildTarget": "my-test-react-app:build",
@@ -425,14 +425,14 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
           }
         },
         "lint": {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["apps/my-test-react-app/**/*.{ts,tsx,js,jsx}"]
           }
         },
         "test": {
-          "executor": "@nrwl/jest:jest",
+          "executor": "@nx/jest:jest",
           "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
           "options": {
             "jestConfig": "apps/my-test-react-app/jest.config.ts",
@@ -447,7 +447,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
 "
 `;
 
-exports[`@nrwl/vite:configuration transform Web app to use Vite should create vite.config file at the root of the app 1`] = `
+exports[`@nx/vite:configuration transform Web app to use Vite should create vite.config file at the root of the app 1`] = `
 "/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 
@@ -484,7 +484,7 @@ export default defineConfig({
 "
 `;
 
-exports[`@nrwl/vite:configuration transform Web app to use Vite should move index.html to the root of the project 1`] = `
+exports[`@nx/vite:configuration transform Web app to use Vite should move index.html to the root of the project 1`] = `
 "<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -503,7 +503,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should move inde
 "
 `;
 
-exports[`@nrwl/vite:configuration transform Web app to use Vite should transform workspace.json project config 1`] = `
+exports[`@nx/vite:configuration transform Web app to use Vite should transform workspace.json project config 1`] = `
 "{
   "projects": {
     "my-test-web-app": {
@@ -515,7 +515,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
       "tags": [],
       "targets": {
         "build": {
-          "executor": "@nrwl/webpack:webpack",
+          "executor": "@nx/webpack:webpack",
           "outputs": ["{options.outputPath}"],
           "defaultConfiguration": "production",
           "options": {
@@ -551,7 +551,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
           }
         },
         "serve": {
-          "executor": "@nrwl/webpack:dev-server",
+          "executor": "@nx/webpack:dev-server",
           "options": {
             "buildTarget": "my-test-web-app:build"
           },
@@ -562,14 +562,14 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
           }
         },
         "lint": {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["apps/my-test-web-app/**/*.ts"]
           }
         },
         "test": {
-          "executor": "@nrwl/jest:jest",
+          "executor": "@nx/jest:jest",
           "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
           "options": {
             "jestConfig": "apps/my-test-web-app/jest.config.ts",
@@ -583,7 +583,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
 "
 `;
 
-exports[`@nrwl/vite:configuration vitest should create a vitest configuration if "includeVitest" is true 1`] = `
+exports[`@nx/vite:configuration vitest should create a vitest configuration if "includeVitest" is true 1`] = `
 "/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';

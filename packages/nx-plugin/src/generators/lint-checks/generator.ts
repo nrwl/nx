@@ -203,7 +203,7 @@ function updateProjectEslintConfig(
       ].filter((f) => !!f),
       parser: 'jsonc-eslint-parser',
       rules: {
-        '@nrwl/nx/nx-plugin-checks': 'error',
+        '@nx/nx/nx-plugin-checks': 'error',
       },
     });
   }

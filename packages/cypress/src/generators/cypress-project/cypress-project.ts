@@ -96,7 +96,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
       projectType: 'application',
       targets: {
         e2e: {
-          executor: '@nrwl/cypress:cypress',
+          executor: '@nx/cypress:cypress',
           options: {
             cypressConfig: joinPathFragments(
               options.projectRoot,
@@ -129,7 +129,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
       projectType: 'application',
       targets: {
         e2e: {
-          executor: '@nrwl/cypress:cypress',
+          executor: '@nx/cypress:cypress',
           options: {
             cypressConfig: joinPathFragments(
               options.projectRoot,

@@ -26,7 +26,7 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
       tree,
       {},
       {
-        '@nrwl/rollup': nxVersion,
+        '@nx/rollup': nxVersion,
         '@swc/helpers': swcHelpersVersion,
         '@swc/core': swcCoreVersion,
         'swc-loader': swcLoaderVersion,

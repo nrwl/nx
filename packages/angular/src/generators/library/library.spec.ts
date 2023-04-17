@@ -1108,7 +1108,7 @@ describe('lib', () => {
         expect(readProjectConfiguration(tree, 'my-lib').targets['lint'])
           .toMatchInlineSnapshot(`
           {
-            "executor": "@nrwl/linter:eslint",
+            "executor": "@nx/linter:eslint",
             "options": {
               "lintFilePatterns": [
                 "libs/my-lib/**/*.ts",
@@ -1140,7 +1140,7 @@ describe('lib', () => {
             "overrides": [
               {
                 "extends": [
-                  "plugin:@nrwl/nx/angular",
+                  "plugin:@nx/nx/angular",
                   "plugin:@angular-eslint/template/process-inline-templates",
                 ],
                 "files": [
@@ -1167,7 +1167,7 @@ describe('lib', () => {
               },
               {
                 "extends": [
-                  "plugin:@nrwl/nx/angular-template",
+                  "plugin:@nx/nx/angular-template",
                 ],
                 "files": [
                   "*.html",

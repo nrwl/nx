@@ -36,7 +36,7 @@ describe('rollupInitGenerator', () => {
       name: expect.any(String),
       dependencies: {},
       devDependencies: {
-        '@nrwl/rollup': nxVersion,
+        '@nx/rollup': nxVersion,
         '@swc/helpers': expect.any(String),
         '@swc/core': expect.any(String),
         'swc-loader': expect.any(String),

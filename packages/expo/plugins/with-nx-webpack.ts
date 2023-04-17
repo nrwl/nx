@@ -17,7 +17,7 @@ export async function withNxWebpack(config) {
         options: {
           presets: [
             [
-              '@nrwl/react/babel',
+              '@nx/react/babel',
               {
                 runtime: 'automatic',
               },

@@ -28,7 +28,7 @@ jest.mock('enquirer');
 // @ts-ignore
 enquirer.prompt = jest.fn();
 
-describe('@nrwl/storybook:configuration', () => {
+describe('@nx/storybook:configuration', () => {
   beforeAll(() => {
     process.env.NX_INTERACTIVE = 'true';
   });
@@ -55,7 +55,7 @@ describe('@nrwl/storybook:configuration', () => {
           '@storybook/addon-essentials': '~6.5.9',
           '@storybook/react': '~6.5.9',
           '@storybook/core-server': '~6.5.9',
-          '@nrwl/web': nxVersion,
+          '@nx/web': nxVersion,
         },
       });
       jest.resetModules();
@@ -143,7 +143,7 @@ describe('@nrwl/storybook:configuration', () => {
 
       expect(enquirer.prompt).toHaveBeenCalled();
       expect(project.targets.storybook).toEqual({
-        executor: '@nrwl/storybook:storybook',
+        executor: '@nx/storybook:storybook',
         configurations: {
           ci: {
             quiet: true,
@@ -157,7 +157,7 @@ describe('@nrwl/storybook:configuration', () => {
       });
 
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/test-ui-lib/**/*.ts'],
@@ -193,7 +193,7 @@ describe('@nrwl/storybook:configuration', () => {
       });
 
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/test-ui-lib-2/**/*.ts'],
@@ -231,7 +231,7 @@ describe('@nrwl/storybook:configuration', () => {
       });
 
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/test-ui-lib-5/**/*.ts'],
@@ -422,7 +422,7 @@ describe('@nrwl/storybook:configuration', () => {
         }
       `);
       expect(
-        readJson(tree, 'package.json').devDependencies['@nrwl/web']
+        readJson(tree, 'package.json').devDependencies['@nx/web']
       ).toBeTruthy();
     });
     it('should use static-storybook:ci in cypress project', async () => {
@@ -460,7 +460,7 @@ describe('@nrwl/storybook:configuration', () => {
               "devServerTarget": "test-ui-lib:static-storybook:ci",
             },
           },
-          "executor": "@nrwl/cypress:cypress",
+          "executor": "@nx/cypress:cypress",
           "options": {
             "cypressConfig": "apps/test-ui-lib-e2e/cypress.config.ts",
             "devServerTarget": "test-ui-lib:storybook",
@@ -469,7 +469,7 @@ describe('@nrwl/storybook:configuration', () => {
         }
       `);
       expect(
-        readJson(tree, 'package.json').devDependencies['@nrwl/web']
+        readJson(tree, 'package.json').devDependencies['@nx/web']
       ).toBeTruthy();
     });
   });

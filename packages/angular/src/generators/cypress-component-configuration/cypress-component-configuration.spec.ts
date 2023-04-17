@@ -94,7 +94,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'libs/fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build',
@@ -156,7 +156,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'libs/fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build:development',
@@ -249,7 +249,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-app').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'apps/fancy-app/cypress.config.ts',
           devServerTarget: 'fancy-app:build',
@@ -309,7 +309,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'libs/fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build',

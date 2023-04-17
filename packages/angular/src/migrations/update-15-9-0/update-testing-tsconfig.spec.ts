@@ -4,6 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import {
@@ -75,6 +76,18 @@ async function setup(tree: Tree, name: string) {
     skipPackageJson: true,
   });
 
+  const projectConfig = readProjectConfiguration(tree, name);
+  updateProjectConfiguration(tree, name, {
+    ...projectConfig,
+    targets: {
+      ...projectConfig.targets,
+      test: {
+        ...projectConfig.targets.test,
+        executor: '@nrwl/jest:jest',
+      },
+    },
+  });
+
   updateJson(tree, `${name}/tsconfig.spec.json`, (json) => {
     // revert to before jest-preset-angular v13
     delete json.compilerOptions.target;
@@ -83,6 +96,18 @@ async function setup(tree: Tree, name: string) {
 
   await generateTestLibrary(tree, {
     name: `${name}-lib`,
+  });
+
+  const libConfig = readProjectConfiguration(tree, `${name}-lib`);
+  updateProjectConfiguration(tree, `${name}-lib`, {
+    ...libConfig,
+    targets: {
+      ...libConfig.targets,
+      test: {
+        ...libConfig.targets.test,
+        executor: '@nrwl/jest:jest',
+      },
+    },
   });
 
   updateJson(tree, `${name}/tsconfig.spec.json`, (json) => {

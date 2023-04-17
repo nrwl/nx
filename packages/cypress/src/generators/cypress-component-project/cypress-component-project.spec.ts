@@ -18,13 +18,13 @@ let projectConfig: ProjectConfiguration = {
   root: 'libs/cool-lib',
   targets: {
     build: {
-      executor: '@nrwl/web:rollup',
+      executor: '@nx/web:rollup',
       options: {
         tsConfig: 'libs/cool-lib/tsconfig.lib.json',
       },
     },
     test: {
-      executor: '@nrwl/jest:jest',
+      executor: '@nx/jest:jest',
       options: {
         jestConfig: 'libs/cool-lib/jest.config.js',
       },
@@ -181,7 +181,7 @@ describe('Cypress Component Project', () => {
     tree.write('libs/cool-lib/cypress.config.ts', '');
     const newTarget = {
       ['component-test']: {
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'libs/cool-lib/cypress.config.ts',
           testingType: 'component',

@@ -6,7 +6,7 @@ import { libraryGenerator } from '@nx/js';
 import { cypressProjectGenerator } from './cypress-project';
 
 jest.mock('@nx/cypress/src/utils/cypress-version');
-describe('@nrwl/storybook:cypress-project', () => {
+describe('@nx/storybook:cypress-project', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
@@ -93,7 +93,7 @@ describe('@nrwl/storybook:cypress-project', () => {
     ).toBeTruthy();
 
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/cypress']
+      readJson(tree, 'package.json').devDependencies['@nx/cypress']
     ).toBeTruthy();
   });
 });

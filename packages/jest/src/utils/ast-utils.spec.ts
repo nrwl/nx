@@ -5,7 +5,7 @@ describe('Jest AST Utils', () => {
       const actual = addTransformerToConfig(
         `module.exports = {
   transform: {
-    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest'
+    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'blah',
@@ -21,7 +21,7 @@ describe('Jest AST Utils', () => {
       const actual = addTransformerToConfig(
         `export default {
   transform: {
-    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest'
+    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   displayName: 'blah',

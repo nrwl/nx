@@ -156,7 +156,7 @@ export function storybookConfigExistsCheck(
       `Could not find Storybook configuration for project ${projectName}.
       Please generate Storybook configuration using the following command:
 
-      nx g @nrwl/storybook:configuration --name=${projectName}
+      nx g @nx/storybook:configuration --name=${projectName}
       `
     );
   }
@@ -188,7 +188,21 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
   } = {};
 
   const arrayOfBuilders = [
-    '@nxext/vite:build',
+    '@nx/js:babel',
+    '@nx/js:swc',
+    '@nx/js:tsc',
+    '@nx/webpack:webpack',
+    '@nx/rollup:rollup',
+    '@nx/web:rollup',
+    '@nx/vite:build',
+    '@nx/angular:ng-packagr-lite',
+    '@nx/angular:package',
+    '@nx/angular:webpack-browser',
+    '@nx/esbuild:esbuild',
+    '@nx/next:build',
+    '@nx/react-native:bundle',
+    '@nx/react-native:build-android',
+    '@nx/react-native:bundle',
     '@nrwl/js:babel',
     '@nrwl/js:swc',
     '@nrwl/js:tsc',
@@ -199,12 +213,13 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     '@nrwl/angular:ng-packagr-lite',
     '@nrwl/angular:package',
     '@nrwl/angular:webpack-browser',
-    '@angular-devkit/build-angular:browser',
     '@nrwl/esbuild:esbuild',
     '@nrwl/next:build',
     '@nrwl/react-native:bundle',
     '@nrwl/react-native:build-android',
     '@nrwl/react-native:bundle',
+    '@nxext/vite:build',
+    '@angular-devkit/build-angular:browser',
   ];
 
   for (const target in targets) {
@@ -213,10 +228,10 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
         targets[target].executor === '@angular-devkit/build-angular:browser'
       ) {
         /**
-         * Not looking for '@nrwl/angular:ng-packagr-lite' or any other
-         * @nrwl/angular:* executors.
+         * Not looking for '@nx/angular:ng-packagr-lite' or any other
+         * @nx/angular:* executors.
          * Only looking for '@angular-devkit/build-angular:browser'
-         * because the '@nrwl/angular:ng-packagr-lite' executor
+         * because the '@nx/angular:ng-packagr-lite' executor
          * (and maybe the other custom executors)
          * does not support styles and extra options, so the user
          * will be forced to switch to build-storybook to add extra options.
@@ -235,11 +250,13 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
       returnObject.compiler = targets[target].options?.compiler;
     } else if (
       targets[target].executor === '@storybook/angular:start-storybook' ||
-      targets[target].executor === '@nrwl/storybook:storybook'
+      targets[target].executor === '@nrwl/storybook:storybook' ||
+      targets[target].executor === '@nx/storybook:storybook'
     ) {
       returnObject.storybookTarget = target;
     } else if (
       targets[target].executor === '@storybook/angular:build-storybook' ||
+      targets[target].executor === '@nx/storybook:build' ||
       targets[target].executor === '@nrwl/storybook:build'
     ) {
       returnObject.storybookBuildTarget = target;

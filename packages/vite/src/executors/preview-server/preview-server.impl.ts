@@ -27,6 +27,7 @@ export async function* vitePreviewServerExecutor(
   }
 
   const isCustomBuildTarget =
+    targetConfiguration.executor !== '@nx/vite:build' &&
     targetConfiguration.executor !== '@nrwl/vite:build';
 
   // Retrieve the option for the configured buildTarget.

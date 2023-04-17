@@ -12,7 +12,7 @@ exports[`Cypress e2e configuration v10+ should not override eslint settings if p
   "overrides": [
     {
       "extends": [
-        "plugin:@nrwl/nx/angular",
+        "plugin:@nx/nx/angular",
         "plugin:@angular-eslint/template/process-inline-templates",
       ],
       "files": [
@@ -39,7 +39,7 @@ exports[`Cypress e2e configuration v10+ should not override eslint settings if p
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/angular-template",
+        "plugin:@nx/nx/angular-template",
       ],
       "files": [
         "*.html",

@@ -60,7 +60,7 @@ exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant
     "defaultBase": "main",
   },
   "generators": {
-    "@nrwl/angular": {
+    "@nx/angular": {
       "application": {
         "linter": "tslint",
       },
@@ -90,12 +90,12 @@ exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "generators": {
-    "@nrwl/angular:application": {
+    "@nx/angular:application": {
       "e2eTestRunner": "cypress",
       "linter": "eslint",
       "unitTestRunner": "jest",
     },
-    "@nrwl/angular:library": {
+    "@nx/angular:library": {
       "linter": "tslint",
     },
   },
@@ -153,7 +153,7 @@ exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "generators": {
-    "@nrwl/angular:application": {
+    "@nx/angular:application": {
       "e2eTestRunner": "cypress",
       "unitTestRunner": "jest",
     },
@@ -184,7 +184,7 @@ exports[`ProjectConverter removeTSLintFromWorkspace() should remove the entry in
     "defaultBase": "main",
   },
   "generators": {
-    "@nrwl/angular": {
+    "@nx/angular": {
       "convert-tslint-to-eslint": {
         "removeTSLintIfNoMoreTSLintTargets": true,
       },
@@ -235,7 +235,7 @@ exports[`ProjectConverter setDefaults() should save in nx.json 1`] = `
     "defaultBase": "main",
   },
   "generators": {
-    "@nrwl/angular": {
+    "@nx/angular": {
       "application": {
         "linter": "tslint",
       },
@@ -267,7 +267,7 @@ exports[`ProjectConverter setDefaults() should save in nx.json 2`] = `
     "defaultBase": "main",
   },
   "generators": {
-    "@nrwl/angular": {
+    "@nx/angular": {
       "application": {
         "linter": "tslint",
       },
@@ -303,7 +303,7 @@ exports[`ProjectConverter setDefaults() should save in nx.json 3`] = `
     "defaultBase": "main",
   },
   "generators": {
-    "@nrwl/angular": {
+    "@nx/angular": {
       "application": {
         "linter": "tslint",
       },

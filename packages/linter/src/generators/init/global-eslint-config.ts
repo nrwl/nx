@@ -6,7 +6,7 @@ import { ESLint, Linter as LinterType } from 'eslint';
  */
 export const globalTypeScriptOverrides = {
   files: ['*.ts', '*.tsx'],
-  extends: ['plugin:@nrwl/nx/typescript'],
+  extends: ['plugin:@nx/nx/typescript'],
   /**
    * Having an empty rules object present makes it more obvious to the user where they would
    * extend things from if they needed to
@@ -20,7 +20,7 @@ export const globalTypeScriptOverrides = {
  */
 export const globalJavaScriptOverrides = {
   files: ['*.js', '*.jsx'],
-  extends: ['plugin:@nrwl/nx/javascript'],
+  extends: ['plugin:@nx/nx/javascript'],
   /**
    * Having an empty rules object present makes it more obvious to the user where they would
    * extend things from if they needed to
@@ -35,7 +35,7 @@ export const globalJavaScriptOverrides = {
 export const moduleBoundariesOverride = {
   files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
   rules: {
-    '@nrwl/nx/enforce-module-boundaries': [
+    '@nx/nx/enforce-module-boundaries': [
       'error',
       {
         enforceBuildableLibDependency: true,
@@ -53,7 +53,7 @@ export const getGlobalEsLintConfiguration = (
   const config: ESLint.ConfigData = {
     root: true,
     ignorePatterns: rootProject ? ['!**/*'] : ['**/*'],
-    plugins: ['@nrwl/nx'],
+    plugins: ['@nx/nx'],
     /**
      * We leverage ESLint's "overrides" capability so that we can set up a root config which will support
      * all permutations of Nx workspaces across all frameworks, libraries and tools.

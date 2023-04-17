@@ -545,7 +545,7 @@ function addProjectDependencies(
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@nrwl/rollup': nxVersion, '@types/node': typesNodeVersion }
+      { '@nx/rollup': nxVersion, '@types/node': typesNodeVersion }
     );
   }
 

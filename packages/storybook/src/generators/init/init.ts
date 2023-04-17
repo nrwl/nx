@@ -40,7 +40,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   packageJson.devDependencices = packageJson.devDependencices || {};
 
   // base deps
-  devDependencies['@nrwl/storybook'] = nxVersion;
+  devDependencies['@nx/storybook'] = nxVersion;
 
   if (schema.storybook7Configuration) {
     // Needed for Storybook 7
@@ -133,7 +133,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       devDependencies['@babel/preset-typescript'] =
         babelPresetTypescriptVersion;
       if (schema.bundler === 'webpack') {
-        devDependencies['@nrwl/webpack'] = nxVersion;
+        devDependencies['@nx/webpack'] = nxVersion;
       }
     }
 
@@ -164,7 +164,7 @@ function addCacheableOperation(tree: Tree) {
     !nxJson.tasksRunnerOptions ||
     !nxJson.tasksRunnerOptions.default ||
     (nxJson.tasksRunnerOptions.default.runner !==
-      '@nrwl/workspace/tasks-runners/default' &&
+      '@nx/workspace/tasks-runners/default' &&
       nxJson.tasksRunnerOptions.default.runner !== 'nx/tasks-runners/default')
   ) {
     return;
@@ -192,10 +192,10 @@ function moveToDevDependencies(tree: Tree) {
     packageJson.dependencies = packageJson.dependencies || {};
     packageJson.devDependencies = packageJson.devDependencies || {};
 
-    if (packageJson.dependencies['@nrwl/storybook']) {
-      packageJson.devDependencies['@nrwl/storybook'] =
-        packageJson.dependencies['@nrwl/storybook'];
-      delete packageJson.dependencies['@nrwl/storybook'];
+    if (packageJson.dependencies['@nx/storybook']) {
+      packageJson.devDependencies['@nx/storybook'] =
+        packageJson.dependencies['@nx/storybook'];
+      delete packageJson.dependencies['@nx/storybook'];
     }
     return packageJson;
   });

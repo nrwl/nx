@@ -1,22 +1,19 @@
 import { ProjectConfiguration } from '@nx/devkit';
 import {
   checkFilesExist,
+  cleanupProject,
+  createFile,
   expectTestsPass,
-  isNotWindows,
+  getPackageManagerCommand,
   killPorts,
   newProject,
   readJson,
   readProjectConfig,
   runCLI,
   runCLIAsync,
+  runCommand,
   uniq,
   updateFile,
-  createFile,
-  readFile,
-  removeFile,
-  cleanupProject,
-  runCommand,
-  getPackageManagerCommand,
   updateJson,
 } from '@nrwl/e2e/utils';
 import type { PackageJson } from 'nx/src/utils/package-json';

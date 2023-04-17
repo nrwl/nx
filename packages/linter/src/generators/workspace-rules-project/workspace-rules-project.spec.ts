@@ -12,7 +12,7 @@ import {
   WORKSPACE_RULES_PROJECT_NAME,
 } from './workspace-rules-project';
 
-describe('@nrwl/linter:workspace-rules-project', () => {
+describe('@nx/linter:workspace-rules-project', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -87,7 +87,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
                 "codeCoverage": true,
               },
             },
-            "executor": "@nrwl/jest:jest",
+            "executor": "@nx/jest:jest",
             "options": {
               "jestConfig": "tools/eslint-rules/jest.config.ts",
               "passWithNoTests": true,

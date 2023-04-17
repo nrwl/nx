@@ -82,7 +82,7 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
     targets: {
       ...project.targets,
       build: {
-        executor: '@nrwl/esbuild:esbuild',
+        executor: '@nx/esbuild:esbuild',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: buildOptions,

@@ -33,7 +33,7 @@ export function onlyShowGuide(storybookProjects: {
       `npx storybook@latest upgrade`,
       ``,
       `2. Call the Nx generator to prepare your files for migration:`,
-      `nx g @nrwl/storybook:migrate-7 --onlyPrepare`,
+      `nx g @nx/storybook:migrate-7 --onlyPrepare`,
       ``,
       `3. Call the Storybook automigrate scripts:`,
       `Run the following commands for each Storybook project:`,
@@ -44,7 +44,7 @@ export function onlyShowGuide(storybookProjects: {
       ),
       ``,
       `4. Call the Nx generator to finish the migration:`,
-      `nx g @nrwl/storybook:migrate-7 --afterMigration`,
+      `nx g @nx/storybook:migrate-7 --afterMigration`,
     ],
   });
 }
@@ -336,7 +336,7 @@ export function removeTypecastFromMainTs(
 export function removeUiFrameworkFromProjectJson(tree: Tree) {
   forEachExecutorOptions(
     tree,
-    '@nrwl/storybook:build',
+    '@nx/storybook:build',
     (options, projectName, targetName) => {
       if (projectName && options?.['uiFramework']) {
         const projectConfiguration = readProjectConfiguration(
@@ -351,7 +351,7 @@ export function removeUiFrameworkFromProjectJson(tree: Tree) {
 
   forEachExecutorOptions(
     tree,
-    '@nrwl/storybook:storybook',
+    '@nx/storybook:storybook',
     (options, projectName, targetName) => {
       if (projectName && options?.['uiFramework']) {
         const projectConfiguration = readProjectConfiguration(
@@ -438,7 +438,7 @@ export function getAllStorybookInfo(tree: Tree): {
   const allStorybookDirs = {};
   forEachExecutorOptions(
     tree,
-    '@nrwl/storybook:build',
+    '@nx/storybook:build',
     (options, projectName) => {
       if (projectName && options?.['configDir']) {
         const projectConfiguration = readProjectConfiguration(
@@ -616,8 +616,8 @@ export function checkStorybookInstalled(packageJson): boolean {
   return (
     (packageJson.dependencies['@storybook/core-server'] ||
       packageJson.devDependencies['@storybook/core-server']) &&
-    (packageJson.dependencies['@nrwl/storybook'] ||
-      packageJson.devDependencies['@nrwl/storybook'])
+    (packageJson.dependencies['@nx/storybook'] ||
+      packageJson.devDependencies['@nx/storybook'])
   );
 }
 

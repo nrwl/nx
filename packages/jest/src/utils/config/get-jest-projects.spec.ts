@@ -10,7 +10,7 @@ describe('getJestProjects', () => {
           root: 'blah',
           targets: {
             test: {
-              executor: '@nrwl/jest:jest',
+              executor: '@nx/jest:jest',
               options: {
                 jestConfig: 'test/jest/config/location/jest.config.js',
               },
@@ -36,7 +36,7 @@ describe('getJestProjects', () => {
           root: 'blah',
           targets: {
             'test-with-jest': {
-              executor: '@nrwl/jest:jest',
+              executor: '@nx/jest:jest',
               options: {
                 jestConfig: 'test/jest/config/location/jest.config.js',
               },
@@ -62,7 +62,7 @@ describe('getJestProjects', () => {
           root: '.',
           targets: {
             test: {
-              executor: '@nrwl/jest:jest',
+              executor: '@nx/jest:jest',
               options: {
                 jestConfig: 'jest.config.app.js',
               },
@@ -86,7 +86,7 @@ describe('getJestProjects', () => {
           root: 'blah',
           targets: {
             'test-with-jest': {
-              executor: '@nrwl/jest:jest',
+              executor: '@nx/jest:jest',
               options: {
                 jestConfig: 'test/jest/config/location/jest.config.js',
               },
@@ -118,7 +118,7 @@ describe('getJestProjects', () => {
           root: 'blah',
           targets: {
             'test-with-jest': {
-              executor: '@nrwl/jest:jest',
+              executor: '@nx/jest:jest',
               options: {
                 jestConfig: 'test/jest/config/location/jest.config.js',
               },

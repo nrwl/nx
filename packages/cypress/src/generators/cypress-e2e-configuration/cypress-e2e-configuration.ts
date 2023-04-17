@@ -174,7 +174,7 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
   const projectConfig = readProjectConfiguration(tree, opts.project);
   const cyVersion = installedCypressVersion();
   projectConfig.targets.e2e = {
-    executor: '@nrwl/cypress:cypress',
+    executor: '@nx/cypress:cypress',
     options: {
       cypressConfig: joinPathFragments(
         projectConfig.root,

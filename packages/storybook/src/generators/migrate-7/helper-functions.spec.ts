@@ -82,7 +82,7 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
             'npx storybook@latest upgrade',
             '',
             '2. Call the Nx generator to prepare your files for migration:',
-            'nx g @nrwl/storybook:migrate-7 --onlyPrepare',
+            'nx g @nx/storybook:migrate-7 --onlyPrepare',
             '',
             '3. Call the Storybook automigrate scripts:',
             'Run the following commands for each Storybook project:',
@@ -97,7 +97,7 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
             'npx storybook@latest automigrate --config-dir apps/ngapp-ts/.storybook --renderer @storybook/angular',
             '',
             '4. Call the Nx generator to finish the migration:',
-            'nx g @nrwl/storybook:migrate-7 --afterMigration',
+            'nx g @nx/storybook:migrate-7 --afterMigration',
           ],
           title: 'Storybook 7 Migration Guide',
         })
@@ -252,7 +252,7 @@ function writeMainJs(tree: Tree) {
     `
     const { mergeConfig } = require('vite');
     const viteTsConfigPaths = require('vite-tsconfig-paths').default;
-    
+
     module.exports = {
       core: { builder: '@storybook/builder-vite' },
       stories: [
@@ -270,7 +270,7 @@ function writeMainJs(tree: Tree) {
         });
       },
     };
-  `
+`
   );
 
   tree.write(
@@ -280,7 +280,7 @@ function writeMainJs(tree: Tree) {
 
     import { mergeConfig } from 'vite';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
-    
+
     const config: StorybookConfig = {
       core: { builder: '@storybook/builder-vite' },
       stories: [
@@ -298,7 +298,7 @@ function writeMainJs(tree: Tree) {
         });
       },
     } as StorybookConfig;
-    
+
     module.exports = config;
   `
   );
@@ -316,7 +316,7 @@ function writeMainJs(tree: Tree) {
       ],
       addons: [
         '@storybook/addon-essentials',
-        '@nrwl/react/plugins/storybook',
+        '@nx/react/plugins/storybook',
         'storybook-addon-swc',
         {
           name: 'storybook-addon-next',
@@ -334,7 +334,7 @@ function writeMainJs(tree: Tree) {
     `
     import type { StorybookConfig } from '@storybook/core-common';
     import path from 'path';
-    
+
     const config: StorybookConfig = {
       core: { builder: 'webpack5' },
       stories: [
@@ -343,8 +343,7 @@ function writeMainJs(tree: Tree) {
       ],
       addons: [
         '@storybook/addon-essentials',
-        '@nrwl/react/plugins/storybook',
-    
+        '@nx/react/plugins/storybook',
         'storybook-addon-swc',
         {
           name: 'storybook-addon-next',
@@ -354,7 +353,7 @@ function writeMainJs(tree: Tree) {
         },
       ],
     } as StorybookConfig;
-    
+
     module.exports = config;
   `
   );

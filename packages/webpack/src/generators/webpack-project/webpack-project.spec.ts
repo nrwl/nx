@@ -28,7 +28,7 @@ describe('webpackProject', () => {
 
     expect(project.targets).toMatchObject({
       build: {
-        executor: '@nrwl/webpack:webpack',
+        executor: '@nx/webpack:webpack',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: {
@@ -48,7 +48,7 @@ describe('webpackProject', () => {
 
     expect(project.targets).toMatchObject({
       build: {
-        executor: '@nrwl/webpack:webpack',
+        executor: '@nx/webpack:webpack',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: {
@@ -68,7 +68,7 @@ describe('webpackProject', () => {
 
     expect(project.targets).toMatchObject({
       build: {
-        executor: '@nrwl/webpack:webpack',
+        executor: '@nx/webpack:webpack',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: {
@@ -88,7 +88,7 @@ describe('webpackProject', () => {
 
     expect(project.targets).toMatchObject({
       serve: {
-        executor: '@nrwl/webpack:dev-server',
+        executor: '@nx/webpack:dev-server',
         options: {
           buildTarget: 'mypkg:build',
         },

@@ -8,7 +8,7 @@ import { Linter } from '../utils/linter';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintProjectGenerator } from './lint-project';
 
-describe('@nrwl/linter:lint-project', () => {
+describe('@nx/linter:lint-project', () => {
   let tree: Tree;
 
   const defaultOptions = {
@@ -51,7 +51,7 @@ describe('@nrwl/linter:lint-project', () => {
         const projectConfig = readProjectConfiguration(tree, 'test-lib');
         expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
           {
-            "executor": "@nrwl/linter:eslint",
+            "executor": "@nx/linter:eslint",
             "options": {
               "lintFilePatterns": [
                 "**/*.ts",

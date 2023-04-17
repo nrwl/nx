@@ -78,7 +78,7 @@ export async function addLinterToCyProject(
     joinPathFragments(projectConfig.root, '.eslintrc.json'),
     (json) => {
       if (options.rootProject) {
-        json.plugins = ['@nrwl/nx'];
+        json.plugins = ['@nx/nx'];
         json.extends = ['plugin:cypress/recommended'];
       } else {
         json.extends = ['plugin:cypress/recommended', ...json.extends];

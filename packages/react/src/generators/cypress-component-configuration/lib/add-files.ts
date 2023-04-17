@@ -60,7 +60,7 @@ export async function addFiles(
     options.bundler === 'webpack' ||
     (!options.bundler && actualBundler === 'webpack')
   ) {
-    addDependenciesToPackageJson(tree, {}, { '@nrwl/webpack': nxVersion });
+    addDependenciesToPackageJson(tree, {}, { '@nx/webpack': nxVersion });
   }
 
   if (options.generateTests) {
@@ -85,7 +85,10 @@ async function getBundler(
   tree: Tree
 ): Promise<'vite' | 'webpack'> {
   if (found.target && found.config?.executor) {
-    return found.config.executor === '@nrwl/vite:build' ? 'vite' : 'webpack';
+    return found.config.executor === '@nx/vite:build' ||
+      found.config.executor === '@nrwl/vite:build'
+      ? 'vite'
+      : 'webpack';
   }
 
   const { target, project } = parseTargetString(
@@ -93,7 +96,8 @@ async function getBundler(
     await createProjectGraphAsync()
   );
   const projectConfig = readProjectConfiguration(tree, project);
-  return projectConfig?.targets?.[target]?.executor === '@nrwl/vite:build'
+  return projectConfig?.targets?.[target]?.executor === '@nx/vite:build' ||
+    projectConfig?.targets?.[target]?.executor === '@nrwl/vite:build'
     ? 'vite'
     : 'webpack';
 }

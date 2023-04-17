@@ -52,7 +52,7 @@ function isStorybookV62onwards(uiFramework: string) {
         `Error: ${e}
 
         It looks like you don\'t have Storybook installed.
-        Please run the @nrwl/storybook:configuration generator,
+        Please run the @nx/storybook:configuration generator,
         or run "npm/yarn" again to install your dependencies.`
       );
     }

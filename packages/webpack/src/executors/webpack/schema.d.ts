@@ -71,27 +71,27 @@ export interface WebpackExecutorOptions {
   babelConfig?: string;
   babelUpwardRootMode?: boolean;
   // TODO(jack): Also deprecate these in schema.json once we have migration from executor options to webpack.config.js file.
-  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  /** @deprecated Moved to withWeb options from `@nx/webpack` */
   baseHref?: string;
-  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  /** @deprecated Moved to withWeb options from `@nx/webpack` */
   crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
-  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  /** @deprecated Moved to withWeb options from `@nx/webpack` */
   deployUrl?: string;
-  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  /** @deprecated Moved to withWeb options from `@nx/webpack` */
   extractCss?: boolean;
-  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  /** @deprecated Moved to withWeb options from `@nx/webpack` */
   generateIndexHtml?: boolean;
-  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  /** @deprecated Moved to withWeb options from `@nx/webpack` */
   index?: string;
-  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  /** @deprecated Moved to withWeb options from `@nx/webpack` */
   postcssConfig?: string;
-  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  /** @deprecated Moved to withWeb options from `@nx/webpack` */
   scripts?: Array<ExtraEntryPointClass | string>;
-  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  /** @deprecated Moved to withWeb options from `@nx/webpack` */
   stylePreprocessorOptions?: any;
-  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  /** @deprecated Moved to withWeb options from `@nx/webpack` */
   styles?: Array<ExtraEntryPointClass | string>;
-  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  /** @deprecated Moved to withWeb options from `@nx/webpack` */
   subresourceIntegrity?: boolean;
 }
 

@@ -391,6 +391,7 @@ async function setup(tree: Tree, name: string, existingGraph?: ProjectGraph) {
   const projectConfig = readProjectConfiguration(tree, name);
   projectConfig.targets['test'] = {
     ...projectConfig.targets['test'],
+    executor: '@nrwl/jest:jest',
     configurations: {
       ci: {
         ci: true,
@@ -445,6 +446,22 @@ testEnvironment: 'node',
 preset: '../../jest.preset.js'
 };
 `
+  );
+
+  tree.write(
+    'jest.config.ts',
+    tree
+      .read('jest.config.ts')
+      .toString()
+      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest')
+  );
+
+  tree.write(
+    'jest.preset.js',
+    tree
+      .read('jest.preset.js')
+      .toString()
+      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest')
   );
 
   projectGraph = {

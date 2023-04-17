@@ -22,6 +22,8 @@ export async function updateProjectConfig(
     project: options.project,
     buildTarget: options.buildTarget,
     validExecutorNames: new Set<string>([
+      '@nx/webpack:webpack',
+      '@nx/vite:build',
       '@nrwl/webpack:webpack',
       '@nrwl/vite:build',
     ]),

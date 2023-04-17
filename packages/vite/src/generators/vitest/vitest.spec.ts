@@ -30,7 +30,7 @@ describe('vitest generator', () => {
     const config = readProjectConfiguration(appTree, 'my-test-react-app');
     expect(config.targets['test']).toMatchInlineSnapshot(`
       {
-        "executor": "@nrwl/vite:test",
+        "executor": "@nx/vite:test",
         "options": {
           "passWithNoTests": true,
         },
@@ -53,7 +53,7 @@ describe('vitest generator', () => {
     const config = readProjectConfiguration(appTree, 'my-test-react-app');
     expect(config.targets['test']).toMatchInlineSnapshot(`
       {
-        "executor": "@nrwl/vite:test",
+        "executor": "@nx/vite:test",
         "options": {
           "passWithNoTests": true,
           "reportsDirectory": "../../coverage/apps/my-test-react-app",

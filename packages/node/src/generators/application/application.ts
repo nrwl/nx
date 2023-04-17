@@ -57,7 +57,7 @@ function getWebpackBuildConfig(
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
-    executor: `@nrwl/webpack:webpack`,
+    executor: `@nx/webpack:webpack`,
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
@@ -93,7 +93,7 @@ function getEsBuildConfig(
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
-    executor: '@nrwl/esbuild:esbuild',
+    executor: '@nx/esbuild:esbuild',
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
@@ -295,7 +295,7 @@ function addProjectDependencies(
 ): GeneratorCallback {
   const bundlers = {
     webpack: {
-      '@nrwl/webpack': nxVersion,
+      '@nx/webpack': nxVersion,
     },
     esbuild: {
       '@nrwl/esbuild': nxVersion,

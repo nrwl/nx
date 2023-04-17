@@ -40,7 +40,7 @@ describe('Cypress e2e configuration', () => {
       expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { defineConfig } from 'cypress';
-        import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+        import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
         export default defineConfig({
           e2e: nxE2EPreset(__dirname, {
@@ -57,7 +57,7 @@ describe('Cypress e2e configuration', () => {
               "devServerTarget": "my-app:serve:production",
             },
           },
-          "executor": "@nrwl/cypress:cypress",
+          "executor": "@nx/cypress:cypress",
           "options": {
             "cypressConfig": "apps/my-app/cypress.config.ts",
             "devServerTarget": "my-app:serve",
@@ -100,7 +100,7 @@ describe('Cypress e2e configuration', () => {
       expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { defineConfig } from 'cypress';
-        import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+        import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
         export default defineConfig({
           e2e: nxE2EPreset(__dirname, {
@@ -248,13 +248,13 @@ describe('Cypress e2e configuration', () => {
               ],
             },
             extends: [
-              'plugin:@nrwl/nx/angular',
+              'plugin:@nx/nx/angular',
               'plugin:@angular-eslint/template/process-inline-templates',
             ],
           },
           {
             files: ['*.html'],
-            extends: ['plugin:@nrwl/nx/angular-template'],
+            extends: ['plugin:@nx/nx/angular-template'],
             rules: {},
           },
         ],
