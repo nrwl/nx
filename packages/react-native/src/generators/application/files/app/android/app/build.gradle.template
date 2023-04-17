@@ -1,5 +1,4 @@
 apply plugin: "com.android.application"
-apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 apply plugin: "com.facebook.react"
 
 import com.android.build.OutputFile
@@ -164,7 +163,6 @@ dependencies {
     <% } %>
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    implementation project(':react-native-config')
 
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.0.0")
 

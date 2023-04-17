@@ -35,8 +35,6 @@ describe('expo', () => {
     runCLI(
       `generate @nrwl/expo:component ${componentName} --project=${libName} --export --no-interactive`
     );
-    expectTestsPass(await runCLIAsync(`test ${appName}`));
-    expectTestsPass(await runCLIAsync(`test ${libName}`));
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
       let updated = `// eslint-disable-next-line @typescript-eslint/no-unused-vars\nimport {${componentName}} from '${proj}/${libName}';\n${content}`;
@@ -44,6 +42,7 @@ describe('expo', () => {
     });
 
     expectTestsPass(await runCLIAsync(`test ${appName}`));
+    expectTestsPass(await runCLIAsync(`test ${libName}`));
 
     const appLintResults = await runCLIAsync(`lint ${appName}`);
     expect(appLintResults.combinedOutput).toContain('All files pass linting.');
@@ -124,11 +123,6 @@ describe('expo', () => {
   });
 
   it('should build publishable library', async () => {
-    const componentName = uniq('component');
-
-    runCLI(
-      `generate @nrwl/expo:component ${componentName} --project=${libName} --export`
-    );
     expect(() => {
       runCLI(`build ${libName}`);
       checkFilesExist(`dist/libs/${libName}/index.js`);

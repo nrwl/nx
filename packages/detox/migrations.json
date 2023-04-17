@@ -23,6 +23,12 @@
       "version": "16.0.0-beta.1",
       "description": "Replace @nrwl/detox with @nx/detox",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-0-0-update-detoxrc": {
+      "cli": "nx",
+      "version": "16.0.0-beta.3",
+      "description": "Update .detoxrc.json and jest.config.json for detox 20",
+      "implementation": "./src/migrations/update-16-0-0/update-detoxrc-json"
     }
   },
   "packageJsonUpdates": {
@@ -204,6 +210,15 @@
       "packages": {
         "detox": {
           "version": "~20.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.3",
+      "packages": {
+        "detox": {
+          "version": "~20.7.0",
           "alwaysAddToPackageJson": false
         }
       }

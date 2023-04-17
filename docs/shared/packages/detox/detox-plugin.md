@@ -95,7 +95,7 @@ If you need to fine tune your Detox setup, you can do so by modifying `.detoxrc.
 
 #### Change Testing Simulator/Emulator
 
-For iOS, in terminal, run `xcrun simctl list` to view a list of simulators on your Mac. To open your active simulator, `run open -a simulator`. In `frontend-e2e/.detoxrc.json`, you could change the simulator under `devices.simulator.device`.
+For iOS, in terminal, run `xcrun simctl list devices available` to view a list of simulators on your Mac. To open your active simulator, `run open -a simulator`. In `frontend-e2e/.detoxrc.json`, you could change the simulator under `devices.simulator.device`.
 
 For Android, in terminal, run `emulator -list-avds` to view a list of emulators installed. To open your emulator, run `emulator -avd <your emulator name>`. In `frontend-e2e/.detoxrc.json`, you could change the simulator under `devices.emulator.device`.
 
