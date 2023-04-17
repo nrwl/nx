@@ -4,7 +4,7 @@ import {
   readJson,
   runNxCommandAsync,
   uniq,
-} from '@nrwl/nx-plugin/testing';
+} from '@nx/nx-plugin/testing';
 
 describe('<%= pluginName %> e2e', () => {
   // Setting up individual workspaces per

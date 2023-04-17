@@ -107,7 +107,7 @@ function generateGeneratorOverviewOutput({
       {
         text:
           pluginName +
-          (pluginName.startsWith('@nrwl/')
+          (pluginName.startsWith('@nx/') || pluginName.startsWith('@nrwl/')
             ? chalk.dim(` (v${nxVersion})`)
             : ''),
         padding: [1, 0, 0, 2],
@@ -327,13 +327,19 @@ function generateLinkOutput({
   name: string;
   type: 'generators' | 'executors';
 }): string {
+  const nxPackagePrefix = '@nx/';
   const nrwlPackagePrefix = '@nrwl/';
-  if (!pluginName.startsWith(nrwlPackagePrefix)) {
+  if (
+    !pluginName.startsWith(nxPackagePrefix) &&
+    !pluginName.startsWith(nrwlPackagePrefix)
+  ) {
     return '';
   }
 
   const link = `https://nx.dev/packages/${pluginName.substring(
-    nrwlPackagePrefix.length
+    pluginName.startsWith(nxPackagePrefix)
+      ? nxPackagePrefix.length
+      : nrwlPackagePrefix.length
   )}/${type}/${name}`;
 
   return `\n\n${chalk.dim(

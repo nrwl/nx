@@ -127,8 +127,8 @@ function addPluginDependencies(): void {
   const nxVersion = require('../../../package.json').version;
 
   packageJson.devDependencies ??= {};
-  packageJson.devDependencies['@nrwl/angular'] = nxVersion;
-  packageJson.devDependencies['@nrwl/workspace'] = nxVersion;
+  packageJson.devDependencies['@nx/angular'] = nxVersion;
+  packageJson.devDependencies['@nx/workspace'] = nxVersion;
 
   const peerDepsToInstall = [
     '@angular-devkit/core',

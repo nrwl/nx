@@ -93,14 +93,14 @@ import {
 } from './ts-config';
 
 /**
- * @deprecated Please import this from @nrwl/js instead. This function will be removed in v17
+ * @deprecated Please import this from @nx/js instead. This function will be removed in v17
  */
 export function getRelativePathToRootTsConfig(tree: Tree, targetPath: string) {
   return _getRelativePathToRootTsConfig(tree, targetPath);
 }
 
 /**
- * @deprecated Please import this from @nrwl/js instead. This function will be removed in v17
+ * @deprecated Please import this from @nx/js instead. This function will be removed in v17
  */
 export function getRootTsConfigPathInTree(tree: Tree) {
   return _getRootTsConfigPathInTree(tree);

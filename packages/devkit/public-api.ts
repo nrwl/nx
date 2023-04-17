@@ -1,7 +1,7 @@
 /**
- * Note to developers: STOP! This is the Public API of @nrwl/devkit.
- * @nrwl/devkit should be compatible with versions of Nx 1 major version prior.
- * This is so that plugins can use the latest @nrwl/devkit while their users may use versions +/- 1 of Nx.
+ * Note to developers: STOP! This is the Public API of @nx/devkit.
+ * @nx/devkit should be compatible with versions of Nx 1 major version prior.
+ * This is so that plugins can use the latest @nx/devkit while their users may use versions +/- 1 of Nx.
  *
  * 1. Try hard to not add to this API to reduce the surface area we need to maintain.
  * 2. Do not add newly created paths from the nx package to this file as they will not be available in older versions of Nx.

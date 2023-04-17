@@ -9,6 +9,6 @@
   },
   "devDependencies": {
     "nx": "<%= nxVersion %>",
-    "@nrwl/workspace": "<%= nxVersion %>"
+    "@nx/workspace": "<%= nxVersion %>"
   }
 }

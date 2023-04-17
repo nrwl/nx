@@ -17,27 +17,27 @@ describe('project graph', () => {
 
   beforeEach(async () => {
     packageJson = {
-      name: '@nrwl/workspace-src',
+      name: '@nx/workspace-src',
       version: '0.0.0',
       dependencies: {
         express: '4.0.0',
         'happy-nrwl': '1.0.0',
       },
       devDependencies: {
-        '@nrwl/workspace': '*',
+        '@nx/workspace': '*',
       },
     };
     packageLockJson = {
-      name: '@nrwl/workspace-src',
+      name: '@nx/workspace-src',
       version: '0.0.0',
       lockfileVersion: 2,
       requires: true,
       packages: {
         '': packageJson,
-        'node_modules/@nrwl/workspace': {
+        'node_modules/@nx/workspace': {
           version: '15.0.0',
           resolved:
-            'https://registry.npmjs.org/@nrwl/workspace/-/@nrwl/workspace-15.0.0.tgz',
+            'https://registry.npmjs.org/@nx/workspace/-/@nx/workspace-15.0.0.tgz',
           integrity: 'sha512-12345678==',
           dev: true,
         },
@@ -57,10 +57,10 @@ describe('project graph', () => {
         },
       },
       dependencies: {
-        '@nrwl/workspace': {
+        '@nx/workspace': {
           version: '15.0.0',
           resolved:
-            'https://registry.npmjs.org/@nrwl/workspace/-/@nrwl/workspace-15.0.0.tgz',
+            'https://registry.npmjs.org/@nx/workspace/-/@nx/workspace-15.0.0.tgz',
           integrity: 'sha512-12345678==',
           dev: true,
         },
@@ -136,10 +136,10 @@ describe('project graph', () => {
       compilerOptions: {
         baseUrl: '.',
         paths: {
-          '@nrwl/shared/util': ['libs/shared/util/src/index.ts'],
-          '@nrwl/shared-util-data': ['libs/shared/util/data/src/index.ts'],
-          '@nrwl/ui': ['libs/ui/src/index.ts'],
-          '@nrwl/lazy-lib': ['libs/lazy-lib/src/index.ts'],
+          '@nx/shared/util': ['libs/shared/util/src/index.ts'],
+          '@nx/shared-util-data': ['libs/shared/util/data/src/index.ts'],
+          '@nx/ui': ['libs/ui/src/index.ts'],
+          '@nx/lazy-lib': ['libs/lazy-lib/src/index.ts'],
         },
       },
     };
@@ -149,16 +149,16 @@ describe('project graph', () => {
         require('express');
       `,
       './apps/demo/src/index.ts': stripIndents`
-        import * as ui from '@nrwl/ui';
-        import * as data from '@nrwl/shared-util-data;
-        const s = { loadChildren: '@nrwl/lazy-lib#LAZY' }
+        import * as ui from '@nx/ui';
+        import * as data from '@nx/shared-util-data;
+        const s = { loadChildren: '@nx/lazy-lib#LAZY' }
       `,
       './apps/demo-e2e/src/integration/app.spec.ts': stripIndents`
         describe('whatever', () => {});
       `,
       './libs/ui/src/index.ts': stripIndents`
-        import * as util from '@nrwl/shared/util';
-        import('@nrwl/lazy-lib');
+        import * as util from '@nx/shared/util';
+        import('@nx/lazy-lib');
       `,
       './libs/shared/util/src/index.ts': stripIndents`
         import * as happyNrwl from 'happy-nrwl/a/b/c';
@@ -265,7 +265,7 @@ describe('project graph', () => {
   it('should handle circular dependencies', async () => {
     tempFs.writeFile(
       'libs/shared/util/src/index.ts',
-      `import * as ui from '@nrwl/ui';`
+      `import * as ui from '@nx/ui';`
     );
 
     const graph = await buildProjectGraph();

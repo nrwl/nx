@@ -9,7 +9,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { npmPackageGenerator } from './npm-package';
 
-describe('@nrwl/workspace:npm-package', () => {
+describe('@nx/workspace:npm-package', () => {
   let tree: Tree;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

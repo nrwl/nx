@@ -349,9 +349,14 @@ function readPluginMainFromProjectConfiguration(
 ): string | null {
   const { main } =
     Object.values(plugin.targets).find((x) =>
-      ['@nrwl/js:tsc', '@nrwl/js:swc', '@nrwl/node:package'].includes(
-        x.executor
-      )
+      [
+        '@nx/js:tsc',
+        '@nrwl/js:tsc',
+        '@nx/js:swc',
+        '@nrwl/js:swc',
+        '@nx/node:package',
+        '@nrwl/node:package',
+      ].includes(x.executor)
     )?.options ||
     plugin.targets?.build?.options ||
     {};

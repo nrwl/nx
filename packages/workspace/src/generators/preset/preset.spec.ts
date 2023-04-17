@@ -11,26 +11,23 @@ describe('preset', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     overrideCollectionResolutionForTesting({
-      '@nrwl/workspace': path.join(
+      '@nx/workspace': path.join(
         __dirname,
         '../../../../workspace/generators.json'
       ),
-      '@nrwl/angular': path.join(
+      '@nx/angular': path.join(
         __dirname,
         '../../../../angular/generators.json'
       ),
-      '@nrwl/linter': path.join(
-        __dirname,
-        '../../../../linter/generators.json'
-      ),
-      '@nrwl/nest': path.join(__dirname, '../../../../nest/generators.json'),
-      '@nrwl/node': path.join(__dirname, '../../../../node/generators.json'),
-      '@nrwl/jest': path.join(__dirname, '../../../../jest/generators.json'),
-      '@nrwl/cypress': path.join(
+      '@nx/linter': path.join(__dirname, '../../../../linter/generators.json'),
+      '@nx/nest': path.join(__dirname, '../../../../nest/generators.json'),
+      '@nx/node': path.join(__dirname, '../../../../node/generators.json'),
+      '@nx/jest': path.join(__dirname, '../../../../jest/generators.json'),
+      '@nx/cypress': path.join(
         __dirname,
         '../../../../cypress/generators.json'
       ),
-      '@nrwl/express': path.join(
+      '@nx/express': path.join(
         __dirname,
         '../../../../express/generators.json'
       ),

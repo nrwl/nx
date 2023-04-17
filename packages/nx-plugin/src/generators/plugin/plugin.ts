@@ -101,12 +101,13 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
   addDependenciesToPackageJson(
     host,
     {
-      '@nrwl/devkit': nxVersion,
+      '@nx/devkit': nxVersion,
       tslib: tsLibVersion,
     },
     {
-      '@nrwl/jest': nxVersion,
-      '@nrwl/js': nxVersion,
+      '@nx/jest': nxVersion,
+      '@nx/js': nxVersion,
+      '@nx/nx-plugin': nxVersion,
       '@swc-node/register': swcNodeVersion,
     }
   );

@@ -506,8 +506,7 @@ describe('Migration', () => {
     it('should not throw when packages are missing', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson(),
-        getInstalledPackageVersion: (p) =>
-          p === '@nrwl/nest' ? null : '1.0.0',
+        getInstalledPackageVersion: (p) => (p === '@nx/nest' ? null : '1.0.0'),
         fetch: (_p, _v) =>
           Promise.resolve({
             version: '2.0.0',
@@ -516,16 +515,15 @@ describe('Migration', () => {
         from: {},
         to: {},
       });
-      await migrator.migrate('@nrwl/workspace', '2.0.0');
+      await migrator.migrate('@nx/workspace', '2.0.0');
     });
 
     it('should only fetch packages that are installed', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson(),
-        getInstalledPackageVersion: (p) =>
-          p === '@nrwl/nest' ? null : '1.0.0',
+        getInstalledPackageVersion: (p) => (p === '@nx/nest' ? null : '1.0.0'),
         fetch: (p, _v) => {
-          if (p === '@nrwl/nest') {
+          if (p === '@nx/nest') {
             throw new Error('Boom');
           }
           return Promise.resolve({
@@ -536,7 +534,7 @@ describe('Migration', () => {
         from: {},
         to: {},
       });
-      await migrator.migrate('@nrwl/workspace', '2.0.0');
+      await migrator.migrate('@nx/workspace', '2.0.0');
     });
 
     it('should only fetch packages that are top-level deps', async () => {
@@ -1582,10 +1580,10 @@ describe('Migration', () => {
       });
       expect(
         await parseMigrationsOptions({
-          packageAndVersion: '@nrwl/workspace@8.12',
+          packageAndVersion: '@nx/workspace@8.12',
         })
       ).toMatchObject({
-        targetPackage: '@nrwl/workspace',
+        targetPackage: '@nx/workspace',
         targetVersion: '8.12.0',
       });
       expect(
@@ -1608,18 +1606,18 @@ describe('Migration', () => {
       });
       expect(
         await parseMigrationsOptions({
-          packageAndVersion: '@nrwl/workspace@latest',
+          packageAndVersion: '@nx/workspace@latest',
         })
       ).toMatchObject({
-        targetPackage: '@nrwl/workspace',
+        targetPackage: '@nx/workspace',
         targetVersion: 'latest',
       });
       expect(
         await parseMigrationsOptions({
-          packageAndVersion: '@nrwl/workspace@alpha',
+          packageAndVersion: '@nx/workspace@alpha',
         })
       ).toMatchObject({
-        targetPackage: '@nrwl/workspace',
+        targetPackage: '@nx/workspace',
         targetVersion: 'alpha',
       });
     });
@@ -1674,13 +1672,13 @@ describe('Migration', () => {
 
     it('should handle backslashes in package names', async () => {
       const r = await parseMigrationsOptions({
-        packageAndVersion: '@nrwl\\workspace@8.12.0',
+        packageAndVersion: '@nx\\workspace@8.12.0',
         from: '@myscope\\a@12.3,@myscope\\b@1.1.1',
         to: '@myscope\\c@12.3.1',
       });
       expect(r).toEqual({
         type: 'generateMigrations',
-        targetPackage: '@nrwl/workspace',
+        targetPackage: '@nx/workspace',
         targetVersion: '8.12.0',
         from: {
           '@myscope/a': '12.3.0',

@@ -39,7 +39,7 @@ describe('nx deps utils', () => {
         shouldRecomputeWholeGraph(
           createCache({
             deps: {
-              '@nrwl/workspace': '12.0.1',
+              '@nx/workspace': '12.0.1',
               plugin: '1.0.0',
             },
           }),
@@ -318,7 +318,7 @@ describe('nx deps utils', () => {
     const defaults: ProjectGraphCache = {
       version: '5.1',
       deps: {
-        '@nrwl/workspace': '12.0.0',
+        '@nx/workspace': '12.0.0',
         plugin: '1.0.0',
       },
       pathMappings: {
@@ -337,7 +337,7 @@ describe('nx deps utils', () => {
     p: Record<string, string>
   ): Record<string, string> {
     const defaults = {
-      '@nrwl/workspace': '12.0.0',
+      '@nx/workspace': '12.0.0',
       plugin: '1.0.0',
     };
     return { ...defaults, ...p };

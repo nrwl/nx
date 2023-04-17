@@ -136,7 +136,7 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
   });
 
   const workspaceInfo = await createWorkspace(
-    '@nrwl/nx-plugin',
+    '@nx/nx-plugin',
     populatedArguments
   );
 

@@ -15,7 +15,7 @@ function runNxNewCommand(args?: string, silent?: boolean) {
   return execSync(
     `node ${require.resolve(
       'nx'
-    )} new proj --nx-workspace-root=${localTmpDir} --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj --preset=empty ${
+    )} new proj --nx-workspace-root=${localTmpDir} --no-interactive --skip-install --collection=@nx/workspace --npmScope=proj --preset=empty ${
       args || ''
     }`,
     {
@@ -76,7 +76,7 @@ export function newNxProject(
 
 /**
  * Ensures that a project has been setup in the e2e directory
- * It will also copy `@nrwl` packages to the e2e directory
+ * It will also copy `@nx` packages to the e2e directory
  */
 export function ensureNxProject(
   npmPackageName?: string,

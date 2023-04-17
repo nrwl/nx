@@ -18,11 +18,11 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
     async () => {
       const isInteractive = args.interactive;
       const { normalizedGeneratorName, schema, implementationFactory } =
-        ws.readGenerator('@nrwl/workspace/generators.json', 'new');
+        ws.readGenerator('@nx/workspace/generators.json', 'new');
       removeSpecialFlags(args);
       const combinedOpts = await combineOptionsForGenerator(
         args,
-        '@nrwl/workspace/generators.json',
+        '@nx/workspace/generators.json',
         normalizedGeneratorName,
         null,
         null,

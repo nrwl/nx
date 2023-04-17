@@ -37,9 +37,9 @@ function removeNpmScope(tree: Tree) {
 }
 function moveNxPluginToDevDeps(tree: Tree) {
   updateJson<PackageJson>(tree, 'package.json', (json) => {
-    const nxPluginEntry = json.dependencies['@nrwl/nx-plugin'];
-    delete json.dependencies['@nrwl/nx-plugin'];
-    json.devDependencies['@nrwl/nx-plugin'] = nxPluginEntry;
+    const nxPluginEntry = json.dependencies['@nx/nx-plugin'];
+    delete json.dependencies['@nx/nx-plugin'];
+    json.devDependencies['@nx/nx-plugin'] = nxPluginEntry;
     return json;
   });
 }

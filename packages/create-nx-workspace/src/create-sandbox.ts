@@ -32,7 +32,7 @@ export async function createSandbox(packageManager: PackageManager) {
       JSON.stringify({
         dependencies: {
           nx: nxVersion,
-          '@nrwl/workspace': nxVersion,
+          '@nx/workspace': nxVersion,
         },
         license: 'MIT',
       })

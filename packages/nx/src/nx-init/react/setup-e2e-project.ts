@@ -10,7 +10,7 @@ export function setupE2eProject(appName: string) {
     },
   };
   json.targets['e2e-run'] = {
-    executor: '@nrwl/cypress:cypress',
+    executor: '@nx/cypress:cypress',
     options: {
       cypressConfig: `apps/${appName}-e2e/cypress.json`,
       tsConfig: `apps/${appName}-e2e/tsconfig.e2e.json`,

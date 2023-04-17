@@ -8,7 +8,7 @@ import {
 import ignore, { Ignore } from 'ignore';
 
 /**
- * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nrwl/devkit. This function can be replaced with 'visitNotIgnoredFiles' from @nrwl/devkit.
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. This function can be replaced with 'visitNotIgnoredFiles' from @nx/devkit.
  */
 export function visitNotIgnoredFiles(
   visitor: (file: Path, host: Tree, context: SchematicContext) => void | Rule,

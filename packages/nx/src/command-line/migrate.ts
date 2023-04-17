@@ -1147,6 +1147,8 @@ function readNxVersion(packageJson: PackageJson) {
   return (
     packageJson?.devDependencies?.['nx'] ??
     packageJson?.dependencies?.['nx'] ??
+    packageJson?.devDependencies?.['@nx/workspace'] ??
+    packageJson?.dependencies?.['@nx/workspace'] ??
     packageJson?.devDependencies?.['@nrwl/workspace'] ??
     packageJson?.dependencies?.['@nrwl/workspace']
   );
