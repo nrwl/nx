@@ -169,40 +169,6 @@ export const examples: Record<string, Example[]> = {
         'Run lint for all the projects affected by the last commit on main',
     },
   ],
-  'affected:apps': [
-    {
-      command: 'affected:apps --files=libs/mylib/src/index.ts',
-      description:
-        'Print the names of all the apps affected by changing the index.ts file',
-    },
-    {
-      command: 'affected:apps --base=main --head=HEAD',
-      description:
-        'Print the names of all the apps affected by the changes between main and HEAD (e.g., PR)',
-    },
-    {
-      command: 'affected:apps --base=main~1 --head=main',
-      description:
-        'Print the names of all the apps affected by the last commit on main',
-    },
-  ],
-  'affected:libs': [
-    {
-      command: 'affected:libs --files=libs/mylib/src/index.ts',
-      description:
-        'Print the names of all the libs affected by changing the index.ts file',
-    },
-    {
-      command: 'affected:libs --base=main --head=HEAD',
-      description:
-        'Print the names of all the libs affected by the changes between main and HEAD (e.g., PR)',
-    },
-    {
-      command: 'affected:libs --base=main~1 --head=main',
-      description:
-        'Print the names of all the libs affected by the last commit on main',
-    },
-  ],
   'format:write': [],
   'format:check': [],
   graph: [

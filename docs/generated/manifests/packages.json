@@ -1569,28 +1569,6 @@
         "tags": [],
         "originalFilePath": "generated/cli/affected-graph"
       },
-      "/packages/nx/documents/affected-apps": {
-        "id": "affected-apps",
-        "name": "affected:apps",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/affected-apps",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/nx/documents/affected-apps",
-        "tags": [],
-        "originalFilePath": "generated/cli/affected-apps"
-      },
-      "/packages/nx/documents/affected-libs": {
-        "id": "affected-libs",
-        "name": "affected:libs",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/affected-libs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/nx/documents/affected-libs",
-        "tags": [],
-        "originalFilePath": "generated/cli/affected-libs"
-      },
       "/packages/nx/documents/print-affected": {
         "id": "print-affected",
         "name": "print-affected",

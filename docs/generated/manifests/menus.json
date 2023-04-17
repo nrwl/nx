@@ -5367,22 +5367,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "affected:apps",
-                "path": "/packages/nx/documents/affected-apps",
-                "id": "affected-apps",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "affected:libs",
-                "path": "/packages/nx/documents/affected-libs",
-                "id": "affected-libs",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "print-affected",
                 "path": "/packages/nx/documents/print-affected",
                 "id": "print-affected",

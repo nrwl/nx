@@ -1551,28 +1551,6 @@
         "originalFilePath": "generated/cli/affected-graph"
       },
       {
-        "id": "affected-apps",
-        "name": "affected:apps",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/affected-apps",
-        "itemList": [],
-        "isExternal": false,
-        "path": "nx/documents/affected-apps",
-        "tags": [],
-        "originalFilePath": "generated/cli/affected-apps"
-      },
-      {
-        "id": "affected-libs",
-        "name": "affected:libs",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/affected-libs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "nx/documents/affected-libs",
-        "tags": [],
-        "originalFilePath": "generated/cli/affected-libs"
-      },
-      {
         "id": "print-affected",
         "name": "print-affected",
         "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",

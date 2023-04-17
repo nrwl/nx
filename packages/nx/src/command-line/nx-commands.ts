@@ -150,40 +150,6 @@ export const commandsObject = yargs
       }),
   })
   .command({
-    command: 'affected:apps',
-    deprecated:
-      'Use `nx print-affected --type=app --select=projects` instead. This command will be removed in v15.',
-    describe: `Print applications affected by changes`,
-    builder: (yargs) =>
-      linkToNxDevAndExamples(
-        withAffectedOptions(withPlainOption(yargs)),
-        'affected:apps'
-      ),
-    handler: async (args) => {
-      await (await import('./affected')).affected('apps', { ...args });
-      process.exit(0);
-    },
-  })
-  .command({
-    command: 'affected:libs',
-    deprecated:
-      'Use `nx print-affected --type=lib --select=projects` instead. This command will be removed in v15.',
-    describe: 'Print libraries affected by changes',
-    builder: (yargs) =>
-      linkToNxDevAndExamples(
-        withAffectedOptions(withPlainOption(yargs)),
-        'affected:libs'
-      ),
-    handler: async (args) => {
-      await (
-        await import('./affected')
-      ).affected('libs', {
-        ...args,
-      });
-      process.exit(0);
-    },
-  })
-  .command({
     command: 'affected:graph',
     describe: 'Graph dependencies affected by changes',
     aliases: ['affected:dep-graph'],
@@ -470,12 +436,6 @@ function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       choices: ['app', 'lib'],
       describe: 'Select the type of projects to be returned (e.g., --type=app)',
     });
-}
-
-function withPlainOption(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('plain', {
-    describe: 'Produces a plain output for affected:apps and affected:libs',
-  });
 }
 
 function withExcludeOption(yargs: yargs.Argv): yargs.Argv {

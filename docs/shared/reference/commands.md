@@ -9,8 +9,6 @@
 - [run-many](/packages/nx/documents/run-many)
 - [affected](/packages/nx/documents/affected)
 - [affected:graph](/packages/nx/documents/affected-dep-graph)
-- [affected:apps](/packages/nx/documents/affected-apps)
-- [affected:libs](/packages/nx/documents/affected-libs)
 - [print-affected](/packages/nx/documents/print-affected)
 - [format:check](/packages/nx/documents/format-check)
 - [format:write](/packages/nx/documents/format-write)
