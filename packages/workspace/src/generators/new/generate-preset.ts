@@ -150,7 +150,9 @@ function getPresetDependencies({
       return {
         dev: {},
         dependencies: {
-          [preset]: presetVersion ?? getNpmPackageVersion(preset),
+          [preset]:
+            process.env['NX_E2E_PRESET_VERSION'] ??
+            getNpmPackageVersion(preset, presetVersion),
         },
       };
     }
