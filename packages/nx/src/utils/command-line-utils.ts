@@ -29,7 +29,7 @@ export interface NxArgs {
   plain?: boolean;
   projects?: string[];
   select?: string;
-  graph?: boolean;
+  graph?: string | boolean;
   skipNxCache?: boolean;
   outputStyle?: string;
   nxBail?: boolean;
@@ -80,6 +80,15 @@ export function splitArgsIntoNxArgsAndOverrides(
   overrides.__overrides_unparsed__ = args.__overrides_unparsed__;
   delete (nxArgs as any).$0;
   delete (nxArgs as any).__overrides_unparsed__;
+
+  if (!(nxArgs.graph === null || nxArgs.graph === undefined)) {
+    nxArgs.graph =
+      nxArgs.graph === 'true' || nxArgs.graph === true
+        ? true
+        : nxArgs.graph === 'false' || nxArgs.graph === false
+        ? false
+        : nxArgs.graph;
+  }
 
   if (mode === 'run-many') {
     const args = nxArgs as any;

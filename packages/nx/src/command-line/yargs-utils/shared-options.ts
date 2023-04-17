@@ -29,8 +29,9 @@ export function withRunOptions(yargs: Argv): Argv {
       hidden: true,
     })
     .option('graph', {
-      type: 'boolean',
-      describe: 'Show the task graph of the command',
+      type: 'string',
+      describe:
+        'Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.',
       default: false,
     })
     .option('verbose', {

@@ -46,6 +46,11 @@ export async function runMany(
   const projects = projectsToRun(nxArgs, projectGraph);
 
   if (nxArgs.graph) {
+    const file =
+      typeof nxArgs.graph === 'string' &&
+      (nxArgs.graph.endsWith('.json') || nxArgs.graph.endsWith('html'))
+        ? nxArgs.graph
+        : undefined;
     const projectNames = projects.map((t) => t.name);
     return await generateGraph(
       {
@@ -55,6 +60,7 @@ export async function runMany(
         all: nxArgs.all,
         targets: nxArgs.targets,
         projects: projectNames,
+        file,
       },
       projectNames
     );

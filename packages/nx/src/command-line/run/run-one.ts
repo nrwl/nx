@@ -66,6 +66,11 @@ export async function runOne(
 
   if (nxArgs.graph) {
     const projectNames = projects.map((t) => t.name);
+    const file =
+      typeof nxArgs.graph === 'string' &&
+      (nxArgs.graph.endsWith('.json') || nxArgs.graph.endsWith('html'))
+        ? nxArgs.graph
+        : undefined;
 
     return await generateGraph(
       {
@@ -74,6 +79,7 @@ export async function runOne(
         view: 'tasks',
         targets: nxArgs.targets,
         projects: projectNames,
+        file,
       },
       projectNames
     );

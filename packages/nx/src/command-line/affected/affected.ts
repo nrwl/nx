@@ -83,7 +83,11 @@ export async function affected(
         const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
         if (nxArgs.graph) {
           const projectNames = projectsWithTarget.map((t) => t.name);
-
+          const file =
+            typeof nxArgs.graph === 'string' &&
+            (nxArgs.graph.endsWith('.json') || nxArgs.graph.endsWith('html'))
+              ? nxArgs.graph
+              : undefined;
           return await generateGraph(
             {
               watch: false,
@@ -91,6 +95,7 @@ export async function affected(
               view: 'tasks',
               targets: nxArgs.targets,
               projects: projectNames,
+              file,
             },
             projectNames
           );

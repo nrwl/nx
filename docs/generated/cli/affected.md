@@ -105,11 +105,11 @@ Change the way Nx is calculating the affected command by providing directly chan
 
 ### graph
 
-Type: `boolean`
+Type: `string`
 
 Default: `false`
 
-Show the task graph of the command
+Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
 
 ### head
 
