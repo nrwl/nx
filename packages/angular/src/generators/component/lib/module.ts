@@ -72,7 +72,9 @@ function findModule(
     if (filteredMatches.length == 1) {
       return filteredMatches[0];
     } else if (filteredMatches.length > 1) {
-      return null;
+      throw new Error(
+        "Found more than one candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option."
+      );
     }
 
     dir = dirname(dir);
