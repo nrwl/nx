@@ -134,8 +134,10 @@ export function x() {
 
     // update .swcrc to use path mappings
     updateJson(`libs/${lib}/.swcrc`, (json) => {
+      console.log(json);
+      json.jsc.baseUrl = `${lib}`;
       json.jsc.paths = {
-        'src/*': ['src/*'],
+        'src/*': ['./src/*'],
       };
       return json;
     });
@@ -156,6 +158,15 @@ myLib();
 
     // now run build
     runCLI(`build ${lib}`);
+
+    const folderPrint = execSync(`ls -la`, {
+      cwd: `${tmpProjPath()}/dist/libs/${lib}/src`,
+    }).toString();
+    const folderPrint2 = execSync(`cat ${lib}.js`, {
+      cwd: `${tmpProjPath()}/dist/libs/${lib}/src/lib`,
+    }).toString();
+
+    console.log(folderPrint, folderPrint2);
 
     // invoke the lib with node
     const result = execSync(`node dist/libs/${lib}/src/lib/${lib}.js`, {
