@@ -31,7 +31,7 @@ function createHost(tree: Tree): workspaces.WorkspaceHost {
 }
 
 /**
- * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nrwl/devkit. This function can be replaced with 'getProjects' with Nx Devkit.
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. This function can be replaced with 'getProjects' with Nx Devkit.
  */
 export async function getWorkspace(tree: Tree, path = '/') {
   const host = createHost(tree);
@@ -42,7 +42,7 @@ export async function getWorkspace(tree: Tree, path = '/') {
 }
 
 /**
- * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nrwl/devkit. This function can be replaced with 'updateProjectConfiguration' with Nx Devkit.
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. This function can be replaced with 'updateProjectConfiguration' with Nx Devkit.
  */
 export function updateWorkspace(
   updater: (
@@ -50,13 +50,13 @@ export function updateWorkspace(
   ) => void | PromiseLike<void>
 ): Rule;
 /**
- * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nrwl/devkit. This function can be replaced with 'updateProjectConfiguration' with Nx Devkit.
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. This function can be replaced with 'updateProjectConfiguration' with Nx Devkit.
  */
 export function updateWorkspace(
   workspace: workspaces.WorkspaceDefinition
 ): Rule;
 /**
- * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nrwl/devkit. This function can be replaced with 'updateProjectConfiguration' with Nx Devkit.
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. This function can be replaced with 'updateProjectConfiguration' with Nx Devkit.
  */
 export function updateWorkspace(
   updaterOrWorkspace:
@@ -83,7 +83,7 @@ export function updateWorkspace(
 
 /**
  * Updates builder options for options and configurations for given builder names
- * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nrwl/devkit. This function can be replaced with 'forEachExecutorOptions' with Nx Devkit.
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. This function can be replaced with 'forEachExecutorOptions' with Nx Devkit.
  */
 export function updateBuilderConfig(
   updater: (

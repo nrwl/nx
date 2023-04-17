@@ -25,7 +25,7 @@ function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
 }
 
 /**
- * @deprecated This type will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This type will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export type DependentBuildableProjectNode = {
   name: string;
@@ -34,7 +34,7 @@ export type DependentBuildableProjectNode = {
 };
 
 /**
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function calculateProjectDependencies(
   projGraph: ProjectGraph,
@@ -223,7 +223,7 @@ function readPaths(tsConfig: string | ts.ParsedCommandLine) {
 }
 
 /**
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function createTmpTsConfig(
   tsconfigPath: string,
@@ -256,7 +256,7 @@ function cleanupTmpTsConfigFile(tmpTsConfigPath) {
 }
 
 /**
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function checkDependentProjectsHaveBeenBuilt(
   root: string,
@@ -285,7 +285,7 @@ export function checkDependentProjectsHaveBeenBuilt(
 }
 
 /**
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function findMissingBuildDependencies(
   root: string,
@@ -312,7 +312,7 @@ export function findMissingBuildDependencies(
 }
 
 /**
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function updatePaths(
   dependencies: DependentBuildableProjectNode[],
@@ -361,7 +361,7 @@ export function updatePaths(
 /**
  * Updates the peerDependencies section in the `dist/lib/xyz/package.json` with
  * the proper dependency and version
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function updateBuildableProjectPackageJsonDependencies(
   root: string,

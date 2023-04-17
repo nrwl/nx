@@ -6,7 +6,7 @@ import { createTree } from '@nx/devkit/testing';
 import { Preset } from '../utils/presets';
 import * as nxSchema from '../../../../nx/schemas/nx-schema.json';
 
-describe('@nrwl/workspace:generateWorkspaceFiles', () => {
+describe('@nx/workspace:generateWorkspaceFiles', () => {
   let tree: Tree;
 
   beforeEach(() => {

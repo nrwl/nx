@@ -67,7 +67,7 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('NX   Installed plugins');
 
       // just check for some, not all
-      expect(listOutput).toContain('@nrwl/workspace');
+      expect(listOutput).toContain('@nx/workspace');
 
       // temporarily make it look like this isn't installed
       renameSync(

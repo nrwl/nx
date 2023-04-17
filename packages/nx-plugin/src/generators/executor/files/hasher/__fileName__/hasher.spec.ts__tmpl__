@@ -1,4 +1,4 @@
-import { Hasher, HasherContext } from '@nrwl/devkit';
+import { Hasher, HasherContext } from '@nx/devkit';
 
 import { <%=propertyName%>Hasher } from './hasher';
 

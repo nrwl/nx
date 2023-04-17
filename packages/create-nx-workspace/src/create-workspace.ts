@@ -42,7 +42,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   // If the preset is a third-party preset, we need to call createPreset to install it
   // For first-party presets, it will created by createEmptyWorkspace instead.
-  // In createEmptyWorkspace, it will call `nx new` -> `@nrwl/workspace newGenerator` -> `@nrwl/workspace generatePreset`.
+  // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
   const thirdPartyPreset = await getThirdPartyPreset(preset);
   if (thirdPartyPreset) {
     await createPreset(thirdPartyPreset, options, packageManager, directory);

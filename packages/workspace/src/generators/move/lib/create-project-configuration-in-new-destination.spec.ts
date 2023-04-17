@@ -109,7 +109,7 @@ describe('moveProjectConfiguration', () => {
           },
         },
         test: {
-          executor: '@nrwl/jest:jest',
+          executor: '@nx/jest:jest',
           options: {
             jestConfig: 'apps/my-source/jest.config.js',
             tsConfig: 'apps/my-source/tsconfig.spec.json',
@@ -127,7 +127,7 @@ describe('moveProjectConfiguration', () => {
       projectType: 'application',
       targets: {
         e2e: {
-          executor: '@nrwl/cypress:cypress',
+          executor: '@nx/cypress:cypress',
           options: {
             cypressConfig: 'apps/my-source-e2e/cypress.json',
             tsConfig: 'apps/my-source-e2e/tsconfig.e2e.json',

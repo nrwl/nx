@@ -74,7 +74,7 @@ export interface ProjectConfiguration {
    *
    * ```
    * {
-   *   "@nrwl/react": {
+   *   "@nx/react": {
    *     "library": {
    *       "style": "scss"
    *     }
@@ -136,7 +136,7 @@ export interface TargetConfiguration<T = any> {
   /**
    * The executor/builder used to implement the target.
    *
-   * Example: '@nrwl/web:rollup'
+   * Example: '@nx/web:rollup'
    */
   executor?: string;
 

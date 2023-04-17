@@ -1,4 +1,4 @@
-import { CustomHasher } from '@nrwl/devkit';
+import { CustomHasher } from '@nx/devkit';
 
 /**
  * This is a boilerplate custom hasher that matches

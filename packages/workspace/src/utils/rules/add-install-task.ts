@@ -3,7 +3,7 @@ import type { Rule } from '@angular-devkit/schematics';
 let installAdded = false;
 
 /**
- * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nrwl/devkit. This function can be replaced with 'addDependenciesToPackageJson' from @nrwl/devkit.
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. This function can be replaced with 'addDependenciesToPackageJson' from @nx/devkit.
  */
 export function addInstallTask(
   options: { skipInstall: boolean } = { skipInstall: false }

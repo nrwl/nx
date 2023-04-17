@@ -27,8 +27,8 @@ describe('Hasher', () => {
   const tsConfigBaseJson = JSON.stringify({
     compilerOptions: {
       paths: {
-        '@nrwl/parent': ['libs/parent/src/index.ts'],
-        '@nrwl/child': ['libs/child/src/index.ts'],
+        '@nx/parent': ['libs/parent/src/index.ts'],
+        '@nx/child': ['libs/child/src/index.ts'],
       },
     },
   });
@@ -123,7 +123,7 @@ describe('Hasher', () => {
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
       'parent:{projectRoot}/**/*':
-        '/file|file.hash|{"root":"libs/parent","targets":{"build":{"executor":"unknown","inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"}]}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/file|file.hash|{"root":"libs/parent","targets":{"build":{"executor":"unknown","inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"}]}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
       parent: 'unknown',
       '{workspaceRoot}/nx.json': 'nx.json.hash',
       '{workspaceRoot}/.gitignore': '',
@@ -444,7 +444,7 @@ describe('Hasher', () => {
             data: {
               root: 'libs/parent',
               targets: {
-                build: { executor: '@nrwl/workspace:run-commands' },
+                build: { executor: '@nx/workspace:run-commands' },
               },
               files: [
                 { file: 'libs/parent/filea.ts', hash: 'a.hash' },
@@ -457,7 +457,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/child',
-              targets: { build: { executor: '@nrwl/workspace:run-commands' } },
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
               files: [
                 { file: 'libs/child/fileb.ts', hash: 'b.hash' },
                 { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
@@ -511,7 +511,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: '@nrwl/workspace:run-commands' } },
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
               files: [{ file: '/file', hash: 'file.hash' }],
             },
           },
@@ -560,7 +560,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: '@nrwl/workspace:run-commands' } },
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
               files: [{ file: '/filea.ts', hash: 'a.hash' }],
             },
           },
@@ -569,7 +569,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/child',
-              targets: { build: { executor: '@nrwl/workspace:run-commands' } },
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
               files: [{ file: '/fileb.ts', hash: 'b.hash' }],
             },
           },
@@ -641,7 +641,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: '@nrwl/workspace:run-commands' } },
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
               files: [{ file: '/file', hash: 'some-hash' }],
             },
           },
@@ -683,7 +683,7 @@ describe('Hasher', () => {
             type: 'app',
             data: {
               root: 'apps/app',
-              targets: { build: { executor: '@nrwl/workspace:run-commands' } },
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
               files: [{ file: '/filea.ts', hash: 'a.hash' }],
             },
           },
@@ -732,7 +732,7 @@ describe('Hasher', () => {
             type: 'app',
             data: {
               root: 'apps/app',
-              targets: { build: { executor: '@nrwl/workspace:run-commands' } },
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
               files: [{ file: '/filea.ts', hash: 'a.hash' }],
             },
           },

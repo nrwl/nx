@@ -116,7 +116,7 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(project.root).toEqual('apps/my-plugin-e2e');
     expect(project.targets.e2e).toBeTruthy();
     expect(project.targets.e2e).toMatchObject({
-      executor: '@nrwl/nx-plugin:e2e',
+      executor: '@nx/nx-plugin:e2e',
       options: expect.objectContaining({ target: 'my-plugin:build' }),
     });
   });

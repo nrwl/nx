@@ -78,7 +78,7 @@ function updateWorkspaceConfiguration(host: Tree, options: NormalizedSchema) {
     sourceRoot: `${options.projectRoot}/src`,
     targets: {
       e2e: {
-        executor: '@nrwl/nx-plugin:e2e',
+        executor: '@nx/nx-plugin:e2e',
         options: { target: `${options.pluginName}:build` },
       },
     },

@@ -72,10 +72,10 @@ describe('new', () => {
 
       const { devDependencies } = readJson(tree, 'my-workspace/package.json');
       expect(devDependencies).toStrictEqual({
-        '@nrwl/react': nxVersion,
-        '@nrwl/cypress': nxVersion,
-        '@nrwl/vite': nxVersion,
-        '@nrwl/workspace': nxVersion,
+        '@nx/react': nxVersion,
+        '@nx/cypress': nxVersion,
+        '@nx/vite': nxVersion,
+        '@nx/workspace': nxVersion,
         nx: nxVersion,
       });
     });
@@ -94,10 +94,10 @@ describe('new', () => {
         tree,
         'my-workspace/package.json'
       );
-      expect(dependencies).toStrictEqual({ '@nrwl/angular': nxVersion });
+      expect(dependencies).toStrictEqual({ '@nx/angular': nxVersion });
       expect(devDependencies).toStrictEqual({
         '@angular-devkit/core': angularCliVersion,
-        '@nrwl/workspace': nxVersion,
+        '@nx/workspace': nxVersion,
         nx: nxVersion,
         typescript: typescriptVersion,
       });
