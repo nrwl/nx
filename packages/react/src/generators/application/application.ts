@@ -27,13 +27,10 @@ import {
 import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nx/linter';
 import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
-import {
-  nxVersion,
-  swcCoreVersion,
-  swcLoaderVersion,
-} from '../../utils/versions';
+import { nxVersion, swcLoaderVersion } from '../../utils/versions';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
+import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -71,11 +68,12 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
         {
           ...extraEslintDependencies.devDependencies,
           ...(options.compiler === 'swc'
-            ? { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
+            ? { 'swc-loader': swcLoaderVersion }
             : {}),
         }
       );
-      tasks.push(installTask);
+      const addSwcTask = addSwcDependencies(host);
+      tasks.push(installTask, addSwcTask);
     }
   }
   return runTasksInSerial(...tasks);
