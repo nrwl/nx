@@ -3425,14 +3425,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Billing and Utilization",
-            "path": "/nx-cloud/account/billing",
-            "id": "billing",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Users",
             "path": "/nx-cloud/account/users",
             "id": "users",
@@ -3473,14 +3465,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Billing and Utilization",
-        "path": "/nx-cloud/account/billing",
-        "id": "billing",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
