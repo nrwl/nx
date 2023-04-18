@@ -3,6 +3,7 @@ import {
   ensureNxProject,
   readJson,
   runNxCommandAsync,
+  runNxCommand,
   uniq,
 } from '@nx/nx-plugin/testing';
 
@@ -23,39 +24,14 @@ describe('<%= pluginName %> e2e', () => {
     runNxCommandAsync('reset');
   });
 
-  <% if(!minimal) { %>
 
-  it('should create <%= pluginName %>', async () => {
-    const project = uniq('<%= pluginName %>');
-    await runNxCommandAsync(
-      `generate <%=npmPackageName%>:<%= pluginName %> ${project}`
-    );
-    const result = await runNxCommandAsync(`build ${project}`);
-    expect(result.stdout).toContain('Executor ran');
-  }, 120000);
-
-  describe('--directory', () => {
-    it('should create src in the specified directory', async () => {
-      const project = uniq('<%= pluginName %>');
-      await runNxCommandAsync(
-        `generate <%=npmPackageName%>:<%= pluginName %> ${project} --directory subdir`
-      );
-      expect(() =>
-        checkFilesExist(`libs/subdir/${project}/src/index.ts`)
-      ).not.toThrow();
-    }, 120000);
+  // Add some tests here to check that your plugin functionality works as expected.
+  // A sample test is included below to give you some ideas.
+  xit('should be able to build generated projects', async () => {
+    const name = uniq('proj');
+    const generator = 'PLACEHOLDER';
+    await runNxCommandAsync(`generate <%= npmPackageName %>:${generator} --name ${name}`);
+    expect(() => runNxCommand('build ${proj}')).not.toThrow();
+    expect(() => checkFilesExist([`dist/${name}/index.js`])).not.toThrow();
   });
-
-  describe('--tags', () => {
-    it('should add tags to the project', async () => {
-      const projectName = uniq('<%= pluginName %>');
-      ensureNxProject('<%= npmPackageName %>', '<%= pluginOutputPath %>');
-      await runNxCommandAsync(
-        `generate <%=npmPackageName%>:<%= pluginName %> ${projectName} --tags e2etag,e2ePackage`
-      );
-      const project = readJson(`libs/${projectName}/project.json`);
-      expect(project.tags).toEqual(['e2etag', 'e2ePackage']);
-    }, 120000);
-  });
-  <% } %>
 });

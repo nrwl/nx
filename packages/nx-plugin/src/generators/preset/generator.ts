@@ -1,11 +1,4 @@
-import {
-  Tree,
-  readJson,
-  joinPathFragments,
-  updateJson,
-  updateNxJson,
-  readNxJson,
-} from '@nx/devkit';
+import { Tree, updateJson, updateNxJson, readNxJson } from '@nx/devkit';
 import { Linter } from '@nx/linter';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { pluginGenerator } from '../plugin/plugin';
@@ -24,6 +17,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
     unitTestRunner: 'jest',
     importPath: options.pluginName,
     rootProject: true,
+    e2eTestRunner: 'jest',
   });
 
   removeNpmScope(tree);

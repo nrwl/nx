@@ -42,6 +42,17 @@
       "enum": ["jest", "none"],
       "description": "Test runner to use for unit tests.",
       "default": "jest"
+    },
+    "skipLintChecks": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add an eslint configuration for plugin json files."
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not format files with prettier.",
+      "x-priority": "internal"
     }
   },
   "required": ["project", "name"],

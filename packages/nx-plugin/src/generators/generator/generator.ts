@@ -1,4 +1,10 @@
-import { GeneratorsJson, joinPathFragments, Tree, writeJson } from '@nx/devkit';
+import {
+  formatFiles,
+  GeneratorsJson,
+  joinPathFragments,
+  Tree,
+  writeJson,
+} from '@nx/devkit';
 import {
   convertNxGenerator,
   generateFiles,
@@ -10,6 +16,8 @@ import {
 } from '@nx/devkit';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
+import { hasGenerator } from '../../utils/has-generator';
+import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
@@ -81,10 +89,16 @@ function addFiles(host: Tree, options: NormalizedSchema) {
   }
 }
 
-function createGeneratorsJson(host: Tree, options: NormalizedSchema) {
+export async function createGeneratorsJson(
+  host: Tree,
+  projectRoot: string,
+  projectName: string,
+  skipLintChecks?: boolean,
+  skipFormat?: boolean
+) {
   updateJson<PackageJson>(
     host,
-    joinPathFragments(options.projectRoot, 'package.json'),
+    joinPathFragments(projectRoot, 'package.json'),
     (json) => {
       json.generators ??= './generators.json';
       return json;
@@ -92,14 +106,20 @@ function createGeneratorsJson(host: Tree, options: NormalizedSchema) {
   );
   writeJson<GeneratorsJson>(
     host,
-    joinPathFragments(options.projectRoot, 'generators.json'),
+    joinPathFragments(projectRoot, 'generators.json'),
     {
       generators: {},
     }
   );
+  if (!skipLintChecks) {
+    await pluginLintCheckGenerator(host, {
+      projectName,
+      skipFormat,
+    });
+  }
 }
 
-function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
+async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
   const packageJson = readJson<PackageJson>(
     host,
     joinPathFragments(options.projectRoot, 'package.json')
@@ -114,10 +134,16 @@ function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
     generatorsPath = joinPathFragments(options.projectRoot, 'generators.json');
   }
   if (!host.exists(generatorsPath)) {
-    createGeneratorsJson(host, options);
+    await createGeneratorsJson(
+      host,
+      options.projectRoot,
+      options.project,
+      options.skipLintChecks,
+      options.skipFormat
+    );
   }
 
-  return updateJson<GeneratorsJson>(host, generatorsPath, (json) => {
+  updateJson<GeneratorsJson>(host, generatorsPath, (json) => {
     let generators = json.generators ?? json.schematics;
     generators = generators || {};
     generators[options.name] = {
@@ -130,17 +156,23 @@ function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
       generators[options.name]['x-use-standalone-layout'] = true;
     }
     json.generators = generators;
-
     return json;
   });
 }
 
 export async function generatorGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
+  if (hasGenerator(host, options.project, options.name)) {
+    throw new Error(`Generator ${options.name} already exists.`);
+  }
 
   addFiles(host, options);
 
-  updateGeneratorJson(host, options);
+  await updateGeneratorJson(host, options);
+
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default generatorGenerator;

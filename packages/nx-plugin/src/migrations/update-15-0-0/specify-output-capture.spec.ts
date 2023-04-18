@@ -2,12 +2,13 @@ import { readJson, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/linter';
 import { ExecutorConfig } from 'nx/src/config/misc-interfaces';
+import executorGenerator from '../../generators/executor/executor';
 import pluginGenerator from '../../generators/plugin/plugin';
 import update from './specify-output-capture';
 
 const schemaPath = `libs/plugin/src/executors/build/schema.json`;
 
-describe('update-14-2-0-split-create-empty-tree', () => {
+describe('update-15-0-0-specify-output-capture', () => {
   it('should not change outputCapture if already present', async () => {
     const { tree } = await createTreeWithBoilerplate();
     updateJson(tree, schemaPath, (json) => {
@@ -61,6 +62,12 @@ async function createTreeWithBoilerplate() {
     skipLintChecks: false,
     skipTsConfig: false,
     unitTestRunner: 'jest',
+  });
+  await executorGenerator(tree, {
+    name: 'build',
+    project: 'plugin',
+    unitTestRunner: 'jest',
+    includeHasher: false,
   });
   return { tree };
 }

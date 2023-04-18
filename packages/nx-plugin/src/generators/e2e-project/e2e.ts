@@ -46,7 +46,6 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    minimal: options.minimal ?? false,
     projectName,
     linter: options.linter ?? Linter.EsLint,
     pluginPropertyName,

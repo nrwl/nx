@@ -6,7 +6,6 @@ export interface Schema {
   projectDirectory?: string;
   pluginOutputPath?: string;
   jestConfig?: string;
-  minimal?: boolean;
   linter?: Linter;
   skipFormat?: boolean;
   rootProject?: boolean;

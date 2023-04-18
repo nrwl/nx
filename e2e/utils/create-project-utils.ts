@@ -215,12 +215,10 @@ export function runCreateWorkspace(
 export function runCreatePlugin(
   name: string,
   {
-    pluginName,
     packageManager,
     extraArgs,
     useDetectedPm = false,
   }: {
-    pluginName?: string;
     packageManager?: 'npm' | 'yarn' | 'pnpm';
     extraArgs?: string;
     useDetectedPm?: boolean;
@@ -232,11 +230,7 @@ export function runCreatePlugin(
 
   let command = `${
     pm.runUninstalledPackage
-  } create-nx-plugin@${getPublishedVersion()} ${name}`;
-
-  if (pluginName) {
-    command += ` --pluginName=${pluginName} --no-nxCloud`;
-  }
+  } create-nx-plugin@${getPublishedVersion()} ${name} --no-nxCloud`;
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;

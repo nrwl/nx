@@ -44,6 +44,11 @@
         "type": "boolean",
         "default": false,
         "description": "Should the boilerplate for a custom hasher be generated?"
+      },
+      "skipLintChecks": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add an eslint configuration for plugin json files."
       }
     },
     "required": ["project", "name"],

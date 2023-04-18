@@ -36,47 +36,17 @@ describe('Nx Plugin', () => {
     const lintResults = runCLI(`lint ${plugin}`);
     expect(lintResults).toContain('All files pass linting.');
 
-    expectTestsPass(await runCLIAsync(`test ${plugin}`));
-
     const buildResults = runCLI(`build ${plugin}`);
     expect(buildResults).toContain('Done compiling TypeScript files');
     checkFilesExist(
       `dist/libs/${plugin}/package.json`,
-      `dist/libs/${plugin}/generators.json`,
-      `dist/libs/${plugin}/executors.json`,
-      `dist/libs/${plugin}/src/index.js`,
-      `dist/libs/${plugin}/src/generators/${plugin}/schema.json`,
-      `dist/libs/${plugin}/src/generators/${plugin}/schema.d.ts`,
-      `dist/libs/${plugin}/src/generators/${plugin}/generator.js`,
-      `dist/libs/${plugin}/src/generators/${plugin}/files/src/index.ts__template__`,
-      `dist/libs/${plugin}/src/executors/build/executor.js`,
-      `dist/libs/${plugin}/src/executors/build/schema.d.ts`,
-      `dist/libs/${plugin}/src/executors/build/schema.json`
+      `dist/libs/${plugin}/src/index.js`
     );
     const project = readJson(`libs/${plugin}/project.json`);
     expect(project).toMatchObject({
       tags: [],
     });
-    const e2eProject = readJson(`apps/${plugin}-e2e/project.json`);
-
-    expect(e2eProject).toMatchObject({
-      tags: [],
-      implicitDependencies: [`${plugin}`],
-    });
   }, 90000);
-
-  // the test invoke ensureNxProject, which points to @nrwl/workspace collection
-  // which walks up the directory to find it in the next repo itself, so it
-  // doesn't use the collection we are building
-  // we should change it to point to the right collection using relative path
-  // TODO: Re-enable this to work with pnpm
-  it(`should run the plugin's e2e tests`, async () => {
-    const plugin = uniq('plugin-name');
-    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
-    const e2eResults = runCLI(`e2e ${plugin}-e2e`);
-    expect(e2eResults).toContain('Successfully ran target e2e');
-    expect(await killPorts()).toBeTruthy();
-  }, 250000);
 
   it('should be able to generate a migration', async () => {
     const plugin = uniq('plugin');
@@ -192,7 +162,9 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     const goodGenerator = uniq('good-generator');
     const goodExecutor = uniq('good-executor');
+    const badExecutorBadImplPath = uniq('bad-executor');
     const goodMigration = uniq('good-migration');
+    const badFactoryPath = uniq('bad-generator');
     const badMigrationVersion = uniq('bad-version');
     const missingMigrationVersion = uniq('missing-version');
 
@@ -205,7 +177,15 @@ describe('Nx Plugin', () => {
     );
 
     runCLI(
+      `generate @nrwl/nx-plugin:generator ${badFactoryPath} --project=${plugin}`
+    );
+
+    runCLI(
       `generate @nrwl/nx-plugin:executor ${goodExecutor} --project=${plugin}`
+    );
+
+    runCLI(
+      `generate @nrwl/nx-plugin:executor ${badExecutorBadImplPath} --project=${plugin}`
     );
 
     runCLI(
@@ -223,7 +203,9 @@ describe('Nx Plugin', () => {
     updateFile(`libs/${plugin}/generators.json`, (f) => {
       const json = JSON.parse(f);
       // @proj/plugin:plugin has an invalid implementation path
-      json.generators[plugin].factory = `./generators/${plugin}/bad-path`;
+      json.generators[
+        badFactoryPath
+      ].factory = `./generators/${plugin}/bad-path`;
       // @proj/plugin:non-existant has a missing implementation path amd schema
       json.generators['non-existant-generator'] = {};
       return JSON.stringify(json);
@@ -231,8 +213,9 @@ describe('Nx Plugin', () => {
 
     updateFile(`libs/${plugin}/executors.json`, (f) => {
       const json = JSON.parse(f);
-      // @proj/plugin:build has an invalid implementation path
-      json.executors['build'].implementation = './executors/build/bad-path';
+      // @proj/plugin:badExecutorBadImplPath has an invalid implementation path
+      json.executors[badExecutorBadImplPath].implementation =
+        './executors/bad-path';
       // @proj/plugin:non-existant has a missing implementation path amd schema
       json.executors['non-existant-executor'] = {};
       return JSON.stringify(json);
@@ -246,7 +229,7 @@ describe('Nx Plugin', () => {
 
     const results = runCLI(`lint ${plugin}`, { silenceError: true });
     expect(results).toContain(
-      `${plugin}: Implementation path should point to a valid file`
+      `${badFactoryPath}: Implementation path should point to a valid file`
     );
     expect(results).toContain(
       `non-existant-generator: Missing required property - \`schema\``
@@ -257,7 +240,7 @@ describe('Nx Plugin', () => {
     expect(results).not.toContain(goodGenerator);
 
     expect(results).toContain(
-      `build: Implementation path should point to a valid file`
+      `${badExecutorBadImplPath}: Implementation path should point to a valid file`
     );
     expect(results).toContain(
       `non-existant-executor: Missing required property - \`schema\``
@@ -389,7 +372,7 @@ describe('Nx Plugin', () => {
     it('should create a plugin in the specified directory', () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir `
+        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir --e2eTestRunner=jest`
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
       const pluginProject = readProjectConfig(`subdir-${plugin}`);

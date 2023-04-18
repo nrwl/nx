@@ -140,24 +140,6 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(tree.exists('apps/my-plugin-e2e/jest.config.ts')).toBeTruthy();
   });
 
-  it('should not generate tests when minimal flag is passed', async () => {
-    // ARRANGE & ACT
-    await e2eProjectGenerator(tree, {
-      pluginName: 'my-plugin',
-      pluginOutputPath: `dist/libs/my-plugin`,
-      npmPackageName: '@proj/my-plugin',
-      minimal: true,
-    });
-
-    const { root } = readProjectConfiguration(tree, 'my-plugin-e2e');
-
-    // ASSERT
-
-    expect(
-      tree.read(joinPathFragments(root, 'tests/my-plugin.spec.ts'), 'utf-8')
-    ).not.toContain("it('should create ");
-  });
-
   it('should setup the eslint builder', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
