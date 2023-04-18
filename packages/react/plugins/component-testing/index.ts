@@ -135,7 +135,7 @@ export function nxComponentTestingPreset(
 }
 
 /**
- * apply the schema.json defaults from the @nrwl/web:webpack executor to the target options
+ * apply the schema.json defaults from the @nx/web:webpack executor to the target options
  */
 function withSchemaDefaults(target: Target, context: ExecutorContext) {
   const options = readTargetOptions(target, context);
@@ -213,7 +213,7 @@ function buildTargetWebpack(
 
     return async () => {
       customWebpack = await customWebpack;
-      // TODO(jack): Once webpackConfig is always set in @nrwl/webpack:webpack, we no longer need this default.
+      // TODO(jack): Once webpackConfig is always set in @nx/webpack:webpack, we no longer need this default.
       const defaultWebpack = getWebpackConfig(context, {
         ...options,
         root: workspaceRoot,

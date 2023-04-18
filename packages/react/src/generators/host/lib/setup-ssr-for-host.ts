@@ -21,8 +21,7 @@ export async function setupSsrForHost(
 ) {
   const tasks: GeneratorCallback[] = [];
   let project = readProjectConfiguration(tree, appName);
-  project.targets.serve.executor =
-    '@nrwl/react:module-federation-ssr-dev-server';
+  project.targets.serve.executor = '@nx/react:module-federation-ssr-dev-server';
   updateProjectConfiguration(tree, appName, project);
 
   generateFiles(

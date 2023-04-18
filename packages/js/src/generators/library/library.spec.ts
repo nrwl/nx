@@ -756,7 +756,7 @@ describe('lib', () => {
 
         const config = readProjectConfiguration(tree, 'my-lib');
         expect(config.targets.build).toEqual({
-          executor: '@nrwl/js:tsc',
+          executor: '@nx/js:tsc',
           options: {
             assets: ['libs/my-lib/*.md'],
             main: 'libs/my-lib/src/index.ts',
@@ -776,7 +776,7 @@ describe('lib', () => {
 
         const config = readProjectConfiguration(tree, 'my-lib');
         expect(config.targets.build).toEqual({
-          executor: '@nrwl/js:swc',
+          executor: '@nx/js:swc',
           options: {
             assets: ['libs/my-lib/*.md'],
             main: 'libs/my-lib/src/index.ts',
@@ -830,7 +830,7 @@ describe('lib', () => {
 
         const config = readProjectConfiguration(tree, 'my-lib');
         expect(config.targets.build).toEqual({
-          executor: '@nrwl/js:tsc',
+          executor: '@nx/js:tsc',
           options: {
             assets: ['libs/my-lib/*.md'],
             main: 'libs/my-lib/src/index.ts',
@@ -851,7 +851,7 @@ describe('lib', () => {
 
         const config = readProjectConfiguration(tree, 'my-lib');
         expect(config.targets.build).toEqual({
-          executor: '@nrwl/js:swc',
+          executor: '@nx/js:swc',
           options: {
             assets: ['libs/my-lib/*.md'],
             main: 'libs/my-lib/src/index.ts',
@@ -935,7 +935,7 @@ describe('lib', () => {
 
         const config = readProjectConfiguration(tree, 'my-lib');
         expect(config.targets.build).toEqual({
-          executor: '@nrwl/js:tsc',
+          executor: '@nx/js:tsc',
           options: {
             assets: ['libs/my-lib/*.md'],
             main: 'libs/my-lib/src/index.ts',
@@ -1011,7 +1011,7 @@ describe('lib', () => {
         expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
       });
 
-      it('should generate a .babelrc when flag is set to true (even if there is no `@nrwl/web` plugin installed)', async () => {
+      it('should generate a .babelrc when flag is set to true (even if there is no `@nx/web` plugin installed)', async () => {
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies = {};
           return json;
@@ -1030,7 +1030,7 @@ describe('lib', () => {
           {
             "presets": [
               [
-                "@nrwl/js/babel",
+                "@nx/js/babel",
                 {
                   "useBuiltIns": "usage",
                 },
@@ -1040,11 +1040,11 @@ describe('lib', () => {
         `);
       });
 
-      it('should not generate a .babelrc when flag is not set and there is NOT a `@nrwl/web` package installed', async () => {
+      it('should not generate a .babelrc when flag is not set and there is NOT a `@nx/web` package installed', async () => {
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies = {
-            '@nrwl/angular': '1.1.1',
-            '@nrwl/next': '1.1.1',
+            '@nx/angular': '1.1.1',
+            '@nx/next': '1.1.1',
           };
           return json;
         });

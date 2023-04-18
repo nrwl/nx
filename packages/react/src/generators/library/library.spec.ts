@@ -194,7 +194,7 @@ describe('lib', () => {
       expect(eslintJson).toMatchInlineSnapshot(`
         {
           "extends": [
-            "plugin:@nrwl/nx/react",
+            "plugin:@nx/nx/react",
             "../../.eslintrc.json",
           ],
           "ignorePatterns": [
@@ -235,7 +235,7 @@ describe('lib', () => {
         compiler: 'babel',
       });
       expect(tree.read('libs/my-lib/jest.config.ts', 'utf-8')).toContain(
-        "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
+        "['babel-jest', { presets: ['@nx/react/babel'] }]"
       );
     });
   });
@@ -292,7 +292,7 @@ describe('lib', () => {
         compiler: 'babel',
       });
       expect(tree.read('libs/my-dir/my-lib/jest.config.ts', 'utf-8')).toContain(
-        "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
+        "['babel-jest', { presets: ['@nx/react/babel'] }]"
       );
     });
 
@@ -493,7 +493,7 @@ describe('lib', () => {
       const projectsConfigurations = getProjects(tree);
 
       expect(projectsConfigurations.get('my-lib').targets.build).toMatchObject({
-        executor: '@nrwl/rollup:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         options: {
           external: ['react/jsx-runtime'],
@@ -501,7 +501,7 @@ describe('lib', () => {
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',
           tsConfig: 'libs/my-lib/tsconfig.lib.json',
-          rollupConfig: '@nrwl/react/plugins/bundle-rollup',
+          rollupConfig: '@nx/react/plugins/bundle-rollup',
         },
       });
     });

@@ -102,7 +102,7 @@ describe('app', () => {
       expect(appTree.exists('apps/my-app/src/app/app.module.css')).toBeTruthy();
 
       const jestConfig = appTree.read('apps/my-app/jest.config.ts').toString();
-      expect(jestConfig).toContain('@nrwl/react/plugins/jest');
+      expect(jestConfig).toContain('@nx/react/plugins/jest');
 
       const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');
       expect(tsconfig.references).toEqual([
@@ -131,7 +131,7 @@ describe('app', () => {
 
       const eslintJson = readJson(appTree, 'apps/my-app/.eslintrc.json');
       expect(eslintJson.extends).toEqual([
-        'plugin:@nrwl/nx/react',
+        'plugin:@nx/nx/react',
         '../../.eslintrc.json',
       ]);
 
@@ -247,7 +247,7 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: ['plugin:@nrwl/nx/react', '../../../.eslintrc.json'],
+          expectedValue: ['plugin:@nx/nx/react', '../../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -304,7 +304,7 @@ describe('app', () => {
     await applicationGenerator(appTree, { ...schema, name: 'my-app' });
 
     expect(appTree.read('apps/my-app/jest.config.ts').toString()).toContain(
-      "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
+      "['babel-jest', { presets: ['@nx/react/babel'] }]"
     );
   });
 
@@ -325,7 +325,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     const targetConfig = projectsConfigurations.get('my-app').targets;
-    expect(targetConfig.build.executor).toEqual('@nrwl/webpack:webpack');
+    expect(targetConfig.build.executor).toEqual('@nx/webpack:webpack');
     expect(targetConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(targetConfig.build.options).toEqual({
       compiler: 'babel',
@@ -387,7 +387,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     const targetConfig = projectsConfigurations.get('my-app').targets;
-    expect(targetConfig.serve.executor).toEqual('@nrwl/webpack:dev-server');
+    expect(targetConfig.serve.executor).toEqual('@nx/webpack:dev-server');
     expect(targetConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
       hmr: true,
@@ -532,7 +532,7 @@ describe('app', () => {
     expect(eslintJson).toMatchInlineSnapshot(`
       {
         "extends": [
-          "plugin:@nrwl/nx/react",
+          "plugin:@nx/nx/react",
           "../../.eslintrc.json",
         ],
         "ignorePatterns": [
@@ -609,7 +609,7 @@ describe('app', () => {
       await applicationGenerator(appTree, { ...schema, style: 'none' });
 
       const nxJson = readNxJson(appTree);
-      expect(nxJson.generators['@nrwl/react']).toMatchObject({
+      expect(nxJson.generators['@nx/react']).toMatchObject({
         application: {
           style: 'none',
         },
@@ -842,7 +842,7 @@ describe('app', () => {
       });
 
       const nxJson = readNxJson(appTree);
-      expect(nxJson.generators['@nrwl/react']).toMatchObject({
+      expect(nxJson.generators['@nx/react']).toMatchObject({
         application: {
           babel: true,
           style: 'styled-components',

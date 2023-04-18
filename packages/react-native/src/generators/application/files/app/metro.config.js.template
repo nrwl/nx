@@ -1,4 +1,4 @@
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 const exclusionList = require('metro-config/src/defaults/exclusionList');
 

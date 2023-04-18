@@ -35,7 +35,7 @@ describe('NxPlugin Plugin Generator', () => {
     const project = readProjectConfiguration(tree, 'my-plugin');
     expect(project.root).toEqual('libs/my-plugin');
     expect(project.targets.build).toEqual({
-      executor: '@nrwl/js:tsc',
+      executor: '@nx/js:tsc',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: 'dist/libs/my-plugin',
@@ -189,7 +189,7 @@ describe('NxPlugin Plugin Generator', () => {
 
       const { build } = readProjectConfiguration(tree, 'my-plugin').targets;
 
-      expect(build.executor).toEqual('@nrwl/js:tsc');
+      expect(build.executor).toEqual('@nx/js:tsc');
     });
 
     it('should specify swc as compiler', async () => {
@@ -202,7 +202,7 @@ describe('NxPlugin Plugin Generator', () => {
 
       const { build } = readProjectConfiguration(tree, 'my-plugin').targets;
 
-      expect(build.executor).toEqual('@nrwl/js:swc');
+      expect(build.executor).toEqual('@nx/js:swc');
     });
   });
 

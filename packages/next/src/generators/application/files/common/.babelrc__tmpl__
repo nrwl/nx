@@ -2,7 +2,7 @@
   "presets": [
     <% if (style === '@emotion/styled') { %>
     [
-      "@nrwl/next/babel",
+      "@nx/next/babel",
       {
         "preset-react": {
           "runtime": "automatic",
@@ -11,7 +11,7 @@
       }
     ]
     <% } else { %>
-    "@nrwl/next/babel"
+    "@nx/next/babel"
     <% } %>
   ],
   "plugins": [

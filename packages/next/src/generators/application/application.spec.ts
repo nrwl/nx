@@ -224,7 +224,7 @@ describe('app', () => {
     });
 
     expect(tree.read('apps/my-app/jest.config.ts', 'utf-8')).toContain(
-      `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest'`
+      `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest'`
     );
   });
 
@@ -236,7 +236,7 @@ describe('app', () => {
 
     const projectConfiguration = readProjectConfiguration(tree, 'my-app');
     expect(projectConfiguration.targets.build.executor).toEqual(
-      '@nrwl/next:build'
+      '@nx/next:build'
     );
     expect(projectConfiguration.targets.build.options).toEqual({
       root: 'apps/my-app',
@@ -252,7 +252,7 @@ describe('app', () => {
 
     const projectConfiguration = readProjectConfiguration(tree, 'my-app');
     expect(projectConfiguration.targets.serve.executor).toEqual(
-      '@nrwl/next:server'
+      '@nx/next:server'
     );
     expect(projectConfiguration.targets.serve.options).toEqual({
       buildTarget: 'my-app:build',
@@ -275,7 +275,7 @@ describe('app', () => {
 
     const projectConfiguration = readProjectConfiguration(tree, 'my-app');
     expect(projectConfiguration.targets.export.executor).toEqual(
-      '@nrwl/next:export'
+      '@nx/next:export'
     );
     expect(projectConfiguration.targets.export.options).toEqual({
       buildTarget: 'my-app:build:production',
@@ -339,7 +339,7 @@ describe('app', () => {
               "jest": true,
             },
             "extends": [
-              "plugin:@nrwl/nx/react-typescript",
+              "plugin:@nx/nx/react-typescript",
               "next",
               "next/core-web-vitals",
               "../../.eslintrc.json",

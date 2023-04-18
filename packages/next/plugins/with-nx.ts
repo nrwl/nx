@@ -80,7 +80,10 @@ function getNxContext(
 } {
   const targetConfig = getTargetConfig(graph, target);
 
-  if ('@nrwl/next:build' === targetConfig.executor) {
+  if (
+    '@nx/next:build' === targetConfig.executor ||
+    '@nrwl/next:build' === targetConfig.executor
+  ) {
     return {
       node: graph.nodes[target.project],
       options: getOptions(graph, target),
@@ -101,7 +104,12 @@ function getNxContext(
 
     return getNxContext(graph, devServerTarget);
   } else if (
-    ['@nrwl/next:server', '@nrwl/next:export'].includes(targetConfig.executor)
+    [
+      '@nx/next:server',
+      '@nx/next:export',
+      '@nrwl/next:server',
+      '@nrwl/next:export',
+    ].includes(targetConfig.executor)
   ) {
     const buildTarget = parseTargetString(targetOptions.buildTarget, graph);
     return getNxContext(graph, buildTarget);

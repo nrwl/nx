@@ -399,7 +399,7 @@ describe('@nx/storybook:init', () => {
 
       // check that only the following dependencies have been added
       expect(Object.keys(packageJson.devDependencies)).toEqual([
-        '@nrwl/js',
+        '@nx/js',
         '@nx/storybook',
         '@storybook/addon-essentials',
         '@storybook/builder-webpack5',

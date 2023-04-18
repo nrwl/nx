@@ -52,7 +52,7 @@ export function updateHostWithRemote(
   } else {
     // TODO(jack): Point to the nx.dev guide when ready.
     logger.warn(
-      `Could not find configuration at ${moduleFederationConfigPath}. Did you generate this project with "@nrwl/react:host"?`
+      `Could not find configuration at ${moduleFederationConfigPath}. Did you generate this project with "@nx/react:host"?`
     );
   }
 
@@ -70,7 +70,7 @@ export function updateHostWithRemote(
     );
   } else {
     logger.warn(
-      `Could not find remote definitions at ${remoteDefsPath}. Did you generate this project with "@nrwl/react:host"?`
+      `Could not find remote definitions at ${remoteDefsPath}. Did you generate this project with "@nx/react:host"?`
     );
   }
 
@@ -91,7 +91,7 @@ export function updateHostWithRemote(
     );
   } else {
     logger.warn(
-      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nrwl/react:host"?`
+      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nx/react:host"?`
     );
   }
 }

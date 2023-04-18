@@ -1,6 +1,7 @@
 import {
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -22,6 +23,13 @@ describe('Migration: enable SWC', () => {
       skipFormat: false,
       swc: false,
     });
+
+    updateJson(tree, 'apps/demo/.babelrc', (json) => {
+      json.presets[0] = '@nrwl/next/babel';
+
+      return json;
+    });
+
     // rename jest config to js as that was standard at this version of nx
     tree.delete('apps/demo/jest.config.ts');
     updateProjectConfiguration(tree, 'demo', {

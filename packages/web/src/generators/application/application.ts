@@ -127,7 +127,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
     // TODO(jack): Flush this out... no bundler should be possible for web but the experience isn't holistic due to missing features (e.g. writing index.html).
     const project = readProjectConfiguration(tree, options.projectName);
     project.targets.build = {
-      executor: `@nrwl/js:${options.compiler}`,
+      executor: `@nx/js:${options.compiler}`,
       outputs: ['{options.outputPath}'],
       options: {
         main,
@@ -166,12 +166,12 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
 function setDefaults(tree: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(tree);
   nxJson.generators = nxJson.generators || {};
-  nxJson.generators['@nrwl/web:application'] = {
+  nxJson.generators['@nx/web:application'] = {
     style: options.style,
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,
-    ...nxJson.generators['@nrwl/web:application'],
+    ...nxJson.generators['@nx/web:application'],
   };
   updateNxJson(tree, nxJson);
 }

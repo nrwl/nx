@@ -8,7 +8,10 @@ export function updateProject(
   config: ProjectConfiguration,
   options: SetupTailwindOptions
 ) {
-  if (config?.targets?.build?.executor === '@nrwl/webpack:webpack') {
+  if (
+    config?.targets?.build?.executor === '@nx/webpack:webpack' ||
+    config?.targets?.build?.executor === '@nrwl/webpack:webpack'
+  ) {
     config.targets.build.options ??= {};
     config.targets.build.options.postcssConfig = joinPathFragments(
       config.root,

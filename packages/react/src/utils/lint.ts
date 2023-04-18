@@ -21,7 +21,7 @@ export const extendReactEslintJson = (json: Linter.Config) => {
   const { extends: pluginExtends, ...config } = json;
 
   return {
-    extends: ['plugin:@nrwl/nx/react', ...(pluginExtends || [])],
+    extends: ['plugin:@nx/nx/react', ...(pluginExtends || [])],
     ...config,
   };
 };
@@ -34,7 +34,7 @@ export const createReactEslintJson = (
   setParserOptionsProject: boolean
 ): Linter.Config => ({
   extends: [
-    'plugin:@nrwl/nx/react',
+    'plugin:@nx/nx/react',
     `${offsetFromRoot(projectRoot)}.eslintrc.json`,
   ],
   ignorePatterns: ['!**/*'],

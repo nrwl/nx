@@ -28,7 +28,7 @@ describe('hostGenerator', () => {
     expect(tree.exists('apps/test/src/remotes.d.ts'));
   });
 
-  it('should install @nrwl/web for the file-server executor', async () => {
+  it('should install @nx/web for the file-server executor', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await hostGenerator(tree, {
       name: 'test',
@@ -39,7 +39,7 @@ describe('hostGenerator', () => {
     });
 
     const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.devDependencies['@nrwl/web']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/web']).toBeDefined();
   });
 
   it('should generate host files and configs for SSR', async () => {

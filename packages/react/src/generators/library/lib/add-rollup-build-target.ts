@@ -25,7 +25,7 @@ export async function addRollupBuildTarget(
     nxVersion
   );
 
-  // These are used in `@nrwl/react/plugins/bundle-rollup`
+  // These are used in `@nx/react/plugins/bundle-rollup`
   addDependenciesToPackageJson(
     host,
     {},
@@ -47,7 +47,7 @@ export async function addRollupBuildTarget(
   }
 
   targets.build = {
-    executor: '@nrwl/rollup:rollup',
+    executor: '@nx/rollup:rollup',
     outputs: ['{options.outputPath}'],
     options: {
       outputPath:
@@ -58,7 +58,7 @@ export async function addRollupBuildTarget(
       project: `${options.projectRoot}/package.json`,
       entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
       external,
-      rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
+      rollupConfig: `@nx/react/plugins/bundle-rollup`,
       compiler: options.compiler ?? 'babel',
       assets: [
         {

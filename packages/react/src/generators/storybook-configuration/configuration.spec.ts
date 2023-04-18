@@ -129,7 +129,7 @@ describe('react:storybook-configuration', () => {
     });
 
     // Currently the auto-generate stories feature only picks up components under the 'lib' directory.
-    // In our 'createTestAppLib' function, we call @nrwl/react:component to generate a component
+    // In our 'createTestAppLib' function, we call @nx/react:component to generate a component
     // under the specified 'lib' directory
     expect(
       appTree.exists(
