@@ -247,35 +247,14 @@ describe('lib', () => {
     it('should update the projects tsconfig with strict true', async () => {
       await libraryGenerator(tree, { name: libName, strict: true });
 
-      const tsconfigJson = readJson(
-        tree,
-        `/libs/${libFileName}/tsconfig.lib.json`
-      );
-      expect(tsconfigJson.compilerOptions.strict).toBe(true);
+      const tsConfig = readJson(tree, `/libs/${libFileName}/tsconfig.lib.json`);
+      expect(tsConfig.compilerOptions.strictNullChecks).toBeTruthy();
+      expect(tsConfig.compilerOptions.noImplicitAny).toBeTruthy();
+      expect(tsConfig.compilerOptions.strictBindCallApply).toBeTruthy();
       expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).toBe(true);
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBe(true);
-      expect(tsconfigJson.compilerOptions.noFallthroughCasesInSwitch).toBe(
-        true
-      );
-    });
-
-    it('should default to strict false', async () => {
-      await libraryGenerator(tree, { name: libName });
-
-      const tsconfigJson = readJson(
-        tree,
-        `/libs/${libFileName}/tsconfig.lib.json`
-      );
-      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).not.toBeDefined();
+        tsConfig.compilerOptions.forceConsistentCasingInFileNames
+      ).toBeTruthy();
+      expect(tsConfig.compilerOptions.noFallthroughCasesInSwitch).toBeTruthy();
     });
   });
 

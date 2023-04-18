@@ -28,6 +28,7 @@ export function normalizeOptions(
 
   const normalized: NormalizedOptions = {
     ...options,
+    strict: options.strict ?? true,
     controller: options.controller ?? false,
     fileName,
     global: options.global ?? false,

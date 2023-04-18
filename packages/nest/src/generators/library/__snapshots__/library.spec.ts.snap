@@ -32,7 +32,13 @@ export default {
 exports[`lib --unit-test-runner none should not generate test configuration 1`] = `
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
     "module": "commonjs",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "strict": true,
   },
   "extends": "../../tsconfig.base.json",
   "files": [],
@@ -62,7 +68,13 @@ exports[`lib --unit-test-runner none should not generate test configuration 2`] 
 exports[`lib nested should create a local tsconfig.json 1`] = `
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
     "module": "commonjs",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "strict": true,
   },
   "extends": "../../../tsconfig.base.json",
   "files": [],
@@ -94,7 +106,13 @@ export class MyLibModule {}
 exports[`lib not nested should create a local tsconfig.json 1`] = `
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
     "module": "commonjs",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "strict": true,
   },
   "extends": "../../tsconfig.base.json",
   "files": [],

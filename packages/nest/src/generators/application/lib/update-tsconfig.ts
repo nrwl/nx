@@ -9,6 +9,16 @@ export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
     (json) => {
       json.compilerOptions.emitDecoratorMetadata = true;
       json.compilerOptions.target = 'es2015';
+      if (options.strict) {
+        json.compilerOptions = {
+          ...json.compilerOptions,
+          strictNullChecks: true,
+          noImplicitAny: true,
+          strictBindCallApply: true,
+          forceConsistentCasingInFileNames: true,
+          noFallthroughCasesInSwitch: true,
+        };
+      }
       return json;
     }
   );

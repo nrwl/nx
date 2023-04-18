@@ -511,8 +511,8 @@ describe('nest libraries', function () {
       `libs/${nestlib}/src/lib/foo.model.ts`,
       `
 export class FooModel {
-  foo: string;
-  bar: number;
+  foo?: string;
+  bar?: number;
 }`
     );
 
@@ -527,7 +527,7 @@ exports.FooModel = void 0;
 const openapi = require("@nestjs/swagger");
 class FooModel {
     static _OPENAPI_METADATA_FACTORY() {
-        return { foo: { required: true, type: () => String }, bar: { required: true, type: () => Number } };
+        return { foo: { required: false, type: () => String }, bar: { required: false, type: () => Number } };
     }
 }
 exports.FooModel = FooModel;
