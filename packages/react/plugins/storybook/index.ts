@@ -116,6 +116,14 @@ export const webpack = async (
     },
     resolve: {
       ...storybookWebpackConfig.resolve,
+      fallback: {
+        ...storybookWebpackConfig.resolve?.fallback,
+        // Next.js and other React frameworks may have server-code that uses these modules.
+        // They are not meant for client-side components so skip the fallbacks.
+        assert: false,
+        path: false,
+        util: false,
+      },
       plugins: mergePlugins(
         ...((storybookWebpackConfig.resolve.plugins ??
           []) as ResolvePluginInstance[]),
