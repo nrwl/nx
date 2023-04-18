@@ -48,7 +48,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/setup.ts`,
       stripIndents`
-      const { registerTsProject } = require('nx/src/utils/register');
+      const { registerTsProject } = require('@nx/js/src/internal');
       const cleanup = registerTsProject('.', 'tsconfig.base.json');
 
       import {setup} from '@global-fun/globals';
@@ -61,7 +61,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/teardown.ts`,
       stripIndents`
-      import { registerTsProject } from 'nx/src/utils/register';
+      const { registerTsProject } = require('@nx/js/src/internal');
       const cleanup = registerTsProject('.', 'tsconfig.base.json');
 
       import {teardown} from '@global-fun/globals';
@@ -73,19 +73,18 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/jest.config.ts`,
       stripIndents`
-          module.exports = {
-            testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
-            transform: {
-              '^.+\\.(ts|js|html)$': 'ts-jest'
-            },
-            resolver: '@nrwl/jest/plugins/resolver',
-            moduleFileExtensions: ['ts', 'js', 'html'],
-            coverageReporters: ['html'],
-            passWithNoTests: true,
-            globals: { testGlobal: ${testGlobal} },
-            globalSetup: '<rootDir>/setup.ts',
-            globalTeardown: '<rootDir>/teardown.ts'
-          };`
+        export default {
+          displayName: "${mylib}",
+          preset: "../../jest.preset.js",
+          transform: {
+            "^.+\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
+          },
+          moduleFileExtensions: ["ts", "js", "html"],
+          coverageDirectory: "../../coverage/libs/${mylib}",
+          globals: { testGlobal: ${testGlobal} },
+          globalSetup: '<rootDir>/setup.ts',
+          globalTeardown: '<rootDir>/teardown.ts'
+        };`
     );
 
     const appResult = await runCLIAsync(`test ${mylib} --no-watch`);

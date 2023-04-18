@@ -1,6 +1,5 @@
 import { exec } from 'child_process';
 import * as minimatch from 'minimatch';
-import { getRootTsConfigFileName } from '../utils/typescript';
 import { defaultHashing, HashingImpl } from './hashing-impl';
 import {
   FileData,
@@ -10,9 +9,8 @@ import {
 } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
-import { readJsonFile } from '../utils/fileutils';
 import { InputDefinition } from '../config/workspace-json-project-json';
-import { getImportPath } from '../utils/path';
+import { hashTsConfig } from '../plugins/js/hasher/hasher';
 
 type ExpandedSelfInput =
   | { fileset: string }
@@ -40,14 +38,6 @@ export interface Hash {
     implicitDeps?: { [fileName: string]: string };
     runtime?: { [input: string]: string };
   };
-}
-
-interface CompilerOptions {
-  paths: Record<string, string[]>;
-}
-
-interface TsconfigJsonConfiguration {
-  compilerOptions: CompilerOptions;
 }
 
 /**
@@ -94,7 +84,6 @@ export class Hasher {
       legacyRuntimeInputs,
       legacyFilesetInputs,
       this.projectGraph,
-      this.readTsConfig(),
       this.hashing,
       { selectivelyHashTsConfig: this.options.selectivelyHashTsConfig ?? false }
     );
@@ -171,18 +160,6 @@ export class Hasher {
   hashFile(path: string): string {
     return this.hashing.hashFile(path);
   }
-
-  private readTsConfig() {
-    try {
-      const res = readJsonFile(getRootTsConfigFileName());
-      res.compilerOptions.paths ??= {};
-      return res;
-    } catch {
-      return {
-        compilerOptions: { paths: {} },
-      };
-    }
-  }
 }
 
 const DEFAULT_INPUTS: ReadonlyArray<InputDefinition> = [
@@ -209,7 +186,6 @@ class TaskHasher {
     private readonly legacyRuntimeInputs: { runtime: string }[],
     private readonly legacyFilesetInputs: { fileset: string }[],
     private readonly projectGraph: ProjectGraph,
-    private readonly tsConfigJson: TsconfigJsonConfiguration,
     private readonly hashing: HashingImpl,
     private readonly options: { selectivelyHashTsConfig: boolean }
   ) {}
@@ -490,13 +466,11 @@ class TaskHasher {
         const fileNames = filteredFiles.map((f) => f.file);
         const values = filteredFiles.map((f) => f.hash);
 
-        let tsConfig: string;
-        tsConfig = this.hashTsConfig(p);
         const value = this.hashing.hashArray([
           ...fileNames,
           ...values,
           JSON.stringify({ ...p.data, files: undefined }),
-          tsConfig,
+          hashTsConfig(p, this.nxJson, this.options),
         ]);
         res({
           value,
@@ -535,30 +509,6 @@ class TaskHasher {
       details: { [`env:${envVarName}`]: value },
       value,
     };
-  }
-
-  private hashTsConfig(p: ProjectGraphProjectNode) {
-    if (this.options.selectivelyHashTsConfig) {
-      return this.removeOtherProjectsPathRecords(p);
-    } else {
-      return JSON.stringify(this.tsConfigJson);
-    }
-  }
-
-  private removeOtherProjectsPathRecords(p: ProjectGraphProjectNode) {
-    const { paths, ...compilerOptions } = this.tsConfigJson.compilerOptions;
-    const rootPath = p.data.root.split('/');
-    rootPath.shift();
-    const pathAlias = getImportPath(this.nxJson?.npmScope, rootPath.join('/'));
-
-    return JSON.stringify({
-      compilerOptions: {
-        ...compilerOptions,
-        paths: {
-          [pathAlias]: paths[pathAlias] ?? [],
-        },
-      },
-    });
   }
 }
 

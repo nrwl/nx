@@ -101,8 +101,6 @@ It only uses language primitives and immutable objects
 - [applySharedFunction](../../devkit/documents/nrwl_devkit#applysharedfunction)
 - [convertNxExecutor](../../devkit/documents/nrwl_devkit#convertnxexecutor)
 - [convertNxGenerator](../../devkit/documents/nrwl_devkit#convertnxgenerator)
-- [createLockFile](../../devkit/documents/nrwl_devkit#createlockfile)
-- [createPackageJson](../../devkit/documents/nrwl_devkit#createpackagejson)
 - [createProjectGraphAsync](../../devkit/documents/nrwl_devkit#createprojectgraphasync)
 - [defaultTasksRunner](../../devkit/documents/nrwl_devkit#defaulttasksrunner)
 - [detectPackageManager](../../devkit/documents/nrwl_devkit#detectpackagemanager)
@@ -1051,53 +1049,6 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 ##### Returns
 
 `Promise`<`any`\>
-
----
-
-### createLockFile
-
-▸ **createLockFile**(`packageJson`, `packageManager?`): `string`
-
-**`Deprecated`**
-
-Import this from @nrwl/js instead
-
-#### Parameters
-
-| Name             | Type                                                                  |
-| :--------------- | :-------------------------------------------------------------------- |
-| `packageJson`    | `PackageJson`                                                         |
-| `packageManager` | [`PackageManager`](../../devkit/documents/nrwl_devkit#packagemanager) |
-
-#### Returns
-
-`string`
-
----
-
-### createPackageJson
-
-▸ **createPackageJson**(`projectName`, `graph`, `options?`): `PackageJson`
-
-**`Deprecated`**
-
-Import this from @nrwl/js instead
-
-#### Parameters
-
-| Name                          | Type                                                              |
-| :---------------------------- | :---------------------------------------------------------------- |
-| `projectName`                 | `string`                                                          |
-| `graph`                       | [`ProjectGraph`](../../devkit/documents/nrwl_devkit#projectgraph) |
-| `options`                     | `Object`                                                          |
-| `options.helperDependencies?` | `string`[]                                                        |
-| `options.isProduction?`       | `boolean`                                                         |
-| `options.root?`               | `string`                                                          |
-| `options.target?`             | `string`                                                          |
-
-#### Returns
-
-`PackageJson`
 
 ---
 

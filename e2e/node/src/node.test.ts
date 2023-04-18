@@ -14,7 +14,6 @@ import {
   packageManagerLockFile,
   promisifiedTreeKill,
   readFile,
-  readJson,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -26,7 +25,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
+import { getLockFileName } from '@nx/js';
 import { satisfies } from 'semver';
 
 function getData(port, path = '/api'): Promise<any> {

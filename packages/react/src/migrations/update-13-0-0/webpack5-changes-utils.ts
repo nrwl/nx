@@ -7,7 +7,7 @@ import {
 } from '@nx/devkit';
 
 import ts = require('typescript');
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nx/js';
 
 export async function migrateToWebPack5(tree: Tree) {
   allReactProjectsWithStorybookConfiguration(tree).forEach((project) => {

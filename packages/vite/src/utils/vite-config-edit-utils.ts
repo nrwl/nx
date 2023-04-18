@@ -1,5 +1,5 @@
 import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nx/js';
 import { TargetFlags } from './generator-utils';
 import type { Node, ReturnStatement } from 'typescript';
 

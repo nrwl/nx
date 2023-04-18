@@ -11,5 +11,13 @@ export * from './utils/assets';
 export * from './utils/package-json/update-package-json';
 export { libraryGenerator } from './generators/library/library';
 export { initGenerator } from './generators/init/init';
-export { createLockFile } from 'nx/src/plugins/js/lock-file/lock-file';
+
+export {
+  createLockFile,
+  getLockFileName,
+} from 'nx/src/plugins/js/lock-file/lock-file';
 export { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
+export {
+  findNodes,
+  getRootTsConfigPath,
+} from 'nx/src/plugins/js/utils/typescript';

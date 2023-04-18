@@ -1,17 +1,20 @@
 // This must come before the Hasher import
 import { DependencyType } from '../config/project-graph';
 
-jest.doMock('../utils/workspace-root', () => {
+jest.mock('../utils/workspace-root', () => {
   return {
     workspaceRoot: '/root',
   };
 });
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../utils/typescript');
+jest.mock('../plugins/js/utils/typescript', () => ({
+  getRootTsConfigFileName: jest
+    .fn()
+    .mockImplementation(() => '/root/tsconfig.base.json'),
+}));
 
 import { vol } from 'memfs';
-import tsUtils = require('../utils/typescript');
 import {
   expandNamedInput,
   filterUsingGlobPatterns,
@@ -59,7 +62,6 @@ describe('Hasher', () => {
       },
       '/root'
     );
-    tsUtils.getRootTsConfigFileName = () => '/root/tsconfig.base.json';
   });
 
   afterEach(() => {

@@ -1,15 +1,18 @@
-import { isWholeFileChange, WholeFileChange } from '../../file-utils';
+import {
+  isWholeFileChange,
+  WholeFileChange,
+} from '../../../../project-graph/file-utils';
 import {
   JsonDiffType,
   isJsonChange,
   JsonChange,
-} from '../../../utils/json-diff';
-import { logger } from '../../../utils/logger';
-import { TouchedProjectLocator } from '../affected-project-graph-models';
+} from '../../../../utils/json-diff';
+import { logger } from '../../../../utils/logger';
+import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
-} from '../../../config/project-graph';
+} from '../../../../config/project-graph';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange

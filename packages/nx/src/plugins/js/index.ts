@@ -16,7 +16,7 @@ import { projectGraphCacheDirectory } from '../../utils/cache-directory';
 import { readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ensureDirSync } from 'fs-extra';
-import { removeNpmNodes } from 'nx/src/plugins/js/lock-file/remove-npm-nodes';
+import { removeNpmNodes } from './lock-file/remove-npm-nodes';
 
 export const processProjectGraph: ProjectGraphProcessor = async (
   graph,

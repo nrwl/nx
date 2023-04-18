@@ -1,6 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
-import { getSourceNodes } from '@nx/js';
+import { findNodes, getSourceNodes } from '@nx/js';
 import type { PropertyDeclaration } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';

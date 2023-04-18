@@ -13,15 +13,15 @@ import {
 } from '@nx/devkit';
 import { getPath, pathExists } from './graph-utils';
 import { readFileIfExisting } from 'nx/src/utils/fileutils';
-import { TargetProjectLocator } from 'nx/src/plugins/js/project-graph/build-dependencies/target-project-locator';
 import {
   findProjectForPath,
   ProjectRootMappings,
 } from 'nx/src/project-graph/utils/find-project-for-path';
+import { getRootTsConfigFileName } from '@nx/js';
 import {
-  getRootTsConfigFileName,
   resolveModuleByImport,
-} from 'nx/src/utils/typescript';
+  TargetProjectLocator,
+} from '@nx/js/src/internal';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 type SingleSourceTagConstraint = {

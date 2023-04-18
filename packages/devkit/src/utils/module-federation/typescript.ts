@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { ParsedCommandLine } from 'typescript';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getRootTsConfigPath } from 'nx/src/utils/typescript';
+import { getRootTsConfigPath } from 'nx/src/plugins/js/utils/typescript';
 import { dirname } from 'path';
 
 let tsConfig: ParsedCommandLine;

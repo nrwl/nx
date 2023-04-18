@@ -1,6 +1,6 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 import { existsSync } from 'fs';
-import { registerTsProject } from 'nx/src/utils/register';
+import { registerTsProject } from '@nx/js/src/internal';
 import { WORKSPACE_PLUGIN_DIR, WORKSPACE_RULE_NAMESPACE } from './constants';
 
 type ESLintRules = Record<string, TSESLint.RuleModule<string, unknown[]>>;

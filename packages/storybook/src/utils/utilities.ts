@@ -2,7 +2,7 @@ import { readJson, readJsonFile, TargetConfiguration, Tree } from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
 import { storybookVersion } from './versions';
 import { statSync } from 'fs';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nx/js';
 import ts = require('typescript');
 import { gte, lt, major } from 'semver';
 import { join } from 'path';
