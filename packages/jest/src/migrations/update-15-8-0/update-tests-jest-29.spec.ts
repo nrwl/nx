@@ -73,6 +73,7 @@ async function setup(tree: Tree, name: string) {
   const projectConfig = readProjectConfiguration(tree, name);
   projectConfig.targets['test'] = {
     ...projectConfig.targets['test'],
+    executor: '@nrwl/jest:jest',
     configurations: {
       ci: {
         ci: true,

@@ -37,13 +37,13 @@ function setupE2ETargetDefaults(tree: Tree) {
 }
 
 function updateDependencies(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, ['@nrwl/cypress'], []);
+  removeDependenciesFromPackageJson(tree, ['@nx/cypress'], []);
 
   return addDependenciesToPackageJson(
     tree,
     {},
     {
-      ['@nrwl/cypress']: nxVersion,
+      ['@nx/cypress']: nxVersion,
       cypress: cypressVersion,
       '@types/node': typesNodeVersion,
     }

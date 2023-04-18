@@ -14,7 +14,7 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
         "*.jsx",
       ],
       "rules": {
-        "@nrwl/nx/enforce-module-boundaries": [
+        "@nx/nx/enforce-module-boundaries": [
           "error",
           {
             "allow": [
@@ -92,7 +92,7 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/typescript",
+        "plugin:@nx/nx/typescript",
       ],
       "files": [
         "*.ts",
@@ -102,7 +102,7 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/javascript",
+        "plugin:@nx/nx/javascript",
       ],
       "files": [
         "*.js",
@@ -238,7 +238,7 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
     },
   ],
   "plugins": [
-    "@nrwl/nx",
+    "@nx/nx",
   ],
   "root": true,
 }
@@ -255,7 +255,7 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
   "overrides": [
     {
       "extends": [
-        "plugin:@nrwl/nx/angular",
+        "plugin:@nx/nx/angular",
         "plugin:@angular-eslint/template/process-inline-templates",
       ],
       "files": [
@@ -287,7 +287,7 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/angular-template",
+        "plugin:@nx/nx/angular-template",
       ],
       "files": [
         "*.html",
@@ -317,7 +317,7 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
         "*.jsx",
       ],
       "rules": {
-        "@nrwl/nx/enforce-module-boundaries": [
+        "@nx/nx/enforce-module-boundaries": [
           "error",
           {
             "allow": [
@@ -395,7 +395,7 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/typescript",
+        "plugin:@nx/nx/typescript",
       ],
       "files": [
         "*.ts",
@@ -405,7 +405,7 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/javascript",
+        "plugin:@nx/nx/javascript",
       ],
       "files": [
         "*.js",
@@ -541,7 +541,7 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
     },
   ],
   "plugins": [
-    "@nrwl/nx",
+    "@nx/nx",
   ],
   "root": true,
 }
@@ -554,8 +554,8 @@ exports[`convert-tslint-to-eslint should work for Angular applications 1`] = `
     "@angular-eslint/eslint-plugin": "~15.0.0",
     "@angular-eslint/eslint-plugin-template": "~15.0.0",
     "@angular-eslint/template-parser": "~15.0.0",
-    "@nrwl/eslint-plugin-nx": "0.0.1",
-    "@nrwl/linter": "0.0.1",
+    "@nx/eslint-plugin-nx": "0.0.1",
+    "@nx/linter": "0.0.1",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "eslint": "~8.15.0",
@@ -575,7 +575,7 @@ exports[`convert-tslint-to-eslint should work for Angular applications 2`] = `
   "root": "apps/angular-app-1",
   "targets": {
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "apps/angular-app-1/**/*.ts",
@@ -604,7 +604,7 @@ exports[`convert-tslint-to-eslint should work for Angular applications 3`] = `
         "*.jsx",
       ],
       "rules": {
-        "@nrwl/nx/enforce-module-boundaries": [
+        "@nx/nx/enforce-module-boundaries": [
           "error",
           {
             "allow": [
@@ -682,7 +682,7 @@ exports[`convert-tslint-to-eslint should work for Angular applications 3`] = `
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/typescript",
+        "plugin:@nx/nx/typescript",
       ],
       "files": [
         "*.ts",
@@ -692,7 +692,7 @@ exports[`convert-tslint-to-eslint should work for Angular applications 3`] = `
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/javascript",
+        "plugin:@nx/nx/javascript",
       ],
       "files": [
         "*.js",
@@ -828,7 +828,7 @@ exports[`convert-tslint-to-eslint should work for Angular applications 3`] = `
     },
   ],
   "plugins": [
-    "@nrwl/nx",
+    "@nx/nx",
   ],
   "root": true,
 }
@@ -845,7 +845,7 @@ exports[`convert-tslint-to-eslint should work for Angular applications 4`] = `
   "overrides": [
     {
       "extends": [
-        "plugin:@nrwl/nx/angular",
+        "plugin:@nx/nx/angular",
         "plugin:@angular-eslint/template/process-inline-templates",
       ],
       "files": [
@@ -883,7 +883,7 @@ exports[`convert-tslint-to-eslint should work for Angular applications 4`] = `
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/angular-template",
+        "plugin:@nx/nx/angular-template",
       ],
       "files": [
         "*.html",
@@ -906,8 +906,8 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 1`] = `
     "@angular-eslint/eslint-plugin": "~15.0.0",
     "@angular-eslint/eslint-plugin-template": "~15.0.0",
     "@angular-eslint/template-parser": "~15.0.0",
-    "@nrwl/eslint-plugin-nx": "0.0.1",
-    "@nrwl/linter": "0.0.1",
+    "@nx/eslint-plugin-nx": "0.0.1",
+    "@nx/linter": "0.0.1",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "eslint": "~8.15.0",
@@ -927,7 +927,7 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 2`] = `
   "root": "libs/angular-lib-1",
   "targets": {
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "libs/angular-lib-1/**/*.ts",
@@ -956,7 +956,7 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 3`] = `
         "*.jsx",
       ],
       "rules": {
-        "@nrwl/nx/enforce-module-boundaries": [
+        "@nx/nx/enforce-module-boundaries": [
           "error",
           {
             "allow": [
@@ -1034,7 +1034,7 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 3`] = `
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/typescript",
+        "plugin:@nx/nx/typescript",
       ],
       "files": [
         "*.ts",
@@ -1044,7 +1044,7 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 3`] = `
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/javascript",
+        "plugin:@nx/nx/javascript",
       ],
       "files": [
         "*.js",
@@ -1180,7 +1180,7 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 3`] = `
     },
   ],
   "plugins": [
-    "@nrwl/nx",
+    "@nx/nx",
   ],
   "root": true,
 }
@@ -1197,7 +1197,7 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 4`] = `
   "overrides": [
     {
       "extends": [
-        "plugin:@nrwl/nx/angular",
+        "plugin:@nx/nx/angular",
         "plugin:@angular-eslint/template/process-inline-templates",
       ],
       "files": [
@@ -1229,7 +1229,7 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 4`] = `
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/angular-template",
+        "plugin:@nx/nx/angular-template",
       ],
       "files": [
         "*.html",

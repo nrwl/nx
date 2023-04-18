@@ -11,6 +11,6 @@ export const WORKSPACE_PLUGIN_DIR = join(workspaceRoot, 'tools/eslint-rules');
  * E.g. if a user writes a rule called "foo", then they will include it in their ESLint
  * config files as:
  *
- * "@nrwl/nx/workspace/foo": "error"
+ * "@nx/nx/workspace/foo": "error"
  */
 export const WORKSPACE_RULE_NAMESPACE = 'workspace';

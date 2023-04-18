@@ -187,7 +187,7 @@ export async function* esbuildExecutor(
         yield {
           success: buildResult.errors.length === 0,
           // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
-          // This field is needed for `@nrwl/js:node` executor to work.
+          // This field is needed for `@nx/js:node` executor to work.
           outfile: join(context.root, getOutfile(format, options, context)),
         };
       }
@@ -232,7 +232,7 @@ export async function* esbuildExecutor(
                         next({
                           success,
                           // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
-                          // This field is needed for `@nrwl/js:node` executor to work.
+                          // This field is needed for `@nx/js:node` executor to work.
                           outfile: join(
                             context.root,
                             getOutfile(format, options, context)
@@ -332,7 +332,7 @@ function getTypeCheckOptions(
   const { watch, tsConfig, outputPath } = options;
 
   const typeCheckOptions: TypeCheckOptions = {
-    // TODO(jack): Add support for d.ts declaration files -- once the `@nrwl/js:tsc` changes are in we can use the same logic.
+    // TODO(jack): Add support for d.ts declaration files -- once the `@nx/js:tsc` changes are in we can use the same logic.
     mode: 'noEmit',
     tsConfigPath: tsConfig,
     // outDir: outputPath,

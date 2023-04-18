@@ -82,7 +82,7 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
     targets: {
       ...project.targets,
       build: {
-        executor: '@nrwl/rollup:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: buildOptions,

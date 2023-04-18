@@ -422,10 +422,8 @@ describe('lib', () => {
 
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['eslint']).toBeDefined();
-      expect(packageJson.devDependencies['@nrwl/linter']).toBeDefined();
-      expect(
-        packageJson.devDependencies['@nrwl/eslint-plugin-nx']
-      ).toBeDefined();
+      expect(packageJson.devDependencies['@nx/linter']).toBeDefined();
+      expect(packageJson.devDependencies['@nx/eslint-plugin-nx']).toBeDefined();
     });
 
     describe('not nested', () => {
@@ -435,7 +433,7 @@ describe('lib', () => {
           name: 'myLib',
         });
         expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
-          executor: '@nrwl/linter:eslint',
+          executor: '@nx/linter:eslint',
           outputs: ['{options.outputFile}'],
           options: {
             lintFilePatterns: ['libs/my-lib/**/*.ts'],
@@ -499,7 +497,7 @@ describe('lib', () => {
         expect(
           readProjectConfiguration(tree, 'my-dir-my-lib').targets.lint
         ).toEqual({
-          executor: '@nrwl/linter:eslint',
+          executor: '@nx/linter:eslint',
           outputs: ['{options.outputFile}'],
           options: {
             lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
@@ -1073,10 +1071,10 @@ describe('lib', () => {
 
       const project = readProjectConfiguration(tree, 'my-lib');
       expect(project.targets.build).toMatchObject({
-        executor: '@nrwl/vite:build',
+        executor: '@nx/vite:build',
       });
       expect(project.targets.test).toMatchObject({
-        executor: '@nrwl/vite:test',
+        executor: '@nx/vite:test',
       });
       expect(tree.exists('libs/my-lib/vite.config.ts')).toBeTruthy();
     });
@@ -1084,7 +1082,7 @@ describe('lib', () => {
     it.each`
       unitTestRunner | executor
       ${'none'}      | ${undefined}
-      ${'jest'}      | ${'@nrwl/jest:jest'}
+      ${'jest'}      | ${'@nx/jest:jest'}
     `(
       'should respect unitTestRunner if passed',
       async ({ unitTestRunner, executor }) => {

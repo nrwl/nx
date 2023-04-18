@@ -98,7 +98,7 @@ describe('jestConfigObject', () => {
 
     it('should handle spread assignments', () => {
       const content = `
-       import { nxPreset } from '@nrwl/jest/preset';
+       import { nxPreset } from '@nx/jest/preset';
       
         export default {
           ...nxPreset,

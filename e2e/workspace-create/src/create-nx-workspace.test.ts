@@ -179,7 +179,7 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
     expectNoTsJestInJestConfig(appName);
     const packageJson = readJson('package.json');
-    expect(packageJson.devDependencies['@nrwl/webpack']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/webpack']).toBeDefined();
     expectCodeIsFormatted();
   });
 
@@ -197,8 +197,8 @@ describe('create-nx-workspace', () => {
 
     expectNoAngularDevkit();
     const packageJson = readJson('package.json');
-    expect(packageJson.devDependencies['@nrwl/webpack']).not.toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/vite']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/webpack']).not.toBeDefined();
+    expect(packageJson.devDependencies['@nx/vite']).toBeDefined();
     expectCodeIsFormatted();
   });
 

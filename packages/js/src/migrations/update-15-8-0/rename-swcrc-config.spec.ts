@@ -65,6 +65,10 @@ async function setup(tree: Tree) {
     config: 'project',
   });
 
+  const projectConfig = readProjectConfiguration(tree, 'my-lib');
+  projectConfig.targets.test.executor = '@nrwl/jest:jest';
+  updateProjectConfiguration(tree, 'my-lib', projectConfig);
+
   tree.rename('libs/my-lib/.swcrc', 'libs/my-lib/.lib.swcrc');
   tree.write(
     'libs/my-lib/jest.config.ts',

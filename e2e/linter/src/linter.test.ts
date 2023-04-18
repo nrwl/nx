@@ -168,7 +168,7 @@ describe('Linter', () => {
         );
         updateFile(newRulePath, updatedRuleContents);
 
-        const newRuleNameForUsage = `@nrwl/nx/workspace/${newRuleName}`;
+        const newRuleNameForUsage = `@nx/nx/workspace/${newRuleName}`;
 
         // Add the new workspace rule to the lint config and run linting
         const eslintrc = readJson('.eslintrc.json');
@@ -199,10 +199,10 @@ describe('Linter', () => {
 
         const eslint = readJson('.eslintrc.json');
         eslint.overrides[0].rules[
-          '@nrwl/nx/enforce-module-boundaries'
+          '@nx/nx/enforce-module-boundaries'
         ][1].depConstraints = [
           { sourceTag: 'validtag', onlyDependOnLibsWithTags: ['validtag'] },
-          ...eslint.overrides[0].rules['@nrwl/nx/enforce-module-boundaries'][1]
+          ...eslint.overrides[0].rules['@nx/nx/enforce-module-boundaries'][1]
             .depConstraints,
         ];
         updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
@@ -454,8 +454,8 @@ describe('Linter', () => {
       const e2eEslint = readJson('e2e/.eslintrc.json');
 
       // should directly refer to nx plugin
-      expect(rootEslint.plugins).toEqual(['@nrwl/nx']);
-      expect(e2eEslint.plugins).toEqual(['@nrwl/nx']);
+      expect(rootEslint.plugins).toEqual(['@nx/nx']);
+      expect(e2eEslint.plugins).toEqual(['@nx/nx']);
     }
 
     function verifySuccessfulMigratedSetup(myapp: string, mylib: string) {
@@ -476,7 +476,7 @@ describe('Linter', () => {
       const libEslint = readJson(`libs/${mylib}/.eslintrc.json`);
 
       // should directly refer to nx plugin
-      expect(rootEslint.plugins).toEqual(['@nrwl/nx']);
+      expect(rootEslint.plugins).toEqual(['@nx/nx']);
       expect(appEslint.plugins).toBeUndefined();
       expect(e2eEslint.plugins).toBeUndefined();
       expect(libEslint.plugins).toBeUndefined();
@@ -541,7 +541,7 @@ describe('Linter', () => {
 
       // should have no plugin extends
       expect(appEslint.overrides[0].extends).toEqual([
-        'plugin:@nrwl/nx/angular',
+        'plugin:@nx/nx/angular',
         'plugin:@angular-eslint/template/process-inline-templates',
       ]);
       expect(e2eEslint.overrides[0].extends).toBeUndefined();

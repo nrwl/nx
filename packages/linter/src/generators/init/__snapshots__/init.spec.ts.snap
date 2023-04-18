@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nrwl/linter:init --linter eslint should generate the global eslint config 1`] = `
+exports[`@nx/linter:init --linter eslint should generate the global eslint config 1`] = `
 "{
   "root": true,
   "ignorePatterns": [
     "**/*"
   ],
   "plugins": [
-    "@nrwl/nx"
+    "@nx/nx"
   ],
   "overrides": [
     {
@@ -18,7 +18,7 @@ exports[`@nrwl/linter:init --linter eslint should generate the global eslint con
         "*.jsx"
       ],
       "rules": {
-        "@nrwl/nx/enforce-module-boundaries": [
+        "@nx/nx/enforce-module-boundaries": [
           "error",
           {
             "enforceBuildableLibDependency": true,
@@ -41,7 +41,7 @@ exports[`@nrwl/linter:init --linter eslint should generate the global eslint con
         "*.tsx"
       ],
       "extends": [
-        "plugin:@nrwl/nx/typescript"
+        "plugin:@nx/nx/typescript"
       ],
       "rules": {}
     },
@@ -51,7 +51,7 @@ exports[`@nrwl/linter:init --linter eslint should generate the global eslint con
         "*.jsx"
       ],
       "extends": [
-        "plugin:@nrwl/nx/javascript"
+        "plugin:@nx/nx/javascript"
       ],
       "rules": {}
     }

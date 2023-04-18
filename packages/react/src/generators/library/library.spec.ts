@@ -36,11 +36,11 @@ describe('lib', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     updateJson(tree, '/package.json', (json) => {
       json.devDependencies = {
-        '@nrwl/cypress': nxVersion,
-        '@nrwl/jest': nxVersion,
-        '@nrwl/rollup': nxVersion,
-        '@nrwl/vite': nxVersion,
-        '@nrwl/webpack': nxVersion,
+        '@nx/cypress': nxVersion,
+        '@nx/jest': nxVersion,
+        '@nx/rollup': nxVersion,
+        '@nx/vite': nxVersion,
+        '@nx/webpack': nxVersion,
       };
       return json;
     });
@@ -53,7 +53,7 @@ describe('lib', () => {
       expect(project.root).toEqual('libs/my-lib');
       expect(project.targets.build).toBeUndefined();
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -302,7 +302,7 @@ describe('lib', () => {
 
       expect(config.root).toEqual('libs/my-dir/my-lib');
       expect(config.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-dir/my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -397,7 +397,7 @@ describe('lib', () => {
       expect(config.targets.test).toBeUndefined();
       expect(config.targets.lint).toMatchInlineSnapshot(`
         {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/linter:eslint",
           "options": {
             "lintFilePatterns": [
               "libs/my-lib/**/*.{ts,tsx,js,jsx}",

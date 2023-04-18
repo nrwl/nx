@@ -11,9 +11,9 @@ module.exports = {
     '../<%= projectDirectory %>/**/*.stories.mdx',
     '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx)'
   <% } %>],
-  addons: ['@storybook/addon-essentials' <% if(uiFramework === '@storybook/react' && !usesVite) { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
+  addons: ['@storybook/addon-essentials' <% if(uiFramework === '@storybook/react' && !usesVite) { %>, '@nx/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
     <% if(usesSwc && !isNextJs) { %>, 'storybook-addon-swc' <% } %>
-    <% if(isNextJs) { %>, 'storybook-addon-swc', 
+    <% if(isNextJs) { %>, 'storybook-addon-swc',
         {
       name: 'storybook-addon-next',
       options: {
@@ -40,7 +40,7 @@ module.exports = {
 <% } %>
 
 <% if(usesVite) { %>
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 <% } %>

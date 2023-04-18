@@ -57,6 +57,17 @@ describe('Jest Migration (v14.1.2)', () => {
 
   it('should update individual project jest configs', async () => {
     await workspaceLib(tree, { name: 'lib-one' });
+    const projectConfiguration = readProjectConfiguration(tree, 'lib-one');
+    updateProjectConfiguration(tree, 'lib-one', {
+      ...projectConfiguration,
+      targets: {
+        ...projectConfiguration.targets,
+        test: {
+          ...projectConfiguration.targets.test,
+          executor: '@nrwl/jest:jest',
+        },
+      },
+    });
     tree.rename('jest.preset.js', 'jest.preset.ts');
     tree.write(
       'libs/lib-one/jest.config.ts',

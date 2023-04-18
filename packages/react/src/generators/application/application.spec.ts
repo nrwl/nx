@@ -365,7 +365,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     const targetConfig = projectsConfigurations.get('my-app').targets;
-    expect(targetConfig.build.executor).toEqual('@nrwl/vite:build');
+    expect(targetConfig.build.executor).toEqual('@nx/vite:build');
     expect(targetConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(targetConfig.build.options).toEqual({
       outputPath: 'dist/apps/my-app',
@@ -407,7 +407,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     const targetConfig = projectsConfigurations.get('my-app').targets;
-    expect(targetConfig.serve.executor).toEqual('@nrwl/vite:dev-server');
+    expect(targetConfig.serve.executor).toEqual('@nx/vite:dev-server');
     expect(targetConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
     });
@@ -422,7 +422,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     expect(projectsConfigurations.get('my-app').targets.lint).toEqual({
-      executor: '@nrwl/linter:eslint',
+      executor: '@nx/linter:eslint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['apps/my-app/**/*.{ts,tsx,js,jsx}'],
@@ -446,7 +446,7 @@ describe('app', () => {
       expect(projectsConfigurations.get('my-app').targets.lint)
         .toMatchInlineSnapshot(`
         {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/linter:eslint",
           "options": {
             "lintFilePatterns": [
               "apps/my-app/**/*.{ts,tsx,js,jsx}",
@@ -514,8 +514,8 @@ describe('app', () => {
     const packageJson = readJson(appTree, '/package.json');
 
     expect(packageJson.devDependencies.eslint).toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/linter']).toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/eslint-plugin-nx']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/linter']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/eslint-plugin-nx']).toBeDefined();
     expect(packageJson.devDependencies['eslint-plugin-react']).toBeDefined();
     expect(
       packageJson.devDependencies['eslint-plugin-react-hooks']
@@ -947,8 +947,8 @@ describe('app', () => {
     it('should setup targets with vite configuration', () => {
       const projectsConfigurations = getProjects(viteAppTree);
       const targetConfig = projectsConfigurations.get('my-app').targets;
-      expect(targetConfig.build.executor).toEqual('@nrwl/vite:build');
-      expect(targetConfig.serve.executor).toEqual('@nrwl/vite:dev-server');
+      expect(targetConfig.build.executor).toEqual('@nx/vite:build');
+      expect(targetConfig.serve.executor).toEqual('@nx/vite:dev-server');
       expect(targetConfig.serve.options).toEqual({
         buildTarget: 'my-app:build',
       });

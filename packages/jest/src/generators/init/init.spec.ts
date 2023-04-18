@@ -49,7 +49,7 @@ describe('jest', () => {
       sourceRoot: 'apps/my-app/src',
       targets: {
         test: {
-          executor: '@nrwl/jest:jest',
+          executor: '@nx/jest:jest',
           options: {
             jestConfig: 'apps/my-app/jest.config.ts',
           },
@@ -57,7 +57,7 @@ describe('jest', () => {
       },
     });
     const expected = stripIndents`
-import { getJestProjects } from '@nrwl/jest';
+import { getJestProjects } from '@nx/jest';
 export default {
   projects: getJestProjects(),
   extraThing: "Goes Here"
@@ -127,7 +127,7 @@ export default {
     await jestInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies.jest).toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/jest']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/jest']).toBeDefined();
     expect(packageJson.devDependencies['@types/jest']).toBeDefined();
     expect(packageJson.devDependencies['ts-jest']).toBeDefined();
     expect(packageJson.devDependencies['ts-node']).toBeDefined();
@@ -141,7 +141,7 @@ export default {
     await jestInitGenerator(tree, { testEnvironment: 'node' });
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies.jest).toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/jest']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/jest']).toBeDefined();
     expect(packageJson.devDependencies['@types/jest']).toBeDefined();
     expect(packageJson.devDependencies['ts-jest']).toBeDefined();
     expect(packageJson.devDependencies['ts-node']).toBeDefined();
@@ -155,7 +155,7 @@ export default {
     await jestInitGenerator(tree, { testEnvironment: 'none' });
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies.jest).toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/jest']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/jest']).toBeDefined();
     expect(packageJson.devDependencies['@types/jest']).toBeDefined();
     expect(packageJson.devDependencies['ts-jest']).toBeDefined();
     expect(packageJson.devDependencies['ts-node']).toBeDefined();
@@ -213,7 +213,7 @@ export default {
         sourceRoot: 'src',
         targets: {
           test: {
-            executor: '@nrwl/jest:jest',
+            executor: '@nx/jest:jest',
             options: {
               jestConfig: 'jest.config.ts',
             },
@@ -239,7 +239,7 @@ export default {
       await jestInitGenerator(tree, { rootProject: false });
       expect(tree.exists('jest.config.app.ts')).toBeTruthy();
       expect(tree.read('jest.config.ts', 'utf-8'))
-        .toEqual(`import { getJestProjects } from '@nrwl/jest';
+        .toEqual(`import { getJestProjects } from '@nx/jest';
 
 export default {
 projects: getJestProjects()
@@ -247,7 +247,7 @@ projects: getJestProjects()
       expect(readProjectConfiguration(tree, 'my-project').targets.test)
         .toMatchInlineSnapshot(`
         {
-          "executor": "@nrwl/jest:jest",
+          "executor": "@nx/jest:jest",
           "options": {
             "jestConfig": "jest.config.app.ts",
           },
@@ -262,7 +262,7 @@ projects: getJestProjects()
         sourceRoot: 'src',
         targets: {
           test: {
-            executor: '@nrwl/jest:jest',
+            executor: '@nx/jest:jest',
             options: {
               jestConfig: 'jest.config.js',
             },
@@ -288,7 +288,7 @@ module.exports = {
       await jestInitGenerator(tree, { js: true, rootProject: false });
       expect(tree.exists('jest.config.app.js')).toBeTruthy();
       expect(tree.read('jest.config.js', 'utf-8'))
-        .toEqual(`const { getJestProjects } = require('@nrwl/jest');
+        .toEqual(`const { getJestProjects } = require('@nx/jest');
 
 module.exports = {
 projects: getJestProjects()

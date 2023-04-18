@@ -11,8 +11,6 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator as angularApplicationGenerator } from '@nx/angular/generators';
 import { Schema } from './schema';
 import { applicationGenerator } from './application';
-import { overrideCollectionResolutionForTesting } from '@nx/devkit/ngcli-adapter';
-import { join } from 'path';
 
 describe('app', () => {
   let tree: Tree;
@@ -20,20 +18,7 @@ describe('app', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
 
-    overrideCollectionResolutionForTesting({
-      '@nrwl/cypress': join(__dirname, '../../../../cypress/generators.json'),
-      '@nrwl/jest': join(__dirname, '../../../../jest/generators.json'),
-      '@nrwl/workspace': join(
-        __dirname,
-        '../../../../workspace/generators.json'
-      ),
-      '@nrwl/angular': join(__dirname, '../../../../angular/generators.json'),
-    });
     jest.clearAllMocks();
-  });
-
-  afterEach(() => {
-    overrideCollectionResolutionForTesting(null);
   });
 
   describe('not nested', () => {
@@ -47,7 +32,7 @@ describe('app', () => {
       expect(project.targets).toEqual(
         expect.objectContaining({
           build: {
-            executor: '@nrwl/webpack:webpack',
+            executor: '@nx/webpack:webpack',
             outputs: ['{options.outputPath}'],
             defaultConfiguration: 'production',
             options: {
@@ -83,7 +68,7 @@ describe('app', () => {
         })
       );
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-node-app/**/*.ts'],
@@ -203,7 +188,7 @@ describe('app', () => {
       expect(project.root).toEqual('my-dir/my-node-app');
 
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-dir/my-node-app/**/*.ts'],
@@ -293,7 +278,7 @@ describe('app', () => {
       expect(project.targets.test).toBeUndefined();
       expect(project.targets.lint).toMatchInlineSnapshot(`
         {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/linter:eslint",
           "options": {
             "lintFilePatterns": [
               "my-node-app/**/*.ts",

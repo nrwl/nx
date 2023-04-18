@@ -4,8 +4,8 @@ exports[`convert-tslint-to-eslint should work for NestJS applications 1`] = `
 {
   "dependencies": {},
   "devDependencies": {
-    "@nrwl/eslint-plugin-nx": "0.0.1",
-    "@nrwl/linter": "0.0.1",
+    "@nx/eslint-plugin-nx": "0.0.1",
+    "@nx/linter": "0.0.1",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "eslint": "~8.15.0",
@@ -24,7 +24,7 @@ exports[`convert-tslint-to-eslint should work for NestJS applications 2`] = `
   "root": "apps/nest-app-1",
   "targets": {
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "apps/nest-app-1/**/*.ts",
@@ -52,7 +52,7 @@ exports[`convert-tslint-to-eslint should work for NestJS applications 3`] = `
         "*.jsx",
       ],
       "rules": {
-        "@nrwl/nx/enforce-module-boundaries": [
+        "@nx/nx/enforce-module-boundaries": [
           "error",
           {
             "allow": [
@@ -130,7 +130,7 @@ exports[`convert-tslint-to-eslint should work for NestJS applications 3`] = `
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/typescript",
+        "plugin:@nx/nx/typescript",
       ],
       "files": [
         "*.ts",
@@ -140,7 +140,7 @@ exports[`convert-tslint-to-eslint should work for NestJS applications 3`] = `
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/javascript",
+        "plugin:@nx/nx/javascript",
       ],
       "files": [
         "*.js",
@@ -237,7 +237,7 @@ exports[`convert-tslint-to-eslint should work for NestJS applications 3`] = `
     },
   ],
   "plugins": [
-    "@nrwl/nx",
+    "@nx/nx",
   ],
   "root": true,
 }
@@ -289,8 +289,8 @@ exports[`convert-tslint-to-eslint should work for NestJS libraries 1`] = `
 {
   "dependencies": {},
   "devDependencies": {
-    "@nrwl/eslint-plugin-nx": "0.0.1",
-    "@nrwl/linter": "0.0.1",
+    "@nx/eslint-plugin-nx": "0.0.1",
+    "@nx/linter": "0.0.1",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "eslint": "~8.15.0",
@@ -309,7 +309,7 @@ exports[`convert-tslint-to-eslint should work for NestJS libraries 2`] = `
   "root": "libs/nest-lib-1",
   "targets": {
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "libs/nest-lib-1/**/*.ts",
@@ -337,7 +337,7 @@ exports[`convert-tslint-to-eslint should work for NestJS libraries 3`] = `
         "*.jsx",
       ],
       "rules": {
-        "@nrwl/nx/enforce-module-boundaries": [
+        "@nx/nx/enforce-module-boundaries": [
           "error",
           {
             "allow": [
@@ -415,7 +415,7 @@ exports[`convert-tslint-to-eslint should work for NestJS libraries 3`] = `
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/typescript",
+        "plugin:@nx/nx/typescript",
       ],
       "files": [
         "*.ts",
@@ -425,7 +425,7 @@ exports[`convert-tslint-to-eslint should work for NestJS libraries 3`] = `
     },
     {
       "extends": [
-        "plugin:@nrwl/nx/javascript",
+        "plugin:@nx/nx/javascript",
       ],
       "files": [
         "*.js",
@@ -522,7 +522,7 @@ exports[`convert-tslint-to-eslint should work for NestJS libraries 3`] = `
     },
   ],
   "plugins": [
-    "@nrwl/nx",
+    "@nx/nx",
   ],
   "root": true,
 }

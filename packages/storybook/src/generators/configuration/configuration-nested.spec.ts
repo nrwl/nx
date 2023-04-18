@@ -22,7 +22,7 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
 jest.mock('enquirer');
 // @ts-ignore
 enquirer.prompt = jest.fn();
-describe('@nrwl/storybook:configuration for workspaces with Root project', () => {
+describe('@nx/storybook:configuration for workspaces with Root project', () => {
   beforeAll(() => {
     process.env.NX_INTERACTIVE = 'true';
   });

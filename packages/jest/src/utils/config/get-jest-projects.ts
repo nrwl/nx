@@ -2,8 +2,6 @@ import { join } from 'path';
 import type { ProjectsConfigurations } from '@nx/devkit';
 import { readWorkspaceConfig } from 'nx/src/project-graph/file-utils';
 
-const JEST_RUNNER_TOKEN = '@nrwl/jest:jest';
-
 function getJestConfigProjectPath(projectJestConfigPath: string): string {
   return join('<rootDir>', projectJestConfigPath);
 }
@@ -30,7 +28,10 @@ export function getJestProjects() {
       continue;
     }
     for (const targetConfiguration of Object.values(projectConfig.targets)) {
-      if (targetConfiguration.executor !== JEST_RUNNER_TOKEN) {
+      if (
+        targetConfiguration.executor !== '@nx/jest:jest' &&
+        targetConfiguration.executor !== '@nrwl/jest:jest'
+      ) {
         continue;
       }
       if (targetConfiguration.options?.jestConfig) {

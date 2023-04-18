@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nrwl/linter:lint-project --linter eslint should extend to .eslintrc.js when an .eslintrc.js already exist 1`] = `
+exports[`@nx/linter:lint-project --linter eslint should extend to .eslintrc.js when an .eslintrc.js already exist 1`] = `
 "{
   "extends": ["../../.eslintrc.js"],
   "ignorePatterns": ["!**/*"],
@@ -22,7 +22,7 @@ exports[`@nrwl/linter:lint-project --linter eslint should extend to .eslintrc.js
 "
 `;
 
-exports[`@nrwl/linter:lint-project --linter eslint should generate a eslint config 1`] = `
+exports[`@nx/linter:lint-project --linter eslint should generate a eslint config 1`] = `
 "{
   "extends": ["../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],

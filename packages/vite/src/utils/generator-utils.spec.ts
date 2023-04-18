@@ -159,7 +159,7 @@ describe('generator utils', () => {
           object.targets
         );
       }).rejects.toThrowErrorMatchingInlineSnapshot(`
-        "The build target my-build cannot be converted to use the @nrwl/vite:build executor.
+        "The build target my-build cannot be converted to use the @nx/vite:build executor.
               Please try again, either by providing a different build target or by not providing a target at all (Nx will
                 convert the first one it finds, most probably this one: build)
 

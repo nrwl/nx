@@ -463,7 +463,7 @@ exports[`app nested should create project configs 1`] = `
       },
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "apps/my-dir/my-app/**/*.ts",
@@ -499,7 +499,7 @@ exports[`app nested should create project configs 1`] = `
           "codeCoverage": true,
         },
       },
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "apps/my-dir/my-app/jest.config.ts",
         "passWithNoTests": true,
@@ -533,7 +533,7 @@ exports[`app nested should create project configs 2`] = `
           "devServerTarget": "my-dir-my-app:serve:production",
         },
       },
-      "executor": "@nrwl/cypress:cypress",
+      "executor": "@nx/cypress:cypress",
       "options": {
         "cypressConfig": "apps/my-dir/my-app-e2e/cypress.config.ts",
         "devServerTarget": "my-dir-my-app:serve:development",
@@ -541,7 +541,7 @@ exports[`app nested should create project configs 2`] = `
       },
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "apps/my-dir/my-app-e2e/**/*.{js,ts}",
@@ -621,7 +621,7 @@ exports[`app not nested should create project configs 1`] = `
       },
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "apps/my-app/**/*.ts",
@@ -657,7 +657,7 @@ exports[`app not nested should create project configs 1`] = `
           "codeCoverage": true,
         },
       },
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "apps/my-app/jest.config.ts",
         "passWithNoTests": true,
@@ -691,7 +691,7 @@ exports[`app not nested should create project configs 2`] = `
           "devServerTarget": "my-app:serve:production",
         },
       },
-      "executor": "@nrwl/cypress:cypress",
+      "executor": "@nx/cypress:cypress",
       "options": {
         "cypressConfig": "apps/my-app-e2e/cypress.config.ts",
         "devServerTarget": "my-app:serve:development",
@@ -699,7 +699,7 @@ exports[`app not nested should create project configs 2`] = `
       },
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "apps/my-app-e2e/**/*.{js,ts}",

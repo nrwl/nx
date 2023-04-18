@@ -92,7 +92,7 @@ export function updateDependencies(host: Tree) {
       'react-native-svg': reactNativeSvgVersion,
     },
     {
-      '@nrwl/expo': nxVersion,
+      '@nx/expo': nxVersion,
       '@types/react': typesReactVersion,
       '@types/react-native': typesReactNativeVersion,
       metro: metroVersion,
@@ -108,7 +108,7 @@ export function updateDependencies(host: Tree) {
 }
 
 function moveDependency(host: Tree) {
-  return removeDependenciesFromPackageJson(host, ['@nrwl/react-native'], []);
+  return removeDependenciesFromPackageJson(host, ['@nx/react-native'], []);
 }
 
 export default expoInitGenerator;

@@ -72,7 +72,7 @@ describe('addLinting generator', () => {
 
     const project = readProjectConfiguration(tree, appProjectName);
     expect(project.targets.lint).toEqual({
-      executor: '@nrwl/linter:eslint',
+      executor: '@nx/linter:eslint',
       options: {
         lintFilePatterns: [
           `${appProjectRoot}/**/*.ts`,
@@ -150,7 +150,7 @@ describe('addLinting generator', () => {
 
       const project = readProjectConfiguration(tree, appProjectName);
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           lintFilePatterns: [
             `${appProjectRoot}/**/*.ts`,

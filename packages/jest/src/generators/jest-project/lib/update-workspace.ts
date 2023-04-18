@@ -13,7 +13,7 @@ export function updateWorkspace(
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
   projectConfig.targets.test = {
-    executor: '@nrwl/jest:jest',
+    executor: '@nx/jest:jest',
     outputs: [
       options.rootProject
         ? joinPathFragments('{workspaceRoot}', 'coverage', '{projectName}')

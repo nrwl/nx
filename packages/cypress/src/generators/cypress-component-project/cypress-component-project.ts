@@ -89,7 +89,7 @@ function addTargetToProject(
   options: CypressComponentProjectSchema
 ) {
   projectConfig.targets['component-test'] = {
-    executor: '@nrwl/cypress:cypress',
+    executor: '@nx/cypress:cypress',
     options: {
       cypressConfig: joinPathFragments(projectConfig.root, 'cypress.config.ts'),
       testingType: 'component',

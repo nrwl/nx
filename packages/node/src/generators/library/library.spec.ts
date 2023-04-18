@@ -28,14 +28,14 @@ describe('lib', () => {
       expect(configuration.root).toEqual('libs/my-lib');
       expect(configuration.targets.build).toBeUndefined();
       expect(configuration.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-lib/**/*.ts'],
         },
       });
       expect(configuration.targets.test).toEqual({
-        executor: '@nrwl/jest:jest',
+        executor: '@nx/jest:jest',
         outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
         options: {
           jestConfig: 'libs/my-lib/jest.config.ts',
@@ -228,7 +228,7 @@ describe('lib', () => {
       const project = readProjectConfiguration(tree, 'my-dir-my-lib');
       expect(project.root).toEqual('libs/my-dir/my-lib');
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],

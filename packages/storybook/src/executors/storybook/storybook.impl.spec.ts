@@ -17,7 +17,7 @@ import { CommonNxStorybookConfig } from '../../utils/models';
 
 // TODO(katerina): Update when Storybook 7
 
-describe('@nrwl/storybook:storybook', () => {
+describe('@nx/storybook:storybook', () => {
   let context: ExecutorContext;
   let options: CLIOptions & CommonNxStorybookConfig;
   beforeEach(() => {
@@ -53,7 +53,7 @@ describe('@nrwl/storybook:storybook', () => {
             sourceRoot: 'src',
             targets: {
               build: {
-                executor: '@nrwl/web:webpack',
+                executor: '@nx/web:webpack',
                 options: {
                   compiler: 'babel',
                   outputPath: 'dist/apps/webre',
@@ -68,11 +68,11 @@ describe('@nrwl/storybook:storybook', () => {
                   ],
                   styles: ['apps/webre/src/styles.css'],
                   scripts: [],
-                  webpackConfig: '@nrwl/react/plugins/webpack',
+                  webpackConfig: '@nx/react/plugins/webpack',
                 },
               },
               storybook: {
-                executor: '@nrwl/storybook:storybook',
+                executor: '@nx/storybook:storybook',
                 options,
               },
             },

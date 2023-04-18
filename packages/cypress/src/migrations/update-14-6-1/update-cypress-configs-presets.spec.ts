@@ -304,6 +304,10 @@ export default defineConfig({
   });
   await cypressProjectGenerator(tree, { project: appName, name: e2eName });
   const e2eProjectConfig = readProjectConfiguration(tree, e2eName);
+  e2eProjectConfig.targets['e2e'] = {
+    ...e2eProjectConfig.targets['e2e'],
+    executor: '@nrwl/cypress:cypress',
+  };
   e2eProjectConfig.targets['e2e'].configurations = {
     ...e2eProjectConfig.targets['e2e'].configurations,
     sb: {

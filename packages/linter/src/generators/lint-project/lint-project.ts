@@ -102,7 +102,7 @@ export async function lintProjectGenerator(
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   projectConfig.targets['lint'] = {
-    executor: '@nrwl/linter:eslint',
+    executor: '@nx/linter:eslint',
     outputs: ['{options.outputFile}'],
     options: {
       lintFilePatterns: options.eslintFilePatterns,

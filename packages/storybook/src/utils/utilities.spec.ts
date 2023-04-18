@@ -38,7 +38,7 @@ describe('testing utilities', () => {
 
     beforeEach(async () => {
       overrideCollectionResolutionForTesting({
-        '@nrwl/storybook': joinPathFragments(
+        '@nx/storybook': joinPathFragments(
           __dirname,
           '../../../../generators.json'
         ),
@@ -57,7 +57,7 @@ describe('testing utilities', () => {
 
       writeJson(appTree, 'package.json', {
         devDependencies: {
-          '@nrwl/storybook': nxVersion,
+          '@nx/storybook': nxVersion,
           '@storybook/addon-knobs': storybookVersion,
           '@storybook/angular': storybookVersion,
         },

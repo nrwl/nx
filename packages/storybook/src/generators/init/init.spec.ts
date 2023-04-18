@@ -9,7 +9,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from './init';
 
-describe('@nrwl/storybook:init', () => {
+describe('@nx/storybook:init', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -33,8 +33,8 @@ describe('@nrwl/storybook:init', () => {
       expect(packageJson).toMatchSnapshot();
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -67,7 +67,7 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -76,8 +76,8 @@ describe('@nrwl/storybook:init', () => {
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -108,7 +108,7 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -117,8 +117,8 @@ describe('@nrwl/storybook:init', () => {
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -150,7 +150,7 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -159,8 +159,8 @@ describe('@nrwl/storybook:init', () => {
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -200,7 +200,7 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -209,8 +209,8 @@ describe('@nrwl/storybook:init', () => {
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -250,7 +250,7 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -259,8 +259,8 @@ describe('@nrwl/storybook:init', () => {
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -303,7 +303,7 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -312,8 +312,8 @@ describe('@nrwl/storybook:init', () => {
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -400,7 +400,7 @@ describe('@nrwl/storybook:init', () => {
       // check that only the following dependencies have been added
       expect(Object.keys(packageJson.devDependencies)).toEqual([
         '@nrwl/js',
-        '@nrwl/storybook',
+        '@nx/storybook',
         '@storybook/addon-essentials',
         '@storybook/builder-webpack5',
         '@storybook/core-server',

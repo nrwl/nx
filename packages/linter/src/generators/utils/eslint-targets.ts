@@ -3,6 +3,9 @@ import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-optio
 
 export function getEslintTargets(tree: Tree) {
   const eslintTargetNames = new Set<string>();
+  forEachExecutorOptions(tree, '@nx/linter:eslint', (_, __, target) => {
+    eslintTargetNames.add(target);
+  });
   forEachExecutorOptions(tree, '@nrwl/linter:eslint', (_, __, target) => {
     eslintTargetNames.add(target);
   });

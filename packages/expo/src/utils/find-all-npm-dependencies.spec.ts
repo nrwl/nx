@@ -50,12 +50,12 @@ test('findAllNpmDependencies', () => {
           packageName: 'react-native-snackbar',
         },
       },
-      'npm:@nrwl/react-native': {
+      'npm:@nx/react-native': {
         type: 'npm',
-        name: 'npm:@nrwl/react-native',
+        name: 'npm:@nx/react-native',
         data: {
           version: '1',
-          packageName: '@nrwl/react-native',
+          packageName: '@nx/react-native',
         },
       },
     },
@@ -71,7 +71,7 @@ test('findAllNpmDependencies', () => {
         {
           type: DependencyType.static,
           source: 'myapp',
-          target: 'npm:@nrwl/react-native',
+          target: 'npm:@nx/react-native',
         },
       ],
       lib1: [

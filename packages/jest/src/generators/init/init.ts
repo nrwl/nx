@@ -40,13 +40,13 @@ const schemaDefaults = {
 function generateGlobalConfig(tree: Tree, isJS: boolean) {
   const contents = isJS
     ? stripIndents`
-    const { getJestProjects } = require('@nrwl/jest');
+    const { getJestProjects } = require('@nx/jest');
 
     module.exports = {
       projects: getJestProjects()
     };`
     : stripIndents`
-    import { getJestProjects } from '@nrwl/jest';
+    import { getJestProjects } from '@nx/jest';
 
     export default {
      projects: getJestProjects()
@@ -60,7 +60,7 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
     tree.write(
       `jest.preset.js`,
       `
-      const nxPreset = require('@nrwl/jest/preset').default;
+      const nxPreset = require('@nx/jest/preset').default;
 
       module.exports = { ...nxPreset }`
     );
@@ -94,7 +94,8 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
     if (rootProject) {
       const rootProjectConfig = projects.get(rootProject);
       const jestTarget = Object.values(rootProjectConfig.targets || {}).find(
-        (t) => t?.executor === '@nrwl/jest:jest'
+        (t) =>
+          t?.executor === '@nx/jest:jest' || t?.executor === '@nrwl/jest:jest'
       );
       const isProjectConfig = jestTarget?.options?.jestConfig === rootJestPath;
       // if root project doesn't have jest target, there's nothing to migrate
@@ -146,7 +147,7 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
     tslib: tslibVersion,
   };
   const devDeps = {
-    '@nrwl/jest': nxVersion,
+    '@nx/jest': nxVersion,
     jest: jestVersion,
 
     // because the default jest-preset uses ts-jest,
@@ -167,8 +168,8 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
 
   if (options.compiler === 'babel' || options.babelJest) {
     devDeps['babel-jest'] = babelJestVersion;
-    // in some cases @nrwl/js will not already be present i.e. node only projects
-    devDeps['@nrwl/js'] = nxVersion;
+    // in some cases @nx/js will not already be present i.e. node only projects
+    devDeps['@nx/js'] = nxVersion;
   } else if (options.compiler === 'swc') {
     devDeps['@swc/jest'] = swcJestVersion;
   }
@@ -208,7 +209,7 @@ export async function jestInitGenerator(
   createJestConfig(tree, options);
 
   if (!options.skipPackageJson) {
-    removeDependenciesFromPackageJson(tree, ['@nrwl/jest'], []);
+    removeDependenciesFromPackageJson(tree, ['@nx/jest'], []);
     const installTask = updateDependencies(tree, options);
     tasks.push(installTask);
   }

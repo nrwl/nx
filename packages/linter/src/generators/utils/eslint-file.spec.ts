@@ -7,7 +7,7 @@ import {
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-describe('@nrwl/linter:eslint-file', () => {
+describe('@nx/linter:eslint-file', () => {
   let tree: Tree;
 
   beforeEach(() => {

@@ -263,7 +263,7 @@ export async function configurationGenerator(
     devDeps['@storybook/test-runner'] = storybookTestRunnerVersion;
   }
   if (schema.configureStaticServe) {
-    devDeps['@nrwl/web'] = nxVersion;
+    devDeps['@nx/web'] = nxVersion;
   }
 
   tasks.push(addDependenciesToPackageJson(tree, {}, devDeps));

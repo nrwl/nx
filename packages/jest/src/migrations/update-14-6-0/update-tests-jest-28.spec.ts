@@ -19,12 +19,34 @@ describe('Jest Migration - jest 28 test files', () => {
       linter: undefined,
       unitTestRunner: 'jest',
     });
+    const projectConfiguration = readProjectConfiguration(tree, 'blah');
+    updateProjectConfiguration(tree, 'blah', {
+      ...projectConfiguration,
+      targets: {
+        ...projectConfiguration.targets,
+        test: {
+          ...projectConfiguration.targets.test,
+          executor: '@nrwl/jest:jest',
+        },
+      },
+    });
 
     await workspaceLib(tree, {
       name: 'blah-again',
       linter: undefined,
       unitTestRunner: 'jest',
       js: true,
+    });
+    const projectConfiguration2 = readProjectConfiguration(tree, 'blah-again');
+    updateProjectConfiguration(tree, 'blah-again', {
+      ...projectConfiguration2,
+      targets: {
+        ...projectConfiguration2.targets,
+        test: {
+          ...projectConfiguration2.targets.test,
+          executor: '@nrwl/jest:jest',
+        },
+      },
     });
 
     tree.write(

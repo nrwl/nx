@@ -30,7 +30,7 @@ jest.mock('enquirer');
 // @ts-ignore
 enquirer.prompt = jest.fn();
 
-describe('@nrwl/storybook:configuration for Storybook v7', () => {
+describe('@nx/storybook:configuration for Storybook v7', () => {
   describe('basic functionalities', () => {
     let tree: Tree;
 

@@ -22,14 +22,14 @@ describe('lib', () => {
       expect(config.root).toEqual(`libs/${libFileName}`);
       expect(config.targets.build).toBeUndefined();
       expect(config.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: [`libs/${libFileName}/**/*.ts`],
         },
       });
       expect(config.targets.test).toEqual({
-        executor: '@nrwl/jest:jest',
+        executor: '@nx/jest:jest',
         outputs: [`{workspaceRoot}/coverage/{projectRoot}`],
         options: {
           jestConfig: `libs/${libFileName}/jest.config.ts`,
@@ -88,13 +88,6 @@ describe('lib', () => {
         controller: true,
         service: true,
       });
-
-      console.log(
-        tree.read(
-          `libs/${libFileName}/src/lib/${libFileName}.controller.spec.ts`,
-          'utf-8'
-        )
-      );
 
       expect(
         tree.read(
@@ -219,7 +212,7 @@ describe('lib', () => {
       const project = readProjectConfiguration(tree, nestedLibFileName);
       expect(project.root).toEqual(`libs/${dirFileName}/${libFileName}`);
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: [`libs/${dirFileName}/${libFileName}/**/*.ts`],

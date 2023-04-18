@@ -32,7 +32,7 @@ function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
   packageJson.devDependencies = packageJson.devDependencies || {};
 
   // base deps
-  devDependencies['@nrwl/vite'] = nxVersion;
+  devDependencies['@nx/vite'] = nxVersion;
   devDependencies['vite'] = viteVersion;
   devDependencies['vite-plugin-eslint'] = vitePluginEslintVersion;
   devDependencies['vite-tsconfig-paths'] = viteTsConfigPathsVersion;
@@ -56,10 +56,10 @@ function moveToDevDependencies(tree: Tree) {
     packageJson.dependencies = packageJson.dependencies || {};
     packageJson.devDependencies = packageJson.devDependencies || {};
 
-    if (packageJson.dependencies['@nrwl/vite']) {
-      packageJson.devDependencies['@nrwl/vite'] =
-        packageJson.dependencies['@nrwl/vite'];
-      delete packageJson.dependencies['@nrwl/vite'];
+    if (packageJson.dependencies['@nx/vite']) {
+      packageJson.devDependencies['@nx/vite'] =
+        packageJson.dependencies['@nx/vite'];
+      delete packageJson.dependencies['@nx/vite'];
     }
     return packageJson;
   });

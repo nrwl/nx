@@ -67,7 +67,7 @@ describe('NxPlugin Plugin Generator', () => {
       },
     });
     expect(project.targets.lint).toEqual({
-      executor: '@nrwl/linter:eslint',
+      executor: '@nx/linter:eslint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: expect.arrayContaining([
@@ -79,7 +79,7 @@ describe('NxPlugin Plugin Generator', () => {
       },
     });
     expect(project.targets.test).toEqual({
-      executor: '@nrwl/jest:jest',
+      executor: '@nx/jest:jest',
       outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
       options: {
         jestConfig: 'libs/my-plugin/jest.config.ts',

@@ -109,7 +109,7 @@ module.exports = composePlugins(withNx(), withWeb(), (config) => {
     targets: {
       ...project.targets,
       build: {
-        executor: '@nrwl/webpack:webpack',
+        executor: '@nx/webpack:webpack',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: buildOptions,
@@ -135,7 +135,7 @@ function addServeTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
     targets: {
       ...project.targets,
       serve: {
-        executor: '@nrwl/webpack:dev-server',
+        executor: '@nx/webpack:dev-server',
         options: {
           buildTarget: `${options.project}:build`,
         },

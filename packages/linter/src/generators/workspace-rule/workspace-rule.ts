@@ -109,7 +109,7 @@ export async function lintWorkspaceRuleGenerator(
   logger.info(`NX Reminder: Once you have finished writing your rule logic, you need to actually enable the rule within an appropriate .eslintrc.json in your workspace, for example:
 
        "rules": {
-         "@nrwl/nx/workspace/${options.name}": "error"
+         "@nx/nx/workspace/${options.name}": "error"
        }
 `);
 

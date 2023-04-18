@@ -42,7 +42,7 @@ describe('convertToCypressTen', () => {
         sourceRoot: 'apps/app/src',
         targets: {
           serve: {
-            executor: '@nrwl/web:file-server',
+            executor: '@nx/web:file-server',
             options: {},
           },
         },
@@ -255,7 +255,7 @@ describe('convertToCypressTen', () => {
       pc.targets = {
         ...pc.targets,
         e2e: {
-          executor: '@nrwl/cypress:cypress',
+          executor: '@nx/cypress:cypress',
           options: {
             baseUrl: 'http://localhost:4200',
           },
@@ -300,7 +300,7 @@ describe('convertToCypressTen', () => {
         sourceRoot: 'apps/app-two/src',
         targets: {
           serve: {
-            executor: '@nrwl/web:file-server',
+            executor: '@nx/web:file-server',
             options: {},
           },
         },
@@ -341,7 +341,7 @@ describe('convertToCypressTen', () => {
       expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
       expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(readProjectConfiguration(tree, 'app-e2e').targets['e2e']).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'cypress.config.ts',
           devServerTarget: 'app:serve',
@@ -363,7 +363,7 @@ describe('convertToCypressTen', () => {
       expect(
         readProjectConfiguration(tree, 'app-two-e2e').targets['e2e']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'cypress.config.ts',
           devServerTarget: 'app-two:serve',

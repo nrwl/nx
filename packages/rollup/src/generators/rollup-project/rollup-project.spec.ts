@@ -30,7 +30,7 @@ describe('rollupProjectGenerator', () => {
 
     expect(project.targets).toMatchObject({
       build: {
-        executor: '@nrwl/rollup:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: {
@@ -70,7 +70,7 @@ describe('rollupProjectGenerator', () => {
 
     expect(project.targets).toMatchObject({
       build: {
-        executor: '@nrwl/rollup:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: {
@@ -90,7 +90,7 @@ describe('rollupProjectGenerator', () => {
 
     expect(project.targets).toMatchObject({
       build: {
-        executor: '@nrwl/rollup:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: {

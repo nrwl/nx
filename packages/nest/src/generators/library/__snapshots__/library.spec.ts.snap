@@ -47,7 +47,7 @@ exports[`lib --unit-test-runner none should not generate test configuration 1`] 
 
 exports[`lib --unit-test-runner none should not generate test configuration 2`] = `
 {
-  "executor": "@nrwl/linter:eslint",
+  "executor": "@nx/linter:eslint",
   "options": {
     "lintFilePatterns": [
       "libs/my-lib/**/*.ts",

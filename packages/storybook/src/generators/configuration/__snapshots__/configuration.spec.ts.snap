@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nrwl/storybook:configuration basic functionalities should generate a webpackFinal into the main.js and reference a potential global webpackFinal definition 1`] = `
+exports[`@nx/storybook:configuration basic functionalities should generate a webpackFinal into the main.js and reference a potential global webpackFinal definition 1`] = `
 "module.exports = {
   core: { builder: 'webpack5' },
   stories: ['../**/*.stories.mdx', '../**/*.stories.@(js|jsx|ts|tsx)'],
@@ -13,7 +13,7 @@ exports[`@nrwl/storybook:configuration basic functionalities should generate a w
 "
 `;
 
-exports[`@nrwl/storybook:configuration basic functionalities should generate files 1`] = `
+exports[`@nx/storybook:configuration basic functionalities should generate files 1`] = `
 {
   "affected": {
     "defaultBase": "main",
@@ -76,15 +76,15 @@ exports[`@nrwl/storybook:configuration basic functionalities should generate fil
 }
 `;
 
-exports[`@nrwl/storybook:configuration basic functionalities should have the proper typings 1`] = `
+exports[`@nx/storybook:configuration basic functionalities should have the proper typings 1`] = `
 [
-  "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-  "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-  "../../../node_modules/@nrwl/react/typings/image.d.ts",
+  "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+  "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+  "../../../node_modules/@nx/react/typings/image.d.ts",
 ]
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for NextJS buildable libs 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for NextJS buildable libs 1`] = `
 "const { mergeConfig } = require('vite');
 const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 
@@ -112,7 +112,7 @@ module.exports = {
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for NextJS buildable libs 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for NextJS buildable libs 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -120,9 +120,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -142,7 +142,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for React apps using the swc compiler 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for React apps using the swc compiler 1`] = `
 "const { mergeConfig } = require('vite');
 const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 
@@ -170,7 +170,7 @@ module.exports = {
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for React apps using the swc compiler 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for React apps using the swc compiler 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -178,9 +178,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -200,7 +200,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for React buildable libs 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for React buildable libs 1`] = `
 "const { mergeConfig } = require('vite');
 const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 
@@ -228,7 +228,7 @@ module.exports = {
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for React buildable libs 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.js and tsconfig.json for React buildable libs 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -236,9 +236,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -258,7 +258,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJS libs 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJS libs 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
 import { mergeConfig } from 'vite';
@@ -290,7 +290,7 @@ module.exports = config;
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJS libs 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJS libs 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -298,9 +298,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -321,7 +321,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJs apps 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJs apps 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 import path from 'path';
 import { mergeConfig } from 'vite';
@@ -363,7 +363,7 @@ module.exports = config;
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJs apps 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJs apps 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -371,9 +371,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -394,7 +394,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for React apps 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for React apps 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
 import { mergeConfig } from 'vite';
@@ -426,7 +426,7 @@ module.exports = config;
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for React apps 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for React apps 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -434,9 +434,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -457,7 +457,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS buildable libs 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS buildable libs 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
 const config: StorybookConfig = {
@@ -466,7 +466,7 @@ const config: StorybookConfig = {
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
 };
 
 module.exports = config;
@@ -477,7 +477,7 @@ module.exports = config;
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS buildable libs 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS buildable libs 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -485,9 +485,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -508,7 +508,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS libs 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS libs 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
 const config: StorybookConfig = {
@@ -517,7 +517,7 @@ const config: StorybookConfig = {
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
 };
 
 module.exports = config;
@@ -528,7 +528,7 @@ module.exports = config;
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS libs 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS libs 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -536,9 +536,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -559,7 +559,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJs apps 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJs apps 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 import path from 'path';
 
@@ -571,7 +571,7 @@ const config: StorybookConfig = {
   ],
   addons: [
     '@storybook/addon-essentials',
-    '@nrwl/react/plugins/storybook',
+    '@nx/react/plugins/storybook',
 
     'storybook-addon-swc',
     {
@@ -591,7 +591,7 @@ module.exports = config;
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJs apps 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJs apps 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -599,9 +599,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -622,7 +622,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
 const config: StorybookConfig = {
@@ -631,7 +631,7 @@ const config: StorybookConfig = {
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
 };
 
 module.exports = config;
@@ -642,7 +642,7 @@ module.exports = config;
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -650,9 +650,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -673,7 +673,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps using the swc compiler 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps using the swc compiler 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
 const config: StorybookConfig = {
@@ -684,7 +684,7 @@ const config: StorybookConfig = {
   ],
   addons: [
     '@storybook/addon-essentials',
-    '@nrwl/react/plugins/storybook',
+    '@nx/react/plugins/storybook',
     'storybook-addon-swc',
   ],
 };
@@ -697,7 +697,7 @@ module.exports = config;
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps using the swc compiler 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps using the swc compiler 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -705,9 +705,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -728,7 +728,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React buildable libs 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React buildable libs 1`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
 
 const config: StorybookConfig = {
@@ -737,7 +737,7 @@ const config: StorybookConfig = {
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
 };
 
 module.exports = config;
@@ -748,7 +748,7 @@ module.exports = config;
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React buildable libs 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React buildable libs 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -756,9 +756,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -779,14 +779,14 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS buildable libs 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS buildable libs 1`] = `
 "module.exports = {
   core: { builder: 'webpack5' },
   stories: [
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
 };
 
 // To customize your webpack configuration you can use the webpackFinal field.
@@ -795,7 +795,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS buildable libs 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS buildable libs 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -803,9 +803,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -825,14 +825,14 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS libs 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS libs 1`] = `
 "module.exports = {
   core: { builder: 'webpack5' },
   stories: [
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
 };
 
 // To customize your webpack configuration you can use the webpackFinal field.
@@ -841,7 +841,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS libs 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS libs 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -849,9 +849,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -871,7 +871,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJs apps 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJs apps 1`] = `
 "const path = require('path');
 
 module.exports = {
@@ -882,7 +882,7 @@ module.exports = {
   ],
   addons: [
     '@storybook/addon-essentials',
-    '@nrwl/react/plugins/storybook',
+    '@nx/react/plugins/storybook',
 
     'storybook-addon-swc',
     {
@@ -900,7 +900,7 @@ module.exports = {
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJs apps 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJs apps 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -908,9 +908,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -930,14 +930,14 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps 1`] = `
 "module.exports = {
   core: { builder: 'webpack5' },
   stories: [
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
 };
 
 // To customize your webpack configuration you can use the webpackFinal field.
@@ -946,7 +946,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -954,9 +954,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -976,7 +976,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps using the swc compiler 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps using the swc compiler 1`] = `
 "module.exports = {
   core: { builder: 'webpack5' },
   stories: [
@@ -985,7 +985,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   ],
   addons: [
     '@storybook/addon-essentials',
-    '@nrwl/react/plugins/storybook',
+    '@nx/react/plugins/storybook',
     'storybook-addon-swc',
   ],
 };
@@ -996,7 +996,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps using the swc compiler 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps using the swc compiler 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -1004,9 +1004,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",
@@ -1026,14 +1026,14 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React buildable libs 1`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React buildable libs 1`] = `
 "module.exports = {
   core: { builder: 'webpack5' },
   stories: [
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
 };
 
 // To customize your webpack configuration you can use the webpackFinal field.
@@ -1042,7 +1042,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "
 `;
 
-exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React buildable libs 2`] = `
+exports[`@nx/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React buildable libs 2`] = `
 "{
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -1050,9 +1050,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     "outDir": ""
   },
   "files": [
-    "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "../../../node_modules/@nrwl/react/typings/image.d.ts"
+    "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "../**/*.spec.ts",

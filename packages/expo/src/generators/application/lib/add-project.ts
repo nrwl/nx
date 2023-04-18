@@ -28,7 +28,7 @@ function getTargets(options: NormalizedSchema) {
   const architect: { [key: string]: TargetConfiguration } = {};
 
   architect.start = {
-    executor: '@nrwl/expo:start',
+    executor: '@nx/expo:start',
     options: {
       port: 8081,
     },
@@ -42,63 +42,63 @@ function getTargets(options: NormalizedSchema) {
   };
 
   architect['run-ios'] = {
-    executor: '@nrwl/expo:run',
+    executor: '@nx/expo:run',
     options: {
       platform: 'ios',
     },
   };
 
   architect['run-android'] = {
-    executor: '@nrwl/expo:run',
+    executor: '@nx/expo:run',
     options: {
       platform: 'android',
     },
   };
 
   architect['build'] = {
-    executor: '@nrwl/expo:build',
+    executor: '@nx/expo:build',
     options: {},
   };
 
   architect['build-list'] = {
-    executor: '@nrwl/expo:build-list',
+    executor: '@nx/expo:build-list',
     options: {},
   };
 
   architect['download'] = {
-    executor: '@nrwl/expo:download',
+    executor: '@nx/expo:download',
     options: {
       output: `${options.appProjectRoot}/dist`,
     },
   };
 
   architect['sync-deps'] = {
-    executor: '@nrwl/expo:sync-deps',
+    executor: '@nx/expo:sync-deps',
     options: {},
   };
 
   architect['ensure-symlink'] = {
-    executor: '@nrwl/expo:ensure-symlink',
+    executor: '@nx/expo:ensure-symlink',
     options: {},
   };
 
   architect['prebuild'] = {
-    executor: '@nrwl/expo:prebuild',
+    executor: '@nx/expo:prebuild',
     options: {},
   };
 
   architect['install'] = {
-    executor: '@nrwl/expo:install',
+    executor: '@nx/expo:install',
     options: {},
   };
 
   architect['update'] = {
-    executor: '@nrwl/expo:update',
+    executor: '@nx/expo:update',
     options: {},
   };
 
   architect['export'] = {
-    executor: '@nrwl/expo:export',
+    executor: '@nx/expo:export',
     options: {
       platform: 'all',
       outputDir: `${offsetFromRoot(options.appProjectRoot)}dist/${
@@ -108,7 +108,7 @@ function getTargets(options: NormalizedSchema) {
   };
 
   architect['export-web'] = {
-    executor: '@nrwl/expo:export',
+    executor: '@nx/expo:export',
     options: {
       bundler: 'metro',
     },

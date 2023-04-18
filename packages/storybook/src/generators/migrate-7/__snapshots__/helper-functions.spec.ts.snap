@@ -184,8 +184,8 @@ You can run these commands again, manually, and follow the instructions in the
 output of these commands to migrate your Storybook configuration to the latest version 7.
 
 
-Also, we may have missed something. Please make sure to check the logs of the Storybook CLI commands that were run, and look for 
-the \`❌ Failed trying to evaluate\` message or \`❌ The migration failed to update\` message. This will indicate if a command was 
+Also, we may have missed something. Please make sure to check the logs of the Storybook CLI commands that were run, and look for
+the \`❌ Failed trying to evaluate\` message or \`❌ The migration failed to update\` message. This will indicate if a command was
 unsuccessful, and will help you run the migration again, manually.
 
 ## Final adjustments
@@ -197,8 +197,8 @@ workspace, to make sure that everything is working as expected. These adjustment
 - The \`viteConfigPath\` option was added to the Storybook builder, where needed.
 - The import package for the \`StorybookConfig\` type was changed to be framework specific.
 - The \`uiFramework\` option was removed from your project's Storybook targets.
-- The \`lit\` package was added to your workspace, if you are using the 
-Web Components \`@storybook/web-components\` package. Please note that the \`lit-html\` package is 
+- The \`lit\` package was added to your workspace, if you are using the
+Web Components \`@storybook/web-components\` package. Please note that the \`lit-html\` package is
 no longer needed by Storybook v7. So, if you are not using it anywhere else, you can safely remove it.
 
 ## Next steps
@@ -218,7 +218,7 @@ Please read the [Storybook 7.0.0 release article](https://storybook.js.org/blog/
 official [Storybook 7.0.0 migration guide](https://storybook.js.org/docs/react/migration-guide)
 for more information.
 
-You can also read the docs for the [@nrwl/storybook:migrate-7 generator](https://nx.dev/packages/storybook/generators/migrate-7) and our [Storybook 7 setup guide](https://nx.dev/packages/storybook/documents/storybook-7-setup).
+You can also read the docs for the [@nx/storybook:migrate-7 generator](https://nx.dev/packages/storybook/generators/migrate-7) and our [Storybook 7 setup guide](https://nx.dev/packages/storybook/documents/storybook-7-setup).
 "
 `;
 
@@ -234,7 +234,7 @@ exports[`Helper functions for the Storybook 7 migration generator removePathReso
       ],
       addons: [
         '@storybook/addon-essentials',
-        '@nrwl/react/plugins/storybook',
+        '@nx/react/plugins/storybook',
         'storybook-addon-swc',
         {
           name: 'storybook-addon-next',
@@ -251,7 +251,7 @@ exports[`Helper functions for the Storybook 7 migration generator removePathReso
 "
     import type { StorybookConfig } from '@storybook/core-common';
     import path from 'path';
-    
+
     const config: StorybookConfig = {
       core: { builder: 'webpack5' },
       stories: [
@@ -260,8 +260,7 @@ exports[`Helper functions for the Storybook 7 migration generator removePathReso
       ],
       addons: [
         '@storybook/addon-essentials',
-        '@nrwl/react/plugins/storybook',
-    
+        '@nx/react/plugins/storybook',
         'storybook-addon-swc',
         {
           name: 'storybook-addon-next',
@@ -271,7 +270,7 @@ exports[`Helper functions for the Storybook 7 migration generator removePathReso
         },
       ],
     } as StorybookConfig;
-    
+
     module.exports = config;
   "
 `;
@@ -282,7 +281,7 @@ exports[`Helper functions for the Storybook 7 migration generator removeTypecast
 
     import { mergeConfig } from 'vite';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
-    
+
     const config: StorybookConfig = {
       core: { builder: '@storybook/builder-vite' },
       stories: [
@@ -300,7 +299,7 @@ exports[`Helper functions for the Storybook 7 migration generator removeTypecast
         });
       },
     } ;
-    
+
     module.exports = config;
   "
 `;
@@ -309,7 +308,7 @@ exports[`Helper functions for the Storybook 7 migration generator removeTypecast
 "
     import type { StorybookConfig } from '@storybook/core-common';
     import path from 'path';
-    
+
     const config: StorybookConfig = {
       core: { builder: 'webpack5' },
       stories: [
@@ -318,8 +317,7 @@ exports[`Helper functions for the Storybook 7 migration generator removeTypecast
       ],
       addons: [
         '@storybook/addon-essentials',
-        '@nrwl/react/plugins/storybook',
-    
+        '@nx/react/plugins/storybook',
         'storybook-addon-swc',
         {
           name: 'storybook-addon-next',
@@ -329,7 +327,7 @@ exports[`Helper functions for the Storybook 7 migration generator removeTypecast
         },
       ],
     } ;
-    
+
     module.exports = config;
   "
 `;
@@ -338,7 +336,7 @@ exports[`Helper functions for the Storybook 7 migration generator removeViteTsCo
 "
     const { mergeConfig } = require('vite');
     
-    
+
     module.exports = {
       core: { builder: '@storybook/builder-vite' },
       stories: [
@@ -352,7 +350,7 @@ exports[`Helper functions for the Storybook 7 migration generator removeViteTsCo
         });
       },
     };
-  "
+"
 `;
 
 exports[`Helper functions for the Storybook 7 migration generator removeViteTsConfigPathsPlugin should remove ViteTsConfigPathsPlugin from main.ts and the whole plugin array if empty 1`] = `
@@ -361,7 +359,7 @@ exports[`Helper functions for the Storybook 7 migration generator removeViteTsCo
 
     import { mergeConfig } from 'vite';
     
-    
+
     const config: StorybookConfig = {
       core: { builder: '@storybook/builder-vite' },
       stories: [
@@ -375,7 +373,7 @@ exports[`Helper functions for the Storybook 7 migration generator removeViteTsCo
         });
       },
     } as StorybookConfig;
-    
+
     module.exports = config;
   "
 `;

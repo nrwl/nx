@@ -130,7 +130,7 @@ describe('init', () => {
         const { devDependencies } = readJson(tree, 'package.json');
 
         // ASSERT
-        expect(devDependencies['@nrwl/jest']).toBeDefined();
+        expect(devDependencies['@nx/jest']).toBeDefined();
         expect(devDependencies['jest']).toBeDefined();
         expect(devDependencies['jest-preset-angular']).toBeDefined();
       });
@@ -184,7 +184,7 @@ describe('init', () => {
         const { devDependencies } = readJson(tree, 'package.json');
 
         // ASSERT
-        expect(devDependencies['@nrwl/cypress']).toBeDefined();
+        expect(devDependencies['@nx/cypress']).toBeDefined();
         expect(devDependencies['cypress']).toBeDefined();
       });
 
@@ -482,7 +482,7 @@ bar
           const { devDependencies } = readJson(tree, 'package.json');
 
           // ASSERT
-          expect(devDependencies['@nrwl/jest']).toBeDefined();
+          expect(devDependencies['@nx/jest']).toBeDefined();
           expect(devDependencies['jest']).toBeDefined();
           expect(devDependencies['jest-preset-angular']).toEqual(
             backwardCompatibleVersions.angularV14.jestPresetAngularVersion
@@ -538,7 +538,7 @@ bar
           const { devDependencies } = readJson(tree, 'package.json');
 
           // ASSERT
-          expect(devDependencies['@nrwl/cypress']).toBeDefined();
+          expect(devDependencies['@nx/cypress']).toBeDefined();
           expect(devDependencies['cypress']).toBeDefined();
         });
 

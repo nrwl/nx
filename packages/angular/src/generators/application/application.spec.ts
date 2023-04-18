@@ -463,7 +463,7 @@ describe('app', () => {
         expect(readProjectConfiguration(appTree, 'my-app').targets.lint)
           .toMatchInlineSnapshot(`
           {
-            "executor": "@nrwl/linter:eslint",
+            "executor": "@nx/linter:eslint",
             "options": {
               "lintFilePatterns": [
                 "apps/my-app/**/*.ts",
@@ -478,7 +478,7 @@ describe('app', () => {
         expect(readProjectConfiguration(appTree, 'my-app-e2e').targets.lint)
           .toMatchInlineSnapshot(`
           {
-            "executor": "@nrwl/linter:eslint",
+            "executor": "@nx/linter:eslint",
             "options": {
               "lintFilePatterns": [
                 "apps/my-app-e2e/**/*.{js,ts}",
@@ -506,7 +506,7 @@ describe('app', () => {
             "overrides": [
               {
                 "extends": [
-                  "plugin:@nrwl/nx/angular",
+                  "plugin:@nx/nx/angular",
                   "plugin:@angular-eslint/template/process-inline-templates",
                 ],
                 "files": [
@@ -533,7 +533,7 @@ describe('app', () => {
               },
               {
                 "extends": [
-                  "plugin:@nrwl/nx/angular-template",
+                  "plugin:@nx/nx/angular-template",
                 ],
                 "files": [
                   "*.html",

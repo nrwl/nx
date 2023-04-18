@@ -37,7 +37,7 @@ describe('Cypress builder', () => {
       projects: {
         'my-app': {
           targets: {
-            serve: { executor: '@nrwl/webpack:webpack', options: {} },
+            serve: { executor: '@nx/webpack:webpack', options: {} },
           },
         },
       },

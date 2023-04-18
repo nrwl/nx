@@ -44,7 +44,7 @@ describe('Jest Executor', () => {
             root: 'proj',
             targets: {
               test: {
-                executor: '@nrwl/jest:jest',
+                executor: '@nx/jest:jest',
               },
             },
           },
@@ -54,7 +54,7 @@ describe('Jest Executor', () => {
         npmScope: 'test',
       },
       target: {
-        executor: '@nrwl/jest:jest',
+        executor: '@nx/jest:jest',
       },
       cwd: '/root',
       isVerbose: true,

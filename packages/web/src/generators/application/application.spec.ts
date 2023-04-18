@@ -320,7 +320,7 @@ describe('app', () => {
       name: 'my-App',
     });
     const targets = readProjectConfiguration(tree, 'my-app').targets;
-    expect(targets.build.executor).toEqual('@nrwl/webpack:webpack');
+    expect(targets.build.executor).toEqual('@nx/webpack:webpack');
     expect(targets.build.outputs).toEqual(['{options.outputPath}']);
     expect(targets.build.options).toEqual({
       compiler: 'babel',
@@ -355,7 +355,7 @@ describe('app', () => {
       name: 'my-App',
     });
     const targets = readProjectConfiguration(tree, 'my-app').targets;
-    expect(targets.serve.executor).toEqual('@nrwl/webpack:dev-server');
+    expect(targets.serve.executor).toEqual('@nx/webpack:dev-server');
     expect(targets.serve.options).toEqual({
       buildTarget: 'my-app:build',
     });
@@ -371,7 +371,7 @@ describe('app', () => {
       bundler: 'vite',
     });
     const targets = readProjectConfiguration(tree, 'my-app').targets;
-    expect(targets.build.executor).toEqual('@nrwl/vite:build');
+    expect(targets.build.executor).toEqual('@nx/vite:build');
     expect(targets.build.outputs).toEqual(['{options.outputPath}']);
     expect(targets.build.options).toEqual({
       outputPath: 'dist/apps/my-app',
@@ -385,7 +385,7 @@ describe('app', () => {
       bundler: 'vite',
     });
     const targets = readProjectConfiguration(tree, 'my-app').targets;
-    expect(targets.serve.executor).toEqual('@nrwl/vite:dev-server');
+    expect(targets.serve.executor).toEqual('@nx/vite:dev-server');
     expect(targets.serve.options).toEqual({
       buildTarget: 'my-app:build',
     });
@@ -400,7 +400,7 @@ describe('app', () => {
       name: 'my-App',
     });
     expect(readProjectConfiguration(tree, 'my-app').targets.lint).toEqual({
-      executor: '@nrwl/linter:eslint',
+      executor: '@nx/linter:eslint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['apps/my-app/**/*.ts'],
@@ -438,7 +438,7 @@ describe('app', () => {
       expect(projectConfiguration.targets.test).toBeUndefined();
       expect(projectConfiguration.targets.lint).toMatchInlineSnapshot(`
         {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/linter:eslint",
           "options": {
             "lintFilePatterns": [
               "apps/my-app/**/*.ts",
@@ -469,7 +469,7 @@ describe('app', () => {
       `);
       expect(
         readProjectConfiguration(tree, 'my-cool-app').targets.test.executor
-      ).toEqual('@nrwl/jest:jest');
+      ).toEqual('@nx/jest:jest');
     });
 
     it('--bundler=vite --unitTestRunner=jest', async () => {
@@ -495,7 +495,7 @@ describe('app', () => {
       `);
       expect(
         readProjectConfiguration(tree, 'my-vite-app').targets.test.executor
-      ).toEqual('@nrwl/jest:jest');
+      ).toEqual('@nx/jest:jest');
     });
 
     it('--bundler=webpack --unitTestRunner=vitest', async () => {
@@ -520,7 +520,7 @@ describe('app', () => {
       `);
       expect(
         readProjectConfiguration(tree, 'my-webpack-app').targets.test.executor
-      ).toEqual('@nrwl/vite:test');
+      ).toEqual('@nx/vite:test');
     });
   });
 
@@ -595,8 +595,8 @@ describe('app', () => {
     it('should setup targets with vite configuration', () => {
       const projects = getProjects(viteAppTree);
       const targetConfig = projects.get('my-app').targets;
-      expect(targetConfig.build.executor).toEqual('@nrwl/vite:build');
-      expect(targetConfig.serve.executor).toEqual('@nrwl/vite:dev-server');
+      expect(targetConfig.build.executor).toEqual('@nx/vite:build');
+      expect(targetConfig.serve.executor).toEqual('@nx/vite:dev-server');
       expect(targetConfig.serve.options).toEqual({
         buildTarget: 'my-app:build',
       });

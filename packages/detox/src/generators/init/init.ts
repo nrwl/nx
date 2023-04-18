@@ -36,7 +36,7 @@ export function updateDependencies(host: Tree) {
     host,
     {},
     {
-      '@nrwl/detox': nxVersion,
+      '@nx/detox': nxVersion,
       detox: detoxVersion,
       '@testing-library/jest-dom': testingLibraryJestDom,
       '@types/node': typesNodeVersion,
@@ -46,7 +46,7 @@ export function updateDependencies(host: Tree) {
 }
 
 function moveDependency(host: Tree) {
-  return removeDependenciesFromPackageJson(host, ['@nrwl/detox'], []);
+  return removeDependenciesFromPackageJson(host, ['@nx/detox'], []);
 }
 
 export default detoxInitGenerator;

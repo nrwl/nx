@@ -167,7 +167,7 @@ describe('NxPlugin e2e-project Generator', () => {
 
     const projectsConfigurations = getProjects(tree);
     expect(projectsConfigurations.get('my-plugin-e2e').targets.lint).toEqual({
-      executor: '@nrwl/linter:eslint',
+      executor: '@nx/linter:eslint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['apps/my-plugin-e2e/**/*.ts'],
