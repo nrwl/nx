@@ -49,7 +49,7 @@ exports[`preset should create files (preset = react-standalone bundler = vite) 1
     },
   },
   "defaultConfiguration": "development",
-  "executor": "@nrwl/vite:dev-server",
+  "executor": "@nx/vite:dev-server",
   "options": {
     "buildTarget": "proj:build",
   },

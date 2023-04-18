@@ -1,8 +1,6 @@
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { overrideCollectionResolutionForTesting } from '@nx/devkit/ngcli-adapter';
 import { presetGenerator } from './preset';
-import * as path from 'path';
 import { Preset } from '../utils/presets';
 
 describe('preset', () => {
@@ -10,32 +8,6 @@ describe('preset', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    overrideCollectionResolutionForTesting({
-      '@nx/workspace': path.join(
-        __dirname,
-        '../../../../workspace/generators.json'
-      ),
-      '@nx/angular': path.join(
-        __dirname,
-        '../../../../angular/generators.json'
-      ),
-      '@nx/linter': path.join(__dirname, '../../../../linter/generators.json'),
-      '@nx/nest': path.join(__dirname, '../../../../nest/generators.json'),
-      '@nx/node': path.join(__dirname, '../../../../node/generators.json'),
-      '@nx/jest': path.join(__dirname, '../../../../jest/generators.json'),
-      '@nx/cypress': path.join(
-        __dirname,
-        '../../../../cypress/generators.json'
-      ),
-      '@nx/express': path.join(
-        __dirname,
-        '../../../../express/generators.json'
-      ),
-    });
-  });
-
-  afterEach(() => {
-    overrideCollectionResolutionForTesting(null);
   });
 
   it(`should create files (preset = ${Preset.AngularMonorepo})`, async () => {
