@@ -9,7 +9,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateToCypress11 from './cypress-11';
 import { installedCypressVersion } from '../../utils/cypress-version';
 jest.mock('../../utils/cypress-version');
-import { cypressComponentProject } from '../../generators/cypress-component-project/cypress-component-project';
+import { cypressComponentConfiguration } from '../../generators/cypress-component-configuration/cypress-component-configuration';
 
 describe('Cypress 11 Migration', () => {
   let tree: Tree;
@@ -119,7 +119,7 @@ async function setup(tree: Tree) {
   await libraryGenerator(tree, {
     name: 'my-react-lib',
   });
-  await cypressComponentProject(tree, {
+  await cypressComponentConfiguration(tree, {
     project: 'my-react-lib',
     skipFormat: true,
   });
@@ -266,7 +266,7 @@ describe('again', () => {
     name: 'my-ng-lib',
   });
 
-  await cypressComponentProject(tree, {
+  await cypressComponentConfiguration(tree, {
     project: 'my-ng-lib',
     skipFormat: true,
   });

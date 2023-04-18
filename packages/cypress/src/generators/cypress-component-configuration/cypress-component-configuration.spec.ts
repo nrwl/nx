@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { installedCypressVersion } from '../../utils/cypress-version';
-import { cypressComponentProject } from './cypress-component-project';
+import { cypressComponentConfiguration } from './cypress-component-configuration';
 
 jest.mock('../../utils/cypress-version');
 let projectConfig: ProjectConfiguration = {
@@ -31,7 +31,7 @@ let projectConfig: ProjectConfiguration = {
     },
   },
 };
-describe('Cypress Component Project', () => {
+describe('Cypress Component Configuration', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
@@ -97,7 +97,7 @@ describe('Cypress Component Project', () => {
 
   it('should add base cypress component testing config', async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
-    await cypressComponentProject(tree, {
+    await cypressComponentConfiguration(tree, {
       project: 'cool-lib',
       skipFormat: false,
     });
@@ -156,7 +156,7 @@ describe('Cypress Component Project', () => {
       };
       return json;
     });
-    await cypressComponentProject(tree, {
+    await cypressComponentConfiguration(tree, {
       project: 'cool-lib',
       skipFormat: false,
     });
@@ -196,7 +196,7 @@ describe('Cypress Component Project', () => {
       },
     });
 
-    await cypressComponentProject(tree, {
+    await cypressComponentConfiguration(tree, {
       project: 'cool-lib',
       skipFormat: true,
     });
@@ -212,7 +212,7 @@ describe('Cypress Component Project', () => {
     mockedInstalledCypressVersion.mockReturnValue(9);
     await expect(
       async () =>
-        await cypressComponentProject(tree, {
+        await cypressComponentConfiguration(tree, {
           project: 'cool-lib',
           skipFormat: true,
         })

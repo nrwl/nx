@@ -474,13 +474,13 @@
         "path": "/packages/cypress/generators/cypress-e2e-configuration",
         "type": "generator"
       },
-      "/packages/cypress/generators/cypress-component-project": {
+      "/packages/cypress/generators/cypress-component-configuration": {
         "description": "Set up Cypress Component Test for a project",
-        "file": "generated/packages/cypress/generators/cypress-component-project.json",
+        "file": "generated/packages/cypress/generators/cypress-component-configuration.json",
         "hidden": true,
-        "name": "cypress-component-project",
-        "originalFilePath": "/packages/cypress/src/generators/cypress-component-project/schema.json",
-        "path": "/packages/cypress/generators/cypress-component-project",
+        "name": "cypress-component-configuration",
+        "originalFilePath": "/packages/cypress/src/generators/cypress-component-configuration/schema.json",
+        "path": "/packages/cypress/generators/cypress-component-configuration",
         "type": "generator"
       },
       "/packages/cypress/generators/migrate-to-cypress-11": {

@@ -18,9 +18,11 @@ export async function cypressComponentConfigGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  const { cypressComponentProject } = ensurePackage('@nx/cypress', nxVersion);
+  const { cypressComponentConfiguration: baseCyCtConfig } = ensurePackage<
+    typeof import('@nx/cypress')
+  >('@nx/cypress', nxVersion);
   const projectConfig = readProjectConfiguration(tree, options.project);
-  const installTask = await cypressComponentProject(tree, {
+  const installTask = await baseCyCtConfig(tree, {
     project: options.project,
     skipFormat: true,
   });

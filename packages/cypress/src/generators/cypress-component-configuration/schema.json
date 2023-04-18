@@ -1,13 +1,13 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "NxCypressComponentProject",
+  "$id": "NxCypressComponentConfiguration",
   "cli": "nx",
   "title": "Set up Cypress component testing for a project",
   "description": "Set up Cypress component test for a project.",
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nrwl/cypress:cypress-component-project --project=my-cool-lib ",
+      "command": "nx g @nrwl/cypress:cypress-component-configuration --project=my-cool-lib ",
       "description": "Add cypress component testing to an existing project named my-cool-lib"
     }
   ],
@@ -29,5 +29,5 @@
     }
   },
   "required": ["project"],
-  "examplesFile": "../../../docs/cypress-component-project-examples.md"
+  "examplesFile": "../../../docs/cypress-component-configuration-examples.md"
 }

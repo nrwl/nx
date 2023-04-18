@@ -20,11 +20,11 @@ import {
   cypressWebpackVersion,
   htmlWebpackPluginVersion,
 } from '../../utils/versions';
-import { CypressComponentProjectSchema } from './schema';
+import { CypressComponentConfigurationSchema } from './schema';
 
-export async function cypressComponentProject(
+export async function cypressComponentConfiguration(
   tree: Tree,
-  options: CypressComponentProjectSchema
+  options: CypressComponentConfigurationSchema
 ) {
   const cyVersion = installedCypressVersion();
   if (cyVersion && cyVersion < 10) {
@@ -50,7 +50,7 @@ export async function cypressComponentProject(
   };
 }
 
-function updateDeps(tree: Tree, options: CypressComponentProjectSchema) {
+function updateDeps(tree: Tree, options: CypressComponentConfigurationSchema) {
   const devDeps = {
     cypress: cypressVersion,
   };
@@ -68,7 +68,7 @@ function updateDeps(tree: Tree, options: CypressComponentProjectSchema) {
 function addProjectFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  options: CypressComponentProjectSchema
+  options: CypressComponentConfigurationSchema
 ) {
   generateFiles(
     tree,
@@ -86,7 +86,7 @@ function addProjectFiles(
 function addTargetToProject(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  options: CypressComponentProjectSchema
+  options: CypressComponentConfigurationSchema
 ) {
   projectConfig.targets['component-test'] = {
     executor: '@nx/cypress:cypress',
