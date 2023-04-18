@@ -1359,11 +1359,6 @@
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
             {
-              "name": "Billing and Utilization",
-              "id": "billing",
-              "file": "nx-cloud/account/billing"
-            },
-            {
               "name": "Users",
               "id": "users",
               "file": "nx-cloud/account/users"

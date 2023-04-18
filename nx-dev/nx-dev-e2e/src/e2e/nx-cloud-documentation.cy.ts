@@ -16,10 +16,6 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/set-up/github',
     },
     {
-      title: 'Billing and Utilization',
-      path: '/nx-cloud/account/billing',
-    },
-    {
       title: 'User Management',
       path: '/nx-cloud/account/users',
     },
