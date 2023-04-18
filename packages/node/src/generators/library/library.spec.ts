@@ -311,7 +311,7 @@ describe('lib', () => {
 
       const { build } = readProjectConfiguration(tree, 'my-lib').targets;
 
-      expect(build.executor).toEqual('@nrwl/js:tsc');
+      expect(build.executor).toEqual('@nx/js:tsc');
     });
 
     it('should specify swc as compiler', async () => {
@@ -323,7 +323,7 @@ describe('lib', () => {
 
       const { build } = readProjectConfiguration(tree, 'my-lib').targets;
 
-      expect(build.executor).toEqual('@nrwl/js:swc');
+      expect(build.executor).toEqual('@nx/js:swc');
     });
   });
 
@@ -361,7 +361,7 @@ describe('lib', () => {
 
       expect(projectConfiguration.targets.build).toMatchInlineSnapshot(`
         {
-          "executor": "@nrwl/js:tsc",
+          "executor": "@nx/js:tsc",
           "options": {
             "assets": [
               "libs/my-lib/*.md",

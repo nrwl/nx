@@ -51,7 +51,7 @@ describe('app', () => {
             },
           },
           serve: {
-            executor: '@nrwl/js:node',
+            executor: '@nx/js:node',
             defaultConfiguration: 'development',
             options: {
               buildTarget: 'my-node-app:build',

@@ -134,7 +134,7 @@ function getEsBuildConfig(
 
 function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/js:node',
+    executor: '@nx/js:node',
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.name}:build`,
@@ -298,7 +298,7 @@ function addProjectDependencies(
       '@nx/webpack': nxVersion,
     },
     esbuild: {
-      '@nrwl/esbuild': nxVersion,
+      '@nx/esbuild': nxVersion,
       esbuild: esbuildVersion,
     },
   };

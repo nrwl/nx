@@ -18,14 +18,14 @@ import {
 import { Schema } from './schema';
 
 function updateDependencies(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, ['@nrwl/node'], []);
+  removeDependenciesFromPackageJson(tree, ['@nx/node'], []);
 
   return addDependenciesToPackageJson(
     tree,
     {
       tslib: tslibVersion,
     },
-    { '@nrwl/node': nxVersion, '@types/node': typesNodeVersion }
+    { '@nx/node': nxVersion, '@types/node': typesNodeVersion }
   );
 }
 

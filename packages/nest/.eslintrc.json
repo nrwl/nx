@@ -24,7 +24,7 @@
           "@angular-devkit/architect",
           "@angular-devkit/core",
           "@angular-devkit/schematics",
-          "@nrwl/workspace"
+          "@nx/workspace"
         ]
       }
     },

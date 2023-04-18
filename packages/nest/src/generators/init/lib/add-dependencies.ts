@@ -22,7 +22,7 @@ export function addDependencies(tree: Tree): GeneratorCallback {
     {
       '@nestjs/schematics': nestJsVersion,
       '@nestjs/testing': nestJsVersion,
-      '@nrwl/nest': nxVersion,
+      '@nx/nest': nxVersion,
     }
   );
 }

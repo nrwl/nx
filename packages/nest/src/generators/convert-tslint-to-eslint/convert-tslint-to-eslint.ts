@@ -24,8 +24,8 @@ export async function conversionGenerator(
    * to perform in order to convert a project from TSLint to ESLint, as well as some
    * extensibility points for adjusting the behavior on a per package basis.
    *
-   * E.g. @nrwl/angular projects might need to make different changes to the final
-   * ESLint config when compared with @nrwl/nest projects.
+   * E.g. @nx/angular projects might need to make different changes to the final
+   * ESLint config when compared with @nx/nest projects.
    *
    * See the ProjectConverter implementation for a full breakdown of what it does.
    */
@@ -113,7 +113,7 @@ export async function conversionGenerator(
   /**
    * Store user preferences for the collection
    */
-  projectConverter.setDefaults('@nrwl/nest', defaults);
+  projectConverter.setDefaults('@nx/nest', defaults);
 
   /**
    * Based on user preference and remaining usage, remove TSLint from the workspace entirely.
