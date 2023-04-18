@@ -24,12 +24,12 @@ describe('init generator', () => {
     expect(packageJson.dependencies['reflect-metadata']).toBeDefined();
     expect(packageJson.dependencies['rxjs']).toBeDefined();
     expect(packageJson.dependencies['tslib']).toBeDefined();
-    expect(packageJson.dependencies['@nrwl/nest']).toBeUndefined();
+    expect(packageJson.dependencies['@nx/nest']).toBeUndefined();
     expect(packageJson.devDependencies['@nestjs/schematics']).toBe(
       nestJsVersion
     );
     expect(packageJson.devDependencies['@nestjs/testing']).toBe(nestJsVersion);
-    expect(packageJson.devDependencies['@nrwl/nest']).toBe(nxVersion);
+    expect(packageJson.devDependencies['@nx/nest']).toBe(nxVersion);
   });
 
   it('should add jest config when unitTestRunner is jest', async () => {

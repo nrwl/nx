@@ -71,7 +71,7 @@ describe('lib', () => {
       ).toMatchSnapshot();
     });
 
-    it('should remove the default file from @nrwl/node:lib', async () => {
+    it('should remove the default file from @nx/node:lib', async () => {
       await libraryGenerator(tree, { name: libName, global: true });
 
       expect(

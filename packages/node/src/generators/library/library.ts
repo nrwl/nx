@@ -159,7 +159,7 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
 
   project.targets = project.targets || {};
   project.targets.build = {
-    executor: `@nrwl/js:${options.compiler}`,
+    executor: `@nx/js:${options.compiler}`,
     outputs: ['{options.outputPath}'],
     options: {
       outputPath: joinPathFragments(

@@ -20,7 +20,7 @@ describe('init', () => {
     const existingVersion = '1.0.0';
     addDependenciesToPackageJson(
       tree,
-      { '@nrwl/express': expressVersion, [existing]: existingVersion },
+      { '@nx/express': expressVersion, [existing]: existingVersion },
       { [existing]: existingVersion }
     );
     await initGenerator(tree, {});
@@ -29,9 +29,9 @@ describe('init', () => {
     expect(packageJson.dependencies['express']).toBeDefined();
     // add tslib
     expect(packageJson.dependencies['tslib']).toBeDefined();
-    // move `@nrwl/express` to dev
-    expect(packageJson.dependencies['@nrwl/express']).toBeUndefined();
-    expect(packageJson.devDependencies['@nrwl/express']).toBeDefined();
+    // move `@nx/express` to dev
+    expect(packageJson.dependencies['@nx/express']).toBeUndefined();
+    expect(packageJson.devDependencies['@nx/express']).toBeDefined();
     // add express types
     expect(packageJson.devDependencies['@types/express']).toBeDefined();
     // keep existing packages

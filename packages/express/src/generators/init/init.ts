@@ -15,7 +15,7 @@ import {
 import type { Schema } from './schema';
 
 function updateDependencies(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, ['@nrwl/express'], []);
+  removeDependenciesFromPackageJson(tree, ['@nx/express'], []);
 
   return addDependenciesToPackageJson(
     tree,
@@ -25,7 +25,7 @@ function updateDependencies(tree: Tree) {
     },
     {
       '@types/express': expressTypingsVersion,
-      '@nrwl/express': nxVersion,
+      '@nx/express': nxVersion,
     }
   );
 }

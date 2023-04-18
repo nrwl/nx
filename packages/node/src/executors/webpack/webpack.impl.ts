@@ -11,7 +11,7 @@ export async function* webpackExecutor(
   context: ExecutorContext
 ) {
   logger.warn(
-    '"@nrwl/node:webpack" executor is deprecated. Use "@nrwl/webpack:webpack" instead in your project.json.'
+    '"@nx/node:webpack" executor is deprecated. Use "@nx/webpack:webpack" instead in your project.json.'
   );
   yield* baseWebpackExecutor(
     {
