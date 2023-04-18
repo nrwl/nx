@@ -648,6 +648,46 @@ describe('component Generator', () => {
       }
     );
 
+    it('should import the component correctly to the module file when flat is false', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      addProjectConfiguration(tree, 'shared-ui', {
+        projectType: 'library',
+        sourceRoot: 'libs/shared/ui/src',
+        root: 'libs/shared/ui',
+      });
+      tree.write(
+        'libs/shared/ui/src/lib/lib.module.ts',
+        `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+      );
+      tree.write(
+        'libs/shared/ui/src/index.ts',
+        'export * from "./lib/lib.module";'
+      );
+
+      // ACT
+      await componentGenerator(tree, {
+        name: 'example',
+        project: 'shared-ui',
+        export: true,
+        flat: false,
+      });
+
+      // ASSERT
+      const moduleSource = tree.read(
+        'libs/shared/ui/src/lib/lib.module.ts',
+        'utf-8'
+      );
+      expect(moduleSource).toMatchSnapshot();
+    });
+
     it('should not export it in the entry point when the module it belong to is not exported', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

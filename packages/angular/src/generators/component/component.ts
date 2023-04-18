@@ -82,12 +82,7 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
       modulePath,
       componentNames.fileName,
       `${componentNames.className}${typeNames.className}`,
-      options.flat
-        ? `${componentNames.fileName}.${typeNames.fileName}`
-        : joinPathFragments(
-            componentNames.fileName,
-            `${componentNames.fileName}.${typeNames.fileName}`
-          ),
+      `${componentNames.fileName}.${typeNames.fileName}`,
       'declarations',
       options.flat,
       options.export
