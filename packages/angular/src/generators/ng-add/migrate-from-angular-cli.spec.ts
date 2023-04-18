@@ -213,7 +213,7 @@ describe('workspace', () => {
       expect(tree.exists('angular.json')).toBe(false);
     });
 
-    it('should set the default collection to @nrwl/angular', async () => {
+    it('should set the default collection to @nx/angular', async () => {
       await migrateFromAngularCli(tree, {});
       expect(
         readJson(tree, 'nx.json').cli?.defaultCollection

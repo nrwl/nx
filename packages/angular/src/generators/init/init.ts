@@ -102,21 +102,21 @@ function setDefaults(host: Tree, options: Schema) {
   const nxJson = readNxJson(host);
 
   nxJson.generators = nxJson.generators || {};
-  nxJson.generators['@nrwl/angular:application'] = {
+  nxJson.generators['@nx/angular:application'] = {
     style: options.style,
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,
-    ...(nxJson.generators['@nrwl/angular:application'] || {}),
+    ...(nxJson.generators['@nx/angular:application'] || {}),
   };
-  nxJson.generators['@nrwl/angular:library'] = {
+  nxJson.generators['@nx/angular:library'] = {
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
-    ...(nxJson.generators['@nrwl/angular:library'] || {}),
+    ...(nxJson.generators['@nx/angular:library'] || {}),
   };
-  nxJson.generators['@nrwl/angular:component'] = {
+  nxJson.generators['@nx/angular:component'] = {
     style: options.style,
-    ...(nxJson.generators['@nrwl/angular:component'] || {}),
+    ...(nxJson.generators['@nx/angular:component'] || {}),
   };
 
   updateNxJson(host, nxJson);

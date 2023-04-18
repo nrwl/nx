@@ -19,11 +19,11 @@ export function setLibraryStrictDefault(host: Tree, isStrict: boolean) {
 
   nxJson.generators = nxJson.generators || {};
 
-  nxJson.generators['@nrwl/angular:library'] =
-    nxJson.generators['@nrwl/angular:library'] || {};
+  nxJson.generators['@nx/angular:library'] =
+    nxJson.generators['@nx/angular:library'] || {};
 
-  nxJson.generators['@nrwl/angular:library'].strict =
-    nxJson.generators['@nrwl/angular:library'].strict ?? isStrict;
+  nxJson.generators['@nx/angular:library'].strict =
+    nxJson.generators['@nx/angular:library'].strict ?? isStrict;
   updateNxJson(host, nxJson);
 }
 

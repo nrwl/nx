@@ -43,7 +43,7 @@ export async function addSsr(
   // update project.json
   project = readProjectConfiguration(tree, appName);
 
-  project.targets.server.executor = '@nrwl/angular:webpack-server';
+  project.targets.server.executor = '@nx/angular:webpack-server';
   project.targets.server.options.customWebpackConfig = {
     path: joinPathFragments(project.root, 'webpack.server.config.js'),
   };

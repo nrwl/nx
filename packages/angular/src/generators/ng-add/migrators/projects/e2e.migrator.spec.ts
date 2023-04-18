@@ -544,7 +544,7 @@ describe('e2e migrator', () => {
           projectType: 'application',
           targets: {
             e2e: {
-              executor: '@nrwl/cypress:cypress',
+              executor: '@nx/cypress:cypress',
               options: { cypressConfig: 'apps/app1-e2e/cypress.json' },
             },
           },
@@ -610,15 +610,15 @@ describe('e2e migrator', () => {
           projectType: 'application',
           targets: {
             'cypress-run': {
-              executor: '@nrwl/cypress:cypress',
+              executor: '@nx/cypress:cypress',
               options: { cypressConfig: 'apps/app1-e2e/cypress.json' },
             },
             'cypress-open': {
-              executor: '@nrwl/cypress:cypress',
+              executor: '@nx/cypress:cypress',
               options: { cypressConfig: 'apps/app1-e2e/cypress.json' },
             },
             e2e: {
-              executor: '@nrwl/cypress:cypress',
+              executor: '@nx/cypress:cypress',
               options: { cypressConfig: 'apps/app1-e2e/cypress.json' },
             },
           },
@@ -664,18 +664,18 @@ describe('e2e migrator', () => {
           projectType: 'application',
           targets: {
             'cypress-run': {
-              executor: '@nrwl/cypress:cypress',
+              executor: '@nx/cypress:cypress',
               options: {
                 cypressConfig: 'apps/app1-e2e/cypress.json',
                 tsConfig: 'apps/app1-e2e/tsconfig.json',
               },
             },
             'cypress-open': {
-              executor: '@nrwl/cypress:cypress',
+              executor: '@nx/cypress:cypress',
               options: { cypressConfig: 'apps/app1-e2e/cypress.json' },
             },
             e2e: {
-              executor: '@nrwl/cypress:cypress',
+              executor: '@nx/cypress:cypress',
               options: {
                 cypressConfig: 'apps/app1-e2e/cypress.json',
                 tsConfig: 'apps/app1-e2e/tsconfig.json',

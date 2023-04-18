@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Init MF --federationType=dynamic should create a host with the correct configurations 1`] = `
-"import { setRemoteDefinitions } from '@nrwl/angular/mf';
+"import { setRemoteDefinitions } from '@nx/angular/mf';
 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
@@ -52,7 +52,7 @@ exports[`Init MF should add a remote application and add it to a specified host 
 exports[`Init MF should add a remote to dynamic host correctly 1`] = `
 "import { NxWelcomeComponent } from './nx-welcome.component';
 import { Route } from '@angular/router';
-import { loadRemoteModule } from '@nrwl/angular/mf';
+import { loadRemoteModule } from '@nx/angular/mf';
 
 export const appRoutes: Route[] = [
   {
@@ -69,7 +69,7 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 1`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+"const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);
 "
@@ -84,7 +84,7 @@ exports[`Init MF should create webpack and mf configs correctly 2`] = `
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 3`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+"const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);
 "

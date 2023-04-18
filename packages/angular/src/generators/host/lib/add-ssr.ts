@@ -50,13 +50,13 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
   // update project.json
   project = readProjectConfiguration(tree, appName);
 
-  project.targets.server.executor = '@nrwl/angular:webpack-server';
+  project.targets.server.executor = '@nx/angular:webpack-server';
   project.targets.server.options.customWebpackConfig = {
     path: joinPathFragments(project.root, 'webpack.server.config.js'),
   };
 
   project.targets['serve-ssr'].executor =
-    '@nrwl/angular:module-federation-dev-ssr';
+    '@nx/angular:module-federation-dev-ssr';
 
   updateProjectConfiguration(tree, appName, project);
 

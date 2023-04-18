@@ -29,7 +29,11 @@ export function applyDefaultEagerPackages(
   }
 }
 
-export const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js', '@nrwl/angular/mf'];
+export const DEFAULT_NPM_PACKAGES_TO_AVOID = [
+  'zone.js',
+  '@nx/angular/mf',
+  '@nrwl/angular/mf',
+];
 export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
   '@angular/animations',
   '@angular/common',

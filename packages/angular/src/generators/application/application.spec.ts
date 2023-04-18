@@ -666,7 +666,7 @@ describe('app', () => {
       // should not update workspace configuration since --strict=true is the default
       const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
       expect(
-        nxJson.generators['@nrwl/angular:application'].strict
+        nxJson.generators['@nx/angular:application'].strict
       ).not.toBeDefined();
     });
 
@@ -676,7 +676,7 @@ describe('app', () => {
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future applications
       const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
-      expect(nxJson.generators['@nrwl/angular:application'].strict).toBe(false);
+      expect(nxJson.generators['@nx/angular:application'].strict).toBe(false);
     });
   });
 
@@ -712,7 +712,7 @@ describe('app', () => {
       // ASSERT
       expect(appTree.read('apps/app1/tailwind.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
         const { join } = require('path');
 
         /** @type {import('tailwindcss').Config} */

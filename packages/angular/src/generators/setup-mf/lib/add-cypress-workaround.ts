@@ -32,7 +32,7 @@ export function addCypressOnErrorWorkaround(tree: Tree, schema: Schema) {
 
   if (
     e2eProject.targets.e2e.executor !== '@nx/cypress:cypress' &&
-    e2eProject.targets.e2e.executor !== '@nrwl/cypress:cypress'
+    e2eProject.targets.e2e.executor !== '@nx/cypress:cypress'
   ) {
     // Not a cypress e2e project, skip
     return;

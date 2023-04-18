@@ -1078,7 +1078,7 @@ describe('lib', () => {
 
       // check to see if the workspace configuration has been updated to use strict
       // mode by default in future libraries
-      expect(generators['@nrwl/angular:library'].strict).not.toBeDefined();
+      expect(generators['@nx/angular:library'].strict).not.toBeDefined();
     });
 
     it('should set defaults when --strict=false', async () => {
@@ -1093,7 +1093,7 @@ describe('lib', () => {
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future libraries
       const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(generators['@nrwl/angular:library'].strict).toBe(false);
+      expect(generators['@nx/angular:library'].strict).toBe(false);
     });
   });
 
@@ -1234,7 +1234,7 @@ describe('lib', () => {
       // ASSERT
       expect(tree.read('libs/my-lib/tailwind.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
         const { join } = require('path');
 
         /** @type {import('tailwindcss').Config} */

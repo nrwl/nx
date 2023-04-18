@@ -102,7 +102,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     updateFile('angular.json', JSON.stringify(angularJson, null, 2));
 
     // confirm that @nrwl dependencies do not exist yet
-    expect(packageJson.devDependencies['@nrwl/workspace']).not.toBeDefined();
+    expect(packageJson.devDependencies['@nx/workspace']).not.toBeDefined();
 
     // run ng add
     runNgAdd('@nrwl/angular', '--npm-scope projscope --default-base main');
@@ -133,7 +133,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       watch: 'nx build --watch --configuration development',
       test: 'nx test',
     });
-    expect(updatedPackageJson.devDependencies['@nrwl/workspace']).toBeDefined();
+    expect(updatedPackageJson.devDependencies['@nx/workspace']).toBeDefined();
     expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();
 
     // check nx.json
@@ -297,7 +297,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check e2e project config
     const e2eProjectConfig = readJson(`apps/${project}-e2e/project.json`);
     expect(e2eProjectConfig.targets['cypress-run']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         devServerTarget: `${project}:serve`,
         cypressConfig: `apps/${e2eProject}/cypress.json`,
@@ -309,7 +309,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
     });
     expect(e2eProjectConfig.targets['cypress-open']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         watch: true,
         headless: false,
@@ -317,7 +317,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
     });
     expect(e2eProjectConfig.targets.e2e).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         devServerTarget: `${project}:serve`,
         watch: true,
@@ -364,7 +364,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check e2e project config
     const e2eProjectConfig = readJson(`apps/${project}-e2e/project.json`);
     expect(e2eProjectConfig.targets['cypress-run']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         devServerTarget: `${project}:serve`,
         cypressConfig: `apps/${e2eProject}/cypress.config.ts`,
@@ -376,7 +376,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
     });
     expect(e2eProjectConfig.targets['cypress-open']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         watch: true,
         headless: false,
@@ -384,7 +384,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
     });
     expect(e2eProjectConfig.targets.e2e).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         devServerTarget: `${project}:serve`,
         watch: true,
@@ -411,7 +411,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     const projectConfig = readJson(`apps/${project}/project.json`);
     expect(projectConfig.targets.lint).toStrictEqual({
-      executor: '@nrwl/linter:eslint',
+      executor: '@nx/linter:eslint',
       options: {
         lintFilePatterns: [
           `apps/${project}/src/**/*.ts`,

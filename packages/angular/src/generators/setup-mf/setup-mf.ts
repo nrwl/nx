@@ -49,7 +49,7 @@ export async function setupMf(tree: Tree, options: Schema) {
     installTask = addDependenciesToPackageJson(
       tree,
       {},
-      { '@nrwl/web': nxVersion }
+      { '@nx/web': nxVersion }
     );
   }
 
