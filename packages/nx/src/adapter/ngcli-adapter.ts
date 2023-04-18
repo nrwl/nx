@@ -42,8 +42,15 @@ import { NX_ERROR, NX_PREFIX } from '../utils/logger';
 import { readModulePackageJson } from '../utils/package-json';
 import { detectPackageManager } from '../utils/package-manager';
 import { toNewFormat, toOldFormat } from './angular-json';
-import { Workspaces } from '../config/workspaces';
-import { ExecutorsJson } from '../config/misc-interfaces';
+import { normalizeExecutorSchema, Workspaces } from '../config/workspaces';
+import {
+  CustomHasher,
+  Executor,
+  ExecutorConfig,
+  ExecutorsJson,
+  TaskGraphExecutor,
+} from '../config/misc-interfaces';
+import { readPluginPackageJson } from 'nx/src/utils/nx-plugin';
 
 class WrappedWorkspaceNodeModulesArchitectHost extends WorkspaceNodeModulesArchitectHost {
   private workspaces = new Workspaces(this.root);
@@ -54,10 +61,11 @@ class WrappedWorkspaceNodeModulesArchitectHost extends WorkspaceNodeModulesArchi
   async resolveBuilder(builderStr: string): Promise<NodeModulesBuilderInfo> {
     const [packageName, builderName] = builderStr.split(':');
 
-    const { executorsFilePath, executorConfig } = this.workspaces[
-      'readExecutorsJson'
-    ](packageName, builderName);
-    const builderInfo = this.workspaces.readExecutor(packageName, builderName);
+    const { executorsFilePath, executorConfig } = this.readExecutorsJson(
+      packageName,
+      builderName
+    );
+    const builderInfo = this.readExecutor(packageName, builderName);
     return {
       name: builderStr,
       builderName,
@@ -65,11 +73,99 @@ class WrappedWorkspaceNodeModulesArchitectHost extends WorkspaceNodeModulesArchi
         readJsonFile<ExecutorsJson>(executorsFilePath).builders[builderName]
           .description,
       optionSchema: builderInfo.schema,
-      import: this.workspaces['resolveImplementation'](
+      import: this.workspaces['resolveImplementation'].bind(this.workspaces)(
         executorConfig.implementation,
         dirname(executorsFilePath)
       ),
     };
+  }
+
+  private readExecutorsJson(nodeModule: string, builder: string) {
+    const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
+      nodeModule,
+      this.workspaces['resolvePaths'].bind(this.workspaces)()
+    );
+    const executorsFile = packageJson.executors ?? packageJson.builders;
+
+    if (!executorsFile) {
+      throw new Error(
+        `The "${nodeModule}" package does not support Nx executors or Angular Devkit Builders.`
+      );
+    }
+
+    const executorsFilePath = require.resolve(
+      join(dirname(packageJsonPath), executorsFile)
+    );
+    const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
+    const executorConfig: {
+      implementation: string;
+      batchImplementation?: string;
+      schema: string;
+      hasher?: string;
+    } = executorsJson.builders?.[builder];
+    if (!executorConfig) {
+      throw new Error(
+        `Cannot find builder '${builder}' in ${executorsFilePath}.`
+      );
+    }
+    return { executorsFilePath, executorConfig, isNgCompat: true };
+  }
+
+  private readExecutor(
+    nodeModule: string,
+    executor: string
+  ): ExecutorConfig & { isNgCompat: boolean } {
+    try {
+      const { executorsFilePath, executorConfig, isNgCompat } =
+        this.readExecutorsJson(nodeModule, executor);
+      const executorsDir = dirname(executorsFilePath);
+      const schemaPath = this.workspaces['resolveSchema'].bind(this.workspaces)(
+        executorConfig.schema,
+        executorsDir
+      );
+      const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
+
+      const implementationFactory = this.getImplementationFactory<Executor>(
+        executorConfig.implementation,
+        executorsDir
+      );
+
+      const batchImplementationFactory = executorConfig.batchImplementation
+        ? this.getImplementationFactory<TaskGraphExecutor>(
+            executorConfig.batchImplementation,
+            executorsDir
+          )
+        : null;
+
+      const hasherFactory = executorConfig.hasher
+        ? this.getImplementationFactory<CustomHasher>(
+            executorConfig.hasher,
+            executorsDir
+          )
+        : null;
+
+      return {
+        schema,
+        implementationFactory,
+        batchImplementationFactory,
+        hasherFactory,
+        isNgCompat,
+      };
+    } catch (e) {
+      throw new Error(
+        `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
+      );
+    }
+  }
+
+  private getImplementationFactory<T>(
+    implementation: string,
+    executorsDir: string
+  ): () => T {
+    return this.workspaces['getImplementationFactory'].bind(this.workspaces)(
+      implementation,
+      executorsDir
+    );
   }
 }
 
