@@ -8,13 +8,13 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       title: `Calling sb upgrade`,
       bodyLines: [
         `ℹ️ Nx will call the Storybook CLI to upgrade your @storybook/* packages to the latest version.`,
-        `📖 You can read more about the Storybook upgrade command here: https://storybook.js.org/docs/7.0/react/configure/upgrading`,
+        `📖 You can read more about the Storybook upgrade command here: https://storybook.js.org/docs/react/configure/upgrading`,
       ],
       color: 'blue',
     });
 
     execSync(
-      `npx storybook@next upgrade --prerelease ${
+      `npx storybook@latest upgrade ${
         schema.autoAcceptAllPrompts ? '--yes' : ''
       }`,
       {
@@ -36,7 +36,7 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       bodyLines: [
         `🚨 The Storybook CLI failed to upgrade your @storybook/* packages to the latest version.`,
         `Please try running the sb upgrade command manually:`,
-        `npx storybook@next upgrade --prerelease`,
+        `npx storybook@latest upgrade`,
       ],
       color: 'red',
     });
@@ -59,7 +59,7 @@ export function callAutomigrate(
     title: `⚙️ Calling sb automigrate`,
     bodyLines: [
       `ℹ️  Nx will call the Storybook CLI to automigrate the Storybook configuration of all your projects that use Storybook.`,
-      `📖 You can read more about the Storybook automigrate command here: https://storybook.js.org/docs/7.0/react/configure/upgrading#automigrate-script`,
+      `📖 You can read more about the Storybook automigrate command here: https://storybook.js.org/docs/react/configure/upgrading#automigrate-script`,
     ],
     color: 'green',
   });
@@ -71,7 +71,7 @@ export function callAutomigrate(
 
   Object.entries(allStorybookProjects).forEach(
     ([projectName, storybookProjectInfo]) => {
-      const commandToRun = `npx sb@next automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
+      const commandToRun = `npx storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
       try {
         output.log({
           title: `Calling sb automigrate for ${projectName}`,

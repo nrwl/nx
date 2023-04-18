@@ -30,7 +30,7 @@ export function onlyShowGuide(storybookProjects: {
       `You can run the following commands manually to upgrade your Storybook projects to Storybook 7:`,
       ``,
       `1. Call the Storybook upgrade script:`,
-      `npx storybook@next upgrade --prerelease`,
+      `npx storybook@latest upgrade`,
       ``,
       `2. Call the Nx generator to prepare your files for migration:`,
       `nx g @nrwl/storybook:migrate-7 --onlyPrepare`,
@@ -39,7 +39,7 @@ export function onlyShowGuide(storybookProjects: {
       `Run the following commands for each Storybook project:`,
       ...Object.entries(storybookProjects).map(
         ([_projectName, storybookProjectInfo]) => {
-          return `npx sb@next automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
+          return `npx storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
         }
       ),
       ``,

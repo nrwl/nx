@@ -9,7 +9,7 @@ description: This guide explains how you can set up Storybook version 7 in your 
 This is a new feature available on Nx v15.6.0. If you are using an older version of Nx, please [upgrade](/packages/nx/documents/migrate).
 {% /callout %}
 
-Storybook 7 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 7 beta announcement blog post](https://storybook.js.org/blog/7-0-beta/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7 migration guide](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937).
+Storybook 7 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 7.0.0 release article](https://storybook.js.org/blog/storybook-7-0/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7.0.0 migration guide](https://storybook.js.org/docs/react/migration-guide).
 
 Nx provides new generators that allow you to generate Storybook 7 configuration for your projects, by installing the correct dependencies and creating the corresponding version 7 configuration files. Nx also provides a [Storybook 7 migration generator](/packages/storybook/generators/migrate-7) that you can use to migrate your existing Storybook configuration to version 7.
 
@@ -56,7 +56,7 @@ You can generate Storybook configuration for an individual project with this com
 nx g @nrwl/storybook:configuration project-name --storybook7Configuration --storybook7UiFramework=@storybook/react-webpack5
 ```
 
-Make sure to use the framework-specific generators if your project is using Angular, React, Next.js or React Native: [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nrwl/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration), for example:
+Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js or React Native: [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nrwl/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration), for example:
 
 ```shell
 nx g @nrwl/angular:storybook-configuration my-angular-project --storybook7Configuration
@@ -95,7 +95,7 @@ Choosing one of these frameworks will have the following effects on your workspa
 
 2. Nx will generate a root `.storybook` folder and a project-level `.storybook` folder (located under `libs/your-project/.storybook` or `apps/your-project/.storybook`) containing the essential configuration files for Storybook.
 
-3. If you are working on an Angular, a React or a React Native project and you use one of the framework-specific generators, Nx will also generate stories for all the components in your project.
+3. If you are working on an Angular, a React or a React Native project _and you use one of the framework-specific generators_, Nx will also generate stories for all the components in your project.
 
 4. Nx will create new `targets` in your project's `project.json`, called `storybook` and `build-storybook`, containing all the necessary configuration to serve and build Storybook.
 

@@ -47,9 +47,36 @@
       "version": "16.0.0-beta.1",
       "description": "Replace @nrwl/storybook with @nx/storybook",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-0-0-migrate-7": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Update workspace to use Storybook v7",
+      "implementation": "./src/migrations/update-16-0-0/update-sb-7"
     }
   },
   "packageJsonUpdates": {
+    "16.0.0": {
+      "version": "16.0.0-beta.1",
+      "packages": {
+        "@storybook/core-server": {
+          "version": "^7.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/angular": {
+          "version": "^7.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "^7.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-essentials": {
+          "version": "^7.0.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "15.5.2": {
       "version": "15.5.2-beta.0",
       "packages": {
