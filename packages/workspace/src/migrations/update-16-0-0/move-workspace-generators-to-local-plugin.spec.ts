@@ -1,4 +1,4 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   Tree,
   readProjectConfiguration,
@@ -7,11 +7,12 @@ import {
   GeneratorsJson,
   ProjectConfiguration,
   stripIndents,
-} from '@nrwl/devkit';
+  getProjects,
+} from '@nx/devkit';
 
 import generator from './move-workspace-generators-to-local-plugin';
 
-describe('local-plugin-from-tools generator', () => {
+describe('move-workspace-generators-to-local-plugin', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -23,6 +24,7 @@ describe('local-plugin-from-tools generator', () => {
       name: 'my-generator',
     });
     await generator(tree);
+    console.log(getProjects(tree).keys());
     const config = readProjectConfiguration(tree, 'workspace-plugin');
     expect(config.root).toEqual('tools/workspace-plugin');
 
@@ -136,8 +138,8 @@ async function workspaceGeneratorGenerator(
 
   host.write(
     joinPathFragments(outputDirectory, 'index.ts'),
-    stripIndents`import { Tree, formatFiles, installPackagesTask } from '@nrwl/devkit';
-  import { libraryGenerator } from '@nrwl/workspace/generators';
+    stripIndents`import { Tree, formatFiles, installPackagesTask } from '@nx/devkit';
+  import { libraryGenerator } from '@nx/workspace/generators';
   
   export default async function(tree: Tree, schema: any) {
     await libraryGenerator(tree, {name: schema.name});

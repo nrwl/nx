@@ -5,13 +5,14 @@ import {
   getProjects,
   getWorkspaceLayout,
   joinPathFragments,
+  output,
   ProjectConfiguration,
   readJson,
   readProjectConfiguration,
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 // nx-ignore-next-line
 import * as path from 'path';
 import {
@@ -39,7 +40,7 @@ export default async function (tree: Tree) {
         tree,
         {},
         {
-          '@nrwl/nx-plugin': nxVersion,
+          '@nx/nx-plugin': nxVersion,
         }
       )
     );
@@ -80,19 +81,13 @@ function collectAndMoveGenerators(tree: Tree, destinationProjectRoot: string) {
 }
 
 async function createNewPlugin(tree: Tree) {
-  ensurePackage('@nrwl/nx-plugin', nxVersion);
+  ensurePackage('@nx/nx-plugin', nxVersion);
   const { pluginGenerator } =
     // nx-ignore-next-line
-    require('@nrwl/nx-plugin/src/generators/plugin/plugin');
-  const { createExecutorsJson } =
-    // nx-ignore-next-line
-    require('@nrwl/nx-plugin/src/generators/executor/executor');
-  const { createGeneratorsJson } =
-    // nx-ignore-next-line
-    require('@nrwl/nx-plugin/src/generators/generator/generator');
+    require('@nx/nx-plugin/src/generators/plugin/plugin');
 
   // nx-ignore-next-line
-  const { Linter } = ensurePackage('@nrwl/linter', nxVersion);
+  const { Linter } = ensurePackage('@nx/linter', nxVersion);
 
   const { npmScope } = getWorkspaceLayout(tree);
   const importPath = npmScope ? `${npmScope}/${PROJECT_NAME}` : PROJECT_NAME;
@@ -109,8 +104,11 @@ async function createNewPlugin(tree: Tree) {
     unitTestRunner: 'jest',
     e2eTestRunner: 'none',
   });
-  createExecutorsJson(tree, readProjectConfiguration(tree, PROJECT_NAME).root);
-  createGeneratorsJson(tree, readProjectConfiguration(tree, PROJECT_NAME).root);
+  getCreateGeneratorsJson()(
+    tree,
+    readProjectConfiguration(tree, PROJECT_NAME).root,
+    PROJECT_NAME
+  );
   await moveGeneratedPlugin(tree, DESTINATION, importPath);
 }
 
@@ -141,20 +139,50 @@ function updateExistingPlugin(tree: Tree, project: ProjectConfiguration) {
     project.root,
     'generators.json'
   );
-  const generatorsJsonPath =
+  let generatorsJsonPath =
     packageJson.generators ||
     packageJson.schematics ||
     tree.exists(defaultGeneratorsPath)
       ? defaultGeneratorsPath
       : null;
   if (!generatorsJsonPath) {
-    throw new Error('Unable to locate generators.json for ' + project.name);
+    getCreateGeneratorsJson()(
+      tree,
+      readProjectConfiguration(tree, PROJECT_NAME).root,
+      PROJECT_NAME
+    );
+    generatorsJsonPath = defaultGeneratorsPath;
   }
-  const generatorsJson = readJson<GeneratorsJson>(tree, generatorsJsonPath);
-  const generators = collectAndMoveGenerators(tree, project.root);
-  generatorsJson.generators = {
-    ...generators,
-    ...generatorsJson.generators,
-  };
-  writeJson(tree, generatorsJsonPath, generatorsJson);
+  updateJson<GeneratorsJson>(tree, generatorsJsonPath, (json) => {
+    const generators = collectAndMoveGenerators(tree, project.root);
+    json.generators ??= {};
+    for (const generator in generators) {
+      if (json.generators[generator]) {
+        output.warn({
+          title: `Generator ${generator} already exists in ${project.name}`,
+          bodyLines: [
+            'Since you have a generator with the same name in your plugin, the generator from workspace-generators has been discarded.',
+          ],
+        });
+      } else {
+        json.generators[generator] = generators[generator];
+      }
+    }
+    return json;
+  });
+}
+
+function getCreateGeneratorsJson(): (
+  host: Tree,
+  projectRoot: string,
+  projectName: string,
+  skipLintChecks?: boolean,
+  skipFormat?: boolean
+) => Promise<void> {
+  // We cant use  `as typeof import('@nx/nx-plugin/src/generators/generator/generator');` here
+  // because it will cause a typescript error at build time.
+  const { createGeneratorsJson } =
+    // nx-ignore-next-line
+    require('@nx/nx-plugin/src/generators/generator/generator');
+  return createGeneratorsJson;
 }
