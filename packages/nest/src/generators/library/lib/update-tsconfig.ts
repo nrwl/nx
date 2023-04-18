@@ -10,9 +10,10 @@ export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
     if (options.strict) {
       json.compilerOptions = {
         ...json.compilerOptions,
+        strictNullChecks: true,
+        noImplicitAny: true,
+        strictBindCallApply: true,
         forceConsistentCasingInFileNames: true,
-        strict: true,
-        noImplicitReturns: true,
         noFallthroughCasesInSwitch: true,
       };
     }

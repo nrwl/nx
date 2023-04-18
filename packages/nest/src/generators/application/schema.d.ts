@@ -13,6 +13,7 @@ export interface ApplicationGeneratorOptions {
   e2eTestRunner?: 'jest' | 'none';
   setParserOptionsProject?: boolean;
   rootProject?: boolean;
+  strict?: boolean;
 }
 
 interface NormalizedOptions extends ApplicationGeneratorOptions {

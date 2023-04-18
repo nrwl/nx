@@ -25,6 +25,7 @@ export function normalizeOptions(
 
   return {
     ...options,
+    strict: options.strict ?? false,
     appProjectRoot,
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? 'jest',

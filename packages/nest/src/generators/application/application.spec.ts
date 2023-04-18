@@ -59,6 +59,22 @@ describe('application generator', () => {
     ]);
   });
 
+  it('should add strict checks with --strict', async () => {
+    await applicationGenerator(tree, { name: appName, strict: true });
+    const tsConfig = devkit.readJson(
+      tree,
+      `apps/${appDirectory}/tsconfig.app.json`
+    );
+
+    expect(tsConfig.compilerOptions.strictNullChecks).toBeTruthy();
+    expect(tsConfig.compilerOptions.noImplicitAny).toBeTruthy();
+    expect(tsConfig.compilerOptions.strictBindCallApply).toBeTruthy();
+    expect(
+      tsConfig.compilerOptions.forceConsistentCasingInFileNames
+    ).toBeTruthy();
+    expect(tsConfig.compilerOptions.noFallthroughCasesInSwitch).toBeTruthy();
+  });
+
   describe('--skipFormat', () => {
     it('should format files', async () => {
       jest.spyOn(devkit, 'formatFiles');
