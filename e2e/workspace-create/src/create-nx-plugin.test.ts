@@ -16,6 +16,8 @@ describe('create-nx-plugin', () => {
 
   it('should be able to create a plugin repo build a plugin', () => {
     const pluginName = uniq('plugin');
+    const generatorName = uniq('generator');
+    const executorName = uniq('executor');
 
     runCreatePlugin(pluginName, {
       packageManager,
@@ -24,9 +26,18 @@ describe('create-nx-plugin', () => {
     checkFilesExist(
       'package.json',
       packageManagerLockFile[packageManager],
-      `project.json`,
-      `generators.json`,
-      `executors.json`
+      `project.json`
+    );
+
+    runCLI(`build ${pluginName}`);
+
+    checkFilesExist(`dist/package.json`);
+
+    runCLI(
+      `generate @nrwl/nx-plugin:generator ${generatorName} --project=${pluginName}`
+    );
+    runCLI(
+      `generate @nrwl/nx-plugin:executor ${executorName} --project=${pluginName}`
     );
 
     runCLI(`build ${pluginName}`);
