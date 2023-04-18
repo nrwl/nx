@@ -10,6 +10,7 @@ import { getImportPath, joinPathFragments } from '../../../../utils/path';
 import { ProjectsConfigurations } from '../../../../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../../../../config/nx-json';
 import { ExplicitDependency } from './explicit-project-dependencies';
+import { PackageJson } from '../../../../utils/package-json';
 
 class ProjectGraphNodeRecords {}
 
@@ -110,10 +111,11 @@ function processPackageJson(
   }
 }
 
-function readDeps(packageJsonDeps: any) {
+function readDeps(packageJson: PackageJson) {
   return [
-    ...Object.keys(packageJsonDeps?.dependencies ?? {}),
-    ...Object.keys(packageJsonDeps?.devDependencies ?? {}),
-    ...Object.keys(packageJsonDeps?.peerDependencies ?? {}),
+    ...Object.keys(packageJson?.dependencies ?? {}),
+    ...Object.keys(packageJson?.devDependencies ?? {}),
+    ...Object.keys(packageJson?.peerDependencies ?? {}),
+    ...Object.keys(packageJson?.optionalDependencies ?? {}),
   ];
 }
