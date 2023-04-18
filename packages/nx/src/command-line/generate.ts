@@ -333,9 +333,11 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         ].join('/n')
       );
     }
-    logger.info(
-      `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
-    );
+    if (!opts.quiet) {
+      logger.info(
+        `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
+      );
+    }
 
     if (opts.help) {
       printGenHelp(opts, schema, normalizedGeneratorName, aliases);

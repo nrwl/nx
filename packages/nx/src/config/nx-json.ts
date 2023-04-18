@@ -39,7 +39,7 @@ interface NxInstallationConfiguration {
   version: string;
   /**
    * Record<pluginPackageName, pluginVersion>. e.g.
-   * plugins: { '@nrwl/angular': '1.0.0' }
+   * plugins: { '@nx/angular': '1.0.0' }
    */
   plugins?: Record<string, string>;
 }
@@ -106,7 +106,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    *
    * ```
    * {
-   *   "@nrwl/react": {
+   *   "@nx/react": {
    *     "library": {
    *       "style": "scss"
    *     }

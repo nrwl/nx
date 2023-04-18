@@ -4,7 +4,7 @@ exports[`new --preset should generate necessary npm dependencies for empty prese
 {
   "dependencies": {},
   "devDependencies": {
-    "@nrwl/workspace": "0.0.1",
+    "@nx/workspace": "0.0.1",
     "nx": "0.0.1",
   },
   "license": "MIT",

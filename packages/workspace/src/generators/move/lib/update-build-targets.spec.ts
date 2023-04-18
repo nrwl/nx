@@ -27,7 +27,7 @@ describe('updateBuildTargets', () => {
       root: 'libs/my-source',
       targets: {
         storybook: {
-          executor: '@nrwl/storybook:storybook',
+          executor: '@nx/storybook:storybook',
         },
       },
     });
@@ -76,7 +76,7 @@ describe('updateBuildTargets', () => {
 
     expect(myProject).toBeDefined();
     expect(myProject.targets.storybook.executor).toBe(
-      '@nrwl/storybook:storybook'
+      '@nx/storybook:storybook'
     );
 
     expect(e2eProject).toBeDefined();

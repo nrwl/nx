@@ -26,7 +26,7 @@ export async function setupCI(
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
-      `${pmc.exec} nx g @nrwl/workspace:ci-workflow --ci=${ci}`,
+      `${pmc.exec} nx g @nx/workspace:ci-workflow --ci=${ci}`,
       join(process.cwd(), getFileName(name))
     );
     ciSpinner.succeed('CI workflow has been generated successfully');
@@ -35,7 +35,7 @@ export async function setupCI(
     ciSpinner.fail();
     if (e instanceof Error) {
       output.error({
-        title: `Nx failed to generate CI workflow`,
+        title: `Failed to generate CI workflow`,
         bodyLines: mapErrorToBodyLines(e),
       });
     } else {

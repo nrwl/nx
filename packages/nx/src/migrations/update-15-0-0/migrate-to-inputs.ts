@@ -13,10 +13,10 @@ import { PackageJson } from '../../utils/package-json';
 const skippedFiles = [
   'package.json', // Not to be added to filesets
   'babel.config.json', // Will be handled by various plugins
-  'karma.conf.js', // Will be handled by @nrwl/angular
-  'jest.preset.js', // Will be handled by @nrwl/jest
-  '.storybook', // Will be handled by @nrwl/storybook
-  // Will be handled by @nrwl/linter
+  'karma.conf.js', // Will be handled by @nx/angular
+  'jest.preset.js', // Will be handled by @nx/jest
+  '.storybook', // Will be handled by @nx/storybook
+  // Will be handled by @nx/linter
   '.eslintrc.json',
   '.eslintrc.js',
 ];

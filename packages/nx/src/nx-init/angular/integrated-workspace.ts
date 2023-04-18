@@ -3,5 +3,5 @@ import { getPackageManagerCommand } from '../../utils/package-manager';
 
 export function setupIntegratedWorkspace(): void {
   const pmc = getPackageManagerCommand();
-  execSync(`${pmc.exec} ng g @nrwl/angular:ng-add`, { stdio: [0, 1, 2] });
+  execSync(`${pmc.exec} ng g @nx/angular:ng-add`, { stdio: [0, 1, 2] });
 }

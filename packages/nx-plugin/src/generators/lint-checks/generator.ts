@@ -107,8 +107,10 @@ export function addMigrationJsonChecks(
       host,
       `${projectConfiguration.root}/.eslintrc.json`,
       (c) => {
-        const override = c.overrides.find((o) =>
-          Object.keys(o.rules ?? {})?.includes('@nrwl/nx/nx-plugin-checks')
+        const override = c.overrides.find(
+          (o) =>
+            Object.keys(o.rules ?? {})?.includes('@nx/nx/nx-plugin-checks') ||
+            Object.keys(o.rules ?? {})?.includes('@nrwl/nx/nx-plugin-checks')
         );
         if (
           Array.isArray(override?.files) &&
@@ -133,7 +135,10 @@ function updateProjectTarget(
   }
 
   for (const [target, configuration] of Object.entries(project.targets)) {
-    if (configuration.executor === '@nrwl/linter:eslint') {
+    if (
+      configuration.executor === '@nx/linter:eslint' ||
+      configuration.executor === '@nrwl/linter:eslint'
+    ) {
       const opts: EsLintExecutorOptions = configuration.options ?? {};
       opts.lintFilePatterns ??= [];
 
@@ -182,8 +187,10 @@ function updateProjectEslintConfig(
   const eslintConfig = readJson<ESLint.Config>(host, eslintPath);
   eslintConfig.overrides ??= [];
   if (
-    !eslintConfig.overrides.some((x) =>
-      Object.keys(x.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks')
+    !eslintConfig.overrides.some(
+      (x) =>
+        Object.keys(x.rules ?? {}).includes('@nx/nx/nx-plugin-checks') ||
+        Object.keys(x.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks')
     )
   ) {
     eslintConfig.overrides.push({
@@ -254,6 +261,7 @@ export function getEsLintOptions(
   project: ProjectConfiguration
 ): [target: string, configuration: TargetConfiguration<EsLintExecutorOptions>] {
   return Object.entries(project.targets || {}).find(
-    ([, x]) => x.executor === '@nrwl/linter:eslint'
+    ([, x]) =>
+      x.executor === '@nx/linter:eslint' || x.executor === '@nrwl/linter:eslint'
   );
 }

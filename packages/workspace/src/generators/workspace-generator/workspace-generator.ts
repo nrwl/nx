@@ -23,7 +23,7 @@ export default async function (host: Tree, schema: Schema) {
     host,
     {},
     {
-      '@nrwl/devkit': nxVersion,
+      '@nx/devkit': nxVersion,
       // types/node is neccessary for pnpm since it's used in tsconfig and transitive
       // dependencies are not resolved correctly
       '@types/node': 'latest',

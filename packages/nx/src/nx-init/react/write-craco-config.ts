@@ -55,7 +55,7 @@ export function writeCracoConfig(
     },
     jest: {
       configure: (config) => {
-        config.resolver = '@nrwl/jest/plugins/resolver';
+        config.resolver = '@nx/jest/plugins/resolver';
         return config;
       },
     },

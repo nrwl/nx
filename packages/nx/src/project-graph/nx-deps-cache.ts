@@ -149,7 +149,10 @@ export function shouldRecomputeWholeGraph(
   if (cache.version !== '5.1') {
     return true;
   }
-  if (cache.deps['@nrwl/workspace'] !== packageJsonDeps['@nrwl/workspace']) {
+  if (
+    cache.deps['@nx/workspace'] !== packageJsonDeps['@nx/workspace'] ||
+    cache.deps['@nrwl/workspace'] !== packageJsonDeps['@nrwl/workspace']
+  ) {
     return true;
   }
   if (cache.deps['nx'] !== packageJsonDeps['nx']) {

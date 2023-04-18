@@ -38,7 +38,7 @@ describe('checkTargets', () => {
           options: {},
         },
         storybook: {
-          executor: '@nrwl/storybook:storybook',
+          executor: '@nx/storybook:storybook',
           options: {},
         },
       },
@@ -50,7 +50,7 @@ describe('checkTargets', () => {
       sourceRoot: 'apps/storybook/src',
       targets: {
         storybook: {
-          executor: '@nrwl/storybook:storybook',
+          executor: '@nx/storybook:storybook',
         },
       },
     });
@@ -61,7 +61,7 @@ describe('checkTargets', () => {
       projectType: 'application',
       targets: {
         e2e: {
-          executor: '@nrwl/cypress:cypress',
+          executor: '@nx/cypress:cypress',
           options: {
             cypressConfig: 'apps/ng-app-e2e/cypress.json',
             tsConfig: 'apps/ng-app-e2e/tsconfig.e2e.json',

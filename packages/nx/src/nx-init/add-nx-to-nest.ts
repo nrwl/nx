@@ -149,8 +149,8 @@ export async function addNxToNest(packageJson: PackageJson) {
 function addNestPluginToPackageJson(repoRoot: string) {
   const path = join(repoRoot, `package.json`);
   const json: PackageJson = readJsonFile(path);
-  json.devDependencies['@nrwl/nest'] = require('../../package.json').version;
-  json.devDependencies['@nrwl/jest'] = require('../../package.json').version;
+  json.devDependencies['@nx/nest'] = require('../../package.json').version;
+  json.devDependencies['@nx/jest'] = require('../../package.json').version;
   writeJsonFile(path, json);
 }
 
@@ -173,7 +173,7 @@ function createProjectJson(
 
   if (nestCLIOptions.language !== 'js') {
     json.targets['serve'] = {
-      executor: '@nrwl/js:node',
+      executor: '@nx/js:node',
       options: {
         buildTarget: `${packageName}:build`,
       },
@@ -183,7 +183,7 @@ function createProjectJson(
 
     if (nestCLIOptions.webpackOptions) {
       json.targets['build'] = {
-        executor: '@nrwl/webpack:webpack',
+        executor: '@nx/webpack:webpack',
         outputs: ['{options.outputPath}'],
         options: {
           target: 'node',
@@ -210,7 +210,7 @@ function createProjectJson(
       };
     } else {
       json.targets['build'] = {
-        executor: '@nrwl/js:tsc',
+        executor: '@nx/js:tsc',
         outputs: ['{options.outputPath}'],
         options: {
           outputPath: `dist/${packageName}`,
@@ -233,7 +233,7 @@ function createProjectJson(
 
     // lint
     json.targets['lint'] = {
-      executor: '@nrwl/linter:eslint',
+      executor: '@nx/linter:eslint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['src/**/*.ts', 'test/**/*.ts'],
@@ -337,7 +337,7 @@ function addJestTargets(
   );
 
   projectJson.targets['test'] = {
-    executor: '@nrwl/jest:jest',
+    executor: '@nx/jest:jest',
     outputs: [`{workspaceRoot}/coverage/${packageName}`],
     options: {
       passWithNoTests: true,
@@ -346,7 +346,7 @@ function addJestTargets(
   };
 
   projectJson.targets['e2e'] = {
-    executor: '@nrwl/jest:jest',
+    executor: '@nx/jest:jest',
     options: {
       passWithNoTests: true,
       jestConfig: e2eTestConfigPath,
@@ -363,7 +363,7 @@ function addNrwlJsPluginsConfig(repoRoot: string) {
 
   if (!json.pluginsConfig) {
     json.pluginsConfig = {
-      '@nrwl/js': {
+      '@nx/js': {
         analyzeSourceFiles: true,
       } as NrwlJsPluginConfig,
     };

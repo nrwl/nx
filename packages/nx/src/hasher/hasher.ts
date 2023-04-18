@@ -345,8 +345,8 @@ class TaskHasher {
     // if it's "run commands" we skip traversing since we have no info what this command depends on
     // for everything else we take the hash of the @nrwl package dependency tree
     if (
-      target.executor.startsWith(`@nrwl/`) &&
-      target.executor !== `@nrwl/workspace:run-commands`
+      target.executor.startsWith(`@nrwl/`) ||
+      target.executor.startsWith(`@nx/`)
     ) {
       const executorPackage = target.executor.split(':')[0];
       const executorNode = `npm:${executorPackage}`;

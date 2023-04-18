@@ -83,11 +83,12 @@ function getPluginPathAndName(
     }
   }
   const packageJsonPath = path.join(pluginPath, 'package.json');
+
   const { name } =
     !['.ts', '.js'].some((x) => x === path.extname(pluginPath)) && // Not trying to point to a ts or js file
     existsSync(packageJsonPath) // plugin has a package.json
       ? readJsonFile(packageJsonPath) // read name from package.json
-      : { name: path.basename(pluginPath) }; // use the name of the file we point to
+      : { name: moduleName };
   return { pluginPath, name };
 }
 
@@ -351,9 +352,14 @@ function readPluginMainFromProjectConfiguration(
 ): string | null {
   const { main } =
     Object.values(plugin.targets).find((x) =>
-      ['@nrwl/js:tsc', '@nrwl/js:swc', '@nrwl/node:package'].includes(
-        x.executor
-      )
+      [
+        '@nx/js:tsc',
+        '@nrwl/js:tsc',
+        '@nx/js:swc',
+        '@nrwl/js:swc',
+        '@nx/node:package',
+        '@nrwl/node:package',
+      ].includes(x.executor)
     )?.options ||
     plugin.targets?.build?.options ||
     {};

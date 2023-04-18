@@ -1,7 +1,7 @@
 {
   "name": "nx/plugin",
   "version": "0.1",
-  "extends": ["@nrwl/workspace"],
+  "extends": ["@nx/workspace"],
   "generators": {
     "plugin": {
       "factory": "./src/generators/plugin/plugin",

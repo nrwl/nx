@@ -1,5 +1,5 @@
 /**
- * Note to developers: STOP! These exports end up as the public API of @nrwl/devkit.
+ * Note to developers: STOP! These exports end up as the public API of @nx/devkit.
  * Try hard to not add to this API to reduce the surface area we need to maintain.
  */
 

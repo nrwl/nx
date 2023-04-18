@@ -59,6 +59,10 @@ function writeLastProcessedLockfileHash(hash: string) {
 }
 
 function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
+  if (nxJson?.pluginsConfig?.['@nx/js']) {
+    return nxJson?.pluginsConfig?.['@nx/js'];
+  }
+
   if (nxJson?.pluginsConfig?.['@nrwl/js']) {
     return nxJson?.pluginsConfig?.['@nrwl/js'];
   }
@@ -79,6 +83,13 @@ function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
     ...packageJson.devDependencies,
   };
   if (
+    packageJsonDeps['@nx/workspace'] ||
+    packageJsonDeps['@nx/js'] ||
+    packageJsonDeps['@nx/node'] ||
+    packageJsonDeps['@nx/next'] ||
+    packageJsonDeps['@nx/react'] ||
+    packageJsonDeps['@nx/angular'] ||
+    packageJsonDeps['@nx/web'] ||
     packageJsonDeps['@nrwl/workspace'] ||
     packageJsonDeps['@nrwl/js'] ||
     packageJsonDeps['@nrwl/node'] ||

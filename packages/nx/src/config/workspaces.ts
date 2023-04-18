@@ -519,7 +519,7 @@ function findFullGeneratorName(
 }
 
 /**
- * Pulled from toFileName in names from @nrwl/devkit.
+ * Pulled from toFileName in names from @nx/devkit.
  * Todo: Should refactor, not duplicate.
  */
 export function toProjectName(fileName: string): string {

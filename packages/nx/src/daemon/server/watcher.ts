@@ -57,7 +57,7 @@ export async function subscribeToWorkspaceChanges(
   cb: FileWatcherCallback
 ): Promise<AsyncSubscription> {
   /**
-   * The imports and exports of @nrwl/workspace are somewhat messy and far reaching across the repo (and beyond),
+   * The imports and exports of @nx/workspace are somewhat messy and far reaching across the repo (and beyond),
    * and so it is much safer for us to lazily load here `@parcel/watcher` so that its inclusion is not inadvertently
    * executed by packages which do not have its necessary native binaries available.
    */

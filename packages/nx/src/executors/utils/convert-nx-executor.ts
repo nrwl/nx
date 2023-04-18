@@ -1,5 +1,5 @@
 /**
- * This is a copy of the @nrwl/devkit utility but this should not be used outside of the nx package
+ * This is a copy of the @nx/devkit utility but this should not be used outside of the nx package
  */
 
 import type { Observable } from 'rxjs';
