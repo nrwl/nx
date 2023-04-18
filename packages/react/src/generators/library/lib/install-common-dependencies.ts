@@ -1,11 +1,16 @@
-import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  GeneratorCallback,
+  runTasksInSerial,
+  Tree,
+} from '@nx/devkit';
+import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import {
   lessVersion,
   reactDomVersion,
   reactVersion,
   sassVersion,
   stylusVersion,
-  swcCoreVersion,
 } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 
@@ -13,8 +18,8 @@ export function installCommonDependencies(
   host: Tree,
   options: NormalizedSchema
 ) {
-  const devDependencies =
-    options.compiler === 'swc' ? { '@swc/core': swcCoreVersion } : {};
+  const tasks: GeneratorCallback[] = [];
+  const devDependencies = {};
 
   // Vite requires style preprocessors to be installed manually.
   // `@nrwl/webpack` installs them automatically for now.
@@ -33,7 +38,7 @@ export function installCommonDependencies(
     }
   }
 
-  return addDependenciesToPackageJson(
+  const baseInstallTask = addDependenciesToPackageJson(
     host,
     {
       react: reactVersion,
@@ -41,4 +46,11 @@ export function installCommonDependencies(
     },
     devDependencies
   );
+  tasks.push(baseInstallTask);
+
+  if (options.compiler === 'swc') {
+    tasks.push(addSwcDependencies(host));
+  }
+
+  return runTasksInSerial(...tasks);
 }

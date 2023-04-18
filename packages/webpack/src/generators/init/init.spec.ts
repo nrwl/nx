@@ -33,10 +33,12 @@ describe('webpackInitGenerator', () => {
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson).toEqual({
       name: expect.any(String),
-      dependencies: {},
+      dependencies: {
+        '@swc/helpers': expect.any(String),
+      },
       devDependencies: {
         '@nx/webpack': expect.any(String),
-        '@swc/helpers': expect.any(String),
+        '@swc/cli': expect.any(String),
         '@swc/core': expect.any(String),
         'swc-loader': expect.any(String),
       },

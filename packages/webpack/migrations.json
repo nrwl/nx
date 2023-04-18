@@ -30,6 +30,5 @@
       "description": "Replace @nrwl/webpack with @nx/webpack",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
-  },
-  "packageJsonUpdates": {}
+  }
 }
