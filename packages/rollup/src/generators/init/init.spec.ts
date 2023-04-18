@@ -52,6 +52,7 @@ describe('rollupInitGenerator', () => {
       name: expect.any(String),
       dependencies: {},
       devDependencies: {
+        '@nrwl/rollup': nxVersion,
         tslib: expect.any(String),
       },
     });

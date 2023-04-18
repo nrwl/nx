@@ -33,7 +33,14 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
       }
     );
   } else {
-    task = addDependenciesToPackageJson(tree, {}, { tslib: tsLibVersion });
+    task = addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@nrwl/rollup': nxVersion,
+        tslib: tsLibVersion,
+      }
+    );
   }
 
   if (!schema.skipFormat) {
