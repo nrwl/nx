@@ -360,9 +360,9 @@ export default createESLintRule<Options, MessageIds>({
                         relativePath === ''
                           ? `./${basename(importPath)}`
                           : joinPathFragments(
-                            relativePath,
-                            basename(importPath)
-                          );
+                              relativePath,
+                              basename(importPath)
+                            );
 
                       importsToRemap.push({
                         member: importMember,
@@ -445,8 +445,8 @@ export default createESLintRule<Options, MessageIds>({
               .map((files) =>
                 files.length > 1
                   ? `[${files
-                    .map((f) => `\n${spacer}${spacer}${f}`)
-                    .join(',')}\n${spacer}]`
+                      .map((f) => `\n${spacer}${spacer}${f}`)
+                      .join(',')}\n${spacer}]`
                   : files[0]
               )
               .reduce(

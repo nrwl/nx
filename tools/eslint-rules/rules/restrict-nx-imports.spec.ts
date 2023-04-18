@@ -6,7 +6,7 @@ const ruleTester = new TSESLint.RuleTester({
 });
 
 jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+  normalizePath: (path: string) => path,
   workspaceRoot: '/root',
 }));
 
@@ -27,14 +27,9 @@ ruleTester.run(RULE_NAME, rule, {
   ],
   invalid: [
     {
-      errors: [{ messageId: 'noDeepImport' }],
+      errors: [{ messageId: 'noJsImport' }],
       code: `import { createLockFile } from 'nx/src/plugins/js/lock-file/lock-file';`,
-      filename: '/root/packages/devkit/src/path/to.ts',
-    },
-    {
-      errors: [{ messageId: 'noDeepRelativeImport' }],
-      code: `import { createLockFile } from '../plugins/js/lock-file/lock-file';`,
-      filename: '/root/packages/nx/src/path/to.ts',
+      filename: '/root/packages/storybook/src/path/to.ts',
     },
     {
       errors: [{ messageId: 'noCircularNx' }],

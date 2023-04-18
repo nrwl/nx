@@ -36,10 +36,10 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     messages: {
       noCircularNx:
         'Functions within "nx" should be imported with relative path. Alias import found: {{imp}}',
-      noDeepImport:
-        'Functions from "nx/src/plugins/js" should be imported via barrel import. Deep import found: {{imp}}',
-      noDeepRelativeImport:
-        'Functions from "./plugins/js" should be imported via relative barrel import. Deep import found: {{imp}}',
+      noJsImport:
+        'Functions from "nx/src/plugins/js" should be imported from "@nrwl/js". Direct import found: {{imp}}',
+
+      // TODO add deep import check from non js to nx/src/plugins/js
     },
   },
   defaultOptions: [],
@@ -62,25 +62,17 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
         return;
       }
       const imp = node.source.value as string;
-      if (imp.includes('nx/src/plugins/js/')) {
-        context.report({
-          node,
-          messageId: 'noDeepImport',
-          data: {
-            imp,
-          },
-        });
-      }
       const fileName = normalizePath(context.getFilename()).slice(
         workspaceRoot.length + 1
       );
+
       if (
-        imp.includes('./plugins/js/') &&
-        fileName.startsWith('packages/nx/')
+        imp.includes('nx/src/plugins/js/') &&
+        !fileName.startsWith('packages/js/')
       ) {
         context.report({
           node,
-          messageId: 'noDeepRelativeImport',
+          messageId: 'noJsImport',
           data: {
             imp,
           },
