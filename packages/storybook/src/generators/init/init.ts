@@ -30,6 +30,11 @@ import {
   webpack5Version,
 } from '../../utils/versions';
 import { Schema } from './schema';
+import {
+  getInstalledStorybookVersion,
+  storybookMajorVersion,
+} from '../../utils/utilities';
+import { gte } from 'semver';
 
 function checkDependenciesInstalled(host: Tree, schema: Schema) {
   const packageJson = readJson(host, 'package.json');
@@ -43,6 +48,15 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   devDependencies['@nx/storybook'] = nxVersion;
 
   if (schema.storybook7Configuration) {
+    let storybook7VersionToInstall = storybook7Version;
+    if (
+      storybookMajorVersion() === 7 &&
+      getInstalledStorybookVersion() &&
+      gte(getInstalledStorybookVersion(), '7.0.0')
+    ) {
+      storybook7VersionToInstall = getInstalledStorybookVersion();
+    }
+
     // Needed for Storybook 7
     // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
     if (
@@ -61,10 +75,10 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     if (schema.uiFramework === '@storybook/react-native') {
       devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
     } else {
-      devDependencies[schema.uiFramework] = storybook7Version;
+      devDependencies[schema.uiFramework] = storybook7VersionToInstall;
     }
-    devDependencies['@storybook/core-server'] = storybook7Version;
-    devDependencies['@storybook/addon-essentials'] = storybook7Version;
+    devDependencies['@storybook/core-server'] = storybook7VersionToInstall;
+    devDependencies['@storybook/addon-essentials'] = storybook7VersionToInstall;
 
     if (schema.uiFramework === '@storybook/angular') {
       if (
