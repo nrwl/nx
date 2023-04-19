@@ -482,7 +482,7 @@ function findMatchingProjectInCwd(
   return matchingProject;
 }
 
-function normalizeExecutorSchema(
+export function normalizeExecutorSchema(
   schema: Partial<ExecutorConfig['schema']>
 ): ExecutorConfig['schema'] {
   const version = (schema.version ??= 1);
