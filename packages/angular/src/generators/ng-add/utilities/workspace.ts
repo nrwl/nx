@@ -214,7 +214,7 @@ export function updateRootEsLintConfig(
   existingEsLintConfig.ignorePatterns = ['**/*'];
   if (!(existingEsLintConfig.plugins ?? []).includes('@nrwl/nx')) {
     existingEsLintConfig.plugins = Array.from(
-      new Set([...(existingEsLintConfig.plugins ?? []), '@nx/nx'])
+      new Set([...(existingEsLintConfig.plugins ?? []), '@nx'])
     );
   }
   existingEsLintConfig.overrides?.forEach((override) => {
@@ -224,13 +224,13 @@ export function updateRootEsLintConfig(
 
     delete override.parserOptions.project;
   });
-  // add the @nx/nx/enforce-module-boundaries rule
+  // add the @nx/enforce-module-boundaries rule
   existingEsLintConfig.overrides = [
     ...(existingEsLintConfig.overrides ?? []),
     {
       files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
       rules: {
-        '@nx/nx/enforce-module-boundaries': [
+        '@nx/enforce-module-boundaries': [
           'error',
           {
             enforceBuildableLibDependency: true,

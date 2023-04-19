@@ -57,7 +57,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
       // remove nrwl/nx plugins
       if (json.plugins) {
         json.plugins = json.plugins.filter(
-          (p) => p !== '@nx/nx' && p !== '@nrwl/nx'
+          (p) => p !== '@nx' && p !== '@nrwl/nx'
         );
         if (json.plugins.length === 0) {
           delete json.plugins;
@@ -77,9 +77,9 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
           if (override.extends) {
             override.extends = override.extends.filter(
               (ext) =>
-                ext !== 'plugin:@nx/nx/typescript' &&
+                ext !== 'plugin:@nx/typescript' &&
                 ext !== 'plugin:@nrwl/nx/typescript' &&
-                ext !== 'plugin:@nx/nx/javascript' &&
+                ext !== 'plugin:@nx/javascript' &&
                 ext !== 'plugin:@nrwl/nx/javascript'
             );
             if (override.extends.length === 0) {

@@ -7,7 +7,7 @@ exports[`@nx/linter:init --linter eslint should generate the global eslint confi
     "**/*"
   ],
   "plugins": [
-    "@nx/nx"
+    "@nx"
   ],
   "overrides": [
     {
@@ -18,7 +18,7 @@ exports[`@nx/linter:init --linter eslint should generate the global eslint confi
         "*.jsx"
       ],
       "rules": {
-        "@nx/nx/enforce-module-boundaries": [
+        "@nx/enforce-module-boundaries": [
           "error",
           {
             "enforceBuildableLibDependency": true,
@@ -41,7 +41,7 @@ exports[`@nx/linter:init --linter eslint should generate the global eslint confi
         "*.tsx"
       ],
       "extends": [
-        "plugin:@nx/nx/typescript"
+        "plugin:@nx/typescript"
       ],
       "rules": {}
     },
@@ -51,7 +51,7 @@ exports[`@nx/linter:init --linter eslint should generate the global eslint confi
         "*.jsx"
       ],
       "extends": [
-        "plugin:@nx/nx/javascript"
+        "plugin:@nx/javascript"
       ],
       "rules": {}
     }

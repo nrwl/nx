@@ -194,7 +194,7 @@ describe('lib', () => {
       expect(eslintJson).toMatchInlineSnapshot(`
         {
           "extends": [
-            "plugin:@nx/nx/react",
+            "plugin:@nx/react",
             "../../.eslintrc.json",
           ],
           "ignorePatterns": [

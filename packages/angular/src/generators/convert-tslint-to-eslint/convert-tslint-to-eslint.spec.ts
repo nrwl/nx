@@ -321,7 +321,7 @@ describe('convert-tslint-to-eslint', () => {
      * We will make a change to the eslint config before the next step
      */
     eslintContent.overrides[0].rules[
-      '@nx/nx/enforce-module-boundaries'
+      '@nx/enforce-module-boundaries'
     ][1].enforceBuildableLibDependency = false;
     writeJson(host, '.eslintrc.json', eslintContent);
 

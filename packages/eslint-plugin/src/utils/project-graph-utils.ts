@@ -31,7 +31,7 @@ export function ensureGlobalProjectGraph(ruleName: string) {
       );
     } catch {
       const WARNING_PREFIX = `${chalk.reset.keyword('orange')('warning')}`;
-      const RULE_NAME_SUFFIX = `${chalk.reset.dim(`@nx/nx/${ruleName}`)}`;
+      const RULE_NAME_SUFFIX = `${chalk.reset.dim(`@nx/${ruleName}`)}`;
       process.stdout
         .write(`${WARNING_PREFIX} No cached ProjectGraph is available. The rule will be skipped.
           If you encounter this error as part of running standard \`nx\` commands then please open an issue on https://github.com/nrwl/nx

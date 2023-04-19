@@ -339,7 +339,7 @@ describe('app', () => {
               "jest": true,
             },
             "extends": [
-              "plugin:@nx/nx/react-typescript",
+              "plugin:@nx/react-typescript",
               "next",
               "next/core-web-vitals",
               "../../.eslintrc.json",

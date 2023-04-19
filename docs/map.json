@@ -1926,20 +1926,20 @@
           ]
         },
         {
-          "name": "eslint-plugin-nx",
-          "id": "eslint-plugin-nx",
+          "name": "eslint-plugin",
+          "id": "eslint-plugin",
           "description": "ESLint plugin package.",
           "itemList": [
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/eslint-plugin-nx",
-              "file": "shared/packages/linter/eslint-plugin-nx"
+              "path": "/packages/eslint-plugin",
+              "file": "shared/packages/linter/eslint-plugin"
             },
             {
               "id": "enforce-module-boundaries",
               "name": "The `enforce-module-boundaries` rule",
-              "path": "/packages/eslint-plugin-nx",
+              "path": "/packages/eslint-plugin",
               "file": "shared/packages/linter/enforce-module-boundaries"
             }
           ]

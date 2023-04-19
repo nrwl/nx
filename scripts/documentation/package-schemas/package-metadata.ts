@@ -130,7 +130,9 @@ export function getPackageMetadataList(
         githubRoot: 'https://github.com/nrwl/nx/blob/master',
         name: folderName,
         // TODO(v16): Remove this replace
-        packageName: packageJson.name.replace('@nx/', '@nrwl/'),
+        packageName: packageJson.name
+          .replace('@nx/', '@nrwl/')
+          .replace('@nrwl/eslint-plugin', '@nrwl/eslint-plugin-nx'),
         description: packageJson.description,
         root: relativeFolderPath,
         source: join(relativeFolderPath, '/src'),

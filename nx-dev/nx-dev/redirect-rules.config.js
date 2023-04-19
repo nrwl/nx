@@ -433,7 +433,7 @@ const packagesIndexes = {
   '/cypress': '/packages/cypress',
   '/detox': '/packages/detox',
   '/esbuild': '/packages/esbuild',
-  '/eslint-plugin-nx': '/packages/eslint',
+  '/eslint-plugin-nx': '/packages/eslint-plugin-nx',
   '/expo': '/packages/expo',
   '/express': '/packages/express',
   '/jest': '/packages/jest',
@@ -518,6 +518,11 @@ const packagesDocuments = {
   '/packages/add-nx-to-monorepo': '/packages/nx/documents/init',
   '/packages/cra-to-nx': '/packages/nx/documents/init',
   '/packages/make-angular-cli-faster': '/packages/nx/documents/init',
+  '/packages/eslint-plugin-nx': '/packages/eslint-plugin',
+  '/packages/eslint-plugin-nx/documents/enforce-module-boundaries':
+    '/packages/eslint-plugin/documents/enforce-module-boundaries',
+  '/packages/eslint-plugin-nx/documents/overview':
+    '/packages/eslint-plugin/documents/overview',
 };
 
 /**

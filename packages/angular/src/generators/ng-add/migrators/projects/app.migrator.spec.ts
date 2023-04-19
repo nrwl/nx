@@ -945,7 +945,7 @@ describe('app migrator', () => {
         overrides: [
           {
             files: ['*.ts', '*.tsx'],
-            extends: ['plugin:@nx/nx/typescript'],
+            extends: ['plugin:@nx/typescript'],
             rules: { '@typescript-eslint/await-thenable': 'error' },
           },
         ],

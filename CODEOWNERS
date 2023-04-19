@@ -102,10 +102,10 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/jest/** @barbados-clemens @FrozenPandaz
 
 # Linter
-/docs/generated/packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz @JamesHenry
+/docs/generated/packages/eslint-plugin/** @meeroslav @FrozenPandaz @JamesHenry
 /docs/generated/packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
 /docs/shared/packages/linter/** @meeroslav @FrozenPandaz @isaacplmann @juristr
-/packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz @JamesHenry
+/packages/eslint-plugin/** @meeroslav @FrozenPandaz @JamesHenry
 /packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
 /e2e/linter/** @meeroslav @FrozenPandaz
 .eslint* @meeroslav @FrozenPandaz @JamesHenry

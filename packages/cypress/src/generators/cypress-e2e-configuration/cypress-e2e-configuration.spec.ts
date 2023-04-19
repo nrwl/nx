@@ -248,13 +248,13 @@ describe('Cypress e2e configuration', () => {
               ],
             },
             extends: [
-              'plugin:@nx/nx/angular',
+              'plugin:@nx/angular',
               'plugin:@angular-eslint/template/process-inline-templates',
             ],
           },
           {
             files: ['*.html'],
-            extends: ['plugin:@nx/nx/angular-template'],
+            extends: ['plugin:@nx/angular-template'],
             rules: {},
           },
         ],

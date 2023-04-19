@@ -81,7 +81,7 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
         {},
         {
           '@nx/linter': nxVersion,
-          '@nx/eslint-plugin-nx': nxVersion,
+          '@nx/eslint-plugin': nxVersion,
           '@typescript-eslint/parser': typescriptESLintVersion,
           '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
           eslint: eslintVersion,

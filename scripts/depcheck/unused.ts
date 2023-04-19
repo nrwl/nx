@@ -8,7 +8,7 @@ const IGNORE_MATCHES = {
   cli: [],
   cypress: [],
   devkit: [],
-  'eslint-plugin-nx': [],
+  'eslint-plugin': [],
   jest: [
     // This is used for the type import only, we should remove it.
     'jest-resolve',

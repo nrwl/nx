@@ -78,10 +78,11 @@ export async function addLinting(
         json.extends.unshift(...['next', 'next/core-web-vitals']);
         // remove nx/react plugin, as it conflicts with the next.js one
         json.extends = json.extends.filter(
-          (name) => name !== 'plugin:@nx/nx/react'
+          (name) =>
+            name !== 'plugin:@nx/react' && name !== 'plugin:@nrwl/nx/react'
         );
 
-        json.extends.unshift('plugin:@nx/nx/react-typescript');
+        json.extends.unshift('plugin:@nx/react-typescript');
         if (!json.env) {
           json.env = {};
         }

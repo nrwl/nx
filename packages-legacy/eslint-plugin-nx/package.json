@@ -24,7 +24,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@nx/eslint-plugin-nx": "file:../../packages/eslint-plugin-nx"
+    "@nx/eslint-plugin": "file:../../packages/eslint-plugin"
   },
   "publishConfig": {
     "access": "public"

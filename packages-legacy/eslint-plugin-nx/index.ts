@@ -1,1 +1,1 @@
-export * from '@nx/eslint-plugin-nx';
+export * from '@nx/eslint-plugin';
