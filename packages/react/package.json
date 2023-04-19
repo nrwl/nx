@@ -38,7 +38,8 @@
     "minimatch": "3.0.5",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
-    "@nx/linter": "file:../linter"
+    "@nx/linter": "file:../linter",
+    "@nx/web": "file:../web"
   },
   "publishConfig": {
     "access": "public"

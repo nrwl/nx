@@ -1,4 +1,5 @@
-import { ensurePackage, joinPathFragments, Tree } from '@nx/devkit';
+import { ensurePackage, Tree } from '@nx/devkit';
+import { webStaticServeGenerator } from '@nx/web';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 
@@ -7,7 +8,6 @@ export async function addCypress(host: Tree, options: NormalizedSchema) {
     return () => {};
   }
 
-  const { webStaticServeGenerator } = ensurePackage('@nx/web', nxVersion);
   await webStaticServeGenerator(host, {
     buildTarget: `${options.projectName}:build`,
     targetName: 'serve-static',
