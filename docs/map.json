@@ -1528,16 +1528,6 @@
               "file": "generated/cli/affected-graph"
             },
             {
-              "name": "affected:apps",
-              "id": "affected-apps",
-              "file": "generated/cli/affected-apps"
-            },
-            {
-              "name": "affected:libs",
-              "id": "affected-libs",
-              "file": "generated/cli/affected-libs"
-            },
-            {
               "name": "print-affected",
               "id": "print-affected",
               "file": "generated/cli/print-affected"
