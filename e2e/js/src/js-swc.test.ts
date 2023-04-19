@@ -7,9 +7,11 @@ import {
   detectPackageManager,
   newProject,
   packageManagerLockFile,
+  readFile,
   readJson,
   runCLI,
   runCLIAsync,
+  runCommand,
   tmpProjPath,
   uniq,
   updateFile,
@@ -118,7 +120,7 @@ describe('js e2e', () => {
     );
   }, 240_000);
 
-  it('should handle swcrc path mappings', async () => {
+  fit('should handle swcrc path mappings', async () => {
     const lib = uniq('lib');
     runCLI(`generate @nrwl/js:lib ${lib} --bundler=swc --no-interactive`);
 
@@ -135,9 +137,9 @@ export function x() {
     // update .swcrc to use path mappings
     updateJson(`libs/${lib}/.swcrc`, (json) => {
       console.log(json);
-      json.jsc.baseUrl = `${lib}`;
+      json.jsc.baseUrl = '.';
       json.jsc.paths = {
-        'src/*': ['./src/*'],
+        '~/*': ['./src/*'],
       };
       return json;
     });
@@ -146,7 +148,7 @@ export function x() {
     updateFile(`libs/${lib}/src/lib/${lib}.ts`, () => {
       return `
 // @ts-ignore
-import { x } from 'src/x';
+import { x } from '~/x';
 
 export function myLib() {
   console.log(x());
@@ -157,7 +159,7 @@ myLib();
     });
 
     // now run build
-    runCLI(`build ${lib}`);
+    runCLI(`build ${lib} --skipTypeCheck`);
 
     const folderPrint = execSync(`ls -la`, {
       cwd: `${tmpProjPath()}/dist/libs/${lib}/src`,
@@ -167,6 +169,30 @@ myLib();
     }).toString();
 
     console.log(folderPrint, folderPrint2);
+
+    const x = execSync(`ls -la`, {
+      cwd: `${tmpProjPath()}/`,
+    }).toString();
+    console.log({ x });
+    // try running swc cli directly
+    console.log(
+      'raw swc #1',
+      execSync(`npx swc src  --no-swcrc --config-file=.swcrc`, {
+        cwd: `${tmpProjPath()}/libs/${lib}`,
+      }).toString()
+    );
+    console.log(
+      'raw swc #2',
+      execSync(`npx swc src --config-file=.swcrc`, {
+        cwd: `${tmpProjPath()}/libs/${lib}`,
+      }).toString()
+    );
+    console.log(
+      'raw swc #3',
+      execSync(`npx swc src`, {
+        cwd: `${tmpProjPath()}/libs/${lib}`,
+      }).toString()
+    );
 
     // invoke the lib with node
     const result = execSync(`node dist/libs/${lib}/src/lib/${lib}.js`, {

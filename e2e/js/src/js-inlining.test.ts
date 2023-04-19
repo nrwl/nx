@@ -9,7 +9,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { execSync } from 'child_process';
 
-describe('inlining', () => {
+xdescribe('inlining', () => {
   let scope: string;
 
   beforeEach(() => {

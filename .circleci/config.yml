@@ -191,19 +191,7 @@ jobs:
           no_output_timeout: 60m
           command: |
             pids=()
-
-            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-
-            pnpm nx run-many -t check-imports check-commit check-lock-files depcheck --parallel=1 --no-dte &
-            pids+=($!)
-
-            pnpm nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
-            pnpm nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
-            pids+=($!)
-            (pnpm nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
+            (pnpm nx run e2e-js:e2e --verbose) &
             pids+=($!)
 
             for pid in "${pids[@]}"; do

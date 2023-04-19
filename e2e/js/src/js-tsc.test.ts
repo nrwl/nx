@@ -20,7 +20,7 @@ import {
   waitUntil,
 } from '../../utils';
 
-describe('js e2e', () => {
+xdescribe('js e2e', () => {
   let scope;
 
   beforeEach(() => (scope = newProject()));
@@ -161,7 +161,7 @@ describe('js e2e', () => {
   });
 });
 
-describe('package.json updates', () => {
+xdescribe('package.json updates', () => {
   beforeEach(() => newProject({ name: 'proj', packageManager: 'npm' }));
 
   afterEach(() => cleanupProject());

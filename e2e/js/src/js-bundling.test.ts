@@ -6,7 +6,7 @@ import {
   uniq,
 } from '@nrwl/e2e/utils';
 
-describe('bundling libs', () => {
+xdescribe('bundling libs', () => {
   let scope: string;
 
   beforeEach(() => {

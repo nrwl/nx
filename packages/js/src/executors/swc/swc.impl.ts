@@ -76,7 +76,7 @@ export function normalizeOptions(
       swcrcContent.jsc.paths &&
       !swcrcContent.jsc.baseUrl
     ) {
-      swcrcContent.jsc.baseUrl = `./${projectDir}`;
+      swcrcContent.jsc.baseUrl = `.`;
       swcrcPath = getSwcrcPath(options, contextRoot, projectRoot, true);
       writeJsonFile(swcrcPath, swcrcContent);
     }
