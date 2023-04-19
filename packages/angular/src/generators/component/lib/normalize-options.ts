@@ -27,6 +27,7 @@ export function normalizeOptions(
     name,
     changeDetection: options.changeDetection ?? 'Default',
     style: options.style ?? 'css',
+    flat: options.flat ?? false,
     directory,
     filePath,
     path,
