@@ -4,4 +4,5 @@ export interface InitSchema {
   skipFormat?: boolean;
   js?: boolean;
   skipPackageJson?: boolean;
+  rootProject?: boolean;
 }

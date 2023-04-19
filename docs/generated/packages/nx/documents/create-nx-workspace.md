@@ -109,6 +109,12 @@ Type: `string`
 
 Workspace name (e.g. org name)
 
+### nextAppDir
+
+Type: `boolean`
+
+Add Experimental app/ layout for next.js
+
 ### nxCloud
 
 Type: `boolean`
@@ -129,7 +135,7 @@ Package manager to use
 
 Type: `string`
 
-Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "react-native", "expo", "next", "nest", "express", "react", "angular", "node-standalone"]. To build your own see https://nx.dev/packages/nx-plugin#preset
+Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "nextjs-standalone", "react-native", "expo", "next", "nest", "express", "react", "angular", "node-standalone"]. To build your own see https://nx.dev/packages/nx-plugin#preset
 
 ### routing
 

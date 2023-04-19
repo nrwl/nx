@@ -77,6 +77,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.bundler ? `--bundler=${opts.bundler}` : null,
       opts.framework ? `--framework=${opts.framework}` : null,
       opts.docker ? `--docker=${opts.docker}` : null,
+      opts.nextAppDir ? `--nextAppDir=${opts.nextAppDir}` : null,
       opts.packageManager ? `--packageManager=${opts.packageManager}` : null,
       opts.standaloneApi !== undefined
         ? `--standaloneApi=${opts.standaloneApi}`
@@ -116,6 +117,7 @@ function getPresetDependencies({
       };
 
     case Preset.NextJs:
+    case Preset.NextJsStandalone:
       return { dependencies: { '@nx/next': nxVersion }, dev: {} };
 
     case Preset.ReactMonorepo:

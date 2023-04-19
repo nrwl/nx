@@ -65,6 +65,7 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   const reactTask = await reactInitGenerator(host, {
     ...schema,
     skipFormat: true,
+    skipBabelConfig: true,
   });
   tasks.push(reactTask);
 

@@ -80,6 +80,11 @@
         "description": "Generate a Dockerfile",
         "type": "boolean",
         "default": false
+      },
+      "nextAppDir": {
+        "description": "Enable experimental app/ for the project",
+        "type": "boolean",
+        "default": false
       }
     },
     "presets": []

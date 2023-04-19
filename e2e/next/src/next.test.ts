@@ -21,7 +21,6 @@ import {
 } from '@nrwl/e2e/utils';
 import * as http from 'http';
 import { checkApp } from './utils';
-import { removeSync } from 'fs-extra';
 
 describe('Next.js Applications', () => {
   let proj: string;
@@ -423,6 +422,27 @@ describe('Next.js Applications', () => {
       checkUnitTest: false,
       checkLint: false,
       checkE2E: true,
+      checkExport: false,
+    });
+  }, 300_000);
+
+  it('should create a generate a next.js app with app layout enabled', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nrwl/next:app ${appName} --style=css --appDir --no-interactive`
+    );
+
+    checkFilesExist(`apps/${appName}/app/api/hello/route.ts`);
+    checkFilesExist(`apps/${appName}/app/page.tsx`);
+    checkFilesExist(`apps/${appName}/app/layout.tsx`);
+    checkFilesExist(`apps/${appName}/app/global.css`);
+    checkFilesExist(`apps/${appName}/app/page.module.css`);
+
+    await checkApp(appName, {
+      checkUnitTest: false,
+      checkLint: false,
+      checkE2E: false,
       checkExport: false,
     });
   }, 300_000);

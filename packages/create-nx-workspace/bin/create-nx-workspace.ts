@@ -39,6 +39,7 @@ interface Arguments extends CreateWorkspaceOptions {
   framework: Framework;
   standaloneApi: boolean;
   docker: boolean;
+  nextAppDir: boolean;
   routing: boolean;
   bundler: Bundler;
 }
@@ -103,6 +104,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           })
           .option('docker', {
             describe: chalk.dim`Generate a Dockerfile with your node-server`,
+            type: 'boolean',
+          })
+          .option('nextAppDir', {
+            describe: chalk.dim`Add Experimental app/ layout for next.js`,
             type: 'boolean',
           }),
         withNxCloud,
@@ -180,6 +185,7 @@ async function normalizeArgsMiddleware(
       framework,
       bundler,
       docker,
+      nextAppDir,
       routing,
       standaloneApi;
 
@@ -209,7 +215,7 @@ async function normalizeArgsMiddleware(
         if (monorepoStyle === 'package-based') {
           preset = 'npm';
         } else if (monorepoStyle === 'react') {
-          preset = Preset.ReactStandalone;
+          preset = await determineReactFramework(argv);
         } else if (monorepoStyle === 'angular') {
           preset = Preset.AngularStandalone;
         } else if (monorepoStyle === 'node-standalone') {
@@ -228,7 +234,8 @@ async function normalizeArgsMiddleware(
       if (
         preset === Preset.ReactStandalone ||
         preset === Preset.AngularStandalone ||
-        preset === Preset.NodeStandalone
+        preset === Preset.NodeStandalone ||
+        preset === Preset.NextJsStandalone
       ) {
         appName =
           argv.appName ?? argv.name ?? (await determineAppName(preset, argv));
@@ -239,6 +246,10 @@ async function normalizeArgsMiddleware(
           if (framework !== 'none') {
             docker = await determineDockerfile(argv);
           }
+        }
+
+        if (preset === Preset.NextJsStandalone) {
+          nextAppDir = await isNextAppDir(argv);
         }
 
         if (preset === Preset.ReactStandalone) {
@@ -291,6 +302,7 @@ async function normalizeArgsMiddleware(
       ci,
       bundler,
       docker,
+      nextAppDir,
     });
   } catch (e) {
     console.error(e);
@@ -363,27 +375,27 @@ async function determineMonorepoStyle(): Promise<string> {
         {
           name: 'package-based',
           message:
-            'Package-based monorepo: Nx makes it fast, but lets you run things your way.',
+            'Package-based monorepo:      Nx makes it fast, but lets you run things your way.',
         },
         {
           name: 'integrated',
           message:
-            'Integrated monorepo:    Nx configures your favorite frameworks and lets you focus on shipping features.',
+            'Integrated monorepo:         Nx configures your favorite frameworks and lets you focus on shipping features.',
         },
         {
           name: 'react',
           message:
-            'Standalone React app:   Nx configures Vite (or Webpack), ESLint, and Cypress.',
+            'Standalone React app:        Nx configures a React app with an optional framework (e.g. Next.js).',
         },
         {
           name: 'angular',
           message:
-            'Standalone Angular app: Nx configures Jest, ESLint and Cypress.',
+            'Standalone Angular app:      Nx configures Jest, ESLint and Cypress.',
         },
         {
           name: 'node-standalone',
           message:
-            'Standalone Node app:    Nx configures a framework (ex. Express), esbuild, ESlint and Jest.',
+            'Standalone Node app:         Nx configures a framework (e.g. Express), esbuild, ESlint and Jest.',
         },
       ],
     },
@@ -582,6 +594,64 @@ async function determineDockerfile(
   }
 }
 
+async function determineReactFramework(parsedArgs: yargs.Arguments<Arguments>) {
+  if (parsedArgs.framework) {
+    return parsedArgs.framework === 'next.js'
+      ? Preset.NextJsStandalone
+      : Preset.ReactStandalone;
+  }
+  return enquirer
+    .prompt<{ framework: 'none' | 'next.js' }>([
+      {
+        name: 'framework',
+        message: 'What framework would you like to use?',
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'none',
+            message: 'None',
+            hint: 'I only want React',
+          },
+          {
+            name: 'next.js',
+            message: 'Next.js [https://nextjs.org/]',
+          },
+        ],
+        initial: 'none' as any,
+      },
+    ])
+    .then((choice) =>
+      choice.framework === 'next.js'
+        ? Preset.NextJsStandalone
+        : Preset.ReactStandalone
+    );
+}
+
+async function isNextAppDir(parsedArgs: yargs.Arguments<Arguments>) {
+  if (parsedArgs.nextAppDir === undefined) {
+    return enquirer
+      .prompt<{ appDir: 'Yes' | 'No' }>([
+        {
+          name: 'appDir',
+          message: 'Do you want to use experimental app/ in this project?',
+          type: 'autocomplete',
+          choices: [
+            {
+              name: 'No',
+            },
+            {
+              name: 'Yes',
+            },
+          ],
+          initial: 'No' as any,
+        },
+      ])
+      .then((choice) => choice.appDir === 'Yes');
+  } else {
+    return Promise.resolve(parsedArgs.nextAppDir);
+  }
+}
+
 async function determineStyle(
   preset: Preset,
   parsedArgs: yargs.Arguments<Arguments>
@@ -617,9 +687,12 @@ async function determineStyle(
   ];
 
   if (
-    [Preset.ReactMonorepo, Preset.ReactStandalone, Preset.NextJs].includes(
-      preset
-    )
+    [
+      Preset.ReactMonorepo,
+      Preset.ReactStandalone,
+      Preset.NextJs,
+      Preset.NextJsStandalone,
+    ].includes(preset)
   ) {
     choices.push(
       {

@@ -15,7 +15,7 @@ export async function addCypress(host: Tree, options: NormalizedSchema) {
   return cypressProjectGenerator(host, {
     ...options,
     linter: Linter.EsLint,
-    name: `${options.name}-e2e`,
+    name: options.e2eProjectName,
     directory: options.directory,
     project: options.projectName,
     skipFormat: true,

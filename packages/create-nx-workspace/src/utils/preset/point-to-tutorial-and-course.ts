@@ -31,6 +31,7 @@ export function pointToTutorialAndCourse(preset: Preset) {
       break;
     case Preset.ReactMonorepo:
     case Preset.NextJs:
+    case Preset.NextJsStandalone:
       output.addVerticalSeparator();
       output.note({
         title,
