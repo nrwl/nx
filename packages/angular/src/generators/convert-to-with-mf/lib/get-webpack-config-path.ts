@@ -7,9 +7,9 @@ export function getWebpackConfigPath(
   let pathToWebpackConfig = '';
   for (const target of Object.values(project.targets ?? {})) {
     if (
-      target.executor === '@nx/angular:webpack-browser' ||
-      (target.executor === '@nrwl/angular:webpack-browser' &&
-        target.options.customWebpackConfig?.path)
+      (target.executor === '@nx/angular:webpack-browser' ||
+        target.executor === '@nrwl/angular:webpack-browser') &&
+      target.options.customWebpackConfig?.path
     ) {
       pathToWebpackConfig = target.options.customWebpackConfig?.path;
       break;
