@@ -12,7 +12,7 @@ export { WebRollupOptions };
 
 export async function* rollupExecutor(options: any, context: any) {
   logger.warn(
-    '"@nrwl/web:rollup" executor is deprecated. Use "@nrwl/rollup:rollup" instead in your project.json.'
+    '"@nx/web:rollup" executor is deprecated. Use "@nx/rollup:rollup" instead in your project.json.'
   );
   return yield* _rollupExecutor(
     {

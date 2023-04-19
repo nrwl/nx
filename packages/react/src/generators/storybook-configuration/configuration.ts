@@ -44,7 +44,8 @@ export async function storybookConfigurationGenerator(
 
   if (
     projectConfig.projectType === 'application' &&
-    projectConfig.targets['build']?.executor === '@nrwl/vite:build'
+    (projectConfig.targets['build']?.executor === '@nx/vite:build' ||
+      projectConfig.targets['build']?.executor === '@nrwl/vite:build')
   ) {
     bundler = 'vite';
     if (schema.bundler !== 'vite') {

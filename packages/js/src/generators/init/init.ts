@@ -33,7 +33,7 @@ export async function initGenerator(
     });
   }
   const devDependencies = {
-    '@nrwl/js': nxVersion,
+    '@nx/js': nxVersion,
     prettier: prettierVersion,
   };
 

@@ -24,7 +24,7 @@ function getTargets(options: NormalizedSchema) {
   const architect: { [key: string]: TargetConfiguration } = {};
 
   architect.start = {
-    executor: '@nrwl/react-native:start',
+    executor: '@nx/react-native:start',
     options: {
       port: 8081,
     },
@@ -38,12 +38,12 @@ function getTargets(options: NormalizedSchema) {
   };
 
   architect['run-ios'] = {
-    executor: '@nrwl/react-native:run-ios',
+    executor: '@nx/react-native:run-ios',
     options: {},
   };
 
   architect['bundle-ios'] = {
-    executor: '@nrwl/react-native:bundle',
+    executor: '@nx/react-native:bundle',
     outputs: ['{options.bundleOutput}'],
     options: {
       entryFile: options.entryFile,
@@ -53,12 +53,12 @@ function getTargets(options: NormalizedSchema) {
   };
 
   architect['run-android'] = {
-    executor: '@nrwl/react-native:run-android',
+    executor: '@nx/react-native:run-android',
     options: {},
   };
 
   architect['build-android'] = {
-    executor: '@nrwl/react-native:build-android',
+    executor: '@nx/react-native:build-android',
     outputs: [
       `{projectRoot}/android/app/build/outputs/bundle`,
       `{projectRoot}/android/app/build/outputs/apk`,
@@ -67,18 +67,18 @@ function getTargets(options: NormalizedSchema) {
   };
 
   architect['build-ios'] = {
-    executor: '@nrwl/react-native:build-ios',
+    executor: '@nx/react-native:build-ios',
     outputs: ['{projectRoot}/ios/build/Build'],
     options: {},
   };
 
   architect['pod-install'] = {
-    executor: '@nrwl/react-native:pod-install',
+    executor: '@nx/react-native:pod-install',
     options: {},
   };
 
   architect['bundle-android'] = {
-    executor: '@nrwl/react-native:bundle',
+    executor: '@nx/react-native:bundle',
     outputs: ['{options.bundleOutput}'],
     options: {
       entryFile: options.entryFile,
@@ -88,12 +88,12 @@ function getTargets(options: NormalizedSchema) {
   };
 
   architect['sync-deps'] = {
-    executor: '@nrwl/react-native:sync-deps',
+    executor: '@nx/react-native:sync-deps',
     options: {},
   };
 
   architect['ensure-symlink'] = {
-    executor: '@nrwl/react-native:ensure-symlink',
+    executor: '@nx/react-native:ensure-symlink',
     options: {},
   };
 

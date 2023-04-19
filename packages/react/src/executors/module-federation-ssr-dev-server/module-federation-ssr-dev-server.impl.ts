@@ -41,7 +41,7 @@ export default async function* moduleFederationSsrDevServer(
   } catch {
     // TODO(jack): Add a link to guide
     throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nrwl/react:host"?`
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?`
     );
   }
 

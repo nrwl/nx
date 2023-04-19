@@ -65,7 +65,7 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
       if (options.style === '@emotion/styled') {
         json.presets = [
           [
-            '@nrwl/next/babel',
+            '@nx/next/babel',
             {
               'preset-react': {
                 runtime: 'automatic',
@@ -77,12 +77,12 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
       } else if (options.style === 'styled-jsx') {
         // next.js doesn't require the `styled-jsx/babel' plugin as it is already
         // built-into the `next/babel` preset
-        json.presets = ['@nrwl/next/babel'];
+        json.presets = ['@nx/next/babel'];
         json.plugins = (json.plugins || []).filter(
           (x) => x !== 'styled-jsx/babel'
         );
       } else {
-        json.presets = ['@nrwl/next/babel'];
+        json.presets = ['@nx/next/babel'];
       }
       return json;
     }
@@ -109,8 +109,8 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
       json.files = json.files.map((path: string) => {
         if (path.endsWith('react/typings/image.d.ts')) {
           return path.replace(
-            '@nrwl/react/typings/image.d.ts',
-            '@nrwl/next/typings/image.d.ts'
+            '@nx/react/typings/image.d.ts',
+            '@nx/next/typings/image.d.ts'
           );
         }
         return path;

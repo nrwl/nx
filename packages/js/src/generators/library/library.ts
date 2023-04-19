@@ -267,7 +267,7 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
   const filename = '.babelrc';
 
   const babelrc = {
-    presets: [['@nrwl/js/babel', { useBuiltIns: 'usage' }]],
+    presets: [['@nx/js/babel', { useBuiltIns: 'usage' }]],
   };
 
   writeJson(tree, join(options.projectRoot, filename), babelrc);
@@ -426,7 +426,7 @@ function normalizeOptions(
    *
    * In the past, the only way to get a non-buildable library was to set buildable to false.
    * Now, the only way to get a non-buildble library is to set bundler to none.
-   * By default, with nothing provided, libraries are buildable with `@nrwl/js:tsc`.
+   * By default, with nothing provided, libraries are buildable with `@nx/js:tsc`.
    */
 
   options.bundler = options.bundler ?? options.compiler ?? 'tsc';
@@ -534,7 +534,7 @@ function addProjectDependencies(
       tree,
       {},
       {
-        '@nrwl/esbuild': nxVersion,
+        '@nx/esbuild': nxVersion,
         '@types/node': typesNodeVersion,
         esbuild: esbuildVersion,
       }
@@ -558,14 +558,14 @@ function addProjectDependencies(
 function getBuildExecutor(bundler: Bundler) {
   switch (bundler) {
     case 'esbuild':
-      return `@nrwl/esbuild:esbuild`;
+      return `@nx/esbuild:esbuild`;
     case 'rollup':
-      return `@nrwl/rollup:rollup`;
+      return `@nx/rollup:rollup`;
     case 'swc':
     case 'tsc':
-      return `@nrwl/js:${bundler}`;
+      return `@nx/js:${bundler}`;
     case 'vite':
-      return `@nrwl/vite:build`;
+      return `@nx/vite:build`;
     case 'none':
     default:
       return undefined;

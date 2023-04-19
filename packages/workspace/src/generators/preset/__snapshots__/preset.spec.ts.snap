@@ -68,7 +68,7 @@ exports[`preset should create files (preset = react-standalone bundler = webpack
     },
   },
   "defaultConfiguration": "development",
-  "executor": "@nrwl/webpack:dev-server",
+  "executor": "@nx/webpack:dev-server",
   "options": {
     "buildTarget": "proj:build",
     "hmr": true,

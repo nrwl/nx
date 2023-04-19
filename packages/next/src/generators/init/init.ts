@@ -24,7 +24,7 @@ function updateDependencies(host: Tree) {
   return addDependenciesToPackageJson(
     host,
     {
-      '@nrwl/next': nxVersion,
+      '@nx/next': nxVersion,
       next: nextVersion,
       react: reactVersion,
       'react-dom': reactDomVersion,

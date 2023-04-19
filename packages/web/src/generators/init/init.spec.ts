@@ -24,7 +24,7 @@ describe('init', () => {
     addDependenciesToPackageJson(
       tree,
       {
-        '@nrwl/web': nxVersion,
+        '@nx/web': nxVersion,
         [existing]: existingVersion,
       },
       {
@@ -33,9 +33,9 @@ describe('init', () => {
     );
     await webInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.devDependencies['@nrwl/web']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/web']).toBeDefined();
     expect(packageJson.devDependencies[existing]).toBeDefined();
-    expect(packageJson.dependencies['@nrwl/web']).toBeUndefined();
+    expect(packageJson.dependencies['@nx/web']).toBeUndefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
   });
 

@@ -268,7 +268,7 @@ describe('lib', () => {
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
 
       expect(projectConfiguration.targets.build).toMatchObject({
-        executor: '@nrwl/web:rollup',
+        executor: '@nx/web:rollup',
         outputs: ['{options.outputPath}'],
         options: {
           external: ['react/jsx-runtime', 'react-native'],
@@ -276,7 +276,7 @@ describe('lib', () => {
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',
           tsConfig: 'libs/my-lib/tsconfig.lib.json',
-          rollupConfig: '@nrwl/react/plugins/bundle-rollup',
+          rollupConfig: '@nx/react/plugins/bundle-rollup',
         },
       });
     });

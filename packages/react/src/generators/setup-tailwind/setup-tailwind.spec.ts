@@ -49,7 +49,7 @@ describe('setup-tailwind', () => {
       sourceRoot: 'apps/example/src',
       targets: {
         build: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {},
         },
       },

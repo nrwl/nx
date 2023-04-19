@@ -2,7 +2,7 @@
 
 exports[`React:CypressComponentTestConfiguration should generate cypress component test config with --build-target 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';
+import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
 
 export default defineConfig({
   component: nxComponentTestingPreset(__filename, {
@@ -14,7 +14,7 @@ export default defineConfig({
 
 exports[`React:CypressComponentTestConfiguration should generate cypress component test config with project graph 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';
+import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
 
 export default defineConfig({
   component: nxComponentTestingPreset(__filename, {
@@ -26,7 +26,7 @@ export default defineConfig({
 
 exports[`React:CypressComponentTestConfiguration should generate cypress component test config with webpack 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';
+import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
 
 export default defineConfig({
   component: nxComponentTestingPreset(__filename, {
@@ -38,7 +38,7 @@ export default defineConfig({
 
 exports[`React:CypressComponentTestConfiguration should generate cypress config with vite 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';
+import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
 
 export default defineConfig({
   component: nxComponentTestingPreset(__filename, {

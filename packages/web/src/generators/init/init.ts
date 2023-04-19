@@ -19,10 +19,10 @@ import {
 import { Schema } from './schema';
 
 function updateDependencies(tree: Tree, schema: Schema) {
-  removeDependenciesFromPackageJson(tree, ['@nrwl/web'], []);
+  removeDependenciesFromPackageJson(tree, ['@nx/web'], []);
 
   const devDependencies = {
-    '@nrwl/web': nxVersion,
+    '@nx/web': nxVersion,
     '@types/node': typesNodeVersion,
   };
 

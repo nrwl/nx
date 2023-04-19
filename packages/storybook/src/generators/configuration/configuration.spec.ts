@@ -414,7 +414,7 @@ describe('@nx/storybook:configuration', () => {
               "buildTarget": "test-ui-lib:build-storybook:ci",
             },
           },
-          "executor": "@nrwl/web:file-server",
+          "executor": "@nx/web:file-server",
           "options": {
             "buildTarget": "test-ui-lib:build-storybook",
             "staticFilePath": "dist/storybook/test-ui-lib",
@@ -445,7 +445,7 @@ describe('@nx/storybook:configuration', () => {
               "buildTarget": "test-ui-lib:build-storybook:ci",
             },
           },
-          "executor": "@nrwl/web:file-server",
+          "executor": "@nx/web:file-server",
           "options": {
             "buildTarget": "test-ui-lib:build-storybook",
             "staticFilePath": "dist/storybook/test-ui-lib",

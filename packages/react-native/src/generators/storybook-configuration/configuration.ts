@@ -59,7 +59,7 @@ export async function storybookConfigurationGenerator(
 function addStorybookTask(host: Tree, projectName: string) {
   const projectConfig = readProjectConfiguration(host, projectName);
   projectConfig.targets['storybook'] = {
-    executor: '@nrwl/react-native:storybook',
+    executor: '@nx/react-native:storybook',
     options: {
       searchDir: [projectConfig.root],
       outputFile: './.storybook/story-loader.js',

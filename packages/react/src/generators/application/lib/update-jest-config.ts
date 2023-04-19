@@ -10,12 +10,12 @@ export function updateSpecConfig(host: Tree, options: NormalizedSchema) {
   updateJson(host, `${options.appProjectRoot}/tsconfig.spec.json`, (json) => {
     const offset = offsetFromRoot(options.appProjectRoot);
     json.files = [
-      `${offset}node_modules/@nrwl/react/typings/cssmodule.d.ts`,
-      `${offset}node_modules/@nrwl/react/typings/image.d.ts`,
+      `${offset}node_modules/@nx/react/typings/cssmodule.d.ts`,
+      `${offset}node_modules/@nx/react/typings/image.d.ts`,
     ];
     if (options.style === 'styled-jsx') {
       json.files.unshift(
-        `${offset}node_modules/@nrwl/react/typings/styled-jsx.d.ts`
+        `${offset}node_modules/@nx/react/typings/styled-jsx.d.ts`
       );
     }
     return json;

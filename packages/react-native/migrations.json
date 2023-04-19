@@ -134,18 +134,6 @@
           "version": "0.64.1",
           "alwaysAddToPackageJson": false
         },
-        "@nrwl/react": {
-          "version": "12.3.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@nrwl/jest": {
-          "version": "12.3.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@nrwl/linter": {
-          "version": "12.3.6",
-          "alwaysAddToPackageJson": false
-        },
         "@types/react": {
           "version": "17.0.6",
           "alwaysAddToPackageJson": false
@@ -191,14 +179,6 @@
     "12.5.0": {
       "version": "12.5.0-beta.0",
       "packages": {
-        "@nrwl/jest": {
-          "version": "12.5.7",
-          "alwaysAddToPackageJson": false
-        },
-        "@nrwl/linter": {
-          "version": "12.5.7",
-          "alwaysAddToPackageJson": false
-        },
         "react": {
           "version": "17.0.2",
           "alwaysAddToPackageJson": false

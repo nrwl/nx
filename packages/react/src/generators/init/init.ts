@@ -30,10 +30,10 @@ function setDefault(host: Tree) {
   const workspace = readNxJson(host);
 
   workspace.generators = workspace.generators || {};
-  const reactGenerators = workspace.generators['@nrwl/react'] || {};
+  const reactGenerators = workspace.generators['@nx/react'] || {};
   const generators = {
     ...workspace.generators,
-    '@nrwl/react': {
+    '@nx/react': {
       ...reactGenerators,
       application: {
         ...reactGenerators.application,
@@ -46,7 +46,7 @@ function setDefault(host: Tree) {
 }
 
 function updateDependencies(host: Tree, schema: InitSchema) {
-  removeDependenciesFromPackageJson(host, ['@nrwl/react'], []);
+  removeDependenciesFromPackageJson(host, ['@nx/react'], []);
 
   const dependencies = {
     react: reactVersion,
@@ -58,7 +58,7 @@ function updateDependencies(host: Tree, schema: InitSchema) {
   }
 
   return addDependenciesToPackageJson(host, dependencies, {
-    '@nrwl/react': nxVersion,
+    '@nx/react': nxVersion,
     '@types/node': typesNodeVersion,
     '@types/react': typesReactVersion,
     '@types/react-dom': typesReactDomVersion,

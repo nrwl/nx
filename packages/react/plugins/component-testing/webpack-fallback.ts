@@ -71,7 +71,7 @@ export function buildBaseWebpackConfig({
       test: /\.(js|jsx|mjs|ts|tsx)$/,
       loader: require.resolve('babel-loader'),
       options: {
-        presets: [`@nrwl/react/babel`],
+        presets: [`@nx/react/babel`],
         rootMode: 'upward',
         babelrc: true,
       },

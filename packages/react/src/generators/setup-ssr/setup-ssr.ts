@@ -108,7 +108,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     ...projectConfig.targets,
     server: {
       dependsOn: ['build'],
-      executor: '@nrwl/webpack:webpack',
+      executor: '@nx/webpack:webpack',
       outputs: ['{options.outputPath}'],
       defaultConfiguration: 'production',
       options: {
@@ -140,7 +140,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     },
     'serve-browser': projectConfig.targets.serve,
     'serve-server': {
-      executor: '@nrwl/js:node',
+      executor: '@nx/js:node',
       defaultConfiguration: 'development',
       options: {
         buildTarget: `${options.project}:server:development`,
@@ -156,7 +156,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
       },
     },
     serve: {
-      executor: '@nrwl/webpack:ssr-dev-server',
+      executor: '@nx/webpack:ssr-dev-server',
       defaultConfiguration: 'development',
       options: {
         browserTarget: `${options.project}:build:development`,

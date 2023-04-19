@@ -12,7 +12,7 @@ export function createGlobPatternsOfDependentProjects(
   fileGlobPattern: string = '/**/!(*.stories|*.spec).tsx'
 ): string[] {
   logger.warn(
-    `createGlobPatternsOfDependentProjects is deprecated. Use "createGlobPatternsForDependencies(__dirname)" from "@nrwl/next/tailwind" instead`
+    `createGlobPatternsOfDependentProjects is deprecated. Use "createGlobPatternsForDependencies(__dirname)" from "@nx/next/tailwind" instead`
   );
 
   try {

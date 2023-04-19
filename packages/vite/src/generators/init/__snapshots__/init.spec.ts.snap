@@ -6,7 +6,7 @@ exports[`@nx/vite:init dependencies for package.json should add vite packages an
     "existing": "1.0.0",
   },
   "devDependencies": {
-    "@nrwl/js": "0.0.1",
+    "@nx/js": "0.0.1",
     "@nx/vite": "0.0.1",
     "@vitejs/plugin-react": "^3.0.0",
     "@vitest/ui": "^0.25.8",

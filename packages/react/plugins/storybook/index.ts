@@ -63,7 +63,7 @@ export const webpack = async (
   options: any
 ): Promise<Configuration> => {
   logger.info(
-    '=> Loading Nx React Storybook Addon from "@nrwl/react/plugins/storybook"'
+    '=> Loading Nx React Storybook Addon from "@nx/react/plugins/storybook"'
   );
   // In case anyone is missing dep and did not run migrations.
   // See: https://github.com/nrwl/nx/issues/14455

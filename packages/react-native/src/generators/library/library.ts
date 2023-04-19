@@ -84,7 +84,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
     const external = ['react/jsx-runtime', 'react-native'];
 
     targets.build = {
-      executor: '@nrwl/web:rollup',
+      executor: '@nx/web:rollup',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,
@@ -92,7 +92,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
         project: `${options.projectRoot}/package.json`,
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
         external,
-        rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
+        rollupConfig: `@nx/react/plugins/bundle-rollup`,
         assets: [
           {
             glob: `${options.projectRoot}/README.md`,

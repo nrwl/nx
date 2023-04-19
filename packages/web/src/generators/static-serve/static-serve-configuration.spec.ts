@@ -25,7 +25,7 @@ describe('Static serve configuration generator', () => {
     expect(readProjectConfiguration(tree, 'react-app').targets['serve-static'])
       .toMatchInlineSnapshot(`
       {
-        "executor": "@nrwl/web:file-server",
+        "executor": "@nx/web:file-server",
         "options": {
           "buildTarget": "react-app:build",
         },
@@ -39,7 +39,7 @@ describe('Static serve configuration generator', () => {
       readProjectConfiguration(tree, 'angular-app').targets['serve-static']
     ).toMatchInlineSnapshot(`
       {
-        "executor": "@nrwl/web:file-server",
+        "executor": "@nx/web:file-server",
         "options": {
           "buildTarget": "angular-app:build",
         },
@@ -52,7 +52,7 @@ describe('Static serve configuration generator', () => {
     expect(readProjectConfiguration(tree, 'storybook').targets['serve-static'])
       .toMatchInlineSnapshot(`
       {
-        "executor": "@nrwl/web:file-server",
+        "executor": "@nx/web:file-server",
         "options": {
           "buildTarget": "storybook:build-storybook",
           "staticFilePath": "dist/apps/storybook/storybook",
@@ -72,7 +72,7 @@ describe('Static serve configuration generator', () => {
       readProjectConfiguration(tree, 'react-app').targets['serve-static-custom']
     ).toMatchInlineSnapshot(`
       {
-        "executor": "@nrwl/web:file-server",
+        "executor": "@nx/web:file-server",
         "options": {
           "buildTarget": "react-app:build",
         },
@@ -97,7 +97,7 @@ describe('Static serve configuration generator', () => {
       readProjectConfiguration(tree, 'angular-app').targets['serve-static']
     ).toMatchInlineSnapshot(`
       {
-        "executor": "@nrwl/web:file-server",
+        "executor": "@nx/web:file-server",
         "options": {
           "buildTarget": "angular-app:build",
           "staticFilePath": "dist/apps/angular-app",
@@ -136,7 +136,7 @@ function addReactConfig(tree: Tree, name: string) {
     sourceRoot: `apps/${name}/src`,
     targets: {
       build: {
-        executor: '@nrwl/vite:build',
+        executor: '@nx/vite:build',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: {
