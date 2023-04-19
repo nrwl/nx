@@ -22,7 +22,7 @@ export async function addCypress(host: Tree, options: NormalizedSchema) {
     name: options.e2eProjectName,
     directory: options.directory,
     project: options.projectName,
-    bundler: options.bundler,
+    bundler: options.bundler === 'rspack' ? 'webpack' : options.bundler,
     skipFormat: true,
   });
 }

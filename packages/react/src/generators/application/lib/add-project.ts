@@ -27,7 +27,7 @@ export function addProject(host, options: NormalizedSchema) {
   });
 }
 
-function maybeJs(options: NormalizedSchema, path: string): string {
+export function maybeJs(options: NormalizedSchema, path: string): string {
   return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
     ? path.replace(/\.tsx?$/, '.js')
     : path;

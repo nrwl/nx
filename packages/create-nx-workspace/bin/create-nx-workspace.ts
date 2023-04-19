@@ -712,6 +712,10 @@ async function determineBundler(
       name: 'webpack',
       message: 'Webpack [ https://webpack.js.org/ ]',
     },
+    {
+      name: 'rspack',
+      message: 'Rspack  [ https://www.rspack.dev/ ]',
+    },
   ];
 
   if (!parsedArgs.bundler) {
@@ -745,5 +749,5 @@ async function determineBundler(
     process.exit(1);
   }
 
-  return Promise.resolve(parsedArgs.bundler);
+  return parsedArgs.bundler;
 }

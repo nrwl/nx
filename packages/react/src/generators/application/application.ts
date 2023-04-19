@@ -6,7 +6,7 @@ import { NormalizedSchema, Schema } from './schema';
 import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
 import { normalizeOptions } from './lib/normalize-options';
-import { addProject } from './lib/add-project';
+import { addProject, maybeJs } from './lib/add-project';
 import { addCypress } from './lib/add-cypress';
 import { addJest } from './lib/add-jest';
 import { addRouting } from './lib/add-routing';
@@ -27,7 +27,11 @@ import {
 import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nx/linter';
 import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
-import { nxVersion, swcLoaderVersion } from '../../utils/versions';
+import {
+  nxRspackVersion,
+  nxVersion,
+  swcLoaderVersion,
+} from '../../utils/versions';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
@@ -135,6 +139,23 @@ export async function applicationGenerator(
       skipFormat: true,
     });
     tasks.push(webpackInitTask);
+  } else if (options.bundler === 'rspack') {
+    const { configurationGenerator } = ensurePackage(
+      '@nrwl/rspack',
+      nxRspackVersion
+    );
+    const rspackTask = await configurationGenerator(host, {
+      project: options.projectName,
+      main: joinPathFragments(
+        options.appProjectRoot,
+        maybeJs(options, `src/main.tsx`)
+      ),
+      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      target: 'web',
+      newProject: true,
+      uiFramework: 'react',
+    });
+    tasks.push(rspackTask);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {

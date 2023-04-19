@@ -180,7 +180,7 @@
     "bundler": {
       "description": "The bundler to use.",
       "type": "string",
-      "enum": ["vite", "webpack"],
+      "enum": ["vite", "webpack", "rspack"],
       "x-prompt": "Which bundler do you want to use to build the application?",
       "default": "webpack",
       "x-priority": "important"

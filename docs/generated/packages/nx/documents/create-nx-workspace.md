@@ -35,7 +35,7 @@ The name of the application when a preset with pregenerated app is selected
 
 Type: `string`
 
-Choices: [webpack, vite]
+Choices: [webpack, vite, rspack]
 
 Bundler to be used to build the application
 
