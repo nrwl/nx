@@ -79,6 +79,16 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
     });
+  } else if (options.preset === Preset.NextJsStandalone) {
+    const { applicationGenerator: nextApplicationGenerator } = require('@nx' +
+      '/next');
+    return nextApplicationGenerator(tree, {
+      name: options.name,
+      style: options.style,
+      linter: options.linter,
+      appDir: options.nextAppDir,
+      rootProject: true,
+    });
   } else if (options.preset === Preset.WebComponents) {
     const { applicationGenerator: webApplicationGenerator } = require('@nx' +
       '/web');

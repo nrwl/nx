@@ -11,7 +11,7 @@
 const StyledPage = styled.div`<%- pageStyleContent %>`;
 <% }%>
 
-export async function Index() {
+export default async function Index() {
   /*
    * Replace the elements below with your own.
    *
@@ -24,5 +24,3 @@ export async function Index() {
     </<%= wrapper %>>
   );
 };
-
-export default Index;

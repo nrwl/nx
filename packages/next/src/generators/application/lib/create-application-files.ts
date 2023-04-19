@@ -1,5 +1,12 @@
 import { join } from 'path';
-import { generateFiles, names, toJS, Tree } from '@nx/devkit';
+import {
+  generateFiles,
+  names,
+  readJson,
+  toJS,
+  Tree,
+  updateJson,
+} from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 
 import { NormalizedSchema } from './normalize-options';
@@ -12,6 +19,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const templateVariables = {
     ...names(options.name),
     ...options,
+    dot: '.',
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(
       host,
@@ -49,6 +57,38 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     );
   }
 
+  if (options.rootProject) {
+    updateJson(host, 'tsconfig.base.json', (json) => {
+      const appJSON = readJson(host, 'tsconfig.json');
+
+      let { extends: _, ...updatedJson } = json;
+
+      updatedJson = {
+        ...updateJson,
+        compilerOptions: {
+          ...updatedJson.compilerOptions,
+          ...appJSON.compilerOptions,
+        },
+        include: [
+          ...new Set([
+            ...(updatedJson.include || []),
+            ...(appJSON.include || []),
+          ]),
+        ],
+        exclude: [
+          ...new Set([
+            ...(updatedJson.exclude || []),
+            ...(appJSON.exclude || []),
+            '**e2e/**/*',
+          ]),
+        ],
+      };
+      return updatedJson;
+    });
+    host.delete('tsconfig.json');
+    host.rename('tsconfig.base.json', 'tsconfig.json');
+  }
+
   if (options.unitTestRunner === 'none') {
     host.delete(`${options.appProjectRoot}/specs/${options.fileName}.spec.tsx`);
   }
@@ -60,9 +100,13 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   }
 
   if (options.styledModule) {
-    host.delete(
-      `${options.appProjectRoot}/pages/${options.fileName}.module.${options.style}`
-    );
+    if (options.appDir) {
+      host.delete(`${options.appProjectRoot}/app/page.module.${options.style}`);
+    } else {
+      host.delete(
+        `${options.appProjectRoot}/pages/${options.fileName}.module.${options.style}`
+      );
+    }
   }
 
   if (options.style !== 'styled-components') {

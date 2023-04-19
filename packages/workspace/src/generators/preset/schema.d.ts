@@ -12,6 +12,7 @@ export interface Schema {
   packageManager?: PackageManager;
   bundler?: 'vite' | 'webpack' | 'rspack';
   docker?: boolean;
+  nextAppDir?: boolean;
   routing?: boolean;
   standaloneApi?: boolean;
 }
