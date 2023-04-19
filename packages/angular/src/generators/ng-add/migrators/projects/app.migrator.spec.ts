@@ -877,7 +877,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
         },
@@ -903,7 +903,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.myCustomLintTarget).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
         },
@@ -930,7 +930,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           eslintConfig: 'apps/app1/.eslintrc.json',
           lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
@@ -945,7 +945,7 @@ describe('app migrator', () => {
         overrides: [
           {
             files: ['*.ts', '*.tsx'],
-            extends: ['plugin:@nrwl/nx/typescript'],
+            extends: ['plugin:@nx/nx/typescript'],
             rules: { '@typescript-eslint/await-thenable': 'error' },
           },
         ],
@@ -969,7 +969,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           eslintConfig: 'apps/app1/.eslintrc.json',
           hasTypeAwareRules: true,

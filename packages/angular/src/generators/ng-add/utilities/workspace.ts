@@ -172,8 +172,11 @@ export function updatePackageJson(tree: Tree): void {
     if (!packageJson.devDependencies['@angular/cli']) {
       packageJson.devDependencies['@angular/cli'] = angularDevkitVersion;
     }
-    if (!packageJson.devDependencies['@nrwl/workspace']) {
-      packageJson.devDependencies['@nrwl/workspace'] = nxVersion;
+    if (
+      !packageJson.devDependencies['@nx/workspace'] &&
+      !packageJson.devDependencies['@nrwl/workspace']
+    ) {
+      packageJson.devDependencies['@nx/workspace'] = nxVersion;
     }
     if (!packageJson.devDependencies['nx']) {
       packageJson.devDependencies['nx'] = nxVersion;
@@ -209,9 +212,11 @@ export function updateRootEsLintConfig(
   }
 
   existingEsLintConfig.ignorePatterns = ['**/*'];
-  existingEsLintConfig.plugins = Array.from(
-    new Set([...(existingEsLintConfig.plugins ?? []), '@nrwl/nx'])
-  );
+  if (!(existingEsLintConfig.plugins ?? []).includes('@nrwl/nx')) {
+    existingEsLintConfig.plugins = Array.from(
+      new Set([...(existingEsLintConfig.plugins ?? []), '@nx/nx'])
+    );
+  }
   existingEsLintConfig.overrides?.forEach((override) => {
     if (!override.parserOptions?.project) {
       return;
@@ -219,13 +224,13 @@ export function updateRootEsLintConfig(
 
     delete override.parserOptions.project;
   });
-  // add the @nrwl/nx/enforce-module-boundaries rule
+  // add the @nx/nx/enforce-module-boundaries rule
   existingEsLintConfig.overrides = [
     ...(existingEsLintConfig.overrides ?? []),
     {
       files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
       rules: {
-        '@nrwl/nx/enforce-module-boundaries': [
+        '@nx/nx/enforce-module-boundaries': [
           'error',
           {
             enforceBuildableLibDependency: true,

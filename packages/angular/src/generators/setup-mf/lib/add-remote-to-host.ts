@@ -146,7 +146,7 @@ function addLazyLoadedRouteToHostAppModule(
       sourceFile,
       pathToHostRootRouting,
       'loadRemoteModule',
-      '@nrwl/angular/mf'
+      '@nx/angular/mf'
     );
   }
 

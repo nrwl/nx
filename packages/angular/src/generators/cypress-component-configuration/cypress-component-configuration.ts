@@ -108,6 +108,7 @@ async function updateProjectConfig(
     project: options.project,
     buildTarget: options.buildTarget,
     validExecutorNames: new Set<string>([
+      '@nx/angular:webpack-browser',
       '@nrwl/angular:webpack-browser',
       '@angular-devkit/build-angular:browser',
     ]),

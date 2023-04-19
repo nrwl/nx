@@ -1,7 +1,6 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import type { Tree } from '@nx/devkit';
-import { joinPathFragments, writeJson } from '@nx/devkit';
-import { overrideCollectionResolutionForTesting } from '@nx/devkit/ngcli-adapter';
+import { writeJson } from '@nx/devkit';
 import { Linter } from 'packages/linter/src/generators/utils/linter';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
@@ -42,12 +41,6 @@ describe('StorybookConfiguration generator', () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     tree = await createStorybookTestWorkspaceForLib(libName);
 
-    overrideCollectionResolutionForTesting({
-      '@nrwl/storybook': joinPathFragments(
-        __dirname,
-        '../../../../storybook/generators.json'
-      ),
-    });
     jest.resetModules();
     jest.doMock('@storybook/angular/package.json', () => ({
       version: '7.0.2',

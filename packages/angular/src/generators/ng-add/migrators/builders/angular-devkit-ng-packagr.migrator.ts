@@ -58,7 +58,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
     targetName: string,
     target: TargetConfiguration
   ): void {
-    target.executor = '@nrwl/angular:package';
+    target.executor = '@nx/angular:package';
 
     if (
       !target.options &&

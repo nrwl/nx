@@ -48,7 +48,7 @@ exports[`ngrx NgModule Syntax generated unit tests should generate specs for the
 import { TestBed } from '@angular/core/testing';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule, Store } from '@ngrx/store';
-import { readFirst } from '@nrwl/angular/testing';
+import { readFirst } from '@nx/angular/testing';
 
 import * as SuperUsersActions from './super-users.actions';
 import { SuperUsersEffects } from './super-users.effects';

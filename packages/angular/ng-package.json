@@ -7,7 +7,6 @@
   "deleteDestPath": false,
   "allowedNonPeerDependencies": [
     "@nx/",
-    "@nrwl/",
     "@angular-devkit",
     "@angular-eslint/",
     "@nguniversal/builders",

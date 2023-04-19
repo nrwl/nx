@@ -459,7 +459,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   ): TargetConfiguration {
     const updatedTarget = {
       ...existingTarget,
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         ...existingTarget.options,
         cypressConfig,
@@ -781,7 +781,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       sourceFile,
       configFilePath,
       'nxE2EPreset',
-      '@nrwl/cypress/plugins/cypress-preset'
+      '@nx/cypress/plugins/cypress-preset'
     );
     // update recorder with the new content from the file
     recorder.setContentToFileContent();

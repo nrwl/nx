@@ -487,7 +487,7 @@ exports[`app nested should create project configs 1`] = `
       "executor": "@angular-devkit/build-angular:dev-server",
     },
     "serve-static": {
-      "executor": "@nrwl/web:file-server",
+      "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-dir-my-app:build",
       },
@@ -645,7 +645,7 @@ exports[`app not nested should create project configs 1`] = `
       "executor": "@angular-devkit/build-angular:dev-server",
     },
     "serve-static": {
-      "executor": "@nrwl/web:file-server",
+      "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
       },

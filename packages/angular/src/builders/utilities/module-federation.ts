@@ -81,7 +81,7 @@ export function getStaticRemotes(
     mfeConfig = require(mfConfigPath);
   } catch {
     throw new Error(
-      `Could not load ${mfConfigPath}. Was this project generated with "@nrwl/angular:host"?`
+      `Could not load ${mfConfigPath}. Was this project generated with "@nx/angular:host"?`
     );
   }
 

@@ -69,7 +69,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
     targetName: string,
     target: TargetConfiguration
   ): Promise<void> {
-    target.executor = '@nrwl/linter:eslint';
+    target.executor = '@nx/linter:eslint';
 
     if (!target.options) {
       this.logger.warn(

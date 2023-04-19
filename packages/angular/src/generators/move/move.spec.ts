@@ -6,7 +6,7 @@ import { UnitTestRunner } from '../../utils/test-runners';
 import { generateTestLibrary } from '../utils/testing';
 import { angularMoveGenerator } from './move';
 
-describe('@nrwl/angular:move', () => {
+describe('@nx/angular:move', () => {
   let tree: Tree;
 
   beforeEach(async () => {
