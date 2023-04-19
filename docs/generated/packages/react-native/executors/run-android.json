@@ -53,8 +53,7 @@
       },
       "listDevices": {
         "type": "boolean",
-        "description": "Lists all available Android devices and simulators and let you choose one to run the app",
-        "default": false
+        "description": "Lists all available Android devices and simulators and let you choose one to run the app"
       },
       "binaryPath": {
         "type": "string",
@@ -93,7 +92,6 @@
       "activeArchOnly": {
         "type": "boolean",
         "description": "Build native libraries only for the current device architecture for debug builds.",
-        "examples": ["x86_64", "arm64-v8a"],
         "default": false
       },
       "extraParams": {
