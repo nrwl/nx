@@ -200,10 +200,15 @@ function normalizeBuildTargetOptions(
       return polyfill;
     };
     // paths need to be unix paths for angular devkit
-    buildOptions.polyfills =
-      Array.isArray(buildOptions.polyfills) && buildOptions.polyfills.length > 0
-        ? (buildOptions.polyfills as string[]).map((p) => handlePolyfillPath(p))
-        : handlePolyfillPath(buildOptions.polyfills as string);
+    if (buildOptions.polyfills) {
+      buildOptions.polyfills =
+        Array.isArray(buildOptions.polyfills) &&
+        buildOptions.polyfills.length > 0
+          ? (buildOptions.polyfills as string[]).map((p) =>
+              handlePolyfillPath(p)
+            )
+          : handlePolyfillPath(buildOptions.polyfills as string);
+    }
     buildOptions.main = joinPathFragments(offset, buildOptions.main);
     buildOptions.index =
       typeof buildOptions.index === 'string'
