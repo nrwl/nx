@@ -2,7 +2,6 @@ import { prompt } from 'enquirer';
 import { readdirSync, readFileSync, statSync } from 'fs';
 import ignore from 'ignore';
 import { join, relative } from 'path';
-import * as yargsParser from 'yargs-parser';
 import { InitArgs } from '../command-line/init';
 import { readJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
@@ -16,11 +15,7 @@ import {
   runInstall,
 } from './utils';
 
-type Options = Pick<InitArgs, 'nxCloud' | 'interactive'>;
-
-const parsedArgs = yargsParser(process.argv, {
-  string: ['cacheable'], // only used for testing
-});
+type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 
 export async function addNxToMonorepo(options: Options) {
   const repoRoot = process.cwd();
@@ -80,9 +75,7 @@ export async function addNxToMonorepo(options: Options) {
     useNxCloud = options.nxCloud ?? (await askAboutNxCloud());
   } else {
     targetDefaults = [];
-    cacheableOperations = parsedArgs.cacheable
-      ? parsedArgs.cacheable.split(',')
-      : [];
+    cacheableOperations = options.cacheable ?? [];
     useNxCloud =
       options.nxCloud ??
       (options.interactive ? await askAboutNxCloud() : false);

@@ -1,7 +1,6 @@
 import * as enquirer from 'enquirer';
 import { unlinkSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
-import * as yargsParser from 'yargs-parser';
 import { InitArgs } from '../command-line/init';
 import { NrwlJsPluginConfig, NxJsonConfiguration } from '../config/nx-json';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
@@ -19,12 +18,8 @@ import {
   runInstall,
 } from './utils';
 
-type Options = Pick<InitArgs, 'nxCloud' | 'interactive'>;
+type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 type NestCLIConfiguration = any;
-
-const parsedArgs = yargsParser(process.argv, {
-  string: ['cacheable'], // only used for testing
-});
 
 export async function addNxToNest(options: Options, packageJson: PackageJson) {
   const repoRoot = process.cwd();
@@ -99,9 +94,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
 
     useNxCloud = options.nxCloud ?? (await askAboutNxCloud());
   } else {
-    cacheableOperations = parsedArgs.cacheable
-      ? parsedArgs.cacheable.split(',')
-      : [];
+    cacheableOperations = options.cacheable ?? [];
     useNxCloud = options.nxCloud ?? false;
   }
 

@@ -1,6 +1,5 @@
 import { prompt } from 'enquirer';
 import { join } from 'path';
-import { InitArgs } from '../../command-line/init';
 import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
@@ -16,7 +15,6 @@ import { setupIntegratedWorkspace } from './integrated-workspace';
 import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-versions';
 import { setupStandaloneWorkspace } from './standalone-workspace';
 import type { AngularJsonConfig, Options } from './types';
-import yargsParser = require('yargs-parser');
 
 const defaultCacheableOperations: string[] = [
   'build',
@@ -24,9 +22,6 @@ const defaultCacheableOperations: string[] = [
   'test',
   'lint',
 ];
-const parsedArgs = yargsParser(process.argv, {
-  string: ['cacheable'], // only used for testing
-});
 
 let repoRoot: string;
 let workspaceTargets: string[];
@@ -52,7 +47,7 @@ export async function addNxToAngularCliRepo(options: Options) {
 
   output.log({ title: '🐳 Nx initialization' });
   const cacheableOperations = !options.integrated
-    ? await collectCacheableOperations(options.interactive)
+    ? await collectCacheableOperations(options)
     : [];
   const useNxCloud =
     options.nxCloud ?? (options.interactive ? await askAboutNxCloud() : false);
@@ -76,9 +71,7 @@ export async function addNxToAngularCliRepo(options: Options) {
   });
 }
 
-async function collectCacheableOperations(
-  interactive: boolean
-): Promise<string[]> {
+async function collectCacheableOperations(options: Options): Promise<string[]> {
   let cacheableOperations: string[];
 
   workspaceTargets = getWorkspaceTargets();
@@ -86,7 +79,7 @@ async function collectCacheableOperations(
     (t) => workspaceTargets.includes(t)
   );
 
-  if (interactive) {
+  if (options.interactive) {
     output.log({
       title:
         '🧑‍🔧 Please answer the following questions about the targets found in your angular.json in order to generate task runner configuration',
@@ -106,9 +99,8 @@ async function collectCacheableOperations(
       ])) as any
     ).cacheableOperations;
   } else {
-    cacheableOperations = parsedArgs.cacheable
-      ? parsedArgs.cacheable.split(',')
-      : defaultCacheableTargetsInWorkspace;
+    cacheableOperations =
+      options.cacheable ?? defaultCacheableTargetsInWorkspace;
   }
 
   return cacheableOperations;

@@ -1160,6 +1160,13 @@ function withInitOptions(yargs: yargs.Argv) {
       description: 'Use Vite as the bundler. Only for CRA projects.',
       default: true,
       hidden: true,
+    })
+    .options('cacheable', {
+      type: 'string',
+      description:
+        'Comma-separated list of cacheable operations. Only used for internal testing.',
+      coerce: parseCSV,
+      hidden: true,
     });
 }
 

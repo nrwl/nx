@@ -20,6 +20,7 @@ export interface InitArgs {
   interactive: boolean;
   vite: boolean;
   nxCloud?: boolean;
+  cacheable?: string[];
 }
 
 export async function initHandler(options: InitArgs) {
