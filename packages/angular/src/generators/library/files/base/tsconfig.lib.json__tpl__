@@ -8,7 +8,7 @@
     "types": []
   },
   "exclude": [
-    "src/**/*.spec.ts",<% if(unitTesting) { %>
+    "src/**/*.spec.ts",<% if(unitTesting === 'jest') { %>
     "src/test-setup.ts",<% } %>
     "jest.config.ts",
     "src/**/*.test.ts"

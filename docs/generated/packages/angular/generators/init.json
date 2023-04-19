@@ -17,7 +17,7 @@
     "properties": {
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "none"],
+        "enum": ["karma", "jest", "none"],
         "description": "Test runner to use for unit tests.",
         "default": "jest",
         "x-priority": "important"

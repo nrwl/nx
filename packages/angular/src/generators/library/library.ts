@@ -13,6 +13,7 @@ import { lt } from 'semver';
 import init from '../../generators/init/init';
 import { E2eTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
+import karmaProjectGenerator from '../karma-project/karma-project';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
 import {
   getInstalledAngularVersionInfo,
@@ -130,6 +131,11 @@ async function addUnitTestRunner(
       skipSerializers: false,
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
+    });
+  } else if (options.unitTestRunner === 'karma') {
+    await karmaProjectGenerator(host, {
+      project: options.name,
+      skipFormat: true,
     });
   }
 }

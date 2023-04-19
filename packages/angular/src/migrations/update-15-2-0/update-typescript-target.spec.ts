@@ -19,17 +19,8 @@ describe('Migration to update target and add useDefineForClassFields', () => {
     });
     await generateTestApplication(tree, {
       name: 'karma',
-      unitTestRunner: UnitTestRunner.None,
+      unitTestRunner: UnitTestRunner.Karma,
     });
-
-    const karmaProject = readProjectConfiguration(tree, 'karma');
-    karmaProject.targets.test = {
-      executor: '@angular-devkit/build-angular:karma',
-      options: {
-        tsConfig: 'apps/karma/tsconfig.spec.json',
-      },
-    };
-    updateProjectConfiguration(tree, 'karma', karmaProject);
 
     // Create tsconfigs
     const compilerOptions = { target: 'es2015', module: 'es2020' };

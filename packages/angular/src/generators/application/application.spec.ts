@@ -584,6 +584,27 @@ describe('app', () => {
       });
     });
 
+    describe('karma', () => {
+      it('should generate a karma config', async () => {
+        await generateApp(appTree, 'myApp', {
+          unitTestRunner: UnitTestRunner.Karma,
+        });
+
+        expect(appTree.exists('apps/my-app/tsconfig.spec.json')).toBeTruthy();
+        expect(appTree.exists('apps/my-app/karma.conf.js')).toBeTruthy();
+        expect(
+          readProjectConfiguration(appTree, 'my-app').targets.test.executor
+        ).toEqual('@angular-devkit/build-angular:karma');
+        const tsconfigAppJson = readJson(
+          appTree,
+          'apps/my-app/tsconfig.app.json'
+        );
+        expect(tsconfigAppJson.compilerOptions.outDir).toEqual(
+          '../../dist/out-tsc'
+        );
+      });
+    });
+
     describe('none', () => {
       it('should not generate test configuration', async () => {
         await generateApp(appTree, 'myApp', {
