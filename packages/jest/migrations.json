@@ -272,7 +272,7 @@
       }
     },
     "16.0.0": {
-      "version": "16.0.0-beta.3",
+      "version": "16.0.0-beta.4",
       "packages": {
         "ts-jest": {
           "version": "~29.1.0",
