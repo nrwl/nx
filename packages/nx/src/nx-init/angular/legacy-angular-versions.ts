@@ -20,8 +20,8 @@ const nxAngularLegacyVersionMap: Record<number, string> = {};
 const minMajorAngularVersionSupported = 14;
 // version when the Nx CLI changed from @nrwl/tao & @nrwl/cli to nx
 const versionWithConsolidatedPackages = '13.9.0';
-// version when packages were reescoped from @nrwl/* to @nx/*
-const versionWithReescopeToNx = '16.0.0-beta.2';
+// version when packages were rescoped from @nrwl/* to @nx/*
+const versionWithRescopeToNx = '16.0.0-beta.2';
 
 export async function getLegacyMigrationFunctionIfApplicable(
   repoRoot: string,
@@ -71,7 +71,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
       nxAngularLegacyVersionMap[majorAngularVersion]
     );
 
-    pkgScope = gte(pkgVersion, versionWithReescopeToNx) ? '@nx' : '@nrwl';
+    pkgScope = gte(pkgVersion, versionWithRescopeToNx) ? '@nx' : '@nrwl';
     unscopedPkgName = 'angular';
     pkgName = `${pkgScope}/${unscopedPkgName}`;
 
