@@ -66,21 +66,7 @@ export function normalizeOptions(
   // default to current directory if projectRootParts is [].
   // Eg: when a project is at the root level, outside of layout dir
   const swcCwd = projectRootParts.join('/') || '.';
-  let swcrcPath = getSwcrcPath(options, contextRoot, projectRoot);
-
-  try {
-    const swcrcContent = readJsonFile(swcrcPath) as Options;
-    // if we have path mappings setup but baseUrl isn't specified, then we're proceeding with the following logic
-    if (
-      swcrcContent.jsc &&
-      swcrcContent.jsc.paths &&
-      !swcrcContent.jsc.baseUrl
-    ) {
-      swcrcContent.jsc.baseUrl = `./${projectDir}`;
-      swcrcPath = getSwcrcPath(options, contextRoot, projectRoot, true);
-      writeJsonFile(swcrcPath, swcrcContent);
-    }
-  } catch (e) {}
+  const swcrcPath = getSwcrcPath(options, contextRoot, projectRoot);
 
   const swcCliOptions = {
     srcPath: projectDir,
