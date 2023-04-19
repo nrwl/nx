@@ -33,6 +33,14 @@ describe('nx-dev: Packages Section', () => {
     },
     { title: '@nrwl/angular:init', path: '/packages/angular/generators/init' },
     {
+      title: '@nrwl/angular:karma',
+      path: '/packages/angular/generators/karma',
+    },
+    {
+      title: '@nrwl/angular:karma-project',
+      path: '/packages/angular/generators/karma-project',
+    },
+    {
       title: '@nrwl/angular:library',
       path: '/packages/angular/generators/library',
     },

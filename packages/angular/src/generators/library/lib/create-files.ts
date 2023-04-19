@@ -7,7 +7,6 @@ import {
   offsetFromRoot,
 } from '@nrwl/devkit';
 import { NormalizedSchema } from './normalized-schema';
-import { UnitTestRunner } from '../../../utils/test-runners';
 import { getRootTsConfigFileName } from '@nrwl/js';
 
 export function createFiles(
@@ -30,7 +29,7 @@ export function createFiles(
     libFileName: options.libraryOptions.fileName,
     libClassName: libNames.className,
     libPropertyName: libNames.propertyName,
-    unitTesting: options.libraryOptions.unitTestRunner !== UnitTestRunner.None,
+    unitTesting: options.libraryOptions.unitTestRunner,
     rootTsConfig: joinPathFragments(rootOffset, getRootTsConfigFileName(tree)),
     skipModule: options.libraryOptions.skipModule,
     projectRoot: options.libraryOptions.projectRoot,

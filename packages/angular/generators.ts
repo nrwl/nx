@@ -7,6 +7,8 @@ export * from './src/generators/convert-tslint-to-eslint/convert-tslint-to-eslin
 export * from './src/generators/directive/directive';
 export * from './src/generators/host/host';
 export * from './src/generators/init/init';
+export * from './src/generators/karma-project/karma-project';
+export * from './src/generators/karma/karma';
 export * from './src/generators/library-secondary-entry-point/library-secondary-entry-point';
 export * from './src/generators/library/library';
 export * from './src/generators/move/move';

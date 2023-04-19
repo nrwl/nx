@@ -50,6 +50,16 @@
       "description": "Initializes the `@nrwl/angular` plugin.",
       "hidden": true
     },
+    "karma": {
+      "factory": "./src/generators/karma/compat",
+      "schema": "./src/generators/karma/schema.json",
+      "description": "Adds Karma configuration to a workspace."
+    },
+    "karma-project": {
+      "factory": "./src/generators/karma-project/compat",
+      "schema": "./src/generators/karma-project/schema.json",
+      "description": "Adds Karma configuration to a project."
+    },
     "library": {
       "factory": "./src/generators/library/library.compat#librarySchematic",
       "schema": "./src/generators/library/schema.json",
@@ -206,6 +216,16 @@
       "schema": "./src/generators/init/schema.json",
       "description": "Initializes the `@nrwl/angular` plugin.",
       "hidden": true
+    },
+    "karma": {
+      "factory": "./src/generators/karma/karma",
+      "schema": "./src/generators/karma/schema.json",
+      "description": "Adds Karma configuration to a workspace."
+    },
+    "karma-project": {
+      "factory": "./src/generators/karma-project/karma-project",
+      "schema": "./src/generators/karma-project/schema.json",
+      "description": "Adds Karma configuration to a project."
     },
     "library": {
       "factory": "./src/generators/library/library",

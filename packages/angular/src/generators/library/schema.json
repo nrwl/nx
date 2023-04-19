@@ -4,6 +4,7 @@
   "title": "Create a library",
   "description": "Creates an Angular library.",
   "type": "object",
+
   "cli": "nx",
   "properties": {
     "name": {
@@ -95,7 +96,7 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["karma", "jest", "none"],
       "description": "Test runner to use for unit tests.",
       "default": "jest"
     },

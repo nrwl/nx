@@ -14,6 +14,7 @@ import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { initGenerator as jsInitGenerator } from '@nrwl/js';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
+import { karmaGenerator } from '../karma/karma';
 import {
   addDependenciesToPackageJsonIfDontExist,
   getInstalledPackageVersion,
@@ -171,6 +172,10 @@ async function addUnitTestRunner(
   jestPresetAngularVersion: string
 ): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
+    case UnitTestRunner.Karma:
+      return await karmaGenerator(tree, {
+        skipPackageJson: options.skipPackageJson,
+      });
     case UnitTestRunner.Jest:
       if (!options.skipPackageJson) {
         addDependenciesToPackageJsonIfDontExist(

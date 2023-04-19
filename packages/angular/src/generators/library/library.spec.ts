@@ -355,6 +355,21 @@ describe('lib', () => {
         ]);
       });
 
+      it('should leave the excludes alone when unitTestRunner is karma', async () => {
+        // ACT
+        await runLibraryGeneratorWithOpts({
+          unitTestRunner: UnitTestRunner.Karma,
+        });
+
+        // ASSERT
+        const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
+        expect(tsconfigJson.exclude).toEqual([
+          'src/**/*.spec.ts',
+          'jest.config.ts',
+          'src/**/*.test.ts',
+        ]);
+      });
+
       it('should remove the excludes when unitTestRunner is none', async () => {
         // ACT
         await runLibraryGeneratorWithOpts({
