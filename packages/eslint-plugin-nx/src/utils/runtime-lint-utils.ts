@@ -447,7 +447,8 @@ export function groupImports(
  */
 export function isAngularSecondaryEntrypoint(
   importExpr: string,
-  filePath: string
+  filePath: string,
+  projectRoot: string
 ): boolean {
   const resolvedModule = resolveModuleByImport(
     importExpr,
@@ -455,12 +456,14 @@ export function isAngularSecondaryEntrypoint(
     join(workspaceRoot, getRootTsConfigFileName())
   );
 
-  return !!resolvedModule && fileIsSecondaryEntryPoint(resolvedModule);
+  return (
+    !!resolvedModule && fileIsSecondaryEntryPoint(resolvedModule, projectRoot)
+  );
 }
 
-function fileIsSecondaryEntryPoint(file: string): boolean {
+function fileIsSecondaryEntryPoint(file: string, projectRoot: string): boolean {
   let parent = joinPathFragments(file, '../');
-  while (parent !== './') {
+  while (parent !== `${projectRoot}/`) {
     // we need to find closest existing ng-package.json
     // in order to determine if the file matches the secondary entry point
     const ngPackageContent = readFileIfExisting(

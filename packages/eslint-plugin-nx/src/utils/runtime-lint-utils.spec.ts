@@ -401,6 +401,7 @@ describe('isAngularSecondaryEntrypoint', () => {
           ],
           '@project/features': ['libs/features/src/index.ts'],
           '@project/features/*': ['libs/features/*/random/folder/api.ts'],
+          '@project/buildable': ['libs/buildable/src/index.ts'],
         },
       },
     };
@@ -421,25 +422,55 @@ describe('isAngularSecondaryEntrypoint', () => {
         lib: { entryFile: 'random/folder/api.ts' },
       }),
       'libs/features/secondary/random/folder/api.ts': 'const bla = "foo"',
+      'libs/buildable/ng-package.json': JSON.stringify({
+        lib: { entryFile: 'src/index.ts' },
+      }),
     };
     vol.fromJSON(fsJson, '/root');
   });
 
   it('should return true for secondary entrypoints', () => {
     expect(
-      isAngularSecondaryEntrypoint('@project/standard', 'apps/app.ts')
+      isAngularSecondaryEntrypoint(
+        '@project/standard',
+        'apps/app.ts',
+        'libs/standard'
+      )
     ).toBe(false);
     expect(
-      isAngularSecondaryEntrypoint('@project/standard/secondary', 'apps/app.ts')
+      isAngularSecondaryEntrypoint(
+        '@project/standard/secondary',
+        'apps/app.ts',
+        'libs/standard'
+      )
     ).toBe(true);
     expect(
-      isAngularSecondaryEntrypoint('@project/standard/tertiary', 'apps/app.ts')
+      isAngularSecondaryEntrypoint(
+        '@project/standard/tertiary',
+        'apps/app.ts',
+        'libs/standard'
+      )
     ).toBe(true);
     expect(
-      isAngularSecondaryEntrypoint('@project/features', 'apps/app.ts')
+      isAngularSecondaryEntrypoint(
+        '@project/features',
+        'apps/app.ts',
+        'libs/features'
+      )
     ).toBe(false);
     expect(
-      isAngularSecondaryEntrypoint('@project/features/secondary', 'apps/app.ts')
+      isAngularSecondaryEntrypoint(
+        '@project/features/secondary',
+        'apps/app.ts',
+        'libs/features'
+      )
     ).toBe(true);
+    expect(
+      isAngularSecondaryEntrypoint(
+        '@project/buildable',
+        'apps/app.ts',
+        'libs/buildable'
+      )
+    ).toBe(false);
   });
 });
