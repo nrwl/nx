@@ -333,7 +333,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         ].join('/n')
       );
     }
-    if (!opts.quiet) {
+    if (!opts.quiet && !opts.help) {
       logger.info(
         `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
       );

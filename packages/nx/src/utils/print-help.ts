@@ -6,6 +6,7 @@ import { logger } from './logger';
 import { output } from './output';
 import { Schema } from './params';
 import { nxVersion } from './versions';
+import { readModulePackageJson } from './package-json';
 
 export function printHelp(
   header: string,
@@ -97,6 +98,11 @@ function generateGeneratorOverviewOutput({
     // The `:` char
     1;
 
+  let installedVersion: string;
+  try {
+    installedVersion = readModulePackageJson(pluginName).packageJson.version;
+  } catch {}
+
   ui.div(
     ...[
       {
@@ -107,9 +113,7 @@ function generateGeneratorOverviewOutput({
       {
         text:
           pluginName +
-          (pluginName.startsWith('@nx/') || pluginName.startsWith('@nrwl/')
-            ? chalk.dim(` (v${nxVersion})`)
-            : ''),
+          (installedVersion ? chalk.dim(` (v${installedVersion})`) : ''),
         padding: [1, 0, 0, 2],
       },
     ]
