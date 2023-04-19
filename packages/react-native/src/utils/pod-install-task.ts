@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
 import { platform } from 'os';
 import * as chalk from 'chalk';
 import { GeneratorCallback, logger } from '@nx/devkit';
@@ -48,21 +48,34 @@ export function podInstall(
   buildFolder?: string
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const result = execSync('pod install', {
-      cwd: iosDirectory,
-    });
-    logger.info(result.toString());
-    if (result.toString().includes('Pod installation complete')) {
-      // Remove build folder after pod install
-      if (buildFolder) {
-        buildFolder = join(iosDirectory, buildFolder);
-        if (existsSync(buildFolder)) {
-          rmdirSync(buildFolder, { recursive: true });
+    exec(
+      'pod install',
+      {
+        cwd: iosDirectory,
+      },
+      (error, stdout, stderr) => {
+        if (error) {
+          logger.error(error.message);
+          reject(new Error(podInstallErrorMessage));
+        }
+        if (stderr) {
+          logger.error(stderr);
+          reject(new Error(podInstallErrorMessage));
+        }
+        logger.info(stdout);
+        if (stdout.includes('Pod installation complete')) {
+          // Remove build folder after pod install
+          if (buildFolder) {
+            buildFolder = join(iosDirectory, buildFolder);
+            if (existsSync(buildFolder)) {
+              rmdirSync(buildFolder, { recursive: true });
+            }
+          }
+          resolve();
+        } else {
+          reject(new Error(podInstallErrorMessage));
         }
       }
-      resolve();
-    } else {
-      reject(new Error(podInstallErrorMessage));
-    }
+    );
   });
 }
