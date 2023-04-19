@@ -14,15 +14,12 @@ import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { Linter } from '@nx/linter';
 import * as path from 'path';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
-import { executorGenerator } from '../executor/executor';
-import { generatorGenerator } from '../generator/generator';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
 import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
 import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 
 import type { Schema } from './schema';
-import { tsLibVersion } from '@nx/js/src/utils/versions';
 
 const nxVersion = require('../../../package.json').version;
 
@@ -85,10 +82,11 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     skipFormat: true,
   });
 
+  addTsLibDependencies(host);
+
   addDependenciesToPackageJson(
     host,
     {
-      tslib: tsLibVersion,
       '@nx/devkit': nxVersion,
     },
     {
@@ -97,7 +95,6 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       '@nx/nx-plugin': nxVersion,
     }
   );
-  addTsLibDependencies(host);
 
   // Ensures Swc Deps are installed to handle running
   // local plugin generators and executors
