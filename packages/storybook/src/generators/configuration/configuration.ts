@@ -255,7 +255,7 @@ export async function configurationGenerator(
   if (nextBuildTarget && projectType === 'application' && !storybook7) {
     devDeps['storybook-addon-next'] = storybookNextAddonVersion;
     devDeps['storybook-addon-swc'] = storybookSwcAddonVersion;
-  } else if (compiler === 'swc') {
+  } else if (compiler === 'swc' && !storybook7) {
     devDeps['storybook-addon-swc'] = storybookSwcAddonVersion;
   }
 

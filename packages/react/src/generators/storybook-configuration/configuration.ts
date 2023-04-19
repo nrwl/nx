@@ -3,6 +3,7 @@ import storiesGenerator from '../stories/stories';
 import {
   convertNxGenerator,
   ensurePackage,
+  formatFiles,
   logger,
   readProjectConfiguration,
   Tree,
@@ -78,6 +79,8 @@ export async function storybookConfigurationGenerator(
   if (schema.generateStories) {
     await generateStories(host, schema);
   }
+
+  await formatFiles(host);
 
   return installTask;
 }
