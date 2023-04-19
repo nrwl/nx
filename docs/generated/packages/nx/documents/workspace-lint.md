@@ -5,7 +5,9 @@ description: 'Lint nx specific workspace files (nx.json, workspace.json)'
 
 # workspace-lint
 
-Lint nx specific workspace files (nx.json, workspace.json)
+    **Deprecated:** workspace-lint is deprecated, and will be removed in v17. The checks it used to perform are no longer relevant.
+
+    Lint nx specific workspace files (nx.json, workspace.json)
 
 ## Usage
 

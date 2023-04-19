@@ -261,6 +261,8 @@ export const commandsObject = yargs
   .command({
     command: 'workspace-lint [files..]',
     describe: 'Lint nx specific workspace files (nx.json, workspace.json)',
+    deprecated:
+      'workspace-lint is deprecated, and will be removed in v17. The checks it used to perform are no longer relevant.',
     handler: async () => {
       await (await import('./lint')).workspaceLint();
       process.exit(0);
