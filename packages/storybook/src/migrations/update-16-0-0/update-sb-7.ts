@@ -1,8 +1,14 @@
 import { Tree } from '@nx/devkit';
 import { output } from 'nx/src/utils/output';
 import migrate7Generator from '../../generators/migrate-7/migrate-7';
+import { storybookMajorVersion } from '../../utils/utilities';
 
 export default async function changeStorybookTargets(tree: Tree) {
+  const storybookVersion = storybookMajorVersion();
+  if (!storybookVersion || storybookVersion === 7) {
+    return;
+  }
+
   output.log({
     title: 'Migrating Storybook to v7',
     bodyLines: [

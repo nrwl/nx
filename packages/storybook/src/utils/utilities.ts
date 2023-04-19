@@ -4,7 +4,7 @@ import { storybookVersion } from './versions';
 import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
 import ts = require('typescript');
-import { gte, lt, major } from 'semver';
+import { major } from 'semver';
 import { join } from 'path';
 
 export const Constants = {
@@ -51,15 +51,7 @@ type Framework = {
   uiFramework: Constants['uiFrameworks'][keyof Constants['uiFrameworks']];
 };
 
-export function isStorybookV7() {
-  const storybookPackageVersion = require(join(
-    '@storybook/core-server',
-    'package.json'
-  )).version;
-  return gte(storybookPackageVersion, '7.0.0-alpha.0');
-}
-
-export function storybookMajorVersion() {
+export function storybookMajorVersion(): number | undefined {
   try {
     const storybookPackageVersion = require(join(
       '@storybook/core-server',

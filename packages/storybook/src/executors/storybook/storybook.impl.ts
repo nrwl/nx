@@ -2,8 +2,8 @@ import { ExecutorContext } from '@nx/devkit';
 import * as build from '@storybook/core-server';
 import 'dotenv/config';
 import {
-  isStorybookV7,
   storybookConfigExistsCheck,
+  storybookMajorVersion,
 } from '../../utils/utilities';
 import {
   getStorybookFrameworkPath,
@@ -20,7 +20,7 @@ export default async function* storybookExecutor(
   success: boolean;
   info?: { port: number; baseUrl?: string };
 }> {
-  const storybook7 = isStorybookV7();
+  const storybook7 = storybookMajorVersion() === 7;
   storybookConfigExistsCheck(options.configDir, context.projectName);
   if (storybook7) {
     const buildOptions: CLIOptions = options;
