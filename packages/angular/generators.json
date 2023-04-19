@@ -40,7 +40,7 @@
       "description": "Creates a cypress component test file for a component."
     },
     "convert-tslint-to-eslint": {
-      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
+      "factory": "./src/generators/convert-tslint-to-eslint/compat",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
       "description": "Converts a project from TSLint to ESLint."
     },
@@ -70,7 +70,7 @@
       "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
-      "factory": "./src/generators/move/move#angularMoveSchematic",
+      "factory": "./src/generators/move/compat",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."

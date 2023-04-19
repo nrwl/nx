@@ -1,16 +1,9 @@
 import { conversionGenerator as cypressConversionGenerator } from '@nx/cypress';
-import {
-  convertNxGenerator,
-  formatFiles,
-  GeneratorCallback,
-  logger,
-  Tree,
-} from '@nx/devkit';
+import { formatFiles, GeneratorCallback, logger, Tree } from '@nx/devkit';
 import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nx/linter';
 import type { Linter } from 'eslint';
 import type { AngularProjectConfiguration } from '../../utils/types';
 import { addLintingGenerator } from '../add-linting/add-linting';
-import { warnForSchematicUsage } from '../utils/warn-for-schematic-usage';
 
 export async function conversionGenerator(
   host: Tree,
@@ -138,10 +131,6 @@ export async function conversionGenerator(
     await uninstallTSLintTask();
   };
 }
-
-export const conversionSchematic = warnForSchematicUsage(
-  convertNxGenerator(conversionGenerator)
-);
 
 /**
  * In the case of Angular lint rules, we need to apply them to correct override depending upon whether
