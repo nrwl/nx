@@ -91,7 +91,7 @@
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     },
     "16-0-0-move-workspace-generators-into-local-plugin": {
-      "version": "16.0.0-beta.3",
+      "version": "16.0.0-beta.4",
       "description": "Generates a plugin called 'workspace-plugin' containing your workspace generators.",
       "cli": "nx",
       "implementation": "./src/migrations/update-16-0-0/move-workspace-generators-to-local-plugin"
