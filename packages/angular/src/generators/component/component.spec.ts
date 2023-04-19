@@ -542,6 +542,47 @@ describe('component Generator', () => {
         "
       `);
     });
+
+    it('should throw an error when there are more than one candidate modules that the component can be added to', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      addProjectConfiguration(tree, 'lib1', {
+        projectType: 'library',
+        sourceRoot: 'libs/lib1/src',
+        root: 'libs/lib1',
+      });
+      tree.write(
+        'libs/lib1/src/lib/lib.module.ts',
+        `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+      );
+      tree.write(
+        'libs/lib1/src/lib/lib2.module.ts',
+        `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class Lib2Module {}`
+      );
+
+      // ACT & ASSERT
+      await expect(
+        componentGenerator(tree, {
+          name: 'example',
+          project: 'lib1',
+          path: 'libs/lib1/src/lib',
+        })
+      ).rejects.toThrow();
+    });
   });
 
   describe('secondary entry points', () => {
