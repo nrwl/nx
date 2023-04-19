@@ -68,14 +68,7 @@ export function withNx(_opts = {}) {
         port: 4200,
         hot: true,
       } as any,
-      module: {
-        rules: [
-          {
-            test: /\.css$/,
-            type: 'css/module' as any,
-          },
-        ],
-      },
+      module: {},
       plugins: config.plugins ?? [],
       resolve: {
         alias,

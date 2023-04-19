@@ -6,6 +6,7 @@ export interface WithWebOptions {
   stylePreprocessorOptions?: {
     includePaths?: string[];
   };
+  cssModules?: boolean;
 }
 
 export function withWeb(opts: WithWebOptions = {}) {
@@ -45,11 +46,11 @@ export function withWeb(opts: WithWebOptions = {}) {
           ...(config.module.rules || []),
           {
             test: /\.css$/,
-            type: 'css/module',
+            type: opts?.cssModules ? 'css/module' : undefined,
           },
           {
             test: /\.scss$|\.sass$/,
-            type: 'css/module',
+            type: opts?.cssModules ? 'css/module' : undefined,
             use: [
               {
                 loader: require.resolve('sass-loader'),
@@ -67,7 +68,7 @@ export function withWeb(opts: WithWebOptions = {}) {
           },
           {
             test: /.less$/,
-            type: 'css/module',
+            type: opts?.cssModules ? 'css/module' : undefined,
             use: [
               {
                 loader: require.resolve('less-loader'),
