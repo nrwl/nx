@@ -105,6 +105,6 @@ function createRunAndroidOptions(options: ReactNativeRunAndroidOptions) {
   return getCliOptions<ReactNativeRunAndroidOptions>(
     options,
     [...nxOptions, ...startOptions, ...deprecatedOptions],
-    ['appId', 'appIdSuffix']
+    ['appId', 'appIdSuffix', 'deviceId']
   );
 }
