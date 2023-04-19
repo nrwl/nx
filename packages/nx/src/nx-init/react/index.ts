@@ -312,7 +312,13 @@ function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
     setupE2eProject(options.reactAppName);
   } else {
     removeSync(join('apps', `${options.reactAppName}-e2e`));
-    execSync(`${options.pmc.rm} @nrwl/cypress eslint-plugin-cypress`);
+    const packageJson = readJsonFile('package.json');
+    const cypressPkgName =
+      packageJson.devDependencies?.['@nrwl/cypress'] ||
+      packageJson.dependencies?.['@nrwl/cypress']
+        ? '@nrwl/cypress'
+        : '@nx/cypress';
+    execSync(`${options.pmc.rm} ${cypressPkgName} eslint-plugin-cypress`);
   }
 
   if (options.isStandalone) {
