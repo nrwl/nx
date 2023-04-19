@@ -33,6 +33,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       standalone: options.standaloneApi,
       routing: options.routing,
+      e2eTestRunner: options.e2eTestRunner,
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
@@ -46,6 +47,7 @@ async function createPreset(tree: Tree, options: Schema) {
       routing: options.routing,
       rootProject: true,
       standalone: options.standaloneApi,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
     });
   } else if (options.preset === Preset.ReactMonorepo) {
     const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
@@ -56,6 +58,7 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       bundler: options.bundler ?? 'webpack',
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
     });
   } else if (options.preset === Preset.ReactStandalone) {
     const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
@@ -67,7 +70,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       rootProject: true,
       bundler: options.bundler ?? 'vite',
-      e2eTestRunner: 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
       unitTestRunner: options.bundler === 'vite' ? 'vitest' : 'jest',
     });
   } else if (options.preset === Preset.NextJs) {
@@ -78,6 +81,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
     });
   } else if (options.preset === Preset.NextJsStandalone) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nx' +
@@ -98,6 +102,7 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       bundler: 'vite',
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
     });
   } else if (options.preset === Preset.Nest) {
     const { applicationGenerator: nestApplicationGenerator } = require('@nx' +
@@ -106,6 +111,7 @@ async function createPreset(tree: Tree, options: Schema) {
     return nestApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
+      e2eTestRunner: options.e2eTestRunner ?? 'jest',
     });
   } else if (options.preset === Preset.Express) {
     const {
@@ -114,6 +120,7 @@ async function createPreset(tree: Tree, options: Schema) {
     return expressApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
+      e2eTestRunner: options.e2eTestRunner ?? 'jest',
     });
   } else if (options.preset === Preset.ReactNative) {
     const { reactNativeApplicationGenerator } = require('@nx' +
@@ -121,14 +128,14 @@ async function createPreset(tree: Tree, options: Schema) {
     return reactNativeApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
-      e2eTestRunner: 'detox',
+      e2eTestRunner: options.e2eTestRunner ?? 'detox',
     });
   } else if (options.preset === Preset.Expo) {
     const { expoApplicationGenerator } = require('@nx' + '/expo');
     return expoApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
-      e2eTestRunner: 'detox',
+      e2eTestRunner: options.e2eTestRunner ?? 'detox',
     });
   } else if (options.preset === Preset.TS) {
     const c = readNxJson(tree);
@@ -149,6 +156,7 @@ async function createPreset(tree: Tree, options: Schema) {
       framework: options.framework,
       docker: options.docker,
       rootProject: true,
+      e2eTestRunner: options.e2eTestRunner ?? 'jest',
     });
   } else {
     throw new Error(`Invalid preset ${options.preset}`);

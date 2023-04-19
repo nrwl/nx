@@ -84,6 +84,9 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
         : null,
       parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
       opts.routing !== undefined ? `--routing=${opts.routing}` : null,
+      opts.e2eTestRunner !== undefined
+        ? `--e2eTestRunner=${opts.e2eTestRunner}`
+        : null,
     ].filter((e) => !!e);
   }
 }
@@ -92,6 +95,7 @@ function getPresetDependencies({
   preset,
   presetVersion,
   bundler,
+  e2eTestRunner,
 }: NormalizedSchema) {
   switch (preset) {
     case Preset.TS:
@@ -126,7 +130,7 @@ function getPresetDependencies({
         dependencies: {},
         dev: {
           '@nx/react': nxVersion,
-          '@nx/cypress': nxVersion,
+          '@nx/cypress': e2eTestRunner !== 'none' ? nxVersion : undefined,
           '@nx/jest': bundler !== 'vite' ? nxVersion : undefined,
           '@nx/vite': bundler === 'vite' ? nxVersion : undefined,
           '@nx/webpack': bundler === 'webpack' ? nxVersion : undefined,

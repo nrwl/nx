@@ -30,6 +30,7 @@ interface Schema {
   standaloneApi?: boolean;
   routing?: boolean;
   packageManager?: PackageManager;
+  e2eTestRunner?: 'cypress' | 'detox' | 'jest' | 'none';
 }
 
 export interface NormalizedSchema extends Schema {
