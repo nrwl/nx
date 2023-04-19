@@ -63,6 +63,18 @@ export function storybookMajorVersion(): number | undefined {
   }
 }
 
+export function getInstalledStorybookVersion(): string | undefined {
+  try {
+    const storybookPackageVersion = require(join(
+      '@storybook/core-server',
+      'package.json'
+    )).version;
+    return storybookPackageVersion;
+  } catch {
+    return undefined;
+  }
+}
+
 export function safeFileDelete(tree: Tree, path: string): boolean {
   if (tree.exists(path)) {
     tree.delete(path);
