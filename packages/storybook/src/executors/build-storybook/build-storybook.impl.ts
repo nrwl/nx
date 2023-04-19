@@ -3,8 +3,8 @@ import * as build from '@storybook/core-server';
 import { CLIOptions } from '@storybook/types'; // TODO(katerina): Remove when Storybook 7
 import 'dotenv/config';
 import {
-  isStorybookV7,
   storybookConfigExistsCheck,
+  storybookMajorVersion,
 } from '../../utils/utilities';
 import { CommonNxStorybookConfig } from '../../utils/models';
 import {
@@ -18,7 +18,7 @@ export default async function buildStorybookExecutor(
   context: ExecutorContext
 ) {
   storybookConfigExistsCheck(options.configDir, context.projectName);
-  const storybook7 = isStorybookV7();
+  const storybook7 = storybookMajorVersion() === 7;
   if (storybook7) {
     const buildOptions: CLIOptions = options;
     logger.info(`NX Storybook builder starting ...`);
