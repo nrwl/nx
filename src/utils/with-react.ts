@@ -10,7 +10,10 @@ export function withReact(opts = {}) {
     const isDev =
       process.env.NODE_ENV === 'development' || options.mode === 'development';
 
-    config = withWeb(opts)(config, { options, context });
+    config = withWeb({ ...opts, cssModules: true })(config, {
+      options,
+      context,
+    });
 
     return {
       ...config,
