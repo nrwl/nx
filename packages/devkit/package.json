@@ -35,7 +35,7 @@
     "semver": "7.3.4"
   },
   "peerDependencies": {
-    "nx": ">= 14.1 <= 16"
+    "nx": ">= 15 <= 17"
   },
   "publishConfig": {
     "access": "public"
