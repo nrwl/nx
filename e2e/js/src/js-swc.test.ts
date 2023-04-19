@@ -134,8 +134,9 @@ export function x() {
 
     // update .swcrc to use path mappings
     updateJson(`libs/${lib}/.swcrc`, (json) => {
+      json.jsc.baseUrl = '.';
       json.jsc.paths = {
-        'src/*': ['src/*'],
+        '~/*': ['./src/*'],
       };
       return json;
     });
@@ -144,7 +145,7 @@ export function x() {
     updateFile(`libs/${lib}/src/lib/${lib}.ts`, () => {
       return `
 // @ts-ignore
-import { x } from 'src/x';
+import { x } from '~/x';
 
 export function myLib() {
   console.log(x());
@@ -154,8 +155,8 @@ myLib();
   `;
     });
 
-    // now run build
-    runCLI(`build ${lib}`);
+    // now run build without type checking (since we're using path mappings not in tsconfig)
+    runCLI(`build ${lib} --skipTypeCheck`);
 
     // invoke the lib with node
     const result = execSync(`node dist/libs/${lib}/src/lib/${lib}.js`, {
