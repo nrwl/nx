@@ -37,18 +37,9 @@ describe('nx init (for React)', () => {
     expect(craToNxOutput).toContain('🎉 Done!');
 
     const packageJson = readJson('package.json');
-    expect(
-      packageJson.devDependencies['@nrwl/jest'] ||
-        packageJson.devDependencies['@nx/jest']
-    ).toBeDefined();
-    expect(
-      packageJson.devDependencies['@nrwl/vite'] ||
-        packageJson.devDependencies['@nx/vite']
-    ).toBeUndefined();
-    expect(
-      packageJson.devDependencies['@nrwl/webpack'] ||
-        packageJson.devDependencies['@nx/webpack']
-    ).toBeDefined();
+    expect(packageJson.devDependencies['@nx/jest']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/vite']).toBeUndefined();
+    expect(packageJson.devDependencies['@nx/webpack']).toBeDefined();
 
     runCLI(`build ${appName}`, {
       env: {
@@ -77,18 +68,9 @@ describe('nx init (for React)', () => {
     expect(craToNxOutput).toContain('🎉 Done!');
 
     const packageJson = readJson('package.json');
-    expect(
-      packageJson.devDependencies['@nrwl/jest'] ||
-        packageJson.devDependencies['@nx/jest']
-    ).toBeUndefined();
-    expect(
-      packageJson.devDependencies['@nrwl/vite'] ||
-        packageJson.devDependencies['@nx/vite']
-    ).toBeDefined();
-    expect(
-      packageJson.devDependencies['@nrwl/webpack'] ||
-        packageJson.devDependencies['@nx/webpack']
-    ).toBeUndefined();
+    expect(packageJson.devDependencies['@nx/jest']).toBeUndefined();
+    expect(packageJson.devDependencies['@nx/vite']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/webpack']).toBeUndefined();
 
     const viteConfig = readFile(`apps/${appName}/vite.config.js`);
     expect(viteConfig).toContain('port: 4200'); // default port
@@ -166,7 +148,7 @@ describe('nx init (for React)', () => {
     );
 
     const packageJson = readJson('package.json');
-    expect(packageJson.devDependencies['@nrwl/jest']).toBeUndefined();
+    expect(packageJson.devDependencies['@nx/jest']).toBeUndefined();
 
     const viteConfig = readFile(`vite.config.js`);
     expect(viteConfig).toContain('port: 4200'); // default port
