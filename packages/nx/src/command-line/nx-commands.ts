@@ -266,16 +266,17 @@ export const commandsObject = yargs
       process.exit(0);
     },
   })
-
+  /**
+   * @deprecated(v17): Remove `workspace-generator in v17. Use local plugins.
+   */
   .command({
     command: 'workspace-generator [name]',
     describe: 'Runs a workspace generator from the tools/generators directory',
+    deprecated:
+      'Use a local plugin instead. See: https://nx.dev/deprecated/workspace-generators',
     aliases: ['workspace-schematic [name]'],
     builder: async (yargs) =>
-      linkToNxDevAndExamples(
-        await withWorkspaceGeneratorOptions(yargs, process.argv.slice(3)),
-        'workspace-generator'
-      ),
+      linkToNxDevAndExamples(withGenerateOptions(yargs), 'workspace-generator'),
     handler: workspaceGeneratorHandler,
   })
   .command({
@@ -824,142 +825,11 @@ function withRunOneOptions(yargs: yargs.Argv) {
   }
 }
 
-type OptionArgumentDefinition = {
-  type: yargs.Options['type'];
-  describe?: string;
-  default?: any;
-  choices?: yargs.Options['type'][];
-  demandOption?: boolean;
-};
-
-type WorkspaceGeneratorProperties = {
-  [name: string]:
-    | {
-        type: yargs.Options['type'];
-        description?: string;
-        default?: any;
-        enum?: yargs.Options['type'][];
-        demandOption?: boolean;
-      }
-    | {
-        type: yargs.PositionalOptionsType;
-        description?: string;
-        default?: any;
-        enum?: yargs.PositionalOptionsType[];
-        $default: {
-          $source: 'argv';
-          index: number;
-        };
-      };
-};
-
-function isPositionalProperty(
-  property: WorkspaceGeneratorProperties[keyof WorkspaceGeneratorProperties]
-): property is { type: yargs.PositionalOptionsType } {
-  return property['$default']?.['$source'] === 'argv';
-}
-
-async function withWorkspaceGeneratorOptions(
-  yargs: yargs.Argv,
-  args: string[]
-) {
-  // filter out only positional arguments
-  args = args.filter((a) => !a.startsWith('-'));
-  if (args.length) {
-    // this is an actual workspace generator
-    return withCustomGeneratorOptions(yargs, args[0]);
-  } else {
-    yargs
-      .option('list-generators', {
-        describe: 'List the available workspace-generators',
-        type: 'boolean',
-      })
-      .positional('name', {
-        type: 'string',
-        describe: 'The name of your generator',
-      });
-    /**
-     * Don't require `name` if only listing available
-     * schematics
-     */
-    if ((await yargs.argv).listGenerators !== true) {
-      yargs.demandOption('name');
-    }
-    return yargs;
-  }
-}
-
-async function withCustomGeneratorOptions(
-  yargs: yargs.Argv,
-  generatorName: string
-) {
-  const schema = (
-    await import('./workspace-generators')
-  ).workspaceGeneratorSchema(generatorName);
-  const options = [];
-  const positionals = [];
-
-  Object.entries(
-    (schema.properties ?? {}) as WorkspaceGeneratorProperties
-  ).forEach(([name, prop]) => {
-    const option: { name: string; definition: OptionArgumentDefinition } = {
-      name,
-      definition: {
-        describe: prop.description,
-        type: prop.type,
-        default: prop.default,
-        choices: prop.enum,
-      },
-    };
-    if (schema.required && schema.required.includes(name)) {
-      option.definition.demandOption = true;
-    }
-    options.push(option);
-    if (isPositionalProperty(prop)) {
-      positionals.push({
-        name,
-        definition: {
-          describe: prop.description,
-          type: prop.type,
-          choices: prop.enum,
-        },
-      });
-    }
-  });
-
-  let command = generatorName;
-  positionals.forEach(({ name }) => {
-    command += ` [${name}]`;
-  });
-  if (options.length) {
-    command += ' (options)';
-  }
-
-  yargs
-    .command({
-      // this is the default and only command
-      command,
-      describe: schema.description || '',
-      builder: (y) => {
-        options.forEach(({ name, definition }) => {
-          y.option(name, definition);
-        });
-        positionals.forEach(({ name, definition }) => {
-          y.positional(name, definition);
-        });
-        return linkToNxDevAndExamples(y, 'workspace-generator');
-      },
-      handler: workspaceGeneratorHandler,
-    })
-    .fail(() => void 0); // no action is needed on failure as Nx will handle it based on schema validation
-
-  return yargs;
-}
-
-async function workspaceGeneratorHandler() {
-  await (
-    await import('./workspace-generators')
-  ).workspaceGenerators(process.argv.slice(3));
+/**
+ * @deprecated(v17): Remove `workspace-generator in v17. Use local plugins.
+ */
+async function workspaceGeneratorHandler(args: yargs.Arguments) {
+  await (await import('./workspace-generators')).workspaceGenerators(args);
   process.exit(0);
 }
 

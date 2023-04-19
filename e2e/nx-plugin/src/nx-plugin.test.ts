@@ -259,9 +259,6 @@ describe('Nx Plugin', () => {
     expect(results).not.toContain(goodMigration);
   });
 
-  /**
-   * @todo(@AgentEnder): reenable after figuring out @swc-node
-   */
   describe('local plugins', () => {
     let plugin: string;
     beforeEach(() => {
@@ -365,6 +362,28 @@ describe('Nx Plugin', () => {
       }).not.toThrow();
       updateFile('package.json', JSON.stringify(oldPackageJson, null, 2));
       runCommand(getPackageManagerCommand().install);
+    });
+  });
+
+  describe('workspace-generator', () => {
+    let custom: string;
+
+    it('should work with generate wrapper', () => {
+      custom = uniq('custom');
+      const project = uniq('generated-project');
+      runCLI(`g @nrwl/nx-plugin:plugin workspace-plugin --no-interactive`);
+      runCLI(
+        `g @nrwl/nx-plugin:generator ${custom} --project workspace-plugin --no-interactive`
+      );
+      runCLI(
+        `workspace-generator ${custom} --name ${project} --no-interactive`
+      );
+      expect(() => {
+        checkFilesExist(
+          `libs/${project}/src/index.ts`,
+          `libs/${project}/project.json`
+        );
+      });
     });
   });
 

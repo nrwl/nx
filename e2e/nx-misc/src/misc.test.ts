@@ -86,7 +86,6 @@ describe('Nx Commands', () => {
       // check for schematics
       expect(listOutput).toContain('workspace');
       expect(listOutput).toContain('library');
-      expect(listOutput).toContain('workspace-generator');
 
       // check for builders
       expect(listOutput).toContain('run-commands');

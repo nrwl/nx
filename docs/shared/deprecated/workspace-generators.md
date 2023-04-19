@@ -8,6 +8,10 @@ Check the [nx-plugin guide](/packages/nx-plugin) for information on creating a n
 
 ## Converting workspace generators to local generators
 
+{% callout type=\"info\" %}
+When migrating to Nx 16, a new workspace plugin is automatically generated in the tools folder if you already have workspace-generators.
+{% /callout %}
+
 - If you don't already have a local plugin, use Nx to generate one:
 
 ```shell
