@@ -1,4 +1,10 @@
+import { InitArgs } from '../../command-line/init';
 import type { TargetConfiguration } from '../../config/workspace-json-project-json';
+
+export type Options = Pick<
+  InitArgs,
+  'nxCloud' | 'integrated' | 'interactive' | 'cacheable'
+>;
 
 export type AngularJsonConfigTargetConfiguration = Exclude<
   TargetConfiguration,

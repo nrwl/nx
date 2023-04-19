@@ -14,8 +14,7 @@ import {
 import { setupIntegratedWorkspace } from './integrated-workspace';
 import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-versions';
 import { setupStandaloneWorkspace } from './standalone-workspace';
-import type { AngularJsonConfig } from './types';
-import yargsParser = require('yargs-parser');
+import type { AngularJsonConfig, Options } from './types';
 
 const defaultCacheableOperations: string[] = [
   'build',
@@ -23,25 +22,17 @@ const defaultCacheableOperations: string[] = [
   'test',
   'lint',
 ];
-const parsedArgs = yargsParser(process.argv, {
-  boolean: ['yes'],
-  string: ['cacheable'], // only used for testing
-  alias: {
-    yes: ['y'],
-  },
-});
 
 let repoRoot: string;
 let workspaceTargets: string[];
 
-export async function addNxToAngularCliRepo(integrated: boolean) {
+export async function addNxToAngularCliRepo(options: Options) {
   repoRoot = process.cwd();
 
   output.log({ title: '🧐 Checking versions compatibility' });
   const legacyMigrationFn = await getLegacyMigrationFunctionIfApplicable(
     repoRoot,
-    integrated,
-    parsedArgs.yes !== true
+    options
   );
   if (legacyMigrationFn) {
     output.log({ title: '💽 Running migration for a legacy Angular version' });
@@ -55,16 +46,17 @@ export async function addNxToAngularCliRepo(integrated: boolean) {
   });
 
   output.log({ title: '🐳 Nx initialization' });
-  const cacheableOperations = !integrated
-    ? await collectCacheableOperations()
+  const cacheableOperations = !options.integrated
+    ? await collectCacheableOperations(options)
     : [];
-  const useNxCloud = parsedArgs.yes !== true ? await askAboutNxCloud() : false;
+  const useNxCloud =
+    options.nxCloud ?? (options.interactive ? await askAboutNxCloud() : false);
 
   output.log({ title: '📦 Installing dependencies' });
   installDependencies(useNxCloud);
 
   output.log({ title: '📝 Setting up workspace' });
-  await setupWorkspace(cacheableOperations, integrated);
+  await setupWorkspace(cacheableOperations, options.integrated);
 
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
@@ -79,7 +71,7 @@ export async function addNxToAngularCliRepo(integrated: boolean) {
   });
 }
 
-async function collectCacheableOperations(): Promise<string[]> {
+async function collectCacheableOperations(options: Options): Promise<string[]> {
   let cacheableOperations: string[];
 
   workspaceTargets = getWorkspaceTargets();
@@ -87,7 +79,7 @@ async function collectCacheableOperations(): Promise<string[]> {
     (t) => workspaceTargets.includes(t)
   );
 
-  if (parsedArgs.yes !== true) {
+  if (options.interactive) {
     output.log({
       title:
         '🧑‍🔧 Please answer the following questions about the targets found in your angular.json in order to generate task runner configuration',
@@ -107,9 +99,8 @@ async function collectCacheableOperations(): Promise<string[]> {
       ])) as any
     ).cacheableOperations;
   } else {
-    cacheableOperations = parsedArgs.cacheable
-      ? parsedArgs.cacheable.split(',')
-      : defaultCacheableTargetsInWorkspace;
+    cacheableOperations =
+      options.cacheable ?? defaultCacheableTargetsInWorkspace;
   }
 
   return cacheableOperations;

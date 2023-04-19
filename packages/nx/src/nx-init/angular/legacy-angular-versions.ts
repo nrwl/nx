@@ -12,6 +12,7 @@ import {
   resolvePackageVersionUsingRegistry,
 } from '../../utils/package-manager';
 import { askAboutNxCloud, initCloud, printFinalMessage } from '../utils';
+import type { Options } from './types';
 
 // map of Angular major versions to Nx versions to use for legacy `nx init` migrations,
 // key is major Angular version and value is Nx version to use
@@ -23,8 +24,7 @@ const versionWithConsolidatedPackages = '13.9.0';
 
 export async function getLegacyMigrationFunctionIfApplicable(
   repoRoot: string,
-  isIntegratedMigration: boolean,
-  interactive: boolean
+  options: Options
 ): Promise<() => Promise<void> | null> {
   const angularVersion =
     readModulePackageJson('@angular/core').packageJson.version;
@@ -44,7 +44,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
       pkgName,
       `^${majorAngularVersion}.0.0`
     );
-    const preserveAngularCliLayoutFlag = !isIntegratedMigration
+    const preserveAngularCliLayoutFlag = !options.integrated
       ? '--preserveAngularCLILayout'
       : '--preserveAngularCLILayout=false';
     legacyMigrationCommand = `ng g ${pkgName}:ng-add ${preserveAngularCliLayoutFlag}`;
@@ -52,7 +52,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
     // for v13, the migration was in @nrwl/angular:ng-add
     pkgName = '@nrwl/angular';
     pkgVersion = await resolvePackageVersion(pkgName, '~14.1.0');
-    const preserveAngularCliLayoutFlag = !isIntegratedMigration
+    const preserveAngularCliLayoutFlag = !options.integrated
       ? '--preserve-angular-cli-layout'
       : '--preserve-angular-cli-layout=false';
     legacyMigrationCommand = `ng g ${pkgName}:ng-add ${preserveAngularCliLayoutFlag}`;
@@ -70,7 +70,9 @@ export async function getLegacyMigrationFunctionIfApplicable(
 
   return async () => {
     output.log({ title: '🐳 Nx initialization' });
-    const useNxCloud = interactive ? await askAboutNxCloud() : false;
+    const useNxCloud =
+      options.nxCloud ??
+      (options.interactive ? await askAboutNxCloud() : false);
 
     output.log({ title: '📦 Installing dependencies' });
     const pmc = getPackageManagerCommand();

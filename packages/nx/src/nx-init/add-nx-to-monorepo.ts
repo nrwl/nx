@@ -2,7 +2,7 @@ import { prompt } from 'enquirer';
 import { readdirSync, readFileSync, statSync } from 'fs';
 import ignore from 'ignore';
 import { join, relative } from 'path';
-import * as yargsParser from 'yargs-parser';
+import { InitArgs } from '../command-line/init';
 import { readJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
@@ -15,15 +15,9 @@ import {
   runInstall,
 } from './utils';
 
-const parsedArgs = yargsParser(process.argv, {
-  boolean: ['yes'],
-  string: ['cacheable'], // only used for testing
-  alias: {
-    yes: ['y'],
-  },
-});
+type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 
-export async function addNxToMonorepo() {
+export async function addNxToMonorepo(options: Options) {
   const repoRoot = process.cwd();
 
   output.log({ title: '🐳 Nx initialization' });
@@ -36,7 +30,7 @@ export async function addNxToMonorepo() {
   let scriptOutputs = {} as { [script: string]: string };
   let useNxCloud: boolean;
 
-  if (parsedArgs.yes !== true && scripts.length > 0) {
+  if (options.interactive && scripts.length > 0) {
     output.log({
       title:
         '🧑‍🔧 Please answer the following questions about the scripts found in your workspace in order to generate task runner configuration',
@@ -78,13 +72,13 @@ export async function addNxToMonorepo() {
       )[scriptName];
     }
 
-    useNxCloud = await askAboutNxCloud();
+    useNxCloud = options.nxCloud ?? (await askAboutNxCloud());
   } else {
     targetDefaults = [];
-    cacheableOperations = parsedArgs.cacheable
-      ? parsedArgs.cacheable.split(',')
-      : [];
-    useNxCloud = false;
+    cacheableOperations = options.cacheable ?? [];
+    useNxCloud =
+      options.nxCloud ??
+      (options.interactive ? await askAboutNxCloud() : false);
   }
 
   createNxJsonFile(

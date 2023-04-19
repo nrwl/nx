@@ -1,13 +1,13 @@
 import { execSync } from 'child_process';
 import { copySync, moveSync, readdirSync, removeSync } from 'fs-extra';
 import { join } from 'path';
-import * as yargsParser from 'yargs-parser';
+import { InitArgs } from '../../command-line/init';
 import { fileExists, readJsonFile } from '../../utils/fileutils';
 import { output } from '../../utils/output';
 import {
-  PackageManagerCommands,
   detectPackageManager,
   getPackageManagerCommand,
+  PackageManagerCommands,
 } from '../../utils/package-manager';
 import { askAboutNxCloud, printFinalMessage } from '../utils';
 import { checkForCustomWebpackSetup } from './check-for-custom-webpack-setup';
@@ -21,16 +21,9 @@ import { writeCracoConfig } from './write-craco-config';
 import { writeViteConfig } from './write-vite-config';
 import { writeViteIndexHtml } from './write-vite-index-html';
 
-export interface Options {
-  force: boolean;
-  e2e: boolean;
-  nxCloud: boolean;
-  vite: boolean;
-  integrated: boolean;
-  interactive: boolean;
-}
+type Options = InitArgs;
 
-interface NormalizedOptions extends Options {
+type NormalizedOptions = Options & {
   packageManager: string;
   pmc: PackageManagerCommands;
   appIsJs: boolean;
@@ -39,31 +32,17 @@ interface NormalizedOptions extends Options {
   npxYesFlagNeeded: boolean;
   isVite: boolean;
   isStandalone: boolean;
-}
+};
 
-const parsedArgs = yargsParser(process.argv, {
-  boolean: ['force', 'e2e', 'nxCloud', 'vite', 'interactive'],
-  default: {
-    interactive: true,
-    vite: true,
-  },
-  configuration: {
-    'strip-dashed': true,
-  },
-});
-
-export async function addNxToCraRepo(integrated: boolean) {
-  if (!parsedArgs.force) {
+export async function addNxToCraRepo(options: Options) {
+  if (!options.force) {
     checkForUncommittedChanges();
     checkForCustomWebpackSetup();
   }
 
   output.log({ title: '🐳 Nx initialization' });
 
-  const normalizedOptions = await normalizeOptions(
-    parsedArgs as unknown as Options,
-    integrated
-  );
+  const normalizedOptions = await normalizeOptions(options);
   await reorgnizeWorkspaceStructure(normalizedOptions);
 }
 
@@ -90,10 +69,7 @@ function installDependencies(options: NormalizedOptions) {
   });
 }
 
-async function normalizeOptions(
-  options: Options,
-  integrated: boolean
-): Promise<NormalizedOptions> {
+async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
   const packageManager = detectPackageManager();
   const pmc = getPackageManagerCommand(packageManager);
 
@@ -110,14 +86,14 @@ async function normalizeOptions(
   // Should remove this check 04/2023 once Node 14 & npm 6 reach EOL
   const npxYesFlagNeeded = !npmVersion.startsWith('6'); // npm 7 added -y flag to npx
   const isVite = options.vite;
-  const isStandalone = !integrated;
-  options.nxCloud =
-    options.interactive && options.nxCloud === undefined
-      ? await askAboutNxCloud()
-      : options.nxCloud ?? false;
+  const isStandalone = !options.integrated;
+
+  const nxCloud =
+    options.nxCloud ?? (options.interactive ? await askAboutNxCloud() : false);
 
   return {
     ...options,
+    nxCloud,
     packageManager,
     pmc,
     appIsJs,
@@ -126,7 +102,6 @@ async function normalizeOptions(
     npxYesFlagNeeded,
     isVite,
     isStandalone,
-    integrated,
   };
 }
 
@@ -312,7 +287,7 @@ function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
 
   setupTsConfig(options.reactAppName, options.isStandalone);
 
-  if (options.e2e && !options.isStandalone) {
+  if (options.addE2e && !options.isStandalone) {
     output.log({ title: '📃 Setup e2e tests' });
     setupE2eProject(options.reactAppName);
   } else {
