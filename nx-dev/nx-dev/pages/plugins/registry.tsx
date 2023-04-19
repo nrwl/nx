@@ -1,8 +1,14 @@
-import { Footer, Header } from '@nrwl/nx-dev/ui-common';
-import { CreateNxPlugin, PluginDirectory } from '@nrwl/nx-dev/ui-community';
+import { Breadcrumbs, Footer, Header } from '@nrwl/nx-dev/ui-common';
+import { DocumentationHeader, SidebarContainer } from '@nrwl/nx-dev/ui-common';
+import { PluginDirectory } from '@nrwl/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
+import { useRef } from 'react';
+import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { useRouter } from 'next/router';
 import { nxPackagesApi } from '../../lib/packages.api';
+import { Menu } from '@nrwl/nx-dev/models-menu';
+import { getBasicPluginsSection } from '@nrwl/nx-dev/data-access-menu';
+import { menusApi } from '../../lib/menus.api';
 
 declare const fetch: any;
 
@@ -14,9 +20,10 @@ interface PluginInfo {
 }
 interface BrowseProps {
   pluginList: PluginInfo[];
+  // segments: string[];
 }
 
-export async function getStaticProps(): Promise<{ props: BrowseProps }> {
+export async function getStaticProps({}): Promise<{ props: BrowseProps }> {
   const res = await fetch(
     'https://raw.githubusercontent.com/nrwl/nx/master/community/approved-plugins.json'
   );
@@ -46,12 +53,23 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
           isOfficial: false,
         })),
       ],
+      // segments,
     },
   };
 }
 
 export default function Browse(props: BrowseProps): JSX.Element {
   const router = useRouter();
+  const { toggleNav, navIsOpen } = useNavToggle();
+  const wrapperElement = useRef(null);
+
+  const vm: {
+    menu: Menu;
+  } = {
+    menu: {
+      sections: [getBasicPluginsSection(menusApi.getMenu('plugins', ''))],
+    },
+  };
 
   return (
     <>
@@ -75,15 +93,37 @@ export default function Browse(props: BrowseProps): JSX.Element {
           type: 'website',
         }}
       />
-      <Header />
-      <main id="main" role="main">
-        <div className="w-full">
-          <div id="plugin-directory" className="py-28">
-            <PluginDirectory pluginList={props.pluginList} />
-          </div>
+      <div id="shell" className="flex h-full flex-col">
+        <div className="w-full flex-shrink-0">
+          <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
         </div>
-      </main>
-      <Footer />
+        <main
+          id="main"
+          role="main"
+          className="flex h-full flex-1 overflow-y-hidden"
+        >
+          <SidebarContainer menu={vm.menu} navIsOpen={navIsOpen} />
+          <div
+            ref={wrapperElement}
+            id="wrapper"
+            data-testid="wrapper"
+            className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
+          >
+            <div className="mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl">
+              <div id="content-wrapper" className="w-full flex-auto flex-col">
+                <div className="mb-6 pt-8">
+                  <Breadcrumbs path={router.asPath} />
+                </div>
+                <div className="min-w-0 flex-auto pb-24 lg:pb-16">
+                  <PluginDirectory pluginList={props.pluginList} />
+                </div>
+              </div>
+            </div>
+
+            <Footer />
+          </div>
+        </main>
+      </div>
     </>
   );
 }

@@ -18,7 +18,6 @@ export function PluginDirectory({
   return (
     <div
       id="plugin-directory"
-      className="max-w-screen mx-auto p-4 lg:max-w-7xl lg:px-8"
     >
       <div className="flex w-full flex-col justify-between gap-8 md:flex-row ">
         <SectionHeading as="h2" variant="display" id="plugins-registry">

@@ -68,7 +68,7 @@ export function Header(): JSX.Element {
       href: '/community',
     },
     {
-      name: 'Plugins registry',
+      name: 'Plugins',
       description: 'Add capabilities to your workspace with plugins.',
       href: '/plugins/intro/use-cases',
     },

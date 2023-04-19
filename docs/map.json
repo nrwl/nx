@@ -761,11 +761,6 @@
               "file": "shared/plugins/intro"
             },
             {
-              "name": "Create a Plugin",
-              "id": "create-plugin",
-              "file": "shared/plugins/create-plugin"
-            },
-            {
               "name": "Plugin Registry",
               "description": "Browse official and community plugins",
               "id": "registry",
@@ -776,14 +771,36 @@
           ]
         },
         {
-          "name": "Executors",
-          "id": "executors",
-          "description": "Use, extend and compose executors.",
+          "name": "5 Min Tutorials",
+          "id": "tutorials",
+          "description": "Get started with plugins",
           "itemList": [
             {
-              "name": "Local Executors",
-              "id": "creating-custom-executors",
-              "tags": ["use-task-executors", "create-your-own-plugin"],
+              "name": "Create a Local Plugin",
+              "id": "create-plugin",
+              "file": "shared/plugins/create-plugin"
+            },
+            {
+              "name": "Create and Maintain a Published Plugin",
+              "id": "publish-plugin",
+              "file": "shared/plugins/publish-plugin"
+            },
+            {
+              "name": "Use Nx as Your Framework CLI",
+              "id": "nx-framework-cli",
+              "file": "shared/plugins/nx-framework-cli"
+            }
+          ]
+        },
+        {
+          "name": "Recipes",
+          "id": "recipes",
+          "description": "Focused instructions to complete a specific task",
+          "itemList": [
+            {
+              "name": "Write a Simple Executor",
+              "id": "local-executors",
+              "tags": ["use-task-executors"],
               "file": "shared/recipes/plugins/local-executors"
             },
             {
@@ -791,51 +808,37 @@
               "id": "compose-executors",
               "tags": ["use-task-executors"],
               "file": "shared/recipes/plugins/compose-executors"
-            }
-          ]
-        },
-        {
-          "name": "Generators",
-          "id": "generators",
-          "description": "Use, extend and compose generators.",
-          "itemList": [
+            },
             {
-              "name": "Local Generators",
+              "name": "Write a Simple Generator",
               "id": "local-generators",
-              "tags": ["use-code-generators", "create-your-own-plugin"],
+              "tags": ["use-code-generators"],
               "file": "shared/recipes/generators/local-generators"
             },
             {
-              "name": "Composing Generators",
+              "name": "Compose Generators",
               "id": "composing-generators",
               "tags": ["use-code-generators"],
               "file": "shared/recipes/generators/composing-generators"
             },
             {
-              "name": "Generator Options",
+              "name": "Provide Options for Generators",
               "id": "generator-options",
               "tags": ["use-code-generators"],
               "file": "shared/recipes/generators/generator-options"
             },
             {
-              "name": "Creating Files",
+              "name": "Create Files",
               "id": "creating-files",
               "tags": ["use-code-generators"],
               "file": "shared/recipes/generators/creating-files"
             },
             {
-              "name": "Modifying Files",
+              "name": "Modify Files",
               "id": "modifying-files",
               "tags": ["use-code-generators"],
               "file": "shared/recipes/generators/modifying-files"
-            }
-          ]
-        },
-        {
-          "name": "Advanced",
-          "id": "advanced",
-          "description": "Advanced Plugin",
-          "itemList": [
+            },
             {
               "name": "Share Your Plugin",
               "id": "share-your-plugin",
@@ -843,7 +846,7 @@
               "file": "shared/recipes/plugins/share-your-plugin"
             },
             {
-              "name": "Migration Generators",
+              "name": "Write a Migration",
               "id": "migration-generators",
               "tags": ["create-your-own-plugin"],
               "file": "shared/recipes/plugins/migration-generators"
@@ -855,13 +858,13 @@
               "file": "shared/recipes/plugins/create-preset"
             },
             {
-              "name": "Project Graph Plugins",
+              "name": "Modify the Project Graph",
               "id": "project-graph-plugins",
               "tags": ["create-your-own-plugin", "explore-graph"],
               "file": "shared/recipes/plugins/project-graph-plugins"
             },
             {
-              "name": "Project Inference Plugins",
+              "name": "Identify Custom Projects",
               "id": "project-inference-plugins",
               "tags": ["create-your-own-plugin"],
               "file": "shared/recipes/plugins/project-inference-plugins"

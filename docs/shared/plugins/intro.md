@@ -26,7 +26,7 @@ Plugins allow you to easily adopt the industry standard practices for a particul
 
 ## Create a Local Plugin
 
-Local plugins allow you to automate and centralize repository specific tasks. You can automate code creation and modification tasks with [code generators]. Instead of writing a 7 step guide in a readme file, you can create a generator to prompt the developer for inputs and modify the code directly. Make scripts and their flags easily discoverable with [executors]. And [Nx Console] offers a ready-made UI for your repo specific tasks.
+Local plugins allow you to automate and centralize repository specific tasks. You can automate code creation and modification tasks with [code generators](/plugins/recipes/local-generators). Instead of writing a 7 step guide in a readme file, you can create a generator to prompt the developer for inputs and modify the code directly. Make scripts and their flags easily discoverable with [executors](/plugins/recipes/local-executors). And [Nx Console](/core-features/integrate-with-editors) offers a ready-made UI for your repo specific tasks.
 
 {% cards cols="3" %}
 
