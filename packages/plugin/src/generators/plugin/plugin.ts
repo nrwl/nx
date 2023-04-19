@@ -87,7 +87,9 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     })
   );
 
-  tasks.push(addTsLibDependencies(host));
+  if (options.bundler === 'tsc') {
+    tasks.push(addTsLibDependencies(host));
+  }
 
   tasks.push(
     addDependenciesToPackageJson(
