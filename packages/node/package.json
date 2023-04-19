@@ -36,7 +36,6 @@
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",
-    "@nx/webpack": "file:../webpack",
     "@nx/workspace": "file:../workspace"
   },
   "publishConfig": {

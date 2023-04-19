@@ -70,7 +70,7 @@
   },
   "nextlib": {
     "build": {
-      "executor": "@nx/web:rollup",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/next-lib-buildable",
@@ -116,7 +116,6 @@
         "styles": ["apps/ngapp/src/styles.css"],
         "scripts": []
       },
-
       "defaultConfiguration": "production"
     },
     "serve": {
@@ -131,7 +130,6 @@
       },
       "defaultConfiguration": "development"
     },
-
     "storybook": {
       "executor": "@storybook/angular:start-storybook",
       "options": {

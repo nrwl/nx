@@ -1405,15 +1405,6 @@
     "root": "/packages/node",
     "source": "/packages/node/src",
     "executors": {
-      "/packages/node/executors/webpack": {
-        "description": "Build a Node application using Webpack.",
-        "file": "generated/packages/node/executors/webpack.json",
-        "hidden": false,
-        "name": "webpack",
-        "originalFilePath": "/packages/node/src/executors/webpack/schema.json",
-        "path": "/packages/node/executors/webpack",
-        "type": "executor"
-      },
       "/packages/node/executors/node": {
         "description": "Execute a Node application.",
         "file": "generated/packages/node/executors/node.json",
@@ -2671,33 +2662,6 @@
     "root": "/packages/web",
     "source": "/packages/web/src",
     "executors": {
-      "/packages/web/executors/webpack": {
-        "description": "Build an application using Webpack.",
-        "file": "generated/packages/web/executors/webpack.json",
-        "hidden": false,
-        "name": "webpack",
-        "originalFilePath": "/packages/web/src/executors/webpack/schema.json",
-        "path": "/packages/web/executors/webpack",
-        "type": "executor"
-      },
-      "/packages/web/executors/rollup": {
-        "description": "Package a library using Rollup.",
-        "file": "generated/packages/web/executors/rollup.json",
-        "hidden": false,
-        "name": "rollup",
-        "originalFilePath": "/packages/web/src/executors/rollup/schema.json",
-        "path": "/packages/web/executors/rollup",
-        "type": "executor"
-      },
-      "/packages/web/executors/dev-server": {
-        "description": "Serve a web application.",
-        "file": "generated/packages/web/executors/dev-server.json",
-        "hidden": false,
-        "name": "dev-server",
-        "originalFilePath": "/packages/web/src/executors/dev-server/schema.json",
-        "path": "/packages/web/executors/dev-server",
-        "type": "executor"
-      },
       "/packages/web/executors/file-server": {
         "description": "Serve a web application from a folder.",
         "file": "generated/packages/web/executors/file-server.json",

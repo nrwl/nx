@@ -90,7 +90,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
     const external = ['react/jsx-runtime', 'react-native'];
 
     targets.build = {
-      executor: '@nx/web:rollup',
+      executor: '@nx/rollup:rollup',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,

@@ -136,7 +136,7 @@ export interface TargetConfiguration<T = any> {
   /**
    * The executor/builder used to implement the target.
    *
-   * Example: '@nx/web:rollup'
+   * Example: '@nx/rollup:rollup'
    */
   executor?: string;
 

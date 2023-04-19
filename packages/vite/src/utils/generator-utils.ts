@@ -46,7 +46,6 @@ export function findExistingTargetsInProject(
       '@nx/js:swc',
       '@nx/webpack:webpack',
       '@nx/rollup:rollup',
-      '@nx/web:rollup',
       '@nrwl/js:babel',
       '@nrwl/js:swc',
       '@nrwl/webpack:webpack',

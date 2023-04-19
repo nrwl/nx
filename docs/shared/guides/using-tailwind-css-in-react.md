@@ -126,7 +126,7 @@ Open up the `apps/{your app here}/project.json` file and add the following to th
   // ...
   "targets": {
     "build": {
-      "executor": "@nrwl/web:webpack",
+      "executor": "@nrwl/webpack:webpack",
       "options": {
         // ...
         "postcssConfig": "apps/{your app here}/postcss.config.js"
