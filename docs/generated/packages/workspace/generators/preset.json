@@ -85,6 +85,11 @@
         "description": "Enable experimental app/ for the project",
         "type": "boolean",
         "default": false
+      },
+      "e2eTestRunner": {
+        "description": "The tool to use for running e2e tests.",
+        "type": "string",
+        "enum": ["cypress", "jest", "detox", "none"]
       }
     },
     "presets": []
