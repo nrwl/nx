@@ -21,6 +21,8 @@ const nxAngularLegacyVersionMap: Record<number, string> = {};
 const minMajorAngularVersionSupported = 14;
 // version when the Nx CLI changed from @nrwl/tao & @nrwl/cli to nx
 const versionWithConsolidatedPackages = '13.9.0';
+// version when packages were rescoped from @nrwl/* to @nx/*
+const versionWithRescopeToNx = '16.0.0-beta.2';
 
 export async function getLegacyMigrationFunctionIfApplicable(
   repoRoot: string,
@@ -36,10 +38,14 @@ export async function getLegacyMigrationFunctionIfApplicable(
 
   let legacyMigrationCommand: string;
   let pkgName: string;
+  let unscopedPkgName: string;
+  let pkgScope: string;
   let pkgVersion: string;
   if (majorAngularVersion < 13) {
     // for versions lower than 13, the migration was in @nrwl/workspace:ng-add
-    pkgName = '@nrwl/workspace';
+    pkgScope = '@nrwl';
+    unscopedPkgName = 'workspace';
+    pkgName = `${pkgScope}/${unscopedPkgName}`;
     pkgVersion = await resolvePackageVersion(
       pkgName,
       `^${majorAngularVersion}.0.0`
@@ -50,7 +56,9 @@ export async function getLegacyMigrationFunctionIfApplicable(
     legacyMigrationCommand = `ng g ${pkgName}:ng-add ${preserveAngularCliLayoutFlag}`;
   } else if (majorAngularVersion < 14) {
     // for v13, the migration was in @nrwl/angular:ng-add
-    pkgName = '@nrwl/angular';
+    pkgScope = '@nrwl';
+    unscopedPkgName = 'angular';
+    pkgName = `${pkgScope}/${unscopedPkgName}`;
     pkgVersion = await resolvePackageVersion(pkgName, '~14.1.0');
     const preserveAngularCliLayoutFlag = !options.integrated
       ? '--preserve-angular-cli-layout'
@@ -58,11 +66,15 @@ export async function getLegacyMigrationFunctionIfApplicable(
     legacyMigrationCommand = `ng g ${pkgName}:ng-add ${preserveAngularCliLayoutFlag}`;
   } else {
     // use the latest Nx version that supported the Angular version
-    pkgName = '@nrwl/angular';
     pkgVersion = await resolvePackageVersion(
       'nx',
       nxAngularLegacyVersionMap[majorAngularVersion]
     );
+
+    pkgScope = gte(pkgVersion, versionWithRescopeToNx) ? '@nx' : '@nrwl';
+    unscopedPkgName = 'angular';
+    pkgName = `${pkgScope}/${unscopedPkgName}`;
+
     legacyMigrationCommand = `nx@${pkgVersion} init ${process.argv
       .slice(2)
       .join(' ')}`;
@@ -76,7 +88,17 @@ export async function getLegacyMigrationFunctionIfApplicable(
 
     output.log({ title: '📦 Installing dependencies' });
     const pmc = getPackageManagerCommand();
-    await installDependencies(repoRoot, pkgName, pkgVersion, useNxCloud, pmc);
+    await installDependencies(
+      repoRoot,
+      {
+        pkgName,
+        pkgScope,
+        pkgVersion,
+        unscopedPkgName,
+      },
+      useNxCloud,
+      pmc
+    );
 
     output.log({ title: '📝 Setting up workspace' });
     execSync(`${pmc.exec} ${legacyMigrationCommand}`, { stdio: [0, 1, 2] });
@@ -97,21 +119,25 @@ export async function getLegacyMigrationFunctionIfApplicable(
 
 async function installDependencies(
   repoRoot: string,
-  pkgName: string,
-  pkgVersion: string,
+  pkgInfo: {
+    pkgName: string;
+    pkgScope: string;
+    pkgVersion: string;
+    unscopedPkgName: string;
+  },
   useNxCloud: boolean,
   pmc: PackageManagerCommands
 ): Promise<void> {
   const json = readJsonFile(join(repoRoot, 'package.json'));
 
   json.devDependencies ??= {};
-  json.devDependencies['@nrwl/workspace'] = pkgVersion;
+  json.devDependencies[`${pkgInfo.pkgScope}/workspace`] = pkgInfo.pkgVersion;
 
-  if (gte(pkgVersion, versionWithConsolidatedPackages)) {
-    json.devDependencies['nx'] = pkgVersion;
+  if (gte(pkgInfo.pkgVersion, versionWithConsolidatedPackages)) {
+    json.devDependencies['nx'] = pkgInfo.pkgVersion;
   } else {
-    json.devDependencies['@nrwl/cli'] = pkgVersion;
-    json.devDependencies['@nrwl/tao'] = pkgVersion;
+    json.devDependencies[`${pkgInfo.pkgScope}/cli`] = pkgInfo.pkgVersion;
+    json.devDependencies[`${pkgInfo.pkgScope}/tao`] = pkgInfo.pkgVersion;
   }
 
   if (useNxCloud) {
@@ -119,14 +145,14 @@ async function installDependencies(
     // version being installed
     json.devDependencies['nx-cloud'] = await resolvePackageVersion(
       'nx-cloud',
-      `^${major(pkgVersion)}.0.0`
+      `^${major(pkgInfo.pkgVersion)}.0.0`
     );
   }
   json.devDependencies = sortObjectByKeys(json.devDependencies);
 
-  if (pkgName === '@nrwl/angular') {
+  if (pkgInfo.unscopedPkgName === 'angular') {
     json.dependencies ??= {};
-    json.dependencies['@nrwl/angular'] = pkgVersion;
+    json.dependencies[pkgInfo.pkgName] = pkgInfo.pkgVersion;
     json.dependencies = sortObjectByKeys(json.dependencies);
   }
   writeJsonFile(`package.json`, json);
