@@ -12,18 +12,8 @@ export function withNx(_opts = {}) {
     const isProd =
       process.env.NODE_ENV === 'production' || options.mode === 'production';
 
-    const sourceRoot = path.join(
-      context.root,
-      context.projectGraph.nodes[context.projectName].data.sourceRoot
-    );
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const tsconfigPaths = require('tsconfig-paths');
-    const { paths } = tsconfigPaths.loadConfig(options.tsConfig);
-    const alias = Object.keys(paths).reduce((acc, k) => {
-      acc[k] = path.join(context.root, paths[k][0]);
-      return acc;
-    }, {});
+    const project = context.projectGraph.nodes[context.projectName];
+    const sourceRoot = path.join(context.root, project.data.sourceRoot);
 
     const externals: ExternalItem = {};
     let externalsType: Configuration['externalsType'];
@@ -71,8 +61,7 @@ export function withNx(_opts = {}) {
       module: {},
       plugins: config.plugins ?? [],
       resolve: {
-        alias,
-        tsConfigPath: path.resolve(__dirname, 'tsconfig.app.json'),
+        tsConfigPath: path.join(context.root, options.tsConfig),
       },
       infrastructureLogging: {
         debug: false,
