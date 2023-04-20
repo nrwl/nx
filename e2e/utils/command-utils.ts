@@ -13,7 +13,7 @@ import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { join } from 'path';
 import * as isCI from 'is-ci';
 import { Workspaces } from '../../packages/nx/src/config/workspaces';
-import { exists, updateFile } from './file-utils';
+import { fileExists, readJson, updateFile } from './file-utils';
 import { logError, stripConsoleColors } from './log-utils';
 import { existsSync } from 'fs-extra';
 
@@ -119,6 +119,9 @@ export function getPackageManagerCommand({
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const publishedVersion = getPublishedVersion();
+  const isYarnWorkspace = fileExists(join(path, 'package.json'))
+    ? readJson('package.json').workspaces
+    : false;
   const isPnpmWorkspace = existsSync(join(path, 'pnpm-workspace.yaml'));
 
   return {
@@ -138,16 +141,17 @@ export function getPackageManagerCommand({
       runLerna: `npx lerna`,
     },
     yarn: {
-      // `yarn create nx-workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
+      createWorkspace: `npx ${
+        +npmMajorVersion >= 7 ? '--yes' : ''
+      } create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       runUninstalledPackage: 'npx --yes',
       install: 'yarn',
       ciInstall: 'yarn --frozen-lockfile',
-      addProd: `yarn add`,
-      addDev: `yarn add -D`,
+      addProd: isYarnWorkspace ? 'yarn add -W' : 'yarn add',
+      addDev: isYarnWorkspace ? 'yarn add -DW' : 'yarn add -D',
       list: 'npm ls --depth 10',
       runLerna: `yarn --silent lerna`,
     },
