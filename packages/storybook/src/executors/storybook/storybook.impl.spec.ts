@@ -25,7 +25,6 @@ describe('@nx/storybook:storybook', () => {
       port: 4400,
       configDir: join(__dirname, `/../../utils/test-configs/.storybook`),
     };
-
     context = {
       root: rootPath,
       cwd: rootPath,
