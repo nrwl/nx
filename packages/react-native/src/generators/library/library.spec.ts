@@ -268,7 +268,7 @@ describe('lib', () => {
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
 
       expect(projectConfiguration.targets.build).toMatchObject({
-        executor: '@nx/web:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         options: {
           external: ['react/jsx-runtime', 'react-native'],

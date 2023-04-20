@@ -407,7 +407,7 @@ To use webpack instead of gulp, go back to your `apps/realworld/project.json` fi
 ```jsonc {% fileName="apps/realworld/project.json" %}
 ...
 "build": {
-  "executor": "@nrwl/web:webpack",
+  "executor": "@nrwl/webpack:webpack",
   "options": {
     "outputPath": "dist/apps/realworld",
     "index": "apps/realworld/src/index.html",

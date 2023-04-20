@@ -1386,15 +1386,6 @@
     ],
     "executors": [
       {
-        "description": "Build a Node application using Webpack.",
-        "file": "generated/packages/node/executors/webpack.json",
-        "hidden": false,
-        "name": "webpack",
-        "originalFilePath": "/packages/node/src/executors/webpack/schema.json",
-        "path": "node/executors/webpack",
-        "type": "executor"
-      },
-      {
         "description": "Execute a Node application.",
         "file": "generated/packages/node/executors/node.json",
         "hidden": false,
@@ -2642,33 +2633,6 @@
       }
     ],
     "executors": [
-      {
-        "description": "Build an application using Webpack.",
-        "file": "generated/packages/web/executors/webpack.json",
-        "hidden": false,
-        "name": "webpack",
-        "originalFilePath": "/packages/web/src/executors/webpack/schema.json",
-        "path": "web/executors/webpack",
-        "type": "executor"
-      },
-      {
-        "description": "Package a library using Rollup.",
-        "file": "generated/packages/web/executors/rollup.json",
-        "hidden": false,
-        "name": "rollup",
-        "originalFilePath": "/packages/web/src/executors/rollup/schema.json",
-        "path": "web/executors/rollup",
-        "type": "executor"
-      },
-      {
-        "description": "Serve a web application.",
-        "file": "generated/packages/web/executors/dev-server.json",
-        "hidden": false,
-        "name": "dev-server",
-        "originalFilePath": "/packages/web/src/executors/dev-server/schema.json",
-        "path": "web/executors/dev-server",
-        "type": "executor"
-      },
       {
         "description": "Serve a web application from a folder.",
         "file": "generated/packages/web/executors/file-server.json",

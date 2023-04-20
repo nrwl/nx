@@ -1,10 +1,5 @@
 {
   "executors": {
-    "webpack": {
-      "implementation": "./src/executors/webpack/webpack.impl",
-      "schema": "./src/executors/webpack/schema.json",
-      "description": "Build a Node application using Webpack."
-    },
     "node": {
       "implementation": "./src/executors/node/node.impl",
       "schema": "./src/executors/node/schema.json",
@@ -12,11 +7,6 @@
     }
   },
   "builders": {
-    "webpack": {
-      "implementation": "./src/executors/webpack/compat",
-      "schema": "./src/executors/webpack/schema.json",
-      "description": "Build a Node application using Webpack."
-    },
     "node": {
       "implementation": "./src/executors/node/compat",
       "schema": "./src/executors/node/schema.json",

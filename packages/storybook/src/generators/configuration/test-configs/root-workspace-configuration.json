@@ -10,7 +10,9 @@
           "executor": "@nx/vite:build",
           "outputs": ["{options.outputPath}"],
           "defaultConfiguration": "production",
-          "options": { "outputPath": "dist/web" },
+          "options": {
+            "outputPath": "dist/web"
+          },
           "configurations": {
             "development": {},
             "production": {
@@ -27,9 +29,13 @@
         "serve": {
           "executor": "@nx/vite:dev-server",
           "defaultConfiguration": "development",
-          "options": { "buildTarget": "web:build" },
+          "options": {
+            "buildTarget": "web:build"
+          },
           "configurations": {
-            "development": { "buildTarget": "web:build:development" },
+            "development": {
+              "buildTarget": "web:build:development"
+            },
             "production": {
               "buildTarget": "web:build:production",
               "hmr": false
@@ -39,7 +45,9 @@
         "test": {
           "executor": "@nx/vite:test",
           "outputs": ["{projectRoot}/coverage"],
-          "options": { "passWithNoTests": true }
+          "options": {
+            "passWithNoTests": true
+          }
         },
         "storybook": {
           "executor": "@storybook/angular:start-storybook",
@@ -49,7 +57,11 @@
             "browserTarget": "web:build-storybook",
             "compodoc": false
           },
-          "configurations": { "ci": { "quiet": true } }
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
         },
         "build-storybook": {
           "executor": "@storybook/angular:build-storybook",
@@ -60,7 +72,11 @@
             "browserTarget": "web:build-storybook",
             "compodoc": false
           },
-          "configurations": { "ci": { "quiet": true } }
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
         }
       },
       "tags": [],
@@ -179,7 +195,7 @@
       "tags": [],
       "targets": {
         "build": {
-          "executor": "@nx/web:rollup",
+          "executor": "@nx/rollup:rollup",
           "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/libs/nxlib-buildable",
@@ -223,7 +239,7 @@
       "tags": [],
       "targets": {
         "build": {
-          "executor": "@nx/web:rollup",
+          "executor": "@nx/rollup:rollup",
           "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/libs/relib-buildable",

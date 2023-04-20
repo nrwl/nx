@@ -259,7 +259,6 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/node/generators/application',
     },
     { title: '@nrwl/node:library', path: '/packages/node/generators/library' },
-    { title: '@nrwl/node:webpack', path: '/packages/node/executors/webpack' },
     { title: '@nrwl/node:node', path: '/packages/node/executors/node' },
     { title: 'nx', path: '/packages/nx' },
     { title: 'nx:noop', path: '/packages/nx/executors/noop' },
@@ -420,12 +419,6 @@ describe('nx-dev: Packages Section', () => {
     {
       title: '@nrwl/web:application',
       path: '/packages/web/generators/application',
-    },
-    { title: '@nrwl/web:webpack', path: '/packages/web/executors/webpack' },
-    { title: '@nrwl/web:rollup', path: '/packages/web/executors/rollup' },
-    {
-      title: '@nrwl/web:dev-server',
-      path: '/packages/web/executors/dev-server',
     },
     {
       title: '@nrwl/web:file-server',

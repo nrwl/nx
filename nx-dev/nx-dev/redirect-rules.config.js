@@ -531,6 +531,11 @@ const packagesDocuments = {
     '/packages/eslint-plugin/documents/enforce-module-boundaries',
   '/packages/eslint-plugin-nx/documents/overview':
     '/packages/eslint-plugin/documents/overview',
+  '/packages/node/executors/webpack': '/packages/webpack/executors/webpack',
+  '/packages/web/executors/webpack': '/packages/webpack/executors/webpack',
+  '/packages/web/executors/dev-server':
+    '/packages/webpack/executors/dev-server',
+  '/packages/web/executors/rollup': '/packages/rollup/executors/rollup',
 };
 
 /**

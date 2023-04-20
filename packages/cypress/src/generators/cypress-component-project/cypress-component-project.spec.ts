@@ -18,7 +18,7 @@ let projectConfig: ProjectConfiguration = {
   root: 'libs/cool-lib',
   targets: {
     build: {
-      executor: '@nx/web:rollup',
+      executor: '@nx/rollup:rollup',
       options: {
         tsConfig: 'libs/cool-lib/tsconfig.lib.json',
       },

@@ -5220,14 +5220,6 @@
             "name": "executors",
             "children": [
               {
-                "id": "webpack",
-                "path": "/packages/node/executors/webpack",
-                "name": "webpack",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "node",
                 "path": "/packages/node/executors/node",
                 "name": "node",
@@ -6425,30 +6417,6 @@
             "path": "/packages/web/executors",
             "name": "executors",
             "children": [
-              {
-                "id": "webpack",
-                "path": "/packages/web/executors/webpack",
-                "name": "webpack",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "rollup",
-                "path": "/packages/web/executors/rollup",
-                "name": "rollup",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "dev-server",
-                "path": "/packages/web/executors/dev-server",
-                "name": "dev-server",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
               {
                 "id": "file-server",
                 "path": "/packages/web/executors/file-server",

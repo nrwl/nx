@@ -20,7 +20,7 @@ Executors are associated with specific targets in a project's `project.json` fil
   "generators": {},
   "targets": {
     "build": {
-      "executor": "@nrwl/web:webpack",
+      "executor": "@nrwl/webpack:webpack",
       "options": {
         "outputPath": "dist/apps/cart",
         ...

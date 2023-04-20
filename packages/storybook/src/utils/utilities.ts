@@ -197,7 +197,6 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     '@nx/js:tsc',
     '@nx/webpack:webpack',
     '@nx/rollup:rollup',
-    '@nx/web:rollup',
     '@nx/vite:build',
     '@nx/angular:ng-packagr-lite',
     '@nx/angular:package',

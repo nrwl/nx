@@ -232,7 +232,7 @@ describe('lib', () => {
       const projects = getProjects(appTree);
 
       expect(projects.get('my-lib').targets.build).toMatchObject({
-        executor: '@nx/web:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         options: {
           external: ['react/jsx-runtime', 'react-native'],
