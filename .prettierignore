@@ -3,6 +3,7 @@ tmp
 /build
 node_modules
 /package.json
+/pnpm-lock.yaml
 packages/workspace/src/generators/**/files/**/*.json
 packages/angular/src/schematics/**/files/**/*.json
 packages/angular/src/migrations/**/files/**/*.json

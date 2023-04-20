@@ -18,6 +18,7 @@ jest.mock('@nx/devkit', () => {
   return {
     ...jest.requireActual('@nx/devkit'),
     createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
+    readTargetOptions: jest.fn().mockImplementation(() => ({})),
   };
 });
 jest.mock('../../utils/cypress-version');

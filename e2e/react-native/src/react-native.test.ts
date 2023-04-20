@@ -22,6 +22,7 @@ describe('react native', () => {
   let libName = uniq('lib');
 
   beforeAll(() => {
+    process.env.NX_VERBOSE_LOGGING = 'true';
     proj = newProject();
     runCLI(
       `generate @nx/react-native:application ${appName} --install=false --no-interactive`
@@ -30,7 +31,10 @@ describe('react native', () => {
       `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
     );
   });
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    process.env.NX_VERBOSE_LOGGING = 'false';
+    cleanupProject();
+  });
 
   it('should test and lint', async () => {
     const componentName = uniq('component');
