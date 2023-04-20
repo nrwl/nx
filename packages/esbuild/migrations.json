@@ -22,6 +22,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.5",
+      "packages": {
+        "esbuild": {
+          "version": "0.17.17",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
