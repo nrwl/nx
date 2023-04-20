@@ -1,11 +1,11 @@
 ---
 title: 'run - CLI command'
-description: 'Runs an Architect target with an optional custom builder configuration defined in your project.'
+description: 'Runs a target defined for your project. Target definitions can be found in the `scripts` property of the project's `package.json`, or in the `targets` property of the project's `project.json` file.'
 ---
 
 # run
 
-Runs an Architect target with an optional custom builder configuration defined in your project.
+Runs a target defined for your project. Target definitions can be found in the `scripts` property of the project's `package.json`, or in the `targets` property of the project's `project.json` file.
 
 ## Usage
 
