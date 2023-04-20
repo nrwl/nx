@@ -14,19 +14,19 @@ orbs:
 # -------------------------
 machine:
   pre:
-    - mkdir ~/.cache/yarn
+    - mkdir ~/.pnpm-store
     - mkdir ~/.cache/Cypress
     - mkdir ~/Library/Caches/Homebrew
     - mkdir /usr/local/Homebrew
 
 dependencies:
   cache_directories:
-    - ~/.cache/yarn
+    - ~/.pnpm-store
     - ~/.cache/Cypress
     - /usr/local/Homebrew
     - ~/Library/Caches/Homebrew
   override:
-    - yarn install
+    - pnpm install
     - brew install
 
 defaults: &defaults
@@ -52,29 +52,30 @@ executors:
 #        COMMANDS
 # -------------------------
 commands:
-  run-yarn-install:
+  run-pnpm-install:
     parameters:
       os:
         type: string
     steps:
       - restore_cache:
-          name: Restore Yarn Package Cache
+          name: Restore pnpm Package Cache
           keys:
-            - node-deps-{{ arch }}-v2-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+            - pnpm-packages-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
       - run:
-          name: Install dependencies
-          command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
+          name: Install pnpm package manager
+          command: |
+            npm install --prefix=$HOME/.local -g @pnpm/exe@8.3.1
+      - run:
+          name: Install Dependencies
+          command: |
+            pnpm install
       - save_cache:
-          name: Save Yarn Package Cache
-          key: node-deps-{{ arch }}-v2-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+          name: Save pnpm Package Cache
+          key: pnpm-packages-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
           paths:
             - ~/.cache/yarn
             - ~/.cache/Cypress
-  install-pnpm:
-    steps:
-      - run:
-          name: Install PNPM
-          command: npm install --prefix=$HOME/.local -g @pnpm/exe@8.3.1
+            - node_modules
 
   setup:
     parameters:
@@ -114,13 +115,8 @@ commands:
       - node/install:
           # Use LTS version
           node-version: ''
-      - run-yarn-install:
+      - run-pnpm-install:
           os: << parameters.os >>
-      - when:
-          condition:
-            equal: [<< parameters.os >>, linux]
-          steps:
-            - install-pnpm
 
 # -------------------------
 #          JOBS
@@ -162,7 +158,7 @@ jobs:
           os: << parameters.os >>
       - run:
           name: Agent
-          command: npx nx-cloud start-agent
+          command: pnpm nx-cloud start-agent
           no_output_timeout: 60m
 
   # -------------------------
@@ -184,10 +180,10 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud start-ci-run --stop-agents-after="e2e"
+      - run: pnpm nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
           name: Check Documentation
-          command: npx nx documentation --no-dte
+          command: pnpm nx documentation --no-dte
           no_output_timeout: 20m
       - run:
           name: Run Checks/Lint/Test/Build
@@ -195,18 +191,18 @@ jobs:
           command: |
             pids=()
 
-            npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
+            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
             pids+=($!)
 
-            npx nx run-many -t check-imports check-commit check-lock-files depcheck --parallel=1 --no-dte &
+            pnpm nx run-many -t check-imports check-commit check-lock-files depcheck --parallel=1 --no-dte &
             pids+=($!)
 
-            yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
+            pnpm nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
             pids+=($!)
-            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
+            pnpm nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
             pids+=($!)
-            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
+            (pnpm nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
+            pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
@@ -233,7 +229,7 @@ jobs:
           name: Run E2E Tests for macOS
           # FIXME: remove --exclude=e2e-detox once we have a fix for the detox tests
           command: |
-            npx nx affected -t e2e-macos --parallel=1 --exclude=e2e-detox
+            pnpm nx affected -t e2e-macos --parallel=1 --exclude=e2e-detox
           no_output_timeout: 45m
 
 # -------------------------

@@ -26,7 +26,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
   const options = parseArgs();
 
   if (options.clearLocalRegistry) {
-    execSync('yarn local-registry clear');
+    execSync('pnpm local-registry clear');
   }
 
   const currentLatestVersion = execSync('npm view nx version')
@@ -43,7 +43,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
       ? 'previous'
       : 'latest';
 
-  const buildCommand = 'yarn build';
+  const buildCommand = 'pnpm build';
   console.log(`> ${buildCommand}`);
   execSync(buildCommand, {
     stdio: [0, 1, 2],
@@ -150,7 +150,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
 
 function parseArgs() {
   const parsedArgs = yargs
-    .scriptName('yarn nx-release')
+    .scriptName('pnpm nx-release')
     .wrap(144)
     .strictOptions()
     .version(false)
@@ -228,7 +228,7 @@ function parseArgs() {
         }
         if (!args.force && registryIsLocalhost) {
           throw new Error(
-            'Registry is still set to localhost! Run "yarn local-registry disable" or pass --force'
+            'Registry is still set to localhost! Run "pnpm local-registry disable" or pass --force'
           );
         }
       } else {

@@ -4,14 +4,14 @@ import { dirname, join, relative, resolve } from 'path';
 import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
 import { getSourceDirOfDependentProjects } from 'nx/src/utils/project-graph-utils';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
-import ignore, { Ignore } from 'ignore';
+import ignore from 'ignore';
 import {
   createProjectRootMappings,
   findProjectForPath,
 } from 'nx/src/project-graph/utils/find-project-for-path';
 
 function configureIgnore() {
-  let ig: Ignore;
+  let ig: ReturnType<typeof ignore>;
   const pathToGitIgnore = join(workspaceRoot, '.gitignore');
   if (existsSync(pathToGitIgnore)) {
     ig = ignore();
