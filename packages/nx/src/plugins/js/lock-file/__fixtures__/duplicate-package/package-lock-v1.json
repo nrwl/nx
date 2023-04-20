@@ -704,9 +704,9 @@
         "nx": "15.4.0"
       }
     },
-    "@nrwl/devkit": {
+    "@nx/devkit": {
       "version": "14.8.6",
-      "resolved": "https://registry.npmjs.org/@nrwl/devkit/-/devkit-14.8.6.tgz",
+      "resolved": "https://registry.npmjs.org/@nx/devkit/-/devkit-14.8.6.tgz",
       "integrity": "sha512-+3KqohOKeUuyS176jrwY0yeB3E2IFQ3jMkS0KizzsHGsZWdZbQ2WQ46hZ0/bvRh9Efl8CAg6n4fUWR0BXUePMA==",
       "requires": {
         "@phenomnomnominal/tsquery": "4.1.1",
@@ -715,14 +715,14 @@
         "tslib": "^2.3.0"
       }
     },
-    "@nrwl/jest": {
+    "@nx/jest": {
       "version": "14.8.6",
-      "resolved": "https://registry.npmjs.org/@nrwl/jest/-/jest-14.8.6.tgz",
+      "resolved": "https://registry.npmjs.org/@nx/jest/-/jest-14.8.6.tgz",
       "integrity": "sha512-v+y833GGKVPc2RAd1odUGAzMdBUuKN6ZbbI8seAT+eI/2qQDvab51zOlf66/8zUv7Kr4yrkDYl0slf24GklTvQ==",
       "requires": {
         "@jest/reporters": "28.1.1",
         "@jest/test-result": "28.1.1",
-        "@nrwl/devkit": "14.8.6",
+        "@nx/devkit": "14.8.6",
         "@phenomnomnominal/tsquery": "4.1.1",
         "chalk": "4.1.0",
         "dotenv": "~10.0.0",
@@ -734,13 +734,13 @@
         "tslib": "^2.3.0"
       }
     },
-    "@nrwl/linter": {
+    "@nx/linter": {
       "version": "14.8.6",
-      "resolved": "https://registry.npmjs.org/@nrwl/linter/-/linter-14.8.6.tgz",
+      "resolved": "https://registry.npmjs.org/@nx/linter/-/linter-14.8.6.tgz",
       "integrity": "sha512-Usqh17Q+BiZpownyMOC5TrDFkSSRazjTXmTFqUoLkfGI07qF8i7DB1hrqedE32mNv9V0N6LS3FaAb4plFPgPxA==",
       "requires": {
-        "@nrwl/devkit": "14.8.6",
-        "@nrwl/jest": "14.8.6",
+        "@nx/devkit": "14.8.6",
+        "@nx/jest": "14.8.6",
         "@phenomnomnominal/tsquery": "4.1.1",
         "nx": "14.8.6",
         "tmp": "~0.2.1",
@@ -833,9 +833,9 @@
       "resolved": "https://registry.npmjs.org/@nrwl/workspace/-/workspace-14.8.6.tgz",
       "integrity": "sha512-a0qUpy2LhnH1SIgMhiuu1JVqiGOKF+Lku/0HZv3WSEUEhn5+fpLgdQDbLbZVACMtjsGL9eNrR9rD4rRm+lth+Q==",
       "requires": {
-        "@nrwl/devkit": "14.8.6",
-        "@nrwl/jest": "14.8.6",
-        "@nrwl/linter": "14.8.6",
+        "@nx/devkit": "14.8.6",
+        "@nx/jest": "14.8.6",
+        "@nx/linter": "14.8.6",
         "@parcel/watcher": "2.0.4",
         "chalk": "4.1.0",
         "chokidar": "^3.5.1",

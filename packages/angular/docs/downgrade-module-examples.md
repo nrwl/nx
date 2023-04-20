@@ -7,7 +7,7 @@ Below are some examples of how to generate configuration and setup for using `ng
 {% tab label="Basic Usage" %}
 
 ```bash
-nx g @nrwl/angular:downgrade-module --name=myAngularJsModule --project=myapp
+nx g @nx/angular:downgrade-module --name=myAngularJsModule --project=myapp
 ```
 
 {% /tab %}
@@ -17,7 +17,7 @@ nx g @nrwl/angular:downgrade-module --name=myAngularJsModule --project=myapp
 Allow a setup that configures routing for `DowngradeModule`.
 
 ```bash
-nx g @nrwl/angular:downgrade-module --name=myAngularJsModule --project=myapp --router=true
+nx g @nx/angular:downgrade-module --name=myAngularJsModule --project=myapp --router=true
 ```
 
 {% /tab %}

@@ -61,24 +61,24 @@ export function newProject({
 
       // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
       const packages = [
-        `@nrwl/angular`,
+        `@nx/angular`,
         `@nrwl/eslint-plugin-nx`,
         `@nrwl/express`,
         `@nrwl/esbuild`,
-        `@nrwl/jest`,
-        `@nrwl/js`,
-        `@nrwl/linter`,
+        `@nx/jest`,
+        `@nx/js`,
+        `@nx/linter`,
         `@nrwl/nest`,
-        `@nrwl/next`,
+        `@nx/next`,
         `@nrwl/node`,
         `@nrwl/nx-plugin`,
         `@nrwl/rollup`,
-        `@nrwl/react`,
-        `@nrwl/storybook`,
+        `@nx/react`,
+        `@nx/storybook`,
         `@nrwl/vite`,
-        `@nrwl/web`,
-        `@nrwl/webpack`,
-        `@nrwl/react-native`,
+        `@nx/web`,
+        `@nx/webpack`,
+        `@nx/react-native`,
         `@nrwl/expo`,
       ];
       packageInstall(packages.join(` `), projScope);
@@ -393,7 +393,7 @@ export function newLernaWorkspace({
       const overrides = {
         ...json.overrides,
         nx: nxVersion,
-        '@nrwl/devkit': nxVersion,
+        '@nx/devkit': nxVersion,
       };
       if (packageManager === 'pnpm') {
         json.pnpm = {

@@ -12,7 +12,7 @@ import { TS_QUERY_JEST_CONFIG_PREFIX } from '@nx/jest/src/utils/ast-utils';
 import { findRootJestPreset } from '@nx/jest/src/utils/config/find-root-jest-files';
 import { JestExecutorOptions } from '@nx/jest/src/executors/jest/schema';
 
-// NOTE: this is a copy of the @nrwl/jest v15.8.0 migrations
+// NOTE: this is a copy of the @nx/jest v15.8.0 migrations
 export async function updateConfigsJest29(tree: Tree) {
   const rootPreset = findRootJestPreset(tree);
   const targetsWithJest = new Set<string>();

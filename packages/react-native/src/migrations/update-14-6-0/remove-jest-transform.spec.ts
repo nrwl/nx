@@ -12,13 +12,13 @@ describe('Rename jest preprocessor', () => {
       sourceRoot: 'apps/products/src',
       targets: {
         start: {
-          executor: '@nrwl/react-native:start',
+          executor: '@nx/react-native:start',
           options: {
             port: 8081,
           },
         },
         test: {
-          executor: '@nrwl/jest:jest',
+          executor: '@nx/jest:jest',
           options: {
             jestConfig: 'apps/products/jest.config.ts',
             passWithNoTests: true,

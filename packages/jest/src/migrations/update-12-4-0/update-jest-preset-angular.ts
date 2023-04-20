@@ -10,7 +10,7 @@ import {
 function updateJestConfig(tree: Tree) {
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nrwl/jest:jest',
+    '@nx/jest:jest',
     (options, project) => {
       if (!options.jestConfig) {
         return;

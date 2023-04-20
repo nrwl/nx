@@ -1,14 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Nx Plugin Migration - jest 29 update configs should NOT update ts-jest with no globals are preset 1`] = `
-"const nxPreset = require('@nrwl/jest/preset').default;
+"const nxPreset = require('@nx/jest/preset').default;
 module.exports = {
   ...nxPreset,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
   transform: {
     '^.+.(ts|js|html)$': 'ts-jest',
   },
-  resolver: '@nrwl/jest/plugins/resolver',
+  resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageReporters: ['html'],
   /* TODO: Update to latest Jest snapshotFormat
@@ -226,7 +226,7 @@ exports[`Nx Plugin Migration - jest 29 update configs should update jest.config.
 `;
 
 exports[`Nx Plugin Migration - jest 29 update configs should update root preset 1`] = `
-"const nxPreset = require('@nrwl/jest/preset').default;
+"const nxPreset = require('@nx/jest/preset').default;
 
 module.exports = {
   ...nxPreset,
@@ -288,7 +288,7 @@ exports[`Nx Plugin Migration - jest 29 update configs should update root preset 
 `;
 
 exports[`Nx Plugin Migration - jest 29 update configs should update root preset if ts-jest is preset 1`] = `
-"const nxPreset = require('@nrwl/jest/preset').default;
+"const nxPreset = require('@nx/jest/preset').default;
 module.exports = {
   ...nxPreset,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
@@ -301,7 +301,7 @@ module.exports = {
       },
     ],
   },
-  resolver: '@nrwl/jest/plugins/resolver',
+  resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageReporters: ['html'],
   /* TODO: Update to latest Jest snapshotFormat

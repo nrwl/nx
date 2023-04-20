@@ -15,7 +15,7 @@ To use a custom webpack configuration when building your Angular application, ch
 
 ```typescript
 "build": {
-    "executor": "@nrwl/angular:webpack-browser",
+    "executor": "@nx/angular:webpack-browser",
     "options": {
         ...
         "customWebpackConfig": {
@@ -38,7 +38,7 @@ To allow your Angular application to take advantage of incremental building, cha
 
 ```typescript
 "build": {
-    "executor": "@nrwl/angular:webpack-browser",
+    "executor": "@nx/angular:webpack-browser",
     "options": {
         ...
         "buildLibsFromSource": false

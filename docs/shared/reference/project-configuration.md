@@ -27,13 +27,13 @@ The following configuration creates `build` and `test` targets for Nx.
   "root": "libs/mylib/",
   "targets": {
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "options": {
         /* ... */
       }
     },
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         /* ... */
       }
@@ -96,14 +96,14 @@ You can add Nx-specific configuration as follows:
   },
   "targets": {
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "inputs": ["default", "^production"],
       "outputs": [],
       "dependsOn": ["build"],
       "options": {}
     },
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "inputs": ["production", "^production"],
       "outputs": ["{workspaceRoot}/dist/libs/mylib"],
       "dependsOn": ["^build"],

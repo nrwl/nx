@@ -13,7 +13,7 @@ You can configure Webpack using a `webpack.config.js` file in your project. You 
     "targets": {
         //...
         "build": {
-            "executor": "@nrwl/webpack:webpack",
+            "executor": "@nx/webpack:webpack",
             //...
             "options": {
                 //...
@@ -43,7 +43,7 @@ Set `isolatedConfig` to `true` in your `project.json` file in the `build` target
     "targets": {
         //...
         "build": {
-            "executor": "@nrwl/webpack:webpack",
+            "executor": "@nx/webpack:webpack",
             //...
             "options": {
                 //...
@@ -65,7 +65,7 @@ Now, you need to manually add the Nx webpack plugins in your `webpack.config.js`
 You should start with a basic webpack configuration for Nx in your project, that looks like this:
 
 ```js {% fileName="apps/my-app/webpack.config.js" %}
-const { composePlugins, withNx } = require('@nrwl/webpack');
+const { composePlugins, withNx } = require('@nx/webpack');
 
 module.exports = composePlugins(withNx(), (config, { options, context }) => {
   // customize webpack config here
@@ -81,14 +81,14 @@ The `composePlugins` function takes a list of plugins and a function, and return
 
 1. `config`: The webpack configuration object.
 2. An object with the following properties:
-   - `options`: The options passed to the `@nrwl/webpack:webpack` executor.
-   - `context`: The context passed of the `@nrwl/webpack:webpack` executor.
+   - `options`: The options passed to the `@nx/webpack:webpack` executor.
+   - `context`: The context passed of the `@nx/webpack:webpack` executor.
 
 This gives you the ability to customize the webpack configuration as needed, and make use of the options and context passed to the executor, as well.
 
 ### Add configurations for other functionalities
 
-In addition to the basic configuration, you can add configurations for other frameworks or features. The `@nrwl/webpack` package provides plugins such as `withWeb` and `withReact`. This plugins provide features such as TS support, CSS support, JSX support, etc. You can read more about how these plugins work and how to use them in our [Webpack Plugins guide](/packages/webpack/documents/webpack-plugins).
+In addition to the basic configuration, you can add configurations for other frameworks or features. The `@nx/webpack` package provides plugins such as `withWeb` and `withReact`. This plugins provide features such as TS support, CSS support, JSX support, etc. You can read more about how these plugins work and how to use them in our [Webpack Plugins guide](/packages/webpack/documents/webpack-plugins).
 
 You may still reconfigure everything manually, without using the Nx plugins. However, these plugins ensure that you have the necessary configuration for Nx to work with your project.
 
@@ -98,11 +98,11 @@ For most apps, the default configuration of webpack is sufficient, but sometimes
 
 ### Configure webpack for React projects
 
-React projects use the `@nrwl/react` package to build their apps. This package provides a `withReact` plugin that adds the necessary configuration for React to work with webpack. You can use this plugin to add the necessary configuration to your webpack config.
+React projects use the `@nx/react` package to build their apps. This package provides a `withReact` plugin that adds the necessary configuration for React to work with webpack. You can use this plugin to add the necessary configuration to your webpack config.
 
 ```js {% fileName="apps/my-app/webpack.config.js" %}
-const { composePlugins, withNx } = require('@nrwl/webpack');
-const { withReact } = require('@nrwl/react');
+const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
 
 // Nx plugins for webpack.
 module.exports = composePlugins(
@@ -138,7 +138,7 @@ npm install -D css-loader
 {% /tabs %}
 
 ```js {% fileName="apps/my-app/webpack.config.js" %}
-const { composePlugins, withNx } = require('@nrwl/webpack');
+const { composePlugins, withNx } = require('@nx/webpack');
 const { merge } = require('webpack-merge');
 
 module.exports = composePlugins(withNx(), (config, { options, context }) => {
@@ -157,14 +157,14 @@ module.exports = composePlugins(withNx(), (config, { options, context }) => {
 
 ### Configure webpack for Module Federation
 
-If you use the [Module Federation](/recipes/module-federation/faster-builds) support from `@nrwl/angular` or `@nrwl/react` then
+If you use the [Module Federation](/recipes/module-federation/faster-builds) support from `@nx/angular` or `@nx/react` then
 you can customize your webpack configuration as follows.
 
 ```js {% fileName="apps/my-app/webpack.config.js" %}
-const { composePlugins, withNx } = require('@nrwl/webpack');
+const { composePlugins, withNx } = require('@nx/webpack');
 const { merge } = require('webpack-merge');
-const withModuleFederation = require('@nrwl/react/module-federation');
-// or `const withModuleFederation = require('@nrwl/angular/module-federation');`
+const withModuleFederation = require('@nx/react/module-federation');
+// or `const withModuleFederation = require('@nx/angular/module-federation');`
 
 module.exports = composePlugins(
   withNx(),
@@ -188,7 +188,7 @@ config object.
 Next.js supports webpack customization in the `next.config.js` file.
 
 ```js {% fileName="next.config.js" %}
-const { withNx } = require('@nrwl/next/plugins/with-nx');
+const { withNx } = require('@nx/next/plugins/with-nx');
 
 const nextConfig = {
   webpack: (

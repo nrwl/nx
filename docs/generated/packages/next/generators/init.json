@@ -48,7 +48,7 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the `@nrwl/next` plugin.",
+  "description": "Initialize the `@nx/next` plugin.",
   "hidden": true,
   "implementation": "/packages/next/src/generators/init/init#nextInitGenerator.ts",
   "aliases": [],

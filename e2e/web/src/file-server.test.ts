@@ -19,9 +19,9 @@ describe('file-server', () => {
     const appName = uniq('app');
     const port = 4301;
 
-    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+    runCLI(`generate @nx/web:app ${appName} --no-interactive`);
     updateProjectConfig(appName, (config) => {
-      config.targets['serve'].executor = '@nrwl/web:file-server';
+      config.targets['serve'].executor = '@nx/web:file-server';
       return config;
     });
 
@@ -45,16 +45,16 @@ describe('file-server', () => {
     const reactAppName = uniq('react-app');
 
     runCLI(
-      `generate @nrwl/angular:app ${ngAppName} --no-interactive --e2eTestRunner=none`
+      `generate @nx/angular:app ${ngAppName} --no-interactive --e2eTestRunner=none`
     );
     runCLI(
-      `generate @nrwl/react:app ${reactAppName} --no-interactive --e2eTestRunner=none`
+      `generate @nx/react:app ${reactAppName} --no-interactive --e2eTestRunner=none`
     );
     runCLI(
-      `generate @nrwl/web:static-config --buildTarget=${ngAppName}:build --no-interactive`
+      `generate @nx/web:static-config --buildTarget=${ngAppName}:build --no-interactive`
     );
     runCLI(
-      `generate @nrwl/web:static-config --buildTarget=${reactAppName}:build --targetName=custom-serve-static --no-interactive`
+      `generate @nx/web:static-config --buildTarget=${reactAppName}:build --targetName=custom-serve-static --no-interactive`
     );
 
     const port = 6200;

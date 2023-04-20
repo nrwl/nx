@@ -61,7 +61,7 @@
           "build": {
             "dependsOn": ["^build"],
             "inputs": ["production", "^production"],
-            "executor": "@nrwl/js:tsc",
+            "executor": "@nx/js:tsc",
             "outputs": ["{options.outputPath}"],
             "options": {
               "outputPath": "dist/./auth",
@@ -74,7 +74,7 @@
           },
           "lint": {
             "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
-            "executor": "@nrwl/linter:eslint",
+            "executor": "@nx/linter:eslint",
             "outputs": ["{options.outputFile}"],
             "options": { "lintFilePatterns": ["auth/**/*.ts"] },
             "configurations": {}
@@ -85,7 +85,7 @@
               "^production",
               "{workspaceRoot}/jest.preset.js"
             ],
-            "executor": "@nrwl/jest:jest",
+            "executor": "@nx/jest:jest",
             "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
             "options": {
               "jestConfig": "auth/jest.config.ts",
@@ -144,7 +144,7 @@
         ],
         "targets": {
           "e2e": {
-            "executor": "@nrwl/jest:jest",
+            "executor": "@nx/jest:jest",
             "outputs": ["{workspaceRoot}/coverage/{e2eProjectRoot}"],
             "options": {
               "jestConfig": "e2e/jest.config.ts",
@@ -153,7 +153,7 @@
           },
           "lint": {
             "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
-            "executor": "@nrwl/linter:eslint",
+            "executor": "@nx/linter:eslint",
             "outputs": ["{options.outputFile}"],
             "options": { "lintFilePatterns": ["e2e/**/*.{js,ts}"] },
             "configurations": {}
@@ -199,12 +199,12 @@
           {
             "file": "jest.config.ts",
             "hash": "2a738f7746dcbefabfa363e4e0a9ed10024ca942",
-            "deps": ["npm:@nrwl/jest"]
+            "deps": ["npm:@nx/jest"]
           },
           {
             "file": "jest.preset.js",
             "hash": "e6c8ebea00cfb845c55c897266534e9386904de0",
-            "deps": ["npm:@nrwl/jest"]
+            "deps": ["npm:@nx/jest"]
           },
           {
             "file": "nx.json",
@@ -222,9 +222,9 @@
               "npm:tslib",
               "npm:@nrwl/esbuild",
               "npm:@nrwl/eslint-plugin-nx",
-              "npm:@nrwl/jest",
-              "npm:@nrwl/js",
-              "npm:@nrwl/linter",
+              "npm:@nx/jest",
+              "npm:@nx/js",
+              "npm:@nx/linter",
               "npm:@nrwl/node",
               "npm:nx-cloud",
               "npm:@nrwl/workspace",
@@ -305,7 +305,7 @@
               "^production",
               "{workspaceRoot}/jest.preset.js"
             ],
-            "executor": "@nrwl/jest:jest",
+            "executor": "@nx/jest:jest",
             "outputs": ["{workspaceRoot}/coverage/{projectName}"],
             "options": {
               "jestConfig": "jest.config.app.ts",
@@ -314,7 +314,7 @@
             "configurations": {}
           },
           "serve": {
-            "executor": "@nrwl/js:node",
+            "executor": "@nx/js:node",
             "options": { "buildTarget": "products-api:build" },
             "configurations": {
               "production": { "buildTarget": "products-api:build:production" }
@@ -322,7 +322,7 @@
           },
           "lint": {
             "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
-            "executor": "@nrwl/linter:eslint",
+            "executor": "@nx/linter:eslint",
             "outputs": ["{options.outputFile}"],
             "options": { "lintFilePatterns": ["./**/*.ts"] },
             "configurations": {}

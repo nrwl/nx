@@ -66,8 +66,8 @@ async function setup(tree: Tree) {
   });
 
   const projectConfig = readProjectConfiguration(tree, 'my-lib');
-  projectConfig.targets.build.executor = '@nrwl/js:swc';
-  projectConfig.targets.test.executor = '@nrwl/jest:jest';
+  projectConfig.targets.build.executor = '@nx/js:swc';
+  projectConfig.targets.test.executor = '@nx/jest:jest';
   updateProjectConfiguration(tree, 'my-lib', projectConfig);
 
   tree.rename('libs/my-lib/.swcrc', 'libs/my-lib/.lib.swcrc');

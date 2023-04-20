@@ -17,7 +17,7 @@ describe('Migration: add PostCSS config option', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nrwl/web:webpack',
+          executor: '@nx/web:webpack',
           options: {},
         },
       },
@@ -34,7 +34,7 @@ describe('Migration: add PostCSS config option', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nrwl/web:webpack',
+          executor: '@nx/web:webpack',
           options: {
             postcssConfig: 'apps/myapp/postcss.config.js',
           },
@@ -52,7 +52,7 @@ describe('Migration: add PostCSS config option', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nrwl/web:webpack',
+          executor: '@nx/web:webpack',
           options: {},
         },
       },
@@ -68,7 +68,7 @@ describe('Migration: add PostCSS config option', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nrwl/web:webpack',
+          executor: '@nx/web:webpack',
           options: {},
         },
       },

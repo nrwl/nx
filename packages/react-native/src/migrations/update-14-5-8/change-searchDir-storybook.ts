@@ -13,7 +13,7 @@ export default async function update(tree: Tree) {
 
   for (const [name, config] of projects.entries()) {
     if (
-      config.targets?.['storybook']?.executor !== '@nrwl/react-native:storybook'
+      config.targets?.['storybook']?.executor !== '@nx/react-native:storybook'
     )
       continue;
     const searchDir = config.targets?.['storybook']?.options?.searchDir;

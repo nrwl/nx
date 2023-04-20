@@ -31,7 +31,7 @@ async function replaceJasmineMarbleUsagesInFiles(tree: Tree) {
     .filter(([node, dep]) =>
       dep.some(
         ({ target }) =>
-          target === 'npm:@nrwl/angular' && !projectGraph.externalNodes?.[node]
+          target === 'npm:@nx/angular' && !projectGraph.externalNodes?.[node]
       )
     )
     .map(([projectName]) => readProjectConfiguration(tree, projectName).root);
@@ -43,12 +43,12 @@ async function replaceJasmineMarbleUsagesInFiles(tree: Tree) {
       }
 
       const fileContents = tree.read(path, 'utf-8');
-      if (!fileContents.includes('@nrwl/angular/testing')) {
+      if (!fileContents.includes('@nx/angular/testing')) {
         return;
       }
 
       const NRWL_ANGULAR_TESTING_IMPORT_SELECTOR =
-        'ImportDeclaration:has(StringLiteral[value="@nrwl/angular/testing"])';
+        'ImportDeclaration:has(StringLiteral[value="@nx/angular/testing"])';
       const ast = tsquery.ast(fileContents);
       const nrwlAngularTestingImportNodes = tsquery(
         ast,
@@ -107,7 +107,7 @@ async function replaceJasmineMarbleUsagesInFiles(tree: Tree) {
         validNrwlTestingImports.length > 0
           ? `import {${validNrwlTestingImports.join(
               ','
-            )}} from '@nrwl/angular/testing';`
+            )}} from '@nx/angular/testing';`
           : ''
       }
     ${

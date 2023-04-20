@@ -618,8 +618,8 @@ export function checkStorybookInstalled(packageJson): boolean {
       packageJson.devDependencies['@storybook/core-server']) &&
     (packageJson.dependencies['@nx/storybook'] ||
       packageJson.devDependencies['@nx/storybook'] ||
-      packageJson.dependencies['@nrwl/storybook'] ||
-      packageJson.devDependencies['@nrwl/storybook'])
+      packageJson.dependencies['@nx/storybook'] ||
+      packageJson.devDependencies['@nx/storybook'])
   );
 }
 

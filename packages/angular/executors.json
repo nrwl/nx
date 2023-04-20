@@ -8,7 +8,7 @@
     "ng-packagr-lite": {
       "implementation": "./src/executors/ng-packagr-lite/ng-packagr-lite.impl",
       "schema": "./src/executors/ng-packagr-lite/schema.json",
-      "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).\n- It only produces ESM2020 bundles.\n- It doesn't generate package exports in the `package.json`."
+      "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nx/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).\n- It only produces ESM2020 bundles.\n- It doesn't generate package exports in the `package.json`."
     },
     "package": {
       "implementation": "./src/executors/package/package.impl",
@@ -25,7 +25,7 @@
     "ng-packagr-lite": {
       "implementation": "./src/executors/ng-packagr-lite/compat",
       "schema": "./src/executors/ng-packagr-lite/schema.json",
-      "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`)\n- It only produces ESM2020 bundles\n- It doesn't generate package exports in the `package.json`"
+      "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nx/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`)\n- It only produces ESM2020 bundles\n- It doesn't generate package exports in the `package.json`"
     },
     "package": {
       "implementation": "./src/executors/package/compat",
@@ -40,12 +40,12 @@
     "webpack-dev-server": {
       "implementation": "./src/builders/webpack-dev-server/webpack-dev-server.impl",
       "schema": "./src/builders/webpack-dev-server/schema.json",
-      "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
+      "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
     },
     "webpack-server": {
       "implementation": "./src/builders/webpack-server/webpack-server.impl",
       "schema": "./src/builders/webpack-server/schema.json",
-      "description": "The `webpack-server` executor is very similar to the standard `server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR."
+      "description": "The `webpack-server` executor is very similar to the standard `server` builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR."
     },
     "module-federation-dev-server": {
       "implementation": "./src/builders/module-federation-dev-server/module-federation-dev-server.impl",

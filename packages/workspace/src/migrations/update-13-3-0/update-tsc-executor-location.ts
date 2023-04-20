@@ -19,7 +19,7 @@ export async function updateTscExecutorLocation(
       projectConfig.targets || {}
     )) {
       if (targetConfig.executor === '@nrwl/workspace:tsc') {
-        projectConfig.targets[target].executor = '@nrwl/js:tsc';
+        projectConfig.targets[target].executor = '@nx/js:tsc';
         updateProjectConfiguration(host, project, projectConfig);
         used = true;
       }
@@ -30,7 +30,7 @@ export async function updateTscExecutorLocation(
       host,
       {},
       {
-        '@nrwl/js': nxVersion,
+        '@nx/js': nxVersion,
       }
     );
   }

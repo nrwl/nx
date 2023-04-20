@@ -40,7 +40,7 @@ describe('Update tsconfig config for Emotion', () => {
     tree.write(
       'apps/plain-react-app/.babelrc',
       JSON.stringify({
-        presets: ['@nrwl/react/babel'],
+        presets: ['@nx/react/babel'],
         plugins: [],
       })
     );
@@ -53,7 +53,7 @@ describe('Update tsconfig config for Emotion', () => {
       JSON.stringify({
         presets: [
           [
-            '@nrwl/react/babel',
+            '@nx/react/babel',
             {
               runtime: 'automatic',
               importSource: '@emotion/react',

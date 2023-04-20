@@ -42,7 +42,7 @@ describe('Update babel config for emotion', () => {
     tree.write(
       'apps/plain-react-app/.babelrc',
       JSON.stringify({
-        presets: ['@nrwl/react/babel'],
+        presets: ['@nx/react/babel'],
         plugins: ['@babel/whatever'],
       })
     );
@@ -63,7 +63,7 @@ describe('Update babel config for emotion', () => {
 
     expect(readJson(tree, 'apps/no-emotion-app/.babelrc')).toEqual({});
     expect(readJson(tree, 'apps/plain-react-app/.babelrc')).toEqual({
-      presets: ['@nrwl/react/babel'],
+      presets: ['@nx/react/babel'],
       plugins: ['@babel/whatever'],
     });
     expect(readJson(tree, 'apps/emotion-app/.babelrc')).toEqual({

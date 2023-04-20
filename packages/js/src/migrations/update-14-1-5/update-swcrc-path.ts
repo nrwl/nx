@@ -15,7 +15,7 @@ export async function updateSwcrcPath(tree: Tree) {
 
   forEachExecutorOptions(
     tree,
-    '@nrwl/js:swc',
+    '@nx/js:swc',
     (_, projectName, targetName, configurationName) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
       const executorOptions: OldSwcExecutorOptions = configurationName

@@ -12,7 +12,7 @@ import { StringLiteral } from 'typescript';
 export function addBabelJestPresetTransformerOption(tree: Tree) {
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nrwl/jest:jest',
+    '@nx/jest:jest',
     (options, project, target, configuration) => {
       if (
         options.jestConfig &&
@@ -24,7 +24,7 @@ export function addBabelJestPresetTransformerOption(tree: Tree) {
           oldConfig,
           'PropertyAssignment > StringLiteral[value="babel-jest"]',
           (node: StringLiteral) => {
-            return `['babel-jest', { presets: ['@nrwl/react/babel'] }]`;
+            return `['babel-jest', { presets: ['@nx/react/babel'] }]`;
           }
         );
         tree.write(options.jestConfig, updatedConfig);
@@ -35,11 +35,11 @@ export function addBabelJestPresetTransformerOption(tree: Tree) {
 
 function isReactProject(tree: Tree, projectConfig: ProjectConfiguration) {
   const knownInvalidExecutors = [
-    '@nrwl/next:build',
-    '@nrwl/angular',
+    '@nx/next:build',
+    '@nx/angular',
     '@angular-devkit/build-angular:browser',
-    '@nrwl/js:tsc',
-    '@nrwl/js:swc',
+    '@nx/js:tsc',
+    '@nx/js:swc',
     '@nrwl/workspace:run-commands',
     'nx:run-commands',
     '@nrwl/node:webpack',

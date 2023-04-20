@@ -11,7 +11,7 @@
           "outputs": ["{options.outputPath}"]
         },
         "storybook": {
-          "executor": "@nrwl/storybook:storybook",
+          "executor": "@nx/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,
@@ -39,7 +39,7 @@
           "outputs": ["{options.outputPath}"]
         },
         "storybook": {
-          "executor": "@nrwl/storybook:storybook",
+          "executor": "@nx/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,

@@ -42,7 +42,7 @@ And it creates a blank generator under: `libs/pluginName/src/migrations/change-e
 ### 2. Write the Generator Code
 
 ```ts {% fileName="change-executor-name.ts" %}
-import { getProjects, Tree, updateProjectConfiguration } from '@nrwl/devkit';
+import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
 
 export function changeExecutorNameToNewName(tree: Tree) {
   const projects = getProjects(tree);

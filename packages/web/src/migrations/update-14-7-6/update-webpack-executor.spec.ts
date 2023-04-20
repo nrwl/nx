@@ -7,7 +7,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import update from './update-webpack-executor';
 
-describe('Migration: @nrwl/webpack', () => {
+describe('Migration: @nx/webpack', () => {
   it(`should update usage of webpack executor`, async () => {
     let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
@@ -17,11 +17,11 @@ describe('Migration: @nrwl/webpack', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nrwl/web:webpack',
+          executor: '@nx/web:webpack',
           options: {},
         },
         serve: {
-          executor: '@nrwl/web:dev-server',
+          executor: '@nx/web:dev-server',
           options: {},
         },
       },
@@ -37,11 +37,11 @@ describe('Migration: @nrwl/webpack', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {},
         },
         serve: {
-          executor: '@nrwl/webpack:dev-server',
+          executor: '@nx/webpack:dev-server',
           options: {},
         },
       },

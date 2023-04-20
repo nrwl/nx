@@ -10,7 +10,7 @@ export async function update(tree: Tree) {
   const projects = getProjects(tree);
 
   projects.forEach((config, name) => {
-    if (config.targets?.build?.executor === '@nrwl/next:build') {
+    if (config.targets?.build?.executor === '@nx/next:build') {
       config.targets.build.configurations ??= {};
       config.targets.build.configurations.development ??= {};
       if (

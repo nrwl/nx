@@ -290,7 +290,7 @@ describe('yarn LockFile utility', () => {
         version: '0.0.0',
         license: 'MIT',
         dependencies: {
-          '@nrwl/devkit': '15.0.13',
+          '@nx/devkit': '15.0.13',
           'eslint-plugin-disable-autofix':
             'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
           postgres:
@@ -328,7 +328,7 @@ describe('yarn LockFile utility', () => {
         version: '0.0.0',
         license: 'MIT',
         dependencies: {
-          '@nrwl/devkit': '^15.0.0',
+          '@nx/devkit': '^15.0.0',
           'eslint-plugin-disable-autofix':
             'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
           postgres:
@@ -355,7 +355,7 @@ describe('yarn LockFile utility', () => {
       );
       expect(result).toEqual(
         prunedLockFile
-          .replace('"@nrwl/devkit@15.0.13":', '"@nrwl/devkit@^15.0.0":')
+          .replace('"@nx/devkit@15.0.13":', '"@nx/devkit@^15.0.0":')
           .replace('react@18.2.0:', '"react@>=18 < 19":')
           .replace('yargs@17.6.2:', 'yargs@~17.6.0:')
       );
@@ -428,7 +428,7 @@ describe('yarn LockFile utility', () => {
         version: '0.0.0',
         license: 'MIT',
         dependencies: {
-          '@nrwl/devkit': '15.0.13',
+          '@nx/devkit': '15.0.13',
           'eslint-plugin-disable-autofix':
             'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
           postgres:
@@ -578,8 +578,8 @@ describe('yarn LockFile utility', () => {
         'node_modules/@nodelib/fs.stat/package.json': '{"version": "2.0.5"}',
         'node_modules/@nodelib/fs.walk/package.json': '{"version": "1.2.8"}',
         'node_modules/@nrwl/cli/package.json': '{"version": "15.4.5"}',
-        'node_modules/@nrwl/devkit/package.json': '{"version": "15.4.5"}',
-        'node_modules/@nrwl/linter/package.json': '{"version": "15.4.5"}',
+        'node_modules/@nx/devkit/package.json': '{"version": "15.4.5"}',
+        'node_modules/@nx/linter/package.json': '{"version": "15.4.5"}',
         'node_modules/@nrwl/tao/package.json': '{"version": "15.4.5"}',
         'node_modules/@nrwl/workspace/package.json': '{"version": "15.4.5"}',
         'node_modules/@parcel/watcher/package.json': '{"version": "2.0.4"}',

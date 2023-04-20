@@ -13,7 +13,7 @@ describe('Change from main tag to className tag', () => {
       sourceRoot: 'apps/products/src',
       targets: {
         start: {
-          executor: '@nrwl/react-native:start',
+          executor: '@nx/react-native:start',
           options: {
             port: 8081,
           },

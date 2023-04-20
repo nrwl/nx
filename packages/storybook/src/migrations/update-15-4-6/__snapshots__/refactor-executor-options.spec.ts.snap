@@ -34,7 +34,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "options": {
           "configDir": "apps/main-vite-new/.storybook",
           "outputDir": "dist/storybook/main-vite-new",
@@ -45,7 +45,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "apps/main-vite-new/**/*.{ts,tsx,js,jsx}",
@@ -78,7 +78,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "configDir": "apps/main-vite-new/.storybook",
           "port": 4400,
@@ -129,7 +129,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "options": {
           "configDir": "apps/main-vite/.storybook",
           "outputDir": "dist/storybook/main-vite",
@@ -140,7 +140,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "apps/main-vite/**/*.{ts,tsx,js,jsx}",
@@ -173,7 +173,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "configDir": "apps/main-vite/.storybook",
           "port": 4400,
@@ -209,7 +209,7 @@ Map {
             "devServerTarget": "main-vite:serve:production",
           },
         },
-        "executor": "@nrwl/cypress:cypress",
+        "executor": "@nx/cypress:cypress",
         "options": {
           "cypressConfig": "apps/main-vite-e2e/cypress.config.ts",
           "devServerTarget": "main-vite:serve:development",
@@ -217,7 +217,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "apps/main-vite-e2e/**/*.{js,ts}",
@@ -261,7 +261,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "options": {
           "configDir": "apps/main-vite-ts/.storybook",
           "outputDir": "dist/storybook/main-vite-ts",
@@ -272,7 +272,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "apps/main-vite-ts/**/*.{ts,tsx,js,jsx}",
@@ -305,7 +305,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "configDir": "apps/main-vite-ts/.storybook",
           "port": 4400,
@@ -341,7 +341,7 @@ Map {
             "devServerTarget": "main-vite-ts:serve:production",
           },
         },
-        "executor": "@nrwl/cypress:cypress",
+        "executor": "@nx/cypress:cypress",
         "options": {
           "cypressConfig": "apps/main-vite-ts-e2e/cypress.config.ts",
           "devServerTarget": "main-vite-ts:serve:development",
@@ -349,7 +349,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "apps/main-vite-ts-e2e/**/*.{js,ts}",
@@ -393,7 +393,7 @@ Map {
           },
         },
         "defaultConfiguration": "production",
-        "executor": "@nrwl/webpack:webpack",
+        "executor": "@nx/webpack:webpack",
         "options": {
           "assets": [
             "apps/main-webpack/src/favicon.ico",
@@ -410,7 +410,7 @@ Map {
             "apps/main-webpack/src/styles.css",
           ],
           "tsConfig": "apps/main-webpack/tsconfig.app.json",
-          "webpackConfig": "@nrwl/react/plugins/webpack",
+          "webpackConfig": "@nx/react/plugins/webpack",
         },
         "outputs": [
           "{options.outputPath}",
@@ -422,7 +422,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "options": {
           "configDir": "apps/main-webpack/.storybook",
           "outputDir": "dist/storybook/main-webpack",
@@ -433,7 +433,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "apps/main-webpack/**/*.{ts,tsx,js,jsx}",
@@ -454,7 +454,7 @@ Map {
           },
         },
         "defaultConfiguration": "development",
-        "executor": "@nrwl/webpack:dev-server",
+        "executor": "@nx/webpack:dev-server",
         "options": {
           "buildTarget": "main-webpack:build",
           "hmr": true,
@@ -466,7 +466,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "configDir": "apps/main-webpack/.storybook",
           "port": 4400,
@@ -474,7 +474,7 @@ Map {
         },
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "options": {
           "jestConfig": "apps/main-webpack/jest.config.ts",
           "passWithNoTests": true,
@@ -502,7 +502,7 @@ Map {
             "devServerTarget": "main-webpack:serve:production",
           },
         },
-        "executor": "@nrwl/cypress:cypress",
+        "executor": "@nx/cypress:cypress",
         "options": {
           "cypressConfig": "apps/main-webpack-e2e/cypress.config.ts",
           "devServerTarget": "main-webpack:serve:development",
@@ -510,7 +510,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "apps/main-webpack-e2e/**/*.{js,ts}",
@@ -559,7 +559,7 @@ Map {
             "devServerTarget": "react-rollup:storybook:ci",
           },
         },
-        "executor": "@nrwl/cypress:cypress",
+        "executor": "@nx/cypress:cypress",
         "options": {
           "cypressConfig": "apps/react-rollup-e2e/cypress.config.ts",
           "devServerTarget": "react-rollup:storybook",
@@ -567,7 +567,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "apps/react-rollup-e2e/**/*.{js,ts}",
@@ -596,7 +596,7 @@ Map {
             "devServerTarget": "react-vite:storybook:ci",
           },
         },
-        "executor": "@nrwl/cypress:cypress",
+        "executor": "@nx/cypress:cypress",
         "options": {
           "cypressConfig": "apps/react-vite-e2e/cypress.config.ts",
           "devServerTarget": "react-vite:storybook",
@@ -604,7 +604,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "apps/react-vite-e2e/**/*.{js,ts}",
@@ -625,7 +625,7 @@ Map {
     "tags": [],
     "targets": {
       "build": {
-        "executor": "@nrwl/js:tsc",
+        "executor": "@nx/js:tsc",
         "options": {
           "assets": [
             "libs/my-plugin/*.md",
@@ -659,7 +659,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "libs/my-plugin/**/*.ts",
@@ -673,7 +673,7 @@ Map {
         ],
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "options": {
           "jestConfig": "libs/my-plugin/jest.config.ts",
           "passWithNoTests": true,
@@ -722,7 +722,7 @@ Map {
           ],
           "outputPath": "dist/libs/react-rollup",
           "project": "libs/react-rollup/package.json",
-          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+          "rollupConfig": "@nx/react/plugins/bundle-rollup",
           "tsConfig": "libs/react-rollup/tsconfig.lib.json",
         },
         "outputs": [
@@ -735,7 +735,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "options": {
           "configDir": "libs/react-rollup/.storybook",
           "outputDir": "dist/storybook/react-rollup",
@@ -746,7 +746,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "libs/react-rollup/**/*.{ts,tsx,js,jsx}",
@@ -762,7 +762,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "configDir": "libs/react-rollup/.storybook",
           "port": 4400,
@@ -770,7 +770,7 @@ Map {
         },
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "options": {
           "jestConfig": "libs/react-rollup/jest.config.ts",
           "passWithNoTests": true,
@@ -806,7 +806,7 @@ Map {
           ],
           "outputPath": "dist/libs/react-rollup-2",
           "project": "libs/react-rollup-2/package.json",
-          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+          "rollupConfig": "@nx/react/plugins/bundle-rollup",
           "tsConfig": "libs/react-rollup-2/tsconfig.lib.json",
         },
         "outputs": [
@@ -814,7 +814,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "libs/react-rollup-2/**/*.{ts,tsx,js,jsx}",
@@ -825,7 +825,7 @@ Map {
         ],
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "options": {
           "jestConfig": "libs/react-rollup-2/jest.config.ts",
           "passWithNoTests": true,
@@ -868,7 +868,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "options": {
           "configDir": "libs/react-vite/.storybook",
           "outputDir": "dist/storybook/react-vite",
@@ -879,7 +879,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "libs/react-vite/**/*.{ts,tsx,js,jsx}",
@@ -895,7 +895,7 @@ Map {
             "quiet": true,
           },
         },
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "configDir": "libs/react-vite/.storybook",
           "port": 4400,
@@ -941,7 +941,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "libs/react-vite-2/**/*.{ts,tsx,js,jsx}",
@@ -972,7 +972,7 @@ Map {
     "tags": [],
     "targets": {
       "build": {
-        "executor": "@nrwl/webpack:webpack",
+        "executor": "@nx/webpack:webpack",
         "options": {
           "assets": [],
           "main": "libs/utils/one/src/index.ts",
@@ -984,7 +984,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "libs/utils/one/**/*.ts",
@@ -995,7 +995,7 @@ Map {
         ],
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "options": {
           "jestConfig": "libs/utils/one/jest.config.ts",
           "passWithNoTests": true,
@@ -1024,7 +1024,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "libs/utils/three-vite/**/*.ts",
@@ -1035,7 +1035,7 @@ Map {
         ],
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "options": {
           "jestConfig": "libs/utils/three-vite/jest.config.ts",
           "passWithNoTests": true,
@@ -1055,7 +1055,7 @@ Map {
     "tags": [],
     "targets": {
       "build": {
-        "executor": "@nrwl/webpack:webpack",
+        "executor": "@nx/webpack:webpack",
         "options": {
           "assets": [],
           "main": "libs/utils/two/src/index.ts",
@@ -1067,7 +1067,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "options": {
           "lintFilePatterns": [
             "libs/utils/two/**/*.ts",
@@ -1078,7 +1078,7 @@ Map {
         ],
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "options": {
           "jestConfig": "libs/utils/two/jest.config.ts",
           "passWithNoTests": true,

@@ -3,10 +3,10 @@
 To take advantage of Nx's monorepo features provided by Nx and the Nx Angular plugin, you can also perform a migration from an Angular CLI to an Integrated Nx Monorepo with the command:
 
 ```shell
-ng add @nrwl/angular@<version_number>
+ng add @nx/angular@<version_number>
 ```
 
-This installs the `@nrwl/angular` (or `@nrwl/workspace`) package into your workspace and runs a generator (or schematic) to transform your workspace. The generator applies the following changes to your workspace:
+This installs the `@nx/angular` (or `@nrwl/workspace`) package into your workspace and runs a generator (or schematic) to transform your workspace. The generator applies the following changes to your workspace:
 
 - Installs the `nx` and `@nrwl/workspace` packages.
 - Moves your applications into the `apps` folder, and updates the relevant file paths in your configuration files.

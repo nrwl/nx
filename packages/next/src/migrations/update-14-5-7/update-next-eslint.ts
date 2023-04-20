@@ -4,7 +4,7 @@ export async function updateNextEslint(host: Tree) {
   const projects = getProjects(host);
 
   projects.forEach((project) => {
-    if (project.targets?.build?.executor !== '@nrwl/next:build') return;
+    if (project.targets?.build?.executor !== '@nx/next:build') return;
 
     const eslintPath = `${project.root}/.eslintrc.json`;
 

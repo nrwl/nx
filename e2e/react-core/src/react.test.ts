@@ -35,13 +35,13 @@ describe('React Applications', () => {
     const logoSvg = readFileSync(join(__dirname, 'logo.svg')).toString();
 
     runCLI(
-      `generate @nrwl/react:app ${appName} --style=css --bundler=webpack --no-interactive`
+      `generate @nx/react:app ${appName} --style=css --bundler=webpack --no-interactive`
     );
     runCLI(
-      `generate @nrwl/react:lib ${libName} --style=css --no-interactive --unit-test-runner=jest`
+      `generate @nx/react:lib ${libName} --style=css --no-interactive --unit-test-runner=jest`
     );
     runCLI(
-      `generate @nrwl/react:lib ${libWithNoComponents} --no-interactive --no-component --unit-test-runner=jest`
+      `generate @nx/react:lib ${libWithNoComponents} --no-interactive --no-component --unit-test-runner=jest`
     );
 
     // Libs should not include package.json by default
@@ -107,7 +107,7 @@ describe('React Applications', () => {
     });
 
     // Set up SSR and check app
-    runCLI(`generate @nrwl/react:setup-ssr ${appName}`);
+    runCLI(`generate @nx/react:setup-ssr ${appName}`);
     checkFilesExist(`apps/${appName}/src/main.server.tsx`);
     checkFilesExist(`apps/${appName}/server.ts`);
 
@@ -129,15 +129,15 @@ describe('React Applications', () => {
     const plainJsLib = uniq('jslib');
 
     runCLI(
-      `generate @nrwl/react:app ${appName} --bundler=webpack --no-interactive --js`
+      `generate @nx/react:app ${appName} --bundler=webpack --no-interactive --js`
     );
     runCLI(
-      `generate @nrwl/react:lib ${libName} --no-interactive --js --unit-test-runner=none`
+      `generate @nx/react:lib ${libName} --no-interactive --js --unit-test-runner=none`
     );
     // Make sure plain JS libs can be imported as well.
     // There was an issue previously: https://github.com/nrwl/nx/issues/10990
     runCLI(
-      `generate @nrwl/js:lib ${plainJsLib} --js --unit-test-runner=none --bundler=none --compiler=tsc --no-interactive`
+      `generate @nx/js:lib ${plainJsLib} --js --unit-test-runner=none --bundler=none --compiler=tsc --no-interactive`
     );
 
     const mainPath = `apps/${appName}/src/main.js`;
@@ -159,11 +159,9 @@ describe('React Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
+    runCLI(`generate @nx/react:app ${appName} --bundler=vite --no-interactive`);
     runCLI(
-      `generate @nrwl/react:app ${appName} --bundler=vite --no-interactive`
-    );
-    runCLI(
-      `generate @nrwl/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest`
+      `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest`
     );
 
     // Library generated with Vite
@@ -191,7 +189,7 @@ describe('React Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nrwl/react:app ${appName} --routing --bundler=webpack --no-interactive`
+      `generate @nx/react:app ${appName} --routing --bundler=webpack --no-interactive`
     );
 
     runCLI(`build ${appName} --outputHashing none`);
@@ -207,12 +205,12 @@ describe('React Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(`g @nrwl/react:app ${appName} --bundler=webpack --no-interactive`);
-    runCLI(`g @nrwl/react:redux lemon --project=${appName}`);
+    runCLI(`g @nx/react:app ${appName} --bundler=webpack --no-interactive`);
+    runCLI(`g @nx/react:redux lemon --project=${appName}`);
     runCLI(
-      `g @nrwl/react:lib ${libName} --unit-test-runner=jest --no-interactive`
+      `g @nx/react:lib ${libName} --unit-test-runner=jest --no-interactive`
     );
-    runCLI(`g @nrwl/react:redux orange --project=${libName}`);
+    runCLI(`g @nx/react:redux orange --project=${libName}`);
 
     const appTestResults = await runCLIAsync(`test ${appName}`);
     expect(appTestResults.combinedOutput).toContain(
@@ -235,7 +233,7 @@ describe('React Applications', () => {
     `('should support global and css modules', ({ style }) => {
       const appName = uniq('app');
       runCLI(
-        `generate @nrwl/react:app ${appName} --style=${style} --bundler=webpack --no-interactive`
+        `generate @nx/react:app ${appName} --style=${style} --bundler=webpack --no-interactive`
       );
 
       // make sure stylePreprocessorOptions works
@@ -271,9 +269,9 @@ describe('React Applications', () => {
       const appName = uniq('app');
       const libName = uniq('lib');
 
-      runCLI(`g @nrwl/react:app ${appName} --bundler=webpack --no-interactive`);
+      runCLI(`g @nx/react:app ${appName} --bundler=webpack --no-interactive`);
       runCLI(
-        `g @nrwl/react:lib ${libName} --no-interactive --unit-test-runner=none`
+        `g @nx/react:lib ${libName} --no-interactive --unit-test-runner=none`
       );
 
       const mainPath = `apps/${appName}/src/main.tsx`;

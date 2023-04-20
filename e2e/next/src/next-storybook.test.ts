@@ -24,14 +24,14 @@ describe('Next.js Applications', () => {
   it('should run a Next.js based Storybook setup', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+    runCLI(`generate @nx/next:app ${appName} --no-interactive`);
     runCLI(
-      `generate @nrwl/next:component Foo --project=${appName} --no-interactive`
+      `generate @nx/next:component Foo --project=${appName} --no-interactive`
     );
 
     // Currently due to auto-installing peer deps in pnpm, the generator can fail while installing deps with unmet peet deps.
     runCLI(
-      `generate @nrwl/react:storybook-configuration ${appName} --generateStories --no-interactive`,
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`,
       {
         silenceError: true,
       }

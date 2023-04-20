@@ -18,7 +18,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/app1',
       targets: {
         build: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {},
         },
       },
@@ -27,7 +27,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/app2',
       targets: {
         custom: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {},
         },
       },
@@ -44,7 +44,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/app3',
       targets: {
         custom: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {
             webpackConfig: 'apps/app3/webpack.config.js',
           },
@@ -57,7 +57,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/app4',
       targets: {
         custom: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {
             webpackConfig: 'some/random/path/webpack.something.ts',
           },
@@ -87,7 +87,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/app1',
       targets: {
         build: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {},
         },
       },
@@ -96,7 +96,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/app2',
       targets: {
         custom: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {},
         },
       },
@@ -106,7 +106,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/app3',
       targets: {
         custom: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {
             webpackConfig: 'apps/app3/webpack.config.js',
           },
@@ -120,7 +120,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/app4',
       targets: {
         custom: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {
             webpackConfig: 'some/random/path/webpack.something.ts',
           },
@@ -174,7 +174,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/app5',
       targets: {
         custom: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {
             isolatedConfig: true,
           },
@@ -192,9 +192,9 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/app6',
       targets: {
         custom: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {
-            webpackConfig: '@nrwl/react/plugins/webpack',
+            webpackConfig: '@nx/react/plugins/webpack',
           },
         },
       },
@@ -204,7 +204,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/app7',
       targets: {
         custom: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {
             main: 'apps/app7/src/main.tsx',
           },
@@ -223,7 +223,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/myapp',
       targets: {
         build: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {
             main: 'apps/myapp/src/main.ts',
             webpackConfig: 'apps/myapp/webpack.config.js',
@@ -244,7 +244,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       root: 'apps/alreadymigrated',
       targets: {
         build: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {
             isolatedConfig: true,
             main: 'apps/alreadymigrated/src/main.ts',

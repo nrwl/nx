@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/jest",
+  "name": "@nx/jest",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",

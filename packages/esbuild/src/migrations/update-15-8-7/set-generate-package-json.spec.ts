@@ -59,7 +59,7 @@ describe('Migration: Set generatePackageJson', () => {
       root: 'myapp',
       targets: {
         build: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
         },
       },
     });

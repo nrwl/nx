@@ -41,7 +41,7 @@ describe('React update for Nx 14', () => {
         projectType: 'application',
         targets: {
           build: {
-            executor: '@nrwl/web:webpack',
+            executor: '@nx/web:webpack',
             options: {
               main: `apps/example/src/main.${ext}`,
             },
@@ -84,7 +84,7 @@ describe('React update for Nx 14', () => {
         projectType: 'application',
         targets: {
           build: {
-            executor: '@nrwl/web:webpack',
+            executor: '@nx/web:webpack',
             options: {
               main: `apps/example/src/main.tsx`,
             },

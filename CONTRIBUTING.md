@@ -300,7 +300,7 @@ The scope must be one of the following:
 - graph - anything graph app specific
 - expo - anything Expo specific
 - express - anything Express specific
-- js - anything related to @nrwl/js package or general js/ts support
+- js - anything related to @nx/js package or general js/ts support
 - linter - anything Linter specific
 - nest - anything Nest specific
 - nextjs - anything Next specific

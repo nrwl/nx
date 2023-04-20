@@ -21,7 +21,7 @@ Primary.args = {
         tags: ['scope:cart'],
         targets: {
           build: {
-            executor: '@nrwl/js:tsc',
+            executor: '@nx/js:tsc',
           },
         },
         description: 'The app uses this task to build itself.',
@@ -34,7 +34,7 @@ Primary.args = {
         tags: ['scope:cart'],
         targets: {
           build: {
-            executor: '@nrwl/js:tsc',
+            executor: '@nx/js:tsc',
           },
         },
         description: 'The lib uses this task to build itself.',
@@ -48,7 +48,7 @@ Primary.args = {
         tags: ['scope:cart'],
         targets: {
           build: {
-            executor: '@nrwl/js:tsc',
+            executor: '@nx/js:tsc',
           },
         },
       },
@@ -61,7 +61,7 @@ Primary.args = {
         tags: ['scope:cart'],
         targets: {
           build: {
-            executor: '@nrwl/js:tsc',
+            executor: '@nx/js:tsc',
           },
         },
       },

@@ -27,7 +27,7 @@ export async function createStorybookFiles(
   if (
     targets?.start?.executor !== '@nx/react-native:start' &&
     targets?.start?.executor !== '@nx/expo:start' &&
-    targets?.start?.executor !== '@nrwl/react-native:start' &&
+    targets?.start?.executor !== '@nx/react-native:start' &&
     targets?.start?.executor !== '@nrwl/expo:start'
   ) {
     logger.error(

@@ -13,11 +13,11 @@ describe('React default development configuration', () => {
         projectType: 'application',
         targets: {
           build: {
-            executor: '@nrwl/next:build',
+            executor: '@nx/next:build',
             configurations: {},
           },
           serve: {
-            executor: '@nrwl/next:server',
+            executor: '@nx/next:server',
             configurations: {},
           },
         },
@@ -49,12 +49,12 @@ describe('React default development configuration', () => {
         projectType: 'application',
         targets: {
           build: {
-            executor: '@nrwl/next:build',
+            executor: '@nx/next:build',
             defaultConfiguration: 'production',
             configurations: { production: {} },
           },
           serve: {
-            executor: '@nrwl/next:server',
+            executor: '@nx/next:server',
           },
         },
       },

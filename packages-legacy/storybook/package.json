@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/storybook",
+  "name": "@nx/storybook",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",

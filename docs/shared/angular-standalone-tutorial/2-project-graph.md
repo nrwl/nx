@@ -101,11 +101,11 @@ When a library is created, Nx adds a new Typescript path to the `tsconfig.base.j
 
 ### `shared-ui`
 
-Run the `@nrwl/angular:component` generator with the command:
+Run the `@nx/angular:component` generator with the command:
 
-```{% command="npx nx g @nrwl/angular:component banner --project=shared-ui --export" path="~/store" %}
+```{% command="npx nx g @nx/angular:component banner --project=shared-ui --export" path="~/store" %}
 
->  NX  Generating @nrwl/angular:component
+>  NX  Generating @nx/angular:component
 
 CREATE shared/ui/src/lib/banner/banner.component.css
 CREATE shared/ui/src/lib/banner/banner.component.html
@@ -138,9 +138,9 @@ export class BannerComponent {
 
 Create a cart-route component:
 
-```{% command="npx nx g @nrwl/angular:component cart-route --project=cart" path="~/store" %}
+```{% command="npx nx g @nx/angular:component cart-route --project=cart" path="~/store" %}
 
->  NX  Generating @nrwl/angular:component
+>  NX  Generating @nx/angular:component
 
 CREATE cart/src/lib/cart-route/cart-route.component.css
 CREATE cart/src/lib/cart-route/cart-route.component.html

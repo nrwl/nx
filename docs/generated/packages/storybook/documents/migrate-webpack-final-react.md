@@ -19,7 +19,7 @@ width="100%" /%}
 Here are the main differences to the previous versions of Nx:
 
 - there's no `webpack.config.js`; Custom webpack configurations can be added in the `webpackFinal` property of the `main.js` file
-- the `main.js` file now contains a predefined Storybook addon exported by `@nrwl/react/plugins/storybook`.
+- the `main.js` file now contains a predefined Storybook addon exported by `@nx/react/plugins/storybook`.
 
 Here's an example of a newly generated `main.js` file:
 
@@ -41,7 +41,7 @@ module.exports = {
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: [...rootMain.addons, '@nrwl/react/plugins/storybook'],
+  addons: [...rootMain.addons, '@nx/react/plugins/storybook'],
   webpackFinal: async (config, { configType }) => {
     // apply any global webpack configs that might have been specified in .storybook/main.js
     if (rootMain.webpackFinal) {
@@ -193,7 +193,7 @@ module.exports = async ({ config, mode }) => {
 };
 ```
 
-Such webpack file is no more needed as the `@nrwl/react/plugins/storybook` now takes care of it.
+Such webpack file is no more needed as the `@nx/react/plugins/storybook` now takes care of it.
 
 In case you made custom modifications to the `webpack.config.js` file, you need to move them over to the `main.js` `webpackFinal` property and then delete the `webpack.config.js`.
 

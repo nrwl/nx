@@ -7,7 +7,7 @@ import { defaultExclude } from '../../utils/swc/add-swc-config';
 export default function updateSwcRcExclude(tree: Tree) {
   forEachExecutorOptions(
     tree,
-    '@nrwl/js:swc',
+    '@nx/js:swc',
     (config: SwcExecutorOptions, projectName) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
       const libSwcPath = join(projectConfig.root, '.lib.swcrc');

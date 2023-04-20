@@ -47,7 +47,7 @@
     "init": {
       "factory": "./src/generators/init/init.compat#initSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initializes the `@nrwl/angular` plugin.",
+      "description": "Initializes the `@nx/angular` plugin.",
       "hidden": true
     },
     "library": {
@@ -204,7 +204,7 @@
     "init": {
       "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initializes the `@nrwl/angular` plugin.",
+      "description": "Initializes the `@nx/angular` plugin.",
       "hidden": true
     },
     "library": {

@@ -8,13 +8,13 @@ export async function enableSourceAnalysis(tree: Tree) {
     ) {
       const explicitlyDisabled =
         config.pluginsConfig &&
-        config.pluginsConfig['@nrwl/js'] &&
-        (config.pluginsConfig['@nrwl/js'] as any).analyzeSourceFiles === false;
+        config.pluginsConfig['@nx/js'] &&
+        (config.pluginsConfig['@nx/js'] as any).analyzeSourceFiles === false;
 
       if (!explicitlyDisabled) {
         config.pluginsConfig ||= {};
-        config.pluginsConfig['@nrwl/js'] ||= {};
-        (config.pluginsConfig['@nrwl/js'] as any).analyzeSourceFiles = true;
+        config.pluginsConfig['@nx/js'] ||= {};
+        (config.pluginsConfig['@nx/js'] as any).analyzeSourceFiles = true;
       }
     }
     return config;

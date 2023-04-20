@@ -14,7 +14,7 @@ describe('add `defaultBase` in nx.json', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should update @nrwl/workspace:tsc -> @nrwl/js:tsc', async () => {
+  it('should update @nrwl/workspace:tsc -> @nx/js:tsc', async () => {
     addProjectConfiguration(tree, 'tsc-project', {
       root: 'projects/tsc-project',
       targets: {
@@ -22,7 +22,7 @@ describe('add `defaultBase` in nx.json', () => {
           executor: '@nrwl/workspace:tsc',
         },
         test: {
-          executor: '@nrwl/jest:jest',
+          executor: '@nx/jest:jest',
         },
       },
     });
@@ -30,10 +30,10 @@ describe('add `defaultBase` in nx.json', () => {
       root: 'projects/other-project',
       targets: {
         build: {
-          executor: '@nrwl/react:build',
+          executor: '@nx/react:build',
         },
         test: {
-          executor: '@nrwl/jest:jest',
+          executor: '@nx/jest:jest',
         },
       },
     });
@@ -46,10 +46,10 @@ describe('add `defaultBase` in nx.json', () => {
         root: 'projects/tsc-project',
         targets: {
           build: {
-            executor: '@nrwl/js:tsc',
+            executor: '@nx/js:tsc',
           },
           test: {
-            executor: '@nrwl/jest:jest',
+            executor: '@nx/jest:jest',
           },
         },
       },
@@ -59,17 +59,17 @@ describe('add `defaultBase` in nx.json', () => {
         root: 'projects/other-project',
         targets: {
           build: {
-            executor: '@nrwl/react:build',
+            executor: '@nx/react:build',
           },
           test: {
-            executor: '@nrwl/jest:jest',
+            executor: '@nx/jest:jest',
           },
         },
       },
     });
   });
 
-  it('should add @nrwl/js dependency', async () => {
+  it('should add @nx/js dependency', async () => {
     addProjectConfiguration(tree, 'tsc-project', {
       root: 'projects/tsc-project',
       targets: {
@@ -81,7 +81,7 @@ describe('add `defaultBase` in nx.json', () => {
     await updateTscExecutorLocation(tree);
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies).toMatchObject({
-      '@nrwl/js': expect.anything(),
+      '@nx/js': expect.anything(),
     });
   });
 });

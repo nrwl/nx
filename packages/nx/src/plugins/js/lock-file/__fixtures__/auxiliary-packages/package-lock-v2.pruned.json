@@ -9,7 +9,7 @@
       "version": "0.0.0",
       "license": "MIT",
       "dependencies": {
-        "@nrwl/devkit": "15.0.13",
+        "@nx/devkit": "15.0.13",
         "eslint-plugin-disable-autofix": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
         "postgres": "git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
         "yargs": "17.6.2"
@@ -114,9 +114,9 @@
         "nx": "15.2.4"
       }
     },
-    "node_modules/@nrwl/devkit": {
+    "node_modules/@nx/devkit": {
       "version": "15.0.13",
-      "resolved": "https://registry.npmjs.org/@nrwl/devkit/-/devkit-15.0.13.tgz",
+      "resolved": "https://registry.npmjs.org/@nx/devkit/-/devkit-15.0.13.tgz",
       "integrity": "sha512-/8k7wbBRFf2UC+T4F+vWMy3bfSGi+uK6RwXk53moLq3nxehXaQhRiCqasC6VJFUw3zK6luu2T7xkPUlA9K9l4w==",
       "dependencies": {
         "@phenomnomnominal/tsquery": "4.1.1",
@@ -2433,9 +2433,9 @@
         "nx": "15.2.4"
       }
     },
-    "@nrwl/devkit": {
+    "@nx/devkit": {
       "version": "15.0.13",
-      "resolved": "https://registry.npmjs.org/@nrwl/devkit/-/devkit-15.0.13.tgz",
+      "resolved": "https://registry.npmjs.org/@nx/devkit/-/devkit-15.0.13.tgz",
       "integrity": "sha512-/8k7wbBRFf2UC+T4F+vWMy3bfSGi+uK6RwXk53moLq3nxehXaQhRiCqasC6VJFUw3zK6luu2T7xkPUlA9K9l4w==",
       "requires": {
         "@phenomnomnominal/tsquery": "4.1.1",

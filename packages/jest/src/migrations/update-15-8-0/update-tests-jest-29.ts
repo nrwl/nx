@@ -19,7 +19,7 @@ export async function updateTestsJest29(tree: Tree) {
   const graph = await createProjectGraphAsync();
   forEachExecutorOptionsInGraph<JestExecutorOptions>(
     graph,
-    '@nrwl/jest:jest',
+    '@nx/jest:jest',
     (options, projectName) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
       visitNotIgnoredFiles(

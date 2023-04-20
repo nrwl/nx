@@ -11,7 +11,7 @@ export default async function update(host: Tree) {
   for (const [name, config] of projects.entries()) {
     let updated = false;
 
-    if (config?.targets?.build?.executor === '@nrwl/web:rollup') {
+    if (config?.targets?.build?.executor === '@nx/web:rollup') {
       config.targets.build.executor = '@nrwl/rollup:rollup';
       updated = true;
     }

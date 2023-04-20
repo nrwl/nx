@@ -33,12 +33,12 @@ describe('Nx Affected and Graph Tests', () => {
       const mylib = uniq('mylib');
       const mylib2 = uniq('mylib2');
       const mypublishablelib = uniq('mypublishablelib');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
-      runCLI(`generate @nrwl/js:lib ${mylib}`);
-      runCLI(`generate @nrwl/js:lib ${mylib2}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib2}`);
       runCLI(
-        `generate @nrwl/js:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib} --tags=ui`
+        `generate @nx/js:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib} --tags=ui`
       );
 
       updateFile(
@@ -187,26 +187,26 @@ describe('Nx Affected and Graph Tests', () => {
     });
 
     function generateAll() {
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
-      runCLI(`generate @nrwl/js:lib ${mylib}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
       runCommand(`git add . && git commit -am "add all"`);
     }
 
     it('should not affect other projects by generating a new project', () => {
       // TODO: investigate why affected gives different results on windows
       if (isNotWindows()) {
-        runCLI(`generate @nrwl/web:app ${myapp}`);
+        runCLI(`generate @nx/web:app ${myapp}`);
         expect(runCLI('print-affected --select projects')).toContain(myapp);
         runCommand(`git add . && git commit -am "add ${myapp}"`);
 
-        runCLI(`generate @nrwl/web:app ${myapp2}`);
+        runCLI(`generate @nx/web:app ${myapp2}`);
         let output = runCLI('print-affected --select projects');
         expect(output).not.toContain(myapp);
         expect(output).toContain(myapp2);
         runCommand(`git add . && git commit -am "add ${myapp2}"`);
 
-        runCLI(`generate @nrwl/js:lib ${mylib}`);
+        runCLI(`generate @nx/js:lib ${mylib}`);
         output = runCLI('print-affected --select projects');
         expect(output).not.toContain(myapp);
         expect(output).not.toContain(myapp2);
@@ -294,11 +294,11 @@ describe('Nx Affected and Graph Tests', () => {
       const mylib2 = uniq('mylib2');
       const mypublishablelib = uniq('mypublishablelib');
 
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
-      runCLI(`generate @nrwl/js:lib ${mylib}`);
-      runCLI(`generate @nrwl/js:lib ${mylib2}`);
-      runCLI(`generate @nrwl/js:lib ${mypublishablelib}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib2}`);
+      runCLI(`generate @nx/js:lib ${mypublishablelib}`);
 
       const app1ElementSpec = readFile(
         `apps/${myapp}/src/app/app.element.spec.ts`
@@ -412,11 +412,11 @@ describe('Nx Affected and Graph Tests', () => {
       mylib = uniq('mylib');
       mylib2 = uniq('mylib2');
 
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
-      runCLI(`generate @nrwl/web:app ${myapp3}`);
-      runCLI(`generate @nrwl/js:lib ${mylib}`);
-      runCLI(`generate @nrwl/js:lib ${mylib2}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
+      runCLI(`generate @nx/web:app ${myapp3}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib2}`);
 
       runCommand(`git init`);
       runCommand(`git config user.email "test@test.com"`);

@@ -10,16 +10,16 @@ The Next.js plugin contains executors and generators for managing Next.js applic
 
 To create a new Nx workspace with Next.js, run `npx create-nx-workspace@latest --preset=next`.
 
-To add Next.js to an existing Nx workspace, install the `@nrwl/next` package. Make sure to install the version that matches your `@nrwl/workspace` version.
+To add Next.js to an existing Nx workspace, install the `@nx/next` package. Make sure to install the version that matches your `@nrwl/workspace` version.
 
 ```shell
 #yarn
-yarn add --dev @nrwl/next
+yarn add --dev @nx/next
 ```
 
 ```shell
 #npm
-npm install --save-dev @nrwl/next
+npm install --save-dev @nx/next
 ```
 
 ### Creating Applications
@@ -27,7 +27,7 @@ npm install --save-dev @nrwl/next
 You can add a new application with the following:
 
 ```shell
-nx g @nrwl/next:app my-new-app
+nx g @nx/next:app my-new-app
 ```
 
 ### Generating Libraries
@@ -44,7 +44,7 @@ and [Library Types](/more-concepts/library-types).
 To generate a new library run:
 
 ```shell
-nx g @nrwl/next:lib my-new-lib
+nx g @nx/next:lib my-new-lib
 ```
 
 ### Generating Pages and Components
@@ -52,9 +52,9 @@ nx g @nrwl/next:lib my-new-lib
 Nx also provides commands to quickly generate new pages and components for your application.
 
 ```shell
-nx g @nrwl/next:page my-new-page --project=my-new-app
+nx g @nx/next:page my-new-page --project=my-new-app
 
-nx g @nrwl/next:component my-new-component --project=my-new-app
+nx g @nx/next:component my-new-component --project=my-new-app
 ```
 
 Above commands will add a new page `my-new-page` and a component `my-new-component` to `my-new-app` project respectively.
@@ -98,7 +98,7 @@ There is no need to build the library prior to using it. When you update your li
 For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
 
 ```shell
-nx g @nrwl/next:lib my-new-lib --publishable --importPath=@happynrwl/ui-components
+nx g @nx/next:lib my-new-lib --publishable --importPath=@happynrwl/ui-components
 ```
 
 ### Testing Projects

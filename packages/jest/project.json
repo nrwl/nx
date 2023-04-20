@@ -6,7 +6,7 @@
   "targets": {
     "test": {},
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "assets": [
           {
@@ -50,7 +50,7 @@
       "options": {
         "commands": [
           "node ./scripts/copy-readme.js jest",
-          "node ./scripts/add-dependency-to-build.js jest @nrwl/jest"
+          "node ./scripts/add-dependency-to-build.js jest @nx/jest"
         ]
       }
     },

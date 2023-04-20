@@ -24,7 +24,7 @@ export async function updateToCypress11(tree: Tree) {
   const projects = getProjects(tree);
   forEachExecutorOptions<CypressExecutorOptions>(
     tree,
-    '@nrwl/cypress:cypress',
+    '@nx/cypress:cypress',
     (options, projectName, targetName, configurationName) => {
       if (
         options.testingType !== 'component' ||
@@ -165,12 +165,12 @@ export function updateProviderUsage(tree: Tree, filePath: string) {
 }
 
 function getFramework(contents: string): 'react' | 'angular' | null {
-  if (contents.includes('cypress/react') || contents.includes('@nrwl/react')) {
+  if (contents.includes('cypress/react') || contents.includes('@nx/react')) {
     return 'react';
   }
   if (
     contents.includes('cypress/angular') ||
-    contents.includes('@nrwl/angular')
+    contents.includes('@nx/angular')
   ) {
     return 'angular';
   }

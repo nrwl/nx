@@ -46,7 +46,7 @@ nx serve my-app
 
 This starts the application on localhost:3333/api by default.
 
-> Express does not come with any library generators, but you can leverage the[`@nrwl/js`](/packages/js#create-libraries) plugin to generate a Node.js library for your express application.
+> Express does not come with any library generators, but you can leverage the[`@nx/js`](/packages/js#create-libraries) plugin to generate a Node.js library for your express application.
 
 ### Application Proxies
 
@@ -89,5 +89,5 @@ before serving the Express application.
 ## More Documentation
 
 - [Using Jest](/packages/jest)
-- [@nrwl/js](/packages/js)
+- [@nx/js](/packages/js)
 - [Express](https://expressjs.com/)

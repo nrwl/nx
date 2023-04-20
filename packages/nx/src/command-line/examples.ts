@@ -248,9 +248,9 @@ export const examples: Record<string, Example[]> = {
       description: 'List the plugins installed in the current workspace',
     },
     {
-      command: 'list @nrwl/web',
+      command: 'list @nx/web',
       description:
-        'List the generators and executors available in the `@nrwl/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace)',
+        'List the generators and executors available in the `@nx/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace)',
     },
   ],
   'run-many': [
@@ -305,9 +305,9 @@ export const examples: Record<string, Example[]> = {
     },
     {
       command:
-        'migrate @nrwl/workspace@9.0.0 --to="@nrwl/react@9.0.1,@nrwl/angular@9.0.1"',
+        'migrate @nrwl/workspace@9.0.0 --to="@nx/react@9.0.1,@nx/angular@9.0.1"',
       description:
-        'Update @nrwl/workspace to "9.0.0". If it tries to update @nrwl/react or @nrwl/angular, use version "9.0.1"',
+        'Update @nrwl/workspace to "9.0.0". If it tries to update @nx/react or @nx/angular, use version "9.0.1"',
     },
     {
       command: 'migrate another-package@12.0.0',

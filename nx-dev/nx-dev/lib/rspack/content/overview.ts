@@ -73,17 +73,17 @@ Make sure you have the Web plugin installed.
 {% tabs %}
 {% tab label="npm" %}
 \`\`\`bash
-npm i -D @nrwl/web@latest
+npm i -D @nx/web@latest
 \`\`\`
 {% /tab %}
 {% tab label="yarn" %}
 \`\`\`bash
-yarn add -D @nrwl/web@latest
+yarn add -D @nx/web@latest
 \`\`\`
 {% /tab %}
 {% tab label="pnpm" %}
 \`\`\`bash
-pnpm add -D @nrwl/web@latest
+pnpm add -D @nx/web@latest
 \`\`\`
 {% /tab %}
 {% /tabs %}
@@ -91,7 +91,7 @@ pnpm add -D @nrwl/web@latest
 Then generate the application.
 
 \`\`\`bash
-nx g @nrwl/web:app my-app --style=css
+nx g @nx/web:app my-app --style=css
 \`\`\`
 
 Finally, configure Rspack for the new project.

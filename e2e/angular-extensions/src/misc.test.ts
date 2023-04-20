@@ -20,7 +20,7 @@ describe('Move Angular Project', () => {
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
-    runCLI(`generate @nrwl/angular:app ${app1} --no-interactive`);
+    runCLI(`generate @nx/angular:app ${app1} --no-interactive`);
   });
 
   afterAll(() => cleanupProject());
@@ -30,7 +30,7 @@ describe('Move Angular Project', () => {
    */
   it('should work for apps', () => {
     const moveOutput = runCLI(
-      `generate @nrwl/angular:move --project ${app1} ${newPath}`
+      `generate @nx/angular:move --project ${app1} ${newPath}`
     );
 
     // just check the output
@@ -64,7 +64,7 @@ describe('Move Angular Project', () => {
       `apps/${app1}-e2e/cypress.config.ts`,
       `
   import { defineConfig } from 'cypress';
-  import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+  import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
   
   export default defineConfig({
     e2e: {
@@ -76,7 +76,7 @@ describe('Move Angular Project', () => {
   `
     );
     const moveOutput = runCLI(
-      `generate @nrwl/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
+      `generate @nx/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
     );
 
     // just check that the cypress.config.ts is updated correctly
@@ -99,13 +99,13 @@ describe('Move Angular Project', () => {
   it('should work for libraries', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
-    runCLI(`generate @nrwl/angular:lib ${lib1} --no-interactive`);
+    runCLI(`generate @nx/angular:lib ${lib1} --no-interactive`);
 
     /**
      * Create a library which imports the module from the other lib
      */
 
-    runCLI(`generate @nrwl/angular:lib ${lib2} --no-interactive`);
+    runCLI(`generate @nx/angular:lib ${lib2} --no-interactive`);
 
     updateFile(
       `libs/${lib2}/src/lib/${lib2}.module.ts`,
@@ -115,7 +115,7 @@ describe('Move Angular Project', () => {
     );
 
     const moveOutput = runCLI(
-      `generate @nrwl/angular:move --projectName=${lib1} --destination=shared/${lib1}`
+      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1}`
     );
 
     const newPath = `libs/shared/${lib1}`;

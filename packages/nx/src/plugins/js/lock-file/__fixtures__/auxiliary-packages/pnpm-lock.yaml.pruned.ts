@@ -1,7 +1,7 @@
 export default `lockfileVersion: 5.4
 
 specifiers:
-  '@nrwl/devkit': 15.0.13
+  '@nx/devkit': 15.0.13
   eslint-plugin-disable-autofix: npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0
   postgres: github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb
   react: 18.2.0
@@ -9,7 +9,7 @@ specifiers:
   yargs: 17.6.2
 
 dependencies:
-  '@nrwl/devkit': 15.0.13_nx@15.3.0+typescript@4.8.4
+  '@nx/devkit': 15.0.13_nx@15.3.0+typescript@4.8.4
   eslint-plugin-disable-autofix: /@mattlewis92/eslint-plugin-disable-autofix/3.0.0
   postgres: github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb
   typescript: 4.8.4
@@ -98,7 +98,7 @@ packages:
       - debug
     dev: false
 
-  /@nrwl/devkit/15.0.13_nx@15.3.0+typescript@4.8.4:
+  /@nx/devkit/15.0.13_nx@15.3.0+typescript@4.8.4:
     resolution: {integrity: sha512-/8k7wbBRFf2UC+T4F+vWMy3bfSGi+uK6RwXk53moLq3nxehXaQhRiCqasC6VJFUw3zK6luu2T7xkPUlA9K9l4w==}
     peerDependencies:
       nx: '>= 14 <= 16'

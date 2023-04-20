@@ -9,13 +9,13 @@ import {
 
 /**
  * Update svg typings in tsconfig for react native app
- * Replace node_modules/@nrwl/react/typings/image.d.ts with node_modules/@nrwl/react-native/typings/svg.d.ts
+ * Replace node_modules/@nx/react/typings/image.d.ts with node_modules/@nx/react-native/typings/svg.d.ts
  */
 export default async function update(tree: Tree) {
   const projects = getProjects(tree);
 
   projects.forEach((project) => {
-    if (project.targets?.start?.executor !== '@nrwl/react-native:start') return;
+    if (project.targets?.start?.executor !== '@nx/react-native:start') return;
     updateReactNativeSvgTypingInTsconfig(tree, project);
   });
 
@@ -32,9 +32,9 @@ function updateReactNativeSvgTypingInTsconfig(
   updateJson(host, tsconfigPath, (json) => {
     const files = json.files || [];
     const imageTypingIndex = files.findIndex(
-      (file) => file === `${offset}node_modules/@nrwl/react/typings/image.d.ts`
+      (file) => file === `${offset}node_modules/@nx/react/typings/image.d.ts`
     );
-    const reactNativeSvgTypingPath = `${offset}node_modules/@nrwl/react-native/typings/svg.d.ts`;
+    const reactNativeSvgTypingPath = `${offset}node_modules/@nx/react-native/typings/svg.d.ts`;
     if (imageTypingIndex === -1) {
       files.push(reactNativeSvgTypingPath);
     } else {

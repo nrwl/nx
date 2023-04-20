@@ -13,7 +13,7 @@ export default async function update(host: Tree) {
   const projects = getProjects(host);
 
   for (const [name, config] of projects.entries()) {
-    if (config?.targets?.build?.executor !== '@nrwl/web:webpack') continue;
+    if (config?.targets?.build?.executor !== '@nx/web:webpack') continue;
     const configPath = `${config.root}/postcss.config.js`;
 
     if (host.exists(configPath)) {

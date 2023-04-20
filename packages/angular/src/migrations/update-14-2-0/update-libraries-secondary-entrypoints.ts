@@ -12,8 +12,8 @@ import { basename, dirname } from 'path';
 
 const libraryExecutors = [
   '@angular-devkit/build-angular:ng-packagr',
-  '@nrwl/angular:ng-packagr-lite',
-  '@nrwl/angular:package',
+  '@nx/angular:ng-packagr-lite',
+  '@nx/angular:package',
 ];
 
 export default async function (tree: Tree) {

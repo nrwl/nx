@@ -28,7 +28,7 @@ describe('Vite Plugin', () => {
     describe('convert React webpack app to vite using the vite:configuration generator', () => {
       beforeEach(() => {
         proj = newProject();
-        runCLI(`generate @nrwl/react:app ${myApp} --bundler=webpack`);
+        runCLI(`generate @nx/react:app ${myApp} --bundler=webpack`);
         runCLI(`generate @nrwl/vite:configuration ${myApp}`);
       });
       afterEach(() => cleanupProject());
@@ -64,7 +64,7 @@ describe('Vite Plugin', () => {
     describe('set up new React app with --bundler=vite option', () => {
       beforeEach(() => {
         proj = newProject();
-        runCLI(`generate @nrwl/react:app ${myApp} --bundler=vite`);
+        runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
         createFile(`apps/${myApp}/public/hello.md`, `# Hello World`);
         updateFile(
           `apps/${myApp}/src/environments/environment.prod.ts`,
@@ -127,10 +127,10 @@ describe('Vite Plugin', () => {
   });
 
   describe('Vite on Web apps', () => {
-    describe('set up new @nrwl/web app with --bundler=vite option', () => {
+    describe('set up new @nx/web app with --bundler=vite option', () => {
       beforeEach(() => {
         proj = newProject();
-        runCLI(`generate @nrwl/web:app ${myApp} --bundler=vite`);
+        runCLI(`generate @nx/web:app ${myApp} --bundler=vite`);
       });
       afterEach(() => cleanupProject());
       it('should build application', async () => {
@@ -146,10 +146,10 @@ describe('Vite Plugin', () => {
       }, 200_000);
     });
 
-    describe('convert @nrwl/web webpack app to vite using the vite:configuration generator', () => {
+    describe('convert @nx/web webpack app to vite using the vite:configuration generator', () => {
       beforeEach(() => {
         proj = newProject();
-        runCLI(`generate @nrwl/web:app ${myApp} --bundler=webpack`);
+        runCLI(`generate @nx/web:app ${myApp} --bundler=webpack`);
         runCLI(`generate @nrwl/vite:configuration ${myApp}`);
       });
       afterEach(() => cleanupProject());
@@ -198,7 +198,7 @@ describe('Vite Plugin', () => {
       100_000;
 
     it('should be able to run tests', async () => {
-      runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
+      runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
       expect(exists(tmpProjPath(`libs/${lib}/vite.config.ts`))).toBeTruthy();
 
       const result = await runCLIAsync(`test ${lib}`);
@@ -216,7 +216,7 @@ describe('Vite Plugin', () => {
     }, 100_000);
 
     it('should collect coverage', () => {
-      runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
+      runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
       updateFile(`libs/${lib}/vite.config.ts`, () => {
         return `/// <reference types="vitest" />
         import { defineConfig } from 'vite';
@@ -268,7 +268,7 @@ export default defineConfig({
     it('should not delete the project directory when coverage is enabled', () => {
       // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
       // from the @nrwl/vite:test executor options, vite will delete the project root directory
-      runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
+      runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
       updateFile(`libs/${lib}/vite.config.ts`, () => {
         return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -320,7 +320,7 @@ export default defineConfig({
 
     it('should be able to run tests with inSourceTests set to true', async () => {
       runCLI(
-        `generate @nrwl/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
+        `generate @nx/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
       );
       expect(
         exists(tmpProjPath(`libs/${lib}/src/lib/${lib}.spec.tsx`))

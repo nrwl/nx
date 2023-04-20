@@ -13,11 +13,11 @@ describe('React default development configuration', () => {
         projectType: 'application',
         targets: {
           build: {
-            executor: '@nrwl/web:webpack',
+            executor: '@nx/web:webpack',
             configurations: {},
           },
           serve: {
-            executor: '@nrwl/web:dev-server',
+            executor: '@nx/web:dev-server',
             configurations: {},
           },
         },
@@ -53,12 +53,12 @@ describe('React default development configuration', () => {
         projectType: 'application',
         targets: {
           build: {
-            executor: '@nrwl/web:webpack',
+            executor: '@nx/web:webpack',
             defaultConfiguration: 'production',
             configurations: { production: { sourceMap: false } },
           },
           serve: {
-            executor: '@nrwl/web:dev-server',
+            executor: '@nx/web:dev-server',
           },
         },
       },

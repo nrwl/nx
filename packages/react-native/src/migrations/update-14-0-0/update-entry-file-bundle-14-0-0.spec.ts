@@ -13,7 +13,7 @@ describe('Update entryFile for bundle target for react native apps', () => {
       sourceRoot: 'apps/products/src',
       targets: {
         'bundle-ios': {
-          executor: '@nrwl/react-native:bundle',
+          executor: '@nx/react-native:bundle',
           options: {
             entryFile: 'apps/mobile/src/main.tsx',
             platform: 'ios',
@@ -21,7 +21,7 @@ describe('Update entryFile for bundle target for react native apps', () => {
           },
         },
         'bundle-android': {
-          executor: '@nrwl/react-native:bundle',
+          executor: '@nx/react-native:bundle',
           options: {
             entryFile: 'apps/mobile/src/main.tsx',
             platform: 'android',
@@ -39,7 +39,7 @@ describe('Update entryFile for bundle target for react native apps', () => {
 
     getProjects(tree).forEach((project) => {
       expect(project.targets['bundle-ios']).toEqual({
-        executor: '@nrwl/react-native:bundle',
+        executor: '@nx/react-native:bundle',
         options: {
           entryFile: 'src/main.tsx',
           platform: 'ios',
@@ -48,7 +48,7 @@ describe('Update entryFile for bundle target for react native apps', () => {
       });
 
       expect(project.targets['bundle-android']).toEqual({
-        executor: '@nrwl/react-native:bundle',
+        executor: '@nx/react-native:bundle',
         options: {
           entryFile: 'src/main.tsx',
           platform: 'android',
@@ -63,7 +63,7 @@ describe('Update entryFile for bundle target for react native apps', () => {
 
     getProjects(tree).forEach((project) => {
       expect(project.targets['bundle-ios']).toEqual({
-        executor: '@nrwl/react-native:bundle',
+        executor: '@nx/react-native:bundle',
         options: {
           entryFile: 'apps/mobile/src/main.tsx',
           platform: 'ios',
@@ -72,7 +72,7 @@ describe('Update entryFile for bundle target for react native apps', () => {
       });
 
       expect(project.targets['bundle-android']).toEqual({
-        executor: '@nrwl/react-native:bundle',
+        executor: '@nx/react-native:bundle',
         options: {
           entryFile: 'apps/mobile/src/main.tsx',
           platform: 'android',

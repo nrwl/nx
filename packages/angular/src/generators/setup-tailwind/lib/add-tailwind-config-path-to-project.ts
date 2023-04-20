@@ -25,8 +25,8 @@ export function addTailwindConfigPathToProject(
   const supportedLibraryExecutors = [
     '@nx/angular:ng-packagr-lite',
     '@nx/angular:package',
-    '@nrwl/angular:ng-packagr-lite',
-    '@nrwl/angular:package',
+    '@nx/angular:ng-packagr-lite',
+    '@nx/angular:package',
   ];
   if (!supportedLibraryExecutors.includes(buildTarget.executor)) {
     throw new Error(

@@ -32,7 +32,7 @@ describe('migrate-defaults-5-to-6 Generator', () => {
         ...json,
         devDependencies: {
           ...json.devDependencies,
-          '@nrwl/storybook': '10.4.0',
+          '@nx/storybook': '10.4.0',
           '@nrwl/workspace': '10.4.0',
           '@storybook/addon-knobs': '^5.3.8',
           '@storybook/angular': '^5.3.8',

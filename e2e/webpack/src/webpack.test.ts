@@ -15,12 +15,12 @@ describe('Webpack Plugin', () => {
 
   it('should be able to setup project to build node programs with webpack and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=none`);
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     // babel (default)
     runCLI(
-      `generate @nrwl/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
+      `generate @nx/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
     );
 
     // Test `scriptType` later during during.
@@ -53,7 +53,7 @@ module.exports = composePlugins(withNx(), (config) => {
 
     // swc
     runCLI(
-      `generate @nrwl/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
+      `generate @nx/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -67,7 +67,7 @@ module.exports = composePlugins(withNx(), (config) => {
 
     // tsc
     runCLI(
-      `generate @nrwl/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
+      `generate @nx/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);

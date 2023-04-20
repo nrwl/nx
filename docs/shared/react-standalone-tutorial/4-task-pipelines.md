@@ -127,7 +127,7 @@ Here are the outputs defined for the `shared-ui` project:
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["shared/ui/**/*.{ts,tsx,js,jsx}"]

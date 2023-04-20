@@ -10,8 +10,8 @@ import {
 import { nxVersion } from '../../utils/versions';
 
 export default async function updateFileServerExecutor(tree: Tree) {
-  const oldExecutor = '@nrwl/angular:file-server';
-  const newExecutor = '@nrwl/web:file-server';
+  const oldExecutor = '@nx/angular:file-server';
+  const newExecutor = '@nx/web:file-server';
   let needsNrwlWeb = false;
 
   const nxJson = readNxJson(tree);
@@ -49,7 +49,7 @@ export default async function updateFileServerExecutor(tree: Tree) {
   }
 
   if (needsNrwlWeb) {
-    addDependenciesToPackageJson(tree, {}, { '@nrwl/web': nxVersion });
+    addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
   }
 
   await formatFiles(tree);

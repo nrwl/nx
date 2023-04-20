@@ -40,7 +40,7 @@ Each project has the `test` and `build` targets defined. Tasks can be defined as
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "options": {
         "codeCoverage": true
       }

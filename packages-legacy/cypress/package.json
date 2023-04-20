@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/cypress",
+  "name": "@nx/cypress",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",

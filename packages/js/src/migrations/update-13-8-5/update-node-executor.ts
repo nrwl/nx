@@ -12,7 +12,7 @@ export default async function update(host: Tree) {
   let installNeeded = false;
 
   for (const [name, config] of projects.entries()) {
-    if (config?.targets?.serve?.executor !== '@nrwl/js:node') continue;
+    if (config?.targets?.serve?.executor !== '@nx/js:node') continue;
 
     config.targets.serve.executor = '@nrwl/node:node';
 

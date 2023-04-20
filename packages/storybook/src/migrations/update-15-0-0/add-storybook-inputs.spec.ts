@@ -26,11 +26,11 @@ describe('15.0.0 migration (add-storybook-inputs)', () => {
       root: 'proj',
       targets: {
         'build-storybook': {
-          executor: '@nrwl/storybook:build',
+          executor: '@nx/storybook:build',
           options: {},
         },
         'build-storybook2': {
-          executor: '@nrwl/storybook:build',
+          executor: '@nx/storybook:build',
           options: {},
         },
         notStorybook: {

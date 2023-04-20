@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "dependsOn": ["^build"],
       "options": {
         "main": "packages-legacy/nest/index.ts",

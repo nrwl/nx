@@ -1,6 +1,6 @@
 ---
 title: Storybook 7 Migration Generator Examples
-description: This page contains examples for the @nrwl/storybook:migrate-7 generator.
+description: This page contains examples for the @nx/storybook:migrate-7 generator.
 ---
 
 {% callout type="info" title="Available on Nx v15.9" %}
@@ -13,14 +13,14 @@ For setting up Storybook version 7 in a new Nx workspace, or a workspace that do
 
 Storybook 7 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 7.0.0 release article](https://storybook.js.org/blog/storybook-7-0/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7.0.0 migration guide](https://storybook.js.org/docs/react/migration-guide).
 
-You can now migrate your existing Nx workspace with Storybook configuration to use Storybook version 7. To help you, Nx offers the `@nrwl/storybook:migrate-7` generator. This generator will help you migrate your existing Storybook setup to version 7.
+You can now migrate your existing Nx workspace with Storybook configuration to use Storybook version 7. To help you, Nx offers the `@nx/storybook:migrate-7` generator. This generator will help you migrate your existing Storybook setup to version 7.
 
 ## How to use it
 
 Just call:
 
 ```bash
-npx nx g @nrwl/storybook:migrate-7
+npx nx g @nx/storybook:migrate-7
 ```
 
 {% callout type="warning" title="Commit your changes" %}
@@ -104,7 +104,7 @@ npx nx storybook PROJECT_NAME
 You can run the generator with the `--autoAcceptAllPrompts` flag, which will automatically accept all the Storybook CLI prompts. This is useful if you want to run the generator in a CI environment, or if you want to run the generator in a script. Or if you are sure that you want to accept all the prompts!
 
 ```bash
-npx nx g @nrwl/storybook:migrate-7 --autoAcceptAllPrompts
+npx nx g @nx/storybook:migrate-7 --autoAcceptAllPrompts
 ```
 
 The Storybook CLI may still ask you about some things, but mostly it should just run the whole migration suite uninterrupted.
@@ -114,24 +114,24 @@ The Storybook CLI may still ask you about some things, but mostly it should just
 Nx gives you the ability to run all the migration steps one by one, manually, but still with the help of our migrator. To help you out with the commands that you need to run, Nx will print out the instructions if you run the generator with the `--onlyShowListOfCommands` flag, like this:
 
 ```bash
-npx nx g @nrwl/storybook:migrate-7 --onlyShowListOfCommands
+npx nx g @nx/storybook:migrate-7 --onlyShowListOfCommands
 ```
 
 Essentially, the way to run the migration manually is the following:
 
 1. Call the Nx generator to show you the list of commands:
-   `npx nx g @nrwl/storybook:migrate-7 --onlyShowListOfCommands`
+   `npx nx g @nx/storybook:migrate-7 --onlyShowListOfCommands`
 2. Call the Storybook upgrade script:
    `npx storybook@latest upgrade`
 3. Call the Nx generator to prepare your files for migration. The steps are explained in [Step 02](#step-02) above.
-   `nx g @nrwl/storybook:migrate-7 --onlyPrepare`
-4. Call the Storybook automigrate scripts for each one of the projects using Storybook (the `@nrwl/storybook:migrate-7` will give you the list of all the commands)
+   `nx g @nx/storybook:migrate-7 --onlyPrepare`
+4. Call the Storybook automigrate scripts for each one of the projects using Storybook (the `@nx/storybook:migrate-7` will give you the list of all the commands)
 5. Call the Nx generator to finish the migration. The steps are explained in [Step 04](#step-04) above.
-   `nx g @nrwl/storybook:migrate-7 --afterMigration`
+   `nx g @nx/storybook:migrate-7 --afterMigration`
 
 ## How the generator works under the hood
 
-Now let's see how the `@nrwl/storybook:migrate-7` generator works under the hood. It essentially does the following things:
+Now let's see how the `@nx/storybook:migrate-7` generator works under the hood. It essentially does the following things:
 
 ### Step 01
 
@@ -179,7 +179,7 @@ You can migrate to Storybook 7 by just using the [Storybook `upgrade` and `autom
 
 First, you would have to run the `npx storybook@latest upgrade` to get the latest versions of all the `@storybook/*` packages. Then, for each one of your projects that use Storybook, you would have to run `npx storybook@latest automigrate --config-dir <MY-PROJECT>/.storybook --renderer @storybook/<react|angular|etc>`.
 
-The `@nrwl/storybook:migrate-7` generator helps you by figuring out all the project paths and the renderers that need to be passed in the `automigrate` script, and also by performing a number of adjustments to your code to make sure the migration scripts run smoothly, so it is recommended to use the generator instead of running the scripts manually.
+The `@nx/storybook:migrate-7` generator helps you by figuring out all the project paths and the renderers that need to be passed in the `automigrate` script, and also by performing a number of adjustments to your code to make sure the migration scripts run smoothly, so it is recommended to use the generator instead of running the scripts manually.
 
 ## Report any issues and bugs
 

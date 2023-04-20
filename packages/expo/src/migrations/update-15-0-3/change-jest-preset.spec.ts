@@ -21,7 +21,7 @@ describe('Change expo jest preset', () => {
       sourceRoot: 'apps/products/src',
       targets: {
         test: {
-          executor: '@nrwl/jest:jest',
+          executor: '@nx/jest:jest',
           options: {
             jestConfig: 'apps/products/jest.config.ts',
             passWithNoTests: true,

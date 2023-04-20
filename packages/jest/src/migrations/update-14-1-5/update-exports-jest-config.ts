@@ -11,7 +11,7 @@ export function updateExportsJestConfig(tree: Tree) {
   let shouldInstallTsNode = false;
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nrwl/jest:jest',
+    '@nx/jest:jest',
     (options) => {
       if (options.jestConfig && tree.exists(options.jestConfig)) {
         if (options.jestConfig.endsWith('.ts')) {
@@ -69,7 +69,7 @@ export function updateRootFiles(tree: Tree): { didUpdateRootPreset: boolean } {
 function updateNxPresetImport(fileContents: string): string {
   return fileContents.replace(
     /require\(['"]@nrwl\/jest\/preset['"]\)[;\s]*?[\n\r]/g,
-    `require('@nrwl/jest/preset').default;
+    `require('@nx/jest/preset').default;
 `
   );
 }

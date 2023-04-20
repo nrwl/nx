@@ -31,7 +31,7 @@ First, let’s see what Nx offers, when you are in the process of developing a p
 
 #### Configuration generation
 
-You can generate the Storybook configuration files and settings using the Nx [`@nrwl/storybook:configuration` generator](/packages/storybook/generators/configuration). You can read more about configuring Storybook with Nx in our [`@nrwl/storybook` package overview page](/packages/storybook#generating-storybook-configuration). With Nx, you configure Storybook for each individual project.
+You can generate the Storybook configuration files and settings using the Nx [`@nx/storybook:configuration` generator](/packages/storybook/generators/configuration). You can read more about configuring Storybook with Nx in our [`@nx/storybook` package overview page](/packages/storybook#generating-storybook-configuration). With Nx, you configure Storybook for each individual project.
 
 #### Stories generation
 

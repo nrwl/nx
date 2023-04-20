@@ -33,7 +33,7 @@
     "update-15-5-3": {
       "cli": "nx",
       "version": "15.5.3-beta.0",
-      "description": "Add @nrwl/webpack if it is missing and is used.",
+      "description": "Add @nx/webpack if it is missing and is used.",
       "factory": "./src/migrations/update-15-5-3/ensure-webpack-package"
     },
     "update-15-7-0": {
@@ -45,7 +45,7 @@
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/storybook with @nx/storybook",
+      "description": "Replace @nx/storybook with @nx/storybook",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     },
     "update-16-0-0-migrate-7": {

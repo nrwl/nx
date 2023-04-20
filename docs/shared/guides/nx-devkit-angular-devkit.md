@@ -13,7 +13,7 @@ Nx comes with a devkit to write generators and executors, but you can also use A
 The following is a generator written using Nx Devkit:
 
 ```typescript
-import { Tree, formatFiles, generateFiles } from '@nrwl/devkit';
+import { Tree, formatFiles, generateFiles } from '@nx/devkit';
 import * as path from 'path';
 
 interface Schema {

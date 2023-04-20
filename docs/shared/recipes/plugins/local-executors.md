@@ -65,7 +65,7 @@ In our `executor.ts` file, we're creating an `Options` interface that matches th
 The `executor.ts` contains the actual code for your executor. Your executor's implementation must export a function that takes an options object and returns a `Promise<{ success: boolean }>`.
 
 ```typescript
-import type { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -149,7 +149,7 @@ Part of the power of the executor API is the ability to compose executors via ex
 Here's an example of this (from a hypothetical project), that serves an api (project name: "api") in watch mode, then serves a frontend app (project name: "web-client") in watch mode:
 
 ```typescript
-import { ExecutorContext, runExecutor } from '@nrwl/devkit';
+import { ExecutorContext, runExecutor } from '@nx/devkit';
 
 export interface MultipleExecutorOptions {}
 
@@ -204,7 +204,7 @@ If you want to add a custom hasher manually, create a new file beside your execu
 This would allow you to write a custom function in `hasher.ts`, which Nx would use to calculate the target's hash. As an example, consider the below hasher which mimics the behavior of Nx's default hashing algorithm.
 
 ```typescript
-import { CustomHasher, Task, HasherContext } from '@nrwl/devkit';
+import { CustomHasher, Task, HasherContext } from '@nx/devkit';
 
 export const mimicNxHasher: CustomHasher = async (
   task: Task,
@@ -219,7 +219,7 @@ export default mimicNxHasher;
 The hash function can do anything it wants, but it is important to remember that the hasher replaces the hashing done normally by Nx. If you change the hasher, Nx may return cache hits when you do not anticipate it. Imagine the below custom hasher:
 
 ```typescript
-import { CustomHasher, Task, HasherContext } from '@nrwl/devkit';
+import { CustomHasher, Task, HasherContext } from '@nx/devkit';
 
 export const badHasher: CustomHasher = async (
   task: Task,

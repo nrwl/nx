@@ -9,9 +9,9 @@ export default async function update(host: Tree) {
   const projects = getProjects(host);
 
   for (const [name, config] of projects.entries()) {
-    if (config?.targets?.build?.executor !== '@nrwl/web:build') continue;
+    if (config?.targets?.build?.executor !== '@nx/web:build') continue;
 
-    config.targets.build.executor = '@nrwl/web:webpack';
+    config.targets.build.executor = '@nx/web:webpack';
 
     updateProjectConfiguration(host, name, config);
   }

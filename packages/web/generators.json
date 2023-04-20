@@ -6,7 +6,7 @@
     "init": {
       "factory": "./src/generators/init/init#webInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Add `@nrwl/web` to a project.",
+      "description": "Add `@nx/web` to a project.",
       "hidden": true
     },
     "application": {
@@ -26,7 +26,7 @@
     "init": {
       "factory": "./src/generators/init/init#webInitSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Add `@nrwl/web` to a project.",
+      "description": "Add `@nx/web` to a project.",
       "hidden": true
     },
     "application": {

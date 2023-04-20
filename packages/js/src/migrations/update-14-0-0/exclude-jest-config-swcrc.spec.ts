@@ -13,7 +13,7 @@ const projectConfig: ProjectConfiguration = {
   sourceRoot: 'libs/swc-lib/src',
   targets: {
     build: {
-      executor: '@nrwl/js:swc',
+      executor: '@nx/js:swc',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: 'dist/libs/swc-lib',

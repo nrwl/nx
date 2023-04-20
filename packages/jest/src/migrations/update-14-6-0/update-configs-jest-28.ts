@@ -17,7 +17,7 @@ export function updateConfigsJest28(tree: Tree) {
   let devDeps = checkDeps(tree);
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nrwl/jest:jest',
+    '@nx/jest:jest',
     (options) => {
       if (options.jestConfig && tree.exists(options.jestConfig)) {
         const updatedConfig = updateJestConfig(

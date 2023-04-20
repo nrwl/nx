@@ -19,7 +19,7 @@ describe('updateFileServerExecutor', () => {
       sourceRoot: '/src',
       targets: {
         serve: {
-          executor: '@nrwl/angular:file-server',
+          executor: '@nx/angular:file-server',
           options: {},
         },
       },
@@ -33,10 +33,10 @@ describe('updateFileServerExecutor', () => {
     // AWAIT
     const updatedProject = readProjectConfiguration(tree, 'test');
     expect(updatedProject.targets.serve.executor).toEqual(
-      '@nrwl/web:file-server'
+      '@nx/web:file-server'
     );
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/web']
+      readJson(tree, 'package.json').devDependencies['@nx/web']
     ).toBeTruthy();
   });
 
@@ -50,7 +50,7 @@ describe('updateFileServerExecutor', () => {
       targetDefaults: {
         ...(nxJson.targetDefaults ?? {}),
         serve: {
-          executor: '@nrwl/angular:file-server',
+          executor: '@nx/angular:file-server',
         },
       },
     });
@@ -61,7 +61,7 @@ describe('updateFileServerExecutor', () => {
     // AWAIT
     const updatedNxJson = readNxJson(tree);
     expect(updatedNxJson.targetDefaults.serve.executor).toEqual(
-      '@nrwl/web:file-server'
+      '@nx/web:file-server'
     );
   });
 

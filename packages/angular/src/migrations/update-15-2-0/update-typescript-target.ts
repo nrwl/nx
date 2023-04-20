@@ -38,11 +38,11 @@ export default async function updateTypescriptTarget(tree: Tree) {
         Builders.Karma,
         Builders.Browser,
         Builders.NgPackagr,
-        '@nrwl/angular:webpack-browser',
-        '@nrwl/angular:ng-packagr-lite',
-        '@nrwl/angular:package',
-        '@nrwl/angular:delegate-build',
-        '@nrwl/jest:jest',
+        '@nx/angular:webpack-browser',
+        '@nx/angular:ng-packagr-lite',
+        '@nx/angular:package',
+        '@nx/angular:delegate-build',
+        '@nx/jest:jest',
       ]);
 
       if (supportedExecutors.has(target.executor)) {

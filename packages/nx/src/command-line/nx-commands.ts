@@ -30,7 +30,7 @@ export const commandsObject = yargs
   .command({
     command: 'generate <generator> [_..]',
     describe:
-      'Generate or update source code (e.g., nx generate @nrwl/js:lib mylib).',
+      'Generate or update source code (e.g., nx generate @nx/js:lib mylib).',
     aliases: ['g'],
     builder: (yargs) => withGenerateOptions(yargs),
     handler: async (args) => {
@@ -698,7 +698,7 @@ function withGenerateOptions(yargs: yargs.Argv) {
     process.argv[3] && !process.argv[3].startsWith('-');
   const res = yargs
     .positional('generator', {
-      describe: 'Name of the generator (e.g., @nrwl/js:library, library)',
+      describe: 'Name of the generator (e.g., @nx/js:library, library)',
       type: 'string',
       required: true,
     })
@@ -814,12 +814,12 @@ function withMigrationOptions(yargs: yargs.Argv) {
     })
     .option('from', {
       describe:
-        'Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nrwl/react@12.0.0,@nrwl/js@12.0.0")',
+        'Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nx/react@12.0.0,@nx/js@12.0.0")',
       type: 'string',
     })
     .option('to', {
       describe:
-        'Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nrwl/react@12.0.0,@nrwl/js@12.0.0")',
+        'Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nx/react@12.0.0,@nx/js@12.0.0")',
       type: 'string',
     })
     .option('createCommits', {

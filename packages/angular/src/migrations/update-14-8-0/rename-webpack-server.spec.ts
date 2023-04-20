@@ -10,7 +10,7 @@ describe('renameWebpackServer', () => {
     await generateTestRemoteApplication(tree, { name: 'remote' });
 
     updateJson(tree, 'apps/remote/project.json', (json) => {
-      json.targets.serve.executor = '@nrwl/angular:webpack-server';
+      json.targets.serve.executor = '@nx/angular:webpack-server';
       return json;
     });
 
@@ -31,7 +31,7 @@ describe('renameWebpackServer', () => {
           },
         },
         "defaultConfiguration": "development",
-        "executor": "@nrwl/angular:webpack-dev-server",
+        "executor": "@nx/angular:webpack-dev-server",
         "options": {
           "port": 4201,
           "publicHost": "http://localhost:4201",

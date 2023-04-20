@@ -6,7 +6,7 @@
   "targets": {
     "test": {},
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "assets": [
           {
@@ -50,7 +50,7 @@
       "options": {
         "commands": [
           "node ./scripts/copy-readme.js webpack",
-          "node ./scripts/add-dependency-to-build.js webpack @nrwl/webpack"
+          "node ./scripts/add-dependency-to-build.js webpack @nx/webpack"
         ]
       }
     },

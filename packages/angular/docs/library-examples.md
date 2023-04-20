@@ -6,7 +6,7 @@
 Creates the `my-ui-lib` library with an `ui` tag:
 
 ```bash
-nx g @nrwl/angular:library my-ui-lib --tags=ui
+nx g @nx/angular:library my-ui-lib --tags=ui
 ```
 
 {% /tab %}
@@ -16,7 +16,7 @@ nx g @nrwl/angular:library my-ui-lib --tags=ui
 Creates the `my-lib` library that can be built producing an output following the Angular Package Format (APF) to be distributed as an NPM package:
 
 ```bash
-nx g @nrwl/angular:library my-lib --publishable --import-path=@my-org/my-lib
+nx g @nx/angular:library my-lib --publishable --import-path=@my-org/my-lib
 ```
 
 {% /tab %}
@@ -26,7 +26,7 @@ nx g @nrwl/angular:library my-lib --publishable --import-path=@my-org/my-lib
 Creates the `my-lib` library with support for incremental builds:
 
 ```bash
-nx g @nrwl/angular:library my-lib --buildable
+nx g @nx/angular:library my-lib --buildable
 ```
 
 {% /tab %}
@@ -35,7 +35,7 @@ nx g @nrwl/angular:library my-lib --buildable
 Creates the `my-lib` library in the `nested` directory and sets the import path to `@myorg/nested/my-lib`:
 
 ```bash
-nx g @nrwl/angular:library --directory=nested --importPath=@myorg/nested/my-lib my-lib
+nx g @nx/angular:library --directory=nested --importPath=@myorg/nested/my-lib my-lib
 ```
 
 {% /tab %}
@@ -44,7 +44,7 @@ nx g @nrwl/angular:library --directory=nested --importPath=@myorg/nested/my-lib 
 Creates the `my-standalone-lib` library with a standalone component as an entry point instead of an ng-module. The component can be used via the `myorg-standalone-component` selector.
 
 ```bash
-nx g @nrwl/angular:library --standalone --selector=myorg-standalone-component  my-standalone-lib
+nx g @nx/angular:library --standalone --selector=myorg-standalone-component  my-standalone-lib
 ```
 
 {% /tab %}

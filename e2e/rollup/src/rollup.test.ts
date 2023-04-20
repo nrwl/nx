@@ -15,7 +15,7 @@ describe('Rollup Plugin', () => {
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=none`);
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     // babel (default)
@@ -56,9 +56,9 @@ describe('Rollup Plugin', () => {
     expect(output).toMatch(/Hello/);
   }, 500000);
 
-  it('should be able to build libs generated with @nrwl/js:lib --bundler rollup', () => {
+  it('should be able to build libs generated with @nx/js:lib --bundler rollup', () => {
     const jsLib = uniq('jslib');
-    runCLI(`generate @nrwl/js:lib ${jsLib} --bundler rollup`);
+    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup`);
     expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
   });
 });

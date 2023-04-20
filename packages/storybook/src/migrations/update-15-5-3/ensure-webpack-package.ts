@@ -10,7 +10,7 @@ import { nxVersion } from '../../utils/versions';
 // See: https://github.com/nrwl/nx/issues/14455
 export default async function update(tree: Tree) {
   const projects = getProjects(tree);
-  const reactPlugin = '@nrwl/react/plugins/storybook';
+  const reactPlugin = '@nx/react/plugins/storybook';
   let shouldInstall = false;
 
   for (const [, config] of projects) {
@@ -32,10 +32,6 @@ export default async function update(tree: Tree) {
   }
 
   if (shouldInstall) {
-    return addDependenciesToPackageJson(
-      tree,
-      {},
-      { '@nrwl/webpack': nxVersion }
-    );
+    return addDependenciesToPackageJson(tree, {}, { '@nx/webpack': nxVersion });
   }
 }

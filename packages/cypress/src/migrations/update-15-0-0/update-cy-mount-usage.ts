@@ -28,7 +28,7 @@ export async function updateCyMountUsage(tree: Tree) {
 
   forEachExecutorOptions<CypressExecutorOptions>(
     tree,
-    '@nrwl/cypress:cypress',
+    '@nx/cypress:cypress',
     (options, projectName) => {
       if (options.testingType !== 'component' || !options.devServerTarget) {
         return;
@@ -139,7 +139,7 @@ function getFramework(
   target: TargetConfiguration
 ): 'angular' | 'react' | 'react18' {
   if (
-    target.executor === '@nrwl/angular:webpack-browser' ||
+    target.executor === '@nx/angular:webpack-browser' ||
     target.executor === '@angular-devkit/build-angular:browser'
   ) {
     return 'angular';

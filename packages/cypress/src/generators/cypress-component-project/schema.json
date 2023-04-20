@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nrwl/cypress:cypress-component-project --project=my-cool-lib ",
+      "command": "nx g @nx/cypress:cypress-component-project --project=my-cool-lib ",
       "description": "Add cypress component testing to an existing project named my-cool-lib"
     }
   ],

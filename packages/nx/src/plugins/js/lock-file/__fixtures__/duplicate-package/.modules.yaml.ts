@@ -123,10 +123,10 @@ hoistedDependencies:
     '@nodelib/fs.walk': private
   /@nrwl/cli/15.4.0:
     '@nrwl/cli': private
-  /@nrwl/jest/14.8.6_nx@14.8.6:
-    '@nrwl/jest': private
-  /@nrwl/linter/14.8.6:
-    '@nrwl/linter': private
+  /@nx/jest/14.8.6_nx@14.8.6:
+    '@nx/jest': private
+  /@nx/linter/14.8.6:
+    '@nx/linter': private
   /@nrwl/tao/15.4.0:
     '@nrwl/tao': private
   /@parcel/watcher/2.0.4:

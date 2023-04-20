@@ -19,7 +19,7 @@ export async function customServerGenerator(
 
   if (
     project.targets?.build?.executor !== '@nx/next:build' &&
-    project.targets?.build?.executor !== '@nrwl/next:build'
+    project.targets?.build?.executor !== '@nx/next:build'
   ) {
     logger.error(
       `Project ${options.project} is not a Next.js project. Did you generate it with "nx g @nx/next:app"?`

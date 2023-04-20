@@ -39,14 +39,14 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["apps/main-vite-new/**/*.{ts,tsx,js,jsx}"]
         }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/react",
           "port": 4400,
@@ -55,7 +55,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputDir}"],
         "options": {
           "uiFramework": "@storybook/react",
@@ -108,14 +108,14 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["apps/main-vite/**/*.{ts,tsx,js,jsx}"]
         }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/react",
           "port": 4400,
@@ -124,7 +124,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputPath}"],
         "options": {
           "uiFramework": "@storybook/react",
@@ -144,7 +144,7 @@
     "projectType": "application",
     "targets": {
       "e2e": {
-        "executor": "@nrwl/cypress:cypress",
+        "executor": "@nx/cypress:cypress",
         "options": {
           "cypressConfig": "apps/main-vite-e2e/cypress.config.ts",
           "devServerTarget": "main-vite:serve:development",
@@ -155,7 +155,7 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": { "lintFilePatterns": ["apps/main-vite-e2e/**/*.{js,ts}"] }
       }
@@ -204,14 +204,14 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["apps/main-vite-ts/**/*.{ts,tsx,js,jsx}"]
         }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/react",
           "port": 4400,
@@ -220,7 +220,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputPath}"],
         "options": {
           "uiFramework": "@storybook/react",
@@ -240,7 +240,7 @@
     "projectType": "application",
     "targets": {
       "e2e": {
-        "executor": "@nrwl/cypress:cypress",
+        "executor": "@nx/cypress:cypress",
         "options": {
           "cypressConfig": "apps/main-vite-ts-e2e/cypress.config.ts",
           "devServerTarget": "main-vite-ts:serve:development",
@@ -251,7 +251,7 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["apps/main-vite-ts-e2e/**/*.{js,ts}"]
@@ -269,7 +269,7 @@
     "projectType": "application",
     "targets": {
       "build": {
-        "executor": "@nrwl/webpack:webpack",
+        "executor": "@nx/webpack:webpack",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
         "options": {
@@ -286,7 +286,7 @@
           ],
           "styles": ["apps/main-webpack/src/styles.css"],
           "scripts": [],
-          "webpackConfig": "@nrwl/react/plugins/webpack"
+          "webpackConfig": "@nx/react/plugins/webpack"
         },
         "configurations": {
           "development": {
@@ -312,7 +312,7 @@
         }
       },
       "serve": {
-        "executor": "@nrwl/webpack:dev-server",
+        "executor": "@nx/webpack:dev-server",
         "defaultConfiguration": "development",
         "options": { "buildTarget": "main-webpack:build", "hmr": true },
         "configurations": {
@@ -324,14 +324,14 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["apps/main-webpack/**/*.{ts,tsx,js,jsx}"]
         }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "apps/main-webpack/jest.config.ts",
@@ -339,7 +339,7 @@
         }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/react",
           "port": 4400,
@@ -348,7 +348,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputPath}"],
         "options": {
           "uiFramework": "@storybook/react",
@@ -368,7 +368,7 @@
     "projectType": "application",
     "targets": {
       "e2e": {
-        "executor": "@nrwl/cypress:cypress",
+        "executor": "@nx/cypress:cypress",
         "options": {
           "cypressConfig": "apps/main-webpack-e2e/cypress.config.ts",
           "devServerTarget": "main-webpack:serve:development",
@@ -379,7 +379,7 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["apps/main-webpack-e2e/**/*.{js,ts}"]
@@ -415,7 +415,7 @@
     "projectType": "application",
     "targets": {
       "e2e": {
-        "executor": "@nrwl/cypress:cypress",
+        "executor": "@nx/cypress:cypress",
         "options": {
           "cypressConfig": "apps/react-rollup-e2e/cypress.config.ts",
           "devServerTarget": "react-rollup:storybook",
@@ -426,7 +426,7 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["apps/react-rollup-e2e/**/*.{js,ts}"]
@@ -444,7 +444,7 @@
     "projectType": "application",
     "targets": {
       "e2e": {
-        "executor": "@nrwl/cypress:cypress",
+        "executor": "@nx/cypress:cypress",
         "options": {
           "cypressConfig": "apps/react-vite-e2e/cypress.config.ts",
           "devServerTarget": "react-vite:storybook",
@@ -455,7 +455,7 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": { "lintFilePatterns": ["apps/react-vite-e2e/**/*.{js,ts}"] }
       }
@@ -471,7 +471,7 @@
     "projectType": "library",
     "targets": {
       "build": {
-        "executor": "@nrwl/js:tsc",
+        "executor": "@nx/js:tsc",
         "outputs": ["{options.outputPath}"],
         "options": {
           "outputPath": "dist/libs/my-plugin",
@@ -503,7 +503,7 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": [
@@ -515,7 +515,7 @@
         }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "libs/my-plugin/jest.config.ts",
@@ -542,7 +542,7 @@
     "tags": [],
     "targets": {
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["libs/react-rollup/**/*.{ts,tsx,js,jsx}"]
@@ -557,7 +557,7 @@
           "project": "libs/react-rollup/package.json",
           "entryFile": "libs/react-rollup/src/index.ts",
           "external": ["react/jsx-runtime"],
-          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+          "rollupConfig": "@nx/react/plugins/bundle-rollup",
           "compiler": "babel",
           "assets": [
             {
@@ -569,7 +569,7 @@
         }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "libs/react-rollup/jest.config.ts",
@@ -577,7 +577,7 @@
         }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/react",
           "port": 4400,
@@ -586,7 +586,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputPath}"],
         "options": {
           "uiFramework": "@storybook/react",
@@ -605,7 +605,7 @@
     "tags": [],
     "targets": {
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["libs/react-rollup-2/**/*.{ts,tsx,js,jsx}"]
@@ -620,7 +620,7 @@
           "project": "libs/react-rollup-2/package.json",
           "entryFile": "libs/react-rollup-2/src/index.ts",
           "external": ["react/jsx-runtime"],
-          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+          "rollupConfig": "@nx/react/plugins/bundle-rollup",
           "compiler": "babel",
           "assets": [
             {
@@ -632,7 +632,7 @@
         }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "libs/react-rollup-2/jest.config.ts",
@@ -650,7 +650,7 @@
     "tags": [],
     "targets": {
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["libs/react-vite/**/*.{ts,tsx,js,jsx}"]
@@ -675,7 +675,7 @@
         }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/react",
           "port": 4400,
@@ -684,7 +684,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputPath}"],
         "options": {
           "uiFramework": "@storybook/react",
@@ -704,7 +704,7 @@
     "tags": [],
     "targets": {
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["libs/react-vite-2/**/*.{ts,tsx,js,jsx}"]
@@ -738,7 +738,7 @@
     "projectType": "library",
     "targets": {
       "build": {
-        "executor": "@nrwl/webpack:webpack",
+        "executor": "@nx/webpack:webpack",
         "outputs": ["{options.outputPath}"],
         "options": {
           "outputPath": "dist/libs/utils/one",
@@ -748,12 +748,12 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": { "lintFilePatterns": ["libs/utils/one/**/*.ts"] }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "libs/utils/one/jest.config.ts",
@@ -776,12 +776,12 @@
         "options": { "outputPath": "dist/libs/utils/three-vite" }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": { "lintFilePatterns": ["libs/utils/three-vite/**/*.ts"] }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "libs/utils/three-vite/jest.config.ts",
@@ -799,7 +799,7 @@
     "projectType": "library",
     "targets": {
       "build": {
-        "executor": "@nrwl/webpack:webpack",
+        "executor": "@nx/webpack:webpack",
         "outputs": ["{options.outputPath}"],
         "options": {
           "outputPath": "dist/libs/utils/two",
@@ -809,12 +809,12 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": { "lintFilePatterns": ["libs/utils/two/**/*.ts"] }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "libs/utils/two/jest.config.ts",

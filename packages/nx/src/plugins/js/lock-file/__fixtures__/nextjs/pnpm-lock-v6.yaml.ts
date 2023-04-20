@@ -1,7 +1,7 @@
 export default `lockfileVersion: '6.0'
 
 dependencies:
-  '@nrwl/next':
+  '@nx/next':
     specifier: 15.3.3
     version: 15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(cypress@11.0.0)(eslint@8.15.0)(next@13.0.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)(webpack@5.77.0)
   core-js:
@@ -27,22 +27,22 @@ devDependencies:
   '@babel/preset-react':
     specifier: ^7.14.5
     version: 7.14.5(@babel/core@7.21.3)
-  '@nrwl/cypress':
+  '@nx/cypress':
     specifier: 15.3.3
     version: 15.3.3(cypress@11.0.0)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
   '@nrwl/eslint-plugin-nx':
     specifier: 15.3.3
     version: 15.3.3(@typescript-eslint/parser@5.36.1)(eslint-config-prettier@8.1.0)(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
-  '@nrwl/jest':
+  '@nx/jest':
     specifier: 15.3.3
     version: 15.3.3(@types/node@18.11.9)(nx@15.3.3)(ts-node@10.9.1)(typescript@4.8.4)
-  '@nrwl/linter':
+  '@nx/linter':
     specifier: 15.3.3
     version: 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
-  '@nrwl/react':
+  '@nx/react':
     specifier: 15.3.3
     version: 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
-  '@nrwl/web':
+  '@nx/web':
     specifier: 15.3.3
     version: 15.3.3(@types/node@18.11.9)(cypress@11.0.0)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(ts-node@10.9.1)(typescript@4.8.4)(vite@3.2.5)(vitest@0.25.8)
   '@nrwl/workspace':
@@ -1952,7 +1952,7 @@ packages:
       - '@swc/core'
       - debug
 
-  /@nrwl/cypress@15.3.3(cypress@11.0.0)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4):
+  /@nx/cypress@15.3.3(cypress@11.0.0)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4):
     resolution: {integrity: sha512-+nxWdnRE0JJ1SPt3aKH1TiXSmmSf9xRyniFZ7pobQ74GzNCj6Vd5ZxrepZKYdYh/xzqINzLTHc+1FfRsWf1VUg==}
     peerDependencies:
       cypress: '>= 3 < 12'
@@ -1963,8 +1963,8 @@ packages:
       '@babel/core': 7.21.3
       '@babel/preset-env': 7.20.2(@babel/core@7.21.3)
       '@cypress/webpack-preprocessor': 5.17.0(@babel/core@7.21.3)(@babel/preset-env@7.20.2)(babel-loader@8.3.0)(webpack@5.77.0)
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nrwl/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(eslint@8.15.0)(prettier@2.6.2)(typescript@4.8.4)
       '@phenomnomnominal/tsquery': 4.1.1(typescript@4.8.4)
       babel-loader: 8.3.0(@babel/core@7.21.3)(webpack@5.77.0)
@@ -1992,7 +1992,7 @@ packages:
       - vue-template-compiler
       - webpack-cli
 
-  /@nrwl/devkit@15.3.3(nx@15.3.3)(typescript@4.8.4):
+  /@nx/devkit@15.3.3(nx@15.3.3)(typescript@4.8.4):
     resolution: {integrity: sha512-48R9HAp6r6umWNXTlVTMsH94YYjU/XUPLDTtXBgKESMVbdq8Fk+HDHuN0thXG5dL6DFkXgD0MICLm3jSQU6xMw==}
     peerDependencies:
       nx: '>= 14 <= 16'
@@ -2015,7 +2015,7 @@ packages:
       eslint-config-prettier:
         optional: true
     dependencies:
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
       '@typescript-eslint/parser': 5.36.1(eslint@8.15.0)(typescript@4.8.4)
       '@typescript-eslint/utils': 5.57.0(eslint@8.15.0)(typescript@4.8.4)
       chalk: 4.1.0
@@ -2029,12 +2029,12 @@ packages:
       - typescript
     dev: true
 
-  /@nrwl/jest@15.3.3(@types/node@18.11.9)(nx@15.3.3)(ts-node@10.9.1)(typescript@4.8.4):
+  /@nx/jest@15.3.3(@types/node@18.11.9)(nx@15.3.3)(ts-node@10.9.1)(typescript@4.8.4):
     resolution: {integrity: sha512-hPqBSVmZzGh+FUsgOPim2KnPY7lbjgZlsT1W3D+1ac++gvZopcqyXA2mJJH1X/RxRS3RAYDsE14n+Z3HWFXbwg==}
     dependencies:
       '@jest/reporters': 28.1.1
       '@jest/test-result': 28.1.1
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
       '@phenomnomnominal/tsquery': 4.1.1(typescript@4.8.4)
       chalk: 4.1.0
       dotenv: 10.0.0
@@ -2052,11 +2052,11 @@ packages:
       - ts-node
       - typescript
 
-  /@nrwl/js@15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4):
+  /@nx/js@15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4):
     resolution: {integrity: sha512-q/ePt1U9PfhBIsm2DXQmO/MHIUMhIE69caNMuwCJ/W5oC0w5Lm7R6I7BsYuqni1X/CQchVUrVQa1+vYFXOWqUw==}
     dependencies:
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nrwl/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(eslint@8.15.0)(prettier@2.6.2)(typescript@4.8.4)
       chalk: 4.1.0
       fast-glob: 3.2.7
@@ -2075,7 +2075,7 @@ packages:
       - prettier
       - typescript
 
-  /@nrwl/linter@15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4):
+  /@nx/linter@15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4):
     resolution: {integrity: sha512-qAcSmbRuzBZ86ahn0/S+zCOj+PobJRAMf6OZq2ZnbfGwS+LXbqXyaoShzZC1e75nd8vroLV61fFbPkLlTqJwgA==}
     peerDependencies:
       eslint: ^8.0.0
@@ -2083,7 +2083,7 @@ packages:
       eslint:
         optional: true
     dependencies:
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
       '@phenomnomnominal/tsquery': 4.1.1(typescript@4.8.4)
       eslint: 8.15.0
       tmp: 0.2.1
@@ -2092,18 +2092,18 @@ packages:
       - nx
       - typescript
 
-  /@nrwl/next@15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(cypress@11.0.0)(eslint@8.15.0)(next@13.0.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)(webpack@5.77.0):
+  /@nx/next@15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(cypress@11.0.0)(eslint@8.15.0)(next@13.0.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)(webpack@5.77.0):
     resolution: {integrity: sha512-Ly3F76YFdX4ZS1SYV7r/KBWoul8kSefoKiLkdRXKar/8UFaK+eW8xnlAFC2MU9seoXpaqGQTl1GMsnEJ1gMEJg==}
     peerDependencies:
       next: ^13.0.0
     dependencies:
       '@babel/plugin-proposal-decorators': 7.21.0(@babel/core@7.21.3)
-      '@nrwl/cypress': 15.3.3(cypress@11.0.0)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nrwl/jest': 15.3.3(@types/node@18.11.9)(nx@15.3.3)(ts-node@10.9.1)(typescript@4.8.4)
-      '@nrwl/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
-      '@nrwl/react': 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
-      '@nrwl/webpack': 15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
+      '@nx/cypress': 15.3.3(cypress@11.0.0)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/jest': 15.3.3(@types/node@18.11.9)(nx@15.3.3)(ts-node@10.9.1)(typescript@4.8.4)
+      '@nx/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
+      '@nx/react': 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
+      '@nx/webpack': 15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(eslint@8.15.0)(prettier@2.6.2)(typescript@4.8.4)
       '@svgr/webpack': 6.5.1
       chalk: 4.1.0
@@ -2147,11 +2147,11 @@ packages:
       - webpack-cli
     dev: false
 
-  /@nrwl/react@15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4):
+  /@nx/react@15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4):
     resolution: {integrity: sha512-sskKgloMmLVbugpbDV0zlDQkwCehrfiDH4Uo3qVGqkdIvPEjPARGGCmLDrxqF+KO5Gad7jZXGAlIMCjgFqfBww==}
     dependencies:
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nrwl/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(eslint@8.15.0)(prettier@2.6.2)(typescript@4.8.4)
       '@phenomnomnominal/tsquery': 4.1.1(typescript@4.8.4)
       chalk: 4.1.0
@@ -2169,8 +2169,8 @@ packages:
   /@nrwl/rollup@15.3.3(@babel/core@7.21.3)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(ts-node@10.9.1)(typescript@4.8.4):
     resolution: {integrity: sha512-Vj/P87msImLuLXOGckb+e0heDrbJ8jT0RTqxOBzLWZ5LuMWqohekPiTTuk0VUwe0V1+2ipJvXWspMXigvckCEQ==}
     dependencies:
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nrwl/js': 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/js': 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(eslint@8.15.0)(prettier@2.6.2)(typescript@4.8.4)
       '@rollup/plugin-babel': 5.3.1(@babel/core@7.21.3)(rollup@2.79.1)
       '@rollup/plugin-commonjs': 20.0.0(rollup@2.79.1)
@@ -2219,8 +2219,8 @@ packages:
       vite: ^3.2.3
       vitest: ^0.25.1
     dependencies:
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nrwl/js': 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/js': 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(eslint@8.15.0)(prettier@2.6.2)(typescript@4.8.4)
       '@swc/helpers': 0.4.14
       chalk: 4.1.0
@@ -2237,7 +2237,7 @@ packages:
       - typescript
     dev: true
 
-  /@nrwl/web@15.3.3(@types/node@18.11.9)(cypress@11.0.0)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(ts-node@10.9.1)(typescript@4.8.4)(vite@3.2.5)(vitest@0.25.8):
+  /@nx/web@15.3.3(@types/node@18.11.9)(cypress@11.0.0)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(ts-node@10.9.1)(typescript@4.8.4)(vite@3.2.5)(vitest@0.25.8):
     resolution: {integrity: sha512-BSVO3JUhgpZGNJ5oGYXeBqjbwXR8tqU9lol+LbS1blmMxA3giMQEXhZQQLR6kol+CPIJm7CjnkRS2Wwvbm2zaQ==}
     dependencies:
       '@babel/core': 7.21.3
@@ -2247,14 +2247,14 @@ packages:
       '@babel/preset-env': 7.20.2(@babel/core@7.21.3)
       '@babel/preset-typescript': 7.21.0(@babel/core@7.21.3)
       '@babel/runtime': 7.21.0
-      '@nrwl/cypress': 15.3.3(cypress@11.0.0)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nrwl/jest': 15.3.3(@types/node@18.11.9)(nx@15.3.3)(ts-node@10.9.1)(typescript@4.8.4)
-      '@nrwl/js': 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
-      '@nrwl/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
+      '@nx/cypress': 15.3.3(cypress@11.0.0)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/jest': 15.3.3(@types/node@18.11.9)(nx@15.3.3)(ts-node@10.9.1)(typescript@4.8.4)
+      '@nx/js': 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
+      '@nx/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
       '@nrwl/rollup': 15.3.3(@babel/core@7.21.3)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(ts-node@10.9.1)(typescript@4.8.4)
       '@nrwl/vite': 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)(vite@3.2.5)(vitest@0.25.8)
-      '@nrwl/webpack': 15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
+      '@nx/webpack': 15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(eslint@8.15.0)(prettier@2.6.2)(typescript@4.8.4)
       babel-plugin-const-enum: 1.2.0(@babel/core@7.21.3)
       babel-plugin-macros: 2.8.0
@@ -2297,11 +2297,11 @@ packages:
       - webpack-cli
     dev: true
 
-  /@nrwl/webpack@15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4):
+  /@nx/webpack@15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4):
     resolution: {integrity: sha512-33JGYqg00NeEe1Lz3UZRweBL5zIWwWJhvaFrRLWcDgaTe5kOzXDHlizRIE3abVReI2OHpWbKBCM7KMK2XI3HRQ==}
     dependencies:
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nrwl/js': 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/js': 15.3.3(eslint@8.15.0)(nx@15.3.3)(prettier@2.6.2)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(eslint@8.15.0)(prettier@2.6.2)(typescript@4.8.4)
       autoprefixer: 10.4.14(postcss@8.4.21)
       babel-loader: 8.3.0(@babel/core@7.21.3)(webpack@5.77.0)
@@ -2381,8 +2381,8 @@ packages:
       prettier:
         optional: true
     dependencies:
-      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nrwl/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
+      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nx/linter': 15.3.3(eslint@8.15.0)(nx@15.3.3)(typescript@4.8.4)
       '@parcel/watcher': 2.0.4
       chalk: 4.1.0
       chokidar: 3.5.3

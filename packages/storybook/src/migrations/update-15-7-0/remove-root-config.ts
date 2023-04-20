@@ -56,7 +56,7 @@ export function removeRootConfig(
 
 function removeImportFromAllFiles(tree: Tree): string[] {
   const hasRemainingRootMainJsReferences = [];
-  forEachExecutorOptions(tree, '@nrwl/storybook:build', (options) => {
+  forEachExecutorOptions(tree, '@nx/storybook:build', (options) => {
     const hasRemainingReference = makeTheChanges(tree, options);
     if (hasRemainingReference) {
       hasRemainingRootMainJsReferences.push(hasRemainingReference);

@@ -63,8 +63,8 @@ function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
     return nxJson?.pluginsConfig?.['@nx/js'];
   }
 
-  if (nxJson?.pluginsConfig?.['@nrwl/js']) {
-    return nxJson?.pluginsConfig?.['@nrwl/js'];
+  if (nxJson?.pluginsConfig?.['@nx/js']) {
+    return nxJson?.pluginsConfig?.['@nx/js'];
   }
 
   if (!fileExists(join(workspaceRoot, 'package.json'))) {
@@ -91,12 +91,12 @@ function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
     packageJsonDeps['@nx/angular'] ||
     packageJsonDeps['@nx/web'] ||
     packageJsonDeps['@nrwl/workspace'] ||
-    packageJsonDeps['@nrwl/js'] ||
+    packageJsonDeps['@nx/js'] ||
     packageJsonDeps['@nrwl/node'] ||
-    packageJsonDeps['@nrwl/next'] ||
-    packageJsonDeps['@nrwl/react'] ||
-    packageJsonDeps['@nrwl/angular'] ||
-    packageJsonDeps['@nrwl/web']
+    packageJsonDeps['@nx/next'] ||
+    packageJsonDeps['@nx/react'] ||
+    packageJsonDeps['@nx/angular'] ||
+    packageJsonDeps['@nx/web']
   ) {
     return { analyzePackageJson: true, analyzeSourceFiles: true };
   } else {

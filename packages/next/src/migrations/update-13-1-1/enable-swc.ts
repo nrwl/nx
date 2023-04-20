@@ -41,7 +41,7 @@ export async function update(host: Tree) {
     if (content.match(/:\s+'babel-jest'/)) {
       const updated = content.replace(
         /:\s+'babel-jest'/,
-        `: ['babel-jest', { presets: ['@nrwl/next/babel'] }]`
+        `: ['babel-jest', { presets: ['@nx/next/babel'] }]`
       );
       host.write(jestConfigPath, updated);
     }
@@ -54,7 +54,7 @@ function customBabelConfig(host, configPath) {
   const json = readJson(host, configPath);
   return !(
     json.presets?.length === 1 &&
-    json.presets?.[0] === '@nrwl/next/babel' &&
+    json.presets?.[0] === '@nx/next/babel' &&
     (json.plugins?.length === 0 || !json.plugins)
   );
 }

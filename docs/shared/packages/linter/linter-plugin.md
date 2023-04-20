@@ -4,14 +4,14 @@ The Linter plugin contains executors, generator, plugin and utilities used for l
 
 ### Installation
 
-In any Nx workspace, you can install `@nrwl/linter` by running the following commands if `@nrwl/linter` package is not installed:
+In any Nx workspace, you can install `@nx/linter` by running the following commands if `@nx/linter` package is not installed:
 
 ```shell
-npm i --save-dev @nrwl/linter
+npm i --save-dev @nx/linter
 ```
 
 ```shell
-yarn add --dev @nrwl/linter
+yarn add --dev @nx/linter
 ```
 
 ## Lint

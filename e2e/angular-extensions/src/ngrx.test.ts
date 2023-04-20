@@ -20,11 +20,11 @@ describe('Angular Package', () => {
 
     it('should work', async () => {
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
+      runCLI(`generate @nx/angular:app ${myapp} --no-interactive`);
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nrwl/angular:ngrx users --parent=apps/${myapp}/src/app/app.module.ts --root --minimal=false`
+        `generate @nx/angular:ngrx users --parent=apps/${myapp}/src/app/app.module.ts --root --minimal=false`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
@@ -34,9 +34,9 @@ describe('Angular Package', () => {
 
       const mylib = uniq('mylib');
       // Generate feature library and ngrx state within that library
-      runCLI(`g @nrwl/angular:lib ${mylib} --prefix=fl`);
+      runCLI(`g @nx/angular:lib ${mylib} --prefix=fl`);
       runCLI(
-        `generate @nrwl/angular:ngrx flights --parent=libs/${mylib}/src/lib/${mylib}.module.ts --facade`
+        `generate @nx/angular:ngrx flights --parent=libs/${mylib}/src/lib/${mylib}.module.ts --facade`
       );
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);
@@ -49,11 +49,11 @@ describe('Angular Package', () => {
 
     it('should work with creators', async () => {
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --routing --no-interactive`);
+      runCLI(`generate @nx/angular:app ${myapp} --routing --no-interactive`);
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nrwl/angular:ngrx users --parent=apps/${myapp}/src/app/app.module.ts --root`
+        `generate @nx/angular:ngrx users --parent=apps/${myapp}/src/app/app.module.ts --root`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/entity']).toBeDefined();
@@ -65,11 +65,11 @@ describe('Angular Package', () => {
 
       const mylib = uniq('mylib');
       // Generate feature library and ngrx state within that library
-      runCLI(`g @nrwl/angular:lib ${mylib} --prefix=fl`);
+      runCLI(`g @nx/angular:lib ${mylib} --prefix=fl`);
 
       const flags = `--facade --barrels`;
       runCLI(
-        `generate @nrwl/angular:ngrx flights --parent=libs/${mylib}/src/lib/${mylib}.module.ts ${flags}`
+        `generate @nx/angular:ngrx flights --parent=libs/${mylib}/src/lib/${mylib}.module.ts ${flags}`
       );
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);
@@ -82,11 +82,11 @@ describe('Angular Package', () => {
 
     it('should work with creators using --module', async () => {
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --routing --no-interactive`);
+      runCLI(`generate @nx/angular:app ${myapp} --routing --no-interactive`);
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nrwl/angular:ngrx users --parent=apps/${myapp}/src/app/app.module.ts --root`
+        `generate @nx/angular:ngrx users --parent=apps/${myapp}/src/app/app.module.ts --root`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/entity']).toBeDefined();
@@ -98,11 +98,11 @@ describe('Angular Package', () => {
 
       const mylib = uniq('mylib');
       // Generate feature library and ngrx state within that library
-      runCLI(`g @nrwl/angular:lib ${mylib} --prefix=fl`);
+      runCLI(`g @nx/angular:lib ${mylib} --prefix=fl`);
 
       const flags = `--facade --barrels`;
       runCLI(
-        `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts ${flags}`
+        `generate @nx/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts ${flags}`
       );
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);

@@ -19,5 +19,5 @@ const Template: ComponentStory<typeof TaskNodeTooltip> = (args) => (
 export const Primary = Template.bind({});
 Primary.args = {
   id: 'my-lib:build',
-  executor: '@nrwl/webpack:webpack',
+  executor: '@nx/webpack:webpack',
 };

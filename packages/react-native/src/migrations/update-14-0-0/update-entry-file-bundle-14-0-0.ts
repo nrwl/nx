@@ -26,14 +26,13 @@ export default async function update(tree: Tree) {
 
   for (const [name, config] of projects.entries()) {
     if (
-      config.targets?.['bundle-ios']?.executor === '@nrwl/react-native:bundle'
+      config.targets?.['bundle-ios']?.executor === '@nx/react-native:bundle'
     ) {
       updateTargetEntryFile('bundle-ios', config);
     }
 
     if (
-      config.targets?.['bundle-android']?.executor ===
-      '@nrwl/react-native:bundle'
+      config.targets?.['bundle-android']?.executor === '@nx/react-native:bundle'
     ) {
       updateTargetEntryFile('bundle-android', config);
     }

@@ -22,7 +22,7 @@ module.exports = withNx({
 });
 ```
 
-This guide contains information on how to compose the Nx plugin with other plugins, such as `@next/mdx`. Note that Nx prior to version 16 is missing the compose utility from the `@nrwl/next` package, and a workaround will be provided for Nx 15 and prior.
+This guide contains information on how to compose the Nx plugin with other plugins, such as `@next/mdx`. Note that Nx prior to version 16 is missing the compose utility from the `@nx/next` package, and a workaround will be provided for Nx 15 and prior.
 
 {% callout type="warning" title="Avoid next-compose-plugins" %}
 There is a popular package called `next-compose-plugins` that has not been maintained for over two years. This package does not correctly combine plugins in all situations. If you do use it, replace the package with Nx 16's `composePlugins` utility (see below).
@@ -34,9 +34,9 @@ Since Nx 16, we provide a `composePlugins` utility function that helps users com
 
 ```js
 // next.config.js
-const { composePlugins, withNx } = require('@nrwl/next');
+const { composePlugins, withNx } = require('@nx/next');
 /**
- * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
   nx: {
@@ -87,7 +87,7 @@ If you are not on Nx 16 and later versions, the `composePlugins` utility is not 
 // ...
 
 /**
- * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
   // ...

@@ -12,10 +12,10 @@ To add the web plugin to an existing workspace, run one of the following:
 
 ```shell
 # For npm users
-npm install -D @nrwl/web
+npm install -D @nx/web
 
 # For yarn users
-yarn add -D @nrwl/web
+yarn add -D @nx/web
 ```
 
 ### Creating Applications
@@ -23,7 +23,7 @@ yarn add -D @nrwl/web
 You can add a new application with the following:
 
 ```shell
-nx g @nrwl/web:app my-new-app
+nx g @nx/web:app my-new-app
 ```
 
 The application uses no framework and generates with web components. You can add any framework you want on top of the default setup.
@@ -36,13 +36,13 @@ If you are looking to add a React application, check out the [React plugin](/pac
 
 ### Creating Libraries
 
-To create a generic TypeScript library (i.e. non-framework specific), use the [`@nrwl/js`](/packages/js) plugin.
+To create a generic TypeScript library (i.e. non-framework specific), use the [`@nx/js`](/packages/js) plugin.
 
 ```shell
-nx g @nrwl/js:lib my-new-lib
+nx g @nx/js:lib my-new-lib
 
 # If you want the library to be publishable to npm
-nx g @nrwl/js:lib my-new-lib \
+nx g @nx/js:lib my-new-lib \
 --publishable \
 --importPath=@myorg/my-new-lib
 ```

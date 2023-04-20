@@ -47,7 +47,7 @@
     "required": [],
     "presets": []
   },
-  "description": "Add `@nrwl/web` to a project.",
+  "description": "Add `@nx/web` to a project.",
   "hidden": true,
   "implementation": "/packages/web/src/generators/init/init#webInitGenerator.ts",
   "aliases": [],

@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Jest Migration (v14.1.2) should convert module.exports => export default 1`] = `
-"const { getJestProjects } = require('@nrwl/jest');
-const nxPreset = require('@nrwl/jest/preset');
+"const { getJestProjects } = require('@nx/jest');
+const nxPreset = require('@nx/jest/preset');
 
 
 const someFn = () => ({more: 'stuff'});
@@ -17,7 +17,7 @@ projects: getJestProjects()
 
 exports[`Jest Migration (v14.1.2) should update individual project jest configs 1`] = `
 "
-const nxPreset = require('@nrwl/jest/preset').default;
+const nxPreset = require('@nx/jest/preset').default;
 const someOtherImport = require('../something/else.js');
 export default {
   ...someOtherImport,
@@ -47,7 +47,7 @@ export default {
 
 exports[`Jest Migration (v14.1.2) should work with multiple configurations 1`] = `
 "
-const nxPreset = require('@nrwl/jest/preset').default;
+const nxPreset = require('@nx/jest/preset').default;
 const someOtherImport = require('../something/else.js');
 export default {
   ...someOtherImport,

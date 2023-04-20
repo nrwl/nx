@@ -22,7 +22,7 @@ export async function updateCypressConfigsPresets(tree: Tree) {
   const updateTasks = [];
   forEachExecutorOptions<CypressExecutorOptions>(
     tree,
-    '@nrwl/cypress:cypress',
+    '@nx/cypress:cypress',
     (options, projectName, targetName, configName) => {
       if (options.cypressConfig && tree.exists(options.cypressConfig)) {
         updatePreset(tree, options, targetName);
@@ -67,7 +67,7 @@ export async function updateCypressConfigsPresets(tree: Tree) {
     logger.warn(stripIndents`
 You can manually add the 'devServerTarget' option to the 
 component testing target to specify the build target to use.
-The build configuration should be using @nrwl/web:webpack as the executor. 
+The build configuration should be using @nx/web:webpack as the executor. 
 Usually this is a React app in your workspace. 
 Component testing will fallback to a default configuration if one isn't provided, 
 but might require modifications if your projects are more complex.
@@ -110,7 +110,7 @@ async function addBuildTargetToConfig(
 ): Promise<boolean> {
   const projectWithBuild = await findBuildConfig(tree, {
     project: projectName,
-    validExecutorNames: new Set(['@nrwl/web:webpack']),
+    validExecutorNames: new Set(['@nx/web:webpack']),
   });
   // didn't find the config so can't update. consumer should collect list of them and display a warning at the end
   // no reason to fail since the preset will fallback to a default config so should still keep working.

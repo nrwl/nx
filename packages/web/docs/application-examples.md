@@ -6,7 +6,7 @@
 Create an application named `my-app`:
 
 ```bash
-nx g @nrwl/web:application my-app
+nx g @nx/web:application my-app
 ```
 
 {% /tab %}
@@ -16,7 +16,7 @@ nx g @nrwl/web:application my-app
 Create an application named `my-app`:
 
 ```bash
-nx g @nrwl/web:app my-app --bundler=vite
+nx g @nx/web:app my-app --bundler=vite
 ```
 
 {% /tab %}
@@ -26,7 +26,7 @@ nx g @nrwl/web:app my-app --bundler=vite
 Create an application named `my-app` in the `my-dir` directory:
 
 ```bash
-nx g @nrwl/web:app my-app --directory=my-dir
+nx g @nx/web:app my-app --directory=my-dir
 ```
 
 {% /tab %}
@@ -36,7 +36,7 @@ nx g @nrwl/web:app my-app --directory=my-dir
 Add tags to the application (used for linting).
 
 ```bash
-nx g @nrwl/web:app my-app --tags=scope:admin,type:ui
+nx g @nx/web:app my-app --tags=scope:admin,type:ui
 ```
 
 {% /tab %}

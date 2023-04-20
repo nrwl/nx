@@ -25,7 +25,7 @@ export default async function update(tree: Tree) {
   let useJestExpo = false;
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nrwl/jest:jest',
+    '@nx/jest:jest',
     (options, projectName) => {
       if (options.jestConfig && tree.exists(options.jestConfig)) {
         const jestConfig = tree.read(options.jestConfig, 'utf-8');

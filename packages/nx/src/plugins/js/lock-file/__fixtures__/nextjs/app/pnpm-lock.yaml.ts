@@ -1,14 +1,14 @@
 export default `lockfileVersion: 5.4
 
 specifiers:
-  '@nrwl/next': 15.3.3
+  '@nx/next': 15.3.3
   next: 13.0.0
   react: 18.2.0
   react-dom: 18.2.0
   typescript: 4.8.4
 
 dependencies:
-  '@nrwl/next': 15.3.3_xvhegjze7sm3upzckgmd3qanmy
+  '@nx/next': 15.3.3_xvhegjze7sm3upzckgmd3qanmy
   next: 13.0.0_biqbaboplfbrettd7655fr4n2y
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
@@ -1780,7 +1780,7 @@ packages:
       - debug
     dev: false
 
-  /@nrwl/cypress/15.3.3_typescript@4.8.4:
+  /@nx/cypress/15.3.3_typescript@4.8.4:
     resolution: {integrity: sha512-+nxWdnRE0JJ1SPt3aKH1TiXSmmSf9xRyniFZ7pobQ74GzNCj6Vd5ZxrepZKYdYh/xzqINzLTHc+1FfRsWf1VUg==}
     peerDependencies:
       cypress: '>= 3 < 12'
@@ -1791,8 +1791,8 @@ packages:
       '@babel/core': 7.20.5
       '@babel/preset-env': 7.20.2_@babel+core@7.20.5
       '@cypress/webpack-preprocessor': 5.15.7_z55wzhjjrdtefyvtzcfbwh2ocq
-      '@nrwl/devkit': 15.3.3_typescript@4.8.4
-      '@nrwl/linter': 15.3.3_typescript@4.8.4
+      '@nx/devkit': 15.3.3_typescript@4.8.4
+      '@nx/linter': 15.3.3_typescript@4.8.4
       '@nrwl/workspace': 15.3.3_typescript@4.8.4
       '@phenomnomnominal/tsquery': 4.1.1_typescript@4.8.4
       babel-loader: 8.3.0_ztqwsvkb6z73luspkai6ilstpu
@@ -1820,7 +1820,7 @@ packages:
       - webpack-cli
     dev: false
 
-  /@nrwl/devkit/15.3.3_nx@15.3.3+typescript@4.8.4:
+  /@nx/devkit/15.3.3_nx@15.3.3+typescript@4.8.4:
     resolution: {integrity: sha512-48R9HAp6r6umWNXTlVTMsH94YYjU/XUPLDTtXBgKESMVbdq8Fk+HDHuN0thXG5dL6DFkXgD0MICLm3jSQU6xMw==}
     peerDependencies:
       nx: '>= 14 <= 16'
@@ -1835,7 +1835,7 @@ packages:
       - typescript
     dev: false
 
-  /@nrwl/devkit/15.3.3_typescript@4.8.4:
+  /@nx/devkit/15.3.3_typescript@4.8.4:
     resolution: {integrity: sha512-48R9HAp6r6umWNXTlVTMsH94YYjU/XUPLDTtXBgKESMVbdq8Fk+HDHuN0thXG5dL6DFkXgD0MICLm3jSQU6xMw==}
     peerDependencies:
       nx: '>= 14 <= 16'
@@ -1849,12 +1849,12 @@ packages:
       - typescript
     dev: false
 
-  /@nrwl/jest/15.3.3_mwhvu7sfp6vq5ryuwb6hlbjfka:
+  /@nx/jest/15.3.3_mwhvu7sfp6vq5ryuwb6hlbjfka:
     resolution: {integrity: sha512-hPqBSVmZzGh+FUsgOPim2KnPY7lbjgZlsT1W3D+1ac++gvZopcqyXA2mJJH1X/RxRS3RAYDsE14n+Z3HWFXbwg==}
     dependencies:
       '@jest/reporters': 28.1.1
       '@jest/test-result': 28.1.1
-      '@nrwl/devkit': 15.3.3_typescript@4.8.4
+      '@nx/devkit': 15.3.3_typescript@4.8.4
       '@phenomnomnominal/tsquery': 4.1.1_typescript@4.8.4
       chalk: 4.1.0
       dotenv: 10.0.0
@@ -1873,11 +1873,11 @@ packages:
       - typescript
     dev: false
 
-  /@nrwl/js/15.3.3_typescript@4.8.4:
+  /@nx/js/15.3.3_typescript@4.8.4:
     resolution: {integrity: sha512-q/ePt1U9PfhBIsm2DXQmO/MHIUMhIE69caNMuwCJ/W5oC0w5Lm7R6I7BsYuqni1X/CQchVUrVQa1+vYFXOWqUw==}
     dependencies:
-      '@nrwl/devkit': 15.3.3_typescript@4.8.4
-      '@nrwl/linter': 15.3.3_typescript@4.8.4
+      '@nx/devkit': 15.3.3_typescript@4.8.4
+      '@nx/linter': 15.3.3_typescript@4.8.4
       '@nrwl/workspace': 15.3.3_typescript@4.8.4
       chalk: 4.1.0
       fast-glob: 3.2.7
@@ -1897,7 +1897,7 @@ packages:
       - typescript
     dev: false
 
-  /@nrwl/linter/15.3.3_nx@15.3.3+typescript@4.8.4:
+  /@nx/linter/15.3.3_nx@15.3.3+typescript@4.8.4:
     resolution: {integrity: sha512-qAcSmbRuzBZ86ahn0/S+zCOj+PobJRAMf6OZq2ZnbfGwS+LXbqXyaoShzZC1e75nd8vroLV61fFbPkLlTqJwgA==}
     peerDependencies:
       eslint: ^8.0.0
@@ -1905,7 +1905,7 @@ packages:
       eslint:
         optional: true
     dependencies:
-      '@nrwl/devkit': 15.3.3_nx@15.3.3+typescript@4.8.4
+      '@nx/devkit': 15.3.3_nx@15.3.3+typescript@4.8.4
       '@phenomnomnominal/tsquery': 4.1.1_typescript@4.8.4
       tmp: 0.2.1
       tslib: 2.4.1
@@ -1914,7 +1914,7 @@ packages:
       - typescript
     dev: false
 
-  /@nrwl/linter/15.3.3_typescript@4.8.4:
+  /@nx/linter/15.3.3_typescript@4.8.4:
     resolution: {integrity: sha512-qAcSmbRuzBZ86ahn0/S+zCOj+PobJRAMf6OZq2ZnbfGwS+LXbqXyaoShzZC1e75nd8vroLV61fFbPkLlTqJwgA==}
     peerDependencies:
       eslint: ^8.0.0
@@ -1922,7 +1922,7 @@ packages:
       eslint:
         optional: true
     dependencies:
-      '@nrwl/devkit': 15.3.3_typescript@4.8.4
+      '@nx/devkit': 15.3.3_typescript@4.8.4
       '@phenomnomnominal/tsquery': 4.1.1_typescript@4.8.4
       tmp: 0.2.1
       tslib: 2.4.1
@@ -1931,18 +1931,18 @@ packages:
       - typescript
     dev: false
 
-  /@nrwl/next/15.3.3_xvhegjze7sm3upzckgmd3qanmy:
+  /@nx/next/15.3.3_xvhegjze7sm3upzckgmd3qanmy:
     resolution: {integrity: sha512-Ly3F76YFdX4ZS1SYV7r/KBWoul8kSefoKiLkdRXKar/8UFaK+eW8xnlAFC2MU9seoXpaqGQTl1GMsnEJ1gMEJg==}
     peerDependencies:
       next: ^13.0.0
     dependencies:
       '@babel/plugin-proposal-decorators': 7.20.5
-      '@nrwl/cypress': 15.3.3_typescript@4.8.4
-      '@nrwl/devkit': 15.3.3_typescript@4.8.4
-      '@nrwl/jest': 15.3.3_mwhvu7sfp6vq5ryuwb6hlbjfka
-      '@nrwl/linter': 15.3.3_typescript@4.8.4
-      '@nrwl/react': 15.3.3_typescript@4.8.4
-      '@nrwl/webpack': 15.3.3_typescript@4.8.4
+      '@nx/cypress': 15.3.3_typescript@4.8.4
+      '@nx/devkit': 15.3.3_typescript@4.8.4
+      '@nx/jest': 15.3.3_mwhvu7sfp6vq5ryuwb6hlbjfka
+      '@nx/linter': 15.3.3_typescript@4.8.4
+      '@nx/react': 15.3.3_typescript@4.8.4
+      '@nx/webpack': 15.3.3_typescript@4.8.4
       '@nrwl/workspace': 15.3.3_typescript@4.8.4
       '@svgr/webpack': 6.5.1
       chalk: 4.1.0
@@ -1986,11 +1986,11 @@ packages:
       - webpack-cli
     dev: false
 
-  /@nrwl/react/15.3.3_typescript@4.8.4:
+  /@nx/react/15.3.3_typescript@4.8.4:
     resolution: {integrity: sha512-sskKgloMmLVbugpbDV0zlDQkwCehrfiDH4Uo3qVGqkdIvPEjPARGGCmLDrxqF+KO5Gad7jZXGAlIMCjgFqfBww==}
     dependencies:
-      '@nrwl/devkit': 15.3.3_typescript@4.8.4
-      '@nrwl/linter': 15.3.3_typescript@4.8.4
+      '@nx/devkit': 15.3.3_typescript@4.8.4
+      '@nx/linter': 15.3.3_typescript@4.8.4
       '@nrwl/workspace': 15.3.3_typescript@4.8.4
       '@phenomnomnominal/tsquery': 4.1.1_typescript@4.8.4
       chalk: 4.1.0
@@ -2017,11 +2017,11 @@ packages:
       - debug
     dev: false
 
-  /@nrwl/webpack/15.3.3_typescript@4.8.4:
+  /@nx/webpack/15.3.3_typescript@4.8.4:
     resolution: {integrity: sha512-33JGYqg00NeEe1Lz3UZRweBL5zIWwWJhvaFrRLWcDgaTe5kOzXDHlizRIE3abVReI2OHpWbKBCM7KMK2XI3HRQ==}
     dependencies:
-      '@nrwl/devkit': 15.3.3_typescript@4.8.4
-      '@nrwl/js': 15.3.3_typescript@4.8.4
+      '@nx/devkit': 15.3.3_typescript@4.8.4
+      '@nx/js': 15.3.3_typescript@4.8.4
       '@nrwl/workspace': 15.3.3_typescript@4.8.4
       autoprefixer: 10.4.13_postcss@8.4.20
       babel-loader: 8.3.0_webpack@5.75.0
@@ -2102,8 +2102,8 @@ packages:
       prettier:
         optional: true
     dependencies:
-      '@nrwl/devkit': 15.3.3_nx@15.3.3+typescript@4.8.4
-      '@nrwl/linter': 15.3.3_nx@15.3.3+typescript@4.8.4
+      '@nx/devkit': 15.3.3_nx@15.3.3+typescript@4.8.4
+      '@nx/linter': 15.3.3_nx@15.3.3+typescript@4.8.4
       '@parcel/watcher': 2.0.4
       chalk: 4.1.0
       chokidar: 3.5.3

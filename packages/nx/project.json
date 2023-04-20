@@ -18,7 +18,7 @@
       "command": "yarn napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages/nx/native-packages"
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/nx/bin/nx.ts",
         "assets": [

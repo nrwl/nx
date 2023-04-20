@@ -25,15 +25,15 @@ describe('React Module Federation', () => {
     const remote2 = uniq('remote2');
     const remote3 = uniq('remote3');
 
-    runCLI(`generate @nrwl/react:host ${shell} --style=css --no-interactive`);
+    runCLI(`generate @nx/react:host ${shell} --style=css --no-interactive`);
     runCLI(
-      `generate @nrwl/react:remote ${remote1} --style=css --host=${shell} --no-interactive`
+      `generate @nx/react:remote ${remote1} --style=css --host=${shell} --no-interactive`
     );
     runCLI(
-      `generate @nrwl/react:remote ${remote2} --style=css --host=${shell} --no-interactive`
+      `generate @nx/react:remote ${remote2} --style=css --host=${shell} --no-interactive`
     );
     runCLI(
-      `generate @nrwl/react:remote ${remote3} --style=css --host=${shell} --no-interactive`
+      `generate @nx/react:remote ${remote3} --style=css --host=${shell} --no-interactive`
     );
 
     checkFilesExist(`apps/${shell}/module-federation.config.js`);
@@ -48,10 +48,10 @@ describe('React Module Federation', () => {
     updateFile(
       `apps/${shell}/webpack.config.js`,
       stripIndents`
-        import { ModuleFederationConfig } from '@nrwl/devkit';
-        import { composePlugins, withNx } from '@nrwl/webpack';
-        import { withReact } from '@nrwl/react';
-        import { withModuleFederation } from '@nrwl/react/module-federation');
+        import { ModuleFederationConfig } from '@nx/devkit';
+        import { composePlugins, withNx } from '@nx/webpack';
+        import { withReact } from '@nx/react';
+        import { withModuleFederation } from '@nx/react/module-federation');
         
         const baseConfig = require('./module-federation.config');
         

@@ -23,7 +23,7 @@ function setup(
           }
         : {}),
       test: {
-        executor: '@nrwl/jest:jest',
+        executor: '@nx/jest:jest',
         options: {
           jestConfig: 'projects/my-proj/jest.config.ts',
         },
@@ -46,7 +46,7 @@ export default {
   displayName: 'my-proj',
   preset: '../../jest.preset.js',
   transform: {
-    '^(?!.*\\\\\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',
+    '^(?!.*\\\\\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
     '^.+\\\\\\\\.[tj]sx?$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
@@ -56,7 +56,7 @@ export default {
 
     addBabelJestPresetTransformerOption(tree);
     expect(tree.read('projects/my-proj/jest.config.ts', 'utf-8')).toContain(
-      `['babel-jest', { presets: ['@nrwl/react/babel'] }],`
+      `['babel-jest', { presets: ['@nx/react/babel'] }],`
     );
   });
 
@@ -88,15 +88,15 @@ export default {
 
   it('should not update if next project', () => {
     setup(tree, {
-      buildName: '@nrwl/next:build',
+      buildName: '@nx/next:build',
       jestConfigContent: `
 /* eslint-disable */
 export default {
   displayName: 'my-proj',
   preset: '../../jest.preset.js',
   transform: {
-    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',
-    '^.+\\\\.[tj]sx?$': ['babel-jest', { presets: ['@nrwl/next/babel'] }],
+    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
+    '^.+\\\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/next/babel'] }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/my-proj',
@@ -105,13 +105,13 @@ export default {
     });
     addBabelJestPresetTransformerOption(tree);
     expect(tree.read('projects/my-proj/jest.config.ts', 'utf-8')).toContain(
-      `'^.+\\\\.[tj]sx?$': ['babel-jest', { presets: ['@nrwl/next/babel'] }],`
+      `'^.+\\\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/next/babel'] }],`
     );
   });
 
   it('should not update if js project', () => {
     setup(tree, {
-      buildName: '@nrwl/js:tsc',
+      buildName: '@nx/js:tsc',
       jestConfigContent: `/* eslint-disable */
 export default {
   displayName: 'my-proj',

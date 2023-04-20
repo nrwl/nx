@@ -40,7 +40,7 @@ function getCypressTargetNames(tree: Tree) {
   let hasComponentTesting = false;
   forEachExecutorOptions<CypressExecutorOptions>(
     tree,
-    '@nrwl/cypress:cypress',
+    '@nx/cypress:cypress',
     (options, __, target) => {
       cypressTargets.add(target);
       if (options.testingType === 'component') {

@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`15.6.3 migration (setup webpack.config file for React apps) should create webpack.config.js for React projects only 1`] = `
-"const { composePlugins, withNx } = require('@nrwl/webpack');
-const { withReact } = require('@nrwl/react');
+"const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
 
 // Nx plugins for webpack.
 module.exports = composePlugins(
@@ -20,8 +20,8 @@ module.exports = composePlugins(
 `;
 
 exports[`15.6.3 migration (setup webpack.config file for React apps) should create webpack.config.js for React projects only 2`] = `
-"const { composePlugins, withNx } = require('@nrwl/webpack');
-const { withReact } = require('@nrwl/react');
+"const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
 
 // Nx plugins for webpack.
 module.exports = composePlugins(
@@ -39,8 +39,8 @@ module.exports = composePlugins(
 `;
 
 exports[`15.6.3 migration (setup webpack.config file for React apps) should create webpack.config.js for React projects only 3`] = `
-"const { composePlugins, withNx } = require('@nrwl/webpack');
-const { withReact } = require('@nrwl/react');
+"const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
 
 // Nx plugins for webpack.
 module.exports = composePlugins(
@@ -58,8 +58,8 @@ module.exports = composePlugins(
 `;
 
 exports[`15.6.3 migration (setup webpack.config file for React apps) should create webpack.config.js for React projects only 4`] = `
-"const { composePlugins, withNx } = require('@nrwl/webpack');
-const { withReact } = require('@nrwl/react');
+"const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
 
 // Nx plugins for webpack.
 module.exports = composePlugins(

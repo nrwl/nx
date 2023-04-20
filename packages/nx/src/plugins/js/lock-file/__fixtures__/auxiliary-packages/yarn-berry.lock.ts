@@ -74,9 +74,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nrwl/devkit@npm:15.0.13":
+"@nx/devkit@npm:15.0.13":
   version: 15.0.13
-  resolution: "@nrwl/devkit@npm:15.0.13"
+  resolution: "@nx/devkit@npm:15.0.13"
   dependencies:
     "@phenomnomnominal/tsquery": 4.1.1
     ejs: ^3.1.7
@@ -1034,7 +1034,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "test@workspace:."
   dependencies:
-    "@nrwl/devkit": 15.0.13
+    "@nx/devkit": 15.0.13
     eslint-plugin-disable-autofix: "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0"
     postgres: "charsleysa/postgres#fix-errors-compiled"
     react: 18.2.0

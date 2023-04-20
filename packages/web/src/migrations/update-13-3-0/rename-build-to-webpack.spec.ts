@@ -17,7 +17,7 @@ describe('Migration: rename build to webpack', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nrwl/web:build',
+          executor: '@nx/web:build',
           options: {},
         },
       },
@@ -33,7 +33,7 @@ describe('Migration: rename build to webpack', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nrwl/web:webpack',
+          executor: '@nx/web:webpack',
           options: {},
         },
       },

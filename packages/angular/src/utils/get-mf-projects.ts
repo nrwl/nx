@@ -55,7 +55,7 @@ export function getMFProjects(
   );
   forEachExecutorOptions(
     tree,
-    '@nrwl/angular:webpack-browser',
+    '@nx/angular:webpack-browser',
     _getMfProjects(
       tree,
       CUSTOM_WEBPACK_OPTION,

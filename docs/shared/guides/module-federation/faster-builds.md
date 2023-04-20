@@ -61,32 +61,32 @@ cd acme
 You will be prompted to enable Nx Cloud in the workspace. For the best experience, we highly recommend using Nx Cloud to take advantage of distributed caching and other features it provides.
 {% /callout %}
 
-Then, for React users, install the `@nrwl/react` plugin; and for Angular users, install the `@nrwl/angular` plugin.
+Then, for React users, install the `@nx/react` plugin; and for Angular users, install the `@nx/angular` plugin.
 
 ```shell
 # If you use React
-npm install --save-dev @nrwl/react
+npm install --save-dev @nx/react
 
 # If you use Angular
-npm install --save-dev @nrwl/angular
+npm install --save-dev @nx/angular
 
 # Or with yarn
-yarn add --dev @nrwl/react
-yarn add --dev @nrwl/angular
+yarn add --dev @nx/react
+yarn add --dev @nx/angular
 ```
 
 Next, generate the host and remote applications.
 
 ```shell
 # React
-nx g @nrwl/react:host host --remotes=shop,cart,about
+nx g @nx/react:host host --remotes=shop,cart,about
 
 # Angular
-nx g @nrwl/angular:host host --remotes=shop,cart,about
+nx g @nx/angular:host host --remotes=shop,cart,about
 ```
 
 {% callout type="note" title="More details" %}
-You can leave off the `--remotes` option and add them later with `nx g @nrwl/react:remote shop --host=host` or `nx g @nrwl/angular:remote shop --host=host`.
+You can leave off the `--remotes` option and add them later with `nx g @nx/react:remote shop --host=host` or `nx g @nx/angular:remote shop --host=host`.
 {% /callout %}
 
 Now, serve `host` to view it in your browser.
@@ -115,7 +115,7 @@ To understand how Module Federation works with Nx, let's take a look at three fi
 
 ### `apps/host/project.json`
 
-The `build` target uses `@nrwl/webpack:webpack` for React, and `@nrwl/angular:webpack-browser` for Angular. This is the same as a normal SPA that uses custom webpack configuration (`webpackConfig`), but difference is in the webpack configuration file.
+The `build` target uses `@nx/webpack:webpack` for React, and `@nx/angular:webpack-browser` for Angular. This is the same as a normal SPA that uses custom webpack configuration (`webpackConfig`), but difference is in the webpack configuration file.
 
 If you use Module Federation to speed up your CI and improve your local development, and not to deploy different remotes independently, you need to create implicit dependencies from the host to all the remotes. Semantically, the host and the remotes comprise one application, so you cannot build the host without the remotes. Adding implicit dependencies also makes distributed builds possible ([see below](#production-build-and-deployment)). To create these dependencies, add the `implicitDependencies` configuration.
 
@@ -134,8 +134,8 @@ In the future, Nx may automatically handle this for you.
 The webpack configuration uses an utility function that Nx provides: `withModuleFederation`.
 
 ```javascript
-// For Angular, you'll see `@nrwl/angular/module-federation`
-const withModuleFederation = require('@nrwl/react/module-federation');
+// For Angular, you'll see `@nx/angular/module-federation`
+const withModuleFederation = require('@nx/react/module-federation');
 const moduleFederationConfig = require('./module-federation.config');
 
 module.exports = withModuleFederation({
@@ -268,7 +268,7 @@ First, make sure you have implicit dependencies from `host` to each remote. In c
 Next, open up the production webpack configuration file and update the remote URLs to their own sub-folder under `http://localhost:3000`.
 
 ```javascript {% fileName="apps/host/webpack.config.prod.js" %}
-const withModuleFederation = require('@nrwl/react/module-federation');
+const withModuleFederation = require('@nx/react/module-federation');
 const moduleFederationConfig = require('./module-federation.config');
 
 module.exports = withModuleFederation({

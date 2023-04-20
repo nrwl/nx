@@ -102,7 +102,7 @@ function isNextWithProjectLint(
 
   // check if it's a next app and has a parserOptions.project set in the eslint overrides
   return !!(
-    projectConfig?.targets?.['build']?.executor === '@nrwl/next:build' &&
+    projectConfig?.targets?.['build']?.executor === '@nx/next:build' &&
     esLintOverrides?.parserOptions?.project
   );
 }
@@ -116,7 +116,7 @@ export async function updateJestConfigExt(tree: Tree) {
 
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nrwl/jest:jest',
+    '@nx/jest:jest',
     (options, projectName, target, configuration) => {
       const projectConfig = projects.get(projectName);
 

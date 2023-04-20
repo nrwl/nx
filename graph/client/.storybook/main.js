@@ -6,7 +6,7 @@ module.exports = {
   ],
   addons: [
     '@storybook/addon-essentials',
-    '@nrwl/react/plugins/storybook',
+    '@nx/react/plugins/storybook',
     'storybook-dark-mode',
   ],
 };

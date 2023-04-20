@@ -20,9 +20,9 @@ describe('bundling libs', () => {
     const viteLib = uniq('vitelib');
 
     runCLI(
-      `generate @nrwl/js:lib ${esbuildLib} --bundler=esbuild --no-interactive`
+      `generate @nx/js:lib ${esbuildLib} --bundler=esbuild --no-interactive`
     );
-    runCLI(`generate @nrwl/js:lib ${viteLib} --bundler=vite --no-interactive`);
+    runCLI(`generate @nx/js:lib ${viteLib} --bundler=vite --no-interactive`);
 
     runCLI(`build ${esbuildLib}`);
     runCLI(`build ${viteLib}`);

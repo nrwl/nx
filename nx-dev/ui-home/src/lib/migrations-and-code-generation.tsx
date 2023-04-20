@@ -71,19 +71,19 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
                   <br />
                   Fetching nx@14.7.13
                   <br />
-                  Fetching @nrwl/cypress@14.7.13
+                  Fetching @nx/cypress@14.7.13
                   <br />
-                  Fetching @nrwl/next@14.7.13
+                  Fetching @nx/next@14.7.13
                   <br />
-                  Fetching @nrwl/linter@14.7.13
+                  Fetching @nx/linter@14.7.13
                   <br />
                   Fetching @nrwl/workspace@14.7.13
                   <br />
-                  Fetching @nrwl/jest@14.7.13
+                  Fetching @nx/jest@14.7.13
                   <br />
-                  Fetching @nrwl/react@14.7.13
+                  Fetching @nx/react@14.7.13
                   <br />
-                  Fetching @nrwl/web@14.7.13
+                  Fetching @nx/web@14.7.13
                 </p>
               </div>
               <div className="mt-8 flex">

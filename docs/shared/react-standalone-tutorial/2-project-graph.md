@@ -109,11 +109,11 @@ When a library is created, Nx adds a new Typescript path to the `tsconfig.base.j
 
 ### `shared-ui`
 
-Run the `@nrwl/react:component` generator with the command:
+Run the `@nx/react:component` generator with the command:
 
-```{% command="npx nx g @nrwl/react:component banner --project=shared-ui --export" path="~/store" %}
+```{% command="npx nx g @nx/react:component banner --project=shared-ui --export" path="~/store" %}
 
->  NX  Generating @nrwl/react:component
+>  NX  Generating @nx/react:component
 
 CREATE shared/ui/src/lib/banner/banner.module.css
 CREATE shared/ui/src/lib/banner/banner.spec.tsx

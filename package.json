@@ -58,19 +58,9 @@
     "@ngrx/router-store": "~15.3.0",
     "@ngrx/store": "~15.3.0",
     "@nguniversal/builders": "~15.2.0",
-    "@nrwl/angular": "16.0.0-beta.5",
-    "@nrwl/cypress": "16.0.0-beta.5",
-    "@nrwl/devkit": "16.0.0-beta.5",
     "@nrwl/eslint-plugin-nx": "16.0.0-beta.5",
-    "@nrwl/jest": "16.0.0-beta.5",
-    "@nrwl/js": "16.0.0-beta.5",
-    "@nrwl/linter": "16.0.0-beta.5",
-    "@nrwl/next": "16.0.0-beta.5",
     "nx-cloud": "16.0.1",
-    "@nrwl/react": "16.0.0-beta.5",
-    "@nrwl/storybook": "16.0.0-beta.5",
-    "@nrwl/web": "16.0.0-beta.5",
-    "@nrwl/webpack": "16.0.0-beta.5",
+    "@nx/webpack": "16.0.0-beta.5",
     "@parcel/watcher": "2.0.4",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
@@ -265,7 +255,17 @@
     "webpack-subresource-integrity": "^5.1.0",
     "xstate": "4.34.0",
     "yargs": "^17.6.2",
-    "yargs-parser": "21.1.1"
+    "yargs-parser": "21.1.1",
+    "@nx/devkit": "16.0.0-beta.5",
+    "@nx/js": "16.0.0-beta.5",
+    "@nx/linter": "16.0.0-beta.5",
+    "@nx/cypress": "16.0.0-beta.5",
+    "@nx/storybook": "16.0.0-beta.5",
+    "@nx/web": "16.0.0-beta.5",
+    "@nx/react": "16.0.0-beta.5",
+    "@nx/jest": "16.0.0-beta.5",
+    "@nx/next": "16.0.0-beta.5",
+    "@nx/angular": "16.0.0-beta.5"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -337,4 +337,3 @@
     ]
   }
 }
-

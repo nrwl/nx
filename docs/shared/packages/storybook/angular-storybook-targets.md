@@ -20,9 +20,9 @@ If you are on Nx version `<14.1.8` and you want to move to the latest version (o
 If you have already moved on a version of Nx `>=14.1.8` without using `nx migrate` and now you are having trouble with your Angular projects using Storybook (eg. `Property 'uiFramework' does not match the schema. '@storybook/angular' should be one of ...`), that means that your targets are still using the old schema and they should change. The way to fix that is to call `nx migrate` again like this:
 
 ```bash
-nx migrate @nrwl/storybook@14.1.0 --to="@nrwl/storybook@14.2.0"
+nx migrate @nx/storybook@14.1.0 --to="@nx/storybook@14.2.0"
 ```
 
 and follow the instructions that will be printed in the console.
 
-This command will generate a new `migrations.json` file which will contain the "change-storybook-targets" migration script. This script (when called with `yarn nx migrate --run-migrations`) will change the `storybook` and `build-storybook` targets in all your Angular projects that are configured to use Storybook. The new target configuration will use the native Storybook builders (`@storybook/angular:build-storybook` and `@storybook/angular:start-storybook`) instead of the Nx Storybook builders (`@nrwl/storybook:build-storybook` and `@nrwl/storybook:storybook`).
+This command will generate a new `migrations.json` file which will contain the "change-storybook-targets" migration script. This script (when called with `yarn nx migrate --run-migrations`) will change the `storybook` and `build-storybook` targets in all your Angular projects that are configured to use Storybook. The new target configuration will use the native Storybook builders (`@storybook/angular:build-storybook` and `@storybook/angular:start-storybook`) instead of the Nx Storybook builders (`@nx/storybook:build-storybook` and `@nx/storybook:storybook`).

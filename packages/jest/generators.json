@@ -5,7 +5,7 @@
     "init": {
       "factory": "./src/generators/init/init#jestInitSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nrwl/jest` plugin.",
+      "description": "Initialize the `@nx/jest` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
@@ -20,7 +20,7 @@
     "init": {
       "factory": "./src/generators/init/init#jestInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nrwl/jest` plugin.",
+      "description": "Initialize the `@nx/jest` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },

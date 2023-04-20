@@ -39,7 +39,7 @@
     "add-missing-root-babel-config": {
       "version": "13.4.4-beta.0",
       "cli": "nx",
-      "description": "Create a root babel config file if it doesn't exist and using babel-jest in jest.config.js and add @nrwl/web as needed",
+      "description": "Create a root babel config file if it doesn't exist and using babel-jest in jest.config.js and add @nx/web as needed",
       "factory": "./src/migrations/update-13-4-4/add-missing-root-babel-config"
     },
     "update-jest-config-extensions": {
@@ -93,7 +93,7 @@
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/jest with @nx/jest",
+      "description": "Replace @nx/jest with @nx/jest",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },

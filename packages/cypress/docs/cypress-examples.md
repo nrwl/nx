@@ -6,7 +6,7 @@ Depending on your testing type, the Cypress executor is configured in different 
 ```json
 "targets": {
   "e2e": {
-    "executor": "@nrwl/cypress:cypress",
+    "executor": "@nx/cypress:cypress",
     "options": {
       "cypressConfig": "apps/app-e2e/cypres.config.ts",
       "devServerTarget": "my-react-app:serve",
@@ -32,13 +32,13 @@ The `baseUrl` defined in the Cypress config file is the last value used if no ur
 
 When running in CI it doesn't make sense to start up a dev server since there aren't changes to watch for.
 
-You can use [`@nrwl/web:file-server`](/packages/web/executors/file-server) to serve the pre-built static files of your frontend project.
+You can use [`@nx/web:file-server`](/packages/web/executors/file-server) to serve the pre-built static files of your frontend project.
 
 In some _frontend_ application, add a 'static-serve' target.
 
 ```json
 "serve-static": {
-  "executor": "@nrwl/web:file-server",
+  "executor": "@nx/web:file-server",
   "options":{
     "buildTarget": "frontend:build"
   }
@@ -59,7 +59,7 @@ In the _e2e_ application add a configuration to change `devServerTarget` to poin
 ```
 
 {% callout type="note" title="What about Node projects?" %}
-The same can be done for backend node apps with [`@nrwl/js:node` executor](/packages/js/executors/node)
+The same can be done for backend node apps with [`@nx/js:node` executor](/packages/js/executors/node)
 {% /callout %}
 
 ```bash
@@ -80,7 +80,7 @@ When adding component testing to a project, it's best to use the framework speci
 ```json
 "targets": {
   "component-test": {
-    "executor": "@nrwl/cypress:cypress",
+    "executor": "@nx/cypress:cypress",
     "options": {
       "cypressConfig": "apps/app/cypres.config.ts",
       "devServerTarget": "my-react-app:build",
@@ -104,7 +104,7 @@ Using [executor configurations](/recipe/use-executor-configurations#use-executor
 ```json
 "targets": {
   "e2e": {
-    "executor": "@nrwl/cypress:cypress",
+    "executor": "@nx/cypress:cypress",
     "options": {
       "cypressConfig": "apps/app-e2e/cypres.config.ts",
       "devServerTarget": "my-react-app:serve",

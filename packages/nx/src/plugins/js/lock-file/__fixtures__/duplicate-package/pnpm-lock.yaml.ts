@@ -1,12 +1,12 @@
 export default `lockfileVersion: 5.4
 
 specifiers:
-  '@nrwl/devkit': ^14.8.0
+  '@nx/devkit': ^14.8.0
   '@nrwl/workspace': ^14.8.0
   nx: 15.4.0
 
 dependencies:
-  '@nrwl/devkit': 14.8.6_nx@15.4.0
+  '@nx/devkit': 14.8.6_nx@15.4.0
   '@nrwl/workspace': 14.8.6
   nx: 15.4.0
 
@@ -618,7 +618,7 @@ packages:
       - debug
     dev: false
 
-  /@nrwl/devkit/14.8.6_nx@14.8.6:
+  /@nx/devkit/14.8.6_nx@14.8.6:
     resolution: {integrity: sha512-+3KqohOKeUuyS176jrwY0yeB3E2IFQ3jMkS0KizzsHGsZWdZbQ2WQ46hZ0/bvRh9Efl8CAg6n4fUWR0BXUePMA==}
     peerDependencies:
       nx: '>= 13.10 <= 15'
@@ -632,7 +632,7 @@ packages:
       - typescript
     dev: false
 
-  /@nrwl/devkit/14.8.6_nx@15.4.0:
+  /@nx/devkit/14.8.6_nx@15.4.0:
     resolution: {integrity: sha512-+3KqohOKeUuyS176jrwY0yeB3E2IFQ3jMkS0KizzsHGsZWdZbQ2WQ46hZ0/bvRh9Efl8CAg6n4fUWR0BXUePMA==}
     peerDependencies:
       nx: '>= 13.10 <= 15'
@@ -646,12 +646,12 @@ packages:
       - typescript
     dev: false
 
-  /@nrwl/jest/14.8.6_nx@14.8.6:
+  /@nx/jest/14.8.6_nx@14.8.6:
     resolution: {integrity: sha512-v+y833GGKVPc2RAd1odUGAzMdBUuKN6ZbbI8seAT+eI/2qQDvab51zOlf66/8zUv7Kr4yrkDYl0slf24GklTvQ==}
     dependencies:
       '@jest/reporters': 28.1.1
       '@jest/test-result': 28.1.1
-      '@nrwl/devkit': 14.8.6_nx@14.8.6
+      '@nx/devkit': 14.8.6_nx@14.8.6
       '@phenomnomnominal/tsquery': 4.1.1
       chalk: 4.1.0
       dotenv: 10.0.0
@@ -670,7 +670,7 @@ packages:
       - typescript
     dev: false
 
-  /@nrwl/linter/14.8.6:
+  /@nx/linter/14.8.6:
     resolution: {integrity: sha512-Usqh17Q+BiZpownyMOC5TrDFkSSRazjTXmTFqUoLkfGI07qF8i7DB1hrqedE32mNv9V0N6LS3FaAb4plFPgPxA==}
     peerDependencies:
       eslint: ^8.0.0
@@ -678,8 +678,8 @@ packages:
       eslint:
         optional: true
     dependencies:
-      '@nrwl/devkit': 14.8.6_nx@14.8.6
-      '@nrwl/jest': 14.8.6_nx@14.8.6
+      '@nx/devkit': 14.8.6_nx@14.8.6
+      '@nx/jest': 14.8.6_nx@14.8.6
       '@phenomnomnominal/tsquery': 4.1.1
       nx: 14.8.6
       tmp: 0.2.1
@@ -725,9 +725,9 @@ packages:
       prettier:
         optional: true
     dependencies:
-      '@nrwl/devkit': 14.8.6_nx@14.8.6
-      '@nrwl/jest': 14.8.6_nx@14.8.6
-      '@nrwl/linter': 14.8.6
+      '@nx/devkit': 14.8.6_nx@14.8.6
+      '@nx/jest': 14.8.6_nx@14.8.6
+      '@nx/linter': 14.8.6
       '@parcel/watcher': 2.0.4
       chalk: 4.1.0
       chokidar: 3.5.3

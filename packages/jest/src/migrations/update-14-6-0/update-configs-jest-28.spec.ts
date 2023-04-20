@@ -13,7 +13,7 @@ import {
 } from './update-configs-jest-28';
 
 const mockJestConfig = `
-import { nxPreset } from '@nrwl/jest/preset'
+import { nxPreset } from '@nx/jest/preset'
 const myGlobals = ['Math', 'Promise'];
 
 export default {
@@ -167,7 +167,7 @@ module.exports = {
         ...projectConfiguration.targets,
         test: {
           ...projectConfiguration.targets.test,
-          executor: '@nrwl/jest:jest',
+          executor: '@nx/jest:jest',
         },
       },
     });

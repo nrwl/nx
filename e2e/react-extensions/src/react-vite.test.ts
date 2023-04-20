@@ -23,7 +23,7 @@ describe('Build React applications and libraries with Vite', () => {
     const viteApp = uniq('viteapp');
 
     runCLI(
-      `generate @nrwl/react:app ${viteApp} --bundler=vite --unitTestRunner=vitest --no-interactive`
+      `generate @nx/react:app ${viteApp} --bundler=vite --unitTestRunner=vitest --no-interactive`
     );
 
     const appTestResults = await runCLIAsync(`test ${viteApp}`);
@@ -45,7 +45,7 @@ describe('Build React applications and libraries with Vite', () => {
     const viteLib = uniq('vitelib');
 
     runCLI(
-      `generate @nrwl/react:app ${viteApp} --bundler=vite --unitTestRunner=vitest --inSourceTests --no-interactive`
+      `generate @nx/react:app ${viteApp} --bundler=vite --unitTestRunner=vitest --inSourceTests --no-interactive`
     );
     expect(() => {
       checkFilesExist(`apps/${viteApp}/src/app/app.spec.tsx`);
@@ -65,21 +65,21 @@ describe('Build React applications and libraries with Vite', () => {
     checkFilesExist(`dist/apps/${viteApp}/index.html`);
 
     runCLI(
-      `generate @nrwl/react:lib ${viteLib} --bundler=vite --inSourceTests --unitTestRunner=vitest --no-interactive`
+      `generate @nx/react:lib ${viteLib} --bundler=vite --inSourceTests --unitTestRunner=vitest --no-interactive`
     );
     expect(() => {
       checkFilesExist(`libs/${viteLib}/src/lib/${viteLib}.spec.tsx`);
     }).toThrow();
 
     runCLI(
-      `generate @nrwl/react:component comp1 --inSourceTests --export --project=${viteLib} --no-interactive`
+      `generate @nx/react:component comp1 --inSourceTests --export --project=${viteLib} --no-interactive`
     );
     expect(() => {
       checkFilesExist(`libs/${viteLib}/src/lib/comp1/comp1.spec.tsx`);
     }).toThrow();
 
     runCLI(
-      `generate @nrwl/react:component comp2 --export --project=${viteLib} --no-interactive`
+      `generate @nx/react:component comp2 --export --project=${viteLib} --no-interactive`
     );
     checkFilesExist(`libs/${viteLib}/src/lib/comp2/comp2.spec.tsx`);
 
@@ -105,7 +105,7 @@ describe('Build React applications and libraries with Vite', () => {
     const viteLib = uniq('vitelib');
 
     runCLI(
-      `generate @nrwl/react:lib ${viteLib} --bundler=vite --no-interactive --unit-test-runner=none`
+      `generate @nx/react:lib ${viteLib} --bundler=vite --no-interactive --unit-test-runner=none`
     );
 
     const packageJson = readJson('package.json');
@@ -125,7 +125,7 @@ describe('Build React applications and libraries with Vite', () => {
     // Convert non-buildable lib to buildable one
     const nonBuildableLib = uniq('nonbuildablelib');
     runCLI(
-      `generate @nrwl/react:lib ${nonBuildableLib} --no-interactive --unitTestRunner=jest`
+      `generate @nx/react:lib ${nonBuildableLib} --no-interactive --unitTestRunner=jest`
     );
     runCLI(
       `generate @nrwl/vite:configuration ${nonBuildableLib} --uiFramework=react --no-interactive`

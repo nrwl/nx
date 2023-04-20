@@ -15,7 +15,7 @@ export default async function (tree: Tree) {
   const defaultOptionsUpdated = new Set<string>();
   forEachExecutorOptions<WebpackExecutorOptions>(
     tree,
-    '@nrwl/webpack:webpack',
+    '@nx/webpack:webpack',
     (options, projectName, targetName, configurationName) => {
       const projectConfiguration = readProjectConfiguration(tree, projectName);
       const defaultOptions = projectConfiguration.targets[targetName].options;
@@ -29,7 +29,7 @@ export default async function (tree: Tree) {
         (defaultOptions?.['isolatedConfig'] ||
           !(
             defaultOptions?.['main']?.match(/main\.(t|j)sx$/) ||
-            defaultOptions?.['webpackConfig'] === '@nrwl/react/plugins/webpack'
+            defaultOptions?.['webpackConfig'] === '@nx/react/plugins/webpack'
           ))
       ) {
         return;
@@ -49,7 +49,7 @@ export default async function (tree: Tree) {
 
       if (
         options?.['webpackConfig'] &&
-        options['webpackConfig'] !== '@nrwl/react/plugins/webpack'
+        options['webpackConfig'] !== '@nx/react/plugins/webpack'
       ) {
         let oldName = options['webpackConfig'];
         if (options['webpackConfig'].endsWith('.js')) {
@@ -65,8 +65,8 @@ export default async function (tree: Tree) {
         tree.write(
           options['webpackConfig'],
           `
-            const { composePlugins, withNx } = require('@nrwl/webpack');
-            const { withReact } = require('@nrwl/react');
+            const { composePlugins, withNx } = require('@nx/webpack');
+            const { withReact } = require('@nx/react');
 
             // Nx plugins for webpack.
             module.exports = composePlugins(withNx(), withReact(), (config, { options, context }) => {
@@ -114,8 +114,8 @@ export default async function (tree: Tree) {
         tree.write(
           options['webpackConfig'],
           `
-          const { composePlugins, withNx } = require('@nrwl/webpack');
-          const { withReact } = require('@nrwl/react');
+          const { composePlugins, withNx } = require('@nx/webpack');
+          const { withReact } = require('@nx/react');
           
           // Nx plugins for webpack.
           module.exports = composePlugins(withNx(), withReact(), (config, { options, context }) => {

@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nrwl/cypress:migrate-to-cypress-11",
+      "command": "nx g @nx/cypress:migrate-to-cypress-11",
       "description": "Migrate existing cypress projects to Cypress v11"
     }
   ],

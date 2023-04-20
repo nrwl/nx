@@ -63,7 +63,7 @@ describe('updateComponentTestingConfig', () => {
 `);
     const libProjectConfig = readProjectConfiguration(tree, 'something-lib');
     expect(libProjectConfig.targets['component-test']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         cypressConfig: 'libs/something-lib/cypress.config.ts',
         testingType: 'component',
@@ -72,7 +72,7 @@ describe('updateComponentTestingConfig', () => {
       },
     });
     expect(libProjectConfig.targets['ct']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         cypressConfig: 'libs/something-lib/cypress.config-two.ts',
         testingType: 'component',
@@ -104,7 +104,7 @@ describe('updateComponentTestingConfig', () => {
       [
         `You can manually add the 'devServerTarget' option to the
 component testing target to specify the build target to use.
-The build configuration should be using @nrwl/web:webpack as the executor.
+The build configuration should be using @nx/web:webpack as the executor.
 Usually this is a React app in your workspace.
 Component testing will fallback to a default configuration if one isn't provided,
 but might require modifications if your projects are more complex.`,
@@ -195,7 +195,7 @@ but might require modifications if your projects are more complex.`,
 `);
     const libProjectConfig = readProjectConfiguration(tree, 'something-lib');
     expect(libProjectConfig.targets['component-test']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         cypressConfig: 'libs/something-lib/cypress.config.ts',
         testingType: 'component',
@@ -204,7 +204,7 @@ but might require modifications if your projects are more complex.`,
       },
     });
     expect(libProjectConfig.targets['ct']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         cypressConfig: 'libs/something-lib/cypress.config-two.ts',
         testingType: 'component',
@@ -243,7 +243,7 @@ but might require modifications if your projects are more complex.`,
 `);
     const libProjectConfig2 = readProjectConfiguration(tree, 'something-lib');
     expect(libProjectConfig2.targets['component-test']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         cypressConfig: 'libs/something-lib/cypress.config.ts',
         testingType: 'component',
@@ -252,7 +252,7 @@ but might require modifications if your projects are more complex.`,
       },
     });
     expect(libProjectConfig2.targets['ct']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         cypressConfig: 'libs/something-lib/cypress.config-two.ts',
         testingType: 'component',
@@ -275,7 +275,7 @@ async function setup(tree: Tree, options: { name: string }) {
   tree.write(
     'apps/my-app/cypress.config.ts',
     `import { defineConfig } from 'cypress';
-import { nxComponentTestingPreset } from '@nrwl/cypress/plugins/component-testing';
+import { nxComponentTestingPreset } from '@nx/cypress/plugins/component-testing';
 
 export default defineConfig({
   component: nxComponentTestingPreset(__dirname),
@@ -288,7 +288,7 @@ export default defineConfig({
     sourceRoot: `apps/${appName}/src`,
     targets: {
       build: {
-        executor: '@nrwl/web:webpack',
+        executor: '@nx/web:webpack',
         outputs: ['{options.outputPath}'],
         options: {
           compiler: 'babel',
@@ -306,7 +306,7 @@ export default defineConfig({
   const e2eProjectConfig = readProjectConfiguration(tree, e2eName);
   e2eProjectConfig.targets['e2e'] = {
     ...e2eProjectConfig.targets['e2e'],
-    executor: '@nrwl/cypress:cypress',
+    executor: '@nx/cypress:cypress',
   };
   e2eProjectConfig.targets['e2e'].configurations = {
     ...e2eProjectConfig.targets['e2e'].configurations,
@@ -318,7 +318,7 @@ export default defineConfig({
   tree.write(
     `apps/${e2eName}/cypress.config.ts`,
     `import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: nxE2EPreset(__dirname),
@@ -329,7 +329,7 @@ export default defineConfig({
     `apps/${e2eName}/cypress.storybook-config.ts`,
     `
   import { defineConfig } from 'cypress';
-import { nxE2EStorybookPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EStorybookPreset } from '@nx/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: nxE2EStorybookPreset(__dirname),
@@ -342,14 +342,14 @@ export default defineConfig({
   libProjectConfig.targets = {
     ...libProjectConfig.targets,
     'component-test': {
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         testingType: 'component',
         cypressConfig: `libs/${libName}/cypress.config.ts`,
       },
     },
     ct: {
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         testingType: 'component',
         cypressConfig: `libs/${libName}/cypress.config-two.ts`,
@@ -365,7 +365,7 @@ export default defineConfig({
   tree.write(
     `libs/${libName}/cypress.config.ts`,
     `import { defineConfig } from 'cypress';
-import { nxComponentTestingPreset } from '@nrwl/cypress/plugins/component-testing';
+import { nxComponentTestingPreset } from '@nx/cypress/plugins/component-testing';
 
 export default defineConfig({
   component: nxComponentTestingPreset(__dirname),
@@ -375,7 +375,7 @@ export default defineConfig({
   tree.write(
     `libs/${libName}/cypress.config-two.ts`,
     `import { defineConfig } from 'cypress';
-import { nxComponentTestingPreset } from '@nrwl/cypress/plugins/component-testing';
+import { nxComponentTestingPreset } from '@nx/cypress/plugins/component-testing';
 
 export default defineConfig({
   component: nxComponentTestingPreset(__dirname),

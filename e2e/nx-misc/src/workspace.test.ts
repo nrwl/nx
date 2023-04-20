@@ -58,7 +58,7 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
-      runCLI(`generate @nrwl/js:lib ${lib1}/data-access`);
+      runCLI(`generate @nx/js:lib ${lib1}/data-access`);
 
       updateFile(
         `libs/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
@@ -74,7 +74,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/js:lib ${lib2}/ui`);
+      runCLI(`generate @nx/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -87,7 +87,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/js:lib ${lib3}`);
+      runCLI(`generate @nx/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -194,7 +194,7 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
       runCLI(
-        `generate @nrwl/js:lib ${lib1}/data-access --importPath=${importPath}`
+        `generate @nx/js:lib ${lib1}/data-access --importPath=${importPath}`
       );
 
       updateFile(
@@ -211,7 +211,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/js:lib ${lib2}/ui`);
+      runCLI(`generate @nx/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -224,7 +224,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/js:lib ${lib3}`);
+      runCLI(`generate @nx/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -327,7 +327,7 @@ describe('Workspace Tests', () => {
       nxJson.workspaceLayout = { libsDir: 'packages' };
       updateFile('nx.json', JSON.stringify(nxJson));
 
-      runCLI(`generate @nrwl/js:lib ${lib1}/data-access`);
+      runCLI(`generate @nx/js:lib ${lib1}/data-access`);
 
       updateFile(
         `packages/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
@@ -343,7 +343,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/js:lib ${lib2}/ui`);
+      runCLI(`generate @nx/js:lib ${lib2}/ui`);
 
       updateFile(
         `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -356,7 +356,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/js:lib ${lib3}`);
+      runCLI(`generate @nx/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -455,7 +455,7 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('lib1');
       const lib2 = uniq('lib2');
       const lib3 = uniq('lib3');
-      runCLI(`generate @nrwl/js:lib ${lib1}`);
+      runCLI(`generate @nx/js:lib ${lib1}`);
 
       updateFile(
         `libs/${lib1}/src/lib/${lib1}.ts`,
@@ -471,7 +471,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/js:lib ${lib2}/ui`);
+      runCLI(`generate @nx/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -484,7 +484,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/js:lib ${lib3}`);
+      runCLI(`generate @nx/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [lib1];
         return config;
@@ -589,7 +589,7 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
-      runCLI(`generate @nrwl/js:lib ${lib1}/data-access`);
+      runCLI(`generate @nx/js:lib ${lib1}/data-access`);
       let rootTsConfig = readJson('tsconfig.base.json');
       expect(
         rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
@@ -612,7 +612,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/js:lib ${lib2}/ui`);
+      runCLI(`generate @nx/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -625,7 +625,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/js:lib ${lib3}`);
+      runCLI(`generate @nx/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -703,14 +703,14 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('myliba');
       const lib2 = uniq('mylibb');
 
-      runCLI(`generate @nrwl/js:lib ${lib1}`);
+      runCLI(`generate @nx/js:lib ${lib1}`);
       expect(exists(tmpProjPath(`libs/${lib1}`))).toBeTruthy();
 
       /**
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/js:lib ${lib2}`);
+      runCLI(`generate @nx/js:lib ${lib2}`);
       updateProjectConfig(lib2, (config) => {
         config.implicitDependencies = [lib1];
         return config;

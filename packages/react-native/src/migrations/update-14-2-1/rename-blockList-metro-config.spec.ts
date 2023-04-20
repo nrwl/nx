@@ -13,7 +13,7 @@ describe('Rename blacklistRE to blockList in metro.config.js for react native ap
       sourceRoot: 'apps/products/src',
       targets: {
         start: {
-          executor: '@nrwl/react-native:start',
+          executor: '@nx/react-native:start',
           options: {
             port: 8081,
           },

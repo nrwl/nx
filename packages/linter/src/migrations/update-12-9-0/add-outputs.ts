@@ -12,7 +12,7 @@ export default async function addOutputs(tree: Tree) {
     }
 
     for (const target of Object.values(project.targets)) {
-      if (target.executor !== '@nrwl/linter:eslint' || target.outputs) {
+      if (target.executor !== '@nx/linter:eslint' || target.outputs) {
         continue;
       }
 

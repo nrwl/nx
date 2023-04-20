@@ -25,11 +25,11 @@ describe('15.7.1 migration (add-eslintignore)', () => {
       root: 'proj',
       targets: {
         lint: {
-          executor: '@nrwl/linter:eslint',
+          executor: '@nx/linter:eslint',
           options: {},
         },
         lint2: {
-          executor: '@nrwl/linter:eslint',
+          executor: '@nx/linter:eslint',
           options: {},
         },
         notTest: {

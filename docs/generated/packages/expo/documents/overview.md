@@ -50,7 +50,7 @@ nx start my-app
 To generate a new library run:
 
 ```shell
-npx nx g @nrwl/react-native:lib your-lib-name
+npx nx g @nx/react-native:lib your-lib-name
 ```
 
 ### Generating Components
@@ -58,7 +58,7 @@ npx nx g @nrwl/react-native:lib your-lib-name
 To generate a new component inside library run:
 
 ```shell
-npx nx g @nrwl/react-native:component your-component-name --project=your-lib-name --export
+npx nx g @nx/react-native:component your-component-name --project=your-lib-name --export
 ```
 
 Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`

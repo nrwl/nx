@@ -20,7 +20,7 @@ describe('Detox', () => {
 
   it('should create files and run lint command for react-native apps', async () => {
     runCLI(
-      `generate @nrwl/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint --install=false`
+      `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint --install=false`
     );
     checkFilesExist(`apps/${appName}-e2e/.detoxrc.json`);
     checkFilesExist(`apps/${appName}-e2e/tsconfig.json`);

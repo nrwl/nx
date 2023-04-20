@@ -51,7 +51,7 @@ describe('Jest Migration - jest 29 update configs', () => {
     await setup(tree, 'my-lib');
     tree.write(
       'jest.preset.js',
-      `const nxPreset = require('@nrwl/jest/preset').default;
+      `const nxPreset = require('@nx/jest/preset').default;
 module.exports = {
   ...nxPreset,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
@@ -65,7 +65,7 @@ module.exports = {
   transform: {
     '^.+\\.(ts|js|html)$': 'ts-jest',
   },
-  resolver: '@nrwl/jest/plugins/resolver',
+  resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageReporters: ['html'],
 };
@@ -82,14 +82,14 @@ module.exports = {
     await setup(tree, 'my-lib');
     tree.write(
       'jest.preset.js',
-      `const nxPreset = require('@nrwl/jest/preset').default;
+      `const nxPreset = require('@nx/jest/preset').default;
 module.exports = {
   ...nxPreset,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
   transform: {
     '^.+\\.(ts|js|html)$': 'ts-jest',
   },
-  resolver: '@nrwl/jest/plugins/resolver',
+  resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageReporters: ['html'],
 };
@@ -391,7 +391,7 @@ async function setup(tree: Tree, name: string, existingGraph?: ProjectGraph) {
   const projectConfig = readProjectConfiguration(tree, name);
   projectConfig.targets['test'] = {
     ...projectConfig.targets['test'],
-    executor: '@nrwl/jest:jest',
+    executor: '@nx/jest:jest',
     configurations: {
       ci: {
         ci: true,
@@ -453,7 +453,7 @@ preset: '../../jest.preset.js'
     tree
       .read('jest.config.ts')
       .toString()
-      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest')
+      .replace(new RegExp('@nx/jest', 'g'), '@nx/jest')
   );
 
   tree.write(
@@ -461,7 +461,7 @@ preset: '../../jest.preset.js'
     tree
       .read('jest.preset.js')
       .toString()
-      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest')
+      .replace(new RegExp('@nx/jest', 'g'), '@nx/jest')
   );
 
   projectGraph = {

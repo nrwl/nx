@@ -1,7 +1,7 @@
 import type { Node } from 'typescript';
 
 export function isAlreadyCommented(node: Node) {
-  return node.getFullText().includes('TODO(@nrwl/cypress)');
+  return node.getFullText().includes('TODO(@nx/cypress)');
 }
 
 export const BANNED_COMMANDS = [

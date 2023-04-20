@@ -42,7 +42,7 @@ describe('nx wrapper / .nx installation', () => {
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
       json.tasksRunnerOptions.default.options.cacheableOperations = ['echo'];
       json.installation.plugins = {
-        '@nrwl/js': getPublishedVersion(),
+        '@nx/js': getPublishedVersion(),
       };
       return json;
     });
@@ -66,7 +66,7 @@ describe('nx wrapper / .nx installation', () => {
   it('should work with nx report', () => {
     const output = runNxWrapper('report');
     expect(output).toMatch(new RegExp(`nx.*:.*${getPublishedVersion()}`));
-    expect(output).toMatch(new RegExp(`@nrwl/js.*:.*${getPublishedVersion()}`));
+    expect(output).toMatch(new RegExp(`@nx/js.*:.*${getPublishedVersion()}`));
     expect(output).not.toContain('@nrwl/express');
   });
 
@@ -85,10 +85,10 @@ describe('nx wrapper / .nx installation', () => {
     );
 
     expect(installedPluginLines.some((x) => x.includes(`${bold('nx')}`)));
-    expect(installedPluginLines.some((x) => x.includes(`${bold('@nrwl/js')}`)));
+    expect(installedPluginLines.some((x) => x.includes(`${bold('@nx/js')}`)));
 
-    output = runNxWrapper('list @nrwl/js');
-    expect(output).toContain('Capabilities in @nrwl/js');
+    output = runNxWrapper('list @nx/js');
+    expect(output).toContain('Capabilities in @nx/js');
   });
 
   it('should work with basic generators', () => {
