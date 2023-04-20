@@ -2,7 +2,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
 import { FileData } from '../config/project-graph';
 import { join, relative } from 'path';
-import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
+import { readdirSync, statSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';
 import { stripIndents } from '../utils/strip-indents';
 import ignore from 'ignore';
@@ -10,7 +10,7 @@ import { normalizePath } from '../utils/path';
 import { getIgnoreObject } from '../utils/ignore';
 
 export class NodeBasedFileHasher extends FileHasherBase {
-  ignoredGlobs = getIgnoredGlobs();
+  ignoredGlobs: ReturnType<typeof ignore> = getIgnoredGlobs();
 
   async init() {
     performance.mark('init hashing:start');
@@ -71,7 +71,7 @@ function getIgnoredGlobs() {
       node_modules
       tmp
       dist
-      build    
+      build
     `);
   return ig;
 }

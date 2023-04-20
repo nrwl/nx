@@ -50,7 +50,7 @@ export const getGlobalEsLintConfiguration = (
   unitTestRunner?: string,
   rootProject?: boolean
 ) => {
-  const config: ESLint.ConfigData = {
+  const config: LinterType.Config = {
     root: true,
     ignorePatterns: rootProject ? ['!**/*'] : ['**/*'],
     plugins: ['@nx'],
