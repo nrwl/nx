@@ -385,6 +385,30 @@ describe('app', () => {
         `);
       });
     });
+
+    describe('root level', () => {
+      it('should adjust eslint config for root level projects', async () => {
+        await applicationGenerator(tree, {
+          name: 'testApp',
+          style: 'css',
+          appDir: true,
+          rootProject: true,
+        });
+
+        const eslintJSON = readJson(tree, '.eslintrc.json');
+
+        expect(eslintJSON.extends).toMatchInlineSnapshot(
+          {},
+          `
+          [
+            "plugin:@nx/nx/react-typescript",
+            "next",
+            "next/core-web-vitals",
+          ]
+        `
+        );
+      });
+    });
   });
 
   describe('--js', () => {
