@@ -12,8 +12,11 @@ Some npm users are experiencing errors like the following:
 NX   Cannot find module '@nrwl/nx-linux-x64-gnu'
 ```
 
-This happens because the package-lock.json file was not correctly updated by npm, and missed optional dependencies used by Nx.
-You can read more about this [issue on the npm repository.](https://github.com/npm/cli/issues/4828)
+There are two reasons why this could potentially happen:
+
+1. Running your install command with `--no-optional` (or the relative flag in yarn, pnpm, etc)
+2. The package-lock.json file was not correctly updated by npm, and missed optional dependencies used by Nx.
+   You can read more about this [issue on the npm repository.](https://github.com/npm/cli/issues/4828)
 
 {% callout type="note" title="Updating Nx" %}
 When updating Nx that is already on 15.8, the package-lock.json should continue to be updated properly with all the proper optional dependencies.
@@ -21,7 +24,8 @@ When updating Nx that is already on 15.8, the package-lock.json should continue 
 
 ### How to fix
 
-Deleting your node_modules and `package-lock.json` and re-running `npm i` should make sure that everything is created properly in the newly generated `package-lock.json`.
+1. If you are running your install command with `--no-optional`, try again without the flag.
+2. Delete your node_modules and `package-lock.json` and re-run `npm i`. This should have the `package-lock.json` file updated properly.
 
 ### Supported native module platforms
 
