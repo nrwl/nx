@@ -140,7 +140,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@angular-devkit/core',
     '@angular-devkit/architect',
     '@angular/cli',
-    '@nx/angular',
+    '@nrwl/angular',
     '@nx/angular',
     '@nrwl/cli',
     'rxjs',

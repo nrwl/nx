@@ -60,7 +60,7 @@
       "options": {
         "commands": [
           "node ./scripts/copy-readme.js react",
-          "node ./scripts/add-dependency-to-build.js react @nx/react"
+          "node ./scripts/add-dependency-to-build.js react @nrwl/react"
         ]
       }
     },

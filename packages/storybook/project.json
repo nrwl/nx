@@ -70,7 +70,7 @@
       "options": {
         "commands": [
           "node ./scripts/copy-readme.js storybook",
-          "node ./scripts/add-dependency-to-build.js storybook @nx/storybook"
+          "node ./scripts/add-dependency-to-build.js storybook @nrwl/storybook"
         ]
       }
     },

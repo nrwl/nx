@@ -55,7 +55,7 @@
       "options": {
         "commands": [
           "node ./scripts/copy-readme.js next",
-          "node ./scripts/add-dependency-to-build.js next @nx/next"
+          "node ./scripts/add-dependency-to-build.js next @nrwl/next"
         ]
       }
     },

@@ -52,7 +52,7 @@
       "options": {
         "commands": [
           "node ./scripts/copy-readme.js js",
-          "node ./scripts/add-dependency-to-build.js js @nx/js"
+          "node ./scripts/add-dependency-to-build.js js @nrwl/js"
         ]
       }
     }

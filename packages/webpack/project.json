@@ -50,7 +50,7 @@
       "options": {
         "commands": [
           "node ./scripts/copy-readme.js webpack",
-          "node ./scripts/add-dependency-to-build.js webpack @nx/webpack"
+          "node ./scripts/add-dependency-to-build.js webpack @nrwl/webpack"
         ]
       }
     },

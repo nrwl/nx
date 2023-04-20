@@ -50,7 +50,7 @@
       "options": {
         "commands": [
           "node ./scripts/copy-readme.js cypress",
-          "node ./scripts/add-dependency-to-build.js cypress @nx/cypress"
+          "node ./scripts/add-dependency-to-build.js cypress @nrwl/cypress"
         ]
       }
     },

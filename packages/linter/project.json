@@ -50,7 +50,7 @@
       "options": {
         "commands": [
           "node ./scripts/copy-readme.js linter",
-          "node ./scripts/add-dependency-to-build.js linter @nx/linter"
+          "node ./scripts/add-dependency-to-build.js linter @nrwl/linter"
         ]
       }
     },

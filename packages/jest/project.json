@@ -50,7 +50,7 @@
       "options": {
         "commands": [
           "node ./scripts/copy-readme.js jest",
-          "node ./scripts/add-dependency-to-build.js jest @nx/jest"
+          "node ./scripts/add-dependency-to-build.js jest @nrwl/jest"
         ]
       }
     },

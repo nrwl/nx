@@ -50,7 +50,7 @@
       "options": {
         "commands": [
           "node ./scripts/copy-readme.js devkit",
-          "node ./scripts/add-dependency-to-build.js devkit @nx/devkit"
+          "node ./scripts/add-dependency-to-build.js devkit @nrwl/devkit"
         ]
       }
     },
