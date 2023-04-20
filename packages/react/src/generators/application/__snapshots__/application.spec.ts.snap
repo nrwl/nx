@@ -6,12 +6,12 @@ import styles from './app.module.css';
 
 export function App() {
   return (
-    <>
+    <div>
       <h1>
         <span> Hello there, </span>
         Welcome plain 👋
       </h1>
-    </>
+    </div>
   );
 }
 
@@ -49,9 +49,9 @@ import NxWelcome from './nx-welcome';
 
 export function App() {
   return (
-    <>
+    <div>
       <NxWelcome title="my-app" />
-    </>
+    </div>
   );
 }
 
@@ -67,9 +67,9 @@ import NxWelcome from './nx-welcome';
 
 export function App() {
   return (
-    <>
+    <div>
       <NxWelcome title="my-dir-my-app" />
-    </>
+    </div>
   );
 }
 
