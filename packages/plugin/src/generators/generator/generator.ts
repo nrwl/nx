@@ -62,7 +62,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
   const indexPath = `${options.projectSourceRoot}/generators/${options.fileName}/files/src/index.ts__template__`;
 
   if (!host.exists(indexPath)) {
-    host.write(indexPath, 'const variable = "<%= projectName %>";');
+    host.write(indexPath, 'const variable = "<%= name %>";');
   }
 
   generateFiles(

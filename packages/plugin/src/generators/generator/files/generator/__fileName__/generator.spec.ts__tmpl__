@@ -5,16 +5,16 @@ import generator from './generator';
 import { <%= className %>GeneratorSchema } from './schema';
 
 describe('<%= name %> generator', () => {
-  let appTree: Tree;
+  let tree: Tree;
   const options: <%= className %>GeneratorSchema = { name: 'test' };
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace({layout: 'apps-libs'});
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should run successfully', async () => {
-    await generator(appTree, options);
-    const config = readProjectConfiguration(appTree, 'test');
+    await generator(tree, options);
+    const config = readProjectConfiguration(tree, 'test');
     expect(config).toBeDefined();
   });
 });
