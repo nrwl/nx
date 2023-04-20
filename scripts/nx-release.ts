@@ -37,7 +37,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
   const parsedCurrentLatestVersion = parse(currentLatestVersion);
 
   const distTag =
-    parsedVersion?.prerelease?.length > 0
+    parsedVersion?.prerelease.length > 0
       ? 'next'
       : parsedVersion?.major < parsedCurrentLatestVersion.major
       ? 'previous'
@@ -83,7 +83,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     });
   }
 
-  const versionOptions: Record<string, any> = {
+  const versionOptions = {
     bump: options.version ? options.version : undefined,
     conventionalCommits: true,
     conventionalPrerelease: options.tag === 'next',

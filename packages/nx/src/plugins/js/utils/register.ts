@@ -51,14 +51,12 @@ export function registerTranspiler(
 
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
-  console.log('AÀasfasfasfasfasfasf');
-
   if (swcNodeInstalled && !preferTsNode) {
     // These are requires to prevent it from registering when it shouldn't
     const { register } =
       require('@swc-node/register/register') as typeof import('@swc-node/register/register');
 
-    registerTranspiler = () => () => register(compilerOptions);
+    registerTranspiler = () => register(compilerOptions);
   } else {
     // We can fall back on ts-node if it's available
 
