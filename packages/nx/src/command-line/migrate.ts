@@ -13,6 +13,7 @@ import {
   satisfies,
   valid,
 } from 'semver';
+import { URL } from 'url';
 import { promisify } from 'util';
 import {
   MigrationsJson,
@@ -933,14 +934,29 @@ async function getPackageMigrationsConfigFromRegistry(
   const result = await packageRegistryView(
     packageName,
     packageVersion,
-    'nx-migrations ng-update --json'
+    'nx-migrations ng-update dist --json'
   );
 
   if (!result) {
     return null;
   }
 
-  return readNxMigrateConfig(JSON.parse(result));
+  const json = JSON.parse(result);
+
+  if (!json['nx-migrations'] && !json['ng-update']) {
+    const registry = new URL('dist' in json ? json.dist.tarball : json.tarball)
+      .hostname;
+
+    // Registries other than npmjs and the local registry may not support full metadata via npm view
+    // so throw error so that fetcher falls back to getting config via install
+    if (!['registry.npmjs.org', 'localhost'].includes(registry)) {
+      throw new Error(
+        `Getting migration config from registry is not supported from ${registry}`
+      );
+    }
+  }
+
+  return readNxMigrateConfig(json);
 }
 
 async function downloadPackageMigrationsFromRegistry(
