@@ -72,10 +72,7 @@ export function withNx(_opts = {}) {
       plugins: config.plugins ?? [],
       resolve: {
         alias,
-        // This is not working it seems.
-        //plugins: [new TsconfigPathsPlugin({
-        //  configFile: path.resolve(__dirname, 'tsconfig.app.json')
-        //})]
+        tsConfigPath: path.resolve(__dirname, 'tsconfig.app.json'),
       },
       infrastructureLogging: {
         debug: false,
@@ -97,17 +94,9 @@ export function withNx(_opts = {}) {
     };
 
     if (options.optimization) {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const minifyPlugin = require('@rspack/plugin-minify');
       updated.optimization = {
         ...config.optimization,
         minimize: true,
-        minimizer: [
-          ...(config.optimization?.minimizer || []),
-          new minifyPlugin({
-            minifier: 'terser',
-          }),
-        ],
       };
     }
 
