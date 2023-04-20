@@ -26,6 +26,7 @@ export async function addLinting(
     unitTestRunner: options.unitTestRunner,
     eslintFilePatterns: [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
+    rootProject: options.rootProject,
   });
 
   if (options.linter === Linter.EsLint) {
