@@ -6290,6 +6290,46 @@ packages:
       - typescript
     dev: true
 
+  /@lerna/publish@6.0.0(nx@16.0.0-beta.0)(typescript@4.9.5):
+    resolution: {integrity: sha512-B2E5mkPzuIVywbcXgKsgGZWX30jHt4pYsAZWlzosevtKuqMbUSTzWdVjaPJ0zl6LFcnNSKcWi57wIj0DugMlLw==}
+    engines: {node: ^14.15.0 || >=16.0.0}
+    dependencies:
+      '@lerna/check-working-tree': 6.0.0
+      '@lerna/child-process': 6.0.0
+      '@lerna/collect-updates': 6.0.0
+      '@lerna/command': 6.0.0
+      '@lerna/describe-ref': 6.0.0
+      '@lerna/log-packed': 6.0.0
+      '@lerna/npm-conf': 6.0.0
+      '@lerna/npm-dist-tag': 6.0.0
+      '@lerna/npm-publish': 6.0.0
+      '@lerna/otplease': 6.0.0
+      '@lerna/output': 6.0.0
+      '@lerna/pack-directory': 6.0.0
+      '@lerna/prerelease-id-from-version': 6.0.0
+      '@lerna/prompt': 6.0.0
+      '@lerna/pulse-till-done': 6.0.0
+      '@lerna/run-lifecycle': 6.0.0
+      '@lerna/run-topologically': 6.0.0
+      '@lerna/validation-error': 6.0.0
+      '@lerna/version': 6.0.0(nx@16.0.0-beta.0)(typescript@4.9.5)
+      fs-extra: 9.1.0
+      libnpmaccess: 6.0.4
+      npm-package-arg: 8.1.1
+      npm-registry-fetch: 13.3.1
+      npmlog: 6.0.2
+      p-map: 4.0.0
+      p-pipe: 3.1.0
+      pacote: 13.6.2
+      semver: 7.3.4
+    transitivePeerDependencies:
+      - bluebird
+      - encoding
+      - nx
+      - supports-color
+      - typescript
+    dev: true
+
   /@lerna/pulse-till-done@6.0.0:
     resolution: {integrity: sha512-Ib7SFjUSOPOH8Fct8uB5fa0qbtIYtCxPQA4CI/xnWAOlsdpildLeYeByVNRngzDodHO9LSRS7hulAcE4my/4Tw==}
     engines: {node: ^14.15.0 || >=16.0.0}
@@ -6423,6 +6463,45 @@ packages:
       '@lerna/temp-write': 6.0.0
       '@lerna/validation-error': 6.0.0
       '@nrwl/devkit': 15.8.0(nx@15.9.2)(typescript@4.9.5)
+      chalk: 4.1.2
+      dedent: 0.7.0
+      load-json-file: 6.2.0
+      minimatch: 3.0.5
+      npmlog: 6.0.2
+      p-map: 4.0.0
+      p-pipe: 3.1.0
+      p-reduce: 2.1.0
+      p-waterfall: 2.1.1
+      semver: 7.3.4
+      slash: 3.0.0
+      write-json-file: 4.3.0
+    transitivePeerDependencies:
+      - bluebird
+      - encoding
+      - nx
+      - supports-color
+      - typescript
+    dev: true
+
+  /@lerna/version@6.0.0(nx@16.0.0-beta.0)(typescript@4.9.5):
+    resolution: {integrity: sha512-K1myNUkSttG6B54VwTNIC8EQwzJ/wtoceXx0lKOmyPJbe+7E3uYX+evc4lWJ6rmuc4PJGVPJaYLxDwCDIiVtbw==}
+    engines: {node: ^14.15.0 || >=16.0.0}
+    dependencies:
+      '@lerna/check-working-tree': 6.0.0
+      '@lerna/child-process': 6.0.0
+      '@lerna/collect-updates': 6.0.0
+      '@lerna/command': 6.0.0
+      '@lerna/conventional-commits': 6.0.0
+      '@lerna/github-client': 6.0.0
+      '@lerna/gitlab-client': 6.0.0
+      '@lerna/output': 6.0.0
+      '@lerna/prerelease-id-from-version': 6.0.0
+      '@lerna/prompt': 6.0.0
+      '@lerna/run-lifecycle': 6.0.0
+      '@lerna/run-topologically': 6.0.0
+      '@lerna/temp-write': 6.0.0
+      '@lerna/validation-error': 6.0.0
+      '@nrwl/devkit': 15.8.0(nx@16.0.0-beta.0)(typescript@4.9.5)
       chalk: 4.1.2
       dedent: 0.7.0
       load-json-file: 6.2.0

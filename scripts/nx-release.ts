@@ -7,8 +7,8 @@ import { join } from 'path';
 
 import { parse } from 'semver';
 
-import * as version from '@lerna/version/index';
-import * as publish from '@lerna/publish/index';
+import * as version from '@lerna/version';
+import * as publish from '@lerna/publish';
 
 const lernaJsonPath = join(__dirname, '../lerna.json');
 const originalLernaJson = readFileSync(lernaJsonPath);
@@ -37,7 +37,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
   const parsedCurrentLatestVersion = parse(currentLatestVersion);
 
   const distTag =
-    parsedVersion?.prerelease.length > 0
+    parsedVersion?.prerelease?.length > 0
       ? 'next'
       : parsedVersion?.major < parsedCurrentLatestVersion.major
       ? 'previous'
