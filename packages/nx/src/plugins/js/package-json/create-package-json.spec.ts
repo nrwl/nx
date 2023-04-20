@@ -1,10 +1,14 @@
 import * as fs from 'fs';
 
 import * as configModule from '../../../config/configuration';
-import { DependencyType } from '../../../config/project-graph';
+import { DependencyType, ProjectGraph } from '../../../config/project-graph';
 import * as hashModule from '../../../hasher/hasher';
 import { createPackageJson } from './create-package-json';
 import * as fileutilsModule from '../../../utils/fileutils';
+
+jest.mock('../../../utils/workspace-root', () => ({
+  workspaceRoot: '/root',
+}));
 
 describe('createPackageJson', () => {
   it('should add additional dependencies', () => {
@@ -498,5 +502,215 @@ describe('createPackageJson', () => {
       expect.anything()
     );
     expect(filterUsingGlobPatternsSpy).toHaveBeenCalledTimes(4);
+  });
+
+  describe('parsing "package.json" versions', () => {
+    const appDependencies = [
+      { source: 'app1', target: 'npm:@nx/devkit', type: 'static' },
+      { source: 'app1', target: 'npm:typescript', type: 'static' },
+    ];
+
+    const libDependencies = [
+      { source: 'lib1', target: 'npm:@nx/devkit', type: 'static' },
+      { source: 'lib1', target: 'npm:tslib', type: 'static' },
+      { source: 'lib1', target: 'npm:typescript', type: 'static' },
+    ];
+
+    const graph: ProjectGraph = {
+      nodes: {
+        app1: {
+          type: 'app',
+          name: 'app1',
+          data: {
+            files: [
+              {
+                file: '/root/apps/app1/src/main.ts',
+                hash: '',
+                dependencies: appDependencies,
+              },
+            ],
+            targets: {},
+            root: '/root/apps/app1',
+          },
+        },
+        lib1: {
+          type: 'lib',
+          name: 'lib1',
+          data: {
+            files: [
+              {
+                file: '/root/libs/lib1/index.ts',
+                hash: '',
+                dependencies: libDependencies,
+              },
+            ],
+            targets: {},
+            root: '/root/libs/lib1',
+          },
+        },
+      },
+      externalNodes: {
+        'npm:@nx/devkit': {
+          type: 'npm',
+          name: 'npm:@nx/devkit',
+          data: { version: '16.0.0', hash: '', packageName: '@nx/devkit' },
+        },
+        'npm:nx': {
+          type: 'npm',
+          name: 'npm:nx',
+          data: { version: '16.0.0', hash: '', packageName: 'nx' },
+        },
+        'npm:tslib': {
+          type: 'npm',
+          name: 'npm:tslib',
+          data: { version: '2.4.4', hash: '', packageName: 'tslib' },
+        },
+        'npm:typescript': {
+          type: 'npm',
+          name: 'npm:typescript',
+          data: { version: '4.9.5', hash: '', packageName: 'typescript' },
+        },
+      },
+      dependencies: {
+        app1: appDependencies,
+        lib1: libDependencies,
+      },
+    };
+
+    const rootPackageJson = () => ({
+      dependencies: {
+        '@nx/devkit': '~16.0.0',
+        nx: '> 14',
+        typescript: '^4.8.2',
+        tslib: '~2.4.0',
+      },
+    });
+
+    const projectPackageJson = () => ({
+      name: 'other-name',
+      version: '1.2.3',
+      dependencies: {
+        typescript: '^4.8.4',
+        random: '1.0.0',
+      },
+    });
+
+    const spies = [];
+
+    afterEach(() => {
+      while (spies.length > 0) {
+        spies.pop().mockRestore();
+      }
+    });
+
+    it('should use fixed versions when creating package json for apps', () => {
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === '/root/package.json') {
+              return rootPackageJson();
+            }
+          })
+      );
+
+      expect(createPackageJson('app1', graph)).toEqual({
+        dependencies: {
+          '@nx/devkit': '16.0.0',
+          nx: '16.0.0',
+          typescript: '4.9.5',
+        },
+        name: 'app1',
+        version: '0.0.1',
+      });
+    });
+
+    it('should override fixed versions with local ranges when creating package json for apps', () => {
+      spies.push(
+        jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
+          if (path === '/root/apps/app1/package.json') {
+            return true;
+          }
+        })
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === '/root/package.json') {
+              return rootPackageJson();
+            }
+            if (path === '/root/apps/app1/package.json') {
+              return projectPackageJson();
+            }
+          })
+      );
+
+      expect(createPackageJson('app1', graph)).toEqual({
+        dependencies: {
+          '@nx/devkit': '16.0.0',
+          nx: '16.0.0',
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+      });
+    });
+
+    it('should use range versions when creating package json for libs', () => {
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === '/root/package.json') {
+              return rootPackageJson();
+            }
+          })
+      );
+
+      expect(createPackageJson('lib1', graph)).toEqual({
+        dependencies: {
+          '@nx/devkit': '~16.0.0',
+          tslib: '~2.4.0',
+          typescript: '^4.8.2',
+        },
+        name: 'lib1',
+        version: '0.0.1',
+      });
+    });
+
+    it('should override range versions with local ranges when creating package json for libs', () => {
+      spies.push(
+        jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
+          if (path === '/root/libs/lib1/package.json') {
+            return true;
+          }
+        })
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === '/root/package.json') {
+              return rootPackageJson();
+            }
+            if (path === '/root/libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+          })
+      );
+
+      expect(createPackageJson('lib1', graph)).toEqual({
+        dependencies: {
+          '@nx/devkit': '~16.0.0',
+          random: '1.0.0',
+          tslib: '~2.4.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+      });
+    });
   });
 });

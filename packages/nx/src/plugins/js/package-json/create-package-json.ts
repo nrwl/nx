@@ -36,6 +36,7 @@ export function createPackageJson(
   } = {}
 ): PackageJson {
   const projectNode = graph.nodes[projectName];
+  const isLibrary = projectNode.type === 'lib';
 
   const { selfInputs, dependencyInputs } = options.target
     ? getTargetInputs(readNxJson(), projectNode, options.target)
@@ -91,6 +92,18 @@ export function createPackageJson(
     } catch (e) {}
   }
 
+  const getVersion = (
+    packageName,
+    version,
+    section: 'devDependencies' | 'dependencies'
+  ) => {
+    return (
+      packageJson[section][packageName] ||
+      (isLibrary && rootPackageJson[section]?.[packageName]) ||
+      version
+    );
+  };
+
   const rootPackageJson = readJsonFile(
     `${options.root || workspaceRoot}/package.json`
   );
@@ -103,44 +116,64 @@ export function createPackageJson(
       // don't store dev dependencies for production
       if (!options.isProduction) {
         packageJson.devDependencies ??= {};
-        packageJson.devDependencies[packageName] = version;
+        packageJson.devDependencies[packageName] = getVersion(
+          packageName,
+          version,
+          'devDependencies'
+        );
       }
     } else {
       if (!packageJson.peerDependencies?.[packageName]) {
         packageJson.dependencies ??= {};
-        packageJson.dependencies[packageName] = version;
+        packageJson.dependencies[packageName] = getVersion(
+          packageName,
+          version,
+          'dependencies'
+        );
       }
     }
   });
-  Object.entries(npmDeps.peerDependencies).forEach(([packageName, version]) => {
-    if (!packageJson.peerDependencies?.[packageName]) {
-      if (rootPackageJson.dependencies?.[packageName]) {
-        packageJson.dependencies ??= {};
-        packageJson.dependencies[packageName] = version;
-        return;
-      }
+  if (!isLibrary) {
+    Object.entries(npmDeps.peerDependencies).forEach(
+      ([packageName, version]) => {
+        if (!packageJson.peerDependencies?.[packageName]) {
+          if (rootPackageJson.dependencies?.[packageName]) {
+            packageJson.dependencies ??= {};
+            packageJson.dependencies[packageName] = getVersion(
+              packageName,
+              version,
+              'dependencies'
+            );
+            return;
+          }
 
-      const isOptionalPeer =
-        npmDeps.peerDependenciesMeta[packageName]?.optional;
-      if (!isOptionalPeer) {
-        if (
-          !options.isProduction ||
-          rootPackageJson.dependencies?.[packageName]
-        ) {
-          packageJson.peerDependencies ??= {};
-          packageJson.peerDependencies[packageName] = version;
+          const isOptionalPeer =
+            npmDeps.peerDependenciesMeta[packageName]?.optional;
+          if (!isOptionalPeer) {
+            if (
+              !options.isProduction ||
+              rootPackageJson.dependencies?.[packageName]
+            ) {
+              packageJson.peerDependencies ??= {};
+              packageJson.peerDependencies[packageName] = getVersion(
+                packageName,
+                version,
+                'dependencies'
+              );
+            }
+          } else if (!options.isProduction) {
+            // add peer optional dependencies if not in production
+            packageJson.peerDependencies ??= {};
+            packageJson.peerDependencies[packageName] = version;
+            packageJson.peerDependenciesMeta ??= {};
+            packageJson.peerDependenciesMeta[packageName] = {
+              optional: true,
+            };
+          }
         }
-      } else if (!options.isProduction) {
-        // add peer optional dependencies if not in production
-        packageJson.peerDependencies ??= {};
-        packageJson.peerDependencies[packageName] = version;
-        packageJson.peerDependenciesMeta ??= {};
-        packageJson.peerDependenciesMeta[packageName] = {
-          optional: true,
-        };
       }
-    }
-  });
+    );
+  }
 
   packageJson.devDependencies &&= sortObjectByKeys(packageJson.devDependencies);
   packageJson.dependencies &&= sortObjectByKeys(packageJson.dependencies);

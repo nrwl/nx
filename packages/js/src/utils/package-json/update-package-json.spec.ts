@@ -440,8 +440,8 @@ describe('updatePackageJson', () => {
     expect(distPackageJson).toMatchInlineSnapshot(`
       {
         "dependencies": {
-          "external1": "1.0.0",
-          "external2": "4.5.6",
+          "external1": "~1.0.0",
+          "external2": "^4.0.0",
         },
         "main": "./main.js",
         "name": "@org/lib1",
