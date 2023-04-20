@@ -83,7 +83,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     });
   }
 
-  const versionOptions = {
+  const versionOptions: Record<string, any> = {
     bump: options.version ? options.version : undefined,
     conventionalCommits: true,
     conventionalPrerelease: options.tag === 'next',
