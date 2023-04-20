@@ -22,6 +22,7 @@ import {
 import { moveGenerator } from '../../generators/move/move';
 import { nxVersion } from '../../utils/versions';
 import { PackageJson } from 'nx/src/utils/package-json';
+import { posix } from 'path';
 
 const PROJECT_NAME = 'workspace-plugin';
 const DESTINATION = `tools/${PROJECT_NAME}`;
@@ -47,12 +48,23 @@ export default async function (tree: Tree) {
     project = readProjectConfiguration(tree, PROJECT_NAME);
   }
   await updateExistingPlugin(tree, project);
+  removeToolsGeneratorsIfEmpty(tree);
   await formatFiles(tree);
   return () => {
     for (const task of tasks) {
       task();
     }
   };
+}
+
+function removeToolsGeneratorsIfEmpty(tree: Tree) {
+  const children = tree.children('tools/generators');
+  if (
+    children.length === 0 ||
+    (children.length === 1 && children[0] === '.gitkeep')
+  ) {
+    tree.delete('tools/generators');
+  }
 }
 
 // Inspired by packages/nx/src/command-line/workspace-generators.ts
@@ -74,10 +86,69 @@ function collectAndMoveGenerators(tree: Tree, destinationProjectRoot: string) {
         schema: `./src/generators/${joinPathFragments(c, 'schema.json')}`,
         description: schema.description ?? `Generator ${c}`,
       };
-      tree.rename(childDir, joinPathFragments(destinationDir, c));
+      moveFilesInDirectory(
+        tree,
+        childDir,
+        joinPathFragments(destinationDir, c)
+      );
     }
   }
   return generators;
+}
+
+function moveFilesInDirectory(tree: Tree, source: string, destination: string) {
+  const relative = posix.relative(source, posix.dirname(destination));
+  if (!relative.startsWith('../')) {
+    // If the destination is in the same directory or a subdirectory of the source
+    // we can just move the files. If it is not, we need to update the relative imports.
+    return;
+  }
+  let offsetLevel = 0;
+  const pathParts = relative.split('/');
+  for (const part of pathParts) {
+    if (part === '..') {
+      offsetLevel++;
+    } else {
+      break;
+    }
+  }
+  for (const c of tree.children(source)) {
+    if (!tree.isFile(c)) {
+      moveFilesInDirectory(
+        tree,
+        joinPathFragments(source, c),
+        joinPathFragments(destination, c)
+      );
+    }
+    tree.rename(
+      joinPathFragments(source, c),
+      joinPathFragments(destination, c)
+    );
+    // If its a TS file we can update relative imports with find + replace
+    // This could be done with AST, but since we are only looking at relative
+    // imports its easy to do via string replace. We replace any strings starting
+    // with a relative path outside of their own directory.
+    if (c.endsWith('.ts')) {
+      let content = tree.read(joinPathFragments(destination, c)).toString();
+      // +2 is a bit of a magic number here - represents extra directory levels in a normal
+      // plugin structure compared to the workspace-generator layout
+      const extraDirectoriesInPluginStructure = 2;
+      content = content.replace(
+        new RegExp(`'` + `\.\.\/`.repeat(offsetLevel), 'g'),
+        "'" + '../'.repeat(offsetLevel + extraDirectoriesInPluginStructure)
+      );
+      content = content.replace(
+        new RegExp(`"` + `\.\.\/`.repeat(offsetLevel), 'g'),
+        '"' + '../'.repeat(offsetLevel + extraDirectoriesInPluginStructure)
+      );
+      // We write it back in the same spot, since it is moved as if it was a regular file after this
+      tree.write(joinPathFragments(source, c), content);
+    }
+    tree.rename(
+      joinPathFragments(source, c),
+      joinPathFragments(destination, c)
+    );
+  }
 }
 
 async function createNewPlugin(tree: Tree) {
@@ -90,7 +161,7 @@ async function createNewPlugin(tree: Tree) {
   const { Linter } = ensurePackage('@nx/linter', nxVersion);
 
   const { npmScope } = getWorkspaceLayout(tree);
-  const importPath = npmScope ? `${npmScope}/${PROJECT_NAME}` : PROJECT_NAME;
+  const importPath = npmScope ? `@${npmScope}/${PROJECT_NAME}` : PROJECT_NAME;
 
   await pluginGenerator(tree, {
     minimal: true,
