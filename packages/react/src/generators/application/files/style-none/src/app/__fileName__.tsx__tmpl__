@@ -21,7 +21,6 @@ export function App() {
         Welcome <%= projectName %> 👋
       </h1>
      <% } %>
-      <div />
     </>);
 <% if (classComponent) { %>
   }
