@@ -135,6 +135,7 @@ export function runCreateWorkspace(
     bundler,
     routing,
     standaloneApi,
+    nextAppDir,
   }: {
     preset: string;
     appName?: string;
@@ -148,6 +149,7 @@ export function runCreateWorkspace(
     bundler?: 'webpack' | 'vite';
     standaloneApi?: boolean;
     routing?: boolean;
+    nextAppDir?: boolean;
   }
 ) {
   projName = name;
@@ -167,6 +169,10 @@ export function runCreateWorkspace(
 
   if (bundler) {
     command += ` --bundler=${bundler}`;
+  }
+
+  if (nextAppDir) {
+    command += ` --nextAppDir=${nextAppDir}`;
   }
 
   if (standaloneApi !== undefined) {
