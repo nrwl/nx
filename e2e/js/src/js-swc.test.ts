@@ -94,8 +94,7 @@ describe('js e2e', () => {
     runCLI(`build ${lib} --generateLockfile=true`);
     checkFilesExist(
       `dist/libs/${lib}/package.json`,
-      `dist/libs/${lib}/${
-        packageManagerLockFile[detectPackageManager(tmpProjPath())]
+      `dist/libs/${lib}/${packageManagerLockFile[detectPackageManager(tmpProjPath())]
       }`
     );
 
@@ -157,6 +156,15 @@ myLib();
 
     // now run build without type checking (since we're using path mappings not in tsconfig)
     runCLI(`build ${lib} --skipTypeCheck`);
+
+    const folderPrint = execSync(`ls -la`, {
+      cwd: `${tmpProjPath()}/dist/libs/${lib}/src`,
+    }).toString();
+    const folderPrint2 = execSync(`cat ${lib}.js`, {
+      cwd: `${tmpProjPath()}/dist/libs/${lib}/src/lib`,
+    }).toString();
+
+    console.log(folderPrint, folderPrint2);
 
     // invoke the lib with node
     const result = execSync(`node dist/libs/${lib}/src/lib/${lib}.js`, {
