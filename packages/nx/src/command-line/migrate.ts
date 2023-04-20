@@ -949,7 +949,11 @@ async function getPackageMigrationsConfigFromRegistry(
 
     // Registries other than npmjs and the local registry may not support full metadata via npm view
     // so throw error so that fetcher falls back to getting config via install
-    if (!['registry.npmjs.org', 'localhost'].includes(registry)) {
+    if (
+      !['registry.npmjs.org', 'localhost', 'artifactory'].some((v) =>
+        registry.includes(v)
+      )
+    ) {
       throw new Error(
         `Getting migration config from registry is not supported from ${registry}`
       );
