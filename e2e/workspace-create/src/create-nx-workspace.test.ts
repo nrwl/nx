@@ -11,7 +11,7 @@ import {
   readJson,
   runCreateWorkspace,
   uniq,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { existsSync, mkdirSync } from 'fs-extra';
 
 describe('create-nx-workspace', () => {

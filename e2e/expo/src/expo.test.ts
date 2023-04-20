@@ -12,7 +12,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { join } from 'path';
 
 describe('expo', () => {
@@ -22,9 +22,9 @@ describe('expo', () => {
 
   beforeAll(() => {
     proj = newProject();
-    runCLI(`generate @nrwl/expo:application ${appName} --no-interactive`);
+    runCLI(`generate @nx/expo:application ${appName} --no-interactive`);
     runCLI(
-      `generate @nrwl/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
+      `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
     );
   });
   afterAll(() => cleanupProject());
@@ -33,7 +33,7 @@ describe('expo', () => {
     const componentName = uniq('component');
 
     runCLI(
-      `generate @nrwl/expo:component ${componentName} --project=${libName} --export --no-interactive`
+      `generate @nx/expo:component ${componentName} --project=${libName} --export --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {

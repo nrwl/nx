@@ -7,7 +7,7 @@ import {
   runCommandUntil,
   tmpProjPath,
   uniq,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { writeFileSync } from 'fs';
 
 // TODO: re-enable once the issue is fixed with long build times

@@ -22,7 +22,7 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
 import { getLockFileName } from '@nx/js';
@@ -55,7 +55,7 @@ describe('Node Applications', () => {
   it('should be able to generate an empty application', async () => {
     const nodeapp = uniq('nodeapp');
 
-    runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+    runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -72,7 +72,7 @@ describe('Node Applications', () => {
 
   it('should be able to generate the correct outputFileName in options', async () => {
     const nodeapp = uniq('nodeapp');
-    runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+    runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
 
     updateProjectConfig(nodeapp, (config) => {
       config.targets.build.options.outputFileName = 'index.js';
@@ -87,7 +87,7 @@ describe('Node Applications', () => {
     const nodeapp = uniq('nodeapp');
 
     runCLI(
-      `generate @nrwl/node:app ${nodeapp} --linter=eslint --bundler=webpack`
+      `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack`
     );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
@@ -134,7 +134,7 @@ describe('Node Applications', () => {
     const port = 3456;
     process.env.PORT = `${port}`;
 
-    runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
+    runCLI(`generate @nx/express:app ${nodeapp} --linter=eslint`);
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting.');
 
@@ -175,7 +175,7 @@ describe('Node Applications', () => {
   xit('should be able to generate a nest application', async () => {
     const nestapp = uniq('nestapp');
     const port = 3335;
-    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+    runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
 
     const lintResults = runCLI(`lint ${nestapp}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -241,7 +241,7 @@ describe('Build Node apps', () => {
     const scope = newProject();
     const packageManager = detectPackageManager(tmpProjPath());
     const nestapp = uniq('nestapp');
-    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+    runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
 
     await runCLIAsync(`build ${nestapp} --generatePackageJson`);
 
@@ -302,10 +302,10 @@ describe('Build Node apps', () => {
     });
 
     const nodeapp = uniq('nodeapp');
-    runCLI(`generate @nrwl/node:app ${nodeapp} --bundler=webpack`);
+    runCLI(`generate @nx/node:app ${nodeapp} --bundler=webpack`);
 
     const jslib = uniq('jslib');
-    runCLI(`generate @nrwl/js:lib ${jslib} --bundler=tsc`);
+    runCLI(`generate @nx/js:lib ${jslib} --bundler=tsc`);
 
     updateFile(
       `apps/${nodeapp}/src/main.ts`,
@@ -342,7 +342,7 @@ ${jslib}();
   it('should remove previous output before building with the --deleteOutputPath option set', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/node:app ${appName} --no-interactive`);
+    runCLI(`generate @nx/node:app ${appName} --no-interactive`);
 
     // deleteOutputPath should default to true
     createFile(`dist/apps/${appName}/_should_remove.txt`);
@@ -378,7 +378,7 @@ ${jslib}();
     it('should have plugin output if specified in `tsPlugins`', async () => {
       newProject();
       const nestapp = uniq('nestapp');
-      runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+      runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
 
       packageInstall('@nestjs/swagger', undefined, '^6.0.0');
 
@@ -435,7 +435,7 @@ describe('nest libraries', function () {
 
   it('should be able to generate a nest library', async () => {
     const nestlib = uniq('nestlib');
-    runCLI(`generate @nrwl/nest:lib ${nestlib}`);
+    runCLI(`generate @nx/nest:lib ${nestlib}`);
 
     const lintResults = runCLI(`lint ${nestlib}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -449,7 +449,7 @@ describe('nest libraries', function () {
   it('should be able to generate a nest library w/ service', async () => {
     const nestlib = uniq('nestlib');
 
-    runCLI(`generate @nrwl/nest:lib ${nestlib} --service`);
+    runCLI(`generate @nx/nest:lib ${nestlib} --service`);
 
     const lintResults = runCLI(`lint ${nestlib}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -463,7 +463,7 @@ describe('nest libraries', function () {
   it('should be able to generate a nest library w/ controller', async () => {
     const nestlib = uniq('nestlib');
 
-    runCLI(`generate @nrwl/nest:lib ${nestlib} --controller`);
+    runCLI(`generate @nx/nest:lib ${nestlib} --controller`);
 
     const lintResults = runCLI(`lint ${nestlib}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -477,7 +477,7 @@ describe('nest libraries', function () {
   it('should be able to generate a nest library w/ controller and service', async () => {
     const nestlib = uniq('nestlib');
 
-    runCLI(`generate @nrwl/nest:lib ${nestlib} --controller --service`);
+    runCLI(`generate @nx/nest:lib ${nestlib} --controller --service`);
 
     const lintResults = runCLI(`lint ${nestlib}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -491,7 +491,7 @@ describe('nest libraries', function () {
   it('should have plugin output if specified in `transformers`', async () => {
     newProject();
     const nestlib = uniq('nestlib');
-    runCLI(`generate @nrwl/nest:lib ${nestlib} --buildable`);
+    runCLI(`generate @nx/nest:lib ${nestlib} --buildable`);
 
     packageInstall('@nestjs/swagger', undefined, '~6.0.0');
 
@@ -537,6 +537,6 @@ exports.FooModel = FooModel;
   }, 300000);
 
   it('should run default jest tests', async () => {
-    await expectJestTestsToPass('@nrwl/node:lib');
+    await expectJestTestsToPass('@nx/node:lib');
   }, 100000);
 });

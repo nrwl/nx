@@ -8,7 +8,7 @@ import {
   runCypressTests,
   tmpProjPath,
   uniq,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { writeFileSync } from 'fs';
 
 describe('Storybook executors for Angular', () => {
