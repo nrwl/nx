@@ -30,7 +30,6 @@ import { join } from 'path';
 
 import { initGenerator } from '../init/init';
 import {
-  esbuildVersion,
   expressTypingsVersion,
   expressVersion,
   fastifyAutoloadVersion,
@@ -46,6 +45,7 @@ import { setupDockerGenerator } from '../setup-docker/setup-docker';
 
 import { Schema } from './schema';
 import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
+import { esbuildVersion } from '@nx/js/src/utils/versions';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
