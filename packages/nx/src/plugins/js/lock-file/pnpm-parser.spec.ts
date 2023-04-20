@@ -3,7 +3,7 @@ import { parsePnpmLockfile, stringifyPnpmLockfile } from './pnpm-parser';
 import { ProjectGraph } from '../../../config/project-graph';
 import { vol } from 'memfs';
 import { pruneProjectGraph } from './project-graph-pruning';
-import { ProjectGraphBuilder } from 'nx/src/project-graph/project-graph-builder';
+import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 
 jest.mock('fs', () => require('memfs').fs);
 

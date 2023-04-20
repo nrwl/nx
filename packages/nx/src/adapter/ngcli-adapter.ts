@@ -50,7 +50,7 @@ import {
   ExecutorsJson,
   TaskGraphExecutor,
 } from '../config/misc-interfaces';
-import { readPluginPackageJson } from 'nx/src/utils/nx-plugin';
+import { readPluginPackageJson } from '../utils/nx-plugin';
 
 class WrappedWorkspaceNodeModulesArchitectHost extends WorkspaceNodeModulesArchitectHost {
   private workspaces = new Workspaces(this.root);

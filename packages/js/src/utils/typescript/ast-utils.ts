@@ -2,6 +2,7 @@ import type { Tree } from '@nx/devkit';
 import type * as ts from 'typescript';
 // TODO(colum): replace when https://github.com/nrwl/nx/pull/15497 is merged
 import { getSourceNodes } from '@nx/workspace/src/utilities/typescript';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { findNodes } from 'nx/src/plugins/js/utils/typescript';
 import { ensureTypescript } from './ensure-typescript';
 

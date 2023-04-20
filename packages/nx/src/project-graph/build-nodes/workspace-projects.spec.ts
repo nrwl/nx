@@ -1,4 +1,4 @@
-import { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
+import { ProjectGraphProjectNode } from '../../config/project-graph';
 import { normalizeImplicitDependencies } from './workspace-projects';
 
 describe('workspace-projects', () => {
