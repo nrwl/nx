@@ -60,7 +60,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       nxCloud && nxCloudInstallRes?.code === 0
     );
   }
-  if (!skipGit) {
+  if (!skipGit && commit) {
     try {
       await initializeGitRepo(directory, { defaultBase, commit });
     } catch (e) {

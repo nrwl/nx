@@ -4,8 +4,6 @@ import {
   joinPathFragments,
   Tree,
   writeJson,
-} from '@nx/devkit';
-import {
   convertNxGenerator,
   generateFiles,
   getWorkspaceLayout,

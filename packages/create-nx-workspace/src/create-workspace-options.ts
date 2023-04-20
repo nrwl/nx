@@ -1,9 +1,11 @@
 import { PackageManager } from './utils/package-manager';
+import { CI } from './utils/ci/ci-list';
 
 export interface CreateWorkspaceOptions {
   name: string; // Workspace name (e.g. org name)
   packageManager: PackageManager; // Package manager to use
   nxCloud: boolean; // Enable Nx Cloud
+  presetVersion?: string; // Version of the preset to use
   /**
    * @description Enable interactive mode with presets
    * @default true

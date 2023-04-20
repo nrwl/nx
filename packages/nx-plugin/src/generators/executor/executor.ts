@@ -9,6 +9,7 @@ import {
   writeJson,
   readJson,
   ExecutorsJson,
+  formatFiles,
 } from '@nx/devkit';
 import type { Tree } from '@nx/devkit';
 import type { Schema } from './schema';
@@ -176,6 +177,10 @@ export async function executorGenerator(host: Tree, schema: Schema) {
   }
 
   await updateExecutorJson(host, options);
+
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default executorGenerator;

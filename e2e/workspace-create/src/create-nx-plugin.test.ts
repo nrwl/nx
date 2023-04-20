@@ -21,6 +21,7 @@ describe('create-nx-plugin', () => {
 
     runCreatePlugin(pluginName, {
       packageManager,
+      extraArgs: `--createPackageName='false'`,
     });
 
     checkFilesExist(
@@ -31,7 +32,7 @@ describe('create-nx-plugin', () => {
 
     runCLI(`build ${pluginName}`);
 
-    checkFilesExist(`dist/package.json`);
+    checkFilesExist(`dist/package.json`, `dist/src/index.js`);
 
     runCLI(
       `generate @nrwl/nx-plugin:generator ${generatorName} --project=${pluginName}`
@@ -47,5 +48,23 @@ describe('create-nx-plugin', () => {
       `dist/generators.json`,
       `dist/executors.json`
     );
+  });
+
+  it('should be able to create a repo with create workspace cli', () => {
+    const pluginName = uniq('plugin');
+
+    runCreatePlugin(pluginName, {
+      packageManager,
+      extraArgs: `--createPackageName=create-${pluginName}-package`,
+    });
+
+    runCLI(`build ${pluginName}`);
+    checkFilesExist(`dist/package.json`, `dist/generators.json`);
+
+    runCLI(`build create-${pluginName}-package`);
+    checkFilesExist(`dist/create-${pluginName}-package/bin/index.js`);
+
+    expect(() => runCLI(`e2e e2e`)).not.toThrow();
+    expect(() => runCLI(`e2e create-${pluginName}-package-e2e`)).not.toThrow();
   });
 });

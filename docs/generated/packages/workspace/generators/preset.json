@@ -92,6 +92,7 @@
         "enum": ["cypress", "jest", "detox", "none"]
       }
     },
+    "required": ["preset", "name"],
     "presets": []
   },
   "description": "Create application in an empty workspace.",

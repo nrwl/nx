@@ -43,34 +43,44 @@ export const yargsDecorator = {
 
 const nxVersion = require('../package.json').version;
 
-function determinePluginName(parsedArgs: CreateNxPluginArguments) {
+async function determinePluginName(
+  parsedArgs: CreateNxPluginArguments
+): Promise<string> {
   if (parsedArgs.pluginName) {
-    return Promise.resolve(parsedArgs.pluginName);
+    return parsedArgs.pluginName;
   }
 
-  return enquirer
-    .prompt([
-      {
-        name: 'pluginName',
-        message: `Plugin name                        `,
-        type: 'input',
-        validate: (s) => (s.length ? true : 'Name cannot be empty'),
-      },
-    ])
-    .then((a: { pluginName: string }) => {
-      if (!a.pluginName) {
-        output.error({
-          title: 'Invalid name',
-          bodyLines: [`Name cannot be empty`],
-        });
-        process.exit(1);
-      }
-      return a.pluginName;
-    });
+  const results = await enquirer.prompt<{ pluginName: string }>([
+    {
+      name: 'pluginName',
+      message: `Plugin name                        `,
+      type: 'input',
+      validate: (s_1) => (s_1.length ? true : 'Plugin name cannot be empty'),
+    },
+  ]);
+  return results.pluginName;
+}
+
+async function determineCreatePackageName(
+  parsedArgs: CreateNxPluginArguments
+): Promise<string> {
+  if (parsedArgs.createPackageName) {
+    return parsedArgs.createPackageName;
+  }
+
+  const results = await enquirer.prompt<{ createPackageName: string }>([
+    {
+      name: 'createPackageName',
+      message: `Create a package which can be used by npx to create a new workspace (Leave blank to not create this package)`,
+      type: 'input',
+    },
+  ]);
+  return results.createPackageName;
 }
 
 interface CreateNxPluginArguments {
   pluginName: string;
+  createPackageName?: string;
   packageManager: PackageManager;
   ci: CI;
   allPrompts: boolean;
@@ -89,11 +99,16 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
     'Create a new Nx plugin workspace',
     (yargs) =>
       withOptions(
-        yargs.positional('pluginName', {
-          describe: chalk.dim`Plugin name`,
-          type: 'string',
-          alias: ['name'],
-        }),
+        yargs
+          .positional('pluginName', {
+            describe: chalk.dim`Plugin name`,
+            type: 'string',
+            alias: ['name'],
+          })
+          .option('createPackageName', {
+            describe: 'Name of the CLI package to create workspace with plugin',
+            type: 'string',
+          }),
         withNxCloud,
         withCI,
         withAllPrompts,
@@ -164,19 +179,21 @@ async function normalizeArgsMiddleware(
   argv: yargs.Arguments<CreateNxPluginArguments>
 ): Promise<void> {
   try {
-    const name = await determinePluginName(argv);
+    const pluginName = await determinePluginName(argv);
+    const createPackageName = await determineCreatePackageName(argv);
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud = await determineNxCloud(argv);
     const ci = await determineCI(argv, nxCloud);
 
     Object.assign(argv, {
-      name,
+      pluginName,
+      createPackageName,
       nxCloud,
       packageManager,
       defaultBase,
       ci,
-    });
+    } as Partial<CreateNxPluginArguments & CreateWorkspaceOptions>);
   } catch (e) {
     console.error(e);
     process.exit(1);

@@ -221,6 +221,7 @@ async function normalizeArgsMiddleware(
         } else if (monorepoStyle === 'node-standalone') {
           preset = Preset.NodeStandalone;
         } else {
+          // when choose integrated monorepo, further prompt for preset
           preset = await determinePreset(argv);
         }
       } else if (argv.preset === 'react') {

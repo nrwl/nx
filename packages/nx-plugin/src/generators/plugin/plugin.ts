@@ -3,9 +3,10 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
-  installPackagesTask,
+  GeneratorCallback,
   normalizePath,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
@@ -73,55 +74,65 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
 
 export async function pluginGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
+  const tasks: GeneratorCallback[] = [];
 
-  await jsLibraryGenerator(host, {
-    ...schema,
-    config: 'project',
-    bundler: options.bundler,
-    importPath: options.npmPackageName,
-    skipFormat: true,
-  });
+  tasks.push(
+    await jsLibraryGenerator(host, {
+      ...schema,
+      config: 'project',
+      bundler: options.bundler,
+      publishable: true,
+      importPath: options.npmPackageName,
+      skipFormat: true,
+    })
+  );
 
-  addTsLibDependencies(host);
+  tasks.push(addTsLibDependencies(host));
 
-  addDependenciesToPackageJson(
-    host,
-    {
-      '@nx/devkit': nxVersion,
-    },
-    {
-      '@nx/jest': nxVersion,
-      '@nx/js': nxVersion,
-      '@nx/nx-plugin': nxVersion,
-    }
+  tasks.push(
+    addDependenciesToPackageJson(
+      host,
+      {
+        '@nx/devkit': nxVersion,
+      },
+      {
+        '@nx/jest': nxVersion,
+        '@nx/js': nxVersion,
+        '@nx/nx-plugin': nxVersion,
+      }
+    )
   );
 
   // Ensures Swc Deps are installed to handle running
   // local plugin generators and executors
-  addSwcDependencies(host);
-  addSwcRegisterDependencies(host);
+  tasks.push(addSwcDependencies(host));
+  tasks.push(addSwcRegisterDependencies(host));
 
   await addFiles(host, options);
   updatePluginConfig(host, options);
 
   if (options.e2eTestRunner !== 'none') {
-    await e2eProjectGenerator(host, {
-      pluginName: options.name,
-      projectDirectory: options.projectDirectory,
-      pluginOutputPath: `dist/${options.libsDir}/${options.projectDirectory}`,
-      npmPackageName: options.npmPackageName,
-      skipFormat: true,
-      rootProject: options.rootProject,
-    });
+    tasks.push(
+      await e2eProjectGenerator(host, {
+        pluginName: options.name,
+        projectDirectory: options.projectDirectory,
+        pluginOutputPath: `dist/${options.libsDir}/${options.projectDirectory}`,
+        npmPackageName: options.npmPackageName,
+        skipFormat: true,
+        rootProject: options.rootProject,
+      })
+    );
   }
 
   if (options.linter === Linter.EsLint && !options.skipLintChecks) {
     await pluginLintCheckGenerator(host, { projectName: options.name });
   }
 
-  await formatFiles(host);
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 
-  return () => installPackagesTask(host);
+  return runTasksInSerial(...tasks);
 }
 
 export default pluginGenerator;

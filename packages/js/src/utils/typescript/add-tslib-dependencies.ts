@@ -2,7 +2,7 @@ import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
 import { tsLibVersion } from '../versions';
 
 export function addTsLibDependencies(tree: Tree) {
-  addDependenciesToPackageJson(
+  return addDependenciesToPackageJson(
     tree,
     {
       tslib: tsLibVersion,

@@ -1,3 +1,9 @@
+import { workspaceRoot } from '@nx/devkit';
+
+export function tmpFolder() {
+  return `${workspaceRoot}/tmp`;
+}
+
 /**
  * The directory where the e2e workspace resides in.
  *
@@ -6,8 +12,8 @@
  */
 export function tmpProjPath(path?: string) {
   return path
-    ? `${process.cwd()}/tmp/nx-e2e/proj/${path}`
-    : `${process.cwd()}/tmp/nx-e2e/proj`;
+    ? `${tmpFolder()}/nx-e2e/proj/${path}`
+    : `${tmpFolder()}/nx-e2e/proj`;
 }
 
 /**
@@ -18,6 +24,6 @@ export function tmpProjPath(path?: string) {
  */
 export function tmpBackupProjPath(path?: string) {
   return path
-    ? `${process.cwd()}/tmp/nx-e2e/proj-backup/${path}`
-    : `${process.cwd()}/tmp/nx-e2e/proj-backup`;
+    ? `${workspaceRoot}/tmp/nx-e2e/proj-backup/${path}`
+    : `${workspaceRoot}/tmp/nx-e2e/proj-backup`;
 }

@@ -11,7 +11,7 @@ import { fileExists } from './utils';
  */
 export function runCommandAsync(
   command: string,
-  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv } = {
+  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
     silenceError: false,
   }
 ): Promise<{ stdout: string; stderr: string }> {
@@ -19,7 +19,7 @@ export function runCommandAsync(
     exec(
       command,
       {
-        cwd: tmpProjPath(),
+        cwd: opts.cwd ?? tmpProjPath(),
         env: { ...process.env, ...opts.env },
       },
       (err, stdout, stderr) => {
@@ -39,7 +39,7 @@ export function runCommandAsync(
  */
 export function runNxCommandAsync(
   command: string,
-  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv } = {
+  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
     silenceError: false,
   }
 ): Promise<{ stdout: string; stderr: string }> {

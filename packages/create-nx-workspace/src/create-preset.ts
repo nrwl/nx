@@ -39,7 +39,9 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
     }
   }
 
-  if (process.env.NX_VERBOSE_LOGGING !== 'true') {
+  if (
+    !(process.env.NX_VERBOSE_LOGGING === 'true' || args.includes('--verbose'))
+  ) {
     args = '--quiet ' + args;
   }
   const command = `g ${preset}:preset ${args}`;

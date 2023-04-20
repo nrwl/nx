@@ -94,5 +94,6 @@
       "type": "string",
       "enum": ["cypress", "jest", "detox", "none"]
     }
-  }
+  },
+  "required": ["preset", "name"]
 }

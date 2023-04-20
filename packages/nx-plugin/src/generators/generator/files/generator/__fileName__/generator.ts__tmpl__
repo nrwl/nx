@@ -23,7 +23,10 @@ function normalizeOptions(tree: Tree, options: <%= className %>GeneratorSchema):
     ? `${names(options.directory).fileName}/${name}`
     : name;
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const projectRoot = `${getWorkspaceLayout(tree).libsDir}/${projectDirectory}`;
+  const projectRoot =
+    getWorkspaceLayout(tree).libsDir === '.'
+      ? '.'
+      : `${getWorkspaceLayout(tree).libsDir}/${projectDirectory}`;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
