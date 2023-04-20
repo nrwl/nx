@@ -66,7 +66,7 @@
     "@nrwl/js": "16.0.0-beta.0",
     "@nrwl/linter": "16.0.0-beta.0",
     "@nrwl/next": "16.0.0-beta.0",
-    "nx-cloud": "16.0.0-beta.8",
+    "nx-cloud": "16.0.0",
     "@nrwl/react": "16.0.0-beta.0",
     "@nrwl/storybook": "16.0.0-beta.0",
     "@nrwl/web": "16.0.0-beta.0",
