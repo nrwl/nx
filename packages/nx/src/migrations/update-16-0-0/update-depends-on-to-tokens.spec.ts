@@ -1,13 +1,11 @@
 import {
   addProjectConfiguration,
-  getProjects,
   readNxJson,
   readProjectConfiguration,
 } from '../../generators/utils/project-configuration';
-import { Tree } from '../../generators/tree';
 
 import update from './update-depends-on-to-tokens';
-import { updateJson, writeJson } from 'nx/src/devkit-exports';
+import { updateJson, writeJson } from '../../generators/utils/json';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 
 describe('update-depends-on-to-tokens', () => {

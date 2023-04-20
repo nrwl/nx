@@ -9,7 +9,18 @@
   "extends": [],
   "rules": {
     "@typescript-eslint/explicit-module-boundary-types": "off",
-    "no-restricted-imports": ["error", "create-nx-workspace"]
+    "no-restricted-imports": ["error", "create-nx-workspace"],
+    "@typescript-eslint/no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["nx/src/plugins/js*"],
+            "message": "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead"
+          }
+        ]
+      }
+    ]
   },
   "overrides": [
     {

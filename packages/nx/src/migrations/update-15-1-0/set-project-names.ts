@@ -7,7 +7,7 @@ import {
 import { dirname } from 'path';
 import { readJson, writeJson } from '../../generators/utils/json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
+import { getNxRequirePaths } from '../../utils/installation-directory';
 
 export default async function (tree: Tree) {
   const nxJson = readNxJson(tree);
