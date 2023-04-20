@@ -85,6 +85,7 @@ function findNodeMatchingVersion(
     return nodes.sort((a, b) => +gte(b.data.version, a.data.version))[0];
   }
   if (
+    graph.externalNodes[`npm:${packageName}`] &&
     satisfies(
       graph.externalNodes[`npm:${packageName}`].data.version,
       versionExpr
