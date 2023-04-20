@@ -5,7 +5,15 @@ import { storybookMajorVersion } from '../../utils/utilities';
 
 export default async function changeStorybookTargets(tree: Tree) {
   const storybookVersion = storybookMajorVersion();
-  if (!storybookVersion || storybookVersion === 7) {
+  if (!storybookVersion) {
+    /**
+     * This just checks if Storybook is installed in the workspace.
+     * The thing here is that during the previous step of the migration,
+     * during packageJsonUpdates, Nx has already set Storybook
+     * to version 7, if Storybook exists in the workspace.
+     * So, it makes no sense here to check if the version is
+     * 7, because it will always be.
+     */
     return;
   }
 
