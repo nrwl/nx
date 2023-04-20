@@ -6,6 +6,7 @@ const IGNORE_MATCHES = {
   '*': [] as string[],
   angular: ['webpack-merge', '@phenomnomnominal/tsquery'],
   cypress: ['webpack', '@babel/core', 'babel-loader'],
+  jest: ['@jest/reporters', 'jest-config', 'jest-resolve', 'jest-util'],
 };
 
 export default function getDiscrepancies(
@@ -24,7 +25,10 @@ export default function getDiscrepancies(
       (p) =>
         devDependencies[p] &&
         projectDependencies[p] !== devDependencies[p] &&
-        !satisfies(devDependencies[p], projectDependencies[p])
+        !satisfies(
+          devDependencies[p].replace(/^\^|~/, ''),
+          projectDependencies[p]
+        )
     )
     .map(
       (p) => `${p}@${devDependencies[p]} ${chalk.dim(projectDependencies[p])}`

@@ -6,6 +6,8 @@ const p = process.argv[2];
 
 const nativeFiles = glob.sync(`packages/${p}/**/*.node`);
 
-nativeFiles.forEach((file) => {
-  fs.copyFileSync(file, `build/${file}`);
-});
+nativeFiles
+  .filter((file) => !file.includes('/node_modules/'))
+  .forEach((file) => {
+    fs.copyFileSync(file, `build/${file}`);
+  });

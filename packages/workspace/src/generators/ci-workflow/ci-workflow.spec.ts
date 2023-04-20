@@ -8,7 +8,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ciWorkflowGenerator } from './ci-workflow';
 
-describe('lib', () => {
+describe('CI Workflow generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
