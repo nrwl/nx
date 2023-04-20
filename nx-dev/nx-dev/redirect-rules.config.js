@@ -144,11 +144,19 @@ const schemaUrls = {
   '/react-native/start': '/packages/react-native/executors/start',
   '/react-native/storybook': '/packages/react-native/executors/storybook',
   '/react-native/sync-deps': '/packages/react-native/executors/sync-deps',
-  '/nx-plugin/executor': '/packages/nx-plugin/generators/executor',
-  '/nx-plugin/migration': '/packages/nx-plugin/generators/migration',
-  '/nx-plugin/plugin': '/packages/nx-plugin/generators/plugin',
-  '/nx-plugin/schematic': '/packages/nx-plugin/generators/generator',
-  '/nx-plugin/e2e': '/packages/nx-plugin/executors/e2e',
+  '/packages/nx-plugin/generators/executor':
+    '/packages/plugin/generators/executor',
+  '/packages/nx-plugin/generators/migration':
+    '/packages/plugin/generators/migration',
+  '/packages/nx-plugin/generators/plugin': '/packages/plugin/generators/plugin',
+  '/packages/nx-plugin/generators/schematic':
+    '/packages/plugin/generators/generator',
+  '/packages/nx-plugin/generators/e2e': '/packages/plugin/executors/e2e',
+  '/nx-plugin/executor': '/packages/plugin/generators/executor',
+  '/nx-plugin/migration': '/packages/plugin/generators/migration',
+  '/nx-plugin/plugin': '/packages/plugin/generators/plugin',
+  '/nx-plugin/schematic': '/packages/plugin/generators/generator',
+  '/nx-plugin/e2e': '/packages/plugin/executors/e2e',
 };
 
 /**
@@ -296,7 +304,7 @@ const overviewUrls = {
   '/next/overview': '/packages/next',
   '/detox/overview': '/packages/detox',
   '/react-native/overview': '/packages/react-native',
-  '/nx-plugin/overview': '/packages/nx-plugin',
+  '/nx-plugin/overview': '/packages/plugin',
 };
 
 /**
@@ -428,7 +436,7 @@ const packagesIndexes = {
   '/nx': '/packages/nx',
   '/workspace': '/packages/workspace',
   '/devkit': '/packages/devkit',
-  '/nx-plugin': '/packages/nx-plugin',
+  '/nx-plugin': '/packages/plugin',
   '/angular': '/packages/angular',
   '/cypress': '/packages/cypress',
   '/detox': '/packages/detox',

@@ -57,7 +57,7 @@ export function fetchCorePlugins(): CorePlugin[] {
       capabilities: 'executors',
     },
     {
-      name: '@nx/nx-plugin',
+      name: '@nx/plugin',
       capabilities: 'executors,generators',
     },
     {

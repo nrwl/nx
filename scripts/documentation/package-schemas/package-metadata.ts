@@ -132,7 +132,8 @@ export function getPackageMetadataList(
         // TODO(v16): Remove this replace
         packageName: packageJson.name
           .replace('@nx/', '@nrwl/')
-          .replace('@nrwl/eslint-plugin', '@nrwl/eslint-plugin-nx'),
+          .replace('@nrwl/eslint-plugin', '@nrwl/eslint-plugin-nx')
+          .replace('@nrwl/plugin', '@nrwl/nx-plugin'),
         description: packageJson.description,
         root: relativeFolderPath,
         source: join(relativeFolderPath, '/src'),

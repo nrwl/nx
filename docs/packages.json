@@ -245,8 +245,8 @@
     }
   },
   {
-    "name": "nx-plugin",
-    "packageName": "nx-plugin",
+    "name": "plugin",
+    "packageName": "plugin",
     "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
     "path": "generated/packages/nx-plugin.json",
     "schemas": {

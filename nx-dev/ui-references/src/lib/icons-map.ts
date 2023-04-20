@@ -16,7 +16,7 @@ export const iconsMap: Record<string, string> = {
   next: '/images/icons/nextdotjs.svg',
   node: '/images/icons/nodedotjs.svg',
   nx: '/images/icons/nx.svg',
-  'nx-plugin': '/images/icons/nx.svg',
+  plugin: '/images/icons/nx.svg',
   react: '/images/icons/react.svg',
   'react-native': '/images/icons/react.svg',
   rollup: '/images/icons/rollup.svg',

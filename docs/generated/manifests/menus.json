@@ -5528,18 +5528,18 @@
         "disableCollapsible": false
       },
       {
-        "id": "nx-plugin",
-        "path": "/packages/nx-plugin",
-        "name": "nx-plugin",
+        "id": "plugin",
+        "path": "/packages/plugin",
+        "name": "plugin",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/nx-plugin/documents",
+            "path": "/packages/plugin/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/nx-plugin/documents/overview",
+                "path": "/packages/plugin/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -5551,12 +5551,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/nx-plugin/executors",
+            "path": "/packages/plugin/executors",
             "name": "executors",
             "children": [
               {
                 "id": "e2e",
-                "path": "/packages/nx-plugin/executors/e2e",
+                "path": "/packages/plugin/executors/e2e",
                 "name": "e2e",
                 "children": [],
                 "isExternal": false,
@@ -5568,12 +5568,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/nx-plugin/generators",
+            "path": "/packages/plugin/generators",
             "name": "generators",
             "children": [
               {
                 "id": "plugin",
-                "path": "/packages/nx-plugin/generators/plugin",
+                "path": "/packages/plugin/generators/plugin",
                 "name": "plugin",
                 "children": [],
                 "isExternal": false,
@@ -5581,7 +5581,7 @@
               },
               {
                 "id": "create-package",
-                "path": "/packages/nx-plugin/generators/create-package",
+                "path": "/packages/plugin/generators/create-package",
                 "name": "create-package",
                 "children": [],
                 "isExternal": false,
@@ -5589,7 +5589,7 @@
               },
               {
                 "id": "e2e-project",
-                "path": "/packages/nx-plugin/generators/e2e-project",
+                "path": "/packages/plugin/generators/e2e-project",
                 "name": "e2e-project",
                 "children": [],
                 "isExternal": false,
@@ -5597,7 +5597,7 @@
               },
               {
                 "id": "migration",
-                "path": "/packages/nx-plugin/generators/migration",
+                "path": "/packages/plugin/generators/migration",
                 "name": "migration",
                 "children": [],
                 "isExternal": false,
@@ -5605,7 +5605,7 @@
               },
               {
                 "id": "generator",
-                "path": "/packages/nx-plugin/generators/generator",
+                "path": "/packages/plugin/generators/generator",
                 "name": "generator",
                 "children": [],
                 "isExternal": false,
@@ -5613,7 +5613,7 @@
               },
               {
                 "id": "executor",
-                "path": "/packages/nx-plugin/generators/executor",
+                "path": "/packages/plugin/generators/executor",
                 "name": "executor",
                 "children": [],
                 "isExternal": false,
@@ -5621,7 +5621,7 @@
               },
               {
                 "id": "plugin-lint-checks",
-                "path": "/packages/nx-plugin/generators/plugin-lint-checks",
+                "path": "/packages/plugin/generators/plugin-lint-checks",
                 "name": "plugin-lint-checks",
                 "children": [],
                 "isExternal": false,
@@ -5629,7 +5629,7 @@
               },
               {
                 "id": "preset",
-                "path": "/packages/nx-plugin/generators/preset",
+                "path": "/packages/plugin/generators/preset",
                 "name": "preset",
                 "children": [],
                 "isExternal": false,

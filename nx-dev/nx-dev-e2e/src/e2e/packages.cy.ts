@@ -268,28 +268,28 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/nx/executors/run-commands',
     },
     { title: 'nx:run-script', path: '/packages/nx/executors/run-script' },
-    { title: 'nx-plugin', path: '/packages/nx-plugin' },
+    { title: 'nx-plugin', path: '/packages/plugin' },
     {
       title: '@nrwl/nx-plugin:plugin',
-      path: '/packages/nx-plugin/generators/plugin',
+      path: '/packages/plugin/generators/plugin',
     },
     {
       title: '@nrwl/nx-plugin:e2e-project',
-      path: '/packages/nx-plugin/generators/e2e-project',
+      path: '/packages/plugin/generators/e2e-project',
     },
     {
       title: '@nrwl/nx-plugin:migration',
-      path: '/packages/nx-plugin/generators/migration',
+      path: '/packages/plugin/generators/migration',
     },
     {
       title: '@nrwl/nx-plugin:generator',
-      path: '/packages/nx-plugin/generators/generator',
+      path: '/packages/plugin/generators/generator',
     },
     {
       title: '@nrwl/nx-plugin:executor',
-      path: '/packages/nx-plugin/generators/executor',
+      path: '/packages/plugin/generators/executor',
     },
-    { title: '@nrwl/nx-plugin:e2e', path: '/packages/nx-plugin/executors/e2e' },
+    { title: '@nrwl/nx-plugin:e2e', path: '/packages/plugin/executors/e2e' },
     { title: '@nrwl/react', path: '/packages/react' },
     { title: '@nrwl/react:init', path: '/packages/react/generators/init' },
     {

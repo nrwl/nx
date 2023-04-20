@@ -1627,14 +1627,14 @@
         },
         {
           "name": "Nx Plugin",
-          "id": "nx-plugin",
+          "id": "plugin",
           "description": "Plugin package.",
           "itemList": [
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/nx-plugin",
-              "file": "shared/packages/nx-plugin/nx-plugin"
+              "path": "/packages/plugin",
+              "file": "shared/packages/plugin/plugin"
             }
           ]
         },

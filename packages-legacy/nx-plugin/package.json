@@ -24,12 +24,12 @@
   "schematics": "./generators.json",
   "builders": "./executors.json",
   "dependencies": {
-    "@nx/nx-plugin": "file:../../packages/nx-plugin"
+    "@nx/plugin": "file:../../packages/plugin"
   },
   "publishConfig": {
     "access": "public"
   },
   "nx-migrations": {
-    "migrations": "@nx/nx-plugin/migrations.json"
+    "migrations": "@nx/plugin/migrations.json"
   }
 }
