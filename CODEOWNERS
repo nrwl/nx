@@ -125,9 +125,9 @@ yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /packages/devkit/src/utils/module-federation @jaysoo @Coly010
 
 # Nx-Plugin
-/docs/generated/packages/nx-plugin/** @AgentEnder @FrozenPandaz
-/docs/shared/packages/nx-plugin/** @AgentEnder @FrozenPandaz @isaacplmann @juristr
-/packages/nx-plugin/** @AgentEnder @FrozenPandaz
+/docs/generated/packages/plugin/** @AgentEnder @FrozenPandaz
+/docs/shared/packages/plugin/** @AgentEnder @FrozenPandaz @isaacplmann @juristr
+/packages/plugin/** @AgentEnder @FrozenPandaz
 /e2e/nx-plugin/** @AgentEnder @FrozenPandaz
 
 ## Core

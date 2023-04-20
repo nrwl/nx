@@ -1,4 +1,4 @@
 {
-  "extends": ["@nx/nx-plugin"],
+  "extends": ["@nx/plugin"],
   "schematics": {}
 }

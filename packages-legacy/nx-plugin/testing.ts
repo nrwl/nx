@@ -1,1 +1,1 @@
-export * from '@nx/nx-plugin/testing';
+export * from '@nx/plugin/testing';

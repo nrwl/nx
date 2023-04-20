@@ -1,0 +1,65 @@
+{
+  "name": "e2e-project",
+  "factory": "./src/generators/e2e-project/e2e",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxPluginE2E",
+    "title": "Create an E2E app for a Nx Plugin",
+    "description": "Create an E2E app for a Nx Plugin.",
+    "type": "object",
+    "properties": {
+      "pluginName": {
+        "type": "string",
+        "description": "the project name of the plugin to be tested.",
+        "x-priority": "important"
+      },
+      "npmPackageName": {
+        "type": "string",
+        "description": "the package name of the plugin as it would be published to NPM.",
+        "x-priority": "important"
+      },
+      "projectDirectory": {
+        "type": "string",
+        "description": "the directory where the plugin is placed."
+      },
+      "pluginOutputPath": {
+        "type": "string",
+        "description": "the output path of the plugin after it builds.",
+        "x-priority": "important"
+      },
+      "jestConfig": { "type": "string", "description": "Jest config file." },
+      "standaloneConfig": {
+        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+        "type": "boolean",
+        "default": true,
+        "x-deprecated": "Nx only supports standaloneConfig"
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint", "none"],
+        "default": "eslint"
+      },
+      "minimal": {
+        "type": "boolean",
+        "description": "Generate the e2e project with a minimal setup. This would involve not generating tests for a default executor and generator.",
+        "default": false
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["pluginName", "npmPackageName"],
+    "presets": []
+  },
+  "description": "Create a E2E application for a Nx Plugin.",
+  "implementation": "/packages/plugin/src/generators/e2e-project/e2e.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/plugin/src/generators/e2e-project/schema.json",
+  "type": "generator"
+}

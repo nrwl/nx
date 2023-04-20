@@ -1,6 +1,6 @@
 # Workspace Executors
 
-In Nx 13.10+, local nx plugins can contain executors that are used in the workspace. When creating a custom executor for your workspace, look into the [nx-plugin guide](/packages/nx-plugin) to simplify the build process.
+In Nx 13.10+, local nx plugins can contain executors that are used in the workspace. When creating a custom executor for your workspace, look into the [nx-plugin guide](/packages/plugin) to simplify the build process.
 
 ## Converting workspace executors to local executors
 

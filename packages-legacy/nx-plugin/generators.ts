@@ -1,1 +1,1 @@
-export * from '@nx/nx-plugin/generators';
+export * from '@nx/plugin/generators';

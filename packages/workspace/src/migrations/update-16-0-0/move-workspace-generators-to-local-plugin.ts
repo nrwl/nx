@@ -40,7 +40,7 @@ export default async function (tree: Tree) {
         tree,
         {},
         {
-          '@nx/nx-plugin': nxVersion,
+          '@nx/plugin': nxVersion,
         }
       )
     );
@@ -81,10 +81,10 @@ function collectAndMoveGenerators(tree: Tree, destinationProjectRoot: string) {
 }
 
 async function createNewPlugin(tree: Tree) {
-  ensurePackage('@nx/nx-plugin', nxVersion);
+  ensurePackage('@nx/plugin', nxVersion);
   const { pluginGenerator } =
     // nx-ignore-next-line
-    require('@nx/nx-plugin/src/generators/plugin/plugin');
+    require('@nx/plugin/src/generators/plugin/plugin');
 
   // nx-ignore-next-line
   const { Linter } = ensurePackage('@nx/linter', nxVersion);
@@ -179,10 +179,10 @@ function getCreateGeneratorsJson(): (
   skipLintChecks?: boolean,
   skipFormat?: boolean
 ) => Promise<void> {
-  // We cant use  `as typeof import('@nx/nx-plugin/src/generators/generator/generator');` here
+  // We cant use  `as typeof import('@nx/plugin/src/generators/generator/generator');` here
   // because it will cause a typescript error at build time.
   const { createGeneratorsJson } =
     // nx-ignore-next-line
-    require('@nx/nx-plugin/src/generators/generator/generator');
+    require('@nx/plugin/src/generators/generator/generator');
   return createGeneratorsJson;
 }

@@ -1,6 +1,6 @@
 ## @nrwl/nx-plugin has been deprecated!
 
-@nrwl/nx-plugin has been deprecated in favor of [@nx/nx-plugin](https://www.npmjs.com/package/@nx/nx-plugin). Please use that instead.
+@nrwl/nx-plugin has been deprecated in favor of [@nx/plugin](https://www.npmjs.com/package/@nx/plugin). Please use that instead.
 
 @nrwl/nx-plugin will no longer be published in Nx v17.
 

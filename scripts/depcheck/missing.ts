@@ -192,7 +192,7 @@ const IGNORE_MATCHES_BY_FILE: Record<string, string[]> = {
       '../../packages/angular/src/migrations/update-12-3-0/update-storybook.ts'
     ),
   ],
-  '@nx/nx-plugin': [
+  '@nx/plugin': [
     join(
       __dirname,
       '../../packages/workspace/src/migrations/update-16-0-0/move-workspace-generators-to-local-plugin.spec.ts'

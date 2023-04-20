@@ -334,7 +334,7 @@
     "sourceRoot": "apps/my-plugin-e2e/src",
     "targets": {
       "e2e": {
-        "executor": "@nx/nx-plugin:e2e",
+        "executor": "@nx/plugin:e2e",
         "options": {
           "target": "my-plugin:build",
           "jestConfig": "apps/my-plugin-e2e/jest.config.ts"

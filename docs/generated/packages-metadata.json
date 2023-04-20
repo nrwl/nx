@@ -1759,104 +1759,104 @@
         "id": "overview",
         "name": "Overview",
         "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
-        "file": "generated/packages/nx-plugin/documents/overview",
+        "file": "generated/packages/plugin/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "nx-plugin/documents/overview",
+        "path": "plugin/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/nx-plugin/nx-plugin"
+        "originalFilePath": "shared/packages/plugin/plugin"
       }
     ],
     "executors": [
       {
         "description": "Creates and runs the E2E tests for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/executors/e2e.json",
+        "file": "generated/packages/plugin/executors/e2e.json",
         "hidden": false,
         "name": "e2e",
-        "originalFilePath": "/packages/nx-plugin/src/executors/e2e/schema.json",
-        "path": "nx-plugin/executors/e2e",
+        "originalFilePath": "/packages/plugin/src/executors/e2e/schema.json",
+        "path": "plugin/executors/e2e",
         "type": "executor"
       }
     ],
     "generators": [
       {
         "description": "Create a Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/plugin.json",
+        "file": "generated/packages/plugin/generators/plugin.json",
         "hidden": false,
         "name": "plugin",
-        "originalFilePath": "/packages/nx-plugin/src/generators/plugin/schema.json",
-        "path": "nx-plugin/generators/plugin",
+        "originalFilePath": "/packages/plugin/src/generators/plugin/schema.json",
+        "path": "plugin/generators/plugin",
         "type": "generator"
       },
       {
         "description": "Create a package which can be used by npx to create a new workspace",
-        "file": "generated/packages/nx-plugin/generators/create-package.json",
+        "file": "generated/packages/plugin/generators/create-package.json",
         "hidden": false,
         "name": "create-package",
-        "originalFilePath": "/packages/nx-plugin/src/generators/create-package/schema.json",
-        "path": "nx-plugin/generators/create-package",
+        "originalFilePath": "/packages/plugin/src/generators/create-package/schema.json",
+        "path": "plugin/generators/create-package",
         "type": "generator"
       },
       {
         "description": "Create a E2E application for a Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/e2e-project.json",
+        "file": "generated/packages/plugin/generators/e2e-project.json",
         "hidden": false,
         "name": "e2e-project",
-        "originalFilePath": "/packages/nx-plugin/src/generators/e2e-project/schema.json",
-        "path": "nx-plugin/generators/e2e-project",
+        "originalFilePath": "/packages/plugin/src/generators/e2e-project/schema.json",
+        "path": "plugin/generators/e2e-project",
         "type": "generator"
       },
       {
         "description": "Create a migration for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/migration.json",
+        "file": "generated/packages/plugin/generators/migration.json",
         "hidden": false,
         "name": "migration",
-        "originalFilePath": "/packages/nx-plugin/src/generators/migration/schema.json",
-        "path": "nx-plugin/generators/migration",
+        "originalFilePath": "/packages/plugin/src/generators/migration/schema.json",
+        "path": "plugin/generators/migration",
         "type": "generator"
       },
       {
         "description": "Create a generator for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/generator.json",
+        "file": "generated/packages/plugin/generators/generator.json",
         "hidden": false,
         "name": "generator",
-        "originalFilePath": "/packages/nx-plugin/src/generators/generator/schema.json",
-        "path": "nx-plugin/generators/generator",
+        "originalFilePath": "/packages/plugin/src/generators/generator/schema.json",
+        "path": "plugin/generators/generator",
         "type": "generator"
       },
       {
         "description": "Create an executor for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/executor.json",
+        "file": "generated/packages/plugin/generators/executor.json",
         "hidden": false,
         "name": "executor",
-        "originalFilePath": "/packages/nx-plugin/src/generators/executor/schema.json",
-        "path": "nx-plugin/generators/executor",
+        "originalFilePath": "/packages/plugin/src/generators/executor/schema.json",
+        "path": "plugin/generators/executor",
         "type": "generator"
       },
       {
         "description": "Adds linting configuration to validate common json files for nx plugins.",
-        "file": "generated/packages/nx-plugin/generators/plugin-lint-checks.json",
+        "file": "generated/packages/plugin/generators/plugin-lint-checks.json",
         "hidden": false,
         "name": "plugin-lint-checks",
-        "originalFilePath": "/packages/nx-plugin/src/generators/lint-checks/schema.json",
-        "path": "nx-plugin/generators/plugin-lint-checks",
+        "originalFilePath": "/packages/plugin/src/generators/lint-checks/schema.json",
+        "path": "plugin/generators/plugin-lint-checks",
         "type": "generator"
       },
       {
         "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nrwl/nx-plugin`.",
-        "file": "generated/packages/nx-plugin/generators/preset.json",
+        "file": "generated/packages/plugin/generators/preset.json",
         "hidden": true,
         "name": "preset",
-        "originalFilePath": "/packages/nx-plugin/src/generators/preset/schema.json",
-        "path": "nx-plugin/generators/preset",
+        "originalFilePath": "/packages/plugin/src/generators/preset/schema.json",
+        "path": "plugin/generators/preset",
         "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "nx-plugin",
+    "name": "plugin",
     "packageName": "@nrwl/nx-plugin",
-    "root": "/packages/nx-plugin",
-    "source": "/packages/nx-plugin/src"
+    "root": "/packages/plugin",
+    "source": "/packages/plugin/src"
   },
   {
     "description": "The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",

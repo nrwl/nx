@@ -26,11 +26,11 @@ Browse through plugins built by Nx and the community.
 
 {% /persona %}
 
-{% persona type="create" title="Build a Plugin" url="/packages/nx-plugin" %}
+{% persona type="create" title="Build a Plugin" url="/packages/plugin" %}
 
 Build a plugin for use in your own repo or to share with others.
 
-- [Build a plugin](/packages/nx-plugin)
+- [Build a plugin](/packages/plugin)
 
 {% /persona %}
 
@@ -56,7 +56,7 @@ All the core plugins are written using [Nx Devkit](/packages/devkit), and you ca
 executors.
 
 {% callout type="check" title="Plugins!" %}
-The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [generators](/recipes/generators/local-generators) and [executors](/recipes/executors/creating-custom-executors) in a plugin to use in your own repo or share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
+The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [generators](/recipes/generators/local-generators) and [executors](/recipes/executors/creating-custom-executors) in a plugin to use in your own repo or share it with the community. The [Nx Plugin](/packages/plugin) plugin provides guidance on how you can build your own custom plugins.
 {% /callout %}
 
 ### Pay as you go
