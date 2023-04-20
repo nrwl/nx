@@ -19,7 +19,9 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  logger,
   runTasksInSerial,
+  stripIndents,
   Tree,
   updateJson,
 } from '@nx/devkit';
@@ -28,6 +30,7 @@ import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nx/linter';
 import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
 import {
+  babelLoaderVersion,
   nxRspackVersion,
   nxVersion,
   swcLoaderVersion,
@@ -35,6 +38,7 @@ import {
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import * as chalk from 'chalk';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -206,6 +210,46 @@ export async function applicationGenerator(
   const routingTask = addRouting(host, options);
   tasks.push(routingTask);
   setDefaults(host, options);
+
+  if (options.bundler === 'rspack' && options.style === 'styled-jsx') {
+    logger.warn(
+      `${chalk.bold('styled-jsx')} is not supported by ${chalk.bold(
+        'Rspack'
+      )}. We've added ${chalk.bold(
+        'babel-loader'
+      )} to your project, but using babel will slow down your build.`
+    );
+
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {},
+        { 'babel-loader': babelLoaderVersion }
+      )
+    );
+
+    host.write(
+      joinPathFragments(options.appProjectRoot, 'rspack.config.js'),
+      stripIndents`
+        const { composePlugins, withNx, withWeb } = require('@nrwl/rspack');
+        module.exports = composePlugins(withNx(), withWeb(), (config) => {
+          config.module.rules.push({
+            test: /\\.[jt]sx$/i,
+            use: [
+              {
+                loader: 'babel-loader',
+                options: {
+                  presets: ['@babel/preset-typescript'],
+                  plugins: ['styled-jsx/babel'],
+                },
+              },
+            ],
+          });
+          return config;
+        });
+        `
+    );
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);
