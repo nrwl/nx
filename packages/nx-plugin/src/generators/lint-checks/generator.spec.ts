@@ -76,7 +76,7 @@ describe('lint-checks generator', () => {
           './generators.json',
         ]),
         rules: {
-          '@nx/nx/nx-plugin-checks': 'error',
+          '@nx/nx-plugin-checks': 'error',
         },
       })
     );
@@ -100,7 +100,7 @@ describe('lint-checks generator', () => {
     );
 
     expect(
-      eslintConfig.overrides.filter((x) => '@nx/nx/nx-plugin-checks' in x.rules)
+      eslintConfig.overrides.filter((x) => '@nx/nx-plugin-checks' in x.rules)
     ).toHaveLength(1);
   });
 
@@ -155,7 +155,7 @@ describe('lint-checks generator', () => {
           './migrations.json',
         ]),
         rules: {
-          '@nx/nx/nx-plugin-checks': 'error',
+          '@nx/nx-plugin-checks': 'error',
         },
       })
     );

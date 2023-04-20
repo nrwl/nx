@@ -56,5 +56,5 @@
     },
     "lint": {}
   },
-  "implicitDependencies": ["eslint-plugin-nx"]
+  "implicitDependencies": ["eslint-plugin"]
 }

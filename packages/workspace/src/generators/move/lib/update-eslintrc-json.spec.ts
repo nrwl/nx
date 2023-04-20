@@ -100,7 +100,7 @@ describe('updateEslint', () => {
     });
     updateJson(tree, 'libs/my-lib/.eslintrc.json', (eslintRcJson) => {
       eslintRcJson.extends = [
-        'plugin:@nx/nx/react',
+        'plugin:@nx/react',
         '../../.eslintrc.json',
         './customrc.json',
       ];
@@ -120,7 +120,7 @@ describe('updateEslint', () => {
     ).toEqual(
       expect.objectContaining({
         extends: [
-          'plugin:@nx/nx/react',
+          'plugin:@nx/react',
           '../../../.eslintrc.json',
           './customrc.json',
         ],

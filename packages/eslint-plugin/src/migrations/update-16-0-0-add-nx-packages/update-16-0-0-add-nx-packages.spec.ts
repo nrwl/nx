@@ -24,13 +24,13 @@ describe('update-16-0-0-add-nx-packages', () => {
     ).not.toBeDefined();
   });
 
-  it('should add a dependency on @nx/eslint-plugin-nx', async () => {
+  it('should add a dependency on @nx/eslint-plugin', async () => {
     await replacePackage(tree);
 
     const packageJson = readJson(tree, 'package.json');
     const newDependencyVersion =
-      packageJson.devDependencies['@nx/eslint-plugin-nx'] ??
-      packageJson.dependencies['@nx/eslint-plugin-nx'];
+      packageJson.devDependencies['@nx/eslint-plugin'] ??
+      packageJson.dependencies['@nx/eslint-plugin'];
 
     expect(newDependencyVersion).toBeDefined();
   });
@@ -48,10 +48,10 @@ describe('update-16-0-0-add-nx-packages', () => {
     expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
       {
         "plugins": [
-          "@nx/nx",
+          "@nx",
         ],
         "rules": {
-          "@nx/nx/enforce-module-boundaries": [
+          "@nx/enforce-module-boundaries": [
             "error",
             {},
           ],

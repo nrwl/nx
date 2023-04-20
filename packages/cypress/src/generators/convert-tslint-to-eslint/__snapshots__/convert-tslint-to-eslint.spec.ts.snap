@@ -4,7 +4,7 @@ exports[`convert-tslint-to-eslint should work for Cypress applications 1`] = `
 {
   "dependencies": {},
   "devDependencies": {
-    "@nx/eslint-plugin-nx": "0.0.1",
+    "@nx/eslint-plugin": "0.0.1",
     "@nx/linter": "0.0.1",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
@@ -53,7 +53,7 @@ exports[`convert-tslint-to-eslint should work for Cypress applications 3`] = `
         "*.jsx",
       ],
       "rules": {
-        "@nx/nx/enforce-module-boundaries": [
+        "@nx/enforce-module-boundaries": [
           "error",
           {
             "allow": [
@@ -131,7 +131,7 @@ exports[`convert-tslint-to-eslint should work for Cypress applications 3`] = `
     },
     {
       "extends": [
-        "plugin:@nx/nx/typescript",
+        "plugin:@nx/typescript",
       ],
       "files": [
         "*.ts",
@@ -141,7 +141,7 @@ exports[`convert-tslint-to-eslint should work for Cypress applications 3`] = `
     },
     {
       "extends": [
-        "plugin:@nx/nx/javascript",
+        "plugin:@nx/javascript",
       ],
       "files": [
         "*.js",
@@ -238,7 +238,7 @@ exports[`convert-tslint-to-eslint should work for Cypress applications 3`] = `
     },
   ],
   "plugins": [
-    "@nx/nx",
+    "@nx",
   ],
   "root": true,
 }

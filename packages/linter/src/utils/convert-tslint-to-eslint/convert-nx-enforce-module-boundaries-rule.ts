@@ -73,7 +73,7 @@ export function convertTslintNxRuleToEslintNxRule(
   );
 
   return {
-    ruleName: '@nx/nx/enforce-module-boundaries',
+    ruleName: '@nx/enforce-module-boundaries',
     ruleConfig: [ruleSeverity, existingRuleConfig],
   };
 }

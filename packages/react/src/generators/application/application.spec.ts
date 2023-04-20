@@ -131,7 +131,7 @@ describe('app', () => {
 
       const eslintJson = readJson(appTree, 'apps/my-app/.eslintrc.json');
       expect(eslintJson.extends).toEqual([
-        'plugin:@nx/nx/react',
+        'plugin:@nx/react',
         '../../.eslintrc.json',
       ]);
 
@@ -247,7 +247,7 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: ['plugin:@nx/nx/react', '../../../.eslintrc.json'],
+          expectedValue: ['plugin:@nx/react', '../../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -515,7 +515,7 @@ describe('app', () => {
 
     expect(packageJson.devDependencies.eslint).toBeDefined();
     expect(packageJson.devDependencies['@nx/linter']).toBeDefined();
-    expect(packageJson.devDependencies['@nx/eslint-plugin-nx']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/eslint-plugin']).toBeDefined();
     expect(packageJson.devDependencies['eslint-plugin-react']).toBeDefined();
     expect(
       packageJson.devDependencies['eslint-plugin-react-hooks']
@@ -532,7 +532,7 @@ describe('app', () => {
     expect(eslintJson).toMatchInlineSnapshot(`
       {
         "extends": [
-          "plugin:@nx/nx/react",
+          "plugin:@nx/react",
           "../../.eslintrc.json",
         ],
         "ignorePatterns": [

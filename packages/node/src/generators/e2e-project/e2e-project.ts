@@ -113,7 +113,7 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
 
     updateJson(host, join(options.e2eProjectRoot, '.eslintrc.json'), (json) => {
       if (options.rootProject) {
-        json.plugins = ['@nx/nx'];
+        json.plugins = ['@nx'];
         json.extends = [];
       }
       json.overrides = [

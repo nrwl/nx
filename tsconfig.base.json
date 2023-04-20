@@ -75,7 +75,7 @@
       "@nx/devkit": ["packages/devkit"],
       "@nx/devkit/*": ["packages/devkit/*"],
       "@nx/esbuild": ["packages/esbuild"],
-      "@nx/eslint-plugin-nx": ["packages/eslint-plugin-nx/src"],
+      "@nx/eslint-plugin": ["packages/eslint-plugin/src"],
       "@nx/expo": ["packages/expo"],
       "@nx/expo/*": ["packages/expo/*"],
       "@nx/express": ["packages/express"],

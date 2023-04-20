@@ -32,4 +32,4 @@ nx lint my-lib
 
 ## ESLint plugin
 
-Read about our dedicated ESLint plugin - [eslint-plugin-nx](/packages/eslint-plugin-nx/documents/overview).
+Read about our dedicated ESLint plugin - [eslint-plugin-nx](/packages/eslint-plugin/documents/overview).

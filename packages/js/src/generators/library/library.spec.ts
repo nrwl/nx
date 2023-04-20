@@ -423,7 +423,7 @@ describe('lib', () => {
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['eslint']).toBeDefined();
       expect(packageJson.devDependencies['@nx/linter']).toBeDefined();
-      expect(packageJson.devDependencies['@nx/eslint-plugin-nx']).toBeDefined();
+      expect(packageJson.devDependencies['@nx/eslint-plugin']).toBeDefined();
     });
 
     describe('not nested', () => {

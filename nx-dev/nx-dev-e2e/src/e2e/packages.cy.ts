@@ -125,7 +125,7 @@ describe('nx-dev: Packages Section', () => {
       title: '@nrwl/esbuild:esbuild',
       path: '/packages/esbuild/executors/esbuild',
     },
-    { title: '@nrwl/eslint-plugin-nx', path: '/packages/eslint-plugin-nx' },
+    { title: '@nrwl/eslint-plugin', path: '/packages/eslint-plugin' },
     { title: '@nrwl/expo', path: '/packages/expo' },
     {
       title: '@nrwl/expo:init',

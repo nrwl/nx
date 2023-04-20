@@ -4405,18 +4405,18 @@
         "disableCollapsible": false
       },
       {
-        "id": "eslint-plugin-nx",
-        "path": "/packages/eslint-plugin-nx",
-        "name": "eslint-plugin-nx",
+        "id": "eslint-plugin",
+        "path": "/packages/eslint-plugin",
+        "name": "eslint-plugin",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/eslint-plugin-nx/documents",
+            "path": "/packages/eslint-plugin/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/eslint-plugin-nx/documents/overview",
+                "path": "/packages/eslint-plugin/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -4424,7 +4424,7 @@
               },
               {
                 "name": "The `enforce-module-boundaries` rule",
-                "path": "/packages/eslint-plugin-nx/documents/enforce-module-boundaries",
+                "path": "/packages/eslint-plugin/documents/enforce-module-boundaries",
                 "id": "enforce-module-boundaries",
                 "isExternal": false,
                 "children": [],

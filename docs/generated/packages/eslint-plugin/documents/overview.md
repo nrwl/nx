@@ -54,4 +54,4 @@ You can also use `@nrwl/nx/react` which includes all three `@nrwl/nx/react-*` pl
 
 ### Enforce Module Boundaries rule
 
-The `enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. Enforcing strict boundaries helps keep prevent unplanned cross-dependencies. Read more about it on a [dedicated page](/packages/eslint-plugin-nx/documents/enforce-module-boundaries)
+The `enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. Enforcing strict boundaries helps keep prevent unplanned cross-dependencies. Read more about it on a [dedicated page](/packages/eslint-plugin/documents/enforce-module-boundaries)

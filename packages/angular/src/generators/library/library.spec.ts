@@ -1140,7 +1140,7 @@ describe('lib', () => {
             "overrides": [
               {
                 "extends": [
-                  "plugin:@nx/nx/angular",
+                  "plugin:@nx/angular",
                   "plugin:@angular-eslint/template/process-inline-templates",
                 ],
                 "files": [
@@ -1167,7 +1167,7 @@ describe('lib', () => {
               },
               {
                 "extends": [
-                  "plugin:@nx/nx/angular-template",
+                  "plugin:@nx/angular-template",
                 ],
                 "files": [
                   "*.html",

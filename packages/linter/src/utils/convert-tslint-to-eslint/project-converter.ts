@@ -192,9 +192,9 @@ export class ProjectConverter {
     /**
      * The only piece of the converted root tslint.json that we need to pull out to
      * apply to the existing overrides within the root .eslintrc.json is the
-     * @nx/nx/enforce-module-boundaries rule.
+     * @nx/enforce-module-boundaries rule.
      */
-    const nxRuleName = '@nx/nx/enforce-module-boundaries';
+    const nxRuleName = '@nx/enforce-module-boundaries';
     const nxEnforceModuleBoundariesRule =
       convertedRootESLintConfig.rules[nxRuleName];
     if (nxEnforceModuleBoundariesRule) {

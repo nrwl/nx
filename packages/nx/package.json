@@ -110,7 +110,7 @@
       "@nrwl/devkit",
       "@nx/esbuild",
       "@nrwl/esbuild",
-      "@nx/eslint-plugin-nx",
+      "@nx/eslint-plugin",
       "@nrwl/eslint-plugin-nx",
       "@nx/expo",
       "@nrwl/expo",

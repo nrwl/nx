@@ -60,7 +60,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'rxjs',
     'webpack',
   ],
-  'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
+  'eslint-plugin': ['@angular-eslint/eslint-plugin'],
   jest: [
     'jest',
     '@jest/types',

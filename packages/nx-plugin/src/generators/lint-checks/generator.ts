@@ -115,7 +115,7 @@ export function addMigrationJsonChecks(
       (c) => {
         const override = c.overrides.find(
           (o) =>
-            Object.keys(o.rules ?? {})?.includes('@nx/nx/nx-plugin-checks') ||
+            Object.keys(o.rules ?? {})?.includes('@nx/nx-plugin-checks') ||
             Object.keys(o.rules ?? {})?.includes('@nrwl/nx/nx-plugin-checks')
         );
         if (
@@ -195,7 +195,7 @@ function updateProjectEslintConfig(
   let entry: ESLint.ConfigOverride<ESLint.RulesRecord> =
     eslintConfig.overrides.find(
       (x) =>
-        Object.keys(x.rules ?? {}).includes('@nx/nx/nx-plugin-checks') ||
+        Object.keys(x.rules ?? {}).includes('@nx/nx-plugin-checks') ||
         Object.keys(x.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks')
     );
   const newentry = !entry;
@@ -214,7 +214,7 @@ function updateProjectEslintConfig(
   ];
   entry.parser = 'jsonc-eslint-parser';
   entry.rules ??= {
-    '@nx/nx/nx-plugin-checks': 'error',
+    '@nx/nx-plugin-checks': 'error',
   };
 
   if (newentry) {
