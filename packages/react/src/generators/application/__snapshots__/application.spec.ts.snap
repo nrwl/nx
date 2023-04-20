@@ -11,8 +11,6 @@ export function App() {
         <span> Hello there, </span>
         Welcome plain 👋
       </h1>
-
-      <div />
     </>
   );
 }
@@ -53,8 +51,6 @@ export function App() {
   return (
     <>
       <NxWelcome title="my-app" />
-
-      <div />
     </>
   );
 }
@@ -73,8 +69,6 @@ export function App() {
   return (
     <>
       <NxWelcome title="my-dir-my-app" />
-
-      <div />
     </>
   );
 }
