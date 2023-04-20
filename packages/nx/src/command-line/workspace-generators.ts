@@ -13,7 +13,7 @@ export async function workspaceGenerators(args: yargs.Arguments) {
   const generator = process.argv.slice(3);
 
   output.warn({
-    title: `${NX_PREFIX} Workspace Generators are no longer supported`,
+    title: `Workspace Generators are no longer supported`,
     bodyLines: [
       'Instead, Nx now supports executing generators or executors from ',
       'local plugins. To run a generator from a local plugin, ',

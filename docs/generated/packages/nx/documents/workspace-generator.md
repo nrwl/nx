@@ -12,7 +12,7 @@ description: 'Runs a workspace generator from the tools/generators directory'
 ## Usage
 
 ```shell
-nx workspace-generator [name]
+nx workspace-generator [generator]
 ```
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.

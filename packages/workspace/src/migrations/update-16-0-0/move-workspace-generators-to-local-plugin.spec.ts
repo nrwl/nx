@@ -101,6 +101,40 @@ describe('move-workspace-generators-to-local-plugin', () => {
       assertValidGenerator(tree, config, generator);
     }
   });
+
+  it('should update imports that point to a parent directory', async () => {
+    await workspaceGeneratorGenerator(tree, {
+      name: 'my-generator',
+    });
+    tree.write('tools/utils/index.ts', 'export default function someUtil() {}');
+    tree.write(
+      'tools/generators/my-generator/index.ts',
+      'import { someUtil } from "../../utils";'
+    );
+    tree.write(
+      'tools/generators/my-generator/lib/index.ts',
+      'import { someUtil } from "../../../utils";'
+    );
+    await generator(tree);
+
+    const config = readProjectConfiguration(tree, 'workspace-plugin');
+    const generatorImplPath = joinPathFragments(
+      config.root,
+      'src/generators/my-generator/index.ts'
+    );
+    const generatorImpl = tree.read(generatorImplPath).toString('utf-8');
+    expect(generatorImpl).toContain(
+      `import { someUtil } from '../../../../utils';`
+    );
+    const generatorLibImplPath = joinPathFragments(
+      config.root,
+      'src/generators/my-generator/lib/index.ts'
+    );
+    const generatorLibImpl = tree.read(generatorLibImplPath).toString('utf-8');
+    expect(generatorLibImpl).toContain(
+      `import { someUtil } from '../../../../../utils';`
+    );
+  });
 });
 
 function assertValidGenerator(

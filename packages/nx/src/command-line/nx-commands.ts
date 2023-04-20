@@ -238,11 +238,11 @@ export const commandsObject = yargs
    * @deprecated(v17): Remove `workspace-generator in v17. Use local plugins.
    */
   .command({
-    command: 'workspace-generator [name]',
+    command: 'workspace-generator [generator]',
     describe: 'Runs a workspace generator from the tools/generators directory',
     deprecated:
       'Use a local plugin instead. See: https://nx.dev/deprecated/workspace-generators',
-    aliases: ['workspace-schematic [name]'],
+    aliases: ['workspace-schematic [generator]'],
     builder: async (yargs) =>
       linkToNxDevAndExamples(withGenerateOptions(yargs), 'workspace-generator'),
     handler: workspaceGeneratorHandler,
