@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext"
+  },
+  "angularCompilerOptions": {
+    "compilationMode": "partial"
+  }
+}

@@ -1,8 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "angularCompilerOptions": {
-    "compilationMode": "partial"
-  },
   "include": ["**/*.ts"],
   "files": ["index.ts"]
 }

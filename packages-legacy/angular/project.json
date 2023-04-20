@@ -9,7 +9,7 @@
       "executor": "@nrwl/angular:package",
       "options": {
         "project": "packages-legacy/angular/ng-package.json",
-        "tsConfig": "packages-legacy/angular/tsconfig.json"
+        "tsConfig": "packages-legacy/angular/tsconfig.runtime.json"
       },
       "outputs": ["build/packages/angular-legacy"]
     },
