@@ -36,7 +36,7 @@ export default async function (tree: Tree) {
 
 function getStorybookBuildTargets(tree: Tree) {
   const storybookBuildTargets = new Set<string>();
-  forEachExecutorOptions(tree, '@nx/storybook:build', (_, __, target) => {
+  forEachExecutorOptions(tree, '@nrwl/storybook:build', (_, __, target) => {
     storybookBuildTargets.add(target);
   });
   forEachExecutorOptions(

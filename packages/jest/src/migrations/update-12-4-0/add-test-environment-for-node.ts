@@ -14,7 +14,7 @@ import { addPropertyToJestConfig } from '../../utils/config/update-config';
 function updateJestConfig(tree: Tree) {
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nx/jest:jest',
+    '@nrwl/jest:jest',
     (options, project) => {
       if (!options.jestConfig) {
         return;

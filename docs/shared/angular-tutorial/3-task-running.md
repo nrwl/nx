@@ -23,7 +23,7 @@ Here's the `project.json` file for your `common-ui` project:
   "prefix": "myorg",
   "targets": {
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nrwl/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "libs/common-ui/jest.config.ts",
@@ -31,7 +31,7 @@ Here's the `project.json` file for your `common-ui` project:
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nrwl/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "libs/common-ui/**/*.ts",

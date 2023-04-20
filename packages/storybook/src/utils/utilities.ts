@@ -206,21 +206,21 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     '@nx/react-native:bundle',
     '@nx/react-native:build-android',
     '@nx/react-native:bundle',
-    '@nx/js:babel',
-    '@nx/js:swc',
-    '@nx/js:tsc',
-    '@nx/webpack:webpack',
+    '@nrwl/js:babel',
+    '@nrwl/js:swc',
+    '@nrwl/js:tsc',
+    '@nrwl/webpack:webpack',
     '@nrwl/rollup:rollup',
-    '@nx/web:rollup',
+    '@nrwl/web:rollup',
     '@nrwl/vite:build',
-    '@nx/angular:ng-packagr-lite',
-    '@nx/angular:package',
-    '@nx/angular:webpack-browser',
+    '@nrwl/angular:ng-packagr-lite',
+    '@nrwl/angular:package',
+    '@nrwl/angular:webpack-browser',
     '@nrwl/esbuild:esbuild',
-    '@nx/next:build',
-    '@nx/react-native:bundle',
-    '@nx/react-native:build-android',
-    '@nx/react-native:bundle',
+    '@nrwl/next:build',
+    '@nrwl/react-native:bundle',
+    '@nrwl/react-native:build-android',
+    '@nrwl/react-native:bundle',
     '@nxext/vite:build',
     '@angular-devkit/build-angular:browser',
   ];
@@ -253,14 +253,14 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
       returnObject.compiler = targets[target].options?.compiler;
     } else if (
       targets[target].executor === '@storybook/angular:start-storybook' ||
-      targets[target].executor === '@nx/storybook:storybook' ||
+      targets[target].executor === '@nrwl/storybook:storybook' ||
       targets[target].executor === '@nx/storybook:storybook'
     ) {
       returnObject.storybookTarget = target;
     } else if (
       targets[target].executor === '@storybook/angular:build-storybook' ||
       targets[target].executor === '@nx/storybook:build' ||
-      targets[target].executor === '@nx/storybook:build'
+      targets[target].executor === '@nrwl/storybook:build'
     ) {
       returnObject.storybookBuildTarget = target;
     } else if (targets[target].options?.compiler) {

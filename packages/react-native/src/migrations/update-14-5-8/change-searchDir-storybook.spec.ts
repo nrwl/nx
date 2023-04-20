@@ -16,7 +16,7 @@ describe('change-searchDir-storybook', () => {
       sourceRoot: 'apps/products/src',
       targets: {
         storybook: {
-          executor: '@nx/react-native:storybook',
+          executor: '@nrwl/react-native:storybook',
           options: {
             searchDir: 'apps/products',
           },
@@ -30,7 +30,7 @@ describe('change-searchDir-storybook', () => {
 
     const projectConfig = readProjectConfiguration(tree, 'products');
     expect(projectConfig.targets['storybook']).toEqual({
-      executor: '@nx/react-native:storybook',
+      executor: '@nrwl/react-native:storybook',
       options: {
         searchDir: ['apps/products'],
       },

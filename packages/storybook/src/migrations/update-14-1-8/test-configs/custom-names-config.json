@@ -6,7 +6,7 @@
       "sourceRoot": "libs/ui/one/src",
       "targets": {
         "trthrngb": {
-          "executor": "@nx/storybook:storybook",
+          "executor": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,
@@ -17,7 +17,7 @@
           }
         },
         "asdgsdfg": {
-          "executor": "@nx/storybook:build",
+          "executor": "@nrwl/storybook:build",
           "outputs": ["{options.outputPath}"],
           "options": {
             "uiFramework": "@storybook/angular",
@@ -41,7 +41,7 @@
       "sourceRoot": "libs/ui/two/src",
       "targets": {
         "sdft": {
-          "executor": "@nx/storybook:storybook",
+          "executor": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,
@@ -52,7 +52,7 @@
           }
         },
         "thjkkb": {
-          "executor": "@nx/storybook:build",
+          "executor": "@nrwl/storybook:build",
           "outputs": ["{options.outputPath}"],
           "options": {
             "uiFramework": "@storybook/angular",
@@ -76,7 +76,7 @@
       "sourceRoot": "libs/ui/three/src",
       "targets": {
         "nmkgd": {
-          "executor": "@nx/storybook:storybook",
+          "executor": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,
@@ -87,7 +87,7 @@
           }
         },
         "aaaa": {
-          "executor": "@nx/storybook:build",
+          "executor": "@nrwl/storybook:build",
           "outputs": ["{options.outputPath}"],
           "options": {
             "uiFramework": "@storybook/angular",
@@ -116,7 +116,7 @@
           "outputs": ["{options.outputPath}"]
         },
         "lmfkcn": {
-          "executor": "@nx/storybook:storybook",
+          "executor": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,
@@ -132,7 +132,7 @@
           }
         },
         "odmwjbc": {
-          "executor": "@nx/storybook:build",
+          "executor": "@nrwl/storybook:build",
           "outputs": ["{options.outputPath}"],
           "options": {
             "uiFramework": "@storybook/angular",

@@ -1,5 +1,5 @@
 {
-  "name": "@nx/react-native",
+  "name": "@nrwl/react-native",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides: \n\n-Integration with libraries such as Jest, Detox, and Storybook.\n-Scaffolding for creating buildable libraries that can be published to npm.\n-Utilities for automatic workspace refactoring.",

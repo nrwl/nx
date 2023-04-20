@@ -11,7 +11,7 @@ export async function update(tree: Tree) {
 
   for (const [, config] of projects) {
     if (
-      config.targets?.build?.executor === '@nx/next:build' &&
+      config.targets?.build?.executor === '@nrwl/next:build' &&
       tree.exists(joinPathFragments(config.root, 'next.config.js'))
     ) {
       const nextConfigContent = tree.read(
@@ -19,11 +19,11 @@ export async function update(tree: Tree) {
         'utf-8'
       );
 
-      if (nextConfigContent.includes('@nx/next/plugins/with-less')) {
+      if (nextConfigContent.includes('@nrwl/next/plugins/with-less')) {
         missingDeps['less'] = '3.12.2';
       }
 
-      if (nextConfigContent.includes('@nx/next/plugins/with-stylus')) {
+      if (nextConfigContent.includes('@nrwl/next/plugins/with-stylus')) {
         missingDeps['stylus'] = '^0.55.0';
       }
     }

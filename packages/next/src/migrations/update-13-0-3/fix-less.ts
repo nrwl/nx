@@ -21,7 +21,7 @@ export async function update(host: Tree) {
     if (content.match(/next-with-less/)) {
       const updated = content.replace(
         'next-with-less',
-        '@nx/next/plugins/with-less'
+        '@nrwl/next/plugins/with-less'
       );
       task = addDependenciesToPackageJson(
         host,

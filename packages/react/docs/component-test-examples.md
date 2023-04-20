@@ -14,7 +14,7 @@ If you're wanting to create Storybook stories for a component, then check out th
 This generator is used to create a Cypress component test file for a given React component.
 
 ```shell
-nx g @nx/react:component-test --project=my-cool-react-project --componentPath=src/my-fancy-button.tsx
+nx g @nrwl/react:component-test --project=my-cool-react-project --componentPath=src/my-fancy-button.tsx
 ```
 
 Test file are generated with the `.cy.` suffix. this is to prevent colliding with any existing `.spec.` files contained in the project.

@@ -23,7 +23,7 @@ Here's the `project.json` file for your `shared-ui` project:
   "prefix": "store",
   "targets": {
     "build": {
-      "executor": "@nx/angular:ng-packagr-lite",
+      "executor": "@nrwl/angular:ng-packagr-lite",
       "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
         "project": "shared/ui/ng-package.json"
@@ -39,7 +39,7 @@ Here's the `project.json` file for your `shared-ui` project:
       "defaultConfiguration": "production"
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nrwl/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "shared/ui/jest.config.ts",
@@ -47,7 +47,7 @@ Here's the `project.json` file for your `shared-ui` project:
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nrwl/linter:eslint",
       "options": {
         "lintFilePatterns": ["shared/ui/**/*.ts", "shared/ui/**/*.html"]
       }

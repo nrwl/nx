@@ -14,7 +14,7 @@ describe('project graph creation', () => {
 
   it('should correctly build the nxdeps.json containing files for the project', () => {
     const libName = uniq('mylib');
-    runCLI(`generate @nx/js:lib ${libName}`);
+    runCLI(`generate @nrwl/js:lib ${libName}`);
 
     runCLI(`graph --file=graph.json`);
     const { graph: graphJson } = readJson('graph.json');
@@ -25,7 +25,7 @@ describe('project graph creation', () => {
   it("should correctly build the nxdeps.json containing files for the project when root is ''", () => {
     const libName = uniq('mylib');
 
-    runCLI(`generate @nx/js:lib ${libName}`);
+    runCLI(`generate @nrwl/js:lib ${libName}`);
     updateJson(`libs/${libName}/project.json`, (json) => ({
       ...json,
       root: '',
@@ -41,8 +41,8 @@ describe('project graph creation', () => {
     const libName = uniq('mylib');
     const secondLibName = uniq('mysecondlib');
 
-    runCLI(`generate @nx/js:lib ${libName}`);
-    runCLI(`generate @nx/js:lib ${secondLibName}`);
+    runCLI(`generate @nrwl/js:lib ${libName}`);
+    runCLI(`generate @nrwl/js:lib ${secondLibName}`);
     updateJson(`libs/${libName}/project.json`, (json) => ({
       ...json,
       root: '',

@@ -29,7 +29,7 @@ describe('switchToJasmineMarbles', () => {
           {
             type: DependencyType.static,
             source: 'test',
-            target: 'npm:@nx/angular',
+            target: 'npm:@nrwl/angular',
           },
         ],
       },
@@ -42,15 +42,15 @@ describe('switchToJasmineMarbles', () => {
 
     tree.write(
       'test/a/b/mytest.spec.ts',
-      `import {hot, cold} from '@nx/angular/testing';`
+      `import {hot, cold} from '@nrwl/angular/testing';`
     );
     tree.write(
       'test/c/d/mytest.spec.ts',
-      `import {hot, getTestScheduler} from '@nx/angular/testing';`
+      `import {hot, getTestScheduler} from '@nrwl/angular/testing';`
     );
     tree.write(
       'test/e/mytest.spec.ts',
-      `import {getTestScheduler, time} from '@nx/angular/testing';`
+      `import {getTestScheduler, time} from '@nrwl/angular/testing';`
     );
 
     // ACT
@@ -83,7 +83,7 @@ describe('switchToJasmineMarbles', () => {
           {
             type: DependencyType.static,
             source: 'test',
-            target: 'npm:@nx/angular',
+            target: 'npm:@nrwl/angular',
           },
         ],
       },
@@ -95,15 +95,15 @@ describe('switchToJasmineMarbles', () => {
     });
     tree.write(
       'a/b/mytest.spec.ts',
-      `import {hot, cold, readFirst} from '@nx/angular/testing';`
+      `import {hot, cold, readFirst} from '@nrwl/angular/testing';`
     );
     tree.write(
       'c/d/mytest.spec.ts',
-      `import {hot, getTestScheduler, readAll} from '@nx/angular/testing';`
+      `import {hot, getTestScheduler, readAll} from '@nrwl/angular/testing';`
     );
     tree.write(
       'e/mytest.spec.ts',
-      `import {getTestScheduler, time, readAll, readFirst} from '@nx/angular/testing';`
+      `import {getTestScheduler, time, readAll, readFirst} from '@nrwl/angular/testing';`
     );
 
     // ACT
@@ -111,15 +111,15 @@ describe('switchToJasmineMarbles', () => {
 
     // ASSERT
     expect(tree.read('a/b/mytest.spec.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import {readFirst} from '@nx/angular/testing';
+      "import {readFirst} from '@nrwl/angular/testing';
           import {hot,cold} from 'jasmine-marbles';"
     `);
     expect(tree.read('c/d/mytest.spec.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import {readAll} from '@nx/angular/testing';
+      "import {readAll} from '@nrwl/angular/testing';
           import {hot,getTestScheduler} from 'jasmine-marbles';"
     `);
     expect(tree.read('e/mytest.spec.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import {readAll,readFirst} from '@nx/angular/testing';
+      "import {readAll,readFirst} from '@nrwl/angular/testing';
           import {getTestScheduler,time} from 'jasmine-marbles';"
     `);
   });
@@ -134,7 +134,7 @@ describe('switchToJasmineMarbles', () => {
           {
             type: DependencyType.static,
             source: 'test',
-            target: 'npm:@nx/angular',
+            target: 'npm:@nrwl/angular',
           },
         ],
       },
@@ -146,7 +146,7 @@ describe('switchToJasmineMarbles', () => {
     });
     tree.write(
       'a/b/mytest.spec.ts',
-      `import {hot, cold, readFirst} from '@nx/angular/testing';`
+      `import {hot, cold, readFirst} from '@nrwl/angular/testing';`
     );
 
     // ACT

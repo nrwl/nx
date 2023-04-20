@@ -8,7 +8,7 @@ import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-optio
 export async function updateExternalEmotionJsxRuntime(tree: Tree) {
   forEachExecutorOptions<any>(
     tree,
-    '@nx/web:rollup',
+    '@nrwl/web:rollup',
     (options: any, projectName, targetName, configurationName) => {
       const projectConfiguration = readProjectConfiguration(tree, projectName);
       const config = configurationName

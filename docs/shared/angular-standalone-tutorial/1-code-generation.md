@@ -63,13 +63,13 @@ There are two projects that have been created for you:
 
 As far as Nx is concerned, the root-level `store` app owns every file that doesn't belong to a different project. So files in the `e2e` folder belong to the `e2e` project, everything else belongs to `store`.
 
-{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nx/cypress package page." url="/packages/cypress" /%}
+{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nrwl/cypress package page." url="/packages/cypress" /%}
 
 ## Generating a component for the store
 
-```{% command="npx nx g @nx/angular:component shop --project=store" path="~/store" %}
+```{% command="npx nx g @nrwl/angular:component shop --project=store" path="~/store" %}
 
->  NX  Generating @nx/angular:component
+>  NX  Generating @nrwl/angular:component
 
 CREATE src/app/shop/shop.component.css
 CREATE src/app/shop/shop.component.html
@@ -82,11 +82,11 @@ UPDATE src/app/app.module.ts
 
 ## Generating Libraries
 
-To create the `cart` and `shared/ui` libraries, use the `@nx/angular:lib` generator:
+To create the `cart` and `shared/ui` libraries, use the `@nrwl/angular:lib` generator:
 
-```{% command="npx nx g @nx/angular:library cart" path="~/store" %}
+```{% command="npx nx g @nrwl/angular:library cart" path="~/store" %}
 
->  NX  Generating @nx/angular:library
+>  NX  Generating @nrwl/angular:library
 
 CREATE cart/README.md
 CREATE cart/tsconfig.lib.json
@@ -101,9 +101,9 @@ CREATE cart/src/test-setup.ts
 CREATE cart/.eslintrc.json
 ```
 
-```{% command="npx nx g @nx/angular:lib shared/ui --buildable" path="~/store" %}
+```{% command="npx nx g @nrwl/angular:lib shared/ui --buildable" path="~/store" %}
 
->  NX  Generating @nx/angular:library
+>  NX  Generating @nrwl/angular:library
 
 UPDATE jest.config.ts
 CREATE jest.config.app.ts

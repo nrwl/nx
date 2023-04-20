@@ -1,6 +1,6 @@
 ---
 title: Storybook dev server executor examples
-description: This page contains examples for the @nx/storybook:storybook executor.
+description: This page contains examples for the @nrwl/storybook:storybook executor.
 ---
 
 `project.json`:
@@ -11,7 +11,7 @@ description: This page contains examples for the @nx/storybook:storybook executo
     "targets": {
         //...
         "storybook": {
-            "executor": "@nx/storybook:storybook",
+            "executor": "@nrwl/storybook:storybook",
             "options": {
                 "port": 4400,
                 "configDir": "libs/ui/.storybook"
@@ -43,7 +43,7 @@ Read more on the [Storybook documentation page for `addon-docs`](https://storybo
 
 ```json
 "storybook": {
-    "executor": "@nx/storybook:storybook",
+    "executor": "@nrwl/storybook:storybook",
     "options": {
         "port": 4400,
         "configDir": "libs/ui/.storybook",

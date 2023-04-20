@@ -146,7 +146,7 @@ function addAddonEssentialsToAllStorybooks(tree: Tree): string[] {
   const projectsThatFailedTOAddAddonEssentials = [];
   forEachExecutorOptions(
     tree,
-    '@nx/storybook:build',
+    '@nrwl/storybook:build',
     (options, projectName) => {
       const failedToAddAddon = addAddon(tree, options, projectName);
       if (failedToAddAddon) {

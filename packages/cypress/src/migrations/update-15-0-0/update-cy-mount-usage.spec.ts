@@ -189,18 +189,18 @@ async function setup(tree: Tree) {
   });
   const myLib = readProjectConfiguration(tree, 'my-lib');
   myLib.targets['build'] = {
-    executor: '@nx/angular:webpack-browser',
+    executor: '@nrwl/angular:webpack-browser',
     options: {},
   };
-  myLib.targets['component-test'].executor = '@nx/cypress:cypress';
+  myLib.targets['component-test'].executor = '@nrwl/cypress:cypress';
   myLib.targets['component-test'].options.devServerTarget = 'my-lib:build';
   updateProjectConfiguration(tree, 'my-lib', myLib);
   const anotherLib = readProjectConfiguration(tree, 'another-lib');
   anotherLib.targets['build'] = {
-    executor: '@nx/webpack:webpack',
+    executor: '@nrwl/webpack:webpack',
     options: {},
   };
-  anotherLib.targets['component-test'].executor = '@nx/cypress:cypress';
+  anotherLib.targets['component-test'].executor = '@nrwl/cypress:cypress';
   anotherLib.targets['component-test'].options.devServerTarget =
     'another-lib:build';
   updateProjectConfiguration(tree, 'another-lib', anotherLib);

@@ -44,7 +44,7 @@ describe('Cypress 12 Migration', () => {
     expect(tree.read('apps/my-app-e2e/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { defineConfig } from 'cypress';
-      import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
       export default defineConfig({
         e2e: nxE2EPreset(__filename)
@@ -93,7 +93,7 @@ describe('Cypress 12 Migration', () => {
               // I'm not doing nested cy stuff
             });
             /**
-        * TODO(@nx/cypress): Nesting Cypress commands in a should assertion now throws.
+        * TODO(@nrwl/cypress): Nesting Cypress commands in a should assertion now throws.
         * You should use .then() to chain commands instead.
         * More Info: https://docs.cypress.io/guides/references/migration-guide#-should
         **/
@@ -101,7 +101,7 @@ describe('Cypress 12 Migration', () => {
               cy.task("");
             })
             /**
-        * TODO(@nx/cypress): Nesting Cypress commands in a should assertion now throws.
+        * TODO(@nrwl/cypress): Nesting Cypress commands in a should assertion now throws.
         * You should use .then() to chain commands instead.
         * More Info: https://docs.cypress.io/guides/references/migration-guide#-should
         **/
@@ -127,7 +127,7 @@ describe('Cypress 12 Migration', () => {
       // I'm not doing nested cy stuff
     });
     /**
-* TODO(@nx/cypress): Nesting Cypress commands in a should assertion now throws.
+* TODO(@nrwl/cypress): Nesting Cypress commands in a should assertion now throws.
 * You should use .then() to chain commands instead.
 * More Info: https://docs.cypress.io/guides/references/migration-guide#-should
 **/
@@ -135,7 +135,7 @@ cy.should(($s) => {
       cy.task("");
     })
     /**
-* TODO(@nx/cypress): Nesting Cypress commands in a should assertion now throws.
+* TODO(@nrwl/cypress): Nesting Cypress commands in a should assertion now throws.
 * You should use .then() to chain commands instead.
 * More Info: https://docs.cypress.io/guides/references/migration-guide#-should
 **/
@@ -183,7 +183,7 @@ Cypress.Commands.overwrite('find', () => {});
           console.log('Custom command example: Login', email, password);
         });
         /**
-        * TODO(@nx/cypress): This command can no longer be overridden
+        * TODO(@nrwl/cypress): This command can no longer be overridden
         * Consider using a different name like 'custom_find'
         * More info: https://docs.cypress.io/guides/references/migration-guide#Cypress-Commands-overwrite
         **/
@@ -204,7 +204,7 @@ Cypress.Commands.add('login', (email, password) => {
   console.log('Custom command example: Login', email, password);
 });
 /**
-* TODO(@nx/cypress): This command can no longer be overridden
+* TODO(@nrwl/cypress): This command can no longer be overridden
 * Consider using a different name like 'custom_find'
 * More info: https://docs.cypress.io/guides/references/migration-guide#Cypress-Commands-overwrite
 **/
@@ -253,19 +253,19 @@ describe('something', () => {
       );
       const expected = stripIndents`describe('something', () => {
       it('should do the thing', () => {
-        // TODO(@nx/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
+        // TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
     Cypress.Cookies.defaults()
-        // TODO(@nx/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
+        // TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
     Cypress.Cookies.preserveOnce('seesion_id', 'remember-token');
         Cypress.blah.abc()
-        // TODO(@nx/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+        // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
     Cypress.Server.defaults({
          delay: 500,
          method: 'GET',
        })
-       // TODO(@nx/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+       // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
     cy.server()
-       // TODO(@nx/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+       // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
     cy.route(/api/, () => {
           return {
             'test': 'We’ll',
@@ -336,14 +336,14 @@ describe('something', () => {
             Cypress.Cookies.defaults()
             Cypress.Cookies.preserveOnce('seesion_id', 'remember-token');
             Cypress.blah.abc() 
-            // TODO(@nx/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+            // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
         Cypress.Server.defaults({
              delay: 500,
              method: 'GET',
            })
-           // TODO(@nx/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+           // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
         cy.server()
-           // TODO(@nx/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+           // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
         cy.route(/api/, () => {
               return {
                 'test': 'We’ll',
@@ -391,9 +391,9 @@ describe('something', () => {
         "
         describe('something', () => {
           it('should do the thing', () => {
-            // TODO(@nx/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
+            // TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
         Cypress.Cookies.defaults()
-            // TODO(@nx/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
+            // TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
         Cypress.Cookies.preserveOnce('seesion_id', 'remember-token');
             Cypress.blah.abc() 
             Cypress.Server.defaults({
@@ -414,7 +414,7 @@ describe('something', () => {
     it('should be idempotent', () => {
       const content = `
 import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: {
@@ -432,7 +432,7 @@ export default defineConfig({
         'my-cypress.config.ts',
         `
 import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: nxE2EPreset(__filename),
@@ -443,13 +443,13 @@ export default defineConfig({
       expect(tree.read('my-cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
         "
         import { defineConfig } from 'cypress';
-        import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
         export default defineConfig({
           e2e: {
             ...nxE2EPreset(__filename),
             /**
-            * TODO(@nx/cypress): In Cypress v12,the testIsolation option is turned on by default. 
+            * TODO(@nrwl/cypress): In Cypress v12,the testIsolation option is turned on by default. 
             * This can cause tests to start breaking where not indended.
             * You should consider enabling this once you verify tests do not depend on each other
             * More Info: https://docs.cypress.io/guides/references/migration-guide#Test-Isolation
@@ -466,7 +466,7 @@ export default defineConfig({
         'my-cypress.config.ts',
         `
 import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: {
@@ -480,14 +480,14 @@ export default defineConfig({
       expect(tree.read('my-cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
         "
         import { defineConfig } from 'cypress';
-        import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
         export default defineConfig({
           e2e: {
             ...nxE2EPreset(__filename),
             video: false,
             /**
-            * TODO(@nx/cypress): In Cypress v12,the testIsolation option is turned on by default. 
+            * TODO(@nrwl/cypress): In Cypress v12,the testIsolation option is turned on by default. 
             * This can cause tests to start breaking where not indended.
             * You should consider enabling this once you verify tests do not depend on each other
             * More Info: https://docs.cypress.io/guides/references/migration-guide#Test-Isolation
@@ -504,7 +504,7 @@ export default defineConfig({
         'my-cypress.config.ts',
         `
 import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 const myConfig = {
     ...nxE2EPreset(__filename),
     video: false
@@ -519,7 +519,7 @@ export default defineConfig({
       expect(tree.read('my-cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
         "
         import { defineConfig } from 'cypress';
-        import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
         const myConfig = {
             ...nxE2EPreset(__filename),
             video: false
@@ -529,7 +529,7 @@ export default defineConfig({
           e2e: {
             ...myConfig,
             /**
-            * TODO(@nx/cypress): In Cypress v12,the testIsolation option is turned on by default. 
+            * TODO(@nrwl/cypress): In Cypress v12,the testIsolation option is turned on by default. 
             * This can cause tests to start breaking where not indended.
             * You should consider enabling this once you verify tests do not depend on each other
             * More Info: https://docs.cypress.io/guides/references/migration-guide#Test-Isolation
@@ -546,7 +546,7 @@ export default defineConfig({
 function addCypressProject(tree: Tree, name: string) {
   const targets = {
     e2e: {
-      executor: '@nx/cypress:cypress',
+      executor: '@nrwl/cypress:cypress',
       options: {
         tsConfig: `apps/${name}/tsconfig.e2e.json`,
         testingType: 'e2e',
@@ -577,7 +577,7 @@ function addCypressProject(tree: Tree, name: string) {
   tree.write(
     `apps/${name}/cypress.config.ts`,
     `import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: nxE2EPreset(__filename)
@@ -693,11 +693,11 @@ function assertMigration(tree: Tree, name: string) {
   );
   // command overrides
   expect(tree.read(`apps/${name}/src/support/commands.ts`, 'utf-8')).toContain(
-    'TODO(@nx/cypress): This command can no longer be overridden'
+    'TODO(@nrwl/cypress): This command can no longer be overridden'
   );
   // test .should(() => cy.<cmd>)
   expect(tree.read(`apps/${name}/src/e2e/callback.spec.ts`, 'utf-8')).toContain(
-    'TODO(@nx/cypress): Nesting Cypress commands in a should assertion now throws.'
+    'TODO(@nrwl/cypress): Nesting Cypress commands in a should assertion now throws.'
   );
   // use cy.intercept, cy.session
   const interceptSessionSpec = tree.read(
@@ -705,10 +705,10 @@ function assertMigration(tree: Tree, name: string) {
     'utf-8'
   );
   expect(interceptSessionSpec).toContain(
-    '// TODO(@nx/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes'
+    '// TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes'
   );
   expect(interceptSessionSpec).toContain(
-    '// TODO(@nx/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults'
+    '// TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults'
   );
   // intercept,session & callback
   expect(

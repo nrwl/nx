@@ -10,7 +10,7 @@ import {
  */
 export default async function update(tree: Tree) {
   for (const [name, config] of getProjects(tree)) {
-    if (config.targets?.build?.executor !== '@nx/web:rollup') continue;
+    if (config.targets?.build?.executor !== '@nrwl/web:rollup') continue;
     if (Array.isArray(config.targets.build.options?.format)) continue;
 
     config.targets.build.options = {

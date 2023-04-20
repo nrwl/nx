@@ -6,7 +6,7 @@
       "sourceRoot": "libs/ui/one/src",
       "targets": {
         "storybook": {
-          "executor": "@nx/storybook:storybook",
+          "executor": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/react",
             "port": 4400,
@@ -16,7 +16,7 @@
           }
         },
         "build-storybook": {
-          "executor": "@nx/storybook:build",
+          "executor": "@nrwl/storybook:build",
           "outputs": ["{options.outputPath}"],
           "options": {
             "uiFramework": "@storybook/angular",
@@ -40,7 +40,7 @@
       "prefix": "katst",
       "targets": {
         "storybook": {
-          "executor": "@nx/storybook:storybook",
+          "executor": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/react",
             "port": 4400,

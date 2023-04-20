@@ -120,6 +120,6 @@ function getCypressTargets(proj: ProjectConfiguration) {
     return [];
   }
   return Object.values(proj.targets).filter(
-    (target) => target.executor === '@nx/cypress:cypress'
+    (target) => target.executor === '@nrwl/cypress:cypress'
   );
 }

@@ -46,7 +46,7 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["apps/my-test-react-vite-app/**/*.{ts,tsx,js,jsx}"]

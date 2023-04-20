@@ -73,7 +73,7 @@ module.exports = {
   addons: [
     '@storybook/addon-essentials',
     ...rootMain.addons,
-    '@nx/react/plugins/storybook',
+    '@nrwl/react/plugins/storybook',
   ],
   webpackFinal: async (config, { configType }) => {
     // apply any global webpack configs that might have been specified in .storybook/main.js
@@ -158,7 +158,7 @@ module.exports = {
   addons: [
     '@storybook/addon-essentials',
     ...rootMain.addons,
-    '@nx/react/plugins/storybook',
+    '@nrwl/react/plugins/storybook',
   ],
   webpackFinal: async (config, { configType }) => {
     // apply any global webpack configs that might have been specified in .storybook/main.js
@@ -266,7 +266,7 @@ module.exports = {
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
   webpackFinal: async (config, { configType }) => {
     // apply any global webpack configs that might have been specified in .storybook/main.js
 
@@ -346,7 +346,7 @@ module.exports = {
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
   webpackFinal: async (config, { configType }) => {
     // apply any global webpack configs that might have been specified in .storybook/main.js
 

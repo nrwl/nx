@@ -384,13 +384,13 @@ const packageMapCache = new Map<string, any>();
  *
  * For example:
  * ```typescript
- * ensurePackage(tree, '@nx/jest', nxVersion)
+ * ensurePackage(tree, '@nrwl/jest', nxVersion)
  * ```
- * This install the @nx/jest@<nxVersion> and return the module
+ * This install the @nrwl/jest@<nxVersion> and return the module
  * When running with --dryRun, the function will throw when dependencies are missing.
  *
  * @param tree the file system tree
- * @param pkg the package to check (e.g. @nx/jest)
+ * @param pkg the package to check (e.g. @nrwl/jest)
  * @param requiredVersion the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0)
  * @param {EnsurePackageOptions} options?
  */
@@ -406,7 +406,7 @@ export function ensurePackage(
  *
  * For example:
  * ```typescript
- * ensurePackage(tree, '@nx/jest', nxVersion)
+ * ensurePackage(tree, '@nrwl/jest', nxVersion)
  * ```
  * @param pkg the package to install and require
  * @param version the version to install if the package doesn't exist already

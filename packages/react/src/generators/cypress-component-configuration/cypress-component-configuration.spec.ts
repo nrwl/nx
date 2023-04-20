@@ -448,7 +448,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       "Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
       Provided project? some-lib
       Provided build target? my-app:build
-      Provided Executors? @nx/webpack:webpack, @nx/vite:build, @nx/webpack:webpack, @nrwl/vite:build"
+      Provided Executors? @nx/webpack:webpack, @nx/vite:build, @nrwl/webpack:webpack, @nrwl/vite:build"
     `);
   });
 });

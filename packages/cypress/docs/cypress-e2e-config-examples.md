@@ -17,7 +17,7 @@ nx g cypress-e2e-configuration --project=my-cool-project --devServerTarget=some-
 ```
 
 Providing a `--devServerTarget` is optional if you provide a `--baseUrl` or the project you're adding the configuration to has a `serve` target already.
-Otherwise, a `--devServerTarget` is recommend for the `@nx/cypress:cypress` executor to spin up the dev server for you automatically when needed.
+Otherwise, a `--devServerTarget` is recommend for the `@nrwl/cypress:cypress` executor to spin up the dev server for you automatically when needed.
 
 ## Feature Based Testing
 
@@ -126,4 +126,4 @@ nx g cypress-e2e-configuration --project=feature-dashboard --devServerTarget=fan
 
 Each project will now get their own `e2e` target, where the feature project is only concerned with itself. This allows for more focused tests without worrying about forcing unrelated tests to also run.
 
-It's important to remember that these feature tests are still going to be leveraging the same app to run the tests against so if you plan to run in parallel, you can leverage using a file server and the ability for `@nx/cypress:cypress` executor to pass through a port or find a free port to allow running tests in parallel. Read more [about the --port flag](/packages/cypress/executors/cypress#port)
+It's important to remember that these feature tests are still going to be leveraging the same app to run the tests against so if you plan to run in parallel, you can leverage using a file server and the ability for `@nrwl/cypress:cypress` executor to pass through a port or find a free port to allow running tests in parallel. Read more [about the --port flag](/packages/cypress/executors/cypress#port)

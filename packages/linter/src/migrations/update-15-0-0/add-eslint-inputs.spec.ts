@@ -27,11 +27,11 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
         root: 'proj',
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {},
           },
           lint2: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {},
           },
           notTest: {
@@ -81,11 +81,11 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
         root: 'proj',
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {},
           },
           lint2: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {},
           },
           notTest: {
@@ -134,11 +134,11 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
         root: 'proj',
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {},
           },
           lint2: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {},
           },
           notTest: {

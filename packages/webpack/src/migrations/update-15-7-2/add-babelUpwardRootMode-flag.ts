@@ -10,7 +10,7 @@ import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 export default async function (tree: Tree) {
   forEachExecutorOptions<WebpackExecutorOptions>(
     tree,
-    '@nx/webpack:webpack',
+    '@nrwl/webpack:webpack',
     (
       options: WebpackExecutorOptions,
       projectName,

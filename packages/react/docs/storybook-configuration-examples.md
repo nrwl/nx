@@ -1,7 +1,7 @@
 This generator will set up Storybook for your **React** project. You can also use this generator to generate Storybook configuration for your **Next.js** project.
 
 ```bash
-nx g @nx/react:storybook-configuration project-name
+nx g @nrwl/react:storybook-configuration project-name
 ```
 
 You can read more about how this generator works, in the [Storybook for React overview page](/packages/storybook/documents/overview-react#generate-storybook-configuration-for-an-react-project).
@@ -23,7 +23,7 @@ There are a number of other options available. Let's take a look at some example
 ### Generate Storybook configuration using TypeScript
 
 ```bash
-nx g @nx/react:storybook-configuration ui --tsConfiguration=true
+nx g @nrwl/react:storybook-configuration ui --tsConfiguration=true
 ```
 
 This will generate a Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory).
@@ -31,7 +31,7 @@ This will generate a Storybook configuration for the `ui` project using TypeScri
 ### Ignore certain paths when generating stories
 
 ```bash
-nx g @nx/react:storybook-configuration ui --generateStories=true --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts
+nx g @nrwl/react:storybook-configuration ui --generateStories=true --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts
 ```
 
 This will generate a Storybook configuration for the `ui` project and generate stories for all components in the `libs/ui/src/lib` directory, except for the ones in the `libs/ui/src/not-stories` directory, and the ones in the `apps/my-app` directory that end with `.something.ts`, and also for components that their file name is of the pattern `*.other.*`.
@@ -41,7 +41,7 @@ This is useful if you have a project that contains components that are not meant
 ### Generate stories using JavaScript instead of TypeScript
 
 ```bash
-nx g @nx/react:storybook-configuration ui --generateStories=true --js=true
+nx g @nrwl/react:storybook-configuration ui --generateStories=true --js=true
 ```
 
 This will generate stories for all the components in the `ui` project using JavaScript instead of TypeScript. So, you will have `.stories.js` files next to your components.
@@ -49,7 +49,7 @@ This will generate stories for all the components in the `ui` project using Java
 ### Generate Storybook configuration for Storybook version 7
 
 ```bash
-nx g @nx/react:storybook-configuration ui --storybook7Configuration=true
+nx g @nrwl/react:storybook-configuration ui --storybook7Configuration=true
 ```
 
 {% callout type="info" title="For Nx versions <15.9" %}

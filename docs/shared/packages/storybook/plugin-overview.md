@@ -19,14 +19,14 @@ Starting with Nx 16, Storybook 7 is going to be used by default to configure you
 {% tab label="yarn" %}
 
 ```shell
-yarn add -D @nx/storybook
+yarn add -D @nrwl/storybook
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/storybook
+npm install -D @nrwl/storybook
 ```
 
 {% /tab %}
@@ -39,7 +39,7 @@ npm install -D @nx/storybook
 You can generate Storybook configuration for an individual project with this command:
 
 ```shell
-nx g @nx/storybook:configuration project-name
+nx g @nrwl/storybook:configuration project-name
 ```
 
 If you are NOT using a framework-specific generator, in the field `storybook7UiFramework` you must choose one of the following Storybook frameworks:
@@ -71,10 +71,10 @@ Choosing one of these frameworks will have the following effects on your workspa
 
 4. Nx will generate a new Cypress e2e app for your project (if there isn't one already) to run against the Storybook instance.
 
-Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js or React Native: [`@nx/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nx/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nx/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration), for example:
+Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js or React Native: [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nrwl/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration), for example:
 
 ```shell
-nx g @nx/angular:storybook-configuration my-angular-project --storybook7Configuration
+nx g @nrwl/angular:storybook-configuration my-angular-project --storybook7Configuration
 ```
 
 These framework-specific generators will also **generate stories** for you.
@@ -84,7 +84,7 @@ These framework-specific generators will also **generate stories** for you.
 You can choose to configure your project using TypeScript instead of JavaScript. To do that, just add the `--tsConfiguration=true` flag to the above command, like this:
 
 ```shell
-nx g @nx/storybook:configuration project-name --tsConfiguration=true
+nx g @nrwl/storybook:configuration project-name --tsConfiguration=true
 ```
 
 [Here is the Storybook documentation](https://storybook.js.org/docs/react/configure/overview#configure-your-project-with-typescript) if you want to learn more.

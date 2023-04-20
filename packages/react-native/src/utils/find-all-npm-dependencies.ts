@@ -19,7 +19,7 @@ export function findAllNpmDependencies(
   if (node) {
     if (
       node.name !== 'npm:@nx/react-native' &&
-      node.name !== 'npm:@nx/react-native'
+      node.name !== 'npm:@nrwl/react-native'
     ) {
       list.push(node.data.packageName);
     }

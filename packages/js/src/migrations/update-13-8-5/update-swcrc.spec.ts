@@ -30,7 +30,7 @@ describe('Migration: adjust .swcrc', () => {
         ...projectConfiguration.targets,
         build: {
           ...projectConfiguration.targets['build'],
-          executor: '@nx/js:swc',
+          executor: '@nrwl/js:swc',
         },
       },
     });

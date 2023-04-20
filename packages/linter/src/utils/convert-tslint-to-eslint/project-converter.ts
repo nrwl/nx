@@ -518,7 +518,7 @@ export class ProjectConverter {
       for (const [, targetConfig] of Object.entries(projectConfig.targets)) {
         if (
           targetConfig.executor === '@nx/cypress:cypress' ||
-          targetConfig.executor === '@nx/cypress:cypress'
+          targetConfig.executor === '@nrwl/cypress:cypress'
         ) {
           if (
             targetConfig.options.devServerTarget === `${this.projectName}:serve`

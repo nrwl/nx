@@ -3,13 +3,13 @@
     "remove-node-sass-13-0-0": {
       "cli": "nx",
       "version": "13.0.0-beta.1",
-      "description": "Removes deprecated node-sass package (sass is already a dependency of @nx/web).",
+      "description": "Removes deprecated node-sass package (sass is already a dependency of @nrwl/web).",
       "factory": "./src/migrations/update-13-0-0/remove-node-sass-13-0-0"
     },
     "remove-webpack-5-packages": {
       "cli": "nx",
       "version": "13.0.0-beta.1",
-      "description": "Remove packages installed by Nx 12's `@nx/web:webpack5` generator.",
+      "description": "Remove packages installed by Nx 12's `@nrwl/web:webpack5` generator.",
       "factory": "./src/migrations/update-13-0-0/remove-webpack-5-packages-13-0-0"
     },
     "rename-build-to-webpack": {
@@ -33,7 +33,7 @@
     "update-webpack-executor": {
       "cli": "nx",
       "version": "14.7.6-beta.1",
-      "description": "Update usages of webpack executors to @nx/webpack",
+      "description": "Update usages of webpack executors to @nrwl/webpack",
       "factory": "./src/migrations/update-14-7-6/update-webpack-executor"
     },
     "add-babel-inputs": {
@@ -51,25 +51,25 @@
     "update-babel-preset": {
       "cli": "nx",
       "version": "15.5.4-beta.0",
-      "description": "Update `@nx/web/babel` preset to `@nx/js/babel` for projects that have a .babelrc file.",
+      "description": "Update `@nrwl/web/babel` preset to `@nrwl/js/babel` for projects that have a .babelrc file.",
       "factory": "./src/migrations/update-15-5-4/update-babel-preset"
     },
     "add-dropped-dependencies": {
       "cli": "nx",
       "version": "15.9.1",
-      "description": "Add @nx/linter, @nx/cypress, @nx/jest, @nrwl/rollup if they are used",
+      "description": "Add @nrwl/linter, @nrwl/cypress, @nrwl/jest, @nrwl/rollup if they are used",
       "factory": "./src/migrations/update-15-9-1/add-dropped-dependencies"
     },
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
-      "description": "Replace @nx/web with @nx/web",
+      "description": "Replace @nrwl/web with @nx/web",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     },
     "update-16-0-0-update-executors": {
       "cli": "nx",
       "version": "16.0.0-beta.4",
-      "description": "Replace @nx/web executors with @nx/webpack and @nx/rollup",
+      "description": "Replace @nrwl/web executors with @nx/webpack and @nx/rollup",
       "implementation": "./src/migrations/update-16-0-0-update-executors/update-16-0-0-update-executors"
     }
   },

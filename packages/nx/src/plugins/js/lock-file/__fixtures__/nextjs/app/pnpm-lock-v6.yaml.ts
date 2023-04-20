@@ -1,7 +1,7 @@
 export default `lockfileVersion: '6.0'
 
 dependencies:
-  '@nx/next':
+  '@nrwl/next':
     specifier: 15.3.3
     version: 15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(next@13.0.0)(nx@15.3.3)(typescript@4.8.4)(webpack@5.77.0)
   next:
@@ -1771,7 +1771,7 @@ packages:
       - debug
     dev: false
 
-  /@nx/cypress@15.3.3(nx@15.3.3)(typescript@4.8.4):
+  /@nrwl/cypress@15.3.3(nx@15.3.3)(typescript@4.8.4):
     resolution: {integrity: sha512-+nxWdnRE0JJ1SPt3aKH1TiXSmmSf9xRyniFZ7pobQ74GzNCj6Vd5ZxrepZKYdYh/xzqINzLTHc+1FfRsWf1VUg==}
     peerDependencies:
       cypress: '>= 3 < 12'
@@ -1782,8 +1782,8 @@ packages:
       '@babel/core': 7.21.3
       '@babel/preset-env': 7.20.2(@babel/core@7.21.3)
       '@cypress/webpack-preprocessor': 5.17.0(@babel/core@7.21.3)(@babel/preset-env@7.20.2)(babel-loader@8.3.0)(webpack@5.77.0)
-      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nx/linter': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/linter': 15.3.3(nx@15.3.3)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(typescript@4.8.4)
       '@phenomnomnominal/tsquery': 4.1.1(typescript@4.8.4)
       babel-loader: 8.3.0(@babel/core@7.21.3)(webpack@5.77.0)
@@ -1811,7 +1811,7 @@ packages:
       - webpack-cli
     dev: false
 
-  /@nx/devkit@15.3.3(nx@15.3.3)(typescript@4.8.4):
+  /@nrwl/devkit@15.3.3(nx@15.3.3)(typescript@4.8.4):
     resolution: {integrity: sha512-48R9HAp6r6umWNXTlVTMsH94YYjU/XUPLDTtXBgKESMVbdq8Fk+HDHuN0thXG5dL6DFkXgD0MICLm3jSQU6xMw==}
     peerDependencies:
       nx: '>= 14 <= 16'
@@ -1826,12 +1826,12 @@ packages:
       - typescript
     dev: false
 
-  /@nx/jest@15.3.3(@types/node@18.11.9)(nx@15.3.3)(ts-node@10.9.1)(typescript@4.8.4):
+  /@nrwl/jest@15.3.3(@types/node@18.11.9)(nx@15.3.3)(ts-node@10.9.1)(typescript@4.8.4):
     resolution: {integrity: sha512-hPqBSVmZzGh+FUsgOPim2KnPY7lbjgZlsT1W3D+1ac++gvZopcqyXA2mJJH1X/RxRS3RAYDsE14n+Z3HWFXbwg==}
     dependencies:
       '@jest/reporters': 28.1.1
       '@jest/test-result': 28.1.1
-      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
       '@phenomnomnominal/tsquery': 4.1.1(typescript@4.8.4)
       chalk: 4.1.0
       dotenv: 10.0.0
@@ -1850,11 +1850,11 @@ packages:
       - typescript
     dev: false
 
-  /@nx/js@15.3.3(nx@15.3.3)(typescript@4.8.4):
+  /@nrwl/js@15.3.3(nx@15.3.3)(typescript@4.8.4):
     resolution: {integrity: sha512-q/ePt1U9PfhBIsm2DXQmO/MHIUMhIE69caNMuwCJ/W5oC0w5Lm7R6I7BsYuqni1X/CQchVUrVQa1+vYFXOWqUw==}
     dependencies:
-      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nx/linter': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/linter': 15.3.3(nx@15.3.3)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(typescript@4.8.4)
       chalk: 4.1.0
       fast-glob: 3.2.7
@@ -1874,7 +1874,7 @@ packages:
       - typescript
     dev: false
 
-  /@nx/linter@15.3.3(nx@15.3.3)(typescript@4.8.4):
+  /@nrwl/linter@15.3.3(nx@15.3.3)(typescript@4.8.4):
     resolution: {integrity: sha512-qAcSmbRuzBZ86ahn0/S+zCOj+PobJRAMf6OZq2ZnbfGwS+LXbqXyaoShzZC1e75nd8vroLV61fFbPkLlTqJwgA==}
     peerDependencies:
       eslint: ^8.0.0
@@ -1882,7 +1882,7 @@ packages:
       eslint:
         optional: true
     dependencies:
-      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
       '@phenomnomnominal/tsquery': 4.1.1(typescript@4.8.4)
       tmp: 0.2.1
       tslib: 2.3.0
@@ -1891,18 +1891,18 @@ packages:
       - typescript
     dev: false
 
-  /@nx/next@15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(next@13.0.0)(nx@15.3.3)(typescript@4.8.4)(webpack@5.77.0):
+  /@nrwl/next@15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(next@13.0.0)(nx@15.3.3)(typescript@4.8.4)(webpack@5.77.0):
     resolution: {integrity: sha512-Ly3F76YFdX4ZS1SYV7r/KBWoul8kSefoKiLkdRXKar/8UFaK+eW8xnlAFC2MU9seoXpaqGQTl1GMsnEJ1gMEJg==}
     peerDependencies:
       next: ^13.0.0
     dependencies:
       '@babel/plugin-proposal-decorators': 7.21.0(@babel/core@7.21.3)
-      '@nx/cypress': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nx/jest': 15.3.3(@types/node@18.11.9)(nx@15.3.3)(ts-node@10.9.1)(typescript@4.8.4)
-      '@nx/linter': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nx/react': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nx/webpack': 15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/cypress': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/jest': 15.3.3(@types/node@18.11.9)(nx@15.3.3)(ts-node@10.9.1)(typescript@4.8.4)
+      '@nrwl/linter': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/react': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/webpack': 15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(nx@15.3.3)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(typescript@4.8.4)
       '@svgr/webpack': 6.5.1
       chalk: 4.1.0
@@ -1946,11 +1946,11 @@ packages:
       - webpack-cli
     dev: false
 
-  /@nx/react@15.3.3(nx@15.3.3)(typescript@4.8.4):
+  /@nrwl/react@15.3.3(nx@15.3.3)(typescript@4.8.4):
     resolution: {integrity: sha512-sskKgloMmLVbugpbDV0zlDQkwCehrfiDH4Uo3qVGqkdIvPEjPARGGCmLDrxqF+KO5Gad7jZXGAlIMCjgFqfBww==}
     dependencies:
-      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nx/linter': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/linter': 15.3.3(nx@15.3.3)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(typescript@4.8.4)
       '@phenomnomnominal/tsquery': 4.1.1(typescript@4.8.4)
       chalk: 4.1.0
@@ -1977,11 +1977,11 @@ packages:
       - debug
     dev: false
 
-  /@nx/webpack@15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(nx@15.3.3)(typescript@4.8.4):
+  /@nrwl/webpack@15.3.3(@babel/core@7.21.3)(@types/node@18.11.9)(nx@15.3.3)(typescript@4.8.4):
     resolution: {integrity: sha512-33JGYqg00NeEe1Lz3UZRweBL5zIWwWJhvaFrRLWcDgaTe5kOzXDHlizRIE3abVReI2OHpWbKBCM7KMK2XI3HRQ==}
     dependencies:
-      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nx/js': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/js': 15.3.3(nx@15.3.3)(typescript@4.8.4)
       '@nrwl/workspace': 15.3.3(typescript@4.8.4)
       autoprefixer: 10.4.14(postcss@8.4.21)
       babel-loader: 8.3.0(@babel/core@7.21.3)(webpack@5.77.0)
@@ -2062,8 +2062,8 @@ packages:
       prettier:
         optional: true
     dependencies:
-      '@nx/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
-      '@nx/linter': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/devkit': 15.3.3(nx@15.3.3)(typescript@4.8.4)
+      '@nrwl/linter': 15.3.3(nx@15.3.3)(typescript@4.8.4)
       '@parcel/watcher': 2.0.4
       chalk: 4.1.0
       chokidar: 3.5.3

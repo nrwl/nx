@@ -15,7 +15,7 @@ export default async function (tree: Tree) {
   const defaultOptionsUpdated = new Set<string>();
   forEachExecutorOptions<WebpackExecutorOptions>(
     tree,
-    '@nx/webpack:webpack',
+    '@nrwl/webpack:webpack',
     (
       options: WebpackExecutorOptions,
       projectName,
@@ -33,7 +33,7 @@ export default async function (tree: Tree) {
         !defaultWasUpdated &&
         (defaultOptions?.isolatedConfig ||
           defaultOptions?.main?.match(/main\.(t|j)sx$/) ||
-          defaultOptions?.webpackConfig === '@nx/react/plugins/webpack')
+          defaultOptions?.webpackConfig === '@nrwl/react/plugins/webpack')
       ) {
         return;
       }
@@ -65,7 +65,7 @@ export default async function (tree: Tree) {
         tree.write(
           options.webpackConfig,
           `
-        const { composePlugins, withNx } = require('@nx/webpack');
+        const { composePlugins, withNx } = require('@nrwl/webpack');
 
         // Nx plugins for webpack.
         module.exports = composePlugins(withNx(), (config, { options, context }) => {
@@ -111,7 +111,7 @@ export default async function (tree: Tree) {
         tree.write(
           options.webpackConfig,
           `
-        const { composePlugins, withNx } = require('@nx/webpack');
+        const { composePlugins, withNx } = require('@nrwl/webpack');
       
         // Nx plugins for webpack.
         module.exports = composePlugins(withNx(), (config) => {

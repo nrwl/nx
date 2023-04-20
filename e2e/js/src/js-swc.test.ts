@@ -29,7 +29,7 @@ describe('js e2e', () => {
 
   it('should create libs with js executors (--bundler=swc)', async () => {
     const lib = uniq('lib');
-    runCLI(`generate @nx/js:lib ${lib} --bundler=swc --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${lib} --bundler=swc --no-interactive`);
 
     const libPackageJson = readJson(`libs/${lib}/package.json`);
     expect(libPackageJson.scripts).toBeUndefined();
@@ -48,7 +48,7 @@ describe('js e2e', () => {
     checkFilesDoNotExist(`libs/${lib}/.babelrc`);
 
     const parentLib = uniq('parentlib');
-    runCLI(`generate @nx/js:lib ${parentLib} --bundler=swc --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${parentLib} --bundler=swc --no-interactive`);
     const parentLibPackageJson = readJson(`libs/${parentLib}/package.json`);
     expect(parentLibPackageJson.scripts).toBeUndefined();
     expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
@@ -120,7 +120,7 @@ describe('js e2e', () => {
 
   it('should handle swcrc path mappings', async () => {
     const lib = uniq('lib');
-    runCLI(`generate @nx/js:lib ${lib} --bundler=swc --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${lib} --bundler=swc --no-interactive`);
 
     // add a dummy x.ts file for path mappings
     updateFile(

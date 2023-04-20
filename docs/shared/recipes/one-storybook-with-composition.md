@@ -26,7 +26,7 @@ It does not matter which framework you use for the host Storybook library. It ca
 So, let’s use React for the Storybook Composition host library:
 
 ```shell
-nx g @nx/react:lib storybook-host
+nx g @nrwl/react:lib storybook-host
 ```
 
 Now that your library is generated, you can write your intro in the generated component (you can also do this later, it does not matter).
@@ -36,7 +36,7 @@ Now that your library is generated, you can write your intro in the generated co
 Since you do need a story for your host Storybook, you should use the React storybook configuration generator, and actually choose to generate stories (not an e2e project though):
 
 ```shell
-nx g @nx/react:storybook-configuration –-name=storybook-host
+nx g @nrwl/react:storybook-configuration –-name=storybook-host
 ```
 
 And choose `yes` to generate stories, and `no` to generate a Cypress app.
@@ -63,7 +63,7 @@ module.exports = {
     },
   },
   stories: ['../src/lib/**/*.stories.tsx'],
-  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
 ```
 

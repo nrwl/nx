@@ -1,5 +1,5 @@
 {
-  "name": "@nx/js",
+  "name": "@nrwl/js",
   "version": "0.0.1",
   "private": false,
   "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",

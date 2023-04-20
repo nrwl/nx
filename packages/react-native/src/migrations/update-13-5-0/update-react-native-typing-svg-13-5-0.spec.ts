@@ -12,13 +12,13 @@ describe('Update svg typings in tsconfig for react native app', () => {
       sourceRoot: 'apps/products/src',
       targets: {
         start: {
-          executor: '@nx/react-native:start',
+          executor: '@nrwl/react-native:start',
           options: {
             port: 8081,
           },
         },
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {
             jestConfig: 'apps/products/jest.config.js',
             passWithNoTests: true,
@@ -34,7 +34,7 @@ describe('Update svg typings in tsconfig for react native app', () => {
 
     const tsconfig = readJson(tree, 'apps/products/tsconfig.json');
     expect(tsconfig.files).toEqual([
-      '../../node_modules/@nx/react-native/typings/svg.d.ts',
+      '../../node_modules/@nrwl/react-native/typings/svg.d.ts',
     ]);
   });
 
@@ -42,14 +42,14 @@ describe('Update svg typings in tsconfig for react native app', () => {
     tree.write(
       'apps/products/tsconfig.json',
       `{
-        "files": ["../../node_modules/@nx/react/typings/image.d.ts"]
+        "files": ["../../node_modules/@nrwl/react/typings/image.d.ts"]
       }`
     );
     await update(tree);
 
     const tsconfig = readJson(tree, 'apps/products/tsconfig.json');
     expect(tsconfig.files).toEqual([
-      '../../node_modules/@nx/react-native/typings/svg.d.ts',
+      '../../node_modules/@nrwl/react-native/typings/svg.d.ts',
     ]);
   });
 

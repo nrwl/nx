@@ -5,7 +5,7 @@
     "init": {
       "factory": "./src/generators/init/init#webpackInitSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nx/webpack` plugin.",
+      "description": "Initialize the `@nrwl/webpack` plugin.",
       "hidden": true
     },
     "webpack-project": {
@@ -19,7 +19,7 @@
     "init": {
       "factory": "./src/generators/init/init#webpackInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nx/webpack` plugin.",
+      "description": "Initialize the `@nrwl/webpack` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },

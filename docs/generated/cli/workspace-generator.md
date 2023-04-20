@@ -31,7 +31,7 @@ Preview the changes without updating files
 
 Type: `string`
 
-Name of the generator (e.g., @nx/js:library, library)
+Name of the generator (e.g., @nrwl/js:library, library)
 
 ### help
 

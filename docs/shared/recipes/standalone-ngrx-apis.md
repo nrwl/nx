@@ -13,7 +13,7 @@ This guide will show you how to leverage this using the NgRx generator.
 {% callout type="check" title="Prerequisites" %}  
 Before following along with this guide, ensure you have:
 
-1. An Nx >= 15.6.0 Workspace with `@nx/angular` installed
+1. An Nx >= 15.6.0 Workspace with `@nrwl/angular` installed
 2. Angular 15 must be installed
 
 {% /callout %}
@@ -23,7 +23,7 @@ Before following along with this guide, ensure you have:
 1. Generate an Angular application with Standalone Components and routing
 
 ```bash
-nx g @nx/angular:app testapp --standalone --routing
+nx g @nrwl/angular:app testapp --standalone --routing
 ```
 
 2. Generate NgRx Root State
@@ -32,14 +32,14 @@ nx g @nx/angular:app testapp --standalone --routing
 {% tab label="Nx Standalone Repo" %}
 
 ```bash
-nx g @nx/angular:ngrx --root --parent=testapp/src/main.ts
+nx g @nrwl/angular:ngrx --root --parent=testapp/src/main.ts
 ```
 
 {% /tab %}
 {% tab label="Nx Integrated Monorepo" %}
 
 ```bash
-nx g @nx/angular:ngrx --root --parent=apps/testapp/src/main.ts
+nx g @nrwl/angular:ngrx --root --parent=apps/testapp/src/main.ts
 ```
 
 {% /tab %}
@@ -51,14 +51,14 @@ nx g @nx/angular:ngrx --root --parent=apps/testapp/src/main.ts
 {% tab label="Nx Standalone Repo" %}
 
 ```bash
-nx g @nx/angular:ngrx users --parent=testapp/src/app/app.routes.ts
+nx g @nrwl/angular:ngrx users --parent=testapp/src/app/app.routes.ts
 ```
 
 {% /tab %}
 {% tab label="Nx Integrated Monorepo" %}
 
 ```bash
-nx g @nx/angular:ngrx users --parent=apps/testapp/src/app/app.routes.ts
+nx g @nrwl/angular:ngrx users --parent=apps/testapp/src/app/app.routes.ts
 ```
 
 {% /tab %}

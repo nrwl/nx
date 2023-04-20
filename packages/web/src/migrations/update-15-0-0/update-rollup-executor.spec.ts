@@ -13,7 +13,7 @@ describe('Migration: @nrwl/rollup', () => {
       projectType: 'library',
       targets: {
         build: {
-          executor: '@nx/web:rollup',
+          executor: '@nrwl/web:rollup',
           options: {},
         },
       },
@@ -44,7 +44,7 @@ describe('Migration: @nrwl/rollup', () => {
       projectType: 'library',
       targets: {
         build: {
-          executor: '@nx/web:rollup',
+          executor: '@nrwl/web:rollup',
           options: {
             formats: ['umd'],
           },

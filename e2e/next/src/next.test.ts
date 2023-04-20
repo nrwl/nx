@@ -44,11 +44,11 @@ describe('Next.js Applications', () => {
     const jsLib = uniq('tslib');
     const buildableLib = uniq('buildablelib');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
-    runCLI(`generate @nx/next:lib ${nextLib} --no-interactive`);
-    runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
+    runCLI(`generate @nrwl/next:lib ${nextLib} --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
     runCLI(
-      `generate @nx/js:lib ${buildableLib} --no-interactive --bundler=vite`
+      `generate @nrwl/js:lib ${buildableLib} --no-interactive --bundler=vite`
     );
 
     // Create file in public that should be copied to dist
@@ -71,7 +71,7 @@ describe('Next.js Applications', () => {
     // create a css file in node_modules so that it can be imported in a lib
     // to test that it works as expected
     updateFile(
-      'node_modules/@nx/next/test-styles.css',
+      'node_modules/@nrwl/next/test-styles.css',
       'h1 { background-color: red; }'
     );
 
@@ -201,7 +201,7 @@ describe('Next.js Applications', () => {
 
   it('should build and install pruned lock file', () => {
     const appName = uniq('app');
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
 
     const result = runCLI(`build ${appName} --generateLockfile=true`);
     expect(result).not.toMatch(/Graph is not consistent/);
@@ -220,8 +220,8 @@ describe('Next.js Applications', () => {
 
     const port = 4200;
 
-    runCLI(`generate @nx/next:app ${appName}`);
-    runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
+    runCLI(`generate @nrwl/next:app ${appName}`);
+    runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
 
     const proxyConf = {
       '/external-api': {
@@ -286,7 +286,7 @@ describe('Next.js Applications', () => {
   it('should support custom next.config.js and output it in dist', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
 
     updateFile(
       `apps/${appName}/next.config.js`,
@@ -343,7 +343,7 @@ describe('Next.js Applications', () => {
   it('should support --js flag', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --js`);
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --js`);
 
     checkFilesExist(`apps/${appName}/pages/index.js`);
 
@@ -358,7 +358,7 @@ describe('Next.js Applications', () => {
     const libName = uniq('lib');
 
     runCLI(
-      `generate @nx/next:lib ${libName} --no-interactive --style=none --js`
+      `generate @nrwl/next:lib ${libName} --no-interactive --style=none --js`
     );
 
     const mainPath = `apps/${appName}/pages/index.js`;
@@ -395,7 +395,7 @@ describe('Next.js Applications', () => {
   it('should support --no-swc flag', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --no-swc`);
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --no-swc`);
 
     // Next.js enables SWC when custom .babelrc is not provided.
     checkFilesExist(`apps/${appName}/.babelrc`);
@@ -413,7 +413,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --style=css --no-interactive --custom-server`
+      `generate @nrwl/next:app ${appName} --style=css --no-interactive --custom-server`
     );
 
     checkFilesExist(`apps/${appName}/server/main.ts`);
@@ -430,7 +430,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --style=css --appDir --no-interactive`
+      `generate @nrwl/next:app ${appName} --style=css --appDir --no-interactive`
     );
 
     checkFilesExist(`apps/${appName}/app/api/hello/route.ts`);

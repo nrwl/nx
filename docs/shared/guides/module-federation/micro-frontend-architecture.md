@@ -47,12 +47,12 @@ application, and `nx g remote` for remote applications.
 
 ```shell
 # React
-nx g @nx/react:host shell --remotes=shop,cart
-nx g @nx/react:remote about --host=shell
+nx g @nrwl/react:host shell --remotes=shop,cart
+nx g @nrwl/react:remote about --host=shell
 
 #a Angular
-nx g @nx/angular:host shell --remotes=shop,cart
-nx g @nx/angular:remote about --host=shell
+nx g @nrwl/angular:host shell --remotes=shop,cart
+nx g @nrwl/angular:remote about --host=shell
 ```
 
 That is! You can now run `nx serve shell` to develop on the `shell` application, while keeping all remotes static. To

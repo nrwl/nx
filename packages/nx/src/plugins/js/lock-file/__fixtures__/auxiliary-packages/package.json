@@ -6,7 +6,7 @@
     "eslint-plugin-disable-autofix": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
     "postgres": "charsleysa/postgres#fix-errors-compiled",
     "yargs": "17.6.2",
-    "@nx/devkit": "16.0.0-beta.5"
+    "@nrwl/devkit": "15.0.13"
   },
   "devDependencies": {
     "react": "18.2.0"

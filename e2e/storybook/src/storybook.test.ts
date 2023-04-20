@@ -22,9 +22,9 @@ describe('Storybook generators and executors for monorepos', () => {
     proj = newProject({
       packageManager: 'yarn',
     });
-    runCLI(`generate @nx/react:lib ${reactStorybookLib} --no-interactive`);
+    runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
     runCLI(
-      `generate @nx/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive --bundler=webpack`
+      `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive --bundler=webpack`
     );
 
     // TODO(jack): Overriding enhanced-resolve to 5.10.0 now until the package is fixed.
@@ -68,7 +68,7 @@ describe('Storybook generators and executors for monorepos', () => {
     // This test makes sure path resolution works
     it('should build a React based storybook that references another lib and uses webpack', () => {
       const anotherReactLib = uniq('test-another-lib-react');
-      runCLI(`generate @nx/react:lib ${anotherReactLib} --no-interactive`);
+      runCLI(`generate @nrwl/react:lib ${anotherReactLib} --no-interactive`);
       // create a React component we can reference
       writeFileSync(
         tmpProjPath(`libs/${anotherReactLib}/src/lib/mytestcmp.tsx`),

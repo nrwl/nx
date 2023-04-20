@@ -30,10 +30,10 @@ describe('Jest Migration (v13.4.4)', () => {
       projectType: 'library',
       targets: {
         build: {
-          executor: '@nx/web:build',
+          executor: '@nrwl/web:build',
         },
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {
             jestConfig: 'libs/lib-one/jest.config.js',
             passWithNoTests: true,
@@ -48,10 +48,10 @@ describe('Jest Migration (v13.4.4)', () => {
       projectType: 'library',
       targets: {
         build: {
-          executor: '@nx/web:build',
+          executor: '@nrwl/web:build',
         },
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {
             jestConfig: 'libs/lib-two/jest.config.js',
             passWithNoTests: true,
@@ -61,18 +61,18 @@ describe('Jest Migration (v13.4.4)', () => {
     });
   });
 
-  it('should create root babel.config.json and install @nx/web', async () => {
+  it('should create root babel.config.json and install @nrwl/web', async () => {
     await update(tree);
     expect(tree.exists('babel.config.json')).toBeTruthy();
     const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.devDependencies['@nx/web']).toBeTruthy();
+    expect(packageJson.devDependencies['@nrwl/web']).toBeTruthy();
   });
 
   it('should not change anything if root babel.config.json is found', async () => {
     tree.write('babel.config.json', '{"babelrcRoots": ["*"]}');
     await update(tree);
     const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.devDependencies['@nx/web']).toBeFalsy();
+    expect(packageJson.devDependencies['@nrwl/web']).toBeFalsy();
   });
 
   it('should update w/ Array value for babel-jest transformer', async () => {
@@ -93,10 +93,10 @@ describe('Jest Migration (v13.4.4)', () => {
       projectType: 'library',
       targets: {
         build: {
-          executor: '@nx/web:build',
+          executor: '@nrwl/web:build',
         },
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {
             jestConfig: 'libs/lib-three/jest.config.js',
             passWithNoTests: true,
@@ -108,6 +108,6 @@ describe('Jest Migration (v13.4.4)', () => {
     await update(tree);
     expect(tree.exists('babel.config.json')).toBeTruthy();
     const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.devDependencies['@nx/web']).toBeTruthy();
+    expect(packageJson.devDependencies['@nrwl/web']).toBeTruthy();
   });
 });

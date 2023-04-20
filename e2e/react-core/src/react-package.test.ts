@@ -65,12 +65,12 @@ describe('Build React libraries and apps', () => {
       );
     };
 
-    runCLI(`generate @nx/react:app ${app} `);
+    runCLI(`generate @nrwl/react:app ${app} `);
     updateJson('nx.json', (json) => ({
       ...json,
       generators: {
         ...json.generators,
-        '@nx/react': {
+        '@nrwl/react': {
           library: {
             unitTestRunner: 'none',
           },
@@ -79,13 +79,13 @@ describe('Build React libraries and apps', () => {
     }));
     // generate buildable libs
     runCLI(
-      `generate @nx/react:library ${parentLib} --bundler=rollup --importPath=@${proj}/${parentLib} --no-interactive --unitTestRunner=jest`
+      `generate @nrwl/react:library ${parentLib} --bundler=rollup --importPath=@${proj}/${parentLib} --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/react:library ${childLib} --bundler=rollup --importPath=@${proj}/${childLib} --no-interactive --unitTestRunner=jest`
+      `generate @nrwl/react:library ${childLib} --bundler=rollup --importPath=@${proj}/${childLib} --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/react:library ${childLib2} --bundler=rollup --importPath=@${proj}/${childLib2} --no-interactive --unitTestRunner=jest`
+      `generate @nrwl/react:library ${childLib2} --bundler=rollup --importPath=@${proj}/${childLib2} --no-interactive --unitTestRunner=jest`
     );
 
     createDep(parentLib, [childLib, childLib2]);
@@ -190,7 +190,7 @@ export async function h() { return 'c'; }
       // Setup
       const myLib = uniq('my-lib');
       runCLI(
-        `generate @nx/react:library ${myLib} --bundler=rollup --publishable --importPath="@mproj/${myLib}" --no-interactive --unitTestRunner=jest`
+        `generate @nrwl/react:library ${myLib} --bundler=rollup --publishable --importPath="@mproj/${myLib}" --no-interactive --unitTestRunner=jest`
       );
 
       /**
@@ -249,7 +249,7 @@ export async function h() { return 'c'; }
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nx/react:lib ${libName} --bundler=rollup --importPath=@${proj}/${libName} --no-interactive --unitTestRunner=jest`
+        `generate @nrwl/react:lib ${libName} --bundler=rollup --importPath=@${proj}/${libName} --no-interactive --unitTestRunner=jest`
       );
 
       const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;

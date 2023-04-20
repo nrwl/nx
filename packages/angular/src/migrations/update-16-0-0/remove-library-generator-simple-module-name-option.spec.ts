@@ -21,7 +21,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       updateNxJson(tree, {
         ...nxJson,
         generators: {
-          '@nx/angular:library': {
+          '@nrwl/angular:library': {
             simpleModuleName: true,
           },
         },
@@ -30,7 +30,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       await removeLibraryGeneratorSimpleModuleNameOption(tree);
 
       const updatedNxJson = readNxJson(tree);
-      expect(updatedNxJson.generators['@nx/angular:library']).toStrictEqual({
+      expect(updatedNxJson.generators['@nrwl/angular:library']).toStrictEqual({
         simpleName: true,
       });
     });
@@ -40,7 +40,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       updateNxJson(tree, {
         ...nxJson,
         generators: {
-          '@nx/angular': {
+          '@nrwl/angular': {
             library: {
               simpleModuleName: true,
             },
@@ -51,7 +51,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       await removeLibraryGeneratorSimpleModuleNameOption(tree);
 
       const updatedNxJson = readNxJson(tree);
-      expect(updatedNxJson.generators['@nx/angular']).toStrictEqual({
+      expect(updatedNxJson.generators['@nrwl/angular']).toStrictEqual({
         library: {
           simpleName: true,
         },
@@ -63,7 +63,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       updateNxJson(tree, {
         ...nxJson,
         generators: {
-          '@nx/angular:library': {
+          '@nrwl/angular:library': {
             simpleModuleName: true,
             simpleName: false,
           },
@@ -73,7 +73,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       await removeLibraryGeneratorSimpleModuleNameOption(tree);
 
       const updatedNxJson = readNxJson(tree);
-      expect(updatedNxJson.generators['@nx/angular:library']).toStrictEqual({
+      expect(updatedNxJson.generators['@nrwl/angular:library']).toStrictEqual({
         simpleName: false,
       });
     });
@@ -83,7 +83,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       updateNxJson(tree, {
         ...nxJson,
         generators: {
-          '@nx/angular:library': {
+          '@nrwl/angular:library': {
             simpleName: true,
           },
         },
@@ -92,7 +92,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       await removeLibraryGeneratorSimpleModuleNameOption(tree);
 
       const updatedNxJson = readNxJson(tree);
-      expect(updatedNxJson.generators['@nx/angular:library']).toStrictEqual({
+      expect(updatedNxJson.generators['@nrwl/angular:library']).toStrictEqual({
         simpleName: true,
       });
     });
@@ -102,7 +102,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       updateNxJson(tree, {
         ...nxJson,
         generators: {
-          '@nx/angular:component': {
+          '@nrwl/angular:component': {
             standalone: true,
           },
         },
@@ -114,7 +114,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
 
       const updatedNxJson = readNxJson(tree);
       expect(updatedNxJson.generators).toStrictEqual({
-        '@nx/angular:component': {
+        '@nrwl/angular:component': {
           standalone: true,
         },
       });
@@ -150,7 +150,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
         root: '/',
         targets: {},
         generators: {
-          '@nx/angular:library': {
+          '@nrwl/angular:library': {
             simpleModuleName: true,
           },
         },
@@ -160,7 +160,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       await removeLibraryGeneratorSimpleModuleNameOption(tree);
 
       const updatedProject = readProjectConfiguration(tree, 'project');
-      expect(updatedProject.generators['@nx/angular:library']).toStrictEqual({
+      expect(updatedProject.generators['@nrwl/angular:library']).toStrictEqual({
         simpleName: true,
       });
     });
@@ -171,7 +171,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
         root: '/',
         targets: {},
         generators: {
-          '@nx/angular': {
+          '@nrwl/angular': {
             library: {
               simpleModuleName: true,
             },
@@ -183,7 +183,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       await removeLibraryGeneratorSimpleModuleNameOption(tree);
 
       const updatedProject = readProjectConfiguration(tree, 'project');
-      expect(updatedProject.generators['@nx/angular']).toStrictEqual({
+      expect(updatedProject.generators['@nrwl/angular']).toStrictEqual({
         library: {
           simpleName: true,
         },
@@ -196,7 +196,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
         root: '/',
         targets: {},
         generators: {
-          '@nx/angular:library': {
+          '@nrwl/angular:library': {
             simpleModuleName: true,
             simpleName: false,
           },
@@ -207,7 +207,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       await removeLibraryGeneratorSimpleModuleNameOption(tree);
 
       const updatedProject = readProjectConfiguration(tree, 'project');
-      expect(updatedProject.generators['@nx/angular:library']).toStrictEqual({
+      expect(updatedProject.generators['@nrwl/angular:library']).toStrictEqual({
         simpleName: false,
       });
     });
@@ -218,7 +218,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
         root: '/',
         targets: {},
         generators: {
-          '@nx/angular:library': {
+          '@nrwl/angular:library': {
             simpleName: true,
           },
         },
@@ -228,7 +228,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       await removeLibraryGeneratorSimpleModuleNameOption(tree);
 
       const updatedProject = readProjectConfiguration(tree, 'project');
-      expect(updatedProject.generators['@nx/angular:library']).toStrictEqual({
+      expect(updatedProject.generators['@nrwl/angular:library']).toStrictEqual({
         simpleName: true,
       });
     });
@@ -239,7 +239,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
         root: '/',
         targets: {},
         generators: {
-          '@nx/angular:component': {
+          '@nrwl/angular:component': {
             standalone: true,
           },
         },
@@ -252,7 +252,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
 
       const updatedProject = readProjectConfiguration(tree, 'project');
       expect(updatedProject.generators).toStrictEqual({
-        '@nx/angular:component': {
+        '@nrwl/angular:component': {
           standalone: true,
         },
       });

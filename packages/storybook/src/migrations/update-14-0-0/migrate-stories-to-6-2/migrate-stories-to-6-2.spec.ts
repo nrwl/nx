@@ -45,7 +45,7 @@ describe('migrate-stories-to-6-2 schematic', () => {
   describe('angular project', () => {
     beforeEach(async () => {
       overrideCollectionResolutionForTesting({
-        '@nx/storybook': joinPathFragments(
+        '@nrwl/storybook': joinPathFragments(
           __dirname,
           '../../../../generators.json'
         ),
@@ -64,7 +64,7 @@ describe('migrate-stories-to-6-2 schematic', () => {
 
       writeJson(appTree, 'package.json', {
         devDependencies: {
-          '@nx/storybook': nxVersion,
+          '@nrwl/storybook': nxVersion,
           '@storybook/addon-knobs': storybookVersion,
           '@storybook/angular': storybookVersion,
         },

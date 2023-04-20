@@ -218,7 +218,7 @@ describe('Cypress Component Testing Configuration', () => {
         "Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
         Provided project? fancy-lib
         Provided build target? fancy-app:build
-        Provided Executors? @nx/angular:webpack-browser, @nx/angular:webpack-browser, @angular-devkit/build-angular:browser"
+        Provided Executors? @nx/angular:webpack-browser, @nrwl/angular:webpack-browser, @angular-devkit/build-angular:browser"
       `);
     });
     it('should use own project config', async () => {

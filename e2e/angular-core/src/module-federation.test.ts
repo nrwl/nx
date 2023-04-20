@@ -33,10 +33,12 @@ describe('Angular Module Federation', () => {
     const remotePort = 4301;
 
     // generate host app
-    runCLI(`generate @nx/angular:host ${hostApp} --style=css --no-interactive`);
+    runCLI(
+      `generate @nrwl/angular:host ${hostApp} --style=css --no-interactive`
+    );
     // generate remote app
     runCLI(
-      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-interactive`
+      `generate @nrwl/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-interactive`
     );
 
     // check default generated host is built successfully
@@ -45,10 +47,10 @@ describe('Angular Module Federation', () => {
 
     // generate a shared lib with a seconary entry point
     runCLI(
-      `generate @nx/angular:library ${sharedLib} --buildable --no-interactive`
+      `generate @nrwl/angular:library ${sharedLib} --buildable --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
+      `generate @nrwl/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
     );
     // update host & remote files to use shared library
     updateFile(
@@ -137,16 +139,16 @@ describe('Angular Module Federation', () => {
 
     // generate apps
     runCLI(
-      `generate @nx/angular:application ${app1} --routing --no-interactive`
+      `generate @nrwl/angular:application ${app1} --routing --no-interactive`
     );
-    runCLI(`generate @nx/angular:application ${app2} --no-interactive`);
+    runCLI(`generate @nrwl/angular:application ${app2} --no-interactive`);
 
     // convert apps
     runCLI(
-      `generate @nx/angular:setup-mf ${app1} --mfType=host --port=${app1Port} --no-interactive`
+      `generate @nrwl/angular:setup-mf ${app1} --mfType=host --port=${app1Port} --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:setup-mf ${app2} --mfType=remote --host=${app1} --port=${app2Port} --no-interactive`
+      `generate @nrwl/angular:setup-mf ${app2} --mfType=remote --host=${app1} --port=${app2Port} --no-interactive`
     );
 
     const process = await runCommandUntil(
@@ -168,7 +170,7 @@ describe('Angular Module Federation', () => {
 
     // generate remote apps
     runCLI(
-      `generate @nx/angular:host ${host} --ssr --remotes=${remote1},${remote2} --no-interactive`
+      `generate @nrwl/angular:host ${host} --ssr --remotes=${remote1},${remote2} --no-interactive`
     );
 
     // ports

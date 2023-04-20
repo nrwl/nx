@@ -15,7 +15,8 @@ export default async function update(tree: Tree) {
   const projects = getProjects(tree);
 
   for (const [name, config] of projects.entries()) {
-    if (config.targets?.start?.executor !== '@nx/react-native:start') continue;
+    if (config.targets?.start?.executor !== '@nrwl/react-native:start')
+      continue;
     let mailFilePath;
     if (tree.exists(join(config.root, 'src/main.tsx'))) {
       mailFilePath = join(config.root, 'src/main.tsx');

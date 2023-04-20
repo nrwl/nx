@@ -13,13 +13,13 @@ post [Set up Tailwind CSS with Angular in an Nx workspace](https://medium.com/nr
 
 The Nx Angular plugin provides support for Tailwind CSS v2 and v3. The support includes the following features:
 
-- A generator called `@nx/angular:setup-tailwind` that configures Tailwind CSS in an existing project.
-- An option `--add-tailwind` for the `@nx/angular:app` generator to create an application with Tailwind CSS
+- A generator called `@nrwl/angular:setup-tailwind` that configures Tailwind CSS in an existing project.
+- An option `--add-tailwind` for the `@nrwl/angular:app` generator to create an application with Tailwind CSS
   pre-configured.
-- An option `--add-tailwind` for the `@nx/angular:lib` generator to create a library with Tailwind CSS pre-configured.
+- An option `--add-tailwind` for the `@nrwl/angular:lib` generator to create a library with Tailwind CSS pre-configured.
   This option can only be used with buildable and publishable libraries.
-- Ability to build buildable libraries with Tailwind CSS using the `@nx/angular:ng-packagr-lite` executor.
-- Ability to build publishable libraries with Tailwind CSS using the `@nx/angular:package` executor.
+- Ability to build buildable libraries with Tailwind CSS using the `@nrwl/angular:ng-packagr-lite` executor.
+- Ability to build publishable libraries with Tailwind CSS using the `@nrwl/angular:package` executor.
 
 The generation for existing or new projects will perform the following steps:
 
@@ -65,7 +65,7 @@ will default to `/**/!(*.stories|*.spec).{ts,html}`.
 The following is an example of it being used in an application called `app1`:
 
 ```javascript {% fileName="apps/app1/tailwind.config.js" %}
-const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
 const { join } = require('path');
 
 module.exports = {
@@ -115,7 +115,7 @@ This can be fixed in two manners:
 To generate an Angular application with Tailwind CSS configured by default, you can use the following command:
 
 ```shell
-npx nx g @nx/angular:app my-app --add-tailwind
+npx nx g @nrwl/angular:app my-app --add-tailwind
 ```
 
 ### Generate an Angular buildable library with Tailwind CSS pre-configured
@@ -123,7 +123,7 @@ npx nx g @nx/angular:app my-app --add-tailwind
 To generate an Angular buildable library with Tailwind CSS configured by default, you can use the following command:
 
 ```shell
-npx nx g @nx/angular:lib my-lib --buildable --add-tailwind
+npx nx g @nrwl/angular:lib my-lib --buildable --add-tailwind
 ```
 
 ### Generate an Angular publishable library with Tailwind CSS pre-configured
@@ -131,7 +131,7 @@ npx nx g @nx/angular:lib my-lib --buildable --add-tailwind
 To generate an Angular publishable library with Tailwind CSS configured by default, you can use the following command:
 
 ```shell
-npx nx g @nx/angular:lib my-lib --publishable --importPath=@my-org/my-lib --add-tailwind
+npx nx g @nrwl/angular:lib my-lib --publishable --importPath=@my-org/my-lib --add-tailwind
 ```
 
 ### Add Tailwind CSS to an existing Angular application, buildable library or publishable library
@@ -140,7 +140,7 @@ To add Tailwind CSS to an existing Angular application, buildable library or pub
 following command:
 
 ```shell
-npx nx g @nx/angular:setup-tailwind my-project
+npx nx g @nrwl/angular:setup-tailwind my-project
 ```
 
 You can see the available options for the above generator in [its docs](/packages/angular/generators/setup-tailwind).
@@ -249,7 +249,7 @@ Adjust the application's `tailwind.config.js` file to use the preset and remove 
 included in the preset:
 
 ```javascript {% fileName="apps/app1/tailwind.config.js" %}
-const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
 const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
 
@@ -265,7 +265,7 @@ module.exports = {
 Do the same with any buildable or publishable library `tailwind.config.js` file:
 
 ```javascript {% fileName="libs/lib1/tailwind.config.js" %}
-const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
 const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
 
@@ -392,7 +392,7 @@ already included in the preset:
 ```javascript {% fileName="tailwind.config.js" %}
 // apps/app1/tailwind.config.js
 // apps/app2/tailwind.config.js
-const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
 const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
 
@@ -409,7 +409,7 @@ Do the same with any shared buildable or publishable library `tailwind.config.js
 
 ```javascript {% fileName="tailwind.config.js" %}
 // libs/lib1/tailwind.config.js
-const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
 const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
 
@@ -517,7 +517,7 @@ to have the following targets:
 ```jsonc {% fileName="project.json" %}
 ...
 "build-angular": {
-  "executor": "@nx/angular:package",
+  "executor": "@nrwl/angular:package",
   "outputs": ["{workspaceRoot}/dist/libs/lib1"],
   "options": {
     "project": "libs/lib1/ng-package.json",

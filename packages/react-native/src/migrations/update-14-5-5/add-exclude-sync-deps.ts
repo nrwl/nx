@@ -13,7 +13,7 @@ export default async function update(tree: Tree) {
 
   for (const [name, config] of projects.entries()) {
     if (
-      config.targets?.['sync-deps']?.executor !== '@nx/react-native:sync-deps'
+      config.targets?.['sync-deps']?.executor !== '@nrwl/react-native:sync-deps'
     )
       continue;
     const include = config.targets?.['sync-deps']?.options?.include;

@@ -147,7 +147,7 @@ export async function migrateCypressProject(tree: Tree) {
 
   forEachExecutorOptions<CypressExecutorOptions>(
     tree,
-    '@nx/cypress:cypress',
+    '@nrwl/cypress:cypress',
     (currentValue, projectName, target, configuration) => {
       migrateCypressExecutorOptions(
         tree,

@@ -9,7 +9,7 @@ describe('update-swcrc-path migration', () => {
       root: 'packages/test-package',
       targets: {
         build: {
-          executor: '@nx/js:swc',
+          executor: '@nrwl/js:swc',
           options: {
             swcrcPath: 'config/swcrc.json',
             somethingThatShouldNotBeRemoved: true,

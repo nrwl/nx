@@ -27,7 +27,7 @@ Disable type checks (useful to speed up builds).
 ### Example
 
 ```js
-const { composePlugins, withNx } = require('@nx/webpack');
+const { composePlugins, withNx } = require('@nrwl/webpack');
 
 module.exports = composePlugins(withNx(), (config) => {
   // Further customize webpack config
@@ -110,7 +110,7 @@ Enables the use of subresource integrity validation.
 ### Example
 
 ```js
-const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
 
 module.exports = composePlugins(
   // always pass withNx() first
@@ -143,8 +143,8 @@ SVGR allows SVG files to be imported as React components. Set this to `false` to
 ### Example
 
 ```js
-const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact } = require('@nx/react');
+const { composePlugins, withNx } = require('@nrwl/webpack');
+const { withReact } = require('@nrwl/react');
 
 module.exports = composePlugins(
   withNx(), // always pass withNx() first
@@ -223,8 +223,8 @@ Shared libraries in addition to the ones that Nx detects automatically. Items ma
 {% tab label="React Module Federation" %}
 
 ```js
-const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact, withModuleFederation } = require('@nx/react');
+const { composePlugins, withNx } = require('@nrwl/webpack');
+const { withReact, withModuleFederation } = require('@nrwl/react');
 
 // Host config
 // e.g. { remotes: ['about', 'dashboard'] }
@@ -248,7 +248,7 @@ module.exports = composePlugins(
 const {
   composePlugins,
   withModuleFederation,
-} = require('@nx/angular/module-federation');
+} = require('@nrwl/angular/module-federation');
 
 // Host config
 // e.g. { remotes: ['about', 'dashboard'] }
@@ -267,8 +267,8 @@ module.exports = composePlugins(
 {% tab label="React Module Federation for SSR " %}
 
 ```js
-const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact, withModuleFederatioForSSRn } = require('@nx/react');
+const { composePlugins, withNx } = require('@nrwl/webpack');
+const { withReact, withModuleFederatioForSSRn } = require('@nrwl/react');
 
 // Host config
 // e.g. { remotes: ['about', 'dashboard'] }
@@ -292,7 +292,7 @@ module.exports = composePlugins(
 const {
   composePlugins,
   withModuleFederationForSSR,
-} = require('@nx/angular/module-federation');
+} = require('@nrwl/angular/module-federation');
 
 // Host config
 // e.g. { remotes: ['about', 'dashboard'] }

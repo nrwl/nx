@@ -8,7 +8,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { updateRollupExecutor } from './update-rollup-executor';
 
 describe('updateRollupExecutor', () => {
-  it('should migrate projects using @nx/web:rollup to @nrwl/rollup:rollup', async () => {
+  it('should migrate projects using @nrwl/web:rollup to @nrwl/rollup:rollup', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'proj1', {
       root: 'proj1',
@@ -19,13 +19,13 @@ describe('updateRollupExecutor', () => {
     addProjectConfiguration(tree, 'proj2', {
       root: 'proj2',
       targets: {
-        build: { executor: '@nx/web:rollup' },
+        build: { executor: '@nrwl/web:rollup' },
       },
     });
     addProjectConfiguration(tree, 'proj3', {
       root: 'proj3',
       targets: {
-        build: { executor: '@nx/webpack:webpack' },
+        build: { executor: '@nrwl/webpack:webpack' },
       },
     });
 
@@ -43,7 +43,7 @@ describe('updateRollupExecutor', () => {
     });
     expect(readProjectConfiguration(tree, 'proj3')).toMatchObject({
       targets: {
-        build: { executor: '@nx/webpack:webpack' },
+        build: { executor: '@nrwl/webpack:webpack' },
       },
     });
   });

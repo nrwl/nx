@@ -30,7 +30,7 @@ export function getJestProjects() {
     for (const targetConfiguration of Object.values(projectConfig.targets)) {
       if (
         targetConfiguration.executor !== '@nx/jest:jest' &&
-        targetConfiguration.executor !== '@nx/jest:jest'
+        targetConfiguration.executor !== '@nrwl/jest:jest'
       ) {
         continue;
       }

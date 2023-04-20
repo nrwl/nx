@@ -42,7 +42,7 @@ export function findLintTarget(
     ([name, target]) =>
       name === 'lint' ||
       target.executor === '@nx/linter:eslint' ||
-      target.executor === '@nx/linter:eslint'
+      target.executor === '@nrwl/linter:eslint'
   )?.[1];
 }
 

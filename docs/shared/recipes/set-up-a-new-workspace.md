@@ -16,7 +16,7 @@ npx create-nx-workspace --preset=apps
 # create an empty workspace set up for building packages
 npx create-nx-workspace --preset=core
 
-# create an empty workspace set up for building packages with the @nx/js plugin installed
+# create an empty workspace set up for building packages with the @nrwl/js plugin installed
 npx create-nx-workspace --preset=ts
 ```
 

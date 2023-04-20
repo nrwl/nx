@@ -11,7 +11,7 @@ describe('updateExternalEmotionJsxRuntime', () => {
       root: 'libs/components',
       targets: {
         build: {
-          executor: '@nx/web:rollup',
+          executor: '@nrwl/web:rollup',
           options: {
             external: ['@emotion/styled/base', 'react/jsx-runtime'],
           },
@@ -23,7 +23,7 @@ describe('updateExternalEmotionJsxRuntime', () => {
       JSON.stringify({
         presets: [
           [
-            '@nx/react/babel',
+            '@nrwl/react/babel',
             {
               runtime: 'automatic',
               importSource: '@emotion/react',

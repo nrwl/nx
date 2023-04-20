@@ -17,7 +17,7 @@ describe('Migration: rename execute to node', () => {
       projectType: 'application',
       targets: {
         serve: {
-          executor: '@nx/js:node',
+          executor: '@nrwl/js:node',
           options: {},
         },
       },
@@ -41,7 +41,7 @@ describe('Migration: rename execute to node', () => {
     });
   });
 
-  it(`should skip migration if no projects use @nx/js:node`, async () => {
+  it(`should skip migration if no projects use @nrwl/js:node`, async () => {
     let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     tree.write(

@@ -9,7 +9,7 @@ describe('installWebpackRollupDependencies', () => {
     addProjectConfiguration(tree, 'proj', {
       root: 'proj',
       targets: {
-        build: { executor: '@nx/webpack:webpack' },
+        build: { executor: '@nrwl/webpack:webpack' },
       },
     });
 

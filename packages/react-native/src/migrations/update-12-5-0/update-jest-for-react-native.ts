@@ -18,7 +18,7 @@ import { JestExecutorOptions } from '@nx/jest/src/executors/jest/schema';
 function updateJestConfig(tree: Tree) {
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nx/jest:jest',
+    '@nrwl/jest:jest',
     (options, project) => {
       if (!options.jestConfig) {
         return;
@@ -40,7 +40,7 @@ function updateJestConfig(tree: Tree) {
           contents
             .replace(
               `...workspacePreset,`,
-              "resolver: '@nx/jest/plugins/resolver',"
+              "resolver: '@nrwl/jest/plugins/resolver',"
             )
             .replace(
               `const workspacePreset = require('../../jest.preset');`,

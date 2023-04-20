@@ -4,8 +4,8 @@ import updateLibrariesSecondaryEntrypoints from './update-libraries-secondary-en
 
 const libraryExecutors = [
   '@angular-devkit/build-angular:ng-packagr',
-  '@nx/angular:ng-packagr-lite',
-  '@nx/angular:package',
+  '@nrwl/angular:ng-packagr-lite',
+  '@nrwl/angular:package',
 ];
 
 describe('update-libraries-secondary-entrypoints migration', () => {
@@ -75,7 +75,7 @@ describe('update-libraries-secondary-entrypoints migration', () => {
   it('should do nothing when not using any of the relevant executors', async () => {
     addProjectConfiguration(tree, 'lib1', {
       root: 'libs/lib1',
-      targets: { test: { executor: '@nx/jest:jest' } },
+      targets: { test: { executor: '@nrwl/jest:jest' } },
     });
     writeJson(tree, 'libs/lib1/package.json', { version: '0.0.0' });
     writeJson(tree, 'libs/lib1/secondary/package.json', {

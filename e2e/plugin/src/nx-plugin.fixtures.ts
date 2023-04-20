@@ -1,4 +1,4 @@
-export const ASYNC_GENERATOR_EXECUTOR_CONTENTS = `import { ExecutorContext } from '@nx/devkit';
+export const ASYNC_GENERATOR_EXECUTOR_CONTENTS = `import { ExecutorContext } from '@nrwl/devkit';
 
 async function* asyncGenerator(
 ) {

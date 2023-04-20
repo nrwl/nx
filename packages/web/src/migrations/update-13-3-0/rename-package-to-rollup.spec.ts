@@ -17,7 +17,7 @@ describe('Migration: rename package to rollup', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nx/web:package',
+          executor: '@nrwl/web:package',
           options: {},
         },
       },
@@ -33,7 +33,7 @@ describe('Migration: rename package to rollup', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nx/web:rollup',
+          executor: '@nrwl/web:rollup',
           options: {},
         },
       },

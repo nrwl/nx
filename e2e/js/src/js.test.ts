@@ -24,7 +24,7 @@ describe('js e2e', () => {
   it('should create libs with npm scripts', () => {
     const npmScriptsLib = uniq('npmscriptslib');
     runCLI(
-      `generate @nx/js:lib ${npmScriptsLib} --config=npm-scripts --no-interactive`
+      `generate @nrwl/js:lib ${npmScriptsLib} --config=npm-scripts --no-interactive`
     );
     const libPackageJson = readJson(`libs/${npmScriptsLib}/package.json`);
     expect(libPackageJson.scripts.test).toBeDefined();
@@ -39,10 +39,10 @@ describe('js e2e', () => {
 
   it('should allow wildcard ts path alias', async () => {
     const base = uniq('base');
-    runCLI(`generate @nx/js:lib ${base} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${base} --bundler=tsc --no-interactive`);
 
     const lib = uniq('lib');
-    runCLI(`generate @nx/js:lib ${lib} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${lib} --bundler=tsc --no-interactive`);
 
     updateFile(`libs/${base}/src/index.ts`, () => {
       return `
@@ -93,7 +93,7 @@ export function ${lib}Wildcard() {
     const libName = uniq('mylib');
     const dirName = uniq('dir');
 
-    runCLI(`generate @nx/js:lib ${libName} --directory ${dirName}`);
+    runCLI(`generate @nrwl/js:lib ${libName} --directory ${dirName}`);
 
     checkFilesExist(
       `libs/${dirName}/${libName}/src/index.ts`,
@@ -117,8 +117,8 @@ export function ${lib}Wildcard() {
     const consumerLib = uniq('consumer');
     const producerLib = uniq('producer');
 
-    runCLI(`generate @nx/js:lib ${consumerLib} --bundler=none`);
-    runCLI(`generate @nx/js:lib ${producerLib} --bundler=none`);
+    runCLI(`generate @nrwl/js:lib ${consumerLib} --bundler=none`);
+    runCLI(`generate @nrwl/js:lib ${producerLib} --bundler=none`);
 
     updateFile(
       `libs/${producerLib}/src/lib/${producerLib}.ts`,
@@ -151,7 +151,7 @@ export function ${lib}Wildcard() {
 
   it('should not be able to be built when it has no bundler', () => {
     const nonBuildable = uniq('buildable');
-    runCLI(`generate @nx/js:lib ${nonBuildable} --bundler=none`);
+    runCLI(`generate @nrwl/js:lib ${nonBuildable} --bundler=none`);
 
     expect(() => runCLI(`build ${nonBuildable}`)).toThrow();
 

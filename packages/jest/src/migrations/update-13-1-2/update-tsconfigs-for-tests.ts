@@ -14,7 +14,7 @@ import { JestExecutorOptions } from '../../executors/jest/schema';
 function updateTsConfigsForTests(tree: Tree) {
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nx/jest:jest',
+    '@nrwl/jest:jest',
     (jestOptions, projectName) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
 

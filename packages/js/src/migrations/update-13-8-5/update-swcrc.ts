@@ -12,7 +12,7 @@ export default async function update(host: Tree) {
   const projects = getProjects(host);
 
   for (const config of projects.values()) {
-    if (config?.targets?.build?.executor !== '@nx/js:swc') continue;
+    if (config?.targets?.build?.executor !== '@nrwl/js:swc') continue;
 
     const swcrcPath = join(config.root, '.swcrc');
     if (!host.exists(swcrcPath)) continue;

@@ -9,7 +9,7 @@ import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-optio
 const executors = [
   '@angular-devkit/build-angular:browser',
   '@angular-devkit/build-angular:server',
-  '@nx/angular:webpack-browser',
+  '@nrwl/angular:webpack-browser',
 ];
 
 export default async function (tree: Tree) {

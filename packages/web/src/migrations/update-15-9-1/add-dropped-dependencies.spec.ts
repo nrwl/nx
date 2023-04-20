@@ -44,7 +44,7 @@ describe('addDroppedDependencies', () => {
       readJson(tree, 'package.json').devDependencies['@nrwl/rollup']
     ).toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/cypress']
+      readJson(tree, 'package.json').devDependencies['@nrwl/cypress']
     ).not.toBeDefined();
   });
 
@@ -53,7 +53,7 @@ describe('addDroppedDependencies', () => {
       root: 'cypress-proj',
       targets: {
         build: {
-          executor: '@nx/cypress:cypress',
+          executor: '@nrwl/cypress:cypress',
           options: {},
         },
       },
@@ -62,7 +62,7 @@ describe('addDroppedDependencies', () => {
     await addDroppedDependencies(tree);
 
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/cypress']
+      readJson(tree, 'package.json').devDependencies['@nrwl/cypress']
     ).toBeDefined();
     expect(
       readJson(tree, 'package.json').devDependencies['@nrwl/rollup']
@@ -74,7 +74,7 @@ describe('addDroppedDependencies', () => {
       root: 'linter-proj',
       targets: {
         build: {
-          executor: '@nx/linter:eslint',
+          executor: '@nrwl/linter:eslint',
           options: {},
         },
       },
@@ -83,10 +83,10 @@ describe('addDroppedDependencies', () => {
     await addDroppedDependencies(tree);
 
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/linter']
+      readJson(tree, 'package.json').devDependencies['@nrwl/linter']
     ).toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/cypress']
+      readJson(tree, 'package.json').devDependencies['@nrwl/cypress']
     ).not.toBeDefined();
   });
 
@@ -94,7 +94,7 @@ describe('addDroppedDependencies', () => {
     updateNxJson(tree, {
       targetDefaults: {
         build: {
-          executor: '@nx/linter:eslint',
+          executor: '@nrwl/linter:eslint',
           options: {},
         },
         test: {
@@ -106,10 +106,10 @@ describe('addDroppedDependencies', () => {
     await addDroppedDependencies(tree);
 
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/linter']
+      readJson(tree, 'package.json').devDependencies['@nrwl/linter']
     ).toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/cypress']
+      readJson(tree, 'package.json').devDependencies['@nrwl/cypress']
     ).not.toBeDefined();
   });
 });

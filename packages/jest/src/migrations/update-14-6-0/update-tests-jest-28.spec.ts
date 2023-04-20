@@ -26,7 +26,7 @@ describe('Jest Migration - jest 28 test files', () => {
         ...projectConfiguration.targets,
         test: {
           ...projectConfiguration.targets.test,
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
         },
       },
     });
@@ -44,7 +44,7 @@ describe('Jest Migration - jest 28 test files', () => {
         ...projectConfiguration2.targets,
         test: {
           ...projectConfiguration2.targets.test,
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
         },
       },
     });

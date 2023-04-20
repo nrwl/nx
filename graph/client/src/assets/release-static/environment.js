@@ -132,7 +132,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'libs/products/product-detail-page/src/**/*.ts',
@@ -143,7 +143,7 @@ window.projectGraphResponse = {
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
             options: {
               jestConfig: 'libs/products/product-detail-page/jest.config.ts',
               passWithNoTests: true,
@@ -254,7 +254,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'libs/shared/product/state/src/**/*.ts',
@@ -265,7 +265,7 @@ window.projectGraphResponse = {
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
             options: {
               jestConfig: 'libs/shared/product/state/jest.config.ts',
               passWithNoTests: true,
@@ -322,7 +322,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'libs/shared/product/types/src/**/*.ts',
@@ -386,7 +386,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'libs/shared/product/data/src/**/*.ts',
@@ -491,7 +491,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'libs/products/home-page/src/**/*.ts',
@@ -502,7 +502,7 @@ window.projectGraphResponse = {
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
             options: {
               jestConfig: 'libs/products/home-page/jest.config.ts',
               passWithNoTests: true,
@@ -609,7 +609,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'libs/shared/cart/state/src/**/*.ts',
@@ -620,7 +620,7 @@ window.projectGraphResponse = {
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
             options: {
               jestConfig: 'libs/shared/cart/state/jest.config.ts',
               passWithNoTests: true,
@@ -695,7 +695,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'libs/shared/product/ui/src/**/*.ts',
@@ -706,7 +706,7 @@ window.projectGraphResponse = {
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
             options: {
               jestConfig: 'libs/shared/product/ui/jest.config.ts',
               passWithNoTests: true,
@@ -759,7 +759,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'libs/shared/e2e-utils/src/**/*.ts',
@@ -839,7 +839,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'libs/cart/cart-page/src/**/*.ts',
@@ -850,7 +850,7 @@ window.projectGraphResponse = {
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
             options: {
               jestConfig: 'libs/cart/cart-page/jest.config.ts',
               passWithNoTests: true,
@@ -980,7 +980,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'libs/shared/header/src/**/*.ts',
@@ -991,7 +991,7 @@ window.projectGraphResponse = {
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
             options: {
               jestConfig: 'libs/shared/header/jest.config.ts',
               passWithNoTests: true,
@@ -1048,7 +1048,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'libs/shared/jsxify/src/**/*.ts',
@@ -1102,7 +1102,7 @@ window.projectGraphResponse = {
           {
             file: 'apps/products-e2e/cypress.config.ts',
             hash: 'c80242149987121c164a3e239abe178abc8d4a07',
-            deps: ['npm:cypress', 'npm:@nx/cypress'],
+            deps: ['npm:cypress', 'npm:@nrwl/cypress'],
           },
           {
             file: 'apps/products-e2e/project.json',
@@ -1136,7 +1136,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           e2e: {
-            executor: '@nx/cypress:cypress',
+            executor: '@nrwl/cypress:cypress',
             options: {
               cypressConfig: 'apps/products-e2e/cypress.config.ts',
               devServerTarget: 'products:serve',
@@ -1150,7 +1150,7 @@ window.projectGraphResponse = {
             inputs: ['default', '^production'],
           },
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: ['apps/products-e2e/**/*.{js,ts}'],
             },
@@ -1174,7 +1174,7 @@ window.projectGraphResponse = {
           {
             file: 'apps/cart-e2e/cypress.config.ts',
             hash: 'f292e4c8c9a6268418b17d7ff125bef64c961a4c',
-            deps: ['npm:cypress', 'npm:@nx/cypress'],
+            deps: ['npm:cypress', 'npm:@nrwl/cypress'],
           },
           {
             file: 'apps/cart-e2e/project.json',
@@ -1208,7 +1208,7 @@ window.projectGraphResponse = {
         ],
         targets: {
           e2e: {
-            executor: '@nx/cypress:cypress',
+            executor: '@nrwl/cypress:cypress',
             options: {
               cypressConfig: 'apps/cart-e2e/cypress.config.ts',
               devServerTarget: 'cart:serve',
@@ -1222,7 +1222,7 @@ window.projectGraphResponse = {
             inputs: ['default', '^production'],
           },
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: ['apps/cart-e2e/**/*.{ts,tsx,js,jsx}'],
             },
@@ -1425,7 +1425,7 @@ window.projectGraphResponse = {
             },
           },
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: [
                 'apps/products/src/**/*.ts',
@@ -1436,7 +1436,7 @@ window.projectGraphResponse = {
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
             options: {
               jestConfig: 'apps/products/jest.config.ts',
               passWithNoTests: true,
@@ -1552,10 +1552,10 @@ window.projectGraphResponse = {
         ],
         targets: {
           build: {
-            executor: '@nx/webpack:webpack',
+            executor: '@nrwl/webpack:webpack',
             options: {
               outputPath: 'dist/apps/cart',
-              webpackConfig: '@nx/react/plugins/webpack',
+              webpackConfig: '@nrwl/react/plugins/webpack',
               index: 'apps/cart/src/index.html',
               main: 'apps/cart/src/main.tsx',
               polyfills: 'apps/cart/src/polyfills.ts',
@@ -1618,7 +1618,7 @@ window.projectGraphResponse = {
             inputs: ['production', '^production'],
           },
           serve: {
-            executor: '@nx/webpack:dev-server',
+            executor: '@nrwl/webpack:dev-server',
             options: {
               buildTarget: 'cart:build',
             },
@@ -1633,7 +1633,7 @@ window.projectGraphResponse = {
             defaultConfiguration: 'development',
           },
           lint: {
-            executor: '@nx/linter:eslint',
+            executor: '@nrwl/linter:eslint',
             options: {
               lintFilePatterns: ['apps/cart/**/*.{ts,tsx,js,jsx}'],
             },
@@ -1641,7 +1641,7 @@ window.projectGraphResponse = {
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
             options: {
               jestConfig: 'apps/cart/jest.config.ts',
               passWithNoTests: true,

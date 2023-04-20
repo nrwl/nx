@@ -61,7 +61,7 @@ describe('NPM lock file utility', () => {
   describe('auxiliary packages', () => {
     beforeEach(() => {
       const fileSys = {
-        'node_modules/@nx/devkit/package.json':
+        'node_modules/@nrwl/devkit/package.json':
           '{"peerDependencies":{"nx":">= 14 <= 16"}}',
         'node_modules/@phenomnomnominal/tsquery/package.json':
           '{"peerDependencies":{"typescript":"^3 || ^4"}}',
@@ -228,7 +228,7 @@ describe('NPM lock file utility', () => {
         version: '0.0.0',
         license: 'MIT',
         dependencies: {
-          '@nx/devkit': '15.0.13',
+          '@nrwl/devkit': '15.0.13',
           'eslint-plugin-disable-autofix':
             'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
           postgres:
@@ -293,11 +293,11 @@ describe('NPM lock file utility', () => {
           '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
         'node_modules/@jest/reporters/package.json':
           '{"peerDependencies":{"node-notifier":"^8.0.1 || ^9.0.0 || ^10.0.0"},"peerDependenciesMeta":{"node-notifier":{"optional":true}}}',
-        'node_modules/@nx/devkit/package.json':
+        'node_modules/@nrwl/devkit/package.json':
           '{"peerDependencies":{"nx":">= 13.10 <= 15"}}',
-        'node_modules/@nx/linter/package.json':
+        'node_modules/@nrwl/linter/package.json':
           '{"peerDependencies":{"eslint":"^8.0.0"},"peerDependenciesMeta":{"eslint":{"optional":true}}}',
-        'node_modules/@nx/linter/node_modules/nx/package.json':
+        'node_modules/@nrwl/linter/node_modules/nx/package.json':
           '{"peerDependencies":{"@swc-node/register":"^1.4.2","@swc/core":"^1.2.173"},"peerDependenciesMeta":{"@swc-node/register":{"optional":true},"@swc/core":{"optional":true}}}',
         'node_modules/@nrwl/workspace/package.json':
           '{"peerDependencies":{"prettier":"^2.6.2"},"peerDependenciesMeta":{"prettier":{"optional":true}}}',

@@ -354,9 +354,9 @@ function readPluginMainFromProjectConfiguration(
     Object.values(plugin.targets).find((x) =>
       [
         '@nx/js:tsc',
-        '@nx/js:tsc',
+        '@nrwl/js:tsc',
         '@nx/js:swc',
-        '@nx/js:swc',
+        '@nrwl/js:swc',
         '@nx/node:package',
         '@nrwl/node:package',
       ].includes(x.executor)

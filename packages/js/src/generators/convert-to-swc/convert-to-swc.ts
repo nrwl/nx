@@ -53,7 +53,7 @@ function updateProjectBuildTargets(
     if (
       !targetConfiguration ||
       (targetConfiguration.executor !== '@nx/js:tsc' &&
-        targetConfiguration.executor !== '@nx/js:tsc')
+        targetConfiguration.executor !== '@nrwl/js:tsc')
     )
       continue;
     targetConfiguration.executor = '@nx/js:swc';

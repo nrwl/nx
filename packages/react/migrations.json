@@ -63,13 +63,13 @@
     "update-babel-jest-transform-option": {
       "cli": "nx",
       "version": "14.6.0-beta.0",
-      "description": "Update babel-jest to include the @nx/react/babel preset in project jest config",
+      "description": "Update babel-jest to include the @nrwl/react/babel preset in project jest config",
       "factory": "./src/migrations/update-14-6-0/add-preset-jest-config"
     },
     "update-rollup-executor": {
       "cli": "nx",
       "version": "15.3.0-beta.0",
-      "description": "Update projects using @nx/web:rollup to @nrwl/rollup:rollup for build.",
+      "description": "Update projects using @nrwl/web:rollup to @nrwl/rollup:rollup for build.",
       "factory": "./src/migrations/update-15-3-0/update-rollup-executor"
     },
     "install-webpack-rollup-dependencies": {
@@ -87,7 +87,7 @@
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
-      "description": "Replace @nx/react with @nx/react",
+      "description": "Replace @nrwl/react with @nx/react",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },

@@ -6,9 +6,9 @@ export function installWebpackRollupDependencies(tree: Tree) {
 
   for (const [, project] of projects) {
     if (
-      project.targets?.build?.executor === '@nx/webpack:webpack' ||
+      project.targets?.build?.executor === '@nrwl/webpack:webpack' ||
       project.targets?.build?.executor === '@nrwl/rollup:rollup' ||
-      project.targets?.build?.executor === '@nx/web:rollup'
+      project.targets?.build?.executor === '@nrwl/web:rollup'
     ) {
       shouldInstall = true;
       break;
@@ -16,7 +16,7 @@ export function installWebpackRollupDependencies(tree: Tree) {
   }
 
   if (shouldInstall) {
-    // These were previously dependencies of `@nx/react` but we've removed them
+    // These were previously dependencies of `@nrwl/react` but we've removed them
     // to accommodate different bundlers and test runners.
     return addDependenciesToPackageJson(
       tree,
@@ -33,7 +33,7 @@ export function installWebpackRollupDependencies(tree: Tree) {
         'url-loader': '^4.1.1',
         webpack: '^5.75.0',
         'webpack-merge': '^5.8.0',
-        '@nx/webpack': nxVersion,
+        '@nrwl/webpack': nxVersion,
       }
     );
   }

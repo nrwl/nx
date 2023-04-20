@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nx/react:component-test --project=my-react-project --component-path=src/lib/fancy-component.tsx",
+      "command": "nx g @nrwl/react:component-test --project=my-react-project --component-path=src/lib/fancy-component.tsx",
       "description": "Create a cypress component test for FancyComponent"
     }
   ],

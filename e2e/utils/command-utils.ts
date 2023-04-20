@@ -49,8 +49,8 @@ export function setMaxWorkers() {
       const executor = build.executor as string;
       if (
         executor.startsWith('@nrwl/node') ||
-        executor.startsWith('@nx/web') ||
-        executor.startsWith('@nx/jest')
+        executor.startsWith('@nrwl/web') ||
+        executor.startsWith('@nrwl/jest')
       ) {
         build.options.maxWorkers = 4;
       }

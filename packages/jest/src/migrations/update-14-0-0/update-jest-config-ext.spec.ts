@@ -54,7 +54,7 @@ async function libSetUp(tree: Tree, options = setupDefaults) {
     ...readProjectConfiguration(tree, options.libName),
     targets: {
       test: {
-        executor: '@nx/jest:jest',
+        executor: '@nrwl/jest:jest',
         options: {
           jestConfig: `libs/${options.libName}/jest.config.js`,
           passWithNoTests: true,
@@ -122,7 +122,7 @@ describe('Jest Migration (v14.0.0)', () => {
       ...readProjectConfiguration(tree, 'lib-one'),
       targets: {
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {
             jestConfig: 'libs/lib-one/jest.config.ts',
             passWithNoTests: true,
@@ -138,7 +138,7 @@ describe('Jest Migration (v14.0.0)', () => {
       ...readProjectConfiguration(tree, 'lib-two'),
       targets: {
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {
             jestConfig: 'libs/lib-two/jest.config.json',
             passWithNoTests: true,
@@ -218,7 +218,7 @@ describe('Jest Migration (v14.0.0)', () => {
 
     const projectConfig = readProjectConfiguration(tree, 'lib-one');
     projectConfig.targets['build'] = {
-      executor: '@nx/next:build',
+      executor: '@nrwl/next:build',
       options: {},
     };
     updateProjectConfiguration(tree, 'lib-one', projectConfig);
@@ -276,7 +276,7 @@ async function setupNextProj(tree: Tree) {
   });
   const projectConfig = readProjectConfiguration(tree, 'my-next-proj');
   projectConfig.targets['build'] = {
-    executor: '@nx/next:build',
+    executor: '@nrwl/next:build',
     options: {},
   };
   updateProjectConfiguration(tree, 'my-next-proj', projectConfig);

@@ -86,7 +86,7 @@ describe('Cypress 11 Migration', () => {
       sourceRoot: 'apps/my-e2e-app/src',
       targets: {
         e2e: {
-          executor: '@nx/cypress:cypress',
+          executor: '@nrwl/cypress:cypress',
           options: {
             cypressConfig: 'apps/my-e2e-app/cypress.config.ts',
           },
@@ -124,7 +124,7 @@ async function setup(tree: Tree) {
     skipFormat: true,
   });
   const projectConfig = readProjectConfiguration(tree, 'my-react-lib');
-  projectConfig.targets['component-test'].executor = '@nx/cypress:cypress';
+  projectConfig.targets['component-test'].executor = '@nrwl/cypress:cypress';
   updateProjectConfiguration(tree, 'my-react-lib', projectConfig);
   tree.write(
     'libs/my-react-lib/cypress/support/commands.ts',
@@ -271,7 +271,7 @@ describe('again', () => {
     skipFormat: true,
   });
   const projectConfig2 = readProjectConfiguration(tree, 'my-ng-lib');
-  projectConfig2.targets['component-test'].executor = '@nx/cypress:cypress';
+  projectConfig2.targets['component-test'].executor = '@nrwl/cypress:cypress';
   updateProjectConfiguration(tree, 'my-ng-lib', projectConfig2);
   tree.write(
     'libs/my-ng-lib/cypress/support/commands.ts',

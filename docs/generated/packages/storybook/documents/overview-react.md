@@ -13,27 +13,27 @@ You first need to set up Storybook for your Nx workspace, if you haven't already
 
 ## Generate Storybook Configuration for a React project
 
-You can generate Storybook configuration for an individual React project by using the [`@nx/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration), like this:
+You can generate Storybook configuration for an individual React project by using the [`@nrwl/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration), like this:
 
 ```shell
-nx g @nx/react:storybook-configuration project-name
+nx g @nrwl/react:storybook-configuration project-name
 ```
 
 ## Nx React Storybook Preset
 
-The [`@nx/react`](/packages/react) package ships with a Storybook addon to make sure it uses the very same configuration as your Nx React application. When you generate a Storybook configuration for a project, it'll automatically add the addon to your configuration.
+The [`@nrwl/react`](/packages/react) package ships with a Storybook addon to make sure it uses the very same configuration as your Nx React application. When you generate a Storybook configuration for a project, it'll automatically add the addon to your configuration.
 
 ```typescript
 module.exports = {
   ...
-  addons: ['@storybook/addon-essentials', ..., '@nx/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', ..., '@nrwl/react/plugins/storybook'],
   ...
 };
 ```
 
 ## Auto-generate Stories
 
-The [`@nx/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) has the option to automatically generate `*.stories.ts|tsx` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
+The [`@nrwl/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) has the option to automatically generate `*.stories.ts|tsx` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```text
 <some-folder>/
@@ -41,10 +41,10 @@ The [`@nx/react:storybook-configuration` generator](/packages/react/generators/s
 └── my-component.stories.tsx
 ```
 
-If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/react:stories` generator](/packages/react/generators/stories):
+If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nrwl/react:stories` generator](/packages/react/generators/stories):
 
 ```shell
-nx g @nx/react:stories --project=<project-name>
+nx g @nrwl/react:stories --project=<project-name>
 ```
 
 {% callout type="note" title="Example" %}
@@ -53,7 +53,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 The command to generate stories for that library would be:
 
 ```shell
-nx g @nx/react:stories --project=feature-ui
+nx g @nrwl/react:stories --project=feature-ui
 ```
 
 and the result would be the following:
@@ -87,7 +87,7 @@ and the result would be the following:
 
 ## Cypress tests for Stories
 
-The [`@nx/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
+The [`@nrwl/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
 To launch Storybook and run the Cypress tests against the iframe inside of Storybook:
 
@@ -111,7 +111,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 
 ### Story file
 
-The [`@nx/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) would generate a Story file that looks like this:
+The [`@nrwl/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) would generate a Story file that looks like this:
 
 ```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.stories.tsx" %}
 import type { Meta } from '@storybook/react';

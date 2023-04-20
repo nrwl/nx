@@ -24,14 +24,14 @@ describe('pnpm LockFile utility', () => {
         'node_modules/@eslint/eslintrc/package.json': '{"version": "1.3.3"}',
         'node_modules/@next/eslint-plugin-next/package.json':
           '{"version": "13.0.0"}',
-        'node_modules/@nx/cypress/package.json': '{"version": "15.3.3"}',
+        'node_modules/@nrwl/cypress/package.json': '{"version": "15.3.3"}',
         'node_modules/@nrwl/eslint-plugin-nx/package.json':
           '{"version": "15.3.3"}',
-        'node_modules/@nx/jest/package.json': '{"version": "15.3.3"}',
-        'node_modules/@nx/linter/package.json': '{"version": "15.3.3"}',
-        'node_modules/@nx/next/package.json': '{"version": "15.3.3"}',
-        'node_modules/@nx/react/package.json': '{"version": "15.3.3"}',
-        'node_modules/@nx/web/package.json': '{"version": "15.3.3"}',
+        'node_modules/@nrwl/jest/package.json': '{"version": "15.3.3"}',
+        'node_modules/@nrwl/linter/package.json': '{"version": "15.3.3"}',
+        'node_modules/@nrwl/next/package.json': '{"version": "15.3.3"}',
+        'node_modules/@nrwl/react/package.json': '{"version": "15.3.3"}',
+        'node_modules/@nrwl/web/package.json': '{"version": "15.3.3"}',
         'node_modules/@nrwl/workspace/package.json': '{"version": "15.3.3"}',
         'node_modules/@rushstack/eslint-patch/package.json':
           '{"version": "1.2.0"}',
@@ -198,7 +198,7 @@ describe('pnpm LockFile utility', () => {
     beforeEach(() => {
       const fileSys = {
         'node_modules/@eslint/eslintrc/package.json': '{"version": "1.3.3"}',
-        'node_modules/@nx/devkit/package.json': '{"version": "15.0.13"}',
+        'node_modules/@nrwl/devkit/package.json': '{"version": "15.0.13"}',
         'node_modules/eslint/package.json': '{"version": "8.29.0"}',
         'node_modules/eslint-plugin-disable-autofix/package.json':
           '{"version": "3.0.0"}',
@@ -291,7 +291,7 @@ describe('pnpm LockFile utility', () => {
         version: '0.0.0',
         license: 'MIT',
         dependencies: {
-          '@nx/devkit': '15.0.13',
+          '@nrwl/devkit': '15.0.13',
           'eslint-plugin-disable-autofix':
             'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
           postgres:
@@ -328,7 +328,7 @@ describe('pnpm LockFile utility', () => {
   describe('duplicate packages', () => {
     beforeEach(() => {
       const fileSys = {
-        'node_modules/@nx/devkit/package.json': '{"version": "14.8.6"}',
+        'node_modules/@nrwl/devkit/package.json': '{"version": "14.8.6"}',
         'node_modules/@nrwl/workspace/package.json': '{"version": "14.8.6"}',
         'node_modules/@types/prettier/package.json': '{"version": "2.7.2"}',
         'node_modules/nx/package.json': '{"version": "15.4.0"}',
@@ -350,7 +350,7 @@ describe('pnpm LockFile utility', () => {
       const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(370);
       expect(Object.keys(graph.dependencies).length).toEqual(213);
-      expect(graph.dependencies['npm:@nx/devkit'].length).toEqual(6);
+      expect(graph.dependencies['npm:@nrwl/devkit'].length).toEqual(6);
     });
   });
 

@@ -35,7 +35,7 @@ yarn add -D @nrwl/esbuild
 You can add a new library that builds using esbuild with:
 
 ```shell
-nx g @nx/js:lib mylib --bundler=esbuild
+nx g @nrwl/js:lib mylib --bundler=esbuild
 ```
 
 This command will install the esbuild plugin if needed, and set `@nrwl/esbuild:esbuild` executor for the `build` target.

@@ -13,7 +13,7 @@ describe('Web Components Applications with bundler set as webpack', () => {
   it('should support https for dev-server', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     await runCommandUntil(`serve ${appName} --port=5000 --ssl`, (output) => {

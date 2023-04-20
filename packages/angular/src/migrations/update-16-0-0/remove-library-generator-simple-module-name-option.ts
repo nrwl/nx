@@ -47,15 +47,17 @@ function replaceSimpleModuleNameInConfig(
 
   let updated = false;
 
-  if (configObject.generators['@nx/angular']?.['library']?.simpleModuleName) {
-    configObject.generators['@nx/angular']['library'].simpleName ??=
-      configObject.generators['@nx/angular']['library'].simpleModuleName;
-    delete configObject.generators['@nx/angular']['library'].simpleModuleName;
+  if (configObject.generators['@nrwl/angular']?.['library']?.simpleModuleName) {
+    configObject.generators['@nrwl/angular']['library'].simpleName ??=
+      configObject.generators['@nrwl/angular']['library'].simpleModuleName;
+    delete configObject.generators['@nrwl/angular']['library'].simpleModuleName;
     updated = true;
-  } else if (configObject.generators['@nx/angular:library']?.simpleModuleName) {
-    configObject.generators['@nx/angular:library'].simpleName ??=
-      configObject.generators['@nx/angular:library'].simpleModuleName;
-    delete configObject.generators['@nx/angular:library'].simpleModuleName;
+  } else if (
+    configObject.generators['@nrwl/angular:library']?.simpleModuleName
+  ) {
+    configObject.generators['@nrwl/angular:library'].simpleName ??=
+      configObject.generators['@nrwl/angular:library'].simpleModuleName;
+    delete configObject.generators['@nrwl/angular:library'].simpleModuleName;
     updated = true;
   }
 

@@ -83,7 +83,7 @@ async function setup(tree: Tree, name: string) {
       ...projectConfig.targets,
       test: {
         ...projectConfig.targets.test,
-        executor: '@nx/jest:jest',
+        executor: '@nrwl/jest:jest',
       },
     },
   });
@@ -105,7 +105,7 @@ async function setup(tree: Tree, name: string) {
       ...libConfig.targets,
       test: {
         ...libConfig.targets.test,
-        executor: '@nx/jest:jest',
+        executor: '@nrwl/jest:jest',
       },
     },
   });

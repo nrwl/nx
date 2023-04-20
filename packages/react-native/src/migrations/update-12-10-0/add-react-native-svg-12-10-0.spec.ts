@@ -16,13 +16,13 @@ describe('Add react-native-svg to dev dependencies', () => {
       sourceRoot: 'apps/products/src',
       targets: {
         start: {
-          executor: '@nx/react-native:start',
+          executor: '@nrwl/react-native:start',
           options: {
             port: 8081,
           },
         },
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {
             jestConfig: 'apps/products/jest.config.js',
             passWithNoTests: true,
@@ -50,7 +50,7 @@ describe('Add react-native-svg to dev dependencies', () => {
 
     const tsconfig = readJson(tree, 'apps/products/tsconfig.json');
     expect(tsconfig.files).toEqual([
-      '../../node_modules/@nx/react-native/typings/svg.d.ts',
+      '../../node_modules/@nrwl/react-native/typings/svg.d.ts',
     ]);
 
     const packageJson = readJson(tree, 'apps/products/package.json');
@@ -58,7 +58,7 @@ describe('Add react-native-svg to dev dependencies', () => {
 
     const jestConfig = tree.read('apps/products/jest.config.js', 'utf-8');
     expect(jestConfig).toContain(
-      `moduleNameMapper: { '.svg': '@nx/react-native/plugins/jest/svg-mock' },`
+      `moduleNameMapper: { '.svg': '@nrwl/react-native/plugins/jest/svg-mock' },`
     );
   });
 

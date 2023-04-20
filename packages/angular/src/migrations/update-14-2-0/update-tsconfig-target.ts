@@ -16,15 +16,15 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 import { dirname } from 'path';
 import type { StringLiteral } from 'typescript';
 
-const jestExecutor = '@nx/jest:jest';
+const jestExecutor = '@nrwl/jest:jest';
 const executors = [
   '@angular-devkit/build-angular:browser',
   '@angular-devkit/build-angular:karma',
   '@angular-devkit/build-angular:ng-packagr',
-  '@nx/angular:webpack-browser',
-  '@nx/angular:delegate-build',
-  '@nx/angular:ng-packagr-lite',
-  '@nx/angular:package',
+  '@nrwl/angular:webpack-browser',
+  '@nrwl/angular:delegate-build',
+  '@nrwl/angular:ng-packagr-lite',
+  '@nrwl/angular:package',
 ];
 const skipTargets = ['es2020', 'es2021', 'es2022', 'esnext'];
 

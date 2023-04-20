@@ -26,11 +26,11 @@ describe('15.0.0 migration (add-jest-inputs)', () => {
       root: 'proj',
       targets: {
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {},
         },
         test2: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {},
         },
         notTest: {

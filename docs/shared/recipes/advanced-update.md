@@ -103,7 +103,7 @@ As the migration runs and collects the package updates, you'll be prompted to ap
 
 Once you have skipped some optional updates, there'll come a time when you'll want to update those packages. To do so, you'll need to generate the package updates and migrations from the Nx version that contained those skipped updates.
 
-Say you skipped updating Jest to **v28.x.x**. That package update was meant to happen as part of the `@nx/jest@14.6.0` update, but you decided to skip it at the time. The recommended way to collect the migrations from such an older version is to run the following:
+Say you skipped updating Jest to **v28.x.x**. That package update was meant to happen as part of the `@nrwl/jest@14.6.0` update, but you decided to skip it at the time. The recommended way to collect the migrations from such an older version is to run the following:
 
 ```shell
 nx migrate latest --from=nx@14.5.0 --exclude-applied-migrations
@@ -133,7 +133,7 @@ nx migrate latest --to="jest@22.0.0,cypress@3.4.0"
 By default, Nx uses currently installed packages to calculate what migrations need to run. To override them, override the version:
 
 ```shell
-nx migrate latest --to="@nx/jest@12.0.0"
+nx migrate latest --to="@nrwl/jest@12.0.0"
 ```
 
 {% callout type="warning" title="Overriding versions" %}

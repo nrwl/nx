@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nx/angular:remote appName --host=host --port=4201",
+      "command": "nx g @nrwl/angular:remote appName --host=host --port=4201",
       "description": "Create an Angular app with configuration in place for Module Federation. If host is provided, attach this remote app to host app's configuration."
     }
   ],

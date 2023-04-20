@@ -8,7 +8,7 @@
  * It only uses language primitives and immutable objects
  * (the tree being the only exception).
  *
- * @module @nx/devkit
+ * @module @nrwl/devkit
  */
 
 try {

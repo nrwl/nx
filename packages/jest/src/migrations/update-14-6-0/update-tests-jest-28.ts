@@ -14,7 +14,7 @@ export function updateTestsJest28(tree: Tree) {
     /(timers:\s*['"`]legacy['"`])|(legacyFakeTimers:\s*true)/g;
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nx/jest:jest',
+    '@nrwl/jest:jest',
     (options, projectName) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
 

@@ -809,8 +809,8 @@ let mockedSchematics = null;
  * ```typescript
  *   overrideCollectionResolutionForTesting({
  *     '@nrwl/workspace': path.join(__dirname, '../../../../workspace/generators.json'),
- *     '@nx/angular': path.join(__dirname, '../../../../angular/generators.json'),
- *     '@nx/linter': path.join(__dirname, '../../../../linter/generators.json')
+ *     '@nrwl/angular': path.join(__dirname, '../../../../angular/generators.json'),
+ *     '@nrwl/linter': path.join(__dirname, '../../../../linter/generators.json')
  *   });
  *
  * ```

@@ -13,7 +13,7 @@ nx g move --project booking-some-library shared/some-library
 ```
 
 {% callout type="note" title="Angular" %}
-For Angular projects, you should use the [`@nx/angular:move` generator](/packages/angular/generators/move) instead.
+For Angular projects, you should use the [`@nrwl/angular:move` generator](/packages/angular/generators/move) instead.
 {% /callout %}
 
 ## Remove Generator

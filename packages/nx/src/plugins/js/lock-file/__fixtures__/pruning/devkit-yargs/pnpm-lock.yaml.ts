@@ -1,13 +1,13 @@
 export default `lockfileVersion: 5.4
 
 specifiers:
-  '@nx/devkit': 15.4.5
+  '@nrwl/devkit': 15.4.5
   nx: 15.4.5
   typescript: 4.8.4
   yargs: 17.6.2
 
 dependencies:
-  '@nx/devkit': 15.4.5_nx@15.4.5+typescript@4.8.4
+  '@nrwl/devkit': 15.4.5_nx@15.4.5+typescript@4.8.4
   nx: 15.4.5
   typescript: 4.8.4
   yargs: 17.6.2
@@ -45,7 +45,7 @@ packages:
       - debug
     dev: false
 
-  /@nx/devkit/15.4.5_nx@15.4.5+typescript@4.8.4:
+  /@nrwl/devkit/15.4.5_nx@15.4.5+typescript@4.8.4:
     resolution: {integrity: sha512-oag+wJgusKz+rwvgcVy9i8bNtTo7ikbjVVtSOmyVBE0ZrgN1CMFjugBj4FEjKGtd73djjpvW9Mm36uJRujrc2w==}
     peerDependencies:
       nx: '>= 14 <= 16'

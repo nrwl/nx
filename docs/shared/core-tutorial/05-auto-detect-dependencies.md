@@ -20,7 +20,7 @@ This preset is set to only load dependencies from `package.json` or `project.jso
 ```json
 {
   "pluginsConfig": {
-    "@nx/js": {
+    "@nrwl/js": {
       "analyzeSourceFiles": true
     }
   }
@@ -124,7 +124,7 @@ If at some point in the future the code is refactored so that cow no longer refe
 
 ## More Tooling
 
-If you want Nx to do more for you, you can install the `@nx/js` plugin to help with typescript or javascript tooling. This plugin provides out of the box:
+If you want Nx to do more for you, you can install the `@nrwl/js` plugin to help with typescript or javascript tooling. This plugin provides out of the box:
 
 - Typescript alias paths
 - Build with `tsc` or `swc`

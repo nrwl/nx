@@ -69,13 +69,13 @@
     "rename-webpack-server-executor": {
       "cli": "nx",
       "version": "15.0.0-beta.0",
-      "description": "Rename @nx/angular:webpack-server executor to @nx/angular:webpack-dev-server",
+      "description": "Rename @nrwl/angular:webpack-server executor to @nrwl/angular:webpack-dev-server",
       "factory": "./src/migrations/update-14-8-0/rename-webpack-server"
     },
     "switch-to-jasmine-marbles": {
       "cli": "nx",
       "version": "15.0.0-beta.0",
-      "description": "Update the usages of @nx/angular/testing to import jasmine-marbles symbols from jasmine-marbles itself.",
+      "description": "Update the usages of @nrwl/angular/testing to import jasmine-marbles symbols from jasmine-marbles itself.",
       "factory": "./src/migrations/update-15-0-0/switch-to-jasmine-marbles"
     },
     "add-karma-inputs": {
@@ -162,7 +162,7 @@
     "update-file-server-executor": {
       "cli": "nx",
       "version": "15.9.0-beta.9",
-      "description": "Update the file-server executor to use @nx/web:file-server",
+      "description": "Update the file-server executor to use @nrwl/web:file-server",
       "factory": "./src/migrations/update-15-9-0/update-file-server-executor"
     },
     "remove-library-generator-simple-module-name-option": {
@@ -174,7 +174,7 @@
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
-      "description": "Replace @nx/angular with @nx/angular",
+      "description": "Replace @nrwl/angular with @nx/angular",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },

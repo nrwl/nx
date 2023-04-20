@@ -26,7 +26,7 @@
     },
     "13-3-0-tsc-location": {
       "version": "13.3.0-beta.0",
-      "description": "@nrwl/workspace:tsc is now @nx/js:tsc",
+      "description": "@nrwl/workspace:tsc is now @nrwl/js:tsc",
       "cli": "nx",
       "implementation": "./src/migrations/update-13-3-0/update-tsc-executor-location"
     },

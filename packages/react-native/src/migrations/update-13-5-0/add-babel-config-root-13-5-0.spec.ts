@@ -12,13 +12,13 @@ describe('Add react-native-svg to dev dependencies', () => {
       sourceRoot: 'apps/products/src',
       targets: {
         start: {
-          executor: '@nx/react-native:start',
+          executor: '@nrwl/react-native:start',
           options: {
             port: 8081,
           },
         },
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {
             jestConfig: 'apps/products/jest.config.js',
             passWithNoTests: true,

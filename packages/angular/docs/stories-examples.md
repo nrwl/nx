@@ -1,7 +1,7 @@
 This generator will generate stories for all your components in your project. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```bash
-nx g @nx/angular:stories project-name
+nx g @nrwl/angular:stories project-name
 ```
 
 You can read more about how this generator works, in the [Storybook for Angular overview page](/packages/storybook/documents/overview-angular#auto-generate-stories).
@@ -20,7 +20,7 @@ There are a number of other options available. Let's take a look at some example
 ### Ignore certain paths when generating stories
 
 ```bash
-nx g @nx/angular:stories ui --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*
+nx g @nrwl/angular:stories ui --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*
 ```
 
 This will generate stories for all the components in the `ui` project, except for the ones in the `libs/ui/src/not-stories` directory, and also for components that their file name is of the pattern `*.other.*`.

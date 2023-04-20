@@ -14,7 +14,7 @@ export async function updateTestingTsconfigForJest(tree: Tree) {
   const projects = getProjects(tree);
   forEachExecutorOptionsInGraph<JestExecutorOptions>(
     graph,
-    '@nx/jest:jest',
+    '@nrwl/jest:jest',
     (options, projectName) => {
       const projectConfig = projects.get(projectName);
 

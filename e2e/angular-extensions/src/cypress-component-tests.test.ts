@@ -37,7 +37,7 @@ describe('Angular Cypress Component Tests', () => {
 
   it('should test app', () => {
     runCLI(
-      `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
+      `generate @nrwl/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
     );
     if (runCypressTests()) {
       expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
@@ -48,7 +48,7 @@ describe('Angular Cypress Component Tests', () => {
 
   it('should successfully component test lib being used in app', () => {
     runCLI(
-      `generate @nx/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`
+      `generate @nrwl/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`
     );
     if (runCypressTests()) {
       expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
@@ -61,14 +61,14 @@ describe('Angular Cypress Component Tests', () => {
     expect(() => {
       // should error since no edge in graph between lib and app
       runCLI(
-        `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --no-interactive`
+        `generate @nrwl/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --no-interactive`
       );
     }).toThrow();
 
     updateTestToAssertTailwindIsNotApplied(buildableLibName);
 
     runCLI(
-      `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
+      `generate @nrwl/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
     );
     if (runCypressTests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
@@ -76,7 +76,9 @@ describe('Angular Cypress Component Tests', () => {
       );
     }
     // add tailwind
-    runCLI(`generate @nx/angular:setup-tailwind --project=${buildableLibName}`);
+    runCLI(
+      `generate @nrwl/angular:setup-tailwind --project=${buildableLibName}`
+    );
     updateFile(
       `libs/${buildableLibName}/src/lib/input/input.component.cy.ts`,
       (content) => {
@@ -131,19 +133,19 @@ describe('Angular Cypress Component Tests', () => {
 });
 
 function createApp(appName: string) {
-  runCLI(`generate @nx/angular:app ${appName} --no-interactive`);
+  runCLI(`generate @nrwl/angular:app ${appName} --no-interactive`);
   runCLI(
-    `generate @nx/angular:component fancy-component --project=${appName} --no-interactive`
+    `generate @nrwl/angular:component fancy-component --project=${appName} --no-interactive`
   );
 }
 
 function createLib(projectName: string, appName: string, libName: string) {
-  runCLI(`generate @nx/angular:lib ${libName} --no-interactive`);
+  runCLI(`generate @nrwl/angular:lib ${libName} --no-interactive`);
   runCLI(
-    `generate @nx/angular:component btn --project=${libName} --inlineTemplate --inlineStyle --export --no-interactive`
+    `generate @nrwl/angular:component btn --project=${libName} --inlineTemplate --inlineStyle --export --no-interactive`
   );
   runCLI(
-    `generate @nx/angular:component btn-standalone --project=${libName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
+    `generate @nrwl/angular:component btn-standalone --project=${libName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
   );
   updateFile(
     `libs/${libName}/src/lib/btn/btn.component.ts`,
@@ -181,14 +183,14 @@ export class BtnStandaloneComponent {
 
 function createBuildableLib(projectName: string, libName: string) {
   // create lib
-  runCLI(`generate @nx/angular:lib ${libName} --buildable --no-interactive`);
+  runCLI(`generate @nrwl/angular:lib ${libName} --buildable --no-interactive`);
   // create cmp for lib
   runCLI(
-    `generate @nx/angular:component input --project=${libName} --inlineTemplate --inlineStyle --export --no-interactive`
+    `generate @nrwl/angular:component input --project=${libName} --inlineTemplate --inlineStyle --export --no-interactive`
   );
   // create standlone cmp for lib
   runCLI(
-    `generate @nx/angular:component input-standalone --project=${libName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
+    `generate @nrwl/angular:component input-standalone --project=${libName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
   );
   // update cmp implmentation to use tailwind clasasserting in tests
   updateFile(

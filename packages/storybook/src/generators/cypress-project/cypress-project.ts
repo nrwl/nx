@@ -146,8 +146,8 @@ function projectAlreadyHasCypress(tree: Tree): boolean {
   return (
     (packageJsonContents?.['devDependencies']?.['@nx/cypress'] ||
       packageJsonContents?.['dependencies']?.['@nx/cypress'] ||
-      packageJsonContents?.['devDependencies']?.['@nx/cypress'] ||
-      packageJsonContents?.['dependencies']?.['@nx/cypress']) &&
+      packageJsonContents?.['devDependencies']?.['@nrwl/cypress'] ||
+      packageJsonContents?.['dependencies']?.['@nrwl/cypress']) &&
     (packageJsonContents?.['devDependencies']?.['cypress'] ||
       packageJsonContents?.['dependencies']?.['cypress'])
   );

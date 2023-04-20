@@ -95,7 +95,7 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
       const rootProjectConfig = projects.get(rootProject);
       const jestTarget = Object.values(rootProjectConfig.targets || {}).find(
         (t) =>
-          t?.executor === '@nx/jest:jest' || t?.executor === '@nx/jest:jest'
+          t?.executor === '@nx/jest:jest' || t?.executor === '@nrwl/jest:jest'
       );
       const isProjectConfig = jestTarget?.options?.jestConfig === rootJestPath;
       // if root project doesn't have jest target, there's nothing to migrate

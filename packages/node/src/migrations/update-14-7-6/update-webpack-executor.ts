@@ -10,7 +10,7 @@ export default async function update(host: Tree) {
 
   for (const [name, config] of projects.entries()) {
     if (config?.targets?.build?.executor === '@nrwl/node:webpack') {
-      config.targets.build.executor = '@nx/webpack:webpack';
+      config.targets.build.executor = '@nrwl/webpack:webpack';
       config.targets.build.options.target = 'node';
       config.targets.build.options.compiler = 'tsc';
       updateProjectConfiguration(host, name, config);

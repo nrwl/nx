@@ -26,11 +26,11 @@ describe('15.0.0 migration (add-cypress-inputs)', () => {
       root: 'proj',
       targets: {
         e2e: {
-          executor: '@nx/cypress:cypress',
+          executor: '@nrwl/cypress:cypress',
           options: {},
         },
         e2e2: {
-          executor: '@nx/cypress:cypress',
+          executor: '@nrwl/cypress:cypress',
           options: {},
         },
         notTest: {
@@ -85,13 +85,13 @@ describe('15.0.0 migration (add-cypress-inputs)', () => {
       root: 'proj',
       targets: {
         e2e: {
-          executor: '@nx/cypress:cypress',
+          executor: '@nrwl/cypress:cypress',
           options: {
             testingType: 'component',
           },
         },
         e2e2: {
-          executor: '@nx/cypress:cypress',
+          executor: '@nrwl/cypress:cypress',
           options: {
             testingType: 'component',
           },

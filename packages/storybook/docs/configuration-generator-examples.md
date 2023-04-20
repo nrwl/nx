@@ -1,12 +1,12 @@
 ---
 title: Storybook configuration generator examples
-description: This page contains examples for the @nx/storybook:configuration generator.
+description: This page contains examples for the @nrwl/storybook:configuration generator.
 ---
 
 This is a framework-agnostic generator for setting up Storybook configuration for a project.
 
 ```bash
-nx g @nx/storybook:configuration
+nx g @nrwl/storybook:configuration
 ```
 
 Nx will understand if you're using Storybook v7 or Storybook v6 and configure your project accordingly. By default, it will try to use Storybook v7.
@@ -51,7 +51,7 @@ If you are using Angular, React, React Native or Next.js in your project, it's b
 ### Generate Storybook configuration using TypeScript
 
 ```bash
-nx g @nx/storybook:configuration ui --storybook7UiFramework=@storybook/web-components-vite --tsConfiguration=true
+nx g @nrwl/storybook:configuration ui --storybook7UiFramework=@storybook/web-components-vite --tsConfiguration=true
 ```
 
 This will generate a Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory).
@@ -61,7 +61,7 @@ This will generate a Storybook configuration for the `ui` project using TypeScri
 If, for somem reason, you want to force Nx to generate Storybook version 6 configuration, you can do so by passing false to the `storybook7Configuration` flag:
 
 ```bash
-nx g @nx/storybook:configuration ui --uiFramework=@storybook/react --storybook7Configuration=false
+nx g @nrwl/storybook:configuration ui --uiFramework=@storybook/react --storybook7Configuration=false
 ```
 
 However, this is **NOT recommended**.

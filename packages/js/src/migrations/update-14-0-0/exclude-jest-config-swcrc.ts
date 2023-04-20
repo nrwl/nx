@@ -6,7 +6,7 @@ import { join } from 'path';
 export function excludeJestConfigSwcrc(tree: Tree) {
   forEachExecutorOptions(
     tree,
-    '@nx/js:swc',
+    '@nrwl/js:swc',
     (config: SwcExecutorOptions, projectName) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
       const libSwcPath = join(projectConfig.root, '.lib.swcrc');

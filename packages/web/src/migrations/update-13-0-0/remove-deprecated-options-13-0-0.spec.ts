@@ -17,7 +17,7 @@ describe('Migration: Remove deprecated options', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nx/web:build',
+          executor: '@nrwl/web:build',
           options: {
             showCircularDependencies: false,
             budgets: [],
@@ -42,7 +42,7 @@ describe('Migration: Remove deprecated options', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nx/web:build',
+          executor: '@nrwl/web:build',
           options: {},
           configurations: {
             production: {},

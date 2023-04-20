@@ -17,15 +17,15 @@ describe('Jest', () => {
   afterAll(() => cleanupProject());
 
   it('should be able test projects using jest', async () => {
-    await expectJestTestsToPass('@nx/js:lib');
+    await expectJestTestsToPass('@nrwl/js:lib');
   }, 500000);
 
   it('should merge with jest config globals', async () => {
     const testGlobal = `'My Test Global'`;
     const mylib = uniq('mylib');
     const utilLib = uniq('util-lib');
-    runCLI(`generate @nx/js:lib ${mylib} --unit-test-runner jest`);
-    runCLI(`generate @nx/js:lib ${utilLib} --importPath=@global-fun/globals`);
+    runCLI(`generate @nrwl/js:lib ${mylib} --unit-test-runner jest`);
+    runCLI(`generate @nrwl/js:lib ${utilLib} --importPath=@global-fun/globals`);
     updateFile(
       `libs/${utilLib}/src/index.ts`,
       stripIndents`
@@ -95,7 +95,7 @@ describe('Jest', () => {
 
   it('should set the NODE_ENV to `test`', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nx/js:lib ${mylib} --unit-test-runner jest`);
+    runCLI(`generate @nrwl/js:lib ${mylib} --unit-test-runner jest`);
 
     updateFile(
       `libs/${mylib}/src/lib/${mylib}.spec.ts`,
@@ -113,7 +113,7 @@ describe('Jest', () => {
 
   it('should support multiple `coverageReporters` through CLI', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nx/js:lib ${mylib} --unit-test-runner jest`);
+    runCLI(`generate @nrwl/js:lib ${mylib} --unit-test-runner jest`);
 
     updateFile(
       `libs/${mylib}/src/lib/${mylib}.spec.ts`,

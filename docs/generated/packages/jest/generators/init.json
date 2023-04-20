@@ -44,7 +44,7 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the `@nx/jest` plugin.",
+  "description": "Initialize the `@nrwl/jest` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
   "implementation": "/packages/jest/src/generators/init/init#jestInitGenerator.ts",

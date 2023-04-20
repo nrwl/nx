@@ -15,7 +15,7 @@ export default async function (tree: Tree) {
 function updateNonAngularStorybookBuildTargets(tree: Tree) {
   forEachExecutorOptions(
     tree,
-    '@nx/storybook:build',
+    '@nrwl/storybook:build',
     (_options, projectName, targetName, configuration) => {
       if (!configuration) {
         return;
@@ -61,7 +61,7 @@ function updateNonAngularStorybookBuildTargets(tree: Tree) {
 function updateNonAngularStorybookServeTargets(tree: Tree) {
   forEachExecutorOptions(
     tree,
-    '@nx/storybook:storybook',
+    '@nrwl/storybook:storybook',
     (_options, projectName, targetName, configuration) => {
       if (!configuration) {
         return;

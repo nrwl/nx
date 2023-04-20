@@ -18,7 +18,7 @@ describe('update-babel-preset', () => {
       presets: [
         '@acme/foo',
         [
-          '@nx/web/babel',
+          '@nrwl/web/babel',
           {
             useBuiltIns: 'usage',
           },
@@ -34,7 +34,7 @@ describe('update-babel-preset', () => {
       presets: [
         '@acme/foo',
         [
-          '@nx/js/babel',
+          '@nrwl/js/babel',
           {
             useBuiltIns: 'usage',
           },
@@ -49,14 +49,14 @@ describe('update-babel-preset', () => {
       root: 'demo',
     });
     writeJson(tree, 'demo/.babelrc', {
-      presets: ['@acme/foo', '@nx/web/babel', '@acme/bar'],
+      presets: ['@acme/foo', '@nrwl/web/babel', '@acme/bar'],
     });
 
     await update(tree);
 
     const result = readJson(tree, 'demo/.babelrc');
     expect(result).toEqual({
-      presets: ['@acme/foo', '@nx/js/babel', '@acme/bar'],
+      presets: ['@acme/foo', '@nrwl/js/babel', '@acme/bar'],
     });
   });
 });

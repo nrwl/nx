@@ -12,7 +12,7 @@ describe('Add next eslint 14.5.7', () => {
       root: 'apps/app1',
       targets: {
         build: {
-          executor: '@nx/next:build',
+          executor: '@nrwl/next:build',
         },
       },
     });

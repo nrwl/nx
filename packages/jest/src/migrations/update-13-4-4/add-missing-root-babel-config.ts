@@ -19,7 +19,7 @@ function checkIfProjectNeedsUpdate(tree: Tree): boolean {
   let shouldUpdate = false;
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nx/jest:jest',
+    '@nrwl/jest:jest',
     (jestOptions, projectName) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
       const jestConfigPath = joinPathFragments(
@@ -53,7 +53,7 @@ export default async function update(tree: Tree) {
   const shouldUpdateConfigs = checkIfProjectNeedsUpdate(tree);
 
   if (shouldUpdateConfigs) {
-    addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
+    addDependenciesToPackageJson(tree, {}, { '@nrwl/web': nxVersion });
 
     tree.write('babel.config.json', '{"babelrcRoots": ["*"]}');
 

@@ -15,7 +15,7 @@
     "react-dom": "18.2.0",
     "regenerator-runtime": "0.13.7",
     "tslib": "^2.3.0",
-    "@nx/next": "16.0.0-beta.5"
+    "@nrwl/next": "15.3.3"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.14.5",
@@ -44,12 +44,12 @@
     "ts-jest": "28.0.5",
     "ts-node": "10.9.1",
     "typescript": "~4.8.2",
+    "@nrwl/cypress": "15.3.3",
     "@nrwl/eslint-plugin-nx": "15.3.3",
-    "@nrwl/workspace": "15.3.3",
-    "@nx/linter": "16.0.0-beta.5",
-    "@nx/cypress": "16.0.0-beta.5",
-    "@nx/web": "16.0.0-beta.5",
-    "@nx/react": "16.0.0-beta.5",
-    "@nx/jest": "16.0.0-beta.5"
+    "@nrwl/jest": "15.3.3",
+    "@nrwl/linter": "15.3.3",
+    "@nrwl/react": "15.3.3",
+    "@nrwl/web": "15.3.3",
+    "@nrwl/workspace": "15.3.3"
   }
 }

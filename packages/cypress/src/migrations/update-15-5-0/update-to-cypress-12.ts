@@ -32,7 +32,7 @@ export function updateToCypress12(tree: Tree): GeneratorCallback {
 
   forEachExecutorOptions<CypressExecutorOptions>(
     tree,
-    '@nx/cypress:cypress',
+    '@nrwl/cypress:cypress',
     (options, projectName, targetName, configName) => {
       if (!(options.cypressConfig && tree.exists(options.cypressConfig))) {
         return;
@@ -81,7 +81,7 @@ export function turnOffTestIsolation(tree: Tree, configPath: string) {
   }
 
   const testIsolationProperty = `/**
-    * TODO(@nx/cypress): In Cypress v12,the testIsolation option is turned on by default. 
+    * TODO(@nrwl/cypress): In Cypress v12,the testIsolation option is turned on by default. 
     * This can cause tests to start breaking where not indended.
     * You should consider enabling this once you verify tests do not depend on each other
     * More Info: https://docs.cypress.io/guides/references/migration-guide#Test-Isolation
@@ -129,7 +129,7 @@ export function shouldUseCyIntercept(tree: Tree, filePath: string) {
       // cy.route and cy.route().as
       // only need the first 1 so skip any extra chaining
       if (expression === 'cy' || expression === 'Cypress.Server') {
-        return `// TODO(@nx/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+        return `// TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
 ${node.getText()}`;
       }
     }
@@ -155,7 +155,7 @@ export function shouldUseCySession(tree: Tree, filePath: string) {
       const expression = node.expression.getText().trim();
       // prevent grabbing other Cypress.<something>.defaults
       if (expression === 'Cypress.Cookies') {
-        return `// TODO(@nx/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
+        return `// TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
 ${node.getText()}`;
       }
     }
@@ -192,7 +192,7 @@ export function shouldNotUseCyInShouldCB(tree: Tree, filePath: string) {
           )?.length > 0;
         if (isUsingNestedCyCommand) {
           return `/**
-* TODO(@nx/cypress): Nesting Cypress commands in a should assertion now throws.
+* TODO(@nrwl/cypress): Nesting Cypress commands in a should assertion now throws.
 * You should use .then() to chain commands instead.
 * More Info: https://docs.cypress.io/guides/references/migration-guide#-should
 **/
@@ -229,7 +229,7 @@ export function shouldNotOverrideCommands(tree: Tree, filePath: string) {
         if (BANNED_COMMANDS.includes(command)) {
           // overwrite
           return `/**
-* TODO(@nx/cypress): This command can no longer be overridden
+* TODO(@nrwl/cypress): This command can no longer be overridden
 * Consider using a different name like 'custom_${command}'
 * More info: https://docs.cypress.io/guides/references/migration-guide#Cypress-Commands-overwrite
 **/

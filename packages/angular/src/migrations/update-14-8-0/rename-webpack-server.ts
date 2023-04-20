@@ -4,8 +4,8 @@ import { getProjects, updateProjectConfiguration } from '@nx/devkit';
 export default function renameWebpackServer(tree: Tree) {
   const projects = getProjects(tree);
 
-  const oldExecutorName = '@nx/angular:webpack-server';
-  const newExecutorName = '@nx/angular:webpack-dev-server';
+  const oldExecutorName = '@nrwl/angular:webpack-server';
+  const newExecutorName = '@nrwl/angular:webpack-dev-server';
 
   for (const [projectName, project] of projects.entries()) {
     let stringifiedProject = JSON.stringify(project);

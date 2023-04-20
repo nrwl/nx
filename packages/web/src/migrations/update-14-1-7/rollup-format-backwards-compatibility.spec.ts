@@ -9,7 +9,7 @@ describe('rollup-format-backwards-compatibility', () => {
       root: 'proj1',
       targets: {
         build: {
-          executor: '@nx/web:rollup',
+          executor: '@nrwl/web:rollup',
         },
       },
     });
@@ -18,7 +18,7 @@ describe('rollup-format-backwards-compatibility', () => {
 
     expect(readJson(tree, 'proj1/project.json').targets).toEqual({
       build: {
-        executor: '@nx/web:rollup',
+        executor: '@nrwl/web:rollup',
         options: {
           format: ['esm', 'cjs'],
         },
@@ -32,7 +32,7 @@ describe('rollup-format-backwards-compatibility', () => {
       root: 'proj1',
       targets: {
         build: {
-          executor: '@nx/web:rollup',
+          executor: '@nrwl/web:rollup',
           options: {
             format: ['esm'],
           },
@@ -44,7 +44,7 @@ describe('rollup-format-backwards-compatibility', () => {
 
     expect(readJson(tree, 'proj1/project.json').targets).toEqual({
       build: {
-        executor: '@nx/web:rollup',
+        executor: '@nrwl/web:rollup',
         options: {
           format: ['esm'],
         },

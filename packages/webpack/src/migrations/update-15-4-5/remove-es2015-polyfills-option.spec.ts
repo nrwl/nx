@@ -13,12 +13,12 @@ describe('15.4.5 migration (remove es2015-polyfills)', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should update all executors using @nx/webpack:webpack and es2015Polyfills option', async () => {
+  it('should update all executors using @nrwl/webpack:webpack and es2015Polyfills option', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'app1',
       targets: {
         build: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             es2015Polyfills: 'app1/polyfills.ts',
           },
@@ -29,7 +29,7 @@ describe('15.4.5 migration (remove es2015-polyfills)', () => {
       root: 'app2',
       targets: {
         custom: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             es2016Polyfills: 'app2/polyfills.ts',
           },

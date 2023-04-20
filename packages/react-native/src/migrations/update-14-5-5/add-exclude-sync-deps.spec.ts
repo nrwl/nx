@@ -16,7 +16,7 @@ describe('add-exclude-sync-deps', () => {
       sourceRoot: 'apps/products/src',
       targets: {
         'sync-deps': {
-          executor: '@nx/react-native:sync-deps',
+          executor: '@nrwl/react-native:sync-deps',
           options: {
             include: 'react-native-reanmiated,react-native-screens',
           },
@@ -30,7 +30,7 @@ describe('add-exclude-sync-deps', () => {
 
     const projectConfig = readProjectConfiguration(tree, 'products');
     expect(projectConfig.targets['sync-deps']).toEqual({
-      executor: '@nx/react-native:sync-deps',
+      executor: '@nrwl/react-native:sync-deps',
       options: {
         include: ['react-native-reanmiated', 'react-native-screens'],
       },

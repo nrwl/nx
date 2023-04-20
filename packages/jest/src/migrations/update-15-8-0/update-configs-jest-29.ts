@@ -19,7 +19,7 @@ export async function updateConfigsJest29(tree: Tree) {
   const graph = await createProjectGraphAsync();
   forEachExecutorOptionsInGraph<JestExecutorOptions>(
     graph,
-    '@nx/jest:jest',
+    '@nrwl/jest:jest',
     (options, projectName, targetName) => {
       if (options.jestConfig && tree.exists(options.jestConfig)) {
         targetsWithJest.add(targetName);

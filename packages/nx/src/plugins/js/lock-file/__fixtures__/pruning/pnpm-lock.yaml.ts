@@ -47,7 +47,7 @@ packages:
       - debug
     dev: true
 
-  /@nx/devkit/15.4.5_nx@15.4.5+typescript@4.8.4:
+  /@nrwl/devkit/15.4.5_nx@15.4.5+typescript@4.8.4:
     resolution: {integrity: sha512-oag+wJgusKz+rwvgcVy9i8bNtTo7ikbjVVtSOmyVBE0ZrgN1CMFjugBj4FEjKGtd73djjpvW9Mm36uJRujrc2w==}
     peerDependencies:
       nx: '>= 14 <= 16'
@@ -62,7 +62,7 @@ packages:
       - typescript
     dev: true
 
-  /@nx/linter/15.4.5_nx@15.4.5+typescript@4.8.4:
+  /@nrwl/linter/15.4.5_nx@15.4.5+typescript@4.8.4:
     resolution: {integrity: sha512-rWlsRD1gDj4x6exQJzNX9MyAkVnUotAXMiYGKPl+b4X1Usn1/lmqyCE7UxmaYaZvUx4hQnEI0xSr++AdVxd5RA==}
     peerDependencies:
       eslint: ^8.0.0
@@ -70,7 +70,7 @@ packages:
       eslint:
         optional: true
     dependencies:
-      '@nx/devkit': 15.4.5_nx@15.4.5+typescript@4.8.4
+      '@nrwl/devkit': 15.4.5_nx@15.4.5+typescript@4.8.4
       '@phenomnomnominal/tsquery': 4.1.1_typescript@4.8.4
       tmp: 0.2.1
       tslib: 2.4.1
@@ -98,8 +98,8 @@ packages:
       prettier:
         optional: true
     dependencies:
-      '@nx/devkit': 15.4.5_nx@15.4.5+typescript@4.8.4
-      '@nx/linter': 15.4.5_nx@15.4.5+typescript@4.8.4
+      '@nrwl/devkit': 15.4.5_nx@15.4.5+typescript@4.8.4
+      '@nrwl/linter': 15.4.5_nx@15.4.5+typescript@4.8.4
       '@parcel/watcher': 2.0.4
       chalk: 4.1.0
       chokidar: 3.5.3

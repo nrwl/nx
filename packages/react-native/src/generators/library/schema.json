@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nx/react-native:lib mylib --directory=myapp",
+      "command": "nx g @nrwl/react-native:lib mylib --directory=myapp",
       "description": "Generate `libs/myapp/mylib`"
     }
   ],

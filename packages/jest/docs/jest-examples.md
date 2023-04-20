@@ -2,7 +2,7 @@ Jest can be configured in many ways, but primarily you'll need to at least have 
 
 ```json
 "test": {
-  "executor": "@nx/jest:jest",
+  "executor": "@nrwl/jest:jest",
   "options": {
     "jestConfig": "libs/my-lib/jest.config.ts"
   }
@@ -13,7 +13,7 @@ It is also helpful to have `passWithNoTests: true` set so your project doesn't f
 
 ```json
 "test": {
-  "executor": "@nx/jest:jest",
+  "executor": "@nrwl/jest:jest",
   "options": {
     "jestConfig": "libs/my-lib/jest.config.ts",
     "passWithNoTests": true
@@ -34,7 +34,7 @@ Adding a _ci_ configuration is helpful for adding this behavior.
 
 ```json
 "test": {
-  "executor": "@nx/jest:jest",
+  "executor": "@nrwl/jest:jest",
   "options": {
     "jestConfig": "libs/my-lib/jest.config.ts",
     "passWithNoTests": true

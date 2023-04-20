@@ -6,7 +6,7 @@ export function getEslintTargets(tree: Tree) {
   forEachExecutorOptions(tree, '@nx/linter:eslint', (_, __, target) => {
     eslintTargetNames.add(target);
   });
-  forEachExecutorOptions(tree, '@nx/linter:eslint', (_, __, target) => {
+  forEachExecutorOptions(tree, '@nrwl/linter:eslint', (_, __, target) => {
     eslintTargetNames.add(target);
   });
   return eslintTargetNames;

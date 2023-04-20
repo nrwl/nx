@@ -13,7 +13,7 @@ describe('Add projectRoot option in metro.config.js', () => {
       sourceRoot: 'apps/products/src',
       targets: {
         start: {
-          executor: '@nx/react-native:start',
+          executor: '@nrwl/react-native:start',
           options: {
             port: 8081,
           },

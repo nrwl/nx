@@ -20,7 +20,7 @@ Executors are associated with specific targets in a project's `project.json` fil
   "generators": {},
   "targets": {
     "build": {
-      "executor": "@nx/webpack:webpack",
+      "executor": "@nrwl/webpack:webpack",
       "options": {
         "outputPath": "dist/apps/cart",
         ...
@@ -33,7 +33,7 @@ Executors are associated with specific targets in a project's `project.json` fil
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nrwl/jest:jest",
       "options": {
         ...
       }
@@ -50,7 +50,7 @@ Each project has targets configured to run an executor with a specific set of op
 
 Each executor definition has an `executor` property and, optionally, an `options` and a `configurations` property.
 
-- `executor` is a string of the form `[package name]:[executor name]`. For the `build` executor, the package name is `@nx/web` and the executor name is `webpack`.
+- `executor` is a string of the form `[package name]:[executor name]`. For the `build` executor, the package name is `@nrwl/web` and the executor name is `webpack`.
 - `options` is an object that contains any configuration defaults for the executor. These options vary from executor to executor.
 - `configurations` allows you to create presets of options for different scenarios. All the configurations start with the properties defined in `options` as a baseline and then overwrite those options. In the example, there is a `production` configuration that overrides the default options to set `sourceMap` to `false`.
 

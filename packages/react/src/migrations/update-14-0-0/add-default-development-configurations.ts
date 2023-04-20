@@ -10,7 +10,7 @@ export async function update(tree: Tree) {
 
   projects.forEach((config, name) => {
     let shouldUpdate = false;
-    if (config.targets?.build?.executor === '@nx/web:webpack') {
+    if (config.targets?.build?.executor === '@nrwl/web:webpack') {
       shouldUpdate = true;
       config.targets.build.defaultConfiguration ??= 'production';
       config.targets.build.configurations ??= {};
@@ -22,7 +22,7 @@ export async function update(tree: Tree) {
       };
     }
 
-    if (config.targets?.serve?.executor === '@nx/web:dev-server') {
+    if (config.targets?.serve?.executor === '@nrwl/web:dev-server') {
       shouldUpdate = true;
       config.targets.serve.defaultConfiguration ??= 'development';
       config.targets.serve.configurations ??= {};

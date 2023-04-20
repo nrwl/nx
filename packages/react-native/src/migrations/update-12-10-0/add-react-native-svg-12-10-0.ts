@@ -19,7 +19,7 @@ export default async function update(tree: Tree) {
   const projects = getProjects(tree);
 
   projects.forEach((project) => {
-    if (project.targets?.start?.executor !== '@nx/react-native:start') return;
+    if (project.targets?.start?.executor !== '@nrwl/react-native:start') return;
 
     addReactNativeSvgToAppPackageJson(tree, project);
     addReactNativeSvgToTsconfig(tree, project);
@@ -51,7 +51,7 @@ function addReactNativeSvgToTsconfig(
   const offset = offsetFromRoot(project.root);
   updateJson(host, tsconfigPath, (json) => {
     const files = json.files || [];
-    files.push(`${offset}node_modules/@nx/react-native/typings/svg.d.ts`);
+    files.push(`${offset}node_modules/@nrwl/react-native/typings/svg.d.ts`);
     json.files = files;
     return json;
   });
@@ -67,7 +67,7 @@ function mockSvgInJestConfig(host: Tree, project: ProjectConfiguration) {
       jestConfigPath,
       contents.replace(
         /,([^,]*)$/,
-        `, moduleNameMapper: {'\\.svg': '@nx/react-native/plugins/jest/svg-mock'}, $1`
+        `, moduleNameMapper: {'\\.svg': '@nrwl/react-native/plugins/jest/svg-mock'}, $1`
       )
     );
   } catch {

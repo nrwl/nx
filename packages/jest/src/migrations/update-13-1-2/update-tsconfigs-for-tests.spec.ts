@@ -10,8 +10,8 @@ const reactTsConfigs = {
       types: ['node'],
     },
     files: [
-      '../../node_modules/@nx/react/typings/cssmodule.d.ts',
-      '../../node_modules/@nx/react/typings/image.d.ts',
+      '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
+      '../../node_modules/@nrwl/react/typings/image.d.ts',
     ],
     exclude: [
       '**/*.spec.ts',
@@ -29,8 +29,8 @@ const reactTsConfigs = {
       types: ['node'],
     },
     files: [
-      '../../node_modules/@nx/react/typings/cssmodule.d.ts',
-      '../../node_modules/@nx/react/typings/image.d.ts',
+      '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
+      '../../node_modules/@nrwl/react/typings/image.d.ts',
     ],
     exclude: [
       '**/*.spec.ts',
@@ -57,8 +57,8 @@ const reactTsConfigs = {
       '**/*.d.ts',
     ],
     files: [
-      '../../node_modules/@nx/react/typings/cssmodule.d.ts',
-      '../../node_modules/@nx/react/typings/image.d.ts',
+      '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
+      '../../node_modules/@nrwl/react/typings/image.d.ts',
     ],
   },
   base: {
@@ -202,10 +202,10 @@ const tsConfigWithExclude = {
         projectType: 'library',
         targets: {
           build: {
-            executor: '@nx/web:build',
+            executor: '@nrwl/web:build',
           },
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
             options: {
               jestConfig: 'libs/lib-one/jest.config.js',
               passWithNoTests: true,
@@ -219,10 +219,10 @@ const tsConfigWithExclude = {
         projectType: 'application',
         targets: {
           build: {
-            executor: '@nx/web:build',
+            executor: '@nrwl/web:build',
           },
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
             options: {
               jestConfig: 'apps/project-one/jest.config.js',
               passWithNoTests: true,

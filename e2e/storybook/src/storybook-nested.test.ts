@@ -25,7 +25,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
     });
 
     runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nrwl/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
 
     runCLI(`report`);
@@ -72,7 +72,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
     // This test makes sure path resolution works
     xit('should build a React based storybook that references another lib and uses Vite', () => {
       const reactLib = uniq('test-lib-react');
-      runCLI(`generate @nx/react:lib ${reactLib} --no-interactive`);
+      runCLI(`generate @nrwl/react:lib ${reactLib} --no-interactive`);
       // create a React component we can reference
       writeFileSync(
         tmpProjPath(`${reactLib}/src/lib/mytestcmp.tsx`),

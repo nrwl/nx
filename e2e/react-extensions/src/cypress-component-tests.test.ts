@@ -21,14 +21,14 @@ describe('React Cypress Component Tests', () => {
     ensureCypressInstallation();
 
     runCLI(
-      `generate @nx/react:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nrwl/react:app ${appName} --bundler=webpack --no-interactive`
     );
 
     updateJson('nx.json', (json) => ({
       ...json,
       generators: {
         ...json.generators,
-        '@nx/react': {
+        '@nrwl/react': {
           library: {
             unitTestRunner: 'jest',
           },
@@ -37,13 +37,13 @@ describe('React Cypress Component Tests', () => {
     }));
 
     runCLI(
-      `generate @nx/react:component fancy-cmp --project=${appName} --no-interactive`
+      `generate @nrwl/react:component fancy-cmp --project=${appName} --no-interactive`
     );
     runCLI(
-      `generate @nx/react:lib ${usedInAppLibName} --no-interactive --unitTestRunner=jest`
+      `generate @nrwl/react:lib ${usedInAppLibName} --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/react:component btn --project=${usedInAppLibName} --export --no-interactive`
+      `generate @nrwl/react:component btn --project=${usedInAppLibName} --export --no-interactive`
     );
     // makes sure custom webpack is loading
     createFile(
@@ -102,10 +102,10 @@ export default App;`
     );
 
     runCLI(
-      `generate @nx/react:lib ${buildableLibName} --buildable --no-interactive --unitTestRunner=jest`
+      `generate @nrwl/react:lib ${buildableLibName} --buildable --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/react:component input --project=${buildableLibName} --export --no-interactive`
+      `generate @nrwl/react:component input --project=${buildableLibName} --export --no-interactive`
     );
 
     updateFile(
@@ -144,7 +144,7 @@ export default Input;
 
   it('should test app', () => {
     runCLI(
-      `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`
+      `generate @nrwl/react:cypress-component-configuration --project=${appName} --generate-tests`
     );
     expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
       'All specs passed!'
@@ -153,7 +153,7 @@ export default Input;
 
   it('should successfully component test lib being used in app', () => {
     runCLI(
-      `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
+      `generate @nrwl/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
     expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
       'All specs passed!'
@@ -182,14 +182,14 @@ describe(Input.name, () => {
     );
 
     runCLI(
-      `generate @nx/react:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build`
+      `generate @nrwl/react:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build`
     );
     expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
       'All specs passed!'
     );
 
     // add tailwind
-    runCLI(`generate @nx/react:setup-tailwind --project=${buildableLibName}`);
+    runCLI(`generate @nrwl/react:setup-tailwind --project=${buildableLibName}`);
     updateFile(
       `libs/${buildableLibName}/src/styles.css`,
       `

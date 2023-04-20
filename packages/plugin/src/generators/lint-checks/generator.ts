@@ -143,7 +143,7 @@ function updateProjectTarget(
   for (const [target, configuration] of Object.entries(project.targets)) {
     if (
       configuration.executor === '@nx/linter:eslint' ||
-      configuration.executor === '@nx/linter:eslint'
+      configuration.executor === '@nrwl/linter:eslint'
     ) {
       const opts: EsLintExecutorOptions = configuration.options ?? {};
       opts.lintFilePatterns ??= [];
@@ -276,6 +276,6 @@ export function getEsLintOptions(
 ): [target: string, configuration: TargetConfiguration<EsLintExecutorOptions>] {
   return Object.entries(project.targets || {}).find(
     ([, x]) =>
-      x.executor === '@nx/linter:eslint' || x.executor === '@nx/linter:eslint'
+      x.executor === '@nx/linter:eslint' || x.executor === '@nrwl/linter:eslint'
   );
 }

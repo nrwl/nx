@@ -13,7 +13,7 @@ describe('angular.json v1 config', () => {
 
   beforeAll(() => {
     newProject();
-    runCLI(`generate @nx/angular:app ${app1} --no-interactive`);
+    runCLI(`generate @nrwl/angular:app ${app1} --no-interactive`);
     // reset workspace to use v1 config
     updateFile(`angular.json`, angularV1Json(app1));
     removeFile(`apps/${app1}/project.json`);
@@ -31,7 +31,7 @@ describe('angular.json v1 config', () => {
   it('should generate new app with project.json and keep the existing in angular.json', async () => {
     // create new app
     const app2 = uniq('app2');
-    runCLI(`generate @nx/angular:app ${app2} --no-interactive`);
+    runCLI(`generate @nrwl/angular:app ${app2} --no-interactive`);
 
     // should generate project.json for new projects
     checkFilesExist(`apps/${app2}/project.json`);
@@ -116,7 +116,7 @@ const angularV1Json = (appName: string) => `{
           }
         },
         "lint": {
-          "builder": "@nx/linter:eslint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
             "lintFilePatterns": [
               "apps/${appName}/src/**/*.ts",
@@ -125,7 +125,7 @@ const angularV1Json = (appName: string) => `{
           }
         },
         "test": {
-          "builder": "@nx/jest:jest",
+          "builder": "@nrwl/jest:jest",
           "outputs": ["coverage/apps/${appName}"],
           "options": {
             "jestConfig": "apps/${appName}/jest.config.ts",
@@ -141,7 +141,7 @@ const angularV1Json = (appName: string) => `{
       "projectType": "application",
       "architect": {
         "e2e": {
-          "builder": "@nx/cypress:cypress",
+          "builder": "@nrwl/cypress:cypress",
           "options": {
             "cypressConfig": "apps/${appName}-e2e/cypress.json",
             "devServerTarget": "${appName}:serve:development",
@@ -154,7 +154,7 @@ const angularV1Json = (appName: string) => `{
           }
         },
         "lint": {
-          "builder": "@nx/linter:eslint",
+          "builder": "@nrwl/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["apps/${appName}-e2e/**/*.{js,ts}"]

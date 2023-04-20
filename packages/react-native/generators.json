@@ -6,7 +6,7 @@
     "init": {
       "factory": "./src/generators/init/init#reactNativeInitSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nx/react-native` plugin.",
+      "description": "Initialize the `@nrwl/react-native` plugin.",
       "hidden": true
     },
     "application": {
@@ -58,7 +58,7 @@
     "init": {
       "factory": "./src/generators/init/init#reactNativeInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nx/react-native` plugin.",
+      "description": "Initialize the `@nrwl/react-native` plugin.",
       "hidden": true
     },
     "application": {

@@ -6,7 +6,7 @@
       "sourceRoot": "libs/ui/one/src",
       "targets": {
         "storybook": {
-          "builder": "@nx/storybook:storybook",
+          "builder": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,
@@ -16,7 +16,7 @@
           }
         },
         "build-storybook": {
-          "executor": "@nx/storybook:build",
+          "executor": "@nrwl/storybook:build",
           "outputs": ["{options.outputPath}"],
           "options": {
             "uiFramework": "@storybook/angular",
@@ -39,7 +39,7 @@
       "sourceRoot": "libs/ui/two/src",
       "targets": {
         "storybook": {
-          "builder": "@nx/storybook:storybook",
+          "builder": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,
@@ -49,7 +49,7 @@
           }
         },
         "build-storybook": {
-          "executor": "@nx/storybook:build",
+          "executor": "@nrwl/storybook:build",
           "outputs": ["{options.outputPath}"],
           "options": {
             "uiFramework": "@storybook/angular",
@@ -72,7 +72,7 @@
       "sourceRoot": "libs/ui/three/src",
       "targets": {
         "storybook": {
-          "builder": "@nx/storybook:storybook",
+          "builder": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,
@@ -82,7 +82,7 @@
           }
         },
         "build-storybook": {
-          "executor": "@nx/storybook:build",
+          "executor": "@nrwl/storybook:build",
           "outputs": ["{options.outputPath}"],
           "options": {
             "uiFramework": "@storybook/angular",
@@ -110,7 +110,7 @@
           "outputs": ["{options.outputPath}"]
         },
         "storybook": {
-          "builder": "@nx/storybook:storybook",
+          "builder": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,
@@ -125,7 +125,7 @@
           }
         },
         "build-storybook": {
-          "builder": "@nx/storybook:build",
+          "builder": "@nrwl/storybook:build",
           "outputs": ["{options.outputPath}"],
           "options": {
             "uiFramework": "@storybook/angular",

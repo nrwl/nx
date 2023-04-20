@@ -14,11 +14,11 @@ describe('addOutputs', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     const lintWithoutOutputs: TargetConfiguration = {
-      executor: '@nx/linter:eslint',
+      executor: '@nrwl/linter:eslint',
       options: {},
     };
     const lintWithOutputs: TargetConfiguration = {
-      executor: '@nx/linter:eslint',
+      executor: '@nrwl/linter:eslint',
       outputs: ['dist'],
       options: {},
     };
@@ -47,14 +47,14 @@ describe('addOutputs', () => {
         "root": "proj",
         "targets": {
           "lintWithOutputs": {
-            "executor": "@nx/linter:eslint",
+            "executor": "@nrwl/linter:eslint",
             "options": {},
             "outputs": [
               "dist",
             ],
           },
           "lintWithoutOutputs": {
-            "executor": "@nx/linter:eslint",
+            "executor": "@nrwl/linter:eslint",
             "options": {},
             "outputs": [
               "{options.outputFile}",

@@ -23,10 +23,10 @@ List the plugins installed in the current workspace:
  nx list
 ```
 
-List the generators and executors available in the `@nx/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace):
+List the generators and executors available in the `@nrwl/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace):
 
 ```shell
- nx list @nx/web
+ nx list @nrwl/web
 ```
 
 ## Options

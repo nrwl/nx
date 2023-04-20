@@ -2,7 +2,7 @@
 
 [React 18](https://reactjs.org/blog/2022/03/29/react-v18.html) released with many new features, such as Concurrent React, Suspense, batched updates, and more.
 
-Workspaces that upgrade to `@nx/react` 14 will be automatically migrated to React 18. This migration will also include an upgrade to React Router v6, if it is used in the workspace, as well as the removal of the deprecated `@testing-library/react-hook` package. Keep reading for more details.
+Workspaces that upgrade to `@nrwl/react` 14 will be automatically migrated to React 18. This migration will also include an upgrade to React Router v6, if it is used in the workspace, as well as the removal of the deprecated `@testing-library/react-hook` package. Keep reading for more details.
 
 {% callout type="note" title="Using NPM v7/v8?" %}
 If you use npm v7/v8, you will need to use `npm install --force` after running `nx migrate 14.0.0` since `@testing-library/react-hook` does not support React 18. Don't worry, this package will be removed in the migration.
@@ -158,11 +158,11 @@ If you continue to have issues after the migration, please open an issue on the 
 
 Nx will also update your workspace to React Native v0.68. There are breaking changes, please refer to the official [React Native 0.68 guide](https://reactnative.dev/blog/2022/03/30/version-068) for details.
 
-Because typical React Native projects are essentially made up of a JavaScript project and native code projects (an Android project, an iOS project). For native code, you can either upgrade manually using [React Native Upgrade Helper](https://react-native-community.github.io/upgrade-helper/ or using the `@nx/react-native:upgrade-native` generator.
+Because typical React Native projects are essentially made up of a JavaScript project and native code projects (an Android project, an iOS project). For native code, you can either upgrade manually using [React Native Upgrade Helper](https://react-native-community.github.io/upgrade-helper/ or using the `@nrwl/react-native:upgrade-native` generator.
 
 For manual update, go to [React Native Upgrade Helper](https://react-native-community.github.io/upgrade-helper/) and copy the diff to your native code one by one.
-Nevertheless, you can use Nx's command `nx g @nx/react-native:upgrade-native <your project name>` to replace your iOS and Android folder with the latest code.
+Nevertheless, you can use Nx's command `nx g @nrwl/react-native:upgrade-native <your project name>` to replace your iOS and Android folder with the latest code.
 
 {% callout type="caution" title="Be careful" %}
-Nx's command `nx g @nx/react-native:upgrade-native <your project name>` is destructive, do **NOT** use it if you got customized native code.)
+Nx's command `nx g @nrwl/react-native:upgrade-native <your project name>` is destructive, do **NOT** use it if you got customized native code.)
 {% /callout %}

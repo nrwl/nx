@@ -32,7 +32,7 @@ export function migrateAllStorybookInstances(tree: Tree) {
       ([_, projectConfig]) =>
         projectConfig?.targets?.storybook &&
         projectConfig?.targets?.storybook?.executor !==
-          '@nx/react-native:storybook'
+          '@nrwl/react-native:storybook'
     )
     .map(([projectName, projectConfig]) => {
       return {

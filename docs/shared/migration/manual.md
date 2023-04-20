@@ -35,18 +35,18 @@ The `apps` directory is the place where your top-level applications will be stor
 {% tab label="Angular" %}
 
 ```shell
-npm install --save-dev @nx/angular
+npm install --save-dev @nrwl/angular
 # then
-nx generate @nx/angular:application my-application
+nx generate @nrwl/angular:application my-application
 ```
 
 {% /tab %}
 {% tab label="React" %}
 
 ```shell
-npm install --save-dev @nx/react
+npm install --save-dev @nrwl/react
 # then
-nx generate @nx/react:application my-application
+nx generate @nrwl/react:application my-application
 ```
 
 {% /tab %}
@@ -175,14 +175,14 @@ If your code is divided into libraries, you should also generate libraries for y
 {% tab label="Angular" %}
 
 ```shell
-nx generate @nx/angular:library
+nx generate @nrwl/angular:library
 ```
 
 {% /tab %}
 {% tab label="React" %}
 
 ```shell
-nx generate @nx/react:library
+nx generate @nrwl/react:library
 ```
 
 {% /tab %}

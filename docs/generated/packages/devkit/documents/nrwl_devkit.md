@@ -1,4 +1,4 @@
-# Module: @nx/devkit
+# Module: @nrwl/devkit
 
 The Nx Devkit is the underlying technology used to customize Nx to support
 different technologies and custom use-cases. It contains many utility
@@ -1170,10 +1170,10 @@ Use a package that has not been installed as a dependency.
 For example:
 
 ```typescript
-ensurePackage(tree, '@nx/jest', nxVersion);
+ensurePackage(tree, '@nrwl/jest', nxVersion);
 ```
 
-This install the @nx/jest@<nxVersion> and return the module
+This install the @nrwl/jest@<nxVersion> and return the module
 When running with --dryRun, the function will throw when dependencies are missing.
 
 #### Parameters
@@ -1181,7 +1181,7 @@ When running with --dryRun, the function will throw when dependencies are missin
 | Name                      | Type                                              | Description                                                        |
 | :------------------------ | :------------------------------------------------ | :----------------------------------------------------------------- |
 | `tree`                    | [`Tree`](../../devkit/documents/nrwl_devkit#tree) | the file system tree                                               |
-| `pkg`                     | `string`                                          | the package to check (e.g. @nx/jest)                               |
+| `pkg`                     | `string`                                          | the package to check (e.g. @nrwl/jest)                             |
 | `requiredVersion`         | `string`                                          | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
 | `options?`                | `Object`                                          | -                                                                  |
 | `options.dev?`            | `boolean`                                         | -                                                                  |
@@ -1198,7 +1198,7 @@ Ensure that dependencies and devDependencies from package.json are installed at 
 For example:
 
 ```typescript
-ensurePackage(tree, '@nx/jest', nxVersion);
+ensurePackage(tree, '@nrwl/jest', nxVersion);
 ```
 
 #### Type parameters

@@ -16,7 +16,7 @@ export default async function update(tree: Tree) {
   projects.forEach((project) => {
     const metroConfigPath = `${project.root}/metro.config.js`;
     if (
-      project.targets?.start?.executor !== '@nx/react-native:start' ||
+      project.targets?.start?.executor !== '@nrwl/react-native:start' ||
       !tree.exists(metroConfigPath)
     )
       return;

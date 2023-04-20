@@ -30,7 +30,7 @@ Here's the `project.json` file for your `shared-ui` project:
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["shared/ui/**/*.{ts,tsx,js,jsx}"]

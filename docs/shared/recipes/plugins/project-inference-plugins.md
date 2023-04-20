@@ -64,7 +64,7 @@ Plugins should export a function named `registerProjectTargets` that infers the 
 The `registerProjectTargets` function should return a `Record<string, TargetConfiguration>`, which describes the targets inferred for that specific project file.
 
 ```typescript
-import { TargetConfiguration } from '@nx/devkit';
+import { TargetConfiguration } from '@nrwl/devkit';
 
 export const projectFilePatterns = ['project.json', 'my-other-project-file'];
 

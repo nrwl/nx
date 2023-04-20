@@ -31,7 +31,7 @@ export async function update(host: Tree) {
     if (content.match(/@zeit\/next-stylus/)) {
       updated = updated.replace(
         '@zeit/next-stylus',
-        '@nx/next/plugins/with-stylus'
+        '@nrwl/next/plugins/with-stylus'
       );
       task = addDependenciesToPackageJson(
         host,

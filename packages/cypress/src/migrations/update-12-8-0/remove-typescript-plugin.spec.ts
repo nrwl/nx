@@ -12,7 +12,7 @@ describe('remove typescript plugin', () => {
       root: 'proj',
       targets: {
         cypress: {
-          executor: '@nx/cypress:cypress',
+          executor: '@nrwl/cypress:cypress',
           options: {
             cypressConfig: 'proj/cypress.json',
           },

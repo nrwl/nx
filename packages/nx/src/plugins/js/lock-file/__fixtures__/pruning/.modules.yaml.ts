@@ -7,10 +7,10 @@ hoistedDependencies:
     '@nodelib/fs.stat': private
   /@nodelib/fs.walk/1.2.8:
     '@nodelib/fs.walk': private
-  /@nx/devkit/15.4.5_nx@15.4.5+typescript@4.8.4:
-    '@nx/devkit': private
-  /@nx/linter/15.4.5_nx@15.4.5+typescript@4.8.4:
-    '@nx/linter': private
+  /@nrwl/devkit/15.4.5_nx@15.4.5+typescript@4.8.4:
+    '@nrwl/devkit': private
+  /@nrwl/linter/15.4.5_nx@15.4.5+typescript@4.8.4:
+    '@nrwl/linter': private
   /@nrwl/tao/15.4.5:
     '@nrwl/tao': private
   /@parcel/watcher/2.0.4:

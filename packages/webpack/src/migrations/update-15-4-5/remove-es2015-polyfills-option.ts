@@ -7,7 +7,7 @@ export default async function (tree: Tree) {
 
     Object.entries(p.targets).forEach(([name, config]) => {
       if (
-        p.targets?.[name]?.executor === '@nx/webpack:webpack' &&
+        p.targets?.[name]?.executor === '@nrwl/webpack:webpack' &&
         p.targets?.[name]?.options.es2015Polyfills
       ) {
         delete p.targets?.[name]?.options.es2015Polyfills;

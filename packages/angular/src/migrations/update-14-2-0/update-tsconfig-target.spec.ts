@@ -30,7 +30,7 @@ describe('update-tsconfig-target migration', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nx/angular:webpack-browser',
+          executor: '@nrwl/angular:webpack-browser',
           options: { tsConfig: 'apps/app1/tsconfig.app.json' },
         },
       },
@@ -69,7 +69,7 @@ describe('update-tsconfig-target migration', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nx/angular:webpack-browser',
+          executor: '@nrwl/angular:webpack-browser',
           options: { tsConfig: 'apps/app1/tsconfig.app.json' },
         },
       },
@@ -104,8 +104,8 @@ describe('update-tsconfig-target migration', () => {
   it.each([
     ['@angular-devkit/build-angular:browser', 'tsconfig.app.json'],
     ['@angular-devkit/build-angular:karma', 'tsconfig.spec.json'],
-    ['@nx/angular:webpack-browser', 'tsconfig.app.json'],
-    ['@nx/angular:delegate-build', 'tsconfig.app.json'],
+    ['@nrwl/angular:webpack-browser', 'tsconfig.app.json'],
+    ['@nrwl/angular:delegate-build', 'tsconfig.app.json'],
   ])(
     'should update target in the tsconfig file referenced by the target configuration when using the "%s" executor and there is no "tsconfig.json" at the project root',
     async (executor, tsConfig) => {
@@ -143,8 +143,8 @@ describe('update-tsconfig-target migration', () => {
 
   it.each([
     '@angular-devkit/build-angular:ng-packagr',
-    '@nx/angular:ng-packagr-lite',
-    '@nx/angular:package',
+    '@nrwl/angular:ng-packagr-lite',
+    '@nrwl/angular:package',
   ])(
     'should update target in the tsconfig file referenced by the target configuration when using the "%s" executor and there is no "tsconfig.json" at the project root',
     async (executor) => {
@@ -196,7 +196,7 @@ describe('update-tsconfig-target migration', () => {
       projectType: 'library',
       targets: {
         build: {
-          executor: '@nx/angular:package',
+          executor: '@nrwl/angular:package',
           options: { tsConfig: 'libs/lib1/tsconfig.lib.json' },
         },
       },
@@ -230,7 +230,7 @@ describe('update-tsconfig-target migration', () => {
       projectType: 'library',
       targets: {
         build: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: { jestConfig: 'libs/lib1/jest.config.ts' },
         },
       },
@@ -289,7 +289,7 @@ describe('update-tsconfig-target migration', () => {
       projectType: 'library',
       targets: {
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: { jestConfig: 'libs/lib1/jest.config.ts' },
         },
       },
@@ -335,7 +335,7 @@ describe('update-tsconfig-target migration', () => {
       projectType: 'library',
       targets: {
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: { jestConfig: 'libs/lib1/jest.config.ts' },
         },
       },
@@ -371,7 +371,7 @@ describe('update-tsconfig-target migration', () => {
       projectType: 'library',
       targets: {
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: { jestConfig: 'libs/lib1/jest.config.ts' },
         },
       },
@@ -404,7 +404,7 @@ describe('update-tsconfig-target migration', () => {
       root: 'libs/lib1',
       sourceRoot: 'libs/lib1/src',
       projectType: 'library',
-      targets: { test: { executor: '@nx/jest:jest', options: {} } },
+      targets: { test: { executor: '@nrwl/jest:jest', options: {} } },
     });
     projectGraph = {
       dependencies: {
@@ -423,7 +423,7 @@ describe('update-tsconfig-target migration', () => {
 
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        `The "test" target of the "lib1" project is using the "@nx/jest:jest" executor but no "jestConfig" property was specified.`
+        `The "test" target of the "lib1" project is using the "@nrwl/jest:jest" executor but no "jestConfig" property was specified.`
       )
     );
   });
@@ -576,7 +576,7 @@ describe('update-tsconfig-target migration', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nx/angular:webpack-browser',
+          executor: '@nrwl/angular:webpack-browser',
           options: { tsConfig: 'apps/app1/tsconfig.json' },
         },
       },

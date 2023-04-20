@@ -36,7 +36,7 @@
         "type": "executor"
       },
       {
-        "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nx/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).\n- It only produces ESM2020 bundles.\n- It doesn't generate package exports in the `package.json`.",
+        "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).\n- It only produces ESM2020 bundles.\n- It doesn't generate package exports in the `package.json`.",
         "file": "generated/packages/angular/executors/ng-packagr-lite.json",
         "hidden": false,
         "name": "ng-packagr-lite",
@@ -63,7 +63,7 @@
         "type": "executor"
       },
       {
-        "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+        "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
         "file": "generated/packages/angular/executors/webpack-dev-server.json",
         "hidden": false,
         "name": "webpack-dev-server",
@@ -72,7 +72,7 @@
         "type": "executor"
       },
       {
-        "description": "The `webpack-server` executor is very similar to the standard `server` builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
+        "description": "The `webpack-server` executor is very similar to the standard `server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
         "file": "generated/packages/angular/executors/webpack-server.json",
         "hidden": false,
         "name": "webpack-server",
@@ -173,7 +173,7 @@
         "type": "generator"
       },
       {
-        "description": "Initializes the `@nx/angular` plugin.",
+        "description": "Initializes the `@nrwl/angular` plugin.",
         "file": "generated/packages/angular/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -364,7 +364,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "angular",
-    "packageName": "@nx/angular",
+    "packageName": "@nrwl/angular",
     "root": "/packages/angular",
     "source": "/packages/angular/src"
   },
@@ -440,7 +440,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nx/cypress` plugin.",
+        "description": "Initialize the `@nrwl/cypress` plugin.",
         "file": "generated/packages/cypress/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -487,7 +487,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "cypress",
-    "packageName": "@nx/cypress",
+    "packageName": "@nrwl/cypress",
     "root": "/packages/cypress",
     "source": "/packages/cypress/src"
   },
@@ -582,7 +582,7 @@
     "generators": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "devkit",
-    "packageName": "@nx/devkit",
+    "packageName": "@nrwl/devkit",
     "root": "/packages/devkit",
     "source": "/packages/devkit/src"
   },
@@ -902,7 +902,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nx/jest` plugin.",
+        "description": "Initialize the `@nrwl/jest` plugin.",
         "file": "generated/packages/jest/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -922,7 +922,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "jest",
-    "packageName": "@nx/jest",
+    "packageName": "@nrwl/jest",
     "root": "/packages/jest",
     "source": "/packages/jest/src"
   },
@@ -1001,7 +1001,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "js",
-    "packageName": "@nx/js",
+    "packageName": "@nrwl/js",
     "root": "/packages/js",
     "source": "/packages/js/src"
   },
@@ -1053,7 +1053,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "linter",
-    "packageName": "@nx/linter",
+    "packageName": "@nrwl/linter",
     "root": "/packages/linter",
     "source": "/packages/linter/src"
   },
@@ -1309,7 +1309,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nx/next` plugin.",
+        "description": "Initialize the `@nrwl/next` plugin.",
         "file": "generated/packages/next/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1365,7 +1365,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "next",
-    "packageName": "@nx/next",
+    "packageName": "@nrwl/next",
     "root": "/packages/next",
     "source": "/packages/next/src"
   },
@@ -1886,7 +1886,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nx/react` plugin.",
+        "description": "Initialize the `@nrwl/react` plugin.",
         "file": "generated/packages/react/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -2032,7 +2032,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "react",
-    "packageName": "@nx/react",
+    "packageName": "@nrwl/react",
     "root": "/packages/react",
     "source": "/packages/react/src"
   },
@@ -2145,7 +2145,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nx/react-native` plugin.",
+        "description": "Initialize the `@nrwl/react-native` plugin.",
         "file": "generated/packages/react-native/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -2219,7 +2219,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "react-native",
-    "packageName": "@nx/react-native",
+    "packageName": "@nrwl/react-native",
     "root": "/packages/react-native",
     "source": "/packages/react-native/src"
   },
@@ -2503,7 +2503,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "storybook",
-    "packageName": "@nx/storybook",
+    "packageName": "@nrwl/storybook",
     "root": "/packages/storybook",
     "source": "/packages/storybook/src"
   },
@@ -2645,7 +2645,7 @@
     ],
     "generators": [
       {
-        "description": "Add `@nx/web` to a project.",
+        "description": "Add `@nrwl/web` to a project.",
         "file": "generated/packages/web/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -2674,7 +2674,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "web",
-    "packageName": "@nx/web",
+    "packageName": "@nrwl/web",
     "root": "/packages/web",
     "source": "/packages/web/src"
   },
@@ -2746,7 +2746,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nx/webpack` plugin.",
+        "description": "Initialize the `@nrwl/webpack` plugin.",
         "file": "generated/packages/webpack/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -2766,7 +2766,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "webpack",
-    "packageName": "@nx/webpack",
+    "packageName": "@nrwl/webpack",
     "root": "/packages/webpack",
     "source": "/packages/webpack/src"
   },

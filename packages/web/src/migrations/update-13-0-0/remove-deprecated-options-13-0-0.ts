@@ -12,7 +12,7 @@ export default async function update(host: Tree) {
   const projects = getProjects(host);
 
   for (const [name, config] of projects.entries()) {
-    if (config.targets.build.executor !== '@nx/web:build') return;
+    if (config.targets.build.executor !== '@nrwl/web:build') return;
 
     for (const opt of deprecatedOptions) {
       let updated = false;

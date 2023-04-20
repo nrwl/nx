@@ -16,12 +16,12 @@ describe('migrate-mfe-to-mf', () => {
 
   it('should replace any imports from nrwl/angular/mfe', () => {
     // ARRANGE
-    const file = `import { loadRemoteModule } from '@nx/angular/mfe';
-    // But not comments, or other markdown etc @nx/angular/mfe
+    const file = `import { loadRemoteModule } from '@nrwl/angular/mfe';
+    // But not comments, or other markdown etc @nrwl/angular/mfe
     
     function something() {
       // but this should change
-      import('@nx/angular/mfe');
+      import('@nrwl/angular/mfe');
     }
     `;
 
@@ -30,12 +30,12 @@ describe('migrate-mfe-to-mf', () => {
 
     // ASSERT
     expect(updatedFile).toMatchInlineSnapshot(`
-      "import { loadRemoteModule } from '@nx/angular/mf';
-          // But not comments, or other markdown etc @nx/angular/mfe
+      "import { loadRemoteModule } from '@nrwl/angular/mf';
+          // But not comments, or other markdown etc @nrwl/angular/mfe
           
           function something() {
             // but this should change
-            import('@nx/angular/mf');
+            import('@nrwl/angular/mf');
           }
           "
     `);
@@ -43,8 +43,8 @@ describe('migrate-mfe-to-mf', () => {
 
   it('should replace type imports from nrwl/angular/module-federation', () => {
     // ARRANGE
-    const file = `import { MFERemotes } from '@nx/angular/module-federation';
-    import { MFEConfig } from '@nx/angular/module-federation';
+    const file = `import { MFERemotes } from '@nrwl/angular/module-federation';
+    import { MFEConfig } from '@nrwl/angular/module-federation';
     
     const myValue: MFEConfig = {};
     const myRemotes: MFERemotes = [];
@@ -57,8 +57,8 @@ describe('migrate-mfe-to-mf', () => {
 
     // ASSERT
     expect(updatedFile).toMatchInlineSnapshot(`
-      "import { MFRemotes } from '@nx/angular/module-federation';
-          import { MFConfig } from '@nx/angular/module-federation';
+      "import { MFRemotes } from '@nrwl/angular/module-federation';
+          import { MFConfig } from '@nrwl/angular/module-federation';
           
           const myValue: MFConfig = {};
           const myRemotes: MFRemotes = [];
@@ -70,8 +70,8 @@ describe('migrate-mfe-to-mf', () => {
 
   it('should rename usages of setupMfe', () => {
     // ARRANGE
-    const file = `import { setupMfe } from '@nx/angular/generators';
-    import { setupMfe, somethingElse } from '@nx/angular/generators';
+    const file = `import { setupMfe } from '@nrwl/angular/generators';
+    import { setupMfe, somethingElse } from '@nrwl/angular/generators';
     
     function doSomething(v: MFERemotes): MFEConfig {
     
@@ -89,8 +89,8 @@ describe('migrate-mfe-to-mf', () => {
 
     // ASSERT
     expect(updatedFile).toMatchInlineSnapshot(`
-      "import { setupMf } from '@nx/angular/generators';
-          import { setupMf, somethingElse } from '@nx/angular/generators';
+      "import { setupMf } from '@nrwl/angular/generators';
+          import { setupMf, somethingElse } from '@nrwl/angular/generators';
           
           function doSomething(v: MFERemotes): MFEConfig {
           
@@ -109,19 +109,19 @@ describe('migrate-mfe-to-mf', () => {
     // ARRANGE
     tree.write(
       'test1.js',
-      `import { loadRemoteModule } from '@nx/angular/mfe';
-    // But not comments, or other markdown etc @nx/angular/mfe
+      `import { loadRemoteModule } from '@nrwl/angular/mfe';
+    // But not comments, or other markdown etc @nrwl/angular/mfe
     
     function something() {
       // but this should change
-      import('@nx/angular/mfe');
+      import('@nrwl/angular/mfe');
     }`
     );
 
     tree.write(
       'test2.ts',
-      `import { MFERemotes } from '@nx/angular/module-federation';
-    import { MFEConfig } from '@nx/angular/module-federation';
+      `import { MFERemotes } from '@nrwl/angular/module-federation';
+    import { MFEConfig } from '@nrwl/angular/module-federation';
     
     const myValue: MFEConfig = {};
     const myRemotes: MFERemotes = [];
@@ -132,13 +132,13 @@ describe('migrate-mfe-to-mf', () => {
 
     tree.write(
       'apps/app1/test3.ts',
-      `import { loadRemoteModule } from '@nx/angular/mfe';
-    import { MFERemotes, MFEConfig } from '@nx/angular/module-federation';
-    // But not comments, or other markdown etc @nx/angular/mfe
+      `import { loadRemoteModule } from '@nrwl/angular/mfe';
+    import { MFERemotes, MFEConfig } from '@nrwl/angular/module-federation';
+    // But not comments, or other markdown etc @nrwl/angular/mfe
     
     function something() {
       // but this should change
-      import('@nx/angular/mfe');
+      import('@nrwl/angular/mfe');
     }
     
     const myValue: MFEConfig = {};
@@ -150,8 +150,8 @@ describe('migrate-mfe-to-mf', () => {
 
     tree.write(
       'libs/plugins/my-plugin/src/generators/my-generator.ts',
-      `import { setupMfe } from '@nx/angular/generators';
-    import { setupMfe, somethingElse } from '@nx/angular/generators';
+      `import { setupMfe } from '@nrwl/angular/generators';
+    import { setupMfe, somethingElse } from '@nrwl/angular/generators';
     
     function doSomething(v: MFERemotes): MFEConfig {
     
@@ -171,17 +171,17 @@ describe('migrate-mfe-to-mf', () => {
 
     // ASSERT
     expect(tree.read('test1.js', 'utf-8')).toMatchInlineSnapshot(`
-      "import { loadRemoteModule } from '@nx/angular/mf';
-          // But not comments, or other markdown etc @nx/angular/mfe
+      "import { loadRemoteModule } from '@nrwl/angular/mf';
+          // But not comments, or other markdown etc @nrwl/angular/mfe
           
           function something() {
             // but this should change
-            import('@nx/angular/mf');
+            import('@nrwl/angular/mf');
           }"
     `);
     expect(tree.read('test2.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { MFRemotes } from '@nx/angular/module-federation';
-          import { MFConfig } from '@nx/angular/module-federation';
+      "import { MFRemotes } from '@nrwl/angular/module-federation';
+          import { MFConfig } from '@nrwl/angular/module-federation';
           
           const myValue: MFConfig = {};
           const myRemotes: MFRemotes = [];
@@ -190,13 +190,13 @@ describe('migrate-mfe-to-mf', () => {
           "
     `);
     expect(tree.read('apps/app1/test3.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { loadRemoteModule } from '@nx/angular/mf';
-          import { MFRemotes, MFConfig } from '@nx/angular/module-federation';
-          // But not comments, or other markdown etc @nx/angular/mfe
+      "import { loadRemoteModule } from '@nrwl/angular/mf';
+          import { MFRemotes, MFConfig } from '@nrwl/angular/module-federation';
+          // But not comments, or other markdown etc @nrwl/angular/mfe
           
           function something() {
             // but this should change
-            import('@nx/angular/mf');
+            import('@nrwl/angular/mf');
           }
           
           const myValue: MFConfig = {};
@@ -211,8 +211,8 @@ describe('migrate-mfe-to-mf', () => {
         'utf-8'
       )
     ).toMatchInlineSnapshot(`
-      "import { setupMf } from '@nx/angular/generators';
-          import { setupMf, somethingElse } from '@nx/angular/generators';
+      "import { setupMf } from '@nrwl/angular/generators';
+          import { setupMf, somethingElse } from '@nrwl/angular/generators';
           
           function doSomething(v: MFERemotes): MFEConfig {
           

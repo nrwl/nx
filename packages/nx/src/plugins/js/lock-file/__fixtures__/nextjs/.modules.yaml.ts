@@ -341,18 +341,18 @@ hoistedDependencies:
     '@nodelib/fs.walk': private
   /@nrwl/cli/15.3.3:
     '@nrwl/cli': private
-  /@nx/devkit/15.3.3_nx@15.3.3+typescript@4.8.4:
-    '@nx/devkit': private
-  /@nx/js/15.3.3_r2gzx2xpzw7235i7kfuv5sanse:
-    '@nx/js': private
+  /@nrwl/devkit/15.3.3_nx@15.3.3+typescript@4.8.4:
+    '@nrwl/devkit': private
+  /@nrwl/js/15.3.3_r2gzx2xpzw7235i7kfuv5sanse:
+    '@nrwl/js': private
   /@nrwl/rollup/15.3.3_g7ln6fyf5xyhgqo5gt2apiah5e:
     '@nrwl/rollup': private
   /@nrwl/tao/15.3.3:
     '@nrwl/tao': private
   /@nrwl/vite/15.3.3_llkt3flgrewibg3pitamkbgmhq:
     '@nrwl/vite': private
-  /@nx/webpack/15.3.3_tllczm7ur3wj7jvkuy5rv5uwtq:
-    '@nx/webpack': private
+  /@nrwl/webpack/15.3.3_tllczm7ur3wj7jvkuy5rv5uwtq:
+    '@nrwl/webpack': private
   /@parcel/watcher/2.0.4:
     '@parcel/watcher': private
   /@phenomnomnominal/tsquery/4.1.1_typescript@4.8.4:

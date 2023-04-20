@@ -18,7 +18,7 @@ describe('15.7.2 migration (add babelUpwardRootMode flag)', () => {
       root: 'apps/app1',
       targets: {
         build: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {},
         },
       },
@@ -27,7 +27,7 @@ describe('15.7.2 migration (add babelUpwardRootMode flag)', () => {
       root: 'apps/app2',
       targets: {
         build: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             babelUpwardRootMode: false,
           },

@@ -25,7 +25,7 @@ describe('Cypress E2E Test runner', () => {
 
   it('should generate an app with the Cypress as e2e test runner', () => {
     runCLI(
-      `generate @nx/react:app ${myapp} --e2eTestRunner=cypress --linter=eslint`
+      `generate @nrwl/react:app ${myapp} --e2eTestRunner=cypress --linter=eslint`
     );
 
     // Making sure the package.json file contains the Cypress dependency
@@ -97,7 +97,7 @@ describe('env vars', () => {
       `apps/${myapp}-e2e/cypress.config.ts`,
       `
 import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: {
@@ -146,7 +146,7 @@ describe('env vars', () => {
   it('should run e2e in parallel', () => {
     const ngAppName = uniq('ng-app');
     runCLI(
-      `generate @nx/angular:app ${ngAppName} --e2eTestRunner=cypress --linter=eslint --no-interactive`
+      `generate @nrwl/angular:app ${ngAppName} --e2eTestRunner=cypress --linter=eslint --no-interactive`
     );
 
     const results = runCLI(
@@ -156,8 +156,8 @@ describe('env vars', () => {
     expect(results).toContain('Using port 4201');
     expect(results).toContain('Successfully ran target e2e for 2 projects');
     checkFilesDoNotExist(
-      `node_modules/@nx/cypress/src/executors/cypress/4200.txt`,
-      `node_modules/@nx/cypress/src/executors/cypress/4201.txt`
+      `node_modules/@nrwl/cypress/src/executors/cypress/4200.txt`,
+      `node_modules/@nrwl/cypress/src/executors/cypress/4201.txt`
     );
   });
 });

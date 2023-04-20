@@ -82,7 +82,7 @@ function getNxContext(
 
   if (
     '@nx/next:build' === targetConfig.executor ||
-    '@nx/next:build' === targetConfig.executor
+    '@nrwl/next:build' === targetConfig.executor
   ) {
     return {
       node: graph.nodes[target.project],
@@ -107,8 +107,8 @@ function getNxContext(
     [
       '@nx/next:server',
       '@nx/next:export',
-      '@nx/next:server',
-      '@nx/next:export',
+      '@nrwl/next:server',
+      '@nrwl/next:export',
     ].includes(targetConfig.executor)
   ) {
     const buildTarget = parseTargetString(targetOptions.buildTarget, graph);

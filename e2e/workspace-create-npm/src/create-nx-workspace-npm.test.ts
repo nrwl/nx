@@ -38,21 +38,21 @@ describe('create-nx-workspace --preset=npm', () => {
   });
 
   it('should add angular application', () => {
-    packageInstall('@nx/angular', wsName);
+    packageInstall('@nrwl/angular', wsName);
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nx/angular:app ${appName} --no-interactive`);
+      runCLI(`generate @nrwl/angular:app ${appName} --no-interactive`);
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   }, 1_000_000);
 
   it('should add angular library', () => {
-    packageInstall('@nx/angular', wsName);
+    packageInstall('@nrwl/angular', wsName);
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nx/angular:lib ${libName} --no-interactive`);
+      runCLI(`generate @nrwl/angular:lib ${libName} --no-interactive`);
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -62,12 +62,12 @@ describe('create-nx-workspace --preset=npm', () => {
   }, 1_000_000);
 
   it('should add js library', () => {
-    packageInstall('@nx/js', wsName);
+    packageInstall('@nrwl/js', wsName);
 
     const libName = uniq('lib');
 
     expect(() =>
-      runCLI(`generate @nx/js:library ${libName} --no-interactive`)
+      runCLI(`generate @nrwl/js:library ${libName} --no-interactive`)
     ).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -77,34 +77,34 @@ describe('create-nx-workspace --preset=npm', () => {
   });
 
   it('should add web application', () => {
-    packageInstall('@nx/web', wsName);
+    packageInstall('@nrwl/web', wsName);
 
     const appName = uniq('my-app');
 
     expect(() =>
-      runCLI(`generate @nx/web:app ${appName} --no-interactive`)
+      runCLI(`generate @nrwl/web:app ${appName} --no-interactive`)
     ).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
 
   it('should add react application', () => {
-    packageInstall('@nx/react', wsName);
+    packageInstall('@nrwl/react', wsName);
 
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nx/react:app ${appName} --no-interactive`);
+      runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
 
   it('should add react library', () => {
-    packageInstall('@nx/react', wsName);
+    packageInstall('@nrwl/react', wsName);
 
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nx/react:lib ${libName} --no-interactive`);
+      runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -114,23 +114,23 @@ describe('create-nx-workspace --preset=npm', () => {
   });
 
   it('should add next application', () => {
-    packageInstall('@nx/next', wsName);
+    packageInstall('@nrwl/next', wsName);
 
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nx/next:app ${appName} --no-interactive`);
+      runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
 
   it('should add next library', () => {
-    packageInstall('@nx/next', wsName);
+    packageInstall('@nrwl/next', wsName);
 
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nx/next:lib ${libName} --no-interactive`);
+      runCLI(`generate @nrwl/next:lib ${libName} --no-interactive`);
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -141,25 +141,25 @@ describe('create-nx-workspace --preset=npm', () => {
   });
 
   it('should add react-native application', () => {
-    packageInstall('@nx/react-native', wsName);
+    packageInstall('@nrwl/react-native', wsName);
 
     const appName = uniq('my-app');
 
     expect(() => {
       runCLI(
-        `generate @nx/react-native:app ${appName} --install=false --no-interactive`
+        `generate @nrwl/react-native:app ${appName} --install=false --no-interactive`
       );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
 
   it('should add react-native library', () => {
-    packageInstall('@nx/react-native', wsName);
+    packageInstall('@nrwl/react-native', wsName);
 
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nx/react-native:lib ${libName} --no-interactive`);
+      runCLI(`generate @nrwl/react-native:lib ${libName} --no-interactive`);
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);

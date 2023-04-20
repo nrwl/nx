@@ -1,6 +1,6 @@
 /**
  * These minimal smoke tests are here to ensure that we do not break assumptions on the lerna side
- * when making updates to nx or @nx/devkit.
+ * when making updates to nx or @nrwl/devkit.
  */
 
 import {

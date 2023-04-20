@@ -16,7 +16,7 @@ import { JestExecutorOptions } from '../../executors/jest/schema';
 function updateJestConfig(tree: Tree) {
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
-    '@nx/jest:jest',
+    '@nrwl/jest:jest',
     (options, projectName) => {
       const config = require(join(tree.root, options.jestConfig as string));
 

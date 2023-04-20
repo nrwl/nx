@@ -7,7 +7,7 @@ Below are some examples of how to generate configuration and setup for using `ng
 {% tab label="Basic Usage" %}
 
 ```bash
-nx g @nx/angular:upgrade-module --name=myAngularJsModule --project=myapp
+nx g @nrwl/angular:upgrade-module --name=myAngularJsModule --project=myapp
 ```
 
 {% /tab %}
@@ -17,7 +17,7 @@ nx g @nx/angular:upgrade-module --name=myAngularJsModule --project=myapp
 Allow a setup that configures routing for `UpgradeModule`.
 
 ```bash
-nx g @nx/angular:upgrade-module --name=myAngularJsModule --project=myapp --router=true
+nx g @nrwl/angular:upgrade-module --name=myAngularJsModule --project=myapp --router=true
 ```
 
 {% /tab %}

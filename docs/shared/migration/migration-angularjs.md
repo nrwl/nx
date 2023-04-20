@@ -42,7 +42,7 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 Your new workspace won’t have much in it because of the `apps` preset. You’ll need to generate an application to have some structure created. Add the Angular plugin to your workspace:
 
 ```shell
-npm install -D @nx/angular
+npm install -D @nrwl/angular
 ```
 
 For this example, we will use Karma and Protractor, the most common unit test runner and e2e test runner for AngularJS.
@@ -54,7 +54,7 @@ Codebases with existing unit and e2e tests should continue to use whatever runne
 With the Angular capability added, generate your application:
 
 ```shell
-nx generate @nx/angular:application --name=realworld --unitTestRunner=karma --e2eTestRunner=protractor
+nx generate @nrwl/angular:application --name=realworld --unitTestRunner=karma --e2eTestRunner=protractor
 ```
 
 Accept the default options for each prompt:
@@ -111,10 +111,10 @@ Your `package.json` should now look like this:
     "@angular/cli": "~13.1.0",
     "@angular/compiler-cli": "~13.1.0",
     "@angular/language-service": "~13.1.0",
-    "@nx/angular": "^13.4.6",
+    "@nrwl/angular": "^13.4.6",
     "@nrwl/cli": "13.4.6",
     "@nrwl/eslint-plugin-nx": "13.4.6",
-    "@nx/linter": "13.4.6",
+    "@nrwl/linter": "13.4.6",
     "@nrwl/workspace": "13.4.6",
     "@types/jasmine": "~3.5.0",
     "@types/jasminewd2": "~2.0.3",
@@ -362,10 +362,10 @@ So far, you’ve mostly gotten already existing code and processes to work. This
 But migrating AngularJS code means we need to switch some of our tools to a more modern tool stack. Specifically, using webpack and babel is going to allow us to take advantage of Nx more easily. Becoming an expert in these build tools is outside the scope of this article, but I’ll address some AngularJS specific concerns. To get started, install these new dependencies:
 
 ```shell
-npm install -D @nx/web babel-plugin-angularjs-annotate
+npm install -D @nrwl/web babel-plugin-angularjs-annotate
 ```
 
-Nx already has most of what you need for webpack added as a dependency. `@nx/web` contains the [executors](/plugin-features/use-task-executors) we need to use to build and serve the application with webpack and
+Nx already has most of what you need for webpack added as a dependency. `@nrwl/web` contains the [executors](/plugin-features/use-task-executors) we need to use to build and serve the application with webpack and
 `babel-plugin-angularjs-annotate` is going to accomplish the same thing that `browserify-ngannotate` previously did in gulp: add dependency injection annotations.
 
 Start with a `webpack.config.js` file in your application’s root directory:
@@ -407,7 +407,7 @@ To use webpack instead of gulp, go back to your `apps/realworld/project.json` fi
 ```jsonc {% fileName="apps/realworld/project.json" %}
 ...
 "build": {
-  "executor": "@nx/webpack:webpack",
+  "executor": "@nrwl/webpack:webpack",
   "options": {
     "outputPath": "dist/apps/realworld",
     "index": "apps/realworld/src/index.html",
@@ -449,7 +449,7 @@ To use webpack instead of gulp, go back to your `apps/realworld/project.json` fi
   }
 },
 "serve": {
-  "executor": "@nx/web:dev-server",
+  "executor": "@nrwl/web:dev-server",
   "options": {
     "buildTarget": "realworld:build"
   }

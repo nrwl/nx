@@ -8,19 +8,19 @@ describe('update-16-0-0-add-nx-packages', () => {
     tree = createTreeWithEmptyWorkspace();
 
     updateJson(tree, 'package.json', (json) => {
-      json.devDependencies['@nx/angular'] = '16.0.0';
+      json.devDependencies['@nrwl/angular'] = '16.0.0';
       return json;
     });
   });
 
-  it('should remove the dependency on @nx/angular', async () => {
+  it('should remove the dependency on @nrwl/angular', async () => {
     await replacePackage(tree);
 
     expect(
-      readJson(tree, 'package.json').dependencies['@nx/angular']
+      readJson(tree, 'package.json').dependencies['@nrwl/angular']
     ).not.toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/angular']
+      readJson(tree, 'package.json').devDependencies['@nrwl/angular']
     ).not.toBeDefined();
   });
 

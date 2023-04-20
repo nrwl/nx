@@ -12,7 +12,7 @@ describe('add-build-ios-target', () => {
       sourceRoot: 'apps/product/src',
       targets: {
         start: {
-          executor: '@nx/react-native:start',
+          executor: '@nrwl/react-native:start',
         },
       },
     });
@@ -23,12 +23,12 @@ describe('add-build-ios-target', () => {
 
     getProjects(tree).forEach((project) => {
       expect(project.targets['build-ios']).toEqual({
-        executor: '@nx/react-native:build-ios',
+        executor: '@nrwl/react-native:build-ios',
         outputs: ['{projectRoot}/ios/build/Build'],
         options: {},
       });
       expect(project.targets['pod-install']).toEqual({
-        executor: '@nx/react-native:pod-install',
+        executor: '@nrwl/react-native:pod-install',
         options: {},
       });
     });

@@ -129,13 +129,13 @@ When using React Native in Nx, you get the out-of-the-box support for TypeScript
 
 ### Adding React Native to an Existing Workspace
 
-For existing Nx workspaces, install the `@nx/react-native` package to add React Native capabilities to it.
+For existing Nx workspaces, install the `@nrwl/react-native` package to add React Native capabilities to it.
 
 ```shell
-npm install @nx/react-native --save-dev
+npm install @nrwl/react-native --save-dev
 
 # Or with yarn
-yarn add @nx/react-native --dev
+yarn add @nrwl/react-native --dev
 ```
 
 ## Generating an Application
@@ -143,7 +143,7 @@ yarn add @nx/react-native --dev
 To create additional React Native apps run:
 
 ```shell
-npx nx g @nx/react-native:app
+npx nx g @nrwl/react-native:app
 ```
 
 ## Generating a Library
@@ -160,7 +160,7 @@ and [Library Types](/more-concepts/library-types).
 To generate a new library run:
 
 ```shell
-npx nx g @nx/react-native:lib shared-ui-layout
+npx nx g @nrwl/react-native:lib shared-ui-layout
 ```
 
 And you will see the following:
@@ -200,7 +200,7 @@ Run:
 To generate a new component inside `shared-ui-layout` run:
 
 ```shell
-npx nx g @nx/react-native:component layout --project=shared-ui-layout --export
+npx nx g @nrwl/react-native:component layout --project=shared-ui-layout --export
 ```
 
 And you will see the following updated for `shared-ui-layout`:
@@ -245,8 +245,8 @@ That's it! There is no need to build the library prior to using it. When you upd
 For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
 
 ```shell
-npx nx g @nx/react-native:lib shared-ui-layout --publishable --importPath=@happynrwl/ui-components
-npx nx g @nx/react-native:component layout --project=shared-ui-layout --export
+npx nx g @nrwl/react-native:lib shared-ui-layout --publishable --importPath=@happynrwl/ui-components
+npx nx g @nrwl/react-native:component layout --project=shared-ui-layout --export
 ```
 
 Run `npx nx build shared-ui-layout` to build the library. It will generate the following:

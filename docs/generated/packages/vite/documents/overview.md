@@ -38,24 +38,24 @@ There is a number of ways to use Vite in your existing workspace.
 
 ### Generate a new project using Vite
 
-You can generate a [React](/packages/react) application or library or a [Web](/packages/web) application that uses Vite.js. The [`@nx/react:app`](/packages/react/generators/application), [`@nx/react:lib`](/packages/react/generators/library) and [`@nx/web:app`](/packages/web/generators/application) generators accept the `bundler` option, where you can pass `vite`. This will generate a new application configured to use Vite.js, and it will also install all the necessary dependencies, including the `@nrwl/vite` plugin.
+You can generate a [React](/packages/react) application or library or a [Web](/packages/web) application that uses Vite.js. The [`@nrwl/react:app`](/packages/react/generators/application), [`@nrwl/react:lib`](/packages/react/generators/library) and [`@nrwl/web:app`](/packages/web/generators/application) generators accept the `bundler` option, where you can pass `vite`. This will generate a new application configured to use Vite.js, and it will also install all the necessary dependencies, including the `@nrwl/vite` plugin.
 
 To generate a React application using Vite.js, run the following:
 
 ```bash
-nx g @nx/react:app my-app --bundler=vite
+nx g @nrwl/react:app my-app --bundler=vite
 ```
 
 To generate a React library using Vite.js, run the following:
 
 ```bash
-nx g @nx/react:lib my-lib --bundler=vite
+nx g @nrwl/react:lib my-lib --bundler=vite
 ```
 
 To generate a Web application using Vite.js, run the following:
 
 ```bash
-nx g @nx/web:app my-app --bundler=vite
+nx g @nrwl/web:app my-app --bundler=vite
 ```
 
 ### Modify an existing React or Web project to use Vite.js

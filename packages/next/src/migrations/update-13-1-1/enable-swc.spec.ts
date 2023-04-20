@@ -25,7 +25,7 @@ describe('Migration: enable SWC', () => {
     });
 
     updateJson(tree, 'apps/demo/.babelrc', (json) => {
-      json.presets[0] = '@nx/next/babel';
+      json.presets[0] = '@nrwl/next/babel';
 
       return json;
     });
@@ -36,7 +36,7 @@ describe('Migration: enable SWC', () => {
       ...readProjectConfiguration(tree, 'demo'),
       targets: {
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {
             jestConfig: 'apps/demo/jest.config.js',
             passWithNoTests: true,
@@ -53,7 +53,7 @@ module.exports = {
   displayName: 'napp4',
   preset: '../../jest.preset.js',
   transform: {
-    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
+    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',
     '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
@@ -67,7 +67,7 @@ module.exports = {
 
     const result = tree.read('apps/demo/jest.config.js').toString();
 
-    expect(result).toMatch(`['babel-jest', { presets: ['@nx/next/babel'] }]`);
+    expect(result).toMatch(`['babel-jest', { presets: ['@nrwl/next/babel'] }]`);
 
     expect(tree.exists('apps/demo/.babelrc')).toBe(false);
   });
@@ -85,7 +85,7 @@ module.exports = {
       ...readProjectConfiguration(tree, 'demo'),
       targets: {
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {
             jestConfig: 'apps/demo/jest.config.js',
             passWithNoTests: true,
@@ -101,7 +101,7 @@ module.exports = {
   displayName: 'napp4',
   preset: '../../jest.preset.js',
   transform: {
-    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
+    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',
     '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
@@ -115,7 +115,7 @@ module.exports = {
 
     const result = tree.read('apps/demo/jest.config.js').toString();
 
-    expect(result).toMatch(`['babel-jest', { presets: ['@nx/next/babel'] }]`);
+    expect(result).toMatch(`['babel-jest', { presets: ['@nrwl/next/babel'] }]`);
   });
   it('should skip migration if the babelrc has been customized', async () => {
     await applicationGenerator(tree, {
@@ -130,7 +130,7 @@ module.exports = {
       ...readProjectConfiguration(tree, 'demo'),
       targets: {
         test: {
-          executor: '@nx/jest:jest',
+          executor: '@nrwl/jest:jest',
           options: {
             jestConfig: 'apps/demo/jest.config.js',
             passWithNoTests: true,
@@ -141,7 +141,7 @@ module.exports = {
     tree.write(
       'apps/demo/.babelrc',
       `{
-        "presets": ["@nx/next/babel", "something-else"],
+        "presets": ["@nrwl/next/babel", "something-else"],
         "plugins": []
       }`
     );
@@ -153,7 +153,7 @@ module.exports = {
     tree.write(
       'apps/demo/.babelrc',
       `{
-        "presets": ["@nx/next/babel"],
+        "presets": ["@nrwl/next/babel"],
         "plugins": ["some-plugin"]
       }`
     );
@@ -166,7 +166,7 @@ module.exports = {
     tree.write(
       'apps/demo/.babelrc',
       `{
-        "presets": ["@nx/next/babel"]
+        "presets": ["@nrwl/next/babel"]
       }`
     );
 
@@ -186,7 +186,7 @@ module.exports = {
     tree.write(
       'apps/demo/.babelrc',
       `{
-        "presets": ["@nx/next/babel"]
+        "presets": ["@nrwl/next/babel"]
       }`
     );
     tree.write(

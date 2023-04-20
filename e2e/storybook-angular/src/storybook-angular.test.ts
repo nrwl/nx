@@ -17,7 +17,7 @@ describe('Storybook executors for Angular', () => {
     newProject();
     createTestUILib(angularStorybookLib);
     runCLI(
-      `generate @nx/angular:storybook-configuration ${angularStorybookLib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
+      `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
     );
   });
 
@@ -83,9 +83,9 @@ describe('Storybook executors for Angular', () => {
 });
 
 export function createTestUILib(libName: string): void {
-  runCLI(`g @nx/angular:library ${libName} --no-interactive`);
+  runCLI(`g @nrwl/angular:library ${libName} --no-interactive`);
   runCLI(
-    `g @nx/angular:component test-button --project=${libName} --no-interactive`
+    `g @nrwl/angular:component test-button --project=${libName} --no-interactive`
   );
 
   writeFileSync(

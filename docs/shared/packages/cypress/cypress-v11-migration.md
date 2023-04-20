@@ -15,7 +15,7 @@ As of nx v15.1.0, if your project was already using Cypress v10, then your proje
 {% /callout %}
 
 ```shell
-nx g @nx/cypress:migrate-to-cypress-11
+nx g @nrwl/cypress:migrate-to-cypress-11
 ```
 
 In general, these are the steps taken to migrate your project:

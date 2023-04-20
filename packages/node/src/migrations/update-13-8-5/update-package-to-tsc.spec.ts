@@ -29,14 +29,14 @@ describe('Migration: rename package to tsc', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nx/js:tsc',
+          executor: '@nrwl/js:tsc',
           options: {},
         },
       },
     });
   });
 
-  it(`should skip migration if no projects use @nx/js:node`, async () => {
+  it(`should skip migration if no projects use @nrwl/js:node`, async () => {
     let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     const tasks = await update(tree);
@@ -70,7 +70,7 @@ describe('Migration: rename package to tsc', () => {
       projectType: 'application',
       targets: {
         build: {
-          executor: '@nx/js:tsc',
+          executor: '@nrwl/js:tsc',
           options: {
             rootDir: '.',
           },

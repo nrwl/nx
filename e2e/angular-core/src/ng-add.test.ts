@@ -105,7 +105,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(packageJson.devDependencies['@nx/workspace']).not.toBeDefined();
 
     // run ng add
-    runNgAdd('@nx/angular', '--npm-scope projscope --default-base main');
+    runNgAdd('@nrwl/angular', '--npm-scope projscope --default-base main');
 
     // check that prettier config exits and that files have been moved
     checkFilesExist(
@@ -268,7 +268,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   it('should handle a workspace with cypress v9', () => {
     addCypress9();
 
-    runNgAdd('@nx/angular', '--npm-scope projscope --skip-install');
+    runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install');
 
     const e2eProject = `${project}-e2e`;
     //check e2e project files
@@ -335,7 +335,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   it('should handle a workspace with cypress v10', () => {
     addCypress10();
 
-    runNgAdd('@nx/angular', '--npm-scope projscope --skip-install');
+    runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install');
 
     const e2eProject = `${project}-e2e`;
     //check e2e project files
@@ -401,11 +401,11 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
   // TODO(leo): The current Verdaccio setup fails to resolve older versions
   // of @nrwl/* packages, the @angular-eslint/builder package depends on an
-  // older version of @nx/devkit so we skip this test for now.
+  // older version of @nrwl/devkit so we skip this test for now.
   it.skip('should handle a workspace with ESLint', () => {
     addEsLint();
 
-    runNgAdd('@nx/angular', '--npm-scope projscope');
+    runNgAdd('@nrwl/angular', '--npm-scope projscope');
 
     checkFilesExist(`apps/${project}/.eslintrc.json`, `.eslintrc.json`);
 
@@ -442,7 +442,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     runCommand(`ng g @schematics/angular:application ${app1}`);
     runCommand(`ng g @schematics/angular:library ${lib1}`);
 
-    runNgAdd('@nx/angular', '--npm-scope projscope');
+    runNgAdd('@nrwl/angular', '--npm-scope projscope');
 
     // check angular.json does not exist
     checkFilesDoNotExist('angular.json');

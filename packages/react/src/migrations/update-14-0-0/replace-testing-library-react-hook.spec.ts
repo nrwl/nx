@@ -19,7 +19,7 @@ describe('Remove deprecated hook testing package', () => {
         projectType: 'application',
         targets: {
           test: {
-            executor: '@nx/jest:jest',
+            executor: '@nrwl/jest:jest',
           },
         },
       },

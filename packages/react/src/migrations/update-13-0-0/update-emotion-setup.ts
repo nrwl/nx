@@ -19,7 +19,7 @@ export async function updateEmotionSetup(host: Tree) {
       if (babelrc.presets) {
         for (const [idx, preset] of babelrc.presets.entries()) {
           if (Array.isArray(preset)) {
-            if (!preset[0].includes('@nx/react/babel')) continue;
+            if (!preset[0].includes('@nrwl/react/babel')) continue;
             const emotionOptions = preset[1];
             hasEmotion = emotionOptions.importSource === '@emotion/react';
             break;

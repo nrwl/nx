@@ -24,7 +24,7 @@ Run the following command with the options listed to create an empty workspace.
 
 {% tab label="Angular" %}
 
-```{% command="npm install --save-dev @nx/angular" path="~/myorg" %}
+```{% command="npm install --save-dev @nrwl/angular" path="~/myorg" %}
 
 ```
 
@@ -32,7 +32,7 @@ Run the following command with the options listed to create an empty workspace.
 
 {% tab label="React" %}
 
-```{% command="npm install --save-dev @nx/react" path="~/myorg" %}
+```{% command="npm install --save-dev @nrwl/react" path="~/myorg" %}
 
 ```
 
@@ -55,7 +55,7 @@ Nx allows you to do this with a single command:
 
 {% tab label="Angular" %}
 
-```{% command="npx nx g @nx/angular:host store --ssr --remotes=product,checkout" path="~/myorg" %}
+```{% command="npx nx g @nrwl/angular:host store --ssr --remotes=product,checkout" path="~/myorg" %}
 
 ```
 
@@ -63,7 +63,7 @@ Nx allows you to do this with a single command:
 
 {% tab label="React" %}
 
-```{% command="npx nx g @nx/react:host store --ssr --remotes=product,checkout" path="~/myorg" %}
+```{% command="npx nx g @nrwl/react:host store --ssr --remotes=product,checkout" path="~/myorg" %}
 
 ```
 

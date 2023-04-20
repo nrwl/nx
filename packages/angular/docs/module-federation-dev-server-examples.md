@@ -9,7 +9,7 @@ See an example set up of it below:
 ```json
 {
   "serve": {
-    "executor": "@nx/angular:module-federation-dev-server",
+    "executor": "@nrwl/angular:module-federation-dev-server",
     "configurations": {
       "production": {
         "browserTarget": "host:build:production"
@@ -36,7 +36,7 @@ See an example set up of it below:
 ```json
 {
   "serve-with-hmr-remotes": {
-    "executor": "@nx/angular:module-federation-dev-server",
+    "executor": "@nrwl/angular:module-federation-dev-server",
     "configurations": {
       "production": {
         "browserTarget": "host:build:production"

@@ -16,7 +16,7 @@ export default async function (tree: Tree) {
 
   forEachExecutorOptions(
     tree,
-    '@nx/js:swc',
+    '@nrwl/js:swc',
     (_, projectName, target, configurationName) => {
       const projectConfiguration = projects.get(projectName);
       const executorOptions: SwcExecutorOptions = configurationName
@@ -52,7 +52,7 @@ export default async function (tree: Tree) {
 
   forEachExecutorOptions(
     tree,
-    '@nx/jest:jest',
+    '@nrwl/jest:jest',
     (_, projectName, target, configurationName) => {
       const projectConfiguration = projects.get(projectName);
       const executorOptions = configurationName

@@ -14,7 +14,7 @@ describe('React default development configuration', () => {
         projectType: 'application',
         targets: {
           build: {
-            executor: '@nx/next:build',
+            executor: '@nrwl/next:build',
             configurations: {
               development: {},
             },
@@ -44,7 +44,7 @@ describe('React default development configuration', () => {
         projectType: 'application',
         targets: {
           build: {
-            executor: '@nx/next:build',
+            executor: '@nrwl/next:build',
             configurations: {
               development: { outputPath: 'tmp/apps/example' },
             },
@@ -74,7 +74,7 @@ describe('React default development configuration', () => {
         projectType: 'application',
         targets: {
           build: {
-            executor: '@nx/next:build',
+            executor: '@nrwl/next:build',
             configurations: {
               development: { outputPath: '.tmp/custom' },
             },

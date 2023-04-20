@@ -51,7 +51,7 @@ The script will make the following changes:
 
 - Installs the `@nrwl/workspace` and `nx` packages.
   - If you opted into Nx Cloud, `nx-cloud` will be installed as well.
-  - If your project's Angular version is greater than or equal to version 13, then the `@nx/angular` package will be installed as well.
+  - If your project's Angular version is greater than or equal to version 13, then the `@nrwl/angular` package will be installed as well.
 - Creates an `nx.json` file in the root of your workspace.
 
 By running this command and accepting Nx Cloud, Nx distributed caching is now enabled.

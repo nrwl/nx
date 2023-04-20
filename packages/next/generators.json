@@ -6,7 +6,7 @@
     "init": {
       "factory": "./src/generators/init/init#nextInitSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nx/next` plugin.",
+      "description": "Initialize the `@nrwl/next` plugin.",
       "hidden": true
     },
     "application": {
@@ -36,7 +36,7 @@
     "init": {
       "factory": "./src/generators/init/init#nextInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nx/next` plugin.",
+      "description": "Initialize the `@nrwl/next` plugin.",
       "hidden": true
     },
     "application": {

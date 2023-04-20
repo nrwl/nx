@@ -39,7 +39,7 @@ export default async function (tree: Tree) {
 
 function getJestTargetNames(tree: Tree) {
   const jestTargetNames = new Set<string>();
-  forEachExecutorOptions(tree, '@nx/jest:jest', (_, __, target) => {
+  forEachExecutorOptions(tree, '@nrwl/jest:jest', (_, __, target) => {
     jestTargetNames.add(target);
   });
   return jestTargetNames;

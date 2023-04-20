@@ -38,7 +38,7 @@
 
 ## 14.0.2
 
-- Fix: Remove dependency on `@nx/devkit` for init generator
+- Fix: Remove dependency on `@nrwl/devkit` for init generator
 
 ## 14.0.1
 

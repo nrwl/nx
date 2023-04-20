@@ -18,10 +18,10 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/react1',
       targets: {
         build: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             main: 'apps/react1/src/main.tsx',
-            webpackConfig: '@nx/react/plugins/webpack',
+            webpackConfig: '@nrwl/react/plugins/webpack',
           },
         },
       },
@@ -30,7 +30,7 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/react2',
       targets: {
         custom: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             main: 'apps/react2/src/main.tsx',
           },
@@ -42,9 +42,9 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/react3',
       targets: {
         custom: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
-            webpackConfig: '@nx/react/plugins/webpack',
+            webpackConfig: '@nrwl/react/plugins/webpack',
           },
         },
       },
@@ -54,7 +54,7 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/react4',
       targets: {
         custom: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             main: 'apps/react4/src/main.tsx',
             webpackConfig: 'apps/react4/webpack.something.ts',
@@ -90,7 +90,7 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/app4',
       targets: {
         custom: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             webpackConfig: 'some/random/path/webpack.something.ts',
           },
@@ -103,7 +103,7 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/app5',
       targets: {
         custom: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             isolatedConfig: true,
           },
@@ -115,7 +115,7 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/app6',
       targets: {
         build: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             main: 'apps/app6/src/main.ts',
           },
@@ -140,10 +140,10 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/react1',
       targets: {
         build: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             main: 'apps/react1/src/main.tsx',
-            webpackConfig: '@nx/react/plugins/webpack',
+            webpackConfig: '@nrwl/react/plugins/webpack',
           },
         },
       },
@@ -153,7 +153,7 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/react2',
       targets: {
         custom: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             main: 'apps/react2/src/main.tsx',
           },
@@ -165,9 +165,9 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/react3',
       targets: {
         custom: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
-            webpackConfig: '@nx/react/plugins/webpack',
+            webpackConfig: '@nrwl/react/plugins/webpack',
           },
         },
       },
@@ -177,7 +177,7 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/react4',
       targets: {
         custom: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             main: 'apps/react4/src/main.tsx',
             webpackConfig: 'apps/react4/webpack.something.ts',
@@ -233,7 +233,7 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/reactapp',
       targets: {
         build: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             main: 'apps/reactapp/src/main.tsx',
             webpackConfig: 'apps/reactapp/webpack.config.js',
@@ -254,7 +254,7 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
       root: 'apps/alreadymigrated',
       targets: {
         build: {
-          executor: '@nx/webpack:webpack',
+          executor: '@nrwl/webpack:webpack',
           options: {
             isolatedConfig: true,
             main: 'apps/alreadymigrated/src/main.tsx',

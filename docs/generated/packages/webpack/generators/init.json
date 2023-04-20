@@ -30,7 +30,7 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the `@nx/webpack` plugin.",
+  "description": "Initialize the `@nrwl/webpack` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
   "implementation": "/packages/webpack/src/generators/init/init#webpackInitGenerator.ts",

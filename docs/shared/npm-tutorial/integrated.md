@@ -32,12 +32,12 @@ myorg/
 Nx comes with generators that can help with scaffolding applications. Run this generator to make a new library named `is-even`:
 
 ```shell
-npx nx generate @nx/js:library is-even --publishable --importPath @myorg/is-even
+npx nx generate @nrwl/js:library is-even --publishable --importPath @myorg/is-even
 ```
 
 This command:
 
-- Uses the `@nx/js` plugin's `library` generator to scaffold a new library named `is-even`.
+- Uses the `@nrwl/js` plugin's `library` generator to scaffold a new library named `is-even`.
 - The `--publishable` flag makes sure we also get a `package.json` generated and a `publish` target we can invoke to publish to NPM.
 - The `--importPath` allows us to define the name of the NPM package.
 
@@ -103,7 +103,7 @@ The local linking of packages in an integrated monorepo style is handled by Nx a
 To illustrate that, let's create another package `is-odd`. We can again run the generator for that:
 
 ```shell
-npx nx generate @nx/js:library is-odd --publishable --importPath @myorg/is-odd
+npx nx generate @nrwl/js:library is-odd --publishable --importPath @myorg/is-odd
 ```
 
 Note how the `tsconfig.base.json` now has two entries:

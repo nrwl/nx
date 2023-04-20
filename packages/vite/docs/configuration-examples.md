@@ -34,41 +34,41 @@ Nx will determine if the targets you provided (or the ones it inferred) are vali
 
 ## Projects that can be converted to use the `@nrwl/vite` executors
 
-Usually, React and Web projects generated with the `@nx/react` and the `@nx/web` generators can be converted to use the `@nrwl/vite` executors without any issues.
+Usually, React and Web projects generated with the `@nrwl/react` and the `@nrwl/web` generators can be converted to use the `@nrwl/vite` executors without any issues.
 
 The list of executors for building, testing and serving that can be converted to use the `@nrwl/vite` executors is:
 
 ### Supported `build` executors
 
 - `@nxext/vite:build`
-- `@nx/js:babel`
-- `@nx/js:swc`
-- `@nx/webpack:webpack`
+- `@nrwl/js:babel`
+- `@nrwl/js:swc`
+- `@nrwl/webpack:webpack`
 - `@nrwl/rollup:rollup`
-- `@nx/web:rollup`
+- `@nrwl/web:rollup`
 
 ### Supported `serve` executors
 
 - `@nxext/vite:dev`
-- `@nx/webpack:dev-server`
+- `@nrwl/webpack:dev-server`
 
 ### Supported `test` executors
 
-- `@nx/jest:jest`
+- `@nrwl/jest:jest`
 - `@nxext/vitest:vitest`
 
 ### Unsupported executors
 
-- `@nx/angular:ng-packagr-lite`
-- `@nx/angular:package`
-- `@nx/angular:webpack-browser`
+- `@nrwl/angular:ng-packagr-lite`
+- `@nrwl/angular:package`
+- `@nrwl/angular:webpack-browser`
 - `@angular-devkit/build-angular:browser`
 - `@angular-devkit/build-angular:dev-server`
 - `@nrwl/esbuild:esbuild`
-- `@nx/react-native:start`
-- `@nx/next:build`
-- `@nx/next:server`
-- `@nx/js:tsc`
+- `@nrwl/react-native:start`
+- `@nrwl/next:build`
+- `@nrwl/next:server`
+- `@nrwl/js:tsc`
 - any executor _not_ listed in the lists of "supported executors"
 - any project that does _not_ have a target for building, serving or testing
 

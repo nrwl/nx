@@ -55,7 +55,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
       : '--preserveAngularCLILayout=false';
     legacyMigrationCommand = `ng g ${pkgName}:ng-add ${preserveAngularCliLayoutFlag}`;
   } else if (majorAngularVersion < 14) {
-    // for v13, the migration was in @nx/angular:ng-add
+    // for v13, the migration was in @nrwl/angular:ng-add
     pkgScope = '@nrwl';
     unscopedPkgName = 'angular';
     pkgName = `${pkgScope}/${unscopedPkgName}`;

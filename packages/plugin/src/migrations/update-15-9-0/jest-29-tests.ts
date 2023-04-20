@@ -15,7 +15,7 @@ import {
   VariableStatement,
 } from 'typescript';
 
-// NOTE: this is a copy of the @nx/jest v15.8.0 migrations
+// NOTE: this is a copy of the @nrwl/jest v15.8.0 migrations
 export async function updateTestsJest29(tree: Tree) {
   const graph = await createProjectGraphAsync();
   forEachExecutorOptionsInGraph<JestExecutorOptions>(

@@ -33,7 +33,7 @@ The `nxE2EPreset` will then use the `bundler` information to generate the correc
 
 ```ts
 import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 const config = nxE2EPreset(__filename, { bundler: 'vite' });
 export default defineConfig({

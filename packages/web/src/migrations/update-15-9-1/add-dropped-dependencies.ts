@@ -10,9 +10,9 @@ import {
 export default async function addDroppedDependencies(tree: Tree) {
   const devDependencies = {};
   const droppedDependencies = [
-    '@nx/linter',
-    '@nx/cypress',
-    '@nx/jest',
+    '@nrwl/linter',
+    '@nrwl/cypress',
+    '@nrwl/jest',
     '@nrwl/rollup',
   ];
   const projects = getProjects(tree);

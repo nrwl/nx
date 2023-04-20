@@ -18,7 +18,7 @@ export default async function update(host: Tree) {
       installNeeded = true;
       const projectConfiguration = readProjectConfiguration(host, projectName);
 
-      projectConfiguration.targets[targetName].executor = '@nx/js:tsc';
+      projectConfiguration.targets[targetName].executor = '@nrwl/js:tsc';
 
       const transformers =
         projectConfiguration.targets[targetName].options?.tsPlugins;
@@ -49,7 +49,7 @@ export default async function update(host: Tree) {
         host,
         {},
         {
-          '@nx/js': nxVersion,
+          '@nrwl/js': nxVersion,
         }
       )
     : undefined;

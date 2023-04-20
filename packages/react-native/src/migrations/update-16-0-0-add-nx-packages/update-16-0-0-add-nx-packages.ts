@@ -4,7 +4,7 @@ import { replaceNrwlPackageWithNxPackage } from '@nx/devkit/src/utils/replace-pa
 export default async function replacePackage(tree: Tree): Promise<void> {
   await replaceNrwlPackageWithNxPackage(
     tree,
-    '@nx/react-native',
+    '@nrwl/react-native',
     '@nx/react-native'
   );
 
