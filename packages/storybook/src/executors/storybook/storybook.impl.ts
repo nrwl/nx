@@ -24,17 +24,14 @@ export default async function* storybookExecutor(
   storybookConfigExistsCheck(options.configDir, context.projectName);
   if (storybook7) {
     const buildOptions: CLIOptions = options;
-    const result: { port: number } = await runInstance(
-      buildOptions,
-      storybook7
-    );
+    const result = await runInstance(buildOptions, storybook7);
     yield {
       success: true,
       info: {
-        port: result?.port,
+        port: result?.['port'],
         baseUrl: `${options.https ? 'https' : 'http'}://${
           options.host ?? 'localhost'
-        }:${result?.port}`,
+        }:${result?.['port']}`,
       },
     };
     await new Promise<{ success: boolean }>(() => {});
@@ -58,18 +55,24 @@ export default async function* storybookExecutor(
   }
 }
 
-function runInstance(options: CLIOptions, storybook7: boolean) {
+function runInstance(
+  options: CLIOptions,
+  storybook7: boolean
+): Promise<void | {
+  port: number;
+  address: string;
+  networkAddress: string;
+}> {
   const env = process.env.NODE_ENV ?? 'development';
   process.env.NODE_ENV = env;
-
   if (storybook7) {
-    return build['build']({
+    return build.build({
       ...options,
       mode: 'dev',
-    } as any); // TODO(katerina): Change to actual types when Storybook 7
+    });
   } else {
     // TODO(katerina): Remove when Storybook 7
-    return build.buildDev({
+    return build['buildDev']({
       ...options,
       configType: env.toUpperCase(),
       mode: 'dev',

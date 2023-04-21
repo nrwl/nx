@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  detectPackageManager,
   GeneratorCallback,
   readJson,
   readNxJson,
@@ -76,6 +77,17 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
     } else {
       devDependencies[schema.uiFramework] = storybook7VersionToInstall;
+      const isPnpm = detectPackageManager(host.root) === 'pnpm';
+      if (isPnpm) {
+        // If it's pnpm, it needs the framework without the builder
+        // as a dependency too (eg. @storybook/react)
+        const matchResult = schema.uiFramework?.match(/^@storybook\/(\w+)/);
+        const uiFrameworkWithoutBuilder = matchResult ? matchResult[0] : null;
+        if (uiFrameworkWithoutBuilder) {
+          devDependencies[uiFrameworkWithoutBuilder] =
+            storybook7VersionToInstall;
+        }
+      }
     }
     devDependencies['@storybook/core-server'] = storybook7VersionToInstall;
     devDependencies['@storybook/addon-essentials'] = storybook7VersionToInstall;
