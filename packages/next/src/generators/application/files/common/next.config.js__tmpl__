@@ -30,7 +30,7 @@ const plugins = [
   withNx,
 ];
 
-module.exports = composePlugins(...plugins)(nextConfig));
+module.exports = composePlugins(...plugins)(nextConfig);
 <% } else if (style === 'styl') { %>
 const { withStylus } = require('@nx/next/plugins/with-stylus');
 
