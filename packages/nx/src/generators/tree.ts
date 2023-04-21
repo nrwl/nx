@@ -175,6 +175,15 @@ export class FsTree implements Tree {
       delete this.recordedChanges[this.rp(filePath)];
       return;
     }
+    // Remove any recorded changes where a parent directory has been
+    // deleted when writing a new file within the directory.
+    let parent = dirname(this.rp(filePath));
+    while (parent !== '.') {
+      if (this.recordedChanges[parent]?.isDeleted) {
+        delete this.recordedChanges[parent];
+      }
+      parent = dirname(parent);
+    }
     try {
       this.recordedChanges[this.rp(filePath)] = {
         content: Buffer.from(content),
