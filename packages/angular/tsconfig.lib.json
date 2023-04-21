@@ -6,9 +6,6 @@
     "declaration": true,
     "types": ["node"]
   },
-  "angularCompilerOptions": {
-    "compilationMode": "partial"
-  },
   "exclude": [
     "**/*.spec.ts",
     "**/*.test.ts",

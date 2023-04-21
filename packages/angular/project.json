@@ -10,7 +10,7 @@
       "executor": "@nx/angular:package",
       "options": {
         "project": "packages/angular/ng-package.json",
-        "tsConfig": "packages/angular/tsconfig.lib.json"
+        "tsConfig": "packages/angular/tsconfig.lib.runtime.json"
       },
       "outputs": ["build/packages/angular"]
     },
