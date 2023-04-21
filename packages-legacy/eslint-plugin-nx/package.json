@@ -30,6 +30,6 @@
     "access": "public"
   },
   "nx-migrations": {
-    "migrations": "@nx/eslint-plugin-nx/migrations.json"
+    "migrations": "@nx/eslint-plugin/migrations.json"
   }
 }

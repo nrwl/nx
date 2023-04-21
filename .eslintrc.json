@@ -5,7 +5,7 @@
     "node": true
   },
   "ignorePatterns": ["**/*.ts"],
-  "plugins": ["@typescript-eslint", "@nrwl/nx"],
+  "plugins": ["@typescript-eslint", "@nx"],
   "extends": [],
   "rules": {
     "@typescript-eslint/explicit-module-boundary-types": "off",
@@ -27,7 +27,7 @@
       "files": ["**/executors/**/schema.json", "**/generators/**/schema.json"],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nrwl/nx/workspace/valid-schema-description": "error"
+        "@nx/workspace/valid-schema-description": "error"
       }
     }
   ]
