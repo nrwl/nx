@@ -364,6 +364,13 @@ describe('tree', () => {
       } catch (e) {}
     });
 
+    it('should mark deleted folders as present if a file is created within it', () => {
+      tree.write('tools/some-file.txt', 'some content');
+      tree.delete('tools');
+      tree.write('tools/some-file2.txt', 'some content');
+      expect(tree.exists('tools')).toBe(true);
+    });
+
     describe('children', () => {
       it('should return the list of children of a dir', () => {
         expect(tree.children('parent')).toEqual([
