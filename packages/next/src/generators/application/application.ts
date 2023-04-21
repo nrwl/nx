@@ -17,6 +17,7 @@ import { nextInitGenerator } from '../init/init';
 import { addStyleDependencies } from '../../utils/styles';
 import { addLinting } from './lib/add-linting';
 import { customServerGenerator } from '../custom-server/custom-server';
+import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
@@ -31,6 +32,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   const jestTask = await addJest(host, options);
   const lintTask = await addLinting(host, options);
   updateJestConfig(host, options);
+  updateCypressTsConfig(host, options);
   const styledTask = addStyleDependencies(host, options.style);
   setDefaults(host, options);
 
