@@ -118,10 +118,11 @@ describe('Cypress Component Configuration', () => {
     );
     expect(projectConfig.targets['component-test']).toMatchSnapshot();
 
-    expect(tree.exists('libs/cool-lib/cypress/tsconfig.cy.json')).toEqual(true);
-    const cyTsConfig = readJson(tree, 'libs/cool-lib/cypress/tsconfig.cy.json');
+    expect(tree.exists('libs/cool-lib/cypress/tsconfig.json')).toEqual(true);
+    const cyTsConfig = readJson(tree, 'libs/cool-lib/cypress/tsconfig.json');
     expect(cyTsConfig.include).toEqual([
-      'support/**/*.ts',
+      '**/*.ts',
+      '**/*.js',
       '../cypress.config.ts',
       '../**/*.cy.ts',
       '../**/*.cy.tsx',
@@ -143,7 +144,7 @@ describe('Cypress Component Configuration', () => {
     );
     const baseTsConfig = readJson(tree, 'libs/cool-lib/tsconfig.json');
     expect(baseTsConfig.references).toEqual(
-      expect.arrayContaining([{ path: './cypress/tsconfig.cy.json' }])
+      expect.arrayContaining([{ path: './cypress/tsconfig.json' }])
     );
   });
 
@@ -178,7 +179,12 @@ describe('Cypress Component Configuration', () => {
 
   it('should not error when rerunning on an existing project', async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
-    tree.write('libs/cool-lib/cypress.config.ts', '');
+    const existingConfig = `import { defineConfig } from 'cypress';
+export default defineConfig({
+  component: somethingElse(__filename),
+});
+`;
+    tree.write('libs/cool-lib/cypress.config.ts', existingConfig);
     const newTarget = {
       ['component-test']: {
         executor: '@nx/cypress:cypress',
@@ -202,9 +208,10 @@ describe('Cypress Component Configuration', () => {
     });
     const actualProjectConfig = readProjectConfiguration(tree, 'cool-lib');
 
-    expect(tree.exists('libs/cool-lib/cypress.config.ts')).toEqual(true);
+    expect(tree.read('libs/cool-lib/cypress.config.ts', 'utf-8')).toEqual(
+      existingConfig
+    );
     expect(tree.exists('libs/cool-lib/cypress')).toEqual(true);
-    expect(tree.exists('libs/cool-lib/cypress/tsconfig.cy.json')).toEqual(true);
     expect(actualProjectConfig.targets['component-test']).toMatchSnapshot();
   });
 
@@ -217,7 +224,7 @@ describe('Cypress Component Configuration', () => {
           skipFormat: true,
         })
     ).rejects.toThrowError(
-      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v10-migration-guide'
+      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v11-migration-guide'
     );
   });
 });
