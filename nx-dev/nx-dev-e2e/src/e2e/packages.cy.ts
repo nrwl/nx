@@ -267,7 +267,7 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/nx/executors/run-commands',
     },
     { title: 'nx:run-script', path: '/packages/nx/executors/run-script' },
-    { title: 'nx-plugin', path: '/packages/plugin' },
+    { title: 'plugin', path: '/packages/plugin' },
     {
       title: '@nx/plugin:plugin',
       path: '/packages/plugin/generators/plugin',
