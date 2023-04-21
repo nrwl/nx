@@ -18,6 +18,7 @@ export interface NormalizedSchema extends Schema {
   npmScope: string;
   npmPackageName: string;
   bundler: 'swc' | 'tsc';
+  publishable: boolean;
 }
 export function normalizeOptions(
   host: Tree,
@@ -58,5 +59,6 @@ export function normalizeOptions(
     projectDirectory: fullProjectDirectory,
     parsedTags,
     npmPackageName,
+    publishable: options.publishable ?? false,
   };
 }

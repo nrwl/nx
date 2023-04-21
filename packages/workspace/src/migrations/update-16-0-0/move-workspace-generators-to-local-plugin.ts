@@ -28,11 +28,24 @@ const PROJECT_NAME = 'workspace-plugin';
 const DESTINATION = `tools/${PROJECT_NAME}`;
 
 export default async function (tree: Tree) {
-  const tasks = [];
-  if (!tree.children('tools/generators').length) {
+  if (!tree.exists('tools/generators')) {
     return;
   }
+  const tasks = [];
+  if (hasWorkspaceGenerators(tree)) {
+    tasks.push(...(await moveWorkspaceGeneratorsToLocalPlugin(tree)));
+  }
+  removeToolsGeneratorsIfEmpty(tree);
+  await formatFiles(tree);
+  return () => {
+    for (const task of tasks) {
+      task();
+    }
+  };
+}
 
+async function moveWorkspaceGeneratorsToLocalPlugin(tree: Tree) {
+  const tasks = [];
   let project = getProjects(tree).get(PROJECT_NAME);
   if (!project) {
     await createNewPlugin(tree);
@@ -48,21 +61,19 @@ export default async function (tree: Tree) {
     project = readProjectConfiguration(tree, PROJECT_NAME);
   }
   await updateExistingPlugin(tree, project);
-  removeToolsGeneratorsIfEmpty(tree);
-  await formatFiles(tree);
-  return () => {
-    for (const task of tasks) {
-      task();
-    }
-  };
+  return tasks;
+}
+
+function hasWorkspaceGenerators(tree: Tree) {
+  const children = tree.children('tools/generators');
+  return (
+    children.length > 0 &&
+    !(children.length === 1 && children[0] === '.gitkeep')
+  );
 }
 
 function removeToolsGeneratorsIfEmpty(tree: Tree) {
-  const children = tree.children('tools/generators');
-  if (
-    children.length === 0 ||
-    (children.length === 1 && children[0] === '.gitkeep')
-  ) {
+  if (!hasWorkspaceGenerators(tree)) {
     tree.delete('tools/generators');
   }
 }
@@ -174,6 +185,7 @@ async function createNewPlugin(tree: Tree) {
     skipLintChecks: false,
     unitTestRunner: 'jest',
     e2eTestRunner: 'none',
+    publishable: false,
   });
   getCreateGeneratorsJson()(
     tree,
