@@ -9,13 +9,18 @@ import {
 export function addProject(host: Tree, options: NormalizedSchema) {
   const targets: Record<string, any> = {};
 
+  const outputPath = joinPathFragments(
+    'dist',
+    options.appProjectRoot,
+    ...(options.rootProject ? [options.name] : [])
+  );
   targets.build = {
     executor: '@nx/next:build',
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
       root: options.appProjectRoot,
-      outputPath: joinPathFragments('dist', options.appProjectRoot),
+      outputPath: outputPath,
     },
     configurations: {
       development: {
