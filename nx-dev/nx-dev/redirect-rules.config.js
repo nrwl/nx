@@ -491,6 +491,7 @@ const packagesDocuments = {
   '/workspace/nx-nodejs-typescript-version-matrix':
     '/packages/workspace/documents/nx-nodejs-typescript-version-matrix',
   '/devkit/index': '/packages/devkit/documents/nx_devkit',
+  '/packages/devkit/documents/nrwl_devkit': '/packages/devkit/documents/nx_devkit',
   '/devkit/ngcli_adapter': '/packages/devkit/documents/ngcli_adapter',
   '/angular-nx-version-matrix':
     '/packages/angular/documents/angular-nx-version-matrix',
