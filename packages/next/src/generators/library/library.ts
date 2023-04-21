@@ -54,7 +54,20 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
       'src',
       `server.${options.js ? 'js' : 'ts'}`
     ),
-    `// Use this file to export React server components\n`
+    `// Use this file to export React server components
+    export * from './lib/hello-server';`
+  );
+  host.write(
+    joinPathFragments(
+      options.projectRoot,
+      'src/lib',
+      `hello-server.${options.js ? 'js' : 'tsx'}`
+    ),
+    `// React server components are async so you make database or API calls.
+      export async function HelloServer() {
+        return <h1>Hello Server</h1>
+      }
+    `
   );
   addTsConfigPath(host, `${options.importPath}/server`, [serverEntryPath]);
 
