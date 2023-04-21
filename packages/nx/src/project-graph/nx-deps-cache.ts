@@ -19,9 +19,11 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
+import { nxVersion } from '../utils/versions';
 
 export interface ProjectGraphCache {
   version: string;
+  nxVersion: string;
   deps: Record<string, string>;
   pathMappings: Record<string, any>;
   nxJsonPlugins: { name: string; version: string }[];
@@ -93,7 +95,8 @@ export function createCache(
   }));
   const newValue: ProjectGraphCache = {
     version: projectGraph.version || '5.1',
-    deps: packageJsonDeps,
+    nxVersion: nxVersion,
+    deps: packageJsonDeps, // TODO(v18): We can remove this in favor of nxVersion
     // compilerOptions may not exist, especially for package-based repos
     pathMappings: tsConfig?.compilerOptions?.paths || {},
     nxJsonPlugins,
@@ -149,13 +152,7 @@ export function shouldRecomputeWholeGraph(
   if (cache.version !== '5.1') {
     return true;
   }
-  if (
-    cache.deps['@nx/workspace'] !== packageJsonDeps['@nx/workspace'] ||
-    cache.deps['@nrwl/workspace'] !== packageJsonDeps['@nrwl/workspace']
-  ) {
-    return true;
-  }
-  if (cache.deps['nx'] !== packageJsonDeps['nx']) {
+  if (cache.nxVersion !== nxVersion) {
     return true;
   }
 
