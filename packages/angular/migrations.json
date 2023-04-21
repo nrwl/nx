@@ -177,6 +177,12 @@
       "description": "Replace @nrwl/angular with @nx/angular",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     },
+    "remove-protractor-defaults-from-generators": {
+      "cli": "nx",
+      "version": "16.0.0-beta.6",
+      "description": "Remove protractor as default e2eTestRunner from nxJson and project configurations",
+      "implementation": "./src/migrations/update-16-0-0/remove-protractor-defaults"
+    },
     "remove-karma-defaults-from-generators": {
       "cli": "nx",
       "version": "16.0.0-beta.6",
