@@ -1,29 +1,40 @@
-# Create a Plugin
+# Create a Local Plugin
 
 To get started with building a Nx Plugin, run the following command:
 
 ```shell
-npx create-nx-plugin my-org --pluginName my-plugin
+npx create-nx-plugin my-plugin
+```
+
+The file structure should look like this:
+
+```treeview
+my-plugin/
+├── e2e/
+├── src/
+├── nx.json
+├── package.json
+├── README.md
+└── tsconfig.base.json
 ```
 
 This command creates a brand-new workspace, and sets up a pre-configured plugin with the specified name.
 
-> Note, the command above will create a plugin with the package name set to `@my-org/my-plugin`. You can pass `--importPath` to provide a different package name.
-
 > If you do not want to create a new workspace, install the `@nrwl/nx-plugin` dependency in an already existing workspace with npm or yarn. Then run `nx g @nrwl/nx-plugin:plugin [pluginName]`.
 
-A new plugin is created with a default generator, executor, and e2e app.
+A new plugin is created with an e2e app.
 
 ## Generator
 
-The created generator contains boilerplate that will do the following:
+To create a new generator run:
 
-- Normalize a schema (the options that the generator accepts)
-- Update the `project.json`
-- Add the plugin's project to the `nx.json` file
-- Add files to the disk using templates
+```shell
+nx generate @nx/nx-plugin:generator my-generator --project=my-plugin
+```
 
-There will be an exported default function that will be the main entry for the generator.
+The new generator is located in `/src/generators/my-generator`.  The `my-generator.ts` file contains the code that runs the generator.  This generator creates a new project using a folder of template files.
+
+For more information about this sample generator, read the [simple generator recipe](/plugins/recipes/local-generator).
 
 ### Generator options
 
@@ -33,45 +44,31 @@ The `schema.d.ts` file contains all the options that the generator supports. By 
 The `schema.d.ts` file is used for type checking inside the implementation file. It should match the properties in `schema.json`.
 {% /callout %}
 
-### Adding more generators
-
-To [add more generators](/plugins/generators/local-generators) to the plugin, run the following command:
-`nx generate @nrwl/nx-plugin:generator [generatorName] --project=[pluginName]`.
-
-This will scaffold out a new generator and update the necessary files to support it.
-
 ### Generator Testing
 
 The generator spec file includes boilerplate to help get started with testing. This includes setting up an empty workspace.
 
 These tests should ensure that files within the tree (created with `createTreeWithEmptyWorkspace`) are in the correct place, and contain the right content.
 
-Full E2Es are supported (and recommended) and will run everything on the file system like a user would.
+Full E2Es are supported and will run everything on the file system like a user would.
 
 ## Executor
 
-The default executor is set up to just emit a console log. Some examples of what an executor can do are:
+To create a new executor run:
 
-- Support different languages, (Java, Go, Python, C#)
-- Compile new UI framework components
-- Deploy an app on a CDN
-- Publish to NPM
-- and many more!
+```shell
+nx generate @nx/nx-plugin:executor my-executor --project=my-plugin
+```
 
-### Adding more executors
+The new executor is located in `/src/executors/my-executor`.  The `my-executor.ts` file contains the code that runs the executor.  This executor emits a console log, but executors can compile code, deploy an app, publish to NPM and much more.
 
-To [add more executors](/plugins/executors/creating-custom-executors) to the plugin, run the following command:
-`nx generate @nrwl/nx-plugin:executor [executor] --project=[pluginName]`.
-
-This will scaffold out a new generator and update the necessary files to support it.
+For more information about this sample executor, read the [simple executor recipe](/plugins/recipes/local-executor).
 
 ### Executor testing
 
 The executor spec file contains boilerplate to run the default exported function from the executor.
 
-These tests should make sure that the executor is executing and calling the functions that it relies on.
-
-Full E2Es are supported (and recommended) and will run everything on the file system like a user would.
+These tests should make sure that the executor is executing and calling the functions that it relies on.  Typically, unit tests are more useful for generators and e2e tests are more useful for executors.
 
 ## Testing your plugin
 
@@ -104,45 +101,6 @@ it('should create my-plugin', async (done) => {
 
 There are additional functions that the `@nrwl/nx-plugin/testing` package exports. Most of them are file utilities to manipulate and read files in the E2E directory.
 
-## Including Assets
+## Using your Nx Plugin Locally
 
-Sometimes you might want to include some assets with the plugin. This might be a image or some additional binaries.
-
-To make sure that assets are copied to the dist folder, open the plugin's `project.json` file. Inside the `build` property, add additional assets. By default, all `.md` files in the root, all non-ts files in folders, and the `generators.json` and `executors.json` files are included.
-
-```jsonc {% fileName="project.json" %}
-"build": {
-  "executor": "@nrwl/node:package",
-  "options": {
-    // shortened...
-    "assets": [
-      "packages/my-plugin/*.md",
-      {
-        "input": "./packages/my-plugin/src",
-        "glob": "**/*.!(ts)",
-        "output": "./src"
-      },
-      {
-        "input": "./packages/my-plugin",
-        "glob": "generators.json",
-        "output": "."
-      },
-      {
-        "input": "./packages/my-plugin",
-        "glob": "executors.json",
-        "output": "."
-      }
-    ]
-  }
-}
-```
-
-## Using your Nx Plugin
-
-To use your plugin, simply list it in `nx.json` or use its generators and executors as you would for any other plugin. This could look like `nx g @my-org/my-plugin:lib` for generators or `"executor": "@my-org/my-plugin:build"` for executors. It should be usable in all of the same ways as published plugins in your local workspace immediately after generating it. This includes setting it up as the default collection in `nx.json`, which would allow you to run `nx g lib` and hit your plugin's generator.
-
-{% callout type="warning" title="string" %}
-
-Nx uses the paths from tsconfig.base.json when running plugins locally, but uses the recommended tsconfig for node 16 for other compiler options. See https://github.com/tsconfig/bases/blob/main/bases/node16.json
-
-{% /callout %}
+To use your plugin, simply list it in `nx.json` or use its generators and executors as you would for any other plugin. This could look like `nx g @my-org/my-plugin:lib` for generators or `"executor": "@my-org/my-plugin:build"` for executors. It should be usable in all of the same ways as published plugins in your local workspace immediately after generating it.

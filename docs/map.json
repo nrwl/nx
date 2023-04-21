@@ -781,7 +781,7 @@
               "file": "shared/plugins/create-plugin"
             },
             {
-              "name": "Create and Maintain a Published Plugin",
+              "name": "Maintain a Published Plugin",
               "id": "publish-plugin",
               "file": "shared/plugins/publish-plugin"
             },
@@ -838,12 +838,6 @@
               "id": "modifying-files",
               "tags": ["use-code-generators"],
               "file": "shared/recipes/generators/modifying-files"
-            },
-            {
-              "name": "Share Your Plugin",
-              "id": "share-your-plugin",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/share-your-plugin"
             },
             {
               "name": "Write a Migration",

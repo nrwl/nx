@@ -1,10 +1,14 @@
-# Share your Nx Plugin
+# Maintain a Published Plugins
+
+To create a plugin, see the [create a local plugin tutorial](/plugins/tutorials/create-plugin).
+
+## Publish your Nx Plugin
 
 In order to use your plugin in other workspaces or share it with the community, you will need to publish it to an npm registry. To publish your plugin follow these steps:
 
 1. Build your plugin with the command `nx run my-plugin:build`
-1. `npm publish ./dist/package/my-plugin` and follow the prompts from npm.
-1. That's it!
+2. `npm publish ./dist/package/my-plugin` and follow the prompts from npm.
+3. That's it!
 
 {% callout type="warning" title="Version bump" %}
 Currently you will have to modify the `package.json` version by yourself or with a tool.
@@ -13,7 +17,7 @@ Currently you will have to modify the `package.json` version by yourself or with
 After that, you can then install your plugin like any other npm package,
 `npm i -D @my-org/my-plugin` or `yarn add -D @my-org/my-plugin`.
 
-## Listing your Nx Plugin
+## List your Nx Plugin
 
 Nx provides a utility (`nx list`) that lists both core and community plugins. To submit your plugin, please follow the steps below:
 
