@@ -134,6 +134,25 @@ async function addUnitTestRunner(
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
     });
+    const setupFile = joinPathFragments(
+      options.projectRoot,
+      'src',
+      'test-setup.ts'
+    );
+    if (options.strict && host.exists(setupFile)) {
+      const contents = host.read(setupFile, 'utf-8');
+      host.write(
+        setupFile,
+        `// @ts-expect-error https://thymikee.github.io/jest-preset-angular/docs/getting-started/test-environment
+globalThis.ngJest = {
+  testEnvironmentOptions: {
+    errorOnUnknownElements: true,
+    errorOnUnknownProperties: true,
+  },
+};
+${contents}`
+      );
+    }
   }
 }
 
