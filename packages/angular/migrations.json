@@ -176,6 +176,12 @@
       "version": "16.0.0-beta.1",
       "description": "Replace @nrwl/angular with @nx/angular",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "remove-karma-defaults-from-generators": {
+      "cli": "nx",
+      "version": "16.0.0-beta.6",
+      "description": "Remove karma as default unitTestRunner from nxJson and project configurations",
+      "implementation": "./src/migrations/update-16-0-0/remove-karma-defaults"
     }
   },
   "packageJsonUpdates": {
