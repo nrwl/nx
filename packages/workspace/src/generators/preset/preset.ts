@@ -33,7 +33,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       standalone: options.standaloneApi,
       routing: options.routing,
-      e2eTestRunner: options.e2eTestRunner,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
@@ -91,6 +91,7 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       appDir: options.nextAppDir,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
       rootProject: true,
     });
   } else if (options.preset === Preset.WebComponents) {
