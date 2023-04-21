@@ -60,7 +60,7 @@ commands:
       - restore_cache:
           name: Restore pnpm Package Cache
           keys:
-            - node-deps-{{ arch }}-v3-{{ checksum "package.json" }}-{{ checksum "pnpm-lock.yaml" }}
+            - node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
       - run:
           name: Install pnpm package manager
           command: |
@@ -71,7 +71,7 @@ commands:
             pnpm install --frozen-lockfile
       - save_cache:
           name: Save pnpm Package Cache
-          key: node-deps-{{ arch }}-v3-{{ checksum "package.json" }}-{{ checksum "pnpm-lock.yaml" }}
+          key: node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
           paths:
             - ~/.cache/yarn
             - ~/.cache/Cypress
