@@ -419,7 +419,10 @@ describe('nx-dev: Packages Section', () => {
       title: '@nx/web:application',
       path: '/packages/web/generators/application',
     },
-    { title: '@nx/webpack:webpack', path: '/packages/webpack/executors/webpack' },
+    {
+      title: '@nx/webpack:webpack',
+      path: '/packages/webpack/executors/webpack',
+    },
     { title: '@nx/rollup:rollup', path: '/packages/rollup/executors/rollup' },
     {
       title: '@nx/webpack:dev-server',
