@@ -137,9 +137,9 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /packages/nx/src/adapter @AgentEnder @leosvelperez
 /packages/nx/src/native @vsavkin @FrozenPandaz @Cammisuli
 /packages/nx/src/lock-file @meeroslav @FrozenPandaz
-/packages/nx/src/nx-init/angular/** @Coly010 @leosvelperez @FrozenPandaz
+/packages/nx/src/command-line/init/implementation/angular/** @Coly010 @leosvelperez @FrozenPandaz
 /e2e/nx-init/src/nx-init-angular.test.ts @Coly010 @leosvelperez
-/packages/nx/src/nx-init/react/** @jaysoo @xiongemi @mandarini
+/packages/nx/src/command-line/init/implementation/react/** @jaysoo @xiongemi @mandarini
 /e2e/nx-init/src/nx-init-react.test.ts @jaysoo @xiongemi @mandarini @ndcunningham
 /e2e/nx-init/src/files/cra/** @jaysoo @xiongemi @mandarini @ndcunningham
 /e2e/nx*/** @FrozenPandaz @AgentEnder @vsavkin
