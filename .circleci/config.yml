@@ -14,17 +14,17 @@ orbs:
 # -------------------------
 machine:
   pre:
-    - mkdir /home/circleci/.pnpm-store
-    - mkdir /home/circleci/.cache/Cypress
+    - mkdir ~/.pnpm-store
+    - mkdir ~/.cache/Cypress
     - mkdir ~/Library/Caches/Homebrew
     - mkdir /usr/local/Homebrew
 
 dependencies:
   cache_directories:
-    - /home/circleci/.pnpm-store
-    - /home/circleci/.cache/Cypress
+    - ~/.pnpm-store
+    - ~/.cache/Cypress
     - /usr/local/Homebrew
-    - /home/circleci/Library/Caches/Homebrew
+    - ~/Library/Caches/Homebrew
   override:
     - pnpm install
     - brew install
@@ -60,7 +60,7 @@ commands:
       - restore_cache:
           name: Restore pnpm Package Cache
           keys:
-            - pnpm-packages-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+            - node-deps-{{ arch }}-v3-{{ checksum "package.json" }}-{{ checksum "pnpm-lock.yaml" }}
       - run:
           name: Install pnpm package manager
           command: |
@@ -68,16 +68,16 @@ commands:
       - run:
           name: Install Dependencies
           command: |
-            pnpm install
+            pnpm install --frozen-lockfile
       - save_cache:
           name: Save pnpm Package Cache
-          key: pnpm-packages-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+          key: node-deps-{{ arch }}-v3-{{ checksum "package.json" }}-{{ checksum "pnpm-lock.yaml" }}
           paths:
             - ~/.cache/yarn
             - ~/.cache/Cypress
             - node_modules
-            - /home/circleci/.pnpm-store
-            - /home/circleci/.cache/Cypress
+            - ~/.pnpm-store
+            - ~/.cache/Cypress
 
   setup:
     parameters:
