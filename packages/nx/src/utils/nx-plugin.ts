@@ -257,16 +257,18 @@ export function registerPluginTSTranspiler() {
   if (!tsNodeAndPathsRegistered) {
     // nx-ignore-next-line
     const ts: typeof import('typescript') = require('typescript');
-    const tsConfigName = existsSync('tsconfig.base.json')
-      ? 'tsconfig.base.json'
-      : existsSync('tsconfig.json')
-      ? 'tsconfig.json'
-      : null;
+
+    // Get the first tsconfig that matches the allowed set
+    const tsConfigName = [
+      join(workspaceRoot, 'tsconfig.base.json'),
+      join(workspaceRoot, 'tsconfig.json'),
+    ].find((x) => existsSync(x));
+
     const tsConfig: Partial<ts.ParsedCommandLine> = tsConfigName
       ? readTsConfig(tsConfigName)
       : {};
 
-    registerTsConfigPaths(join(workspaceRoot, 'tsconfig.base.json'));
+    registerTsConfigPaths(tsConfigName);
     registerTranspiler({
       experimentalDecorators: true,
       emitDecoratorMetadata: true,
