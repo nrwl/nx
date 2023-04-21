@@ -5,6 +5,7 @@ import {
 import type { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
 import {
   ExecutorContext,
+  joinPathFragments,
   logger,
   parseTargetString,
   ProjectGraph,
@@ -19,7 +20,8 @@ import {
   getProjectConfigByPath,
 } from '@nx/cypress/src/utils/ct-helpers';
 
-import type { Configuration } from 'webpack';
+import { existsSync, lstatSync } from 'fs';
+import { dirname, join } from 'path';
 type ViteDevServer = {
   framework: 'react';
   bundler: 'vite';
@@ -66,6 +68,36 @@ export function nxComponentTestingPreset(
       specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
       devServer: {
         ...({ framework: 'react', bundler: 'vite' } as const),
+        viteConfig: async () => {
+          const normalizedPath = ['.ts', '.js'].some((ext) =>
+            pathToConfig.endsWith(ext)
+          )
+            ? pathToConfig
+            : dirname(pathToConfig);
+          const viteConfigPath = findViteConfig(normalizedPath);
+
+          const { mergeConfig, loadConfigFromFile, searchForWorkspaceRoot } =
+            (await import('vite')) as typeof import('vite');
+
+          const resolved = await loadConfigFromFile(
+            {
+              mode: 'watch',
+              command: 'serve',
+            },
+            viteConfigPath
+          );
+          return mergeConfig(resolved.config, {
+            server: {
+              fs: {
+                allow: [
+                  searchForWorkspaceRoot(normalizedPath),
+                  workspaceRoot,
+                  joinPathFragments(workspaceRoot, 'node_modules/vite'),
+                ],
+              },
+            },
+          });
+        },
       },
     };
   }
@@ -230,5 +262,14 @@ function buildTargetWebpack(
       }
       return defaultWebpack;
     };
+  }
+}
+function findViteConfig(projectRootFullPath: string): string {
+  const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
+
+  for (const ext of allowsExt) {
+    if (existsSync(join(projectRootFullPath, `vite.config.${ext}`))) {
+      return join(projectRootFullPath, `vite.config.${ext}`);
+    }
   }
 }
