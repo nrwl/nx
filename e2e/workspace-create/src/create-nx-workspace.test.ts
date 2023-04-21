@@ -216,6 +216,21 @@ describe('create-nx-workspace', () => {
     expectCodeIsFormatted();
   });
 
+  it('should be able to create a nextjs standalone workspace', () => {
+    const wsName = uniq('next');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'nextjs-standalone',
+      style: 'css',
+      nextAppDir: true,
+      appName,
+      packageManager,
+    });
+
+    expectNoAngularDevkit();
+    expectCodeIsFormatted();
+  });
+
   it('should be able to create an web-components workspace', () => {
     const wsName = uniq('web-components');
     const appName = uniq('app');
