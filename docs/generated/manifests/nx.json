@@ -1814,7 +1814,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/packages/devkit/documents/nrwl_devkit",
+        "path": "/packages/devkit/documents/nx_devkit",
         "tags": ["create-your-own-plugin"]
       },
       {
@@ -1892,14 +1892,14 @@
     "path": "/packages",
     "tags": []
   },
-  "/packages/devkit/documents/nrwl_devkit": {
+  "/packages/devkit/documents/nx_devkit": {
     "id": "packages-devkit",
     "name": "Nx Devkit",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/packages/devkit/documents/nrwl_devkit",
+    "path": "/packages/devkit/documents/nx_devkit",
     "tags": ["create-your-own-plugin"]
   },
   "/reference/glossary": {

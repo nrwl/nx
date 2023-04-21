@@ -4,7 +4,7 @@ At its core, a generator is a function that creates or modifies code and an exec
 
 > A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages). \
 > A list of custom plugins created by the community is found in the [Community](/community) section.
-> Plugins are written using Nx Devkit. **Read [Nx Devkit](/packages/devkit/documents/nrwl_devkit) for more information.**
+> Plugins are written using Nx Devkit. **Read [Nx Devkit](/packages/devkit/documents/nx_devkit) for more information.**
 
 {% youtube
 src="https://www.youtube.com/embed/fC1-4fAZDP4"

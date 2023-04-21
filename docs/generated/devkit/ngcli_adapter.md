@@ -91,7 +91,7 @@ overrideCollectionResolutionForTesting({
 
 ### wrapAngularDevkitSchematic
 
-▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: [`Tree`](../../devkit/documents/nrwl_devkit#tree), `generatorOptions`: { `[k: string]`: `any`; }) => `Promise`<`any`\>
+▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: [`Tree`](../../devkit/documents/nx_devkit#tree), `generatorOptions`: { `[k: string]`: `any`; }) => `Promise`<`any`\>
 
 #### Parameters
 
@@ -108,10 +108,10 @@ overrideCollectionResolutionForTesting({
 
 ##### Parameters
 
-| Name               | Type                                              |
-| :----------------- | :------------------------------------------------ |
-| `host`             | [`Tree`](../../devkit/documents/nrwl_devkit#tree) |
-| `generatorOptions` | `Object`                                          |
+| Name               | Type                                            |
+| :----------------- | :---------------------------------------------- |
+| `host`             | [`Tree`](../../devkit/documents/nx_devkit#tree) |
+| `generatorOptions` | `Object`                                        |
 
 ##### Returns
 

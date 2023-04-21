@@ -581,7 +581,7 @@
               "id": "packages-devkit",
               "tags": ["create-your-own-plugin"],
               "file": "",
-              "path": "/packages/devkit/documents/nrwl_devkit",
+              "path": "/packages/devkit/documents/nx_devkit",
               "isExternal": true
             },
             {
@@ -1650,9 +1650,9 @@
           "description": "Devkit package.",
           "itemList": [
             {
-              "id": "nrwl_devkit",
+              "id": "nx_devkit",
               "name": "Overview",
-              "file": "generated/devkit/nrwl_devkit"
+              "file": "generated/devkit/nx_devkit"
             },
             {
               "id": "ngcli_adapter",
