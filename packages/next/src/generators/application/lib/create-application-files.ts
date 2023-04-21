@@ -63,6 +63,10 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
 
       let { extends: _, ...updatedJson } = json;
 
+      // Don't generate the `paths` object or else workspace libs will not work later.
+      // It'll be generated as needed when a lib is first added.
+      delete json.compilerOptions.paths;
+
       updatedJson = {
         ...updateJson,
         compilerOptions: {
