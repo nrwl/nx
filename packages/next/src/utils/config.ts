@@ -8,7 +8,18 @@ import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
-import { NxWebpackExecutionContext } from '@nx/webpack';
+
+export interface NextConfigFn {
+  (phase: string, context?: any): Promise<NextConfig> | NextConfig;
+}
+
+export interface NextPlugin {
+  (config: NextConfig): NextConfig;
+}
+
+export interface NextPluginThatReturnsConfigFn {
+  (config: NextConfig): NextConfigFn;
+}
 
 export function createWebpackConfig(
   workspaceRoot: string,
@@ -95,40 +106,4 @@ function isTsRule(r: RuleSetRule): boolean {
   }
 
   return r.test.test('a.ts');
-}
-
-export interface NextConfigFn {
-  (phase: string, context?: any): Promise<NextConfig> | NextConfig;
-}
-
-export interface NextPlugin {
-  (config: NextConfig): NextConfig;
-}
-
-export interface NextPluginThatReturnsConfigFn {
-  (config: NextConfig): NextConfigFn;
-}
-
-export function composePlugins(
-  ...plugins: (NextPlugin | NextPluginThatReturnsConfigFn)[]
-): (baseConfig: NextConfig) => NextConfigFn {
-  return function (baseConfig: NextConfig) {
-    return async function combined(
-      phase: string,
-      context: any
-    ): Promise<NextConfig> {
-      let config = baseConfig;
-      for (const plugin of plugins) {
-        const fn = await plugin;
-        const configOrFn = fn(config);
-        if (typeof configOrFn === 'function') {
-          config = await configOrFn(phase, context);
-        } else {
-          config = configOrFn;
-        }
-      }
-
-      return config;
-    };
-  };
 }
