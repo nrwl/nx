@@ -1,5 +1,5 @@
 import { appendFileSync, openSync, writeFileSync } from 'fs';
-import { run } from '../src/command-line/run';
+import { run } from '../src/command-line/run/run';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(

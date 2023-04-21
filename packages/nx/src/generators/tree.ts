@@ -13,6 +13,7 @@ import { output } from '../utils/output';
 import { dirname, join, relative, sep } from 'path';
 import * as chalk from 'chalk';
 import { gt } from 'semver';
+import { nxVersion } from '../utils/versions';
 
 /**
  * Options to set when writing a file in the Virtual file system tree.
@@ -354,7 +355,7 @@ export class FsTree implements Tree {
   private assertUnlocked() {
     if (this.locked) {
       // TODO (v17): Remove condition
-      if (gt(require('../../package.json').version, '17.0.0')) {
+      if (gt(nxVersion, '17.0.0')) {
         throw new Error(
           'The tree has already been committed to disk. It can no longer be modified. Do not modify the tree during a GeneratorCallback and ensure that Promises have resolved before the generator returns or resolves.'
         );
