@@ -5,7 +5,7 @@
   "projectType": "application",
   "targets": {
     "e2e-base": {
-      "executor": "@nrwl/cypress:cypress",
+      "executor": "@nx/cypress:cypress",
       "options": {
         "tsConfig": "graph/client-e2e/tsconfig.e2e.json",
         "testingType": "e2e",

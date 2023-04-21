@@ -1,6 +1,6 @@
 export const getAngularCliMigrationGenerator = (
   version: string
-) => `import { formatFiles, Tree, updateJson } from '@nrwl/devkit';
+) => `import { formatFiles, Tree, updateJson } from '@nx/devkit';
 
 const angularCliVersion = '~${version}';
 
@@ -27,8 +27,8 @@ export default async function (tree: Tree) {
 
 export const getAngularCliMigrationGeneratorSpec = (
   version: string
-) => `import { readJson, Tree, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+) => `import { readJson, Tree, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateAngularCli from './update-angular-cli';
 
 describe('update-angular-cli migration', () => {

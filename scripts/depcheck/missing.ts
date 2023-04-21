@@ -140,8 +140,8 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@angular-devkit/core',
     '@angular-devkit/architect',
     '@angular/cli',
-    '@nx/angular',
     '@nrwl/angular',
+    '@nx/angular',
     '@nrwl/cli',
     'rxjs',
     '@nestjs/cli', // nx init nest makes use of nestjs cli (which should be available in NestJS CLI app) to parse the nest-cli.json file
@@ -163,7 +163,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'memfs', // used in mock for handling .node files in tests
   ],
   web: [
-    // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.
+    // we don't want to bloat the install of @nx/web by including @swc/core and swc-loader as a dependency.
     '@swc/core',
     'swc-loader',
 
