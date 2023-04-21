@@ -111,7 +111,7 @@
       "@nx/esbuild",
       "@nrwl/esbuild",
       "@nx/eslint-plugin",
-      "@nrwl/eslint-plugin-nx",
+      "@nx/eslint-plugin",
       "@nx/expo",
       "@nrwl/expo",
       "@nx/express",

@@ -58,7 +58,6 @@
     "@ngrx/router-store": "~15.3.0",
     "@ngrx/store": "~15.3.0",
     "@nguniversal/builders": "~15.2.0",
-    "@nrwl/eslint-plugin-nx": "16.0.0-beta.5",
     "nx-cloud": "16.0.1",
     "@nx/webpack": "16.0.0-beta.5",
     "@parcel/watcher": "2.0.4",
@@ -265,7 +264,8 @@
     "@nx/react": "16.0.0-beta.5",
     "@nx/jest": "16.0.0-beta.5",
     "@nx/next": "16.0.0-beta.5",
-    "@nx/angular": "16.0.0-beta.5"
+    "@nx/angular": "16.0.0-beta.5",
+    "@nx/eslint-plugin": "16.0.0-beta.5"
   },
   "author": "Victor Savkin",
   "license": "MIT",

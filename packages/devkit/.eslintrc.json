@@ -50,7 +50,7 @@
       "files": ["./package.json"],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nrwl/nx/nx-plugin-checks": "error"
+        "@nx/nx-plugin-checks": "error"
       }
     }
   ]

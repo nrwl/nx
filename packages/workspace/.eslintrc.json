@@ -28,7 +28,7 @@
       ],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nrwl/nx/nx-plugin-checks": [
+        "@nx/nx-plugin-checks": [
           "error",
           {
             "allowedVersionStrings": ["latest", "*"]
