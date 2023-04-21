@@ -57,6 +57,7 @@ import { getNxRequirePaths } from '../utils/installation-directory';
 import { readNxJson } from '../config/configuration';
 import { runNxSync } from '../utils/child-process';
 import { daemonClient } from '../daemon/client/client';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1169,7 +1170,8 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       if (
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
-        !isCI()
+        !isCI() &&
+        !isNxCloudUsed()
       ) {
         const useCloud = await connectToNxCloudCommand(
           messages.getPromptMessage('nxCloudMigration')
