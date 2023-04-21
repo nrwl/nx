@@ -53,12 +53,12 @@ This tutorial uses the `express` framework. The `node-standalone` preset also pr
 
 ## Generating Libraries
 
-To create the `auth` library, use the `@nrwl/node:lib` generator:
+To create the `auth` library, use the `@nx/node:lib` generator:
 
 ![Nx Generator Syntax](/shared/node-server-tutorial/generator-syntax.svg)
 
-```{% command="npx nx g @nrwl/node:lib auth --buildable" path="~/products-api" %}
->  NX  Generating @nrwl/node:library
+```{% command="npx nx g @nx/node:lib auth --buildable" path="~/products-api" %}
+>  NX  Generating @nx/node:library
 
 CREATE auth/README.md
 CREATE auth/.babelrc

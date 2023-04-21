@@ -9,27 +9,35 @@
 By default, Nx will use Jest when creating applications and libraries.
 
 ```shell
-nx g @nrwl/web:app frontend
+nx g @nx/web:app frontend
 ```
 
 ### Adding Jest to an Existing Project
 
-Add Jest to a project using the `jest-project` generator from `@nrwl/jest`.
+Add Jest to a project using the `jest-project` generator from `@nx/jest`.
 
-First, install `@nrwl/jest`, if not already installed using your preferred package manager.
+First, install `@nx/jest`, if not already installed using your preferred package manager.
 
 ```shell
-npm install --save-dev @nrwl/jest
+npm install --save-dev @nx/jest
 ```
 
 ```shell
-yarn add --dev @nrwl/jest
+yarn add --dev @nx/jest
 ```
+
+{% callout type="check" title="Rescope from @nrwl to @nx" %}
+
+For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
+
+[Read more about the rescope ≫](/recipes/other/rescope)
+
+{% /callout %}
 
 Once installed, run the `jest-project` generator
 
 ```shell
-nx g @nrwl/jest:jest-project --project=<project-name>
+nx g @nx/jest:jest-project --project=<project-name>
 ```
 
 > Hint: You can use the `--dry-run` flag to see what will be generated.
@@ -99,12 +107,12 @@ Primary configurations for Jest will be via the `jest.config.ts` file that gener
 The root level `jest.config.ts` file configures [Jest multi project support](https://jestjs.io/docs/configuration#projects-arraystring--projectconfig).
 This configuration allows editor/IDE integrations to pick up individual project's configurations rather than the one at the root.
 
-The set of Jest projects within Nx workspaces tends to change. Instead of statically defining a list in `jest.config.ts`, Nx provides a utility function called `getJestProjects` which queries for Jest configurations defined for targets which use the `@nrwl/jest:jest` executor.
+The set of Jest projects within Nx workspaces tends to change. Instead of statically defining a list in `jest.config.ts`, Nx provides a utility function called `getJestProjects` which queries for Jest configurations defined for targets which use the `@nx/jest:jest` executor.
 
 You can add Jest projects which are not included in `getJestProjects()`, because they do not use the Nx Jest executor, by doing something like the following:
 
 ```typescript {% fileName="jest.config.ts"}
-import { getJestProjects } from '@nrwl/jest';
+import { getJestProjects } from '@nx/jest';
 
 export default {
   projects: [...getJestProjects(), '<rootDir>/path/to/jest.config.ts'],
@@ -135,7 +143,7 @@ In order to use Jest's global setup/teardown functions that reference nx librari
 Nx provides a helper function that you can import within your setup/teardown file.
 
 ```typescript {% fileName="global-setup.ts" %}
-import { registerTsProject } from '@nrwl/js/src/internal';
+import { registerTsProject } from '@nx/js/src/internal';
 const cleanupRegisteredPaths = registerTsProject('.', 'tsconfig.base.json');
 
 import { yourFancyFunction } from '@some-org/my-util-library';
@@ -166,4 +174,4 @@ export default {
 ## More Documentation
 
 - [Jest Docs](https://jestjs.io/)
-- [@nrwl/jest options](/packages/jest)
+- [@nx/jest options](/packages/jest)

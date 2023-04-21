@@ -2,7 +2,7 @@
   "angular": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "angular",
-    "packageName": "@nrwl/angular",
+    "packageName": "@nx/angular",
     "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
     "documents": {
       "/packages/angular/documents/overview": {
@@ -396,7 +396,7 @@
   "cypress": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "cypress",
-    "packageName": "@nrwl/cypress",
+    "packageName": "@nx/cypress",
     "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
     "documents": {
       "/packages/cypress/documents/overview": {
@@ -498,7 +498,7 @@
   "detox": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "detox",
-    "packageName": "@nrwl/detox",
+    "packageName": "@nx/detox",
     "description": "The Nx Plugin for Detox contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.",
     "documents": {
       "/packages/detox/documents/overview": {
@@ -560,7 +560,7 @@
   "devkit": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "devkit",
-    "packageName": "@nrwl/devkit",
+    "packageName": "@nx/devkit",
     "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.",
     "documents": {
       "/packages/devkit/documents/nrwl_devkit": {
@@ -595,7 +595,7 @@
   "esbuild": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "esbuild",
-    "packageName": "@nrwl/esbuild",
+    "packageName": "@nx/esbuild",
     "description": "The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild",
     "documents": {
       "/packages/esbuild/documents/overview": {
@@ -648,7 +648,7 @@
   "eslint-plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "eslint-plugin",
-    "packageName": "@nrwl/eslint-plugin-nx",
+    "packageName": "@nx/eslint-plugin",
     "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
     "documents": {
       "/packages/eslint-plugin/documents/overview": {
@@ -683,7 +683,7 @@
   "expo": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "expo",
-    "packageName": "@nrwl/expo",
+    "packageName": "@nx/expo",
     "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
     "documents": {
       "/packages/expo/documents/overview": {
@@ -844,7 +844,7 @@
   "express": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "express",
-    "packageName": "@nrwl/express",
+    "packageName": "@nx/express",
     "description": "The Nx Plugin for Express contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
     "documents": {
       "/packages/express/documents/overview": {
@@ -887,7 +887,7 @@
   "jest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "jest",
-    "packageName": "@nrwl/jest",
+    "packageName": "@nx/jest",
     "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",
     "documents": {
       "/packages/jest/documents/overview": {
@@ -940,7 +940,7 @@
   "js": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "js",
-    "packageName": "@nrwl/js",
+    "packageName": "@nx/js",
     "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
     "documents": {
       "/packages/js/documents/overview": {
@@ -1020,7 +1020,7 @@
   "linter": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "linter",
-    "packageName": "@nrwl/linter",
+    "packageName": "@nx/linter",
     "description": "The Linter plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
     "documents": {
       "/packages/linter/documents/overview": {
@@ -1073,7 +1073,7 @@
   "nest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nest",
-    "packageName": "@nrwl/nest",
+    "packageName": "@nx/nest",
     "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
     "documents": {
       "/packages/nest/documents/overview": {
@@ -1269,7 +1269,7 @@
   "next": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "next",
-    "packageName": "@nrwl/next",
+    "packageName": "@nx/next",
     "description": "The Next.js plugin for Nx contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:\n\n\n- Scaffolding for creating, building, serving, linting, and testing Next.js applications.\n\n- Integration with building, serving, and exporting a Next.js application.\n\n- Integration with React libraries within the workspace. \n\nWhen using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.",
     "documents": {
       "/packages/next/documents/overview": {
@@ -1396,7 +1396,7 @@
   "node": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "node",
-    "packageName": "@nrwl/node",
+    "packageName": "@nx/node",
     "description": "The Node Plugin for Nx contains generators and executors to manage Node applications within an Nx workspace.",
     "documents": {
       "/packages/node/documents/overview": {
@@ -1772,7 +1772,7 @@
   "plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "plugin",
-    "packageName": "@nrwl/nx-plugin",
+    "packageName": "@nx/plugin",
     "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
     "documents": {
       "/packages/plugin/documents/overview": {
@@ -1879,7 +1879,7 @@
   "react": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "react",
-    "packageName": "@nrwl/react",
+    "packageName": "@nx/react",
     "description": "The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
     "documents": {
       "/packages/react/documents/overview": {
@@ -2067,7 +2067,7 @@
   "react-native": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "react-native",
-    "packageName": "@nrwl/react-native",
+    "packageName": "@nx/react-native",
     "description": "The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides: \n\n-Integration with libraries such as Jest, Detox, and Storybook.\n-Scaffolding for creating buildable libraries that can be published to npm.\n-Utilities for automatic workspace refactoring.",
     "documents": {
       "/packages/react-native/documents/overview": {
@@ -2255,7 +2255,7 @@
   "rollup": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "rollup",
-    "packageName": "@nrwl/rollup",
+    "packageName": "@nx/rollup",
     "description": "The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.",
     "documents": {},
     "root": "/packages/rollup",
@@ -2296,7 +2296,7 @@
   "storybook": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "storybook",
-    "packageName": "@nrwl/storybook",
+    "packageName": "@nx/storybook",
     "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
     "documents": {
       "/packages/storybook/documents/overview": {
@@ -2553,7 +2553,7 @@
   "vite": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "vite",
-    "packageName": "@nrwl/vite",
+    "packageName": "@nx/vite",
     "description": "The Nx Plugin for building and testing applications using Vite",
     "documents": {
       "/packages/vite/documents/overview": {
@@ -2653,7 +2653,7 @@
   "web": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "web",
-    "packageName": "@nrwl/web",
+    "packageName": "@nx/web",
     "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
     "documents": {
       "/packages/web/documents/overview": {
@@ -2715,7 +2715,7 @@
   "webpack": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "webpack",
-    "packageName": "@nrwl/webpack",
+    "packageName": "@nx/webpack",
     "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
     "documents": {
       "/packages/webpack/documents/overview": {
@@ -2808,7 +2808,7 @@
   "workspace": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "workspace",
-    "packageName": "@nrwl/workspace",
+    "packageName": "@nx/workspace",
     "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
     "documents": {
       "/packages/workspace/documents/overview": {

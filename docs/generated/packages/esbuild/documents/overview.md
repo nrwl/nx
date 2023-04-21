@@ -17,28 +17,36 @@ To add the esbuild plugin to an existing workspace, run the following:
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nrwl/esbuild
+npm install -D @nx/esbuild
 ```
 
 {% /tab %}
 {% tab label="yarn" %}
 
 ```shell
-yarn add -D @nrwl/esbuild
+yarn add -D @nx/esbuild
 ```
 
 {% /tab %}
 {% /tabs %}
+
+{% callout type="check" title="Rescope from @nrwl to @nx" %}
+
+For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
+
+[Read more about the rescope ≫](/recipes/other/rescope)
+
+{% /callout %}
 
 ### Creating a new JS library
 
 You can add a new library that builds using esbuild with:
 
 ```shell
-nx g @nrwl/js:lib mylib --bundler=esbuild
+nx g @nx/js:lib mylib --bundler=esbuild
 ```
 
-This command will install the esbuild plugin if needed, and set `@nrwl/esbuild:esbuild` executor for the `build` target.
+This command will install the esbuild plugin if needed, and set `@nx/esbuild:esbuild` executor for the `build` target.
 
 ### Adding esbuild target to existing libraries
 
@@ -70,7 +78,7 @@ Assets are non-JS and non-TS files, such as images, CSS, etc. You can add them t
 
 ```jsonc
 "build": {
- "executor": "@nrwl/esbuild:esbuild",
+ "executor": "@nx/esbuild:esbuild",
   "options": {
     //...
     "assets": [
@@ -120,7 +128,7 @@ Extra API options for esbuild can be passed in the `esbuildOptions` object for y
 
 ```jsonc
 "build": {
-  "executor": "@nrwl/esbuild:esbuild",
+  "executor": "@nx/esbuild:esbuild",
   "options": {
     //...
     "esbuildOptions": {

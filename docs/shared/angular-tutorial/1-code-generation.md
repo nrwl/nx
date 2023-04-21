@@ -46,16 +46,16 @@ Once the command completes, notice two projects were added to the workspace:
 - An Angular application located in `apps/store`.
 - A Project for Cypress e2e tests for our `store` application in `apps/store-e2e`.
 
-{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nrwl/cypress package page." url="/packages/cypress" /%}
+{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nx/cypress package page." url="/packages/cypress" /%}
 
 ## Adding Another Application to Your Workspace
 
 Run this command to create your `admin` app:
 
-```{% command="npx nx g @nrwl/angular:app admin" path="~/myorg" %}
-npx nx g @nrwl/angular:app admin
+```{% command="npx nx g @nx/angular:app admin" path="~/myorg" %}
+npx nx g @nx/angular:app admin
 
->  NX  Generating @nrwl/angular:application
+>  NX  Generating @nx/angular:application
 
 ✔ Would you like to configure routing for this application? (y/N) · false
 [NX] Angular devkit called `writeWorkspace`, this may have created 'workspace.json' or 'angular.json
@@ -95,11 +95,11 @@ CREATE apps/admin-e2e/.eslintrc.json
 
 ## Generating Libraries
 
-To create the `common-ui` and `products` libraries, use the `@nrwl/angular:lib` and `@nrwl/js:lib` generators respectively:
+To create the `common-ui` and `products` libraries, use the `@nx/angular:lib` and `@nx/js:lib` generators respectively:
 
-```{% command="npx nx g @nrwl/angular:lib common-ui" path="~/myorg" %}
+```{% command="npx nx g @nx/angular:lib common-ui" path="~/myorg" %}
 
->  NX  Generating @nrwl/angular:library
+>  NX  Generating @nx/angular:library
 
 [NX] Angular devkit called `writeWorkspace`, this may have created 'workspace.json' or 'angular.json
 [NX] Double check workspace configuration before proceeding
@@ -117,9 +117,9 @@ CREATE libs/common-ui/src/test-setup.ts
 CREATE libs/common-ui/.eslintrc.json
 ```
 
-```{% command="npx nx g @nrwl/js:lib products" path="~/myorg" %}
+```{% command="npx nx g @nx/js:lib products" path="~/myorg" %}
 
->  NX  Generating @nrwl/js:library
+>  NX  Generating @nx/js:library
 
 CREATE libs/products/README.md
 CREATE libs/products/package.json

@@ -17,16 +17,16 @@ Updating happens in three steps:
 First, run the `migrate` command:
 
 ```shell
-nx migrate latest # same as nx migrate @nrwl/workspace@latest
+nx migrate latest # same as nx migrate @nx/workspace@latest
 ```
 
 You can also specify the name of the package and the version:
 
 ```shell
-nx migrate @nrwl/workspace@version # you can also specify version
+nx migrate @nx/workspace@version # you can also specify version
 ```
 
-This fetches the specified version of the `@nrwl/workspace` package, analyzes the dependencies and fetches all the dependent packages. The process keeps going until all the dependencies are resolved. This results in:
+This fetches the specified version of the `@nx/workspace` package, analyzes the dependencies and fetches all the dependent packages. The process keeps going until all the dependencies are resolved. This results in:
 
 - The `package.json` being updated
 - A `migrations.json` being generated if there are pending migrations.

@@ -23,7 +23,7 @@ What we recommend instead is to split `angular.json` into multiple `project.json
 
 - Change the version number in `angular.json` to `2`
 - Run `nx format`
-- Run `nx generate @nrwl/workspace:convert-to-nx-project --all=true`
+- Run `nx generate @nx/workspace:convert-to-nx-project --all=true`
 
 {% callout type="check" title="Nx and AngularCLI are compatible" %}
 But regardless of whether you use `angular.json` or `project.json`, the configuration remains the same. So anything written about `project.json` applies to `angular.json` in the same way. For instance, everything in [project.json](/reference/project-configuration) and [nx.json](/reference/nx-json) applies to `angular.json` in the same way.

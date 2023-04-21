@@ -14,18 +14,26 @@ To add the React plugin to an existing workspace, run one of the following:
 
 ```shell
 # For npm users
-npm install -D @nrwl/react
+npm install -D @nx/react
 
 # For yarn users
-yarn add -D @nrwl/react
+yarn add -D @nx/react
 ```
+
+{% callout type="check" title="Rescope from @nrwl to @nx" %}
+
+For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
+
+[Read more about the rescope ≫](/recipes/other/rescope)
+
+{% /callout %}
 
 ### Creating Applications and Libraries
 
 You can add a new application with the following:
 
 ```shell
-nx g @nrwl/react:app my-new-app
+nx g @nx/react:app my-new-app
 ```
 
 To start the application in development mode, run `nx serve my-new-app`.
@@ -33,12 +41,12 @@ To start the application in development mode, run `nx serve my-new-app`.
 And add a new library as follows:
 
 ```shell
-nx g @nrwl/react:lib my-new-lib
+nx g @nx/react:lib my-new-lib
 
 # If you want the library to be buildable or publishable to npm
-nx g @nrwl/react:lib my-new-lib --bundler=vite
-nx g @nrwl/react:lib my-new-lib --bundler=rollup
-nx g @nrwl/react:lib my-new-lib \
+nx g @nx/react:lib my-new-lib --bundler=vite
+nx g @nx/react:lib my-new-lib --bundler=rollup
+nx g @nx/react:lib my-new-lib \
 --publishable \
 --importPath=@myorg/my-new-lib
 ```
@@ -50,12 +58,12 @@ Read more about [building and publishing libraries here](/more-concepts/buildabl
 Adding a component to an existing project can be done with:
 
 ```shell
-nx g @nrwl/react:component my-new-component \
+nx g @nx/react:component my-new-component \
 --project=my-new-app
 
 # Note: If you want to export the component
 # from the library use  --export
-nx g @nrwl/react:component my-new-component \
+nx g @nx/react:component my-new-component \
 --project=my-new-lib \
 --export
 ```
@@ -67,7 +75,7 @@ Replace `my-new-app` and `my-new-lib` with the name of your projects.
 If you want to add a new hook, run the following
 
 ```shell
-nx g @nrwl/react:hook my-new-hook --project=my-new-lib
+nx g @nx/react:hook my-new-hook --project=my-new-lib
 ```
 
 Replace `my-new-lib` with the name of your project.

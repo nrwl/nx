@@ -20,12 +20,20 @@ more [here](/recipes/adopting-nx/migration-angular).
 Adding the Angular plugin to an existing Nx workspace can be done with the following:
 
 ```shell
-yarn add -D @nrwl/angular
+yarn add -D @nx/angular
 ```
 
 ```shell
-npm install -D @nrwl/angular
+npm install -D @nx/angular
 ```
+
+{% callout type="check" title="Rescope from @nrwl to @nx" %}
+
+For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
+
+[Read more about the rescope ≫](/recipes/other/rescope)
+
+{% /callout %}
 
 ## Using the Angular Plugin
 
@@ -34,7 +42,7 @@ npm install -D @nrwl/angular
 It's straightforward to generate an Angular application:
 
 ```shell
-nx g @nrwl/angular:app appName
+nx g @nx/angular:app appName
 ```
 
 By default, the application will be generated with:
@@ -58,7 +66,7 @@ nx e2e appName
 Generating an Angular library is very similar to generating an application:
 
 ```shell
-nx g @nrwl/angular:lib libName
+nx g @nx/angular:lib libName
 ```
 
 By default, the library will be generated with:
@@ -81,12 +89,12 @@ Read more about:
 
 ### Fallback to `@schematics/angular`
 
-If you try to invoke a generator that is not present in `@nrwl/angular`, the request will automatically be forwarded on
-to `@schematics/angular`. So, even though there is no `@nrwl/angular:service` generator, the following command will
+If you try to invoke a generator that is not present in `@nx/angular`, the request will automatically be forwarded on
+to `@schematics/angular`. So, even though there is no `@nx/angular:service` generator, the following command will
 successfully create a service:
 
 ```shell
-nx g @nrwl/angular:service my-service
+nx g @nx/angular:service my-service
 ```
 
 ## More Documentation

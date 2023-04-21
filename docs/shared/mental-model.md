@@ -73,7 +73,7 @@ Let’s look at the test target relying on its dependencies.
 ```json
 {
   "test": {
-    "executor": "@nrwl/jest:jest",
+    "executor": "@nx/jest:jest",
     "outputs": ["{workspaceRoot}/coverage/apps/app1"],
     "dependsOn": ["^test"],
     "options": {

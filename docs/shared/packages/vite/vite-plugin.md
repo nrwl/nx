@@ -38,68 +38,76 @@ There is a number of ways to use Vite in your existing workspace.
 
 ### Generate a new project using Vite
 
-You can generate a [React](/packages/react) application or library or a [Web](/packages/web) application that uses Vite.js. The [`@nrwl/react:app`](/packages/react/generators/application), [`@nrwl/react:lib`](/packages/react/generators/library) and [`@nrwl/web:app`](/packages/web/generators/application) generators accept the `bundler` option, where you can pass `vite`. This will generate a new application configured to use Vite.js, and it will also install all the necessary dependencies, including the `@nrwl/vite` plugin.
+You can generate a [React](/packages/react) application or library or a [Web](/packages/web) application that uses Vite.js. The [`@nx/react:app`](/packages/react/generators/application), [`@nx/react:lib`](/packages/react/generators/library) and [`@nx/web:app`](/packages/web/generators/application) generators accept the `bundler` option, where you can pass `vite`. This will generate a new application configured to use Vite.js, and it will also install all the necessary dependencies, including the `@nx/vite` plugin.
 
 To generate a React application using Vite.js, run the following:
 
 ```bash
-nx g @nrwl/react:app my-app --bundler=vite
+nx g @nx/react:app my-app --bundler=vite
 ```
 
 To generate a React library using Vite.js, run the following:
 
 ```bash
-nx g @nrwl/react:lib my-lib --bundler=vite
+nx g @nx/react:lib my-lib --bundler=vite
 ```
 
 To generate a Web application using Vite.js, run the following:
 
 ```bash
-nx g @nrwl/web:app my-app --bundler=vite
+nx g @nx/web:app my-app --bundler=vite
 ```
 
 ### Modify an existing React or Web project to use Vite.js
 
-You can use the `@nrwl/vite:configuration` generator to change your React or Web project to use Vite.js. This generator will modify your project's configuration to use Vite.js, and it will also install all the necessary dependencies, including the `@nrwl/vite` plugin..
+You can use the `@nx/vite:configuration` generator to change your React or Web project to use Vite.js. This generator will modify your project's configuration to use Vite.js, and it will also install all the necessary dependencies, including the `@nx/vite` plugin..
 
-You can read more about this generator on the [`@nrwl/vite:configuration`](/packages/vite/generators/configuration) generator page.
+You can read more about this generator on the [`@nx/vite:configuration`](/packages/vite/generators/configuration) generator page.
 
 ### Initialize Vite.js
 
 If you do not want to create any new projects or convert any existing projects yet, you can still use Nx to install all the necessary dependencies for Vite.js. This, for example, could be useful if you want to set up Vite.js manually for a project.
 
-#### Install the `@nrwl/vite` plugin
+#### Install the `@nx/vite` plugin
 
 {% tabs %}
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nrwl/vite
+npm install -D @nx/vite
 ```
 
 {% /tab %}
 {% tab label="yarn" %}
 
 ```shell
-yarn add -D @nrwl/vite
+yarn add -D @nx/vite
 ```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nrwl/vite
+pnpm install -D @nx/vite
 ```
 
 {% /tab %}
 {% /tabs %}
+
+{% callout type="check" title="Rescope from @nrwl to @nx" %}
+
+For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
+
+[Read more about the rescope ≫](/recipes/other/rescope)
+
+{% /callout %}
 
 #### Ask Nx to install the necessary dependencies
 
 After you install the plugin, you can initialize Vite.js. You can do this by running the `init` executor. This executor will make sure to install all the necessary dependencies.
 
 ```bash
-nx g @nrwl/vite:init
+nx g @nx/vite:init
 ```
 
 {% callout type="note" title="Choosing a framework" %}

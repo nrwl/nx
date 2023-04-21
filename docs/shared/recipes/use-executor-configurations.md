@@ -5,7 +5,7 @@ The `configurations` property provides extra sets of values that will be merged 
 ```json {% fileName="project.json" %}
 {
   "build": {
-    "executor": "@nrwl/js:tsc",
+    "executor": "@nx/js:tsc",
     "outputs": ["{workspaceRoot}/dist/libs/mylib"],
     "dependsOn": ["^build"],
     "options": {
@@ -27,7 +27,7 @@ or `nx run mylib:build:production`.
 The following code snippet shows how the executor options get constructed:
 
 ```javascript
-require(`@nrwl/jest`).executors['jest']({
+require(`@nx/jest`).executors['jest']({
   ...options,
   ...selectedConfiguration,
   ...commandLineArgs,
@@ -45,7 +45,7 @@ For example, running e2e tests for multiple environments. By default it would ma
 ```json {% fileName="project.json" %}
 {
   "e2e": {
-    "executor": "@nrwl/cypress:cypress",
+    "executor": "@nx/cypress:cypress",
     "options": {
       "cypressConfig": "apps/my-app-e2e/cypress.config.ts"
     },

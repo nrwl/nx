@@ -13,7 +13,7 @@ Nx comes with a devkit to write generators and executors, but you can also use A
 The following is a generator written using Nx Devkit:
 
 ```typescript
-import { Tree, formatFiles, generateFiles } from '@nrwl/devkit';
+import { Tree, formatFiles, generateFiles } from '@nx/devkit';
 import * as path from 'path';
 
 interface Schema {
@@ -47,8 +47,8 @@ import {
   url,
   move,
 } from '@angular-devkit/schematics';
-import { formatFiles } from '@nrwl/workspace';
-import { toFileName } from '@nrwl/workspace';
+import { formatFiles } from '@nx/workspace';
+import { toFileName } from '@nx/workspace';
 
 interface Schema {
   name: string;
@@ -110,7 +110,7 @@ Then, you might need to register it in the `collections.json`:
 {
   "name": "Nx React",
   "version": "0.1",
-  "extends": ["@nrwl/workspace"],
+  "extends": ["@nx/workspace"],
   "schematics": {
     "mygenerator": {
       "factory": "./src/generators/mygenerator/mygenerator#mygeneratorSchematic",

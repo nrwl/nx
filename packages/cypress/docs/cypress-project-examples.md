@@ -13,7 +13,7 @@ nx g cypress-project --name=my-app-e2e --base-url=http://localhost:1234
 ```
 
 {% callout type="note" title="What about API Projects?" %}
-You can also run the `cypress-project` generator against API projects like a [Nest API](/packages/nest/generators/application#@nrwl/nest:application).
+You can also run the `cypress-project` generator against API projects like a [Nest API](/packages/nest/generators/application#@nx/nest:application).
 If there is a URL to visit then you can test it with Cypress!
 {% /callout %}
 
@@ -33,7 +33,7 @@ The `nxE2EPreset` will then use the `bundler` information to generate the correc
 
 ```ts
 import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 const config = nxE2EPreset(__filename, { bundler: 'vite' });
 export default defineConfig({

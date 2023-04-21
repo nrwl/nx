@@ -32,7 +32,7 @@ If you **don't** have an existing plugin you can create one by running
 To create our preset inside of our plugin we can run
 
 ```shell
-  nx generate @nrwl/nx-plugin:generator --name=preset --project=happynrwl
+  nx generate @nx/nx-plugin:generator --name=preset --project=happynrwl
 ```
 
 {% callout type="warning" title="Double check" %}

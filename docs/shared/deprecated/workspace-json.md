@@ -14,7 +14,7 @@ The target configuration for each project is now stored in individual `project.j
 To remove `workspace.json` in favor of `project.json` files, run:
 
 ```shell
-nx g @nrwl/workspace:fix-configuration
+nx g @nx/workspace:fix-configuration
 ```
 
 See [fix-configuration](/packages/workspace/generators/fix-configuration) for more options.

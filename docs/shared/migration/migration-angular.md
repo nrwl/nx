@@ -14,7 +14,7 @@ This command will install the correct version of Nx based on your Angular versio
 
 This will enable you to use the Nx CLI in your existing Angular CLI workspace while keeping your existing file structure in place. The following changes will be made in your repo to enable Nx:
 
-- The `nx`, `@nrwl/workspace` and `prettier` packages will be installed.
+- The `nx`, `@nx/workspace` and `prettier` packages will be installed.
 - An `nx.json` file will be created in the root of your workspace.
 - For an Angular 14+ repo, the `angular.json` file is split into separate `project.json` files for each project.
 
@@ -49,9 +49,9 @@ When you click this button, we’ll run the `nx init` command to set up the Nx C
 
 The script will make the following changes:
 
-- Installs the `@nrwl/workspace` and `nx` packages.
+- Installs the `@nx/workspace` and `nx` packages.
   - If you opted into Nx Cloud, `nx-cloud` will be installed as well.
-  - If your project's Angular version is greater than or equal to version 13, then the `@nrwl/angular` package will be installed as well.
+  - If your project's Angular version is greater than or equal to version 13, then the `@nx/angular` package will be installed as well.
 - Creates an `nx.json` file in the root of your workspace.
 
 By running this command and accepting Nx Cloud, Nx distributed caching is now enabled.

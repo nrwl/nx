@@ -6,10 +6,10 @@ For more in-depth look on this topic, be sure to check out our blog post on [Set
 
 ## Automated Setup
 
-The easiest way to set up Tailwind is using the `@nrwl/react:setup-tailwind` generator.
+The easiest way to set up Tailwind is using the `@nx/react:setup-tailwind` generator.
 
 ```shell
-nx g @nrwl/react:setup-tailwind --project=<your app here>
+nx g @nx/react:setup-tailwind --project=<your app here>
 ```
 
 This generator will install the necessary dependencies and add `postcss.config.js` and `tailwind.config.js` files.
@@ -78,7 +78,7 @@ Nx has a utility function that can be used to construct the glob representation 
 The function receives a directory path that is used to identify the project for which the dependencies are going to be identified (therefore it needs to be a directory path within a project). It can also receive an optional glob pattern to append to each dependency source root path to conform the final glob pattern. If the glob pattern is not provided, it will default to `/**/!(*.stories|*.spec).{ts,html}`.
 
 ```javascript {% fileName="apps/app1/tailwind.config.js" %}
-const { createGlobPatternsForDependencies } = require('@nrwl/react/tailwind');
+const { createGlobPatternsForDependencies } = require('@nx/react/tailwind');
 const { join } = require('path');
 
 module.exports = {
@@ -126,7 +126,7 @@ Open up the `apps/{your app here}/project.json` file and add the following to th
   // ...
   "targets": {
     "build": {
-      "executor": "@nrwl/webpack:webpack",
+      "executor": "@nx/web:webpack",
       "options": {
         // ...
         "postcssConfig": "apps/{your app here}/postcss.config.js"

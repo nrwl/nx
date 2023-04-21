@@ -36,27 +36,27 @@ For existing projects, see the next section, otherwise you can skip to [deployme
 
 If you have an existing Node.js server project, you can add the same deployment capabilities as we've just covered. Firstly, if the project is not an Nx project you can initialize it as such by running the `npx nx init` command in your project. Next, we can add the `build` and `docker-build` targets by invoking a couple of generators.
 
-You will need to install `@nrwl/node` and `@nrwl/esbuild` if you haven't already.
+You will need to install `@nx/node` and `@nx/esbuild` if you haven't already.
 
 {% tabs %}
 {% tab label="npm" %}
 
 ```bash
-npm i -D @nrwl/node @nrwl/esbuild
+npm i -D @nx/node @nx/esbuild
 ```
 
 {% /tab %}
 {% tab label="yarn" %}
 
 ```bash
-yarn add -D @nrwl/node @nrwl/esbuild
+yarn add -D @nx/node @nx/esbuild
 ```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
 ```bash
-pnpm add -D @nrwl/node @nrwl/esbuild
+pnpm add -D @nx/node @nx/esbuild
 ```
 
 {% /tab %}
@@ -67,17 +67,17 @@ Now, set up the build and Docker targets with these commands. You will be prompt
 ```bash
 # Add build target
 # You can skip this step if your project already has a build target.
-nx g @nrwl/esbuild:esbuild-project --skipValidation
+nx g @nx/esbuild:esbuild-project --skipValidation
 
 # Add Dockerfile
-nx g @nrwl/node:setup-docker
+nx g @nx/node:setup-docker
 ```
 
 You are now ready to deploy the project.
 
 ## Deploying the server to Fly.io
 
-Recall that a `Dockerfile` has been created for our project. If you missed the Docker setup, you can always run the `nx g @nrwl/node:setup-docker` command to generate the `Dockerfile`.
+Recall that a `Dockerfile` has been created for our project. If you missed the Docker setup, you can always run the `nx g @nx/node:setup-docker` command to generate the `Dockerfile`.
 
 Now, all we need to do is set up Fly.io and deploy! If you haven't used Fly.io before, you need to install the CLI and create an account. It'll only take a couple of minutes.
 

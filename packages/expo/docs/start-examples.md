@@ -7,7 +7,7 @@
   "targets": {
     //...
     "start": {
-      "executor": "@nrwl/expo:start",
+      "executor": "@nx/expo:start",
       "options": {
         "port": 8081
       }
@@ -31,7 +31,7 @@ Opens your app in Expo Go in a currently running iOS simulator on your computer:
 
 ```json
     "start": {
-      "executor": "@nrwl/expo:start",
+      "executor": "@nx/expo:start",
       "options": {
         "port": 8081,
         "ios": true
@@ -43,7 +43,7 @@ Opens your app in Expo Go on a connected Android device
 
 ```json
     "start": {
-      "executor": "@nrwl/expo:start",
+      "executor": "@nx/expo:start",
       "options": {
         "port": 8081,
         "android": true
@@ -55,7 +55,7 @@ Opens your app in a web browser:
 
 ```json
     "start": {
-      "executor": "@nrwl/expo:start",
+      "executor": "@nx/expo:start",
       "options": {
         "port": 8081,
         "web": true
@@ -69,7 +69,7 @@ The `host` option allows you to specify the type of host to use. `lan` uses the 
 
 ```json
     "start": {
-      "executor": "@nrwl/expo:start",
+      "executor": "@nx/expo:start",
       "options": {
         "port": 8081,
         "host": "localhost"
@@ -84,7 +84,7 @@ The `clear` option allows you to remove Metro bundler cache.
 
 ```json
     "start": {
-      "executor": "@nrwl/expo:start",
+      "executor": "@nx/expo:start",
       "options": {
         "port": 8081,
         "clear": true

@@ -28,31 +28,39 @@ npx create-nx-workspace your-workspace-name
 
 ### Adding React Native to an Existing Workspace
 
-For existing Nx workspaces, install the `@nrwl/react-native` package to add React Native capabilities to it.
+For existing Nx workspaces, install the `@nx/react-native` package to add React Native capabilities to it.
 
 {% tabs %}
 {%tab label="npm"%}
 
 ```shell
-npm i --save-dev @nrwl/react-native
+npm i --save-dev @nx/react-native
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nrwl/react-native
+yarn add --dev @nx/react-native
 ```
 
 {% /tab %}
 {% /tabs %}
+
+{% callout type="check" title="Rescope from @nrwl to @nx" %}
+
+For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
+
+[Read more about the rescope ≫](/recipes/other/rescope)
+
+{% /callout %}
 
 ### Generating Applications
 
 To create additional React Native apps run:
 
 ```shell
-nx g @nrwl/react-native:app <your-app-name>
+nx g @nx/react-native:app <your-app-name>
 ```
 
 ### Generating Libraries
@@ -60,7 +68,7 @@ nx g @nrwl/react-native:app <your-app-name>
 To generate a new library run:
 
 ```shell
-nx g @nrwl/react-native:lib your-lib-name
+nx g @nx/react-native:lib your-lib-name
 ```
 
 ### Generating Components
@@ -68,7 +76,7 @@ nx g @nrwl/react-native:lib your-lib-name
 To generate a new component inside library run:
 
 ```shell
-nx g @nrwl/react-native:component your-component-name --project=your-lib-name --export
+nx g @nx/react-native:component your-component-name --project=your-lib-name --export
 ```
 
 Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`
@@ -82,7 +90,7 @@ The Nx CLI provides the [`migrate` command](/core-features/automate-updating-dep
 To upgrade native iOS and Android code to latest, you can use the [upgrade-native](/packages/react-native/generators/upgrade-native) generator:
 
 ```shell
-nx generate @nrwl/react-native:upgrade-native <your-app-name>
+nx generate @nx/react-native:upgrade-native <your-app-name>
 ```
 
 This is a command that will replace the iOS and Android native code folder entirely.

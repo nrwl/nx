@@ -9,13 +9,13 @@ The `run` command allows you to compile your app locally.
   "targets": {
     //...
     "run-ios": {
-      "executor": "@nrwl/expo:run",
+      "executor": "@nx/expo:run",
       "options": {
         "platform": "ios"
       }
     },
     "run-android": {
-      "executor": "@nrwl/expo:run",
+      "executor": "@nx/expo:run",
       "options": {
         "platform": "android"
       }
@@ -38,7 +38,7 @@ The `variant` option allows you to specify the compile Android app with variants
 
 ```json
     "run-android": {
-      "executor": "@nrwl/expo:run",
+      "executor": "@nx/expo:run",
       "options": {
         "platform": "android",
         "variant": "release"
@@ -53,7 +53,7 @@ The `xcodeConfiguration` option allows you to specify Xcode configuration to use
 
 ```json
     "run-ios": {
-      "executor": "@nrwl/expo:run",
+      "executor": "@nx/expo:run",
       "options": {
         "platform": "ios",
         "xcodeConfiguration": "Release"
@@ -70,14 +70,14 @@ To see all your Android emulators, run: `emulator -list-avds`.
 
 ```json
     "run-ios": {
-      "executor": "@nrwl/expo:run",
+      "executor": "@nx/expo:run",
       "options": {
         "platform": "ios",
         "device": "iPhone 14"
       }
     },
     "run-android": {
-      "executor": "@nrwl/expo:run",
+      "executor": "@nx/expo:run",
       "options": {
         "platform": "android",
         "device": "Pixel_XL_API_Tiramisu"

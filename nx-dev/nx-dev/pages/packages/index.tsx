@@ -106,6 +106,15 @@ export default function Packages({
                 <div data-document="main">
                   <Heading1 title={'Official Packages Reference'} />
 
+                  <section id="packages-section" className="py-1">
+                    <p>
+                      For version 16 and up, use <code>@nx/package-name</code>{' '}
+                      rather than <code>@nrwl/package-name</code>.{' '}
+                      <a href="/recipes/other/rescope" className="underline">
+                        Read more about the rescope ≫
+                      </a>
+                    </p>
+                  </section>
                   <section id="packages-section" className="py-12">
                     <nav
                       aria-labelledby="package-index-navigation"

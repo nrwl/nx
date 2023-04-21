@@ -52,7 +52,7 @@ Your Storybook targets in your `project.json` will look like this:
 
 ```jsonc {% fileName="project.json" %}
     "storybook": {
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
          ...
         "projectBuildConfig": "my-project:build-storybook"
@@ -60,7 +60,7 @@ Your Storybook targets in your `project.json` will look like this:
       ...
     },
     "build-storybook": {
-      "executor": "@nrwl/storybook:build",
+      "executor": "@nx/storybook:build",
        ...
       "options": {
          ...

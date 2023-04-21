@@ -9,7 +9,7 @@ The `build-list` command allows to check the details of your Expo Application Se
   "targets": {
     //...
     "build-list": {
-      "executor": "@nrwl/expo:build-list",
+      "executor": "@nx/expo:build-list",
       "options": {}
     }
     //...
@@ -29,7 +29,7 @@ The `platform` option allows you to check build status of different platform (e.
 
 ```json
     "build-list": {
-      "executor": "@nrwl/expo:build-list",
+      "executor": "@nx/expo:build-list",
       "options": {
         "platform": "ios"
       }
@@ -43,7 +43,7 @@ The `interactive` option allows you to specify whether to use interactive mode:
 
 ```json
     "build-list": {
-      "executor": "@nrwl/expo:build-list",
+      "executor": "@nx/expo:build-list",
       "options": {
         "interactive": true
       }
@@ -57,7 +57,7 @@ The `json` option allows you to print the output in JSON format:
 
 ```json
     "build-list": {
-      "executor": "@nrwl/expo:build-list",
+      "executor": "@nx/expo:build-list",
       "options": {
         "interactive": false,
         "json": true

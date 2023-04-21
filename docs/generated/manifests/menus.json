@@ -3049,6 +3049,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Rescope Packages from @nrwl to @nx",
+            "path": "/recipes/other/rescope",
+            "id": "rescope",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Standalone NgRx APIs",
             "path": "/recipes/other/standalone-ngrx-apis",
             "id": "standalone-ngrx-apis",
@@ -3303,6 +3311,14 @@
         "name": "Identify Dependencies Between Folders",
         "path": "/recipes/other/identify-dependencies-between-folders",
         "id": "identify-dependencies-between-folders",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Rescope Packages from @nrwl to @nx",
+        "path": "/recipes/other/rescope",
+        "id": "rescope",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

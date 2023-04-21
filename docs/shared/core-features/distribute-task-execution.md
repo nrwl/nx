@@ -43,7 +43,7 @@ This command installs the latest version of `nx-cloud`. The latest version works
 If you have a new workspace, you can generate the CI configuration as follows:
 
 ```shell title="2. Enable DTE in CI"
-nx generate @nrwl/workspace:ci-workflow --ci=github
+nx generate @nx/workspace:ci-workflow --ci=github
 ```
 
 The `--ci` flag can be `github`, `circleci` or `azure`.

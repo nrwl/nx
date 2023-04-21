@@ -16,17 +16,17 @@ Let’s see how we can implement this solution:
 According to the framework you are using, use the corresponding generator to generate a new library. Let’s suppose that you are using React and all your stories are using `@storybook/react`:
 
 ```shell
-nx g @nrwl/react:library storybook-host
+nx g @nx/react:library storybook-host
 ```
 
 Now, you have a new library, which will act as a shell/host for all your stories.
 
 ### Configure the new library to use Storybook
 
-Now let’s configure our new library to use Storybook, using the [`@nrwl/storybook:configuration` generator](/packages/storybook/generators/configuration). Run:
+Now let’s configure our new library to use Storybook, using the [`@nx/storybook:configuration` generator](/packages/storybook/generators/configuration). Run:
 
 ```shell
-nx g @nrwl/storybook:configuration storybook-host
+nx g @nx/storybook:configuration storybook-host
 ```
 
 and choose the framework you want to use (in our case, choose `@storybook/react`).
@@ -43,7 +43,7 @@ Here is a sample `libs/storybook-host/.storybook/main.js` file:
 module.exports = {
   core: { builder: 'webpack5' },
   stories: ['../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
 };
 ```
 

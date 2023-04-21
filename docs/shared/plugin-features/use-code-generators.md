@@ -16,7 +16,7 @@ Generators allow you to create or modify your codebase in a simple and repeatabl
 
 ```shell
 nx generate [plugin]:[generator-name] [options]
-nx generate @nrwl/react:component mycmp --project=myapp
+nx generate @nx/react:component mycmp --project=myapp
 ```
 
 It is important to have a clean git working directory before invoking a generator so that you can easily revert changes and re-invoke the generator with different inputs.

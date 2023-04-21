@@ -2,7 +2,7 @@
 
 ## For React applications using Vite
 
-In React applications using Vite (e.g. those using `@nrwl/vite:*` executors), Nx includes the following variables in the build process:
+In React applications using Vite (e.g. those using `@nx/vite:*` executors), Nx includes the following variables in the build process:
 
 - `NODE_ENV`
 - Variables prefixed with `VITE_`, such as `VITE_CUSTOM_VAR`
@@ -17,7 +17,7 @@ You cannot interpolate environment variables into your `index.html` file for Rea
 
 ## For non-Vite React applications
 
-In React applications (e.g. those using `@nrwl/webpack:webpack` or `@nrwl/next:build` executors for `build` target), Nx
+In React applications (e.g. those using `@nx/web:webpack` or `@nx/next:build` executors for `build` target), Nx
 includes the following variables in the build process:
 
 - `NODE_ENV`

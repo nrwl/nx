@@ -24,19 +24,27 @@ yarn create nx-workspace my-workspace --preset=nest
 To add the Nest plugin to an existing workspace, run one the following commands:
 
 ```shell
-npm install -D @nrwl/nest
+npm install -D @nx/nest
 ```
 
 ```shell
-yarn add -D @nrwl/nest
+yarn add -D @nx/nest
 ```
+
+{% callout type="check" title="Rescope from @nrwl to @nx" %}
+
+For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
+
+[Read more about the rescope ≫](/recipes/other/rescope)
+
+{% /callout %}
 
 ### Create Applications
 
 You can add a new Nest application with the following command:
 
 ```shell
-nx g @nrwl/nest:app my-nest-app
+nx g @nx/nest:app my-nest-app
 ```
 
 #### Application Proxies
@@ -44,7 +52,7 @@ nx g @nrwl/nest:app my-nest-app
 Generating Nest applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
 ```shell
-nx g @nrwl/nest:app my-nest-app --frontendProject my-angular-app
+nx g @nx/nest:app my-nest-app --frontendProject my-angular-app
 ```
 
 ### Create Libraries
@@ -52,19 +60,19 @@ nx g @nrwl/nest:app my-nest-app --frontendProject my-angular-app
 You can add a new Nest library with the following command:
 
 ```shell
-nx g @nrwl/nest:lib my-nest-lib
+nx g @nx/nest:lib my-nest-lib
 ```
 
 To make the library `buildable`, use the following command:
 
 ```shell
-nx g @nrwl/nest:lib my-nest-lib --buildable
+nx g @nx/nest:lib my-nest-lib --buildable
 ```
 
 To make the library `publishable`, use the following command:
 
 ```shell
-nx g @nrwl/nest:lib my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
+nx g @nx/nest:lib my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
 ```
 
 > Read more about [building and publishing libraries here](/more-concepts/buildable-and-publishable-libraries).

@@ -40,8 +40,8 @@ import {
   generateFiles,
   joinPathFragments,
   readProjectConfiguration,
-} from '@nrwl/devkit';
-import { libraryGenerator } from '@nrwl/js';
+} from '@nx/devkit';
+import { libraryGenerator } from '@nx/js';
 
 export default async function (tree: Tree, schema: any) {
   await libraryGenerator(tree, { name: schema.name });

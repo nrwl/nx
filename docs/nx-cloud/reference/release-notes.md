@@ -1,4 +1,12 @@
-# `@nrwl/nx-cloud` - Release notes
+# `@nx/nx-cloud` - Release notes
+
+{% callout type="check" title="Rescope from @nrwl to @nx" %}
+
+For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
+
+[Read more about the rescope ≫](/recipes/other/rescope)
+
+{% /callout %}
 
 ## 14.3.0
 
@@ -12,7 +20,7 @@
 
 ## 14.1.2
 
-- Fix: Provider nicer failure message when version of Nx is incompatible with `@nrwl/nx-cloud`
+- Fix: Provider nicer failure message when version of Nx is incompatible with `@nx/nx-cloud`
 - Fix: Use Nx task graph if provided
 
 ## 14.1.1
@@ -28,7 +36,7 @@
 ## 14.0.5
 
 - Fix: Workspace name for new Nx Cloud workspaces is pulled from `package.json` instead of `nx.json`
-- Fix: `@nrwl/nx-cloud` can be run from directories other than workspace root
+- Fix: `@nx/nx-cloud` can be run from directories other than workspace root
 - Fix: Correctly infer `NX_BRANCH` and `NX_RUN_GROUP` from Jenkins
 - Fix: Ignore errors related to excess whitespace in tarballs
 
@@ -38,7 +46,7 @@
 
 ## 14.0.2
 
-- Fix: Remove dependency on `@nrwl/devkit` for init generator
+- Fix: Remove dependency on `@nx/devkit` for init generator
 
 ## 14.0.1
 

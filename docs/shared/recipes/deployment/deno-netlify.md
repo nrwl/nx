@@ -7,7 +7,7 @@ In this guide, we'll show you how to deploy Deno serverless functions using [Net
 You can create a new Deno project with a single command.
 
 ```shell
-npx create-nx-workspace@latest denoapp --preset=@nrwl/deno
+npx create-nx-workspace@latest denoapp --preset=@nx/deno
 ```
 
 Once the command is finished, you can `cd` into the workspace.
@@ -24,27 +24,27 @@ For existing projects, see the next section, otherwise you can skip to [deployme
 
 **Skip this step if you are not configuring an existing project.**
 
-For existing workspaces, you will need to install the `@nrwl/deno` package.
+For existing workspaces, you will need to install the `@nx/deno` package.
 
 {% tabs %}
 {% tab label="npm" %}
 
 ```shell
-npm i -D @nrwl/deno
+npm i -D @nx/deno
 ```
 
 {% /tab %}
 {% tab label="yarn" %}
 
 ```shell
-yarn add -D @nrwl/deno
+yarn add -D @nx/deno
 ```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
 ```shell
-pnpm add -D @nrwl/deno
+pnpm add -D @nx/deno
 ```
 
 {% /tab %}
@@ -53,7 +53,7 @@ pnpm add -D @nrwl/deno
 Now, you can generate a Deno project.
 
 ```shell
-nx g @nrwl/deno:app denoapp
+nx g @nx/deno:app denoapp
 ```
 
 You are now ready to deploy the project.
@@ -63,7 +63,7 @@ You are now ready to deploy the project.
 First, you'll need to run the generator to set up your project.
 
 ```shell
-nx g @nrwl/deno:setup-serverless --platform=netlify
+nx g @nx/deno:setup-serverless --platform=netlify
 ```
 
 This will add a `netlify.toml` file and install the `netlify-cli` package. You can deploy your app with the following command.

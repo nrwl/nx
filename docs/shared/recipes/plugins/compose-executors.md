@@ -20,7 +20,7 @@ This only works when you know what executor you want to invoke. Sometimes, howev
 ```json {% fileName="project.json" %}
 {
   "e2e": {
-    "builder": "@nrwl/cypress:cypress",
+    "builder": "@nx/cypress:cypress",
     "options": {
       "cypressConfig": "apps/myapp-e2e/cypress.json",
       "tsConfig": "apps/myapp-e2e/tsconfig.e2e.json",

@@ -8,14 +8,14 @@ directly to a project, like [Jest](/packages/jest)
 
 ## Add Component Testing to a Project
 
-> Currently only [@nrwl/react](/packages/react/generators/cypress-component-configuration) and [@nrwl/angular](/packages/angular/generators/cypress-component-configuration) plugins support component testing
+> Currently only [@nx/react](/packages/react/generators/cypress-component-configuration) and [@nx/angular](/packages/angular/generators/cypress-component-configuration) plugins support component testing
 
 Use the `cypress-component-configuration` generator from the respective plugin to add component testing to a project.
 
 ```shell
-nx g @nrwl/react:cypress-component-configuration --project=your-project
+nx g @nx/react:cypress-component-configuration --project=your-project
 
-nx g @nrwl/angular:cypress-component-configuration --project=your-project
+nx g @nx/angular:cypress-component-configuration --project=your-project
 ```
 
 You can optionally pass in `--generate-tests` to create component tests for all components within the library.
@@ -23,15 +23,15 @@ You can optionally pass in `--generate-tests` to create component tests for all 
 Component testing supports both applications and libraries. By default, the generator attempts to find the build target for you based on the project's dependent apps. But you can manually specify the build target to use via the `--build-target` option. Note, in most cases, the build target will be from a different project than the one being configured. The only case where the build targets are from the same project is when the component tests are being added to an application.
 
 ```shell
-nx g @nrwl/react:cypress-component-configuration --project=your-project --build-target=my-react-app:build
+nx g @nx/react:cypress-component-configuration --project=your-project --build-target=my-react-app:build
 
-nx g @nrwl/angular:cypress-component-configuration --project=your-project --build-target=my-ng-app:build
+nx g @nx/angular:cypress-component-configuration --project=your-project --build-target=my-ng-app:build
 ```
 
 The build target option can be changed later via updating the `devServerTarget` option in the `component-test` target.
 
 {% callout type="warning" title="Executor Options" %}
-When using component testing make sure to set `skipServe: true` in the component test target options, otherwise `@nrwl/cypress` will attempt to run the build first which can slow down your component tests. `skipServe: true` is automatically set when using the `cypress-component-configuration` generator.
+When using component testing make sure to set `skipServe: true` in the component test target options, otherwise `@nx/cypress` will attempt to run the build first which can slow down your component tests. `skipServe: true` is automatically set when using the `cypress-component-configuration` generator.
 {% /callout %}
 
 ## Testing Projects

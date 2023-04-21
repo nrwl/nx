@@ -2,7 +2,7 @@
 title: 'migrate - CLI command'
 description:
   'Creates a migrations file or runs migrations from the migrations file.
-  - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
+  - Migrate packages and create migrations.json (e.g., nx migrate @nx/workspace@latest)
   - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.'
 ---
 
@@ -10,7 +10,7 @@ description:
 
 Creates a migrations file or runs migrations from the migrations file.
 
-- Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
+- Migrate packages and create migrations.json (e.g., nx migrate @nx/workspace@latest)
 - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.
 
 ## Usage
@@ -35,16 +35,16 @@ Update all Nx plugins to "9.0.0". This will generate migrations.json:
  nx migrate 9.0.0
 ```
 
-Update @nrwl/workspace and generate the list of migrations starting with version 8.0.0 of @nrwl/workspace and @nrwl/node, regardless of what is installed locally:
+Update @nx/workspace and generate the list of migrations starting with version 8.0.0 of @nx/workspace and @nx/node, regardless of what is installed locally:
 
 ```shell
- nx migrate @nrwl/workspace@9.0.0 --from="@nrwl/workspace@8.0.0,@nrwl/node@8.0.0"
+ nx migrate @nx/workspace@9.0.0 --from="@nx/workspace@8.0.0,@nx/node@8.0.0"
 ```
 
-Update @nrwl/workspace to "9.0.0". If it tries to update @nrwl/react or @nrwl/angular, use version "9.0.1":
+Update @nx/workspace to "9.0.0". If it tries to update @nx/react or @nx/angular, use version "9.0.1":
 
 ```shell
- nx migrate @nrwl/workspace@9.0.0 --to="@nrwl/react@9.0.1,@nrwl/angular@9.0.1"
+ nx migrate @nx/workspace@9.0.0 --to="@nx/react@9.0.1,@nx/angular@9.0.1"
 ```
 
 Update another-package to "12.0.0". This will update other packages and will generate migrations.json file:
@@ -107,7 +107,7 @@ Exclude migrations that should have been applied on previous updates. To be used
 
 Type: `string`
 
-Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nrwl/react@12.0.0,@nrwl/js@12.0.0")
+Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nx/react@12.0.0,@nx/js@12.0.0")
 
 ### help
 
@@ -135,7 +135,7 @@ Enable prompts to confirm whether to collect optional package updates and migrat
 
 Type: `string`
 
-The target package and version (e.g, @nrwl/workspace@13.0.0)
+The target package and version (e.g, @nx/workspace@13.0.0)
 
 ### runMigrations
 
@@ -147,7 +147,7 @@ Execute migrations from a file (when the file isn't provided, execute migrations
 
 Type: `string`
 
-Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nrwl/react@12.0.0,@nrwl/js@12.0.0")
+Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nx/react@12.0.0,@nx/js@12.0.0")
 
 ### version
 

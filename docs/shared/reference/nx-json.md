@@ -34,7 +34,7 @@ The following is an expanded version showing all options. Your `nx.json` will li
     }
   },
   "generators": {
-    "@nrwl/js:library": {
+    "@nx/js:library": {
       "buildable": true
     }
   },
@@ -166,7 +166,7 @@ When defining any options or configurations inside of a target default, you may 
 ```json {% fileName="nx.json" %}
 {
   "targetDefaults": {
-    "@nrwl/js:tsc": {
+    "@nx/js:tsc": {
       "options": {
         "main": "{projectRoot}/src/index.ts"
       },
@@ -187,7 +187,7 @@ When defining any options or configurations inside of a target default, you may 
 ```
 
 {% callout type="note" title="Target Default Priority" %}
-Note that the inputs and outputs are respecified on the @nrwl/js:tsc default configuration. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nrwl/js:tsc]` if the target configuration for build uses the @nrwl/js:tsc executor. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
+Note that the inputs and outputs are respecified on the @nx/js:tsc default configuration. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for build uses the @nx/js:tsc executor. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
 {% /callout %}
 
 ### Generators
@@ -198,7 +198,7 @@ pass `--buildable=true` when creating new libraries.
 ```json {% fileName="nx.json" %}
 {
   "generators": {
-    "@nrwl/js:library": {
+    "@nx/js:library": {
       "buildable": true
     }
   }

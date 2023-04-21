@@ -1300,6 +1300,12 @@
               "file": "shared/recipes/identify-dependencies-between-folders"
             },
             {
+              "name": "Rescope Packages from @nrwl to @nx",
+              "id": "rescope",
+              "tags": [],
+              "file": "shared/recipes/rescope"
+            },
+            {
               "name": "Standalone NgRx APIs",
               "id": "standalone-ngrx-apis",
               "tags": [],

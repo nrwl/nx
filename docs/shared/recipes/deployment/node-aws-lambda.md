@@ -8,34 +8,34 @@ For new workspaces you can create a Nx workspace with AWS lambda functions with 
 
 ```shell
 npx create-nx-workspace@latest my-functions \
---preset=@nrwl/aws-lambda \
+--preset=@nx/aws-lambda \
 ```
 
 ## Configuring existing projects
 
 **Skip this step if you are not configuring an existing project.**
 
-You will need to install `@nrwl/aws-lambda` if you haven't already.
+You will need to install `@nx/aws-lambda` if you haven't already.
 
 {% tabs %}
 {% tab label="npm" %}
 
 ```shell
-npm i -D @nrwl/aws-lambda
+npm i -D @nx/aws-lambda
 ```
 
 {% /tab %}
 {% tab label="yarn" %}
 
 ```shell
-yarn add -D @nrwl/aws-lambda
+yarn add -D @nx/aws-lambda
 ```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
 ```shell
-pnpm add -D @nrwl/aws-lambda
+pnpm add -D @nx/aws-lambda
 ```
 
 {% /tab %}
@@ -44,13 +44,13 @@ pnpm add -D @nrwl/aws-lambda
 - Add AWS lambda configuration by running the following command:
 
 ```shell
-nx generate @nrwl/aws-lambda:setup-serverless
+nx generate @nx/aws-lambda:setup-serverless
 ```
 
 - Create a new aws-lambda project with:
 
 ```shell
-nx generate @nrwl/aws-lambda:serverless
+nx generate @nx/aws-lambda:serverless
 ```
 
 This will do a few things:
