@@ -10,7 +10,7 @@ export class CreateNxWorkspaceError extends Error {
 }
 
 export function mapErrorToBodyLines(error: Error): string[] {
-  const errorLines = error.message?.split('\n').filter((line) => !!line);
+  const errorLines = error.message?.split('\n').filter((line) => !!line.trim());
   if (errorLines.length < 3) {
     const lines = [`Error: ${error.message}`];
     if (process.env.NX_VERBOSE_LOGGING) {
