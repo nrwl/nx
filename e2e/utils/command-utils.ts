@@ -143,7 +143,7 @@ export function getPackageManagerCommand({
     yarn: {
       createWorkspace: `npx ${
         +npmMajorVersion >= 7 ? '--yes' : ''
-      } create-nx-workspace@${publishedVersion}`,
+      } create-nx-workspace@${publishedVersion} --pm=yarn`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
