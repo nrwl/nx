@@ -83,7 +83,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       ...schema,
       config: 'project',
       bundler: options.bundler,
-      publishable: true,
+      publishable: options.publishable,
       importPath: options.npmPackageName,
       skipFormat: true,
     })

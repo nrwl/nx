@@ -26,6 +26,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
     importPath: options.pluginName,
     rootProject: true,
     e2eTestRunner: 'jest',
+    publishable: true,
   });
   tasks.push(pluginTask);
 

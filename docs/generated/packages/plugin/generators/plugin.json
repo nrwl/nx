@@ -87,6 +87,11 @@
         "enum": ["tsc", "swc"],
         "default": "tsc",
         "description": "The compiler used by the build and test targets."
+      },
+      "publishable": {
+        "type": "boolean",
+        "description": "Generates a boilerplate for publishing the plugin to npm.",
+        "default": false
       }
     },
     "required": ["name"],
