@@ -44,25 +44,27 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
   if (project.targets.build) {
     project.targets.build.options.assets ??= [];
 
+    const root =
+      options.projectRoot === '.' ? './' : './' + options.projectRoot;
     project.targets.build.options.assets = [
       ...project.targets.build.options.assets,
       {
-        input: `./${options.projectRoot}/src`,
+        input: `${root}/src`,
         glob: '**/!(*.ts)',
         output: './src',
       },
       {
-        input: `./${options.projectRoot}/src`,
+        input: `${root}/src`,
         glob: '**/*.d.ts',
         output: './src',
       },
       {
-        input: `./${options.projectRoot}`,
+        input: root,
         glob: 'generators.json',
         output: '.',
       },
       {
-        input: `./${options.projectRoot}`,
+        input: root,
         glob: 'executors.json',
         output: '.',
       },

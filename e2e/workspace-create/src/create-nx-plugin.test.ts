@@ -32,7 +32,10 @@ describe('create-nx-plugin', () => {
 
     runCLI(`build ${pluginName}`);
 
-    checkFilesExist(`dist/package.json`, `dist/src/index.js`);
+    checkFilesExist(
+      `dist/${pluginName}/package.json`,
+      `dist/${pluginName}/src/index.js`
+    );
 
     runCLI(
       `generate @nrwl/nx-plugin:generator ${generatorName} --project=${pluginName}`
@@ -44,9 +47,9 @@ describe('create-nx-plugin', () => {
     runCLI(`build ${pluginName}`);
 
     checkFilesExist(
-      `dist/package.json`,
-      `dist/generators.json`,
-      `dist/executors.json`
+      `dist/${pluginName}/package.json`,
+      `dist/${pluginName}/generators.json`,
+      `dist/${pluginName}/executors.json`
     );
   });
 
@@ -59,7 +62,10 @@ describe('create-nx-plugin', () => {
     });
 
     runCLI(`build ${pluginName}`);
-    checkFilesExist(`dist/package.json`, `dist/generators.json`);
+    checkFilesExist(
+      `dist/${pluginName}/package.json`,
+      `dist/${pluginName}/generators.json`
+    );
 
     runCLI(`build create-${pluginName}-package`);
     checkFilesExist(`dist/create-${pluginName}-package/bin/index.js`);

@@ -157,9 +157,7 @@ function addProject(
     options.bundler !== 'none' &&
     options.config !== 'npm-scripts'
   ) {
-    const outputPath = destinationDir
-      ? `dist/${destinationDir}/${options.projectDirectory}`
-      : `dist/${options.projectDirectory}`;
+    const outputPath = getOutputPath(options, destinationDir);
     projectConfiguration.targets.build = {
       executor: getBuildExecutor(options.bundler),
       outputs: ['{options.outputPath}'],
@@ -578,6 +576,19 @@ function ensureBabelRootConfigExists(tree: Tree) {
   writeJson(tree, 'babel.config.json', {
     babelrcRoots: ['*'],
   });
+}
+
+function getOutputPath(options: NormalizedSchema, destinationDir?: string) {
+  const parts = ['dist'];
+  if (destinationDir) {
+    parts.push(destinationDir);
+  }
+  if (options.projectDirectory === '.') {
+    parts.push(options.name);
+  } else {
+    parts.push(options.projectDirectory);
+  }
+  return joinPathFragments(...parts);
 }
 
 export default libraryGenerator;
