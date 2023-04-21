@@ -1380,6 +1380,15 @@
         "originalFilePath": "/packages/next/src/generators/custom-server/schema.json",
         "path": "/packages/next/generators/custom-server",
         "type": "generator"
+      },
+      "/packages/next/generators/cypress-component-configuration": {
+        "description": "cypress-component-configuration generator",
+        "file": "generated/packages/next/generators/cypress-component-configuration.json",
+        "hidden": false,
+        "name": "cypress-component-configuration",
+        "originalFilePath": "/packages/next/src/generators/cypress-component-configuration/schema.json",
+        "path": "/packages/next/generators/cypress-component-configuration",
+        "type": "generator"
       }
     },
     "path": "/packages/next"
