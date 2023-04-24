@@ -265,7 +265,6 @@
     "webpack-subresource-integrity": "^5.1.0",
     "xstate": "4.34.0",
     "yargs": "^17.6.2",
-<<<<<<< HEAD
     "yargs-parser": "21.1.1",
     "@nx/devkit": "16.0.0-beta.6",
     "@nx/js": "16.0.0-beta.6",
@@ -278,9 +277,6 @@
     "@nx/next": "16.0.0-beta.6",
     "@nx/angular": "16.0.0-beta.6",
     "@nx/eslint-plugin": "16.0.0-beta.6"
-=======
-    "yargs-parser": "21.1.1"
->>>>>>> f16ece898 (feat(repo): update packages and lock file)
   },
   "author": "Victor Savkin",
   "license": "MIT",
