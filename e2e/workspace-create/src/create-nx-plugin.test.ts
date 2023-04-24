@@ -7,7 +7,7 @@ import {
   runCreatePlugin,
   cleanupProject,
   tmpProjPath,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('create-nx-plugin', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
@@ -38,10 +38,10 @@ describe('create-nx-plugin', () => {
     );
 
     runCLI(
-      `generate @nrwl/nx-plugin:generator ${generatorName} --project=${pluginName}`
+      `generate @nx/plugin:generator ${generatorName} --project=${pluginName}`
     );
     runCLI(
-      `generate @nrwl/nx-plugin:executor ${executorName} --project=${pluginName}`
+      `generate @nx/plugin:executor ${executorName} --project=${pluginName}`
     );
 
     runCLI(`build ${pluginName}`);

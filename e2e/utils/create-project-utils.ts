@@ -61,25 +61,25 @@ export function newProject({
 
       // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
       const packages = [
-        `@nrwl/angular`,
-        `@nrwl/eslint-plugin-nx`,
-        `@nrwl/express`,
-        `@nrwl/esbuild`,
-        `@nrwl/jest`,
-        `@nrwl/js`,
-        `@nrwl/linter`,
-        `@nrwl/nest`,
-        `@nrwl/next`,
-        `@nrwl/node`,
-        `@nrwl/nx-plugin`,
-        `@nrwl/rollup`,
-        `@nrwl/react`,
-        `@nrwl/storybook`,
-        `@nrwl/vite`,
-        `@nrwl/web`,
-        `@nrwl/webpack`,
-        `@nrwl/react-native`,
-        `@nrwl/expo`,
+        `@nx/angular`,
+        `@nx/eslint-plugin`,
+        `@nx/express`,
+        `@nx/esbuild`,
+        `@nx/jest`,
+        `@nx/js`,
+        `@nx/linter`,
+        `@nx/nest`,
+        `@nx/next`,
+        `@nx/node`,
+        `@nx/plugin`,
+        `@nx/rollup`,
+        `@nx/react`,
+        `@nx/storybook`,
+        `@nx/vite`,
+        `@nx/web`,
+        `@nx/webpack`,
+        `@nx/react-native`,
+        `@nx/expo`,
       ];
       packageInstall(packages.join(` `), projScope);
 
@@ -400,6 +400,7 @@ export function newLernaWorkspace({
         ...json.overrides,
         nx: nxVersion,
         '@nrwl/devkit': nxVersion,
+        '@nx/devkit': nxVersion,
       };
       if (packageManager === 'pnpm') {
         json.pnpm = {

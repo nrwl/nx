@@ -6,7 +6,7 @@ import {
   runCLI,
   runCommand,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('nx init (Monorepo)', () => {
   const pmc = getPackageManagerCommand({

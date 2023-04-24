@@ -1,4 +1,4 @@
-import { uniq } from '@nrwl/e2e/utils';
+import { uniq } from '@nx/e2e/utils';
 
 describe('nx-dev: Recipes pages', () => {
   it('should list related recipes based on tags', () => {

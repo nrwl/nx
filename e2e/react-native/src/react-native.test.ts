@@ -12,7 +12,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
 import { join } from 'path';
 
@@ -24,10 +24,10 @@ describe('react native', () => {
   beforeAll(() => {
     proj = newProject();
     runCLI(
-      `generate @nrwl/react-native:application ${appName} --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName} --install=false --no-interactive`
     );
     runCLI(
-      `generate @nrwl/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
+      `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
     );
   });
   afterAll(() => cleanupProject());
@@ -35,7 +35,7 @@ describe('react native', () => {
   it('should test and lint', async () => {
     const componentName = uniq('component');
     runCLI(
-      `generate @nrwl/react-native:component ${componentName} --project=${libName} --export --no-interactive`
+      `generate @nx/react-native:component ${componentName} --project=${libName} --export --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
@@ -119,7 +119,7 @@ describe('react native', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nrwl/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
     );
     expect(() =>
       checkFilesExist(
@@ -145,7 +145,7 @@ describe('react native', () => {
   it('should upgrade native for application', async () => {
     expect(() =>
       runCLI(
-        `generate @nrwl/react-native:upgrade-native ${appName} --install=false`
+        `generate @nx/react-native:upgrade-native ${appName} --install=false`
       )
     ).not.toThrow();
   });
@@ -154,7 +154,7 @@ describe('react native', () => {
     const componentName = uniq('component');
 
     runCLI(
-      `generate @nrwl/react-native:component ${componentName} --project=${libName} --export`
+      `generate @nx/react-native:component ${componentName} --project=${libName} --export`
     );
     expect(() => {
       runCLI(`build ${libName}`);

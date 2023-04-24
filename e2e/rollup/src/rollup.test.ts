@@ -7,7 +7,7 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Rollup Plugin', () => {
   beforeAll(() => newProject());
@@ -15,12 +15,12 @@ describe('Rollup Plugin', () => {
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=none`);
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     // babel (default)
     runCLI(
-      `generate @nrwl/rollup:rollup-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
+      `generate @nx/rollup:rollup-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -34,7 +34,7 @@ describe('Rollup Plugin', () => {
 
     // swc
     runCLI(
-      `generate @nrwl/rollup:rollup-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
+      `generate @nx/rollup:rollup-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -48,7 +48,7 @@ describe('Rollup Plugin', () => {
 
     // tsc
     runCLI(
-      `generate @nrwl/rollup:rollup-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
+      `generate @nx/rollup:rollup-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -56,9 +56,9 @@ describe('Rollup Plugin', () => {
     expect(output).toMatch(/Hello/);
   }, 500000);
 
-  it('should be able to build libs generated with @nrwl/js:lib --bundler rollup', () => {
+  it('should be able to build libs generated with @nx/js:lib --bundler rollup', () => {
     const jsLib = uniq('jslib');
-    runCLI(`generate @nrwl/js:lib ${jsLib} --bundler rollup`);
+    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup`);
     expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
   });
 });
