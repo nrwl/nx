@@ -90,7 +90,10 @@ export function findMatchingProjects(
       // Same thing as `type:unlabeled`. If no specific type is set,
       // we can waterfall through the different types until we find a match
       default: {
-        const size = selectedProjects.size + excludedProjects.size;
+        // The size of the selected and excluded projects set, before we
+        // start updating it with this pattern. If the size changes, we
+        // know we found a match and can skip the other types.
+        const originalSize = selectedProjects.size + excludedProjects.size;
         addMatchingProjectsByName(
           projectNames,
           projects,
@@ -98,7 +101,7 @@ export function findMatchingProjects(
           excludedProjects,
           selectedProjects
         );
-        if (selectedProjects.size + excludedProjects.size > size) {
+        if (selectedProjects.size + excludedProjects.size > originalSize) {
           // There was some match by name, don't check other types
           continue;
         }
@@ -109,7 +112,7 @@ export function findMatchingProjects(
           excludedProjects,
           selectedProjects
         );
-        if (selectedProjects.size + excludedProjects.size > size) {
+        if (selectedProjects.size + excludedProjects.size > originalSize) {
           // There was some match by directory, don't check other types
           // Note - this doesn't do anything currently, but preps for future
           // types
