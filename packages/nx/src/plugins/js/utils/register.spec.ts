@@ -1,5 +1,5 @@
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
-import { getTsNodeCompilerOptions } from '../plugins/js/utils/register';
+import { getTsNodeCompilerOptions } from './register';
 
 describe('getTsNodeCompilerOptions', () => {
   it('should replace enum value with enum key for module', () => {
