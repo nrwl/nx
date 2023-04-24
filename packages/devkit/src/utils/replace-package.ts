@@ -148,7 +148,13 @@ function replaceMentions(
   newPackageName: string
 ) {
   visitNotIgnoredFiles(tree, '.', (path) => {
-    if (['yarn.lock', 'package-lock.json', 'pnpm-lock.yaml'].includes(path)) {
+    const ignoredFiles = [
+      'yarn.lock',
+      'package-lock.json',
+      'pnpm-lock.yaml',
+      'CHANGELOG.md',
+    ];
+    if (ignoredFiles.includes(path)) {
       return;
     }
 
