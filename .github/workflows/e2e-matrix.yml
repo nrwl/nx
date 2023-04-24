@@ -583,7 +583,7 @@ jobs:
             resultPkg += `\`\`\``;
             core.setOutput('SLACK_PROJ_DURATION', trimSpace(resultPkg));
 
-            // instant check on manual runs
+            // Print project duration report inline to allow reviewing on manual runs (when no slack message will be sent)
             console.log(trimSpace(resultPkg));
 
             let resultPm = `
@@ -596,7 +596,7 @@ jobs:
             resultPm += `\`\`\``;
             core.setOutput('SLACK_PM_DURATION', trimSpace(resultPm));
 
-            // instant check on manual runs
+            // Print package manager duration report inline to allow reviewing on manual runs (when no slack message will be sent)
             console.log(trimSpace(resultPm));
 
   report-failure:
