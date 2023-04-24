@@ -64,7 +64,7 @@ commands:
       - run:
           name: Install pnpm package manager
           command: |
-            npm install --prefix=$HOME/.local -g @pnpm/exe@8.3.1
+            npm install -g @pnpm/exe@8.3.1
       - run:
           name: Install Dependencies
           command: |
