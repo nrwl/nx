@@ -15,6 +15,14 @@ export function withNx(_opts = {}) {
     const project = context.projectGraph.nodes[context.projectName];
     const sourceRoot = path.join(context.root, project.data.sourceRoot);
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const tsconfigPaths = require('tsconfig-paths');
+    const { paths } = tsconfigPaths.loadConfig(options.tsConfig);
+    const alias = Object.keys(paths).reduce((acc, k) => {
+      acc[k] = path.join(context.root, paths[k][0]);
+      return acc;
+    }, {});
+
     const externals: ExternalItem = {};
     let externalsType: Configuration['externalsType'];
     if (options.target === 'node') {
@@ -61,7 +69,11 @@ export function withNx(_opts = {}) {
       module: {},
       plugins: config.plugins ?? [],
       resolve: {
-        tsConfigPath: path.join(context.root, options.tsConfig),
+        // There are some issues resolving workspace libs in a monorepo.
+        // It looks to be an issue with rspack itself, but will check back after Nx 16 release
+        // once I can reproduce a small example repo with rspack only.
+        alias,
+        // tsConfigPath: path.join(context.root, options.tsConfig),
       },
       infrastructureLogging: {
         debug: false,
