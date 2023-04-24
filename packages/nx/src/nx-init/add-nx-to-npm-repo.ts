@@ -25,7 +25,7 @@ export async function addNxToNpmRepo(options: Options) {
   let useNxCloud: boolean;
 
   const packageJson = readJsonFile('package.json');
-  const scripts = Object.keys(packageJson.scripts).filter(
+  const scripts = Object.keys(packageJson.scripts ?? {}).filter(
     (s) => !s.startsWith('pre') && !s.startsWith('post')
   );
 
