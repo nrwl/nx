@@ -42,7 +42,7 @@
     "@nx/workspace": "file:../workspace"
   },
   "peerDependencies": {
-    "react-native": "^0.71.7"
+    "react-native": ">= 0.71.0"
   },
   "builders": "./executors.json",
   "ng-update": {
