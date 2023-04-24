@@ -51,7 +51,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
     'test:watch',
   ];
 
-  const scripts = Object.keys(packageJson.scripts).filter((s) => {
+  const scripts = Object.keys(packageJson.scripts ?? {}).filter((s) => {
     if (nestCacheableScripts.includes(s) || nestIgnoreScripts.includes(s)) {
       return false;
     }

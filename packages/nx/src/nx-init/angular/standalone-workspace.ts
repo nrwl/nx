@@ -43,7 +43,7 @@ export async function setupStandaloneWorkspace(
   // convert workspace config format to standalone project configs
   // update its targets outputs and delete angular.json
   const projects = toNewFormat(angularJson).projects;
-  for (const [projectName, project] of Object.entries(projects)) {
+  for (const [projectName, project] of Object.entries(projects ?? {})) {
     updateProjectOutputs(repoRoot, project);
     writeJsonFile(join(project.root, 'project.json'), {
       $schema: normalizePath(
@@ -162,7 +162,7 @@ function getWorkspaceCapabilities(
     karmaProjectConfigFile: false,
   };
 
-  for (const project of Object.values(projects)) {
+  for (const project of Object.values(projects ?? {})) {
     if (
       !capabilities.eslintProjectConfigFile &&
       projectHasEslintConfig(project)
