@@ -232,17 +232,8 @@
     "source-map": "0.7.3",
     "source-map-loader": "^3.0.0",
     "source-map-support": "0.5.19",
-<<<<<<< HEAD
     "storybook-dark-mode": "^3.0.0",
     "style-loader": "^3.3.0",
-=======
-    "storybook-dark-mode": "^1.1.2",
-<<<<<<< HEAD
-    "style-loader": "^3.3.1",
->>>>>>> 7c221c585 (fix(repo): update packages in pnpm)
-=======
-    "style-loader": "^3.3.0",
->>>>>>> 4d881996b (chore(repo): regenerate pnpm lock file)
     "styled-components": "5.3.6",
     "stylus": "^0.55.0",
     "stylus-loader": "7.1.0",
@@ -274,6 +265,7 @@
     "webpack-subresource-integrity": "^5.1.0",
     "xstate": "4.34.0",
     "yargs": "^17.6.2",
+<<<<<<< HEAD
     "yargs-parser": "21.1.1",
     "@nx/devkit": "16.0.0-beta.6",
     "@nx/js": "16.0.0-beta.6",
@@ -286,6 +278,9 @@
     "@nx/next": "16.0.0-beta.6",
     "@nx/angular": "16.0.0-beta.6",
     "@nx/eslint-plugin": "16.0.0-beta.6"
+=======
+    "yargs-parser": "21.1.1"
+>>>>>>> f16ece898 (feat(repo): update packages and lock file)
   },
   "author": "Victor Savkin",
   "license": "MIT",
