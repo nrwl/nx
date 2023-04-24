@@ -321,9 +321,8 @@ jobs:
 
       - name: Install PNPM
         if: ${{ matrix.package_manager == 'pnpm' }}
-        uses: pnpm/action-setup@v2
-        with:
-          version: 7.30.5
+        run: |
+          npm install -g @pnpm/exe@8.3.1
 
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v3
