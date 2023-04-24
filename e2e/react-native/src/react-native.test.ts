@@ -123,7 +123,8 @@ describe('react native', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nrwl/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nrwl/react-native:storybook-configuration ${appName} --generateStories --no-interactive`,
+      { silenceError: false, verbose: true }
     );
     expect(() =>
       checkFilesExist(
@@ -134,7 +135,10 @@ describe('react native', () => {
       )
     ).not.toThrow();
 
-    await runCLIAsync(`storybook ${appName}`);
+    await runCLIAsync(`storybook ${appName}`, {
+      silenceError: false,
+      verbose: true,
+    });
     const result = readJson(join('apps', appName, 'package.json'));
     expect(result).toMatchObject({
       dependencies: {
@@ -149,7 +153,8 @@ describe('react native', () => {
   it('should upgrade native for application', async () => {
     expect(() =>
       runCLI(
-        `generate @nrwl/react-native:upgrade-native ${appName} --install=false`
+        `generate @nrwl/react-native:upgrade-native ${appName} --install=false`,
+        { silenceError: false, verbose: true }
       )
     ).not.toThrow();
   });
@@ -158,7 +163,8 @@ describe('react native', () => {
     const componentName = uniq('component');
 
     runCLI(
-      `generate @nrwl/react-native:component ${componentName} --project=${libName} --export`
+      `generate @nrwl/react-native:component ${componentName} --project=${libName} --export`,
+      { silenceError: false, verbose: true }
     );
     expect(() => {
       runCLI(`build ${libName}`);
@@ -182,7 +188,8 @@ describe('react native', () => {
     });
 
     await runCLIAsync(
-      `sync-deps ${appName} --include=react-native-gesture-handler,react-native-safe-area-context,react-native-image-picker`
+      `sync-deps ${appName} --include=react-native-gesture-handler,react-native-safe-area-context,react-native-image-picker`,
+      { silenceError: false, verbose: true }
     );
 
     const result = readJson(join('apps', appName, 'package.json'));
