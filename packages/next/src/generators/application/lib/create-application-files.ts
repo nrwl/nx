@@ -1,6 +1,7 @@
 import { join } from 'path';
 import {
   generateFiles,
+  joinPathFragments,
   names,
   readJson,
   toJS,
@@ -47,6 +48,13 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       join(__dirname, '../files/app'),
       join(options.appProjectRoot, 'app'),
       templateVariables
+    );
+    host.delete(
+      joinPathFragments(
+        options.appProjectRoot,
+        'specs',
+        `index.spec.${options.js ? 'jsx' : 'tsx'}`
+      )
     );
   } else {
     generateFiles(
