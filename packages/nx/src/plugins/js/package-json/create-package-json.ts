@@ -226,7 +226,7 @@ function findAllNpmDeps(
         seen.add(dep);
         npmDeps.dependencies[node.data.packageName] = node.data.version;
         recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
-      } else {
+      } else if (graph.nodes[dep]) {
         findAllNpmDeps(
           graph.nodes[dep],
           graph,
@@ -234,6 +234,8 @@ function findAllNpmDeps(
           seen,
           dependencyPatterns
         );
+      } else {
+        throw new Error(`Could not find ${dep} in the project graph.`);
       }
     }
   }
