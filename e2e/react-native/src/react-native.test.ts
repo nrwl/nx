@@ -170,6 +170,8 @@ describe('react native', () => {
       json.dependencies['react-native-image-picker'] = '1.0.0';
       json.dependencies['react-native-gesture-handler'] = '1.0.0';
       json.dependencies['react-native-safe-area-contex'] = '1.0.0';
+      json.dependencies['react-native-config'] = '1.0.0';
+      json.dependencies['@react-native-async-storage/async-storage'] = '1.0.0';
       return JSON.stringify(json, null, 2);
     });
     // Add import for Nx to pick up

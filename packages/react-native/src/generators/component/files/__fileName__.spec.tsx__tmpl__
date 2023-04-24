@@ -5,7 +5,7 @@ import <%= className %> from './<%= fileName %>';
 
 describe('<%= className %>', () => {
   it('should render successfully', () => {
-    const { container } = render(< <%= className %> />);
-    expect(container).toBeTruthy();
+    const { root } = render(< <%= className %> />);
+    expect(root).toBeTruthy();
   });
 });

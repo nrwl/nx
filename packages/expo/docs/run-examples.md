@@ -65,7 +65,7 @@ The `xcodeConfiguration` option allows you to specify Xcode configuration to use
 {% tab label="Run on a device" %}
 
 The `device` option allows you to launch your app in a specific device name or UDID.
-To see all your iOS simulators: run `xcrun simctl list`.
+To see all your iOS simulators: run `xcrun simctl list devices available`.
 To see all your Android emulators, run: `emulator -list-avds`.
 
 ```json

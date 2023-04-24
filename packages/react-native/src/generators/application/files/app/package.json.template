@@ -7,9 +7,7 @@
     "@testing-library/react-native": "*",
     "react": "*",
     "react-native": "*",
-    "react-native-config": "*",
     "react-native-svg": "*",
-    "metro-config": "*",
-    "@react-native-async-storage/async-storage": "*"
+    "metro-config": "*"
   }
 }
