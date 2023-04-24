@@ -20,18 +20,26 @@ export default async function replacePackage(tree: Tree): Promise<void> {
     '@nx/eslint-plugin'
   );
 
+  /**
+   * Matches:
+   * * // eslint-disable-next-line @nrwl/nx/...
+   * * // eslint-disable-line @nrwl/nx/...
+   * * /* eslint-disable @nrwl/nx/...
+   */
+  const ignoreLineRegex = /(eslint-disable(?:(?:-next)?-line)?\s*)@nrwl\/nx/g;
   visitNotIgnoredFiles(tree, '.', (path) => {
-    if (!eslintFileNames.includes(basename(path))) {
-      return;
+    let contents = tree.read(path).toString();
+    if (eslintFileNames.includes(basename(path))) {
+      if (!contents.includes('@nrwl/nx')) {
+        return;
+      }
+
+      contents = contents.replace(new RegExp('@nrwl/nx', 'g'), '@nx');
     }
-
-    const contents = tree.read(path).toString();
-
-    if (!contents.includes('@nrwl/nx')) {
-      return;
+    if (ignoreLineRegex.test(contents)) {
+      contents = contents.replace(ignoreLineRegex, '$1@nx');
     }
-
-    tree.write(path, contents.replace(new RegExp('@nrwl/nx', 'g'), '@nx'));
+    tree.write(path, contents);
   });
 
   await formatFiles(tree);

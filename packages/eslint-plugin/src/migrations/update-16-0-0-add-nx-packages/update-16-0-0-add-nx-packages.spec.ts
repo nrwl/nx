@@ -59,4 +59,27 @@ describe('update-16-0-0-add-nx-packages', () => {
       }
     `);
   });
+
+  it('should replace eslint-ignore comments', async () => {
+    tree.write(
+      'ignored-file.ts',
+      '// eslint-disable-next-line @nrwl/nx/enforce-module-boundaries\n /*\n* eslint-disable @nrwl/nx/enforce-module-boundaries\n*/\n // eslint-disable-line @nrwl/nx/enforce-module-boundaries'
+    );
+    tree.write('plugin.ts', `import * as p from '@nrwl/nx-plugin'`);
+
+    await replacePackage(tree);
+
+    expect(tree.read('ignored-file.ts').toString()).toMatchInlineSnapshot(`
+      "// eslint-disable-next-line @nx/enforce-module-boundaries
+      /*
+       * eslint-disable @nx/enforce-module-boundaries
+       */
+      // eslint-disable-line @nx/enforce-module-boundaries
+      "
+    `);
+    expect(tree.read('plugin.ts').toString()).toMatchInlineSnapshot(`
+      "import * as p from '@nrwl/nx-plugin';
+      "
+    `);
+  });
 });
