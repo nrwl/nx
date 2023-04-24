@@ -1,8 +1,12 @@
+/* eslint-disable storybook/no-uninstalled-addons */
 module.exports = {
-  core: { builder: 'webpack5' },
-  stories: [
-    '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)',
-  ],
+  stories: ['../src/lib/**/*.stories.@(mdx|js|jsx|ts|tsx)'],
   addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+  framework: {
+    name: '@storybook/react-webpack5',
+    options: {},
+  },
+  docs: {
+    autodocs: true,
+  },
 };
