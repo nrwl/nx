@@ -231,9 +231,8 @@ jobs:
       - rust/install
       - run:
           name: Run E2E Tests for macOS
-          # FIXME: remove --exclude=e2e-detox once we have a fix for the detox tests
           command: |
-            npx nx affected -t e2e-macos --parallel=1 --exclude=e2e-detox
+            npx nx affected -t e2e-macos --parallel=1
           no_output_timeout: 45m
 
 # -------------------------

@@ -47,7 +47,8 @@ describe('Detox', () => {
     expect(lintResults.combinedOutput).toContain('All files pass linting');
   });
 
-  describe('React Native Detox MACOS-Tests', () => {
+  // TODO: @xiongemi please fix or remove this test
+  xdescribe('React Native Detox MACOS-Tests', () => {
     if (isOSX()) {
       it('should test ios MACOS-Tests', async () => {
         expect(
