@@ -43,7 +43,7 @@ export function getPackageManagerCommand(
   switch (packageManager) {
     case 'yarn':
       const useBerry = +pmMajor >= 2;
-      const installCommand = 'yarn install --silent';
+      const installCommand = 'yarn install';
       return {
         install: useBerry
           ? installCommand
@@ -57,13 +57,13 @@ export function getPackageManagerCommand(
         useExec = true;
       }
       return {
-        install: 'pnpm install --no-frozen-lockfile --silent --ignore-scripts',
+        install: 'pnpm install --no-frozen-lockfile --ignore-scripts',
         exec: useExec ? 'pnpm exec' : 'pnpx',
       };
 
     case 'npm':
       return {
-        install: 'npm install --silent --ignore-scripts',
+        install: 'npm install --ignore-scripts',
         exec: 'npx',
       };
   }

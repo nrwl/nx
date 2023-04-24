@@ -67,6 +67,11 @@
       "type": "boolean",
       "description": "Enable re-building when files change.",
       "default": true
+    },
+    "cwd": {
+      "type": "string",
+      "description": "The current working directory for the process.",
+      "default": "${workspaceRoot}"
     }
   },
   "additionalProperties": false,

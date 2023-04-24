@@ -12,6 +12,8 @@ import { HashingImpl } from 'nx/src/hasher/hashing-impl';
 import * as treeKill from 'tree-kill';
 import { promisify } from 'util';
 import { InspectType, NodeExecutorOptions } from './schema';
+import { ensureDirSync } from 'fs-extra';
+import { isAbsolute, join } from 'path';
 
 const hasher = new HashingImpl();
 const processMap = new Map<string, ChildProcess>();
@@ -26,6 +28,12 @@ export async function* nodeExecutor(
   options: NodeExecutorOptions,
   context: ExecutorContext
 ) {
+  options.cwd = options.cwd
+    ? isAbsolute(options.cwd)
+      ? options.cwd
+      : join(context.root, options.cwd)
+    : context.root;
+  ensureDirSync(options.cwd);
   const uniqueKey = randomUUID();
   process.on('SIGTERM', async () => {
     await killCurrentProcess(uniqueKey, options, 'SIGTERM');
@@ -105,6 +113,7 @@ async function runProcess(
         NX_FILE_TO_RUN: event.outfile,
         NX_MAPPINGS: JSON.stringify(mappings),
       },
+      cwd: options.cwd,
     }
   );
 

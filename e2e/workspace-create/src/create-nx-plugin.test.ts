@@ -70,6 +70,12 @@ describe('create-nx-plugin', () => {
     runCLI(`build create-${pluginName}-package`);
     checkFilesExist(`dist/create-${pluginName}-package/bin/index.js`);
 
+    expect(() =>
+      runCLI(`execute create-${pluginName}-package --args test-workspace`)
+    ).not.toThrow();
+    expect(() =>
+      checkFilesExist('tmp/test-workspace/package.json')
+    ).not.toThrow();
     expect(() => runCLI(`e2e e2e`)).not.toThrow();
     expect(() => runCLI(`e2e create-${pluginName}-package-e2e`)).not.toThrow();
   });

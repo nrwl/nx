@@ -13,6 +13,7 @@ import {
   joinPathFragments,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import { NodeExecutorOptions } from '@nx/js/src/executors/node/schema';
 import { nxVersion } from 'nx/src/utils/versions';
 import generatorGenerator from '../generator/generator';
 import { CreatePackageSchema } from './schema';
@@ -122,6 +123,16 @@ async function createCliPackage(
   projectConfiguration.targets.build.options.updateBuildableProjectDepsInPackageJson =
     false;
   projectConfiguration.implicitDependencies = [options.project];
+
+  projectConfiguration.targets.execute = {
+    executor: '@nx/js:node',
+    options: {
+      cwd: './tmp',
+      buildTarget: `${options.projectName}:build`,
+      watch: false,
+    } as NodeExecutorOptions,
+  };
+
   updateProjectConfiguration(host, options.projectName, projectConfiguration);
 
   // Add bin files to tsconfg.lib.json
