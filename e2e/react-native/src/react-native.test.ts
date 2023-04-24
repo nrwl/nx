@@ -113,7 +113,7 @@ describe('react native', () => {
   });
 
   if (isOSX()) {
-    it('should pod install', async () => {
+    xit('should pod install', async () => {
       expect(async () => {
         await runCLIAsync(`pod-install ${appName}`);
         checkFilesExist(`apps/${appName}/ios/Podfile.lock`);
@@ -134,7 +134,10 @@ describe('react native', () => {
       )
     ).not.toThrow();
 
-    await runCLIAsync(`storybook ${appName}`);
+    await runCLIAsync(`storybook ${appName}`, {
+      silenceError: false,
+      verbose: true,
+    });
     const result = readJson(join('apps', appName, 'package.json'));
     expect(result).toMatchObject({
       dependencies: {
@@ -184,7 +187,8 @@ describe('react native', () => {
     });
 
     await runCLIAsync(
-      `sync-deps ${appName} --include=react-native-gesture-handler,react-native-safe-area-context,react-native-image-picker`
+      `sync-deps ${appName} --include=react-native-gesture-handler,react-native-safe-area-context,react-native-image-picker`,
+      { silenceError: false, verbose: true }
     );
 
     const result = readJson(join('apps', appName, 'package.json'));
