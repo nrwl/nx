@@ -87,11 +87,6 @@
       "factory": "./src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator",
       "schema": "./src/generators/ci-workflow/schema.json",
       "description": "Generate a CI workflow."
-    },
-    "migrate-docs": {
-      "factory": "./src/generators/migrate-docs/generator",
-      "schema": "./src/generators/migrate-docs/schema.json",
-      "description": "migrate-docs generator"
     }
   }
 }
