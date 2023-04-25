@@ -6,6 +6,7 @@ import {
   ProjectRootMappings,
 } from 'nx/src/project-graph/utils/find-project-for-path';
 import { readNxJson } from 'nx/src/project-graph/file-utils';
+import { TargetProjectLocator } from '@nx/js/src/internal';
 
 export function ensureGlobalProjectGraph(ruleName: string) {
   /**
@@ -25,9 +26,14 @@ export function ensureGlobalProjectGraph(ruleName: string) {
      * the ProjectGraph may or may not exist by the time the lint rule is invoked for the first time.
      */
     try {
-      (global as any).projectGraph = readCachedProjectGraph();
+      const projectGraph = readCachedProjectGraph();
+      (global as any).projectGraph = projectGraph;
       (global as any).projectRootMappings = createProjectRootMappings(
-        (global as any).projectGraph.nodes
+        projectGraph.nodes
+      );
+      (global as any).targetProjectLocator = new TargetProjectLocator(
+        projectGraph.nodes,
+        projectGraph.externalNodes
       );
     } catch {
       const WARNING_PREFIX = `${chalk.reset.keyword('orange')('warning')}`;
@@ -43,10 +49,12 @@ export function ensureGlobalProjectGraph(ruleName: string) {
 export function readProjectGraph(ruleName: string): {
   projectGraph: ProjectGraph;
   projectRootMappings: ProjectRootMappings;
+  targetProjectLocator: TargetProjectLocator;
 } {
   ensureGlobalProjectGraph(ruleName);
   return {
     projectGraph: (global as any).projectGraph,
     projectRootMappings: (global as any).projectRootMappings,
+    targetProjectLocator: (global as any).targetProjectLocator,
   };
 }
