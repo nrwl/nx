@@ -168,22 +168,14 @@ export default createESLintRule<Options, MessageIds>({
     );
     const fileName = normalizePath(context.getFilename());
 
-    const { projectGraph, projectRootMappings } = readProjectGraph(RULE_NAME);
+    const { projectGraph, projectRootMappings, targetProjectLocator } =
+      readProjectGraph(RULE_NAME);
 
     if (!projectGraph) {
       return {};
     }
 
     const workspaceLayout = (global as any).workspaceLayout;
-
-    if (!(global as any).targetProjectLocator) {
-      (global as any).targetProjectLocator = new TargetProjectLocator(
-        projectGraph.nodes,
-        projectGraph.externalNodes
-      );
-    }
-    const targetProjectLocator = (global as any)
-      .targetProjectLocator as TargetProjectLocator;
 
     function run(
       node:
