@@ -59,7 +59,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 }
 
 function addFiles(host: Tree, options: NormalizedSchema) {
-  const indexPath = `${options.projectSourceRoot}/generators/${options.fileName}/files/src/index.ts__template__`;
+  const indexPath = `${options.projectSourceRoot}/generators/${options.fileName}/files/src/index.ts.template`;
 
   if (!host.exists(indexPath)) {
     host.write(indexPath, 'const variable = "<%= name %>";');
@@ -69,10 +69,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     host,
     path.join(__dirname, './files/generator'),
     `${options.projectSourceRoot}/generators`,
-    {
-      ...options,
-      tmpl: '',
-    }
+    options
   );
 
   if (options.unitTestRunner === 'none') {
