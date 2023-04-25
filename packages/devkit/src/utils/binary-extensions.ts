@@ -41,6 +41,10 @@ const binaryExtensions = new Set([
   '.woff',
   '.woff2',
   '.eot',
+
+  // Misc files
+  '.pxd',
+  '.pxz',
 ]);
 
 export function isBinaryPath(path: string): boolean {
