@@ -107,6 +107,77 @@ describe('NxPlugin Plugin Generator', () => {
     expect(projectE2e.root).toEqual('apps/plugins/my-plugin-e2e');
   });
 
+  describe('asset paths', () => {
+    it('should generate normalized asset paths for plugin in monorepo', async () => {
+      await pluginGenerator(
+        tree,
+        getSchema({
+          name: 'myPlugin',
+        })
+      );
+      const project = readProjectConfiguration(tree, 'my-plugin');
+      const assets = project.targets.build.options.assets;
+      expect(assets).toEqual([
+        'libs/my-plugin/*.md',
+        {
+          input: './libs/my-plugin/src',
+          glob: '**/!(*.ts)',
+          output: './src',
+        },
+        {
+          input: './libs/my-plugin/src',
+          glob: '**/*.d.ts',
+          output: './src',
+        },
+        {
+          input: './libs/my-plugin',
+          glob: 'generators.json',
+          output: '.',
+        },
+        {
+          input: './libs/my-plugin',
+          glob: 'executors.json',
+          output: '.',
+        },
+      ]);
+    });
+
+    it('should generate normalized asset paths for plugin in standalone workspace', async () => {
+      await pluginGenerator(
+        tree,
+        getSchema({
+          name: 'myPlugin',
+          rootProject: true,
+        })
+      );
+      const project = readProjectConfiguration(tree, 'my-plugin');
+      const assets = project.targets.build.options.assets;
+      expect(assets).toEqual([
+        '*.md',
+        {
+          input: './src',
+          glob: '**/!(*.ts)',
+          output: './src',
+        },
+        {
+          input: './src',
+          glob: '**/*.d.ts',
+          output: './src',
+        },
+        {
+          input: '.',
+          glob: 'generators.json',
+          output: '.',
+        },
+        {
+          input: '.',
+          glob: 'executors.json',
+          output: '.',
+        },
+      ]);
+    });
+  });
+
   describe('--unitTestRunner', () => {
     describe('none', () => {
       it('should not generate test files', async () => {
