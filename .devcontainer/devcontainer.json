@@ -13,7 +13,7 @@
   "forwardPorts": [4211],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "yarn install",
+  "postCreateCommand": "pnpm install",
   "customizations": {
     "vscode": {
       "extensions": ["nrwl.angular-console"]
