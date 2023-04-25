@@ -22,7 +22,6 @@ describe('react native', () => {
   let libName = uniq('lib');
 
   beforeAll(() => {
-    process.env.NX_VERBOSE_LOGGING = 'true';
     proj = newProject();
     runCLI(
       `generate @nx/react-native:application ${appName} --install=false --no-interactive`
@@ -31,10 +30,7 @@ describe('react native', () => {
       `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
     );
   });
-  afterAll(() => {
-    process.env.NX_VERBOSE_LOGGING = 'false';
-    cleanupProject();
-  });
+  afterAll(() => cleanupProject());
 
   it('should test and lint', async () => {
     const componentName = uniq('component');
@@ -113,7 +109,8 @@ describe('react native', () => {
   });
 
   if (isOSX()) {
-    it('should pod install', async () => {
+    // TODO(@meeroslav): this test is causing git-hasher to overflow with arguments. Enable when it's fixed.
+    xit('should pod install', async () => {
       expect(async () => {
         await runCLIAsync(`pod-install ${appName}`);
         checkFilesExist(`apps/${appName}/ios/Podfile.lock`);

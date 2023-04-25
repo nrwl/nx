@@ -218,7 +218,6 @@ jobs:
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
-      NODE_OPTIONS: --max_old_space_size=8192
     steps:
       - run:
           name: Set dynamic nx run variable
