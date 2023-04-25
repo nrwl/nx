@@ -15,6 +15,7 @@ import { isComponent } from '@nx/react/src/utils/ct-utils';
 import { CypressComponentConfigurationGeneratorSchema } from './schema';
 import { nxVersion } from '../../utils/versions';
 import { componentTestGenerator } from '@nx/react';
+import { normalize, relative } from 'path';
 
 export async function cypressComponentConfiguration(
   tree: Tree,
@@ -99,8 +100,14 @@ async function addFiles(
   if (opts.generateTests) {
     const filePaths = [];
     visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (filePath) => {
-      // we don't generate tests for pages/server-side components
-      if (filePath.includes('pages') || filePath.includes('server')) {
+      const fromProjectRootPath = relative(projectConfig.root, filePath);
+      console.log({ fromProjectRootPath, filePath });
+      // we don't generate tests for pages/server-side/appDir components
+      if (
+        fromProjectRootPath.includes('pages') ||
+        fromProjectRootPath.includes('server') ||
+        fromProjectRootPath.includes('app')
+      ) {
         return;
       }
 
