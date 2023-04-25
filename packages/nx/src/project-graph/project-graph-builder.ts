@@ -385,6 +385,23 @@ export class ProjectGraphBuilder {
         }
       }
     }
+    // cleanup stale dependencies
+    for (const [targetProject, types] of alreadySetTargetProjects.entries()) {
+      const node = this.graph.nodes[sourceProject];
+      if (node) {
+        for (const depType of types.keys()) {
+          if (
+            !node.data.files.some((f) =>
+              f.dependencies?.some(
+                (d) => d.target === targetProject && d.type === depType
+              )
+            )
+          ) {
+            types.delete(depType);
+          }
+        }
+      }
+    }
     return alreadySetTargetProjects;
   }
 }
