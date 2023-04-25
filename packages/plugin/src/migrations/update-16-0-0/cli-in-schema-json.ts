@@ -7,6 +7,7 @@ import {
   readJson,
   Tree,
   updateJson,
+  output,
 } from '@nx/devkit';
 import {
   ExecutorsJsonEntry,
@@ -17,7 +18,7 @@ import { dirname } from 'path';
 
 export function updateCliPropsForPlugins(tree: Tree) {
   const projects = getProjects(tree);
-  for (const [name, project] of projects.entries()) {
+  for (const project of projects.values()) {
     if (tree.exists(joinPathFragments(project.root, 'package.json'))) {
       const packageJson: PackageJson = readJson(
         tree,
@@ -25,34 +26,84 @@ export function updateCliPropsForPlugins(tree: Tree) {
       );
       const migrateConfig = readNxMigrateConfig(packageJson);
       if (migrateConfig.migrations) {
-        updateMigrationsJsonForPlugin(
-          tree,
-          joinPathFragments(project.root, migrateConfig.migrations)
+        const migrationsPath = joinPathFragments(
+          project.root,
+          migrateConfig.migrations
         );
+        if (tree.exists(migrationsPath)) {
+          updateMigrationsJsonForPlugin(tree, migrationsPath);
+        } else {
+          output.warn({
+            title: `Migrations file specified for ${packageJson.name} does not exist: ${migrationsPath}`,
+            bodyLines: [
+              'Please ensure that migrations that use the Angular Devkit are placed inside the `schematics` property, and migrations that use the Nx Devkit are placed inside the `generators` property.',
+            ],
+          });
+        }
       }
       if (packageJson.generators) {
-        removeCliFromGeneratorSchemaJsonFiles(
-          tree,
-          joinPathFragments(project.root, packageJson.generators)
+        const generatorsPath = joinPathFragments(
+          project.root,
+          packageJson.generators
         );
+        if (tree.exists(generatorsPath)) {
+          removeCliFromGeneratorSchemaJsonFiles(tree, generatorsPath);
+        } else {
+          output.warn({
+            title: `Generators file specified for ${packageJson.name} does not exist: ${generatorsPath}`,
+            bodyLines: [
+              "The `cli` property inside generator's `schema.json` files is no longer supported.",
+            ],
+          });
+        }
       }
       if (packageJson.executors) {
-        removeCliFromExecutorSchemaJsonFiles(
-          tree,
-          joinPathFragments(project.root, packageJson.executors)
+        const executorsPath = joinPathFragments(
+          project.root,
+          packageJson.executors
         );
+        if (tree.exists(executorsPath)) {
+          removeCliFromExecutorSchemaJsonFiles(tree, executorsPath);
+        } else {
+          output.warn({
+            title: `Executors file specified for ${packageJson.name} does not exist: ${executorsPath}`,
+            bodyLines: [
+              "The `cli` property inside executor's `schema.json` files is no longer supported.",
+            ],
+          });
+        }
       }
       if (packageJson.builders) {
-        removeCliFromExecutorSchemaJsonFiles(
-          tree,
-          joinPathFragments(project.root, packageJson.builders)
+        const buildersPath = joinPathFragments(
+          project.root,
+          packageJson.builders
         );
+        if (tree.exists(buildersPath)) {
+          removeCliFromExecutorSchemaJsonFiles(tree, buildersPath);
+        } else {
+          output.warn({
+            title: `Builders file specified for ${packageJson.name} does not exist: ${buildersPath}`,
+            bodyLines: [
+              "The `cli` property inside builder's `schema.json` files is no longer supported.",
+            ],
+          });
+        }
       }
       if (packageJson.schematics) {
-        removeCliFromGeneratorSchemaJsonFiles(
-          tree,
-          joinPathFragments(project.root, packageJson.schematics)
+        const schematicsPath = joinPathFragments(
+          project.root,
+          packageJson.schematics
         );
+        if (tree.exists(schematicsPath)) {
+          removeCliFromGeneratorSchemaJsonFiles(tree, schematicsPath);
+        } else {
+          output.warn({
+            title: `Schematics file specified for ${packageJson.name} does not exist: ${schematicsPath}`,
+            bodyLines: [
+              "The `cli` property inside schematic's `schema.json` files is no longer supported.",
+            ],
+          });
+        }
       }
     }
   }
