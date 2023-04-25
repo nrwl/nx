@@ -40,7 +40,9 @@ export function normalizeOptions(
     ? name
     : fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
+  const projectRoot = options.rootProject
+    ? fullProjectDirectory
+    : joinPathFragments(libsDir, fullProjectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
