@@ -2,8 +2,10 @@ import {
   checkFilesExist,
   cleanupProject,
   expectTestsPass,
+  getSelectedPackageManager,
   killPorts,
   newProject,
+  packageInstall,
   promisifiedTreeKill,
   readJson,
   readResolvedConfiguration,
@@ -22,6 +24,7 @@ describe('expo', () => {
 
   beforeAll(() => {
     proj = newProject();
+    packageInstall('react-native', null, '0.71.6'); // expo requires react-native 0.71.6
     runCLI(`generate @nx/expo:application ${appName} --no-interactive`);
     runCLI(
       `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`

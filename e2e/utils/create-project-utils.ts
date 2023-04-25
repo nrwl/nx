@@ -284,20 +284,15 @@ export function packageInstall(
 
   const command = `${
     mode === 'dev' ? pm.addDev : pm.addProd
-  } ${pkgsWithVersions}${isVerbose() ? ' --verbose' : ''}`;
+  } ${pkgsWithVersions}`;
 
   try {
-    const install = execSync(
-      `${mode === 'dev' ? pm.addDev : pm.addProd} ${pkgsWithVersions}${
-        isVerbose() ? ' --verbose' : ''
-      }`,
-      {
-        cwd,
-        stdio: 'pipe',
-        env: process.env,
-        encoding: 'utf-8',
-      }
-    );
+    const install = execSync(command, {
+      cwd,
+      stdio: isVerbose() ? 'inherit' : 'ignore',
+      env: process.env,
+      encoding: 'utf-8',
+    });
 
     if (isVerbose()) {
       output.log({
