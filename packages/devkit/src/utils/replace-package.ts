@@ -159,7 +159,7 @@ function replaceMentions(
       'pnpm-lock.yaml',
       'CHANGELOG.md',
     ];
-    if (ignoredFiles.includes(path)) {
+    if (ignoredFiles.includes(basename(path))) {
       return;
     }
 
