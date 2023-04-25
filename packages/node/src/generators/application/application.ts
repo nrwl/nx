@@ -483,7 +483,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? 'jest',
     rootProject: options.rootProject ?? false,
-    port: options.port ?? 3333,
+    port: options.port ?? 3000,
   };
 }
 
