@@ -311,7 +311,11 @@ export class ProjectGraphBuilder {
       if (!fileData.dependencies) {
         fileData.dependencies = [];
       }
-      if (!fileData.dependencies.find((t) => t.target === targetProjectName)) {
+      if (
+        !fileData.dependencies.find(
+          (t) => t.target === targetProjectName && t.type === type
+        )
+      ) {
         fileData.dependencies.push(dependency);
       }
     }
@@ -391,6 +395,7 @@ export class ProjectGraphBuilder {
       if (node) {
         for (const depType of types.keys()) {
           if (
+            depType !== 'implicit' &&
             !node.data.files.some((f) =>
               f.dependencies?.some(
                 (d) => d.target === targetProject && d.type === depType
