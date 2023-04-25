@@ -114,6 +114,7 @@ export function getPackageManagerCommand({
   ciInstall: string;
   addProd: string;
   addDev: string;
+  rm: string;
   list: string;
   runLerna: string;
 } {
@@ -137,6 +138,7 @@ export function getPackageManagerCommand({
       ciInstall: 'npm ci',
       addProd: `npm install`,
       addDev: `npm install -D`,
+      rm: 'yarn remove',
       list: 'npm ls --depth 10',
       runLerna: `npx lerna`,
     },
@@ -152,6 +154,7 @@ export function getPackageManagerCommand({
       ciInstall: 'yarn --frozen-lockfile',
       addProd: isYarnWorkspace ? 'yarn add -W' : 'yarn add',
       addDev: isYarnWorkspace ? 'yarn add -DW' : 'yarn add -D',
+      rm: 'npm rm',
       list: 'yarn list --pattern',
       runLerna: `yarn --silent lerna`,
     },
@@ -166,6 +169,7 @@ export function getPackageManagerCommand({
       ciInstall: 'pnpm install --frozen-lockfile',
       addProd: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
       addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
+      rm: 'pnpm rm',
       list: 'pnpm ls --depth 10',
       runLerna: `pnpm exec lerna`,
     },

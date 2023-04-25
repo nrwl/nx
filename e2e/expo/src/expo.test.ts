@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   expectTestsPass,
+  getPackageManagerCommand,
   killPorts,
   newProject,
   promisifiedTreeKill,
@@ -9,6 +10,7 @@ import {
   readResolvedConfiguration,
   runCLI,
   runCLIAsync,
+  runCommand,
   runCommandUntil,
   uniq,
   updateFile,
@@ -22,6 +24,8 @@ describe('expo', () => {
 
   beforeAll(() => {
     proj = newProject();
+    runCommand(`${getPackageManagerCommand().rm} @nx/react-native`);
+
     runCLI(`generate @nx/expo:application ${appName} --no-interactive`);
     runCLI(
       `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
