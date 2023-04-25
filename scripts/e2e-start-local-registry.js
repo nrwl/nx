@@ -1,7 +1,7 @@
 const { exec } = require('child_process');
 
 const verdacio = exec(
-  'yarn verdaccio --config ./scripts/local-registry/config.yml'
+  'pnpm exec verdaccio --config ./scripts/local-registry/config.yml'
 );
 verdacio.unref();
 

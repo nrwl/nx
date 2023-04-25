@@ -46,7 +46,7 @@ async function updateVersionsAndPublishPackages() {
   const isVerbose =
     process.env.NX_VERBOSE_LOGGING === 'true' ||
     process.argv.includes('--verbose');
-  const response = execSync(`yarn nx-release major --local`, {
+  const response = execSync(`pnpm run nx-release major --local`, {
     stdio: isVerbose ? 'inherit' : 'pipe',
     encoding: 'utf8',
   });

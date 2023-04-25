@@ -4,7 +4,7 @@ COMMAND=$1
 
 if [[ $COMMAND == "enable" ]]; then
 	echo "Setting registry to local registry"
-	echo "To Disable: yarn local-registry disable"
+	echo "To Disable: pnpm run local-registry disable"
 	npm config set registry http://localhost:4873/ --location user
 	yarn config set registry http://localhost:4873/
 fi
@@ -28,5 +28,5 @@ fi
 if [[ $COMMAND == "start" ]]; then
 	echo "Starting Local Registry"
 	VERDACCIO_HANDLE_KILL_SIGNALS=true
-	yarn verdaccio --config ./.verdaccio/config.yml
+	pnpm exec verdaccio --config ./.verdaccio/config.yml
 fi
