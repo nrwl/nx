@@ -65,7 +65,7 @@
       "@nrwl/nx-dev/ui-theme": ["nx-dev/ui-theme/src/index.ts"],
       "@nrwl/tao": ["packages/tao"],
       "@nrwl/tao/*": ["packages/tao/*"],
-      "@nrwl/typedoc-theme": ["/typedoc-theme/src/index.ts"],
+      "@nrwl/typedoc-theme": ["typedoc-theme/src/index.ts"],
       "@nx/angular": ["packages/angular"],
       "@nx/angular/*": ["packages/angular/*"],
       "@nx/cypress": ["packages/cypress"],
