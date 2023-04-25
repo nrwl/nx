@@ -109,7 +109,8 @@ describe('react native', () => {
   });
 
   if (isOSX()) {
-    it('should pod install', async () => {
+    // TODO(@meeroslav): this test is causing git-hasher to overflow with arguments. Enable when it's fixed.
+    xit('should pod install', async () => {
       expect(async () => {
         await runCLIAsync(`pod-install ${appName}`);
         checkFilesExist(`apps/${appName}/ios/Podfile.lock`);

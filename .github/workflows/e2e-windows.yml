@@ -30,10 +30,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install PNPM
+        run: |
+          npm install -g @pnpm/exe@8.3.1
+
       - name: Set node
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
+          cache: 'pnpm'
 
       - name: Cache node_modules
         id: cache-modules
@@ -44,7 +49,7 @@ jobs:
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+        run: pnpm install --frozen-lockfile
 
       - name: Cache Cypress
         id: cache-cypress
@@ -243,10 +248,15 @@ jobs:
       - name: Prepare dir for output
         run: mkdir -p outputs
 
+      - name: Install PNPM
+        run: |
+          npm install -g @pnpm/exe@8.3.1
+
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
+          cache: 'pnpm'
           registry-url: http://localhost:4872
 
       - name: Cache node_modules
@@ -257,8 +267,7 @@ jobs:
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
 
       - name: Install packages
-        if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+        run: pnpm install --frozen-lockfile
 
       - name: Cache Cypress
         id: cache-cypress
