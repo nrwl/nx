@@ -77,6 +77,21 @@
       "type": "boolean",
       "description": "Enable CORS",
       "default": true
+    },
+    "gzip": {
+      "type": "boolean",
+      "description": "Enable gzip compression",
+      "default": false
+    },
+    "brotli": {
+      "type": "boolean",
+      "description": "Enable brotli compression",
+      "default": false
+    },
+    "cacheSeconds": {
+      "type": "number",
+      "description": "Set cache time (in seconds) for cache-control max-age header. To disable caching, use -1. Caching defaults to disabled.",
+      "default": -1
     }
   },
   "additionalProperties": false,
