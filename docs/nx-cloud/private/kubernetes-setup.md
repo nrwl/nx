@@ -6,11 +6,11 @@ This guide references the [nx-cloud-helm](https://github.com/nrwl/nx-cloud-helm)
 
 - Nx Cloud Helm Chart
 - Instructions on how to install Nx Cloud using Helm
-- Instructions on how to install Nx Cloud using kubectl. See [here](https://github.com/nrwl/nx-cloud-helm/no-helm/README.md).
+- Instructions on how to install Nx Cloud using kubectl. See [here](https://github.com/nrwl/nx-cloud-helm/blob/main/no-helm/README.md).
 
 ## Deployments on AWS/EKS
 
-If you're deploying on EKS, check out our [AWS Guide](https://github.com/nrwl/nx-cloud-helm/aws-guide/AWS-GUIDE.md). Otherwise, continue reading below.
+If you're deploying on EKS, check out our [AWS Guide](https://github.com/nrwl/nx-cloud-helm/blob/main/aws-guide/AWS-GUIDE.md). Otherwise, continue reading below.
 
 ## Installing Using Helm
 
@@ -111,7 +111,7 @@ be different. If you are interested in creating the two using GKE, check out the
 - [Reserving a static external IP address](https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address)
 - [Using Google-managed SSL certificates](https://cloud.google.com/kubernetes-engine/docs/how-to/managed-certs)
 
-If you aren't using GKE, `ingress.class` will also be different. For example, see [our example config for AWS](https://github.com/nrwl/nx-cloud-helm/blob/main/aws-guide/helm-values.yml#L7) or check out the AWS Load Balancer set-up section [here for AWS set-up instructions.](https://github.com/nrwl/nx-cloud-helm/aws-guide/AWS-GUIDE.md#3-install-a-load-balancer)
+If you aren't using GKE, `ingress.class` will also be different. For example, see [our example config for AWS](https://github.com/nrwl/nx-cloud-helm/blob/main/aws-guide/helm-values.yml#L7) or check out the AWS Load Balancer set-up section [here for AWS set-up instructions.](https://github.com/nrwl/nx-cloud-helm/blob/main/aws-guide/AWS-GUIDE.md#3-install-a-load-balancer)
 
 If you need to have a detailed Ingress configuration, you can tell the package to skip defining ingress:
 
@@ -204,7 +204,7 @@ to your admin account.
 If you use AWS or Azure, you can configure Nx Cloud to store cached artifacts on S3 or Azure Blob. In this case, you
 won't need the PVC or the file-server container. S3 and Azure Blob also tend to be faster.
 
-For S3 buckets, see the [AWS Guide](https://github.com/nrwl/nx-cloud-helm/aws-guide/AWS-GUIDE.md#6-external-s3-access)
+For S3 buckets, see the [AWS Guide](https://github.com/nrwl/nx-cloud-helm/blob/main/aws-guide/AWS-GUIDE.md#6-external-s3-access)
 
 For Azure:
 
