@@ -5,7 +5,7 @@ const TERMINAL_SIZE =
 
 export function chunkify(
   target: string[],
-  maxChunkLength: number = TERMINAL_SIZE - 500
+  maxChunkLength: number = TERMINAL_SIZE - 1000 // leave enough buffer for env variables
 ): string[][] {
   const chunks = [];
   let currentChunk = [];
