@@ -62,6 +62,11 @@
       "description": "Generate a lockfile (e.g. yarn.lock) that matches the workspace lockfile to ensure package versions match.",
       "default": false,
       "x-priority": "internal"
+    },
+    "debug": {
+      "type": "boolean",
+      "description": "Enable Next.js debug build logging",
+      "default": false
     }
   },
   "required": ["root", "outputPath"]
