@@ -3,12 +3,12 @@ import {
   generateRelatedDocumentsTemplate,
   ProcessedDocument,
   RelatedDocument,
-} from '@nrwl/nx-dev/models-document';
-import { Breadcrumbs, Footer } from '@nrwl/nx-dev/ui-common';
-import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
+} from '@nx/nx-dev/models-document';
+import { Breadcrumbs, Footer } from '@nx/nx-dev/ui-common';
+import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { cx } from 'nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev/ui-primitives';
 import { useRef } from 'react';
 import { collectHeadings, TableOfContents } from './table-of-contents';
 

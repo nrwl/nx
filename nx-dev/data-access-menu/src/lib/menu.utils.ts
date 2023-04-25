@@ -1,4 +1,4 @@
-import { MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
+import { MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 
 export function getBasicNxSection(items: MenuItem[]): MenuSection {
   return {

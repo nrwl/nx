@@ -9,7 +9,7 @@ import {
   ProjectEdgeNodeTooltipProps,
   ProjectNodeToolTipProps,
   TaskNodeTooltipProps,
-} from '@nrwl/graph/ui-tooltips';
+} from '@nx/graph/ui-tooltips';
 
 export interface GraphPerfReport {
   renderTime: number;

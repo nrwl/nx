@@ -1,8 +1,8 @@
-import { getPackagesSections } from '@nrwl/nx-dev/data-access-menu';
-import { sortCorePackagesFirst } from '@nrwl/nx-dev/data-access-packages';
-import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
-import { ProcessedPackageMetadata } from '@nrwl/nx-dev/models-package';
-import { DocumentationHeader, SidebarContainer } from '@nrwl/nx-dev/ui-common';
+import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
+import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
+import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
+import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';

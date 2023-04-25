@@ -1,5 +1,5 @@
 import { EnvelopeIcon } from '@heroicons/react/24/solid';
-import { SectionHeading } from '@nrwl/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 
 export function ConnectWithUs(): JSX.Element {
   return (

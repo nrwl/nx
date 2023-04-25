@@ -14,7 +14,7 @@ import { getGraphService } from '../machines/graph.service';
 import { useEffect, useMemo } from 'react';
 import { CheckboxPanel } from '../ui-components/checkbox-panel';
 
-import { Dropdown } from '@nrwl/graph/ui-components';
+import { Dropdown } from '@nx/graph/ui-components';
 import { ShowHideAll } from '../ui-components/show-hide-all';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { createTaskName, useRouteConstructor } from '../util';

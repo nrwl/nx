@@ -17,55 +17,21 @@
     "rootDir": ".",
     "allowJs": true,
     "paths": {
-      "@nrwl/graph/ui-components": ["graph/ui-components/src/index.ts"],
-      "@nrwl/graph/ui-graph": ["graph/ui-graph/src/index.ts"],
-      "@nrwl/graph/ui-tooltips": ["graph/ui-tooltips/src/index.ts"],
-      "@nrwl/nx-dev-feature-package-schema-viewer": [
-        "nx-dev/feature-package-schema-viewer/src/index.ts"
-      ],
-      "@nrwl/nx-dev/data-access-documents": [
-        "nx-dev/data-access-documents/src/index.ts"
-      ],
       "@nrwl/nx-dev/data-access-documents/node-only": [
         "nx-dev/data-access-documents/src/node.index.ts"
-      ],
-      "@nrwl/nx-dev/data-access-menu": ["nx-dev/data-access-menu/src/index.ts"],
-      "@nrwl/nx-dev/data-access-packages": [
-        "nx-dev/data-access-packages/src/index.ts"
       ],
       "@nrwl/nx-dev/data-access-packages/node-only": [
         "nx-dev/data-access-packages/src/node.index.ts"
       ],
-      "@nrwl/nx-dev/feature-analytics": [
-        "nx-dev/feature-analytics/src/index.ts"
-      ],
-      "@nrwl/nx-dev/feature-doc-viewer": [
-        "nx-dev/feature-doc-viewer/src/index.ts"
-      ],
       "@nrwl/nx-dev/feature-flavor-selection": [
         "nx-dev/feature-flavor-selection/src/index.ts"
       ],
-      "@nrwl/nx-dev/feature-search": ["nx-dev/feature-search/src/index.ts"],
       "@nrwl/nx-dev/feature-storage": ["nx-dev/feature-storage/src/index.ts"],
       "@nrwl/nx-dev/feature-versions-and-flavors": [
         "nx-dev/feature-versions-and-flavors/src/index.ts"
       ],
-      "@nrwl/nx-dev/models-document": ["nx-dev/models-document/src/index.ts"],
-      "@nrwl/nx-dev/models-menu": ["nx-dev/models-menu/src/index.ts"],
-      "@nrwl/nx-dev/models-package": ["nx-dev/models-package/src/index.ts"],
-      "@nrwl/nx-dev/ui-commands": ["nx-dev/ui-commands/src/index.ts"],
-      "@nrwl/nx-dev/ui-common": ["nx-dev/ui-common/src/index.ts"],
-      "@nrwl/nx-dev/ui-community": ["nx-dev/ui-community/src/index.ts"],
-      "@nrwl/nx-dev/ui-conference": ["nx-dev/ui-conference/src/index.ts"],
-      "@nrwl/nx-dev/ui-home": ["nx-dev/ui-home/src/index.ts"],
-      "@nrwl/nx-dev/ui-markdoc": ["nx-dev/ui-markdoc/src/index.ts"],
-      "@nrwl/nx-dev/ui-member-card": ["nx-dev/ui-member-card/src/index.ts"],
-      "@nrwl/nx-dev/ui-references": ["nx-dev/ui-references/src/index.ts"],
-      "@nrwl/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
-      "@nrwl/nx-dev/ui-theme": ["nx-dev/ui-theme/src/index.ts"],
       "@nrwl/tao": ["packages/tao"],
       "@nrwl/tao/*": ["packages/tao/*"],
-      "@nrwl/typedoc-theme": ["typedoc-theme/src/index.ts"],
       "@nx/angular": ["packages/angular"],
       "@nx/angular/*": ["packages/angular/*"],
       "@nx/cypress": ["packages/cypress"],
@@ -79,6 +45,9 @@
       "@nx/expo": ["packages/expo"],
       "@nx/expo/*": ["packages/expo/*"],
       "@nx/express": ["packages/express"],
+      "@nx/graph/ui-components": ["graph/ui-components/src/index.ts"],
+      "@nx/graph/ui-graph": ["graph/ui-graph/src/index.ts"],
+      "@nx/graph/ui-tooltips": ["graph/ui-tooltips/src/index.ts"],
       "@nx/jest": ["packages/jest"],
       "@nx/jest/*": ["packages/jest/*"],
       "@nx/js": ["packages/js/src"],
@@ -90,6 +59,35 @@
       "@nx/next/*": ["packages/next/*"],
       "@nx/node": ["packages/node"],
       "@nx/node/*": ["packages/node/*"],
+      "@nx/nx-dev/data-access-documents": [
+        "nx-dev/data-access-documents/src/index.ts"
+      ],
+      "@nx/nx-dev/data-access-menu": ["nx-dev/data-access-menu/src/index.ts"],
+      "@nx/nx-dev/data-access-packages": [
+        "nx-dev/data-access-packages/src/index.ts"
+      ],
+      "@nx/nx-dev/feature-analytics": ["nx-dev/feature-analytics/src/index.ts"],
+      "@nx/nx-dev/feature-doc-viewer": [
+        "nx-dev/feature-doc-viewer/src/index.ts"
+      ],
+      "@nx/nx-dev/feature-package-schema-viewer": [
+        "nx-dev/feature-package-schema-viewer/src/index.ts"
+      ],
+      "@nx/nx-dev/feature-search": ["nx-dev/feature-search/src/index.ts"],
+      "@nx/nx-dev/models-document": ["nx-dev/models-document/src/index.ts"],
+      "@nx/nx-dev/models-menu": ["nx-dev/models-menu/src/index.ts"],
+      "@nx/nx-dev/models-package": ["nx-dev/models-package/src/index.ts"],
+      "@nx/nx-dev/ui-commands": ["nx-dev/ui-commands/src/index.ts"],
+      "@nx/nx-dev/ui-common": ["nx-dev/ui-common/src/index.ts"],
+      "@nx/nx-dev/ui-community": ["nx-dev/ui-community/src/index.ts"],
+      "@nx/nx-dev/ui-conference": ["nx-dev/ui-conference/src/index.ts"],
+      "@nx/nx-dev/ui-home": ["nx-dev/ui-home/src/index.ts"],
+      "@nx/nx-dev/ui-markdoc": ["nx-dev/ui-markdoc/src/index.ts"],
+      "@nx/nx-dev/ui-member-card": ["nx-dev/ui-member-card/src/index.ts"],
+      "@nx/nx-dev/ui-primitives": ["nx-dev/ui-primitives/src/index.ts"],
+      "@nx/nx-dev/ui-references": ["nx-dev/ui-references/src/index.ts"],
+      "@nx/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
+      "@nx/nx-dev/ui-theme": ["nx-dev/ui-theme/src/index.ts"],
       "@nx/plugin": ["packages/plugin"],
       "@nx/plugin/*": ["packages/plugin/*"],
       "@nx/react": ["packages/react"],
@@ -100,6 +98,7 @@
       "@nx/rollup/*": ["packages/rollup/*"],
       "@nx/storybook": ["packages/storybook"],
       "@nx/storybook/*": ["packages/storybook/*"],
+      "@nx/typedoc-theme": ["typedoc-theme/src/index.ts"],
       "@nx/vite": ["packages/vite"],
       "@nx/vite/*": ["packages/vite/*"],
       "@nx/web": ["packages/web"],
@@ -112,7 +111,6 @@
       "create-nx-workspace": ["packages/create-nx-workspace/index.ts"],
       "create-nx-workspace/*": ["packages/create-nx-workspace/*"],
       "nx": ["packages/nx"],
-      "nx-dev/ui-primitives": ["nx-dev/ui-primitives/src/index.ts"],
       "nx/*": ["packages/nx/*"]
     }
   }

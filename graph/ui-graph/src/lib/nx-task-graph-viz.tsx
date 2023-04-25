@@ -8,7 +8,7 @@ import {
   ProjectNodeToolTip,
   TaskNodeTooltip,
   Tooltip,
-} from '@nrwl/graph/ui-tooltips';
+} from '@nx/graph/ui-tooltips';
 import { GraphTooltipService } from './tooltip-service';
 
 type Theme = 'light' | 'dark' | 'system';

@@ -27,7 +27,7 @@ export default async function (
     }
 
     // if (projectConfiguration.root.endsWith('-somethingnot')) {
-    // console.log('MIGRATING', projectName, projectConfiguration.root);
+    //   console.log('MIGRATING', projectName, projectConfiguration.root);
     //   await moveGenerator(tree, {
     //     projectName,
     //     newProjectName: projectName,

@@ -3,12 +3,12 @@ import {
   ChatBubbleLeftEllipsisIcon,
   ClipboardIcon,
 } from '@heroicons/react/24/solid';
-import { Footer, Header, SectionHeading } from '@nrwl/nx-dev/ui-common';
+import { Footer, Header, SectionHeading } from '@nx/nx-dev/ui-common';
 import {
   ConnectWithUs,
   CreateNxPlugin,
   PluginDirectory,
-} from '@nrwl/nx-dev/ui-community';
+} from '@nx/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { nxPackagesApi } from '../lib/packages.api';
