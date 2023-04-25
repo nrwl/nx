@@ -1543,8 +1543,12 @@ async function runNxMigration(
   collection: MigrationsJson,
   name: string
 ) {
-  const implPath = getImplementationPath(collection, collectionPath, name);
-  const fn = require(implPath).default;
+  const { path: implPath, fnSymbol } = getImplementationPath(
+    collection,
+    collectionPath,
+    name
+  );
+  const fn = require(implPath)[fnSymbol];
   const host = new FsTree(root, false);
   await fn(host, {});
   host.lock();
@@ -1598,14 +1602,16 @@ function getImplementationPath(
   collection: MigrationsJson,
   collectionPath: string,
   name: string
-) {
+): { path: string; fnSymbol: string } {
   const g = collection.generators?.[name] || collection.schematics?.[name];
   if (!g) {
     throw new Error(
       `Unable to determine implementation path for "${collectionPath}:${name}"`
     );
   }
-  const implRelativePath = g.implementation || g.factory;
+  const implRelativePathAndMaybeSymbol = g.implementation || g.factory;
+  const [implRelativePath, fnSymbol = 'default'] =
+    implRelativePathAndMaybeSymbol.split('#');
 
   let implPath: string;
 
@@ -1620,7 +1626,7 @@ function getImplementationPath(
     );
   }
 
-  return implPath;
+  return { path: implPath, fnSymbol };
 }
 
 // TODO (v17): This should just become something like:
@@ -1643,7 +1649,7 @@ function isAngularMigration(
   const shouldBeNg = !!collection.schematics?.[name];
   let useAngularDevkitToRunMigration = false;
 
-  const implementationPath = getImplementationPath(
+  const { path: implementationPath } = getImplementationPath(
     collection,
     collectionPath,
     name
@@ -1651,6 +1657,7 @@ function isAngularMigration(
   const implStringContents = readFileSync(implementationPath, 'utf-8');
   // TODO (v17): Remove this check and the cli property access - it is only here for backwards compatibility.
   if (
+    ['@angular/material', '@angular/cdk'].includes(collection.name) ||
     [
       "import('@angular-devkit",
       'import("@angular-devkit',

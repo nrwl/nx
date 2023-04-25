@@ -318,10 +318,14 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     'package.json'
   );
   if (tree.exists(packageJsonPath)) {
-    updateJson(tree, packageJsonPath, (json) => {
+    updateJson<PackageJson>(tree, packageJsonPath, (json) => {
       json.name = options.importPath;
       json.version = '0.0.1';
       json.type = 'commonjs';
+      // If the package is publishable, we should remove the private field.
+      if (json.private && options.publishable) {
+        delete json.private;
+      }
       return json;
     });
   } else {
