@@ -41,6 +41,7 @@ import {
   tsNodeVersion,
 } from '../../utils/versions';
 import { getGeneratorConfigurationOptions } from './lib/user-prompts';
+import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -231,8 +232,10 @@ export async function configurationGenerator(
   ) {
     devDeps['storybook-addon-next'] = storybookNextAddonVersion;
     devDeps['storybook-addon-swc'] = storybookSwcAddonVersion;
+    devDeps['@swc/core'] = swcCoreVersion;
   } else if (compiler === 'swc') {
     devDeps['storybook-addon-swc'] = storybookSwcAddonVersion;
+    devDeps['@swc/core'] = swcCoreVersion;
   }
 
   if (schema.configureTestRunner === true) {
