@@ -161,7 +161,39 @@
         },
         "options": {
           "type": "object",
-          "description": "Default options for the runner."
+          "description": "Default options for the runner.",
+          "properties": {
+            "accessToken": {
+              "type": "string"
+            },
+            "captureStderr": {
+              "type": "boolean",
+              "description": "Defines whether the cache captures stderr or just stdout."
+            },
+            "parallel": {
+              "type": "number",
+              "description": "Defines the max number of targets ran in parallel."
+            },
+            "cacheableOperations": {
+              "type": "array",
+              "description": "Defines the list of targets/operations that are cached by Nx.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "cacheDirectory": {
+              "type": "string",
+              "description": "Defines where the local cache is stored."
+            },
+            "skipNxCache": {
+              "type": "boolean",
+              "description": "Defines whether the Nx Cache should be skipped."
+            },
+            "encryptionKey": {
+              "type": "string",
+              "description": "Defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key NX_CLOUD_ENCRYPTION_KEY that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable."
+            }
+          }
         }
       },
       "additionalProperties": false
