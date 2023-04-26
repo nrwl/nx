@@ -98,7 +98,7 @@ export function DocViewer({
               {!isIntro && (
                 <div
                   className={cx(
-                    'fixed top-36 right-[max(4rem,calc(50%-55rem))] z-20 hidden w-60 overflow-y-auto bg-white py-10 text-sm dark:bg-slate-900 xl:block'
+                    'fixed top-36 right-[max(2rem,calc(50%-55rem))] z-20 hidden w-60 overflow-y-auto bg-white py-10 text-sm dark:bg-slate-900 xl:block'
                   )}
                 >
                   <TableOfContents
