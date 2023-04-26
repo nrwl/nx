@@ -1,4 +1,3 @@
-import { GitBasedFileHasher } from './git-based-file-hasher';
 import { NodeBasedFileHasher } from './node-based-file-hasher';
 import { FileHasherBase } from './file-hasher-base';
 import { NativeFileHasher } from './native-file-hasher';
@@ -11,8 +10,6 @@ function createFileHasher(): FileHasherBase {
   switch (getHashingImplementation()) {
     case HasherImplementation.Native:
       return new NativeFileHasher();
-    case HasherImplementation.Git:
-      return new GitBasedFileHasher();
     case HasherImplementation.Node:
       return new NodeBasedFileHasher();
   }
