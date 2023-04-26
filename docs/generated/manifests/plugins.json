@@ -6,13 +6,13 @@
     "file": "",
     "itemList": [
       {
-        "id": "use-cases",
-        "name": "Plugin Use Cases",
+        "id": "getting-started",
+        "name": "Getting Started with Plugins",
         "description": "",
         "file": "shared/plugins/intro",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/intro/use-cases",
+        "path": "/plugins/intro/getting-started",
         "tags": []
       },
       {
@@ -30,14 +30,14 @@
     "path": "/plugins/intro",
     "tags": []
   },
-  "/plugins/intro/use-cases": {
-    "id": "use-cases",
-    "name": "Plugin Use Cases",
+  "/plugins/intro/getting-started": {
+    "id": "getting-started",
+    "name": "Getting Started with Plugins",
     "description": "",
     "file": "shared/plugins/intro",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/intro/use-cases",
+    "path": "/plugins/intro/getting-started",
     "tags": []
   },
   "/plugins/registry": {

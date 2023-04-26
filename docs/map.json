@@ -750,8 +750,8 @@
           "description": "Learn about plugins.",
           "itemList": [
             {
-              "name": "Plugin Use Cases",
-              "id": "use-cases",
+              "name": "Getting Started with Plugins",
+              "id": "getting-started",
               "file": "shared/plugins/intro"
             },
             {

@@ -2,4 +2,4 @@ Nx plugins are npm packages that contain [generators](/plugin-features/use-code-
 
 This package contains tooling to help plugin authors create and maintain plugins.
 
-For more information, see the [plugins](/plugins/intro/use-cases) section of docs.
+For more information, see the [plugins](/plugins/intro/getting-started) section of docs.

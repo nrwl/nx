@@ -1,4 +1,4 @@
-# Plugin Use Cases
+# Getting Started with Plugins
 
 Nx plugins contain [generators](/plugin-features/use-code-generators) and [executors](/plugin-features/use-task-executors) that extend the capabilities of an Nx workspace. They can be shared as npm packages or referenced locally within the same repo.
 
@@ -13,7 +13,7 @@ Nx plugins contain [generators](/plugin-features/use-code-generators) and [execu
 
 ## Use a Plugin
 
-Plugins allow you to easily adopt the industry standard practices for a particular framework without bearing all the maintenance burden. By tapping into the expertise of the plugin maintainers, you're freed up to focus on features that are specific to your application domain.
+Nx plugins help you scaffold new projects, pre-configure tooling, follow best practices, and modularize your codebase.
 
 {% cards cols="2" %}
 

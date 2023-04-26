@@ -3295,9 +3295,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Plugin Use Cases",
-            "path": "/plugins/intro/use-cases",
-            "id": "use-cases",
+            "name": "Getting Started with Plugins",
+            "path": "/plugins/intro/getting-started",
+            "id": "getting-started",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3314,9 +3314,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Plugin Use Cases",
-        "path": "/plugins/intro/use-cases",
-        "id": "use-cases",
+        "name": "Getting Started with Plugins",
+        "path": "/plugins/intro/getting-started",
+        "id": "getting-started",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
