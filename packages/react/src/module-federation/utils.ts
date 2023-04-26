@@ -38,7 +38,10 @@ export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
 
 export async function getModuleFederationConfig(
   mfConfig: ModuleFederationConfig,
-  options: { isServer: boolean } = { isServer: false }
+  options: {
+    isServer: boolean;
+    determineRemoteUrl?: (remote: string) => string;
+  } = { isServer: false }
 ) {
   let projectGraph: ProjectGraph;
   try {
@@ -88,14 +91,13 @@ export async function getModuleFederationConfig(
   );
 
   const mapRemotesFunction = options.isServer ? mapRemotesForSSR : mapRemotes;
+  const determineRemoteUrlFn =
+    options.determineRemoteUrl ||
+    getFunctionDeterminateRemoteUrl(options.isServer);
   const mappedRemotes =
     !mfConfig.remotes || mfConfig.remotes.length === 0
       ? {}
-      : mapRemotesFunction(
-          mfConfig.remotes,
-          'js',
-          getFunctionDeterminateRemoteUrl(options.isServer)
-        );
+      : mapRemotesFunction(mfConfig.remotes, 'js', determineRemoteUrlFn);
 
   return { sharedLibraries, sharedDependencies, mappedRemotes };
 }
