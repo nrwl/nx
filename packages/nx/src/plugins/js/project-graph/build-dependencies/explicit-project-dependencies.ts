@@ -40,19 +40,28 @@ export function buildExplicitTypeScriptDependencies(
             importExpr,
             f.file
           );
+          let targetProjectName;
           if (target) {
             if (!isRoot(source) && isRoot(target)) {
               // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
               return;
             }
 
-            res.push({
-              sourceProjectName: source,
-              targetProjectName: target,
-              sourceProjectFile: f.file,
-              type,
-            });
+            targetProjectName = target;
+          } else {
+            // treat all unknowns as npm packages, they can be eiher
+            // - mistyped local import, which has to be fixed manually
+            // - node internals, which should still be tracked as a dependency
+            // - npm packages, which are not yet installed but should be tracked
+            targetProjectName = `npm:${importExpr}`;
           }
+
+          res.push({
+            sourceProjectName: source,
+            targetProjectName,
+            sourceProjectFile: f.file,
+            type,
+          });
         }
       );
     });

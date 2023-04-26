@@ -268,7 +268,8 @@ export class ProjectGraphBuilder {
     }
     if (
       !this.graph.nodes[targetProjectName] &&
-      !this.graph.externalNodes[targetProjectName]
+      !this.graph.externalNodes[targetProjectName] &&
+      !targetProjectName.startsWith('npm:')
     ) {
       throw new Error(`Target project does not exist: ${targetProjectName}`);
     }
