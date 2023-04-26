@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "remove-eslint-project-config-if-no-type-checking-rules": {
       "cli": "nx",
       "version": "12.4.0-beta.0",
@@ -59,6 +59,12 @@
       "version": "15.7.1-beta.0",
       "description": "Add node_modules to root eslint ignore",
       "factory": "./src/migrations/update-15-7-1/add-eslint-ignore"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/linter with @nx/linter",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },
   "packageJsonUpdates": {
@@ -219,6 +225,20 @@
         },
         "@typescript-eslint/utils": {
           "version": "^5.36.1"
+        }
+      }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "^5.58.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^5.58.0"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^5.58.0"
         }
       }
     }

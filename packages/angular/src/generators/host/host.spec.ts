@@ -1,5 +1,5 @@
-import { stripIndents, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { stripIndents, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
   readProjectConfiguration,
@@ -64,10 +64,10 @@ describe('Host App Generator', () => {
     ).toContain(`'remote1', 'remote2'`);
     expect(tree.read('apps/host-app/src/app/app.component.html', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "<ul class=\\"remote-menu\\">
-        <li><a routerLink=\\"/\\">Home</a></li>
-        <li><a routerLink=\\"remote1\\">Remote1</a></li>
-        <li><a routerLink=\\"remote2\\">Remote2</a></li>
+      "<ul class="remote-menu">
+        <li><a routerLink="/">Home</a></li>
+        <li><a routerLink="remote1">Remote1</a></li>
+        <li><a routerLink="remote2">Remote2</a></li>
       </ul>
       <router-outlet></router-outlet>
       "

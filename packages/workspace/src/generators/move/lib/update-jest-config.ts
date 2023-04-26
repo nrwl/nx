@@ -1,4 +1,4 @@
-import { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import { ProjectConfiguration, Tree } from '@nx/devkit';
 import * as path from 'path';
 import { NormalizedSchema } from '../schema';
 
@@ -22,7 +22,11 @@ export function updateJestConfig(
   if (tree.exists(jestConfigPath)) {
     const oldContent = tree.read(jestConfigPath, 'utf-8');
 
-    const findName = new RegExp(`'${schema.projectName}'`, 'g');
+    // ensure both single and double quotes are replaced
+    const findName = new RegExp(
+      `'${schema.projectName}'|"${schema.projectName}"|\`${schema.projectName}\``,
+      'g'
+    );
     const findDir = new RegExp(project.root, 'g');
 
     const newContent = oldContent

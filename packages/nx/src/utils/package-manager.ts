@@ -87,8 +87,6 @@ export function getPackageManagerCommand(
       };
     },
     npm: () => {
-      process.env.npm_config_legacy_peer_deps ??= 'true';
-
       return {
         install: 'npm install',
         ciInstall: 'npm ci',

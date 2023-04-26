@@ -1,4 +1,4 @@
-import { logger } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
 
 export class Logger {
   private message = (_: TemplateStringsArray, message: string) =>

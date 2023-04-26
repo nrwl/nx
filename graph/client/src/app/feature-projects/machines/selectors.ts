@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-import type { ProjectGraphProjectNode } from '@nrwl/devkit';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
 import { ProjectGraphSelector } from '../hooks/use-project-graph-selector';
 import { GraphPerfReport, WorkspaceLayout } from '../../interfaces';
 import { TracingAlgorithmType } from './interfaces';

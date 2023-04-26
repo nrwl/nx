@@ -1,4 +1,4 @@
-import { getWorkspaceLayout, ProjectConfiguration, Tree } from '@nrwl/devkit';
+import { getWorkspaceLayout, ProjectConfiguration, Tree } from '@nx/devkit';
 import { getImportPath } from 'nx/src/utils/path';
 import type { NormalizedSchema, Schema } from '../schema';
 import { getDestination, getNewProjectName, normalizeSlashes } from './utils';
@@ -11,7 +11,8 @@ export function normalizeSchema(
   const destination = schema.destination.startsWith('/')
     ? normalizeSlashes(schema.destination.slice(1))
     : schema.destination;
-  const newProjectName = getNewProjectName(destination);
+  const newProjectName =
+    schema.newProjectName ?? getNewProjectName(destination);
   const { npmScope } = getWorkspaceLayout(tree);
 
   return {

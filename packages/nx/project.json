@@ -18,7 +18,7 @@
       "command": "yarn napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages/nx/native-packages"
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/nx/bin/nx.ts",
         "assets": [
@@ -85,9 +85,6 @@
           },
           {
             "command": "node ./scripts/copy-readme.js nx"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/cli"
           },
           {
             "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"

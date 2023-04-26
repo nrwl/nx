@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import type { NxJsonConfiguration } from '@nx/devkit';
 import {
   getPackageManagerCommand,
   isNotWindows,
@@ -17,7 +17,7 @@ import {
   fileExists,
   removeFile,
   readResolvedConfiguration,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Nx Affected and Graph Tests', () => {
   let proj: string;
@@ -33,12 +33,12 @@ describe('Nx Affected and Graph Tests', () => {
       const mylib = uniq('mylib');
       const mylib2 = uniq('mylib2');
       const mypublishablelib = uniq('mypublishablelib');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
-      runCLI(`generate @nrwl/js:lib ${mylib}`);
-      runCLI(`generate @nrwl/js:lib ${mylib2}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib2}`);
       runCLI(
-        `generate @nrwl/js:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib}`
+        `generate @nx/js:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib} --tags=ui`
       );
 
       updateFile(
@@ -63,63 +63,49 @@ describe('Nx Affected and Graph Tests', () => {
               });
             `
       );
-      expect(
-        (
-          await runCLIAsync(
-            `affected:apps --files="libs/${mylib}/src/index.ts" --plain`,
-            { silent: true }
-          )
-        ).stdout.trim()
-      ).toEqual(myapp);
 
       const affectedApps = runCLI(
-        `affected:apps --files="libs/${mylib}/src/index.ts"`
+        `print-affected --files="libs/${mylib}/src/index.ts" --select projects`
       );
       expect(affectedApps).toContain(myapp);
       expect(affectedApps).not.toContain(myapp2);
-      expect(affectedApps).not.toContain(`${myapp}-e2e`);
 
       const implicitlyAffectedApps = runCLI(
-        'affected:apps --files="tsconfig.base.json"'
+        'print-affected --select projects --files="tsconfig.base.json"'
       );
       expect(implicitlyAffectedApps).toContain(myapp);
       expect(implicitlyAffectedApps).toContain(myapp2);
 
-      const noAffectedApps = runCLI('affected:apps --files="README.md"');
+      const noAffectedApps = runCLI(
+        'print-affected --select projects --files="README.md"'
+      );
       expect(noAffectedApps).not.toContain(myapp);
       expect(noAffectedApps).not.toContain(myapp2);
 
-      expect(
-        (
-          await runCLIAsync(
-            `affected:libs --files="libs/${mylib}/src/index.ts" --plain`,
-            { silent: true }
-          )
-        ).stdout.trim()
-      ).toEqual(`${mylib} ${mypublishablelib}`);
-
       const affectedLibs = runCLI(
-        `affected:libs --files="libs/${mylib}/src/index.ts"`
+        `print-affected --select projects --files="libs/${mylib}/src/index.ts"`
       );
       expect(affectedLibs).toContain(mypublishablelib);
       expect(affectedLibs).toContain(mylib);
       expect(affectedLibs).not.toContain(mylib2);
 
       const implicitlyAffectedLibs = runCLI(
-        'affected:libs --files="tsconfig.base.json"'
+        'print-affected --select projects --files="tsconfig.base.json"'
       );
       expect(implicitlyAffectedLibs).toContain(mypublishablelib);
       expect(implicitlyAffectedLibs).toContain(mylib);
       expect(implicitlyAffectedLibs).toContain(mylib2);
 
       const noAffectedLibsNonExistentFile = runCLI(
-        'affected:libs --files="tsconfig.json"'
+        'print-affected --select projects --files="tsconfig.json"'
       );
       expect(noAffectedLibsNonExistentFile).not.toContain(mypublishablelib);
       expect(noAffectedLibsNonExistentFile).not.toContain(mylib);
       expect(noAffectedLibsNonExistentFile).not.toContain(mylib2);
 
-      const noAffectedLibs = runCLI('affected:libs --files="README.md"');
+      const noAffectedLibs = runCLI(
+        'print-affected --select projects --files="README.md"'
+      );
       expect(noAffectedLibs).not.toContain(mypublishablelib);
       expect(noAffectedLibs).not.toContain(mylib);
       expect(noAffectedLibs).not.toContain(mylib2);
@@ -135,10 +121,18 @@ describe('Nx Affected and Graph Tests', () => {
       expect(build).toContain('Successfully ran target build');
 
       const buildExcluded = runCLI(
-        `affected:build --files="libs/${mylib}/src/index.ts" --exclude ${myapp}`
+        `affected:build --files="libs/${mylib}/src/index.ts" --exclude=${myapp}`
       );
       expect(buildExcluded).toContain(`Running target build for 2 projects:`);
       expect(buildExcluded).toContain(`- ${mypublishablelib}`);
+
+      const buildExcludedByTag = runCLI(
+        `affected:build --files="libs/${mylib}/src/index.ts" --exclude=tag:ui`
+      );
+      expect(buildExcludedByTag).toContain(
+        `Running target build for 2 projects:`
+      );
+      expect(buildExcludedByTag).not.toContain(`- ${mypublishablelib}`);
 
       // test
       updateFile(
@@ -193,28 +187,30 @@ describe('Nx Affected and Graph Tests', () => {
     });
 
     function generateAll() {
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
-      runCLI(`generate @nrwl/js:lib ${mylib}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
       runCommand(`git add . && git commit -am "add all"`);
     }
 
     it('should not affect other projects by generating a new project', () => {
       // TODO: investigate why affected gives different results on windows
       if (isNotWindows()) {
-        runCLI(`generate @nrwl/web:app ${myapp}`);
-        expect(runCLI('affected:apps')).toContain(myapp);
+        runCLI(`generate @nx/web:app ${myapp}`);
+        expect(runCLI('print-affected --select projects')).toContain(myapp);
         runCommand(`git add . && git commit -am "add ${myapp}"`);
 
-        runCLI(`generate @nrwl/web:app ${myapp2}`);
-        expect(runCLI('affected:apps')).not.toContain(myapp);
-        expect(runCLI('affected:apps')).toContain(myapp2);
+        runCLI(`generate @nx/web:app ${myapp2}`);
+        let output = runCLI('print-affected --select projects');
+        expect(output).not.toContain(myapp);
+        expect(output).toContain(myapp2);
         runCommand(`git add . && git commit -am "add ${myapp2}"`);
 
-        runCLI(`generate @nrwl/js:lib ${mylib}`);
-        expect(runCLI('affected:apps')).not.toContain(myapp);
-        expect(runCLI('affected:apps')).not.toContain(myapp2);
-        expect(runCLI('affected:libs')).toContain(mylib);
+        runCLI(`generate @nx/js:lib ${mylib}`);
+        output = runCLI('print-affected --select projects');
+        expect(output).not.toContain(myapp);
+        expect(output).not.toContain(myapp2);
+        expect(output).toContain(mylib);
       }
     }, 1000000);
 
@@ -226,9 +222,10 @@ describe('Nx Affected and Graph Tests', () => {
           ...config,
           tags: ['tag'],
         }));
-        expect(runCLI('affected:apps')).toContain(myapp);
-        expect(runCLI('affected:apps')).not.toContain(myapp2);
-        expect(runCLI('affected:libs')).not.toContain(mylib);
+        const output = runCLI('print-affected --select projects');
+        expect(output).toContain(myapp);
+        expect(output).not.toContain(myapp2);
+        expect(output).not.toContain(mylib);
       }
     });
 
@@ -236,9 +233,10 @@ describe('Nx Affected and Graph Tests', () => {
       generateAll();
       const root = readResolvedConfiguration().projects[mylib].root;
       removeFile(root);
-      expect(runCLI('affected:apps')).toContain(myapp);
-      expect(runCLI('affected:apps')).toContain(myapp2);
-      expect(runCLI('affected:libs')).not.toContain(mylib);
+      const output = runCLI('print-affected --select projects');
+      expect(output).toContain(myapp);
+      expect(output).toContain(myapp2);
+      expect(output).not.toContain(mylib);
     });
 
     it('should detect changes to implicitly dependant projects', () => {
@@ -251,12 +249,11 @@ describe('Nx Affected and Graph Tests', () => {
       runCommand('git commit -m "setup test"');
       updateFile(`libs/${mylib}/index.html`, '<html></html>');
 
-      const affectedApps = runCLI('affected:apps');
-      const affectedLibs = runCLI('affected:libs');
+      const output = runCLI('print-affected --select projects');
 
-      expect(affectedApps).toContain(myapp);
-      expect(affectedApps).not.toContain(myapp2);
-      expect(affectedLibs).toContain(mylib);
+      expect(output).toContain(myapp);
+      expect(output).not.toContain(myapp2);
+      expect(output).toContain(mylib);
 
       // Clear implicit deps to not interfere with other tests.
       updateProjectConfig(myapp, (config) => ({
@@ -297,11 +294,11 @@ describe('Nx Affected and Graph Tests', () => {
       const mylib2 = uniq('mylib2');
       const mypublishablelib = uniq('mypublishablelib');
 
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
-      runCLI(`generate @nrwl/js:lib ${mylib}`);
-      runCLI(`generate @nrwl/js:lib ${mylib2}`);
-      runCLI(`generate @nrwl/js:lib ${mypublishablelib}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib2}`);
+      runCLI(`generate @nx/js:lib ${mypublishablelib}`);
 
       const app1ElementSpec = readFile(
         `apps/${myapp}/src/app/app.element.spec.ts`
@@ -415,11 +412,11 @@ describe('Nx Affected and Graph Tests', () => {
       mylib = uniq('mylib');
       mylib2 = uniq('mylib2');
 
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
-      runCLI(`generate @nrwl/web:app ${myapp3}`);
-      runCLI(`generate @nrwl/js:lib ${mylib}`);
-      runCLI(`generate @nrwl/js:lib ${mylib2}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
+      runCLI(`generate @nx/web:app ${myapp3}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib2}`);
 
       runCommand(`git init`);
       runCommand(`git config user.email "test@test.com"`);

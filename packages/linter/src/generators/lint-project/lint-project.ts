@@ -1,11 +1,11 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   formatFiles,
   offsetFromRoot,
   readProjectConfiguration,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { Linter } from '../utils/linter';
 import { findEslintFile } from '../utils/eslint-file';
@@ -102,7 +102,7 @@ export async function lintProjectGenerator(
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   projectConfig.targets['lint'] = {
-    executor: '@nrwl/linter:eslint',
+    executor: '@nx/linter:eslint',
     outputs: ['{options.outputFile}'],
     options: {
       lintFilePatterns: options.eslintFilePatterns,

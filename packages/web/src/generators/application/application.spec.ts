@@ -1,13 +1,13 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { getProjects, readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { getProjects, readJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
 describe('app', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
@@ -78,18 +78,18 @@ describe('app', () => {
       expect(tree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = readJson(tree, 'apps/my-app-e2e/tsconfig.json');
       expect(tsconfigE2E).toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
+        {
+          "compilerOptions": {
             "allowJs": true,
             "outDir": "../../dist/out-tsc",
             "sourceMap": false,
-            "types": Array [
+            "types": [
               "cypress",
               "node",
             ],
           },
           "extends": "../../tsconfig.base.json",
-          "include": Array [
+          "include": [
             "src/**/*.ts",
             "src/**/*.js",
             "cypress.config.ts",
@@ -99,36 +99,36 @@ describe('app', () => {
 
       const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
       expect(eslintJson).toMatchInlineSnapshot(`
-        Object {
-          "extends": Array [
+        {
+          "extends": [
             "../../.eslintrc.json",
           ],
-          "ignorePatterns": Array [
+          "ignorePatterns": [
             "!**/*",
           ],
-          "overrides": Array [
-            Object {
-              "files": Array [
+          "overrides": [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
           ],
         }
@@ -320,7 +320,7 @@ describe('app', () => {
       name: 'my-App',
     });
     const targets = readProjectConfiguration(tree, 'my-app').targets;
-    expect(targets.build.executor).toEqual('@nrwl/webpack:webpack');
+    expect(targets.build.executor).toEqual('@nx/webpack:webpack');
     expect(targets.build.outputs).toEqual(['{options.outputPath}']);
     expect(targets.build.options).toEqual({
       compiler: 'babel',
@@ -355,7 +355,7 @@ describe('app', () => {
       name: 'my-App',
     });
     const targets = readProjectConfiguration(tree, 'my-app').targets;
-    expect(targets.serve.executor).toEqual('@nrwl/webpack:dev-server');
+    expect(targets.serve.executor).toEqual('@nx/webpack:dev-server');
     expect(targets.serve.options).toEqual({
       buildTarget: 'my-app:build',
     });
@@ -371,7 +371,7 @@ describe('app', () => {
       bundler: 'vite',
     });
     const targets = readProjectConfiguration(tree, 'my-app').targets;
-    expect(targets.build.executor).toEqual('@nrwl/vite:build');
+    expect(targets.build.executor).toEqual('@nx/vite:build');
     expect(targets.build.outputs).toEqual(['{options.outputPath}']);
     expect(targets.build.options).toEqual({
       outputPath: 'dist/apps/my-app',
@@ -385,7 +385,7 @@ describe('app', () => {
       bundler: 'vite',
     });
     const targets = readProjectConfiguration(tree, 'my-app').targets;
-    expect(targets.serve.executor).toEqual('@nrwl/vite:dev-server');
+    expect(targets.serve.executor).toEqual('@nx/vite:dev-server');
     expect(targets.serve.options).toEqual({
       buildTarget: 'my-app:build',
     });
@@ -400,7 +400,7 @@ describe('app', () => {
       name: 'my-App',
     });
     expect(readProjectConfiguration(tree, 'my-app').targets.lint).toEqual({
-      executor: '@nrwl/linter:eslint',
+      executor: '@nx/linter:eslint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['apps/my-app/**/*.ts'],
@@ -437,14 +437,14 @@ describe('app', () => {
       const projectConfiguration = readProjectConfiguration(tree, 'my-app');
       expect(projectConfiguration.targets.test).toBeUndefined();
       expect(projectConfiguration.targets.lint).toMatchInlineSnapshot(`
-        Object {
-          "executor": "@nrwl/linter:eslint",
-          "options": Object {
-            "lintFilePatterns": Array [
+        {
+          "executor": "@nx/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
               "apps/my-app/**/*.ts",
             ],
           },
-          "outputs": Array [
+          "outputs": [
             "{options.outputFile}",
           ],
         }
@@ -462,14 +462,14 @@ describe('app', () => {
         readJson(tree, 'apps/my-cool-app/tsconfig.spec.json').compilerOptions
           .types
       ).toMatchInlineSnapshot(`
-        Array [
+        [
           "jest",
           "node",
         ]
       `);
       expect(
         readProjectConfiguration(tree, 'my-cool-app').targets.test.executor
-      ).toEqual('@nrwl/jest:jest');
+      ).toEqual('@nx/jest:jest');
     });
 
     it('--bundler=vite --unitTestRunner=jest', async () => {
@@ -488,14 +488,14 @@ describe('app', () => {
         readJson(tree, 'apps/my-vite-app/tsconfig.spec.json').compilerOptions
           .types
       ).toMatchInlineSnapshot(`
-        Array [
+        [
           "jest",
           "node",
         ]
       `);
       expect(
         readProjectConfiguration(tree, 'my-vite-app').targets.test.executor
-      ).toEqual('@nrwl/jest:jest');
+      ).toEqual('@nx/jest:jest');
     });
 
     it('--bundler=webpack --unitTestRunner=vitest', async () => {
@@ -511,7 +511,7 @@ describe('app', () => {
         readJson(tree, 'apps/my-webpack-app/tsconfig.spec.json').compilerOptions
           .types
       ).toMatchInlineSnapshot(`
-        Array [
+        [
           "vitest/globals",
           "vitest/importMeta",
           "vite/client",
@@ -520,7 +520,7 @@ describe('app', () => {
       `);
       expect(
         readProjectConfiguration(tree, 'my-webpack-app').targets.test.executor
-      ).toEqual('@nrwl/vite:test');
+      ).toEqual('@nx/vite:test');
     });
   });
 
@@ -549,7 +549,7 @@ describe('app', () => {
           preset: '../../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
-            '^.+\\\\\\\\.[tj]s$': 'babel-jest',
+            '^.+\\\\.[tj]s$': 'babel-jest',
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/apps/my-app',
@@ -572,7 +572,7 @@ describe('app', () => {
           preset: '../../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
-            '^.+\\\\\\\\.[tj]s$': '@swc/jest',
+            '^.+\\\\.[tj]s$': '@swc/jest',
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/apps/my-app',
@@ -595,8 +595,8 @@ describe('app', () => {
     it('should setup targets with vite configuration', () => {
       const projects = getProjects(viteAppTree);
       const targetConfig = projects.get('my-app').targets;
-      expect(targetConfig.build.executor).toEqual('@nrwl/vite:build');
-      expect(targetConfig.serve.executor).toEqual('@nrwl/vite:dev-server');
+      expect(targetConfig.build.executor).toEqual('@nx/vite:build');
+      expect(targetConfig.serve.executor).toEqual('@nx/vite:dev-server');
       expect(targetConfig.serve.options).toEqual({
         buildTarget: 'my-app:build',
       });

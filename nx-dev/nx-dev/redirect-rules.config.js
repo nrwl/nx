@@ -12,9 +12,14 @@ const schemaUrls = {
     '/packages/workspace/generators/workspace-generator',
   '/workspace/convert-to-nx-project-generator':
     '/packages/workspace/generators/convert-to-nx-project',
-  '/workspace/run-commands-executor':
-    '/packages/workspace/executors/run-commands',
-  '/workspace/run-script': '/packages/workspace/executors/run-script',
+
+  '/workspace/run-commands-executor': '/packages/nx/executors/run-commands',
+  '/workspace/run-script': '/packages/nx/executors/run-script',
+  '/packages/workspace/executors/run-commands':
+    '/packages/nx/executors/run-commands',
+  '/packages/workspace/executors/run-script':
+    '/packages/nx/executors/run-script',
+
   '/js/library': '/packages/js/generators/library',
   '/js/convert-to-swc': '/packages/js/generators/convert-to-swc',
   '/js/tsc': '/packages/js/executors/tsc',
@@ -139,11 +144,19 @@ const schemaUrls = {
   '/react-native/start': '/packages/react-native/executors/start',
   '/react-native/storybook': '/packages/react-native/executors/storybook',
   '/react-native/sync-deps': '/packages/react-native/executors/sync-deps',
-  '/nx-plugin/executor': '/packages/nx-plugin/generators/executor',
-  '/nx-plugin/migration': '/packages/nx-plugin/generators/migration',
-  '/nx-plugin/plugin': '/packages/nx-plugin/generators/plugin',
-  '/nx-plugin/schematic': '/packages/nx-plugin/generators/generator',
-  '/nx-plugin/e2e': '/packages/nx-plugin/executors/e2e',
+  '/packages/nx-plugin/generators/executor':
+    '/packages/plugin/generators/executor',
+  '/packages/nx-plugin/generators/migration':
+    '/packages/plugin/generators/migration',
+  '/packages/nx-plugin/generators/plugin': '/packages/plugin/generators/plugin',
+  '/packages/nx-plugin/generators/schematic':
+    '/packages/plugin/generators/generator',
+  '/packages/nx-plugin/generators/e2e': '/packages/plugin/executors/e2e',
+  '/nx-plugin/executor': '/packages/plugin/generators/executor',
+  '/nx-plugin/migration': '/packages/plugin/generators/migration',
+  '/nx-plugin/plugin': '/packages/plugin/generators/plugin',
+  '/nx-plugin/schematic': '/packages/plugin/generators/generator',
+  '/nx-plugin/e2e': '/packages/plugin/executors/e2e',
 };
 
 /**
@@ -291,7 +304,7 @@ const overviewUrls = {
   '/next/overview': '/packages/next',
   '/detox/overview': '/packages/detox',
   '/react-native/overview': '/packages/react-native',
-  '/nx-plugin/overview': '/packages/nx-plugin',
+  '/nx-plugin/overview': '/packages/plugin',
 };
 
 /**
@@ -306,9 +319,9 @@ const cliUrls = {
   '/cli/run-many': '/nx/run-many',
   '/cli/affected': '/nx/affected',
   '/cli/affected-dep-graph': '/nx/affected-dep-graph',
-  '/cli/affected-apps': '/nx/affected-apps',
-  '/cli/affected-libs': '/nx/affected-libs',
-  '/cli/print-affected': '/nx/print-affected',
+  '/cli/affected-apps': '/packages/nx/documents/print-affected',
+  '/cli/affected-libs': '/packages/nx/documents/print-affected',
+  '/cli/print-affected': '/packages/nx/documents/print-affected',
   '/cli/format-check': '/nx/format-check',
   '/cli/format-write': '/nx/format-write',
   '/cli/migrate': '/nx/migrate',
@@ -342,7 +355,7 @@ const tutorialBaseUrls = {
   '/(l|latest)/(a|angular)/tutorial/1-code-generation':
     '/angular-tutorial/1-code-generation',
   '/(l|latest)/(a|node)/tutorial/1-code-generation':
-    '/getting-started/node-server-tutorial',
+    '/tutorials/node-server-tutorial',
   '/(l|latest)/(r|react)/tutorial/1-code-generation':
     '/react-tutorial/1-code-generation',
 };
@@ -378,7 +391,7 @@ const oldNodeTutorialPaths = [
 ];
 
 const extraNodeRedirects = {
-  '/getting-started/node-tutorial': '/getting-started/node-server-tutorial',
+  '/getting-started/node-tutorial': '/tutorials/node-server-tutorial',
   '/node-tutorial/1-code-generation': '/node-server-tutorial/1-code-generation',
   '/node-tutorial/2-project-graph': '/node-server-tutorial/2-project-graph',
   '/node-tutorial/3-task-running': '/node-server-tutorial/3-task-running',
@@ -386,11 +399,12 @@ const extraNodeRedirects = {
   '/node-tutorial/5-docker-target': '/node-server-tutorial/5-docker-target',
   '/node-tutorial/6-summary': '/node-server-tutorial/6-summary',
 };
-const nodeRedirectDestination = '/getting-started/node-server-tutorial';
+const nodeRedirectDestination = '/tutorials/node-server-tutorial';
 const nodeTutorialRedirects = oldNodeTutorialPaths.reduce((acc, path) => {
   acc[path] = nodeRedirectDestination;
   return acc;
 }, {});
+
 const tutorialRedirects = Object.assign(
   tutorialBaseUrls,
   reactTutorialRedirects,
@@ -422,12 +436,12 @@ const packagesIndexes = {
   '/nx': '/packages/nx',
   '/workspace': '/packages/workspace',
   '/devkit': '/packages/devkit',
-  '/nx-plugin': '/packages/nx-plugin',
+  '/nx-plugin': '/packages/plugin',
   '/angular': '/packages/angular',
   '/cypress': '/packages/cypress',
   '/detox': '/packages/detox',
   '/esbuild': '/packages/esbuild',
-  '/eslint-plugin-nx': '/packages/eslint',
+  '/eslint-plugin-nx': '/packages/eslint-plugin-nx',
   '/expo': '/packages/expo',
   '/express': '/packages/express',
   '/jest': '/packages/jest',
@@ -455,9 +469,13 @@ const packagesDocuments = {
   '/nx/run-many': '/packages/nx/documents/run-many',
   '/nx/affected': '/packages/nx/documents/affected',
   '/nx/affected-dep-graph': '/packages/nx/documents/affected-dep-graph',
-  '/nx/affected-apps': '/packages/nx/documents/affected-apps',
-  '/nx/affected-libs': '/packages/nx/documents/affected-libs',
+  '/nx/affected-apps': '/packages/nx/documents/print-affected',
+  '/nx/affected-libs': '/packages/nx/documents/print-affected',
   '/nx/print-affected': '/packages/nx/documents/print-affected',
+  '/packages/nx/documents/affected-apps':
+    '/packages/nx/documents/print-affected',
+  '/packages/nx/documents/affected-libs':
+    '/packages/nx/documents/print-affected',
   '/nx/format-check': '/packages/nx/documents/format-check',
   '/nx/format-write': '/packages/nx/documents/format-write',
   '/nx/migrate': '/packages/nx/documents/migrate',
@@ -505,6 +523,35 @@ const packagesDocuments = {
   '/packages/storybook/documents/migrate-storybook-7':
     '/packages/storybook/generators/migrate-7',
   '/linter/eslint-plugin-nx': '/packages/linter/documents/eslint-plugin-nx',
+  '/packages/add-nx-to-monorepo': '/packages/nx/documents/init',
+  '/packages/cra-to-nx': '/packages/nx/documents/init',
+  '/packages/make-angular-cli-faster': '/packages/nx/documents/init',
+  '/packages/eslint-plugin-nx': '/packages/eslint-plugin',
+  '/packages/eslint-plugin-nx/documents/enforce-module-boundaries':
+    '/packages/eslint-plugin/documents/enforce-module-boundaries',
+  '/packages/eslint-plugin-nx/documents/overview':
+    '/packages/eslint-plugin/documents/overview',
+  '/packages/node/executors/webpack': '/packages/webpack/executors/webpack',
+  '/packages/web/executors/webpack': '/packages/webpack/executors/webpack',
+  '/packages/web/executors/dev-server':
+    '/packages/webpack/executors/dev-server',
+  '/packages/web/executors/rollup': '/packages/rollup/executors/rollup',
+};
+
+/**
+ * Concept documents Updates (updated 2023-03-31)
+ */
+const conceptUrls = {
+  '/more-concepts/global-nx':
+    '/getting-started/installation#installing-nx-globally',
+  '/getting-started/package-based-repo-tutorial':
+    '/tutorials/package-based-repo-tutorial',
+  '/getting-started/integrated-repo-tutorial':
+    '/tutorials/integrated-repo-tutorial',
+  '/getting-started/react-standalone-tutorial':
+    '/tutorials/react-standalone-tutorial',
+  '/getting-started/angular-standalone-tutorial':
+    '/tutorials/angular-standalone-tutorial',
 };
 
 /**
@@ -521,4 +568,5 @@ module.exports = {
   tutorialRedirects,
   packagesIndexes,
   packagesDocuments,
+  conceptUrls,
 };

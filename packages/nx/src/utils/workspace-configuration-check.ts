@@ -11,7 +11,7 @@ export function workspaceConfigurationCheck() {
       title: 'workspace.json is ignored',
       bodyLines: [
         'Nx no longer reads configuration from workspace.json.',
-        'Run "nx g @nrwl/workspace:fix-configuration" to split workspace.json into individual project.json files.',
+        'Run "nx g @nx/workspace:fix-configuration" to split workspace.json into individual project.json files.',
       ],
     });
     return;
@@ -27,8 +27,8 @@ export function workspaceConfigurationCheck() {
         title: 'angular.json format is incorrect',
         bodyLines: [
           'Nx no longer supports the v2 format of angular.json.',
-          'Run "nx g @nrwl/workspace:fix-configuration" to split angular.json into individual project.json files. (Recommended)',
-          'If you want to preserve angular.json, run "nx g @nrwl/workspace:fix-configuration --reformat"',
+          'Run "nx g @nx/workspace:fix-configuration" to split angular.json into individual project.json files. (Recommended)',
+          'If you want to preserve angular.json, run "nx g @nx/workspace:fix-configuration --reformat"',
         ],
       });
       process.exit(1);

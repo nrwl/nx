@@ -418,5 +418,25 @@
     "name": "@rbnx/webdriverio",
     "description": "A Nx plugin that adds the WebdriverIO testing framework to a NX workspace.",
     "url": "https://github.com/Roozenboom/rbnx/tree/main/packages/webdriverio"
+  },
+  {
+    "name": "nx-ngrok",
+    "description": "Ngrok support for Nx",
+    "url": "https://github.com/domjtalbot/nx-ngrok"
+  },
+  {
+    "name": "@nxrocks/nx-ktor",
+    "description": "Nx plugin to generate, run, package, build (and more) Ktor projects inside your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-ktor"
+  },
+  {
+    "name": "nx-size-limit",
+    "description": "Adds size-limit support for Nx (performance budget tool for JavaScript)",
+    "url": "https://github.com/LironHazan/nx-size-limit"
+  },
+  {
+    "name": "@jnxplus/nx-quarkus-gradle",
+    "description": "Nx plugin to add Quarkus and Gradle multi-project builds support to Nx workspace",
+    "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-quarkus-gradle"
   }
 ]

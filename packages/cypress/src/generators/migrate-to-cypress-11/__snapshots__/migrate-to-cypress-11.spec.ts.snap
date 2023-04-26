@@ -2,7 +2,7 @@
 
 exports[`convertToCypressTen convertCypressProject should handle custom target names 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 const cypressJsonConfig = {
   fileServerFolder: '.',
@@ -25,7 +25,7 @@ export default defineConfig({
 
 exports[`convertToCypressTen convertCypressProject should handle multiple configurations 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 const cypressJsonConfig = {
   fileServerFolder: '.',
@@ -47,17 +47,17 @@ export default defineConfig({
 `;
 
 exports[`convertToCypressTen convertCypressProject should handle multiple configurations 2`] = `
-Object {
-  "configurations": Object {
-    "production": Object {
+{
+  "configurations": {
+    "production": {
       "devServerTarget": "target:serve:production",
     },
-    "static": Object {
+    "static": {
       "baseUrl": "http://localhost:3000",
     },
   },
-  "executor": "@nrwl/cypress:cypress",
-  "options": Object {
+  "executor": "@nx/cypress:cypress",
+  "options": {
     "cypressConfig": "apps/app-e2e/cypress.config.ts",
     "devServerTarget": "app:serve",
     "testingType": "e2e",
@@ -67,7 +67,7 @@ Object {
 
 exports[`convertToCypressTen convertCypressProject should handle multiple configurations with no default cypressConfig option 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 const cypressJsonConfig = {
   fileServerFolder: '.',
@@ -89,19 +89,19 @@ export default defineConfig({
 `;
 
 exports[`convertToCypressTen convertCypressProject should handle multiple configurations with no default cypressConfig option 2`] = `
-Object {
-  "configurations": Object {
-    "production": Object {
+{
+  "configurations": {
+    "production": {
       "cypressConfig": "apps/app-e2e/cypress.production.config.ts",
       "devServerTarget": "target:serve:production",
     },
-    "static": Object {
+    "static": {
       "baseUrl": "http://localhost:3000",
       "cypressConfig": "apps/app-e2e/cypress.config.ts",
     },
   },
-  "executor": "@nrwl/cypress:cypress",
-  "options": Object {
+  "executor": "@nx/cypress:cypress",
+  "options": {
     "baseUrl": "http://localhost:4200",
     "testingType": "e2e",
   },
@@ -110,7 +110,7 @@ Object {
 
 exports[`convertToCypressTen convertCypressProject should handle sharing the same config across projects 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 const cypressJsonConfig = {
   fileServerFolder: '.',
@@ -131,7 +131,7 @@ export default defineConfig({
 
 exports[`convertToCypressTen convertCypressProject should infer targets with --all flag 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 const cypressJsonConfig = {
   fileServerFolder: '.',
@@ -153,41 +153,41 @@ export default defineConfig({
 `;
 
 exports[`convertToCypressTen convertCypressProject should infer targets with --all flag 2`] = `
-Object {
-  "e2e": Object {
-    "configurations": Object {
-      "production": Object {
+{
+  "e2e": {
+    "configurations": {
+      "production": {
         "devServerTarget": "app:serve:production",
       },
     },
-    "executor": "@nrwl/cypress:cypress",
-    "options": Object {
+    "executor": "@nx/cypress:cypress",
+    "options": {
       "cypressConfig": "apps/app-e2e/cypress.config.ts",
       "devServerTarget": "app:serve",
       "testingType": "e2e",
     },
   },
-  "e2e-custom": Object {
-    "configurations": Object {
-      "production": Object {
+  "e2e-custom": {
+    "configurations": {
+      "production": {
         "devServerTarget": "app:serve:production",
       },
     },
-    "executor": "@nrwl/cypress:cypress",
-    "options": Object {
+    "executor": "@nx/cypress:cypress",
+    "options": {
       "cypressConfig": "apps/app-e2e/cypress.config.ts",
       "devServerTarget": "app:serve",
       "testingType": "e2e",
     },
   },
-  "lint": Object {
-    "executor": "@nrwl/linter:eslint",
-    "options": Object {
-      "lintFilePatterns": Array [
+  "lint": {
+    "executor": "@nx/linter:eslint",
+    "options": {
+      "lintFilePatterns": [
         "apps/app-e2e/**/*.{js,ts}",
       ],
     },
-    "outputs": Array [
+    "outputs": [
       "{options.outputFile}",
     ],
   },
@@ -196,7 +196,7 @@ Object {
 
 exports[`convertToCypressTen convertCypressProject should not break when an invalid target is passed in 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 const cypressJsonConfig = {
   fileServerFolder: '.',
@@ -218,41 +218,41 @@ export default defineConfig({
 `;
 
 exports[`convertToCypressTen convertCypressProject should not break when an invalid target is passed in 2`] = `
-Object {
-  "e2e": Object {
-    "configurations": Object {
-      "production": Object {
+{
+  "e2e": {
+    "configurations": {
+      "production": {
         "devServerTarget": "app:serve:production",
       },
     },
-    "executor": "@nrwl/cypress:cypress",
-    "options": Object {
+    "executor": "@nx/cypress:cypress",
+    "options": {
       "cypressConfig": "apps/app-e2e/cypress.config.ts",
       "devServerTarget": "app:serve",
       "testingType": "e2e",
     },
   },
-  "e2e-custom": Object {
-    "configurations": Object {
-      "production": Object {
+  "e2e-custom": {
+    "configurations": {
+      "production": {
         "devServerTarget": "app:serve:production",
       },
     },
-    "executor": "@nrwl/cypress:cypress",
-    "options": Object {
+    "executor": "@nx/cypress:cypress",
+    "options": {
       "cypressConfig": "apps/app-e2e/cypress.config.ts",
       "devServerTarget": "app:serve",
       "testingType": "e2e",
     },
   },
-  "lint": Object {
-    "executor": "@nrwl/linter:eslint",
-    "options": Object {
-      "lintFilePatterns": Array [
+  "lint": {
+    "executor": "@nx/linter:eslint",
+    "options": {
+      "lintFilePatterns": [
         "apps/app-e2e/**/*.{js,ts}",
       ],
     },
-    "outputs": Array [
+    "outputs": [
       "{options.outputFile}",
     ],
   },
@@ -261,7 +261,7 @@ Object {
 
 exports[`convertToCypressTen convertCypressProject should update project w/customized config 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import setupNodeEvents from './src/plugins/index';
 
 const cypressJsonConfig = {
@@ -287,7 +287,7 @@ export default defineConfig({
 
 exports[`convertToCypressTen convertCypressProject should update project w/defaults 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 const cypressJsonConfig = {
   fileServerFolder: '.',
@@ -326,10 +326,10 @@ describe('a', () => {
   });
 
   it('should display welcome message', () => {
-    // Custom command example, see \\\\\`../support/commands.ts\\\\\` file
+    // Custom command example, see \\\`../support/commands.ts\\\` file
     cy.login('my-email@something.com', 'myPassword');
 
-    // Function helper example, see \\\\\`../support/app.po.ts\\\\\` file
+    // Function helper example, see \\\`../support/app.po.ts\\\` file
     getGreeting().contains('Welcome a');
   });
 });

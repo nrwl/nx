@@ -212,7 +212,7 @@ The change made to the `products-api` project is also affecting the `e2e` projec
 To run the `lint` targets only for affected projects, run the command:
 
 ```shell
-npx nx affected --target=lint
+npx nx affected -t lint
 ```
 
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.

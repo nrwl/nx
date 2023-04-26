@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "use-react-jsx-in-tsconfig-12.0.0": {
       "cli": "nx",
       "version": "12.0.0-beta.0",
@@ -83,6 +83,12 @@
       "version": "15.6.3-beta.0",
       "description": "Creates or updates webpack.config.js file with the new options for webpack.",
       "factory": "./src/migrations/update-15-6-3/webpack-config-setup"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/react with @nx/react",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },
   "packageJsonUpdates": {

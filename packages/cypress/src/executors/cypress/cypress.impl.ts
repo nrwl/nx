@@ -9,7 +9,7 @@ import {
   Target,
   targetToTargetString,
   output,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import 'dotenv/config';
 import { existsSync, readdirSync, unlinkSync, writeFileSync } from 'fs';
 import { basename, dirname, join } from 'path';
@@ -417,7 +417,7 @@ ${e.message || e}`);
   let targetHasOpt = Object.keys(targetOpts).includes(property);
 
   if (!targetHasOpt) {
-    // NOTE: readTargetOptions doesn't apply non defaulted values, i.e. @nrwl/vite has a port options but is optional
+    // NOTE: readTargetOptions doesn't apply non defaulted values, i.e. @nx/vite has a port options but is optional
     // so we double check the schema if readTargetOptions didn't return a value for the property
     const projectConfig =
       context.projectsConfigurations?.projects?.[target.project];

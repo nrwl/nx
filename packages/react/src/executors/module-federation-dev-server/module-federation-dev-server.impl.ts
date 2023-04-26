@@ -1,12 +1,12 @@
-import { ExecutorContext, logger, runExecutor } from '@nrwl/devkit';
-import devServerExecutor from '@nrwl/webpack/src/executors/dev-server/dev-server.impl';
-import { WebDevServerOptions } from '@nrwl/webpack/src/executors/dev-server/schema';
+import { ExecutorContext, logger, runExecutor } from '@nx/devkit';
+import devServerExecutor from '@nx/webpack/src/executors/dev-server/dev-server.impl';
+import { WebDevServerOptions } from '@nx/webpack/src/executors/dev-server/schema';
 import { join } from 'path';
 import * as chalk from 'chalk';
 import {
   combineAsyncIterables,
   tapAsyncIterable,
-} from '@nrwl/devkit/src/utils/async-iterable';
+} from '@nx/devkit/src/utils/async-iterable';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];
@@ -32,7 +32,7 @@ export default async function* moduleFederationDevServer(
   } catch {
     // TODO(jack): Add a link to guide
     throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nrwl/react:host"?`
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?`
     );
   }
 

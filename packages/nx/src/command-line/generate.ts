@@ -1,6 +1,5 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
-import { readJsonFile } from '../utils/fileutils';
 
 import { readNxJson } from '../config/configuration';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
@@ -234,10 +233,6 @@ async function convertToGenerateOptions(
     generatorName = 'new';
   }
 
-  if (!collectionName) {
-    throwInvalidInvocation(['@nrwl/workspace:library']);
-  }
-
   const res = {
     collectionName,
     generatorName,
@@ -338,9 +333,11 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         ].join('/n')
       );
     }
-    logger.info(
-      `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
-    );
+    if (!opts.quiet && !opts.help) {
+      logger.info(
+        `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
+      );
+    }
 
     if (opts.help) {
       printGenHelp(opts, schema, normalizedGeneratorName, aliases);

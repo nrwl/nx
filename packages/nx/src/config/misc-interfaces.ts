@@ -75,6 +75,7 @@ export interface MigrationsJsonEntry {
 }
 
 export interface MigrationsJson {
+  name?: string;
   version: string;
   collection?: string;
   generators?: { [name: string]: MigrationsJsonEntry };

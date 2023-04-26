@@ -11,7 +11,7 @@ import {
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function applyDefaultEagerPackages(
   sharedConfig: Record<string, SharedLibraryConfig>
@@ -29,7 +29,11 @@ export function applyDefaultEagerPackages(
   }
 }
 
-export const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js', '@nrwl/angular/mf'];
+export const DEFAULT_NPM_PACKAGES_TO_AVOID = [
+  'zone.js',
+  '@nx/angular/mf',
+  '@nrwl/angular/mf',
+];
 export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
   '@angular/animations',
   '@angular/common',
@@ -60,10 +64,10 @@ export async function getModuleFederationConfig(
 
   if (mfConfig.shared) {
     dependencies.workspaceLibraries = dependencies.workspaceLibraries.filter(
-      (lib) => mfConfig.shared(lib.importKey, {})
+      (lib) => mfConfig.shared(lib.importKey, {}) !== false
     );
-    dependencies.npmPackages = dependencies.npmPackages.filter((pkg) =>
-      mfConfig.shared(pkg, {})
+    dependencies.npmPackages = dependencies.npmPackages.filter(
+      (pkg) => mfConfig.shared(pkg, {}) !== false
     );
   }
 

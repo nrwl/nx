@@ -1,5 +1,5 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { formatFiles } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { formatFiles } from '@nx/devkit';
 import {
   addExportsToBarrel,
   addImportsToModule,

@@ -13,9 +13,9 @@ import {
   toJS,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import { updateRootTsConfig } from '@nrwl/js';
+import { addTsConfigPath } from '@nx/js';
 
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';
@@ -54,7 +54,13 @@ export async function expoLibraryGenerator(
   );
 
   if (!options.skipTsConfig) {
-    updateRootTsConfig(host, options);
+    addTsConfigPath(host, options.importPath, [
+      joinPathFragments(
+        options.projectRoot,
+        './src',
+        'index.' + (options.js ? 'js' : 'ts')
+      ),
+    ]);
   }
 
   const jestTask = await addJest(
@@ -84,7 +90,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
     const external = ['react/jsx-runtime', 'react-native'];
 
     targets.build = {
-      executor: '@nrwl/web:rollup',
+      executor: '@nx/rollup:rollup',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,
@@ -92,7 +98,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
         project: `${options.projectRoot}/package.json`,
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
         external,
-        rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
+        rollupConfig: `@nx/react/plugins/bundle-rollup`,
         assets: [
           {
             glob: `${options.projectRoot}/README.md`,

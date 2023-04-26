@@ -7,7 +7,7 @@ import {
   TargetConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema as FileServerExecutorSchema } from '../../executors/file-server/schema.d';
 interface WebStaticServeSchema {
   buildTarget: string;
@@ -52,7 +52,7 @@ Either rename or remove the existing '${opts.targetName}' target and try again.
 Optionally, you can provide a different name with the --target-name option other than '${opts.targetName}'`);
   }
 
-  // NOTE: @nrwl/web:file-server only looks for the outputPath option
+  // NOTE: @nx/web:file-server only looks for the outputPath option
   if (!buildTargetConfig.options?.outputPath && !opts.outputPath) {
     // attempt to find the suiteable path from the outputs
     let maybeOutputValue: any;
@@ -96,7 +96,7 @@ function addStaticConfig(tree: Tree, opts: NormalizedWebStaticServeSchema) {
   const staticServeOptions: TargetConfiguration<
     Partial<FileServerExecutorSchema>
   > = {
-    executor: '@nrwl/web:file-server',
+    executor: '@nx/web:file-server',
     options: {
       buildTarget: opts.buildTarget,
       staticFilePath: opts.outputPath,

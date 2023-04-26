@@ -2,8 +2,8 @@ import {
   calculateProjectDependencies,
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nrwl/js/src/utils/buildable-libs-utils';
-import { ProjectGraph, readCachedProjectGraph } from '@nrwl/devkit';
+} from '@nx/js/src/utils/buildable-libs-utils';
+import { ProjectGraph, readCachedProjectGraph } from '@nx/devkit';
 import { join } from 'path';
 
 export function createTmpTsConfigForBuildableLibs(

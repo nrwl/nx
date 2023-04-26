@@ -1,8 +1,8 @@
-import { getProjects, Tree, updateProjectConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../library/library';
 import componentStoryGenerator from './component-story';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 describe('react:component-story', () => {
   let appTree: Tree;

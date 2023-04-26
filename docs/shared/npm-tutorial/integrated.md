@@ -195,12 +195,12 @@ Done compiling TypeScript files for project "is-even".
 To run the `build` target for all the packages in the workspace, use:
 
 ```shell
-npx nx run-many --target=build
+npx nx run-many -t build
 ```
 
 What you would get is the following:
 
-```{% command="npx nx run-many --target=build" %}
+```{% command="npx nx run-many -t build" %}
     ✔  nx run is-even:build  [existing outputs match the cache, left as is]
     ✔  nx run is-odd:build (906ms)
 
@@ -216,7 +216,7 @@ Note how on the `is-even:build` it didn't run the build but rather pulled it out
 You can also only run tasks on packages that got changed by using
 
 ```shell
-npx nx affected --target=build
+npx nx affected -t build
 ```
 
 ## Learn More
@@ -233,6 +233,6 @@ npx nx affected --target=build
 
 {% card title="React Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with React applications sharing code." url="/react-tutorial/1-code-generation" /%}
 
-{% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/getting-started/node-server-tutorial" /%}
+{% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/tutorials/node-server-tutorial" /%}
 
 {% /cards %}

@@ -1,8 +1,17 @@
 const path = require('path');
-const { createGlobPatternsForDependencies } = require('@nrwl/next/tailwind');
+const { createGlobPatternsForDependencies } = require('@nx/next/tailwind');
+const {
+  readCachedProjectGraph,
+} = require('nx/src/project-graph/project-graph');
 
 if (!createGlobPatternsForDependencies(__dirname).length)
   throw Error('GRAPH ISSUE: No dependency found when many are expected.');
+
+// TODO(@FrozenPandaz): remove this once the issue is solved
+const projectGraph = readCachedProjectGraph();
+console.log({ projectGraph });
+console.log({ nodes: projectGraph.nodes });
+console.log({ dependencies: projectGraph.dependencies });
 
 module.exports = {
   experimental: {

@@ -13,9 +13,9 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
+import { Linter } from '@nx/linter';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { installedCypressVersion } from '../../utils/cypress-version';
@@ -174,7 +174,7 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
   const projectConfig = readProjectConfiguration(tree, opts.project);
   const cyVersion = installedCypressVersion();
   projectConfig.targets.e2e = {
-    executor: '@nrwl/cypress:cypress',
+    executor: '@nx/cypress:cypress',
     options: {
       cypressConfig: joinPathFragments(
         projectConfig.root,

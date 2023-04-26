@@ -1,0 +1,12 @@
+{
+  "generators": {
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/devkit with @nx/devkit",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    }
+  },
+  "packageJsonUpdates": {},
+  "version": "0.1"
+}

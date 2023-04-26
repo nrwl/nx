@@ -6,12 +6,12 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
 
-import { Linter } from '@nrwl/linter';
-import { libraryGenerator } from '@nrwl/workspace/generators';
+import { Linter } from '@nx/linter';
+import { libraryGenerator } from '@nx/js';
 import { nxVersion } from '../../utils/versions';
 import { TsConfig } from '../../utils/utilities';
 import configurationGenerator from './configuration';
@@ -28,7 +28,7 @@ jest.mock('enquirer');
 // @ts-ignore
 enquirer.prompt = jest.fn();
 
-describe('@nrwl/storybook:configuration', () => {
+describe('@nx/storybook:configuration', () => {
   beforeAll(() => {
     process.env.NX_INTERACTIVE = 'true';
   });
@@ -52,17 +52,23 @@ describe('@nrwl/storybook:configuration', () => {
       });
       writeJson(tree, 'package.json', {
         devDependencies: {
-          '@storybook/addon-essentials': '~6.2.9',
-          '@storybook/react': '~6.2.9',
-          '@nrwl/web': nxVersion,
+          '@storybook/addon-essentials': '~6.5.9',
+          '@storybook/react': '~6.5.9',
+          '@storybook/core-server': '~6.5.9',
+          '@nx/web': nxVersion,
         },
       });
+      jest.resetModules();
+      jest.doMock('@storybook/core-server/package.json', () => ({
+        version: '6.5.9',
+      }));
     });
 
     it('should generate files', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
+        storybook7Configuration: false,
       });
 
       expect(
@@ -98,6 +104,7 @@ describe('@nrwl/storybook:configuration', () => {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
         tsConfiguration: true,
+        storybook7Configuration: false,
       });
 
       expect(
@@ -113,6 +120,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
+        storybook7Configuration: false,
       });
 
       expect(
@@ -129,12 +137,13 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
+        storybook7Configuration: false,
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib');
 
       expect(enquirer.prompt).toHaveBeenCalled();
       expect(project.targets.storybook).toEqual({
-        executor: '@nrwl/storybook:storybook',
+        executor: '@nx/storybook:storybook',
         configurations: {
           ci: {
             quiet: true,
@@ -148,7 +157,7 @@ describe('@nrwl/storybook:configuration', () => {
       });
 
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/test-ui-lib/**/*.ts'],
@@ -164,6 +173,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib-2',
         uiFramework: '@storybook/angular',
+        storybook7Configuration: false,
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib-2');
 
@@ -183,7 +193,7 @@ describe('@nrwl/storybook:configuration', () => {
       });
 
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/test-ui-lib-2/**/*.ts'],
@@ -201,6 +211,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib-5',
         uiFramework: '@storybook/angular',
+        storybook7Configuration: false,
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib-5');
 
@@ -220,7 +231,7 @@ describe('@nrwl/storybook:configuration', () => {
       });
 
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/test-ui-lib-5/**/*.ts'],
@@ -237,6 +248,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
+        storybook7Configuration: false,
       });
       const tsconfigJson = readJson<TsConfig>(
         tree,
@@ -259,6 +271,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
+        storybook7Configuration: false,
       });
       const tsconfigJson = readJson<TsConfig>(
         tree,
@@ -267,18 +280,18 @@ describe('@nrwl/storybook:configuration', () => {
 
       expect(enquirer.prompt).toHaveBeenCalled();
       expect(tsconfigJson.references).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "path": "./tsconfig.lib.json",
-        },
-        Object {
-          "path": "./tsconfig.spec.json",
-        },
-        Object {
-          "path": "./.storybook/tsconfig.json",
-        },
-      ]
-    `);
+        [
+          {
+            "path": "./tsconfig.lib.json",
+          },
+          {
+            "path": "./tsconfig.spec.json",
+          },
+          {
+            "path": "./.storybook/tsconfig.json",
+          },
+        ]
+      `);
     });
 
     it("should update the project's .eslintrc.json if config exists", async () => {
@@ -302,17 +315,18 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib2',
         uiFramework: '@storybook/react',
+        storybook7Configuration: false,
       });
 
       expect(enquirer.prompt).toHaveBeenCalled();
       expect(readJson(tree, 'libs/test-ui-lib2/.eslintrc.json').parserOptions)
         .toMatchInlineSnapshot(`
-      Object {
-        "project": Array [
-          "libs/test-ui-lib2/.storybook/tsconfig.json",
-        ],
-      }
-    `);
+        {
+          "project": [
+            "libs/test-ui-lib2/.storybook/tsconfig.json",
+          ],
+        }
+      `);
     });
 
     it('should have the proper typings', async () => {
@@ -329,6 +343,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib2',
         uiFramework: '@storybook/react',
+        storybook7Configuration: false,
       });
 
       expect(enquirer.prompt).toHaveBeenCalled();
@@ -342,6 +357,7 @@ describe('@nrwl/storybook:configuration', () => {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
         tsConfiguration: true,
+        storybook7Configuration: false,
       });
       expect(tree.exists('libs/test-ui-lib/.storybook/main.ts')).toBeTruthy();
       expect(
@@ -361,6 +377,7 @@ describe('@nrwl/storybook:configuration', () => {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
         configureTestRunner: true,
+        storybook7Configuration: false,
       });
 
       expect(enquirer.prompt).toHaveBeenCalled();
@@ -391,21 +408,21 @@ describe('@nrwl/storybook:configuration', () => {
           'static-storybook'
         ]
       ).toMatchInlineSnapshot(`
-        Object {
-          "configurations": Object {
-            "ci": Object {
+        {
+          "configurations": {
+            "ci": {
               "buildTarget": "test-ui-lib:build-storybook:ci",
             },
           },
-          "executor": "@nrwl/web:file-server",
-          "options": Object {
+          "executor": "@nx/web:file-server",
+          "options": {
             "buildTarget": "test-ui-lib:build-storybook",
             "staticFilePath": "dist/storybook/test-ui-lib",
           },
         }
       `);
       expect(
-        readJson(tree, 'package.json').devDependencies['@nrwl/web']
+        readJson(tree, 'package.json').devDependencies['@nx/web']
       ).toBeTruthy();
     });
     it('should use static-storybook:ci in cypress project', async () => {
@@ -422,14 +439,14 @@ describe('@nrwl/storybook:configuration', () => {
           'static-storybook'
         ]
       ).toMatchInlineSnapshot(`
-        Object {
-          "configurations": Object {
-            "ci": Object {
+        {
+          "configurations": {
+            "ci": {
               "buildTarget": "test-ui-lib:build-storybook:ci",
             },
           },
-          "executor": "@nrwl/web:file-server",
-          "options": Object {
+          "executor": "@nx/web:file-server",
+          "options": {
             "buildTarget": "test-ui-lib:build-storybook",
             "staticFilePath": "dist/storybook/test-ui-lib",
           },
@@ -437,14 +454,14 @@ describe('@nrwl/storybook:configuration', () => {
       `);
       expect(readProjectConfiguration(tree, 'test-ui-lib-e2e').targets.e2e)
         .toMatchInlineSnapshot(`
-        Object {
-          "configurations": Object {
-            "ci": Object {
+        {
+          "configurations": {
+            "ci": {
               "devServerTarget": "test-ui-lib:static-storybook:ci",
             },
           },
-          "executor": "@nrwl/cypress:cypress",
-          "options": Object {
+          "executor": "@nx/cypress:cypress",
+          "options": {
             "cypressConfig": "apps/test-ui-lib-e2e/cypress.config.ts",
             "devServerTarget": "test-ui-lib:storybook",
             "testingType": "e2e",
@@ -452,7 +469,7 @@ describe('@nrwl/storybook:configuration', () => {
         }
       `);
       expect(
-        readJson(tree, 'package.json').devDependencies['@nrwl/web']
+        readJson(tree, 'package.json').devDependencies['@nx/web']
       ).toBeTruthy();
     });
   });

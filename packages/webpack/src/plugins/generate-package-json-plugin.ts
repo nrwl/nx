@@ -1,16 +1,12 @@
 import { type Compiler, sources, type WebpackPluginInstance } from 'webpack';
-import { createLockFile, createPackageJson } from '@nrwl/js';
-import {
-  ExecutorContext,
-  type ProjectGraph,
-  serializeJson,
-} from '@nrwl/devkit';
+import { createLockFile, createPackageJson } from '@nx/js';
+import { ExecutorContext, type ProjectGraph, serializeJson } from '@nx/devkit';
 import {
   getHelperDependenciesFromProjectGraph,
+  getLockFileName,
   HelperDependency,
   readTsConfig,
-} from '@nrwl/js';
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
+} from '@nx/js';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 

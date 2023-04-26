@@ -4,14 +4,13 @@ import {
   getProjects,
   updateProjectConfiguration,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * Change webpack to metro
  * - change target export-web
  * - delete webpack.config.js
  * - delete @expo/webpack-config dependency
- * - add target update
  */
 export default async function update(tree: Tree) {
   const projects = getProjects(tree);

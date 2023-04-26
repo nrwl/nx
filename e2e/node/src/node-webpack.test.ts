@@ -8,7 +8,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { execSync } from 'child_process';
 
 describe('Node Applications + webpack', () => {
@@ -19,7 +19,7 @@ describe('Node Applications + webpack', () => {
   it('should generate an app using webpack', async () => {
     const app = uniq('nodeapp');
 
-    runCLI(`generate @nrwl/node:app ${app} --bundler=webpack --no-interactive`);
+    runCLI(`generate @nx/node:app ${app} --bundler=webpack --no-interactive`);
 
     checkFilesExist(`apps/${app}/webpack.config.js`);
 

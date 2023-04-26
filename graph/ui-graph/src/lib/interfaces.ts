@@ -3,7 +3,7 @@ import type {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
   TaskGraph,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { VirtualElement } from '@floating-ui/react';
 import {
   ProjectEdgeNodeTooltipProps,

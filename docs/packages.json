@@ -1,12 +1,5 @@
 [
   {
-    "name": "add-nx-to-monorepo",
-    "packageName": "add-nx-to-monorepo",
-    "description": "Make any monorepo faster by adding Nx to it",
-    "path": "generated/packages/add-nx-to-monorepo.json",
-    "schemas": { "executors": [], "generators": [] }
-  },
-  {
     "name": "angular",
     "packageName": "angular",
     "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, Karma, and Protractor. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
@@ -57,13 +50,6 @@
         "change-storybook-targets"
       ]
     }
-  },
-  {
-    "name": "cra-to-nx",
-    "packageName": "cra-to-nx",
-    "description": "This package will turn your React app into an Nx workspace. To use this package, your React app must have been generated and kept the structure of Create-React-App, with files generated either in js/jsx or ts/tsx.",
-    "path": "generated/packages/cra-to-nx.json",
-    "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "create-nx-plugin",
@@ -122,10 +108,10 @@
     }
   },
   {
-    "name": "eslint-plugin-nx",
-    "packageName": "eslint-plugin-nx",
-    "description": "The eslint-plugin-nx package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-    "path": "generated/packages/eslint-plugin-nx.json",
+    "name": "eslint-plugin",
+    "packageName": "eslint-plugin",
+    "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
+    "path": "generated/packages/eslint-plugin.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
@@ -190,13 +176,6 @@
       "executors": ["eslint"],
       "generators": ["workspace-rules-project", "workspace-rule"]
     }
-  },
-  {
-    "name": "make-angular-cli-faster",
-    "packageName": "make-angular-cli-faster",
-    "description": "Make Angular CLI faster by enabling distributed computation caching",
-    "path": "generated/packages/make-angular-cli-faster.json",
-    "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "nest",
@@ -266,8 +245,8 @@
     }
   },
   {
-    "name": "nx-plugin",
-    "packageName": "nx-plugin",
+    "name": "plugin",
+    "packageName": "plugin",
     "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
     "path": "generated/packages/nx-plugin.json",
     "schemas": {

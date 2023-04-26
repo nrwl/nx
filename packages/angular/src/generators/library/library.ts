@@ -3,12 +3,13 @@ import {
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
+  joinPathFragments,
   removeDependenciesFromPackageJson,
   Tree,
-} from '@nrwl/devkit';
-import { jestProjectGenerator } from '@nrwl/jest';
-import { Linter } from '@nrwl/linter';
-import { updateRootTsConfig } from '@nrwl/js';
+} from '@nx/devkit';
+import { jestProjectGenerator } from '@nx/jest';
+import { Linter } from '@nx/linter';
+import { addTsConfigPath } from '@nx/js';
 import { lt } from 'semver';
 import init from '../../generators/init/init';
 import { E2eTestRunner } from '../../utils/test-runners';
@@ -107,7 +108,9 @@ export async function libraryGenerator(
     addBuildableLibrariesPostCssDependencies(tree);
   }
 
-  updateRootTsConfig(tree, { ...libraryOptions, js: false });
+  addTsConfigPath(tree, libraryOptions.importPath, [
+    joinPathFragments(libraryOptions.projectRoot, './src', 'index.ts'),
+  ]);
 
   if (!libraryOptions.skipFormat) {
     await formatFiles(tree);

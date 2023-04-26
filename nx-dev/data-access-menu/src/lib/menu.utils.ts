@@ -9,6 +9,7 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
       .filter(
         (m) =>
           m.id === 'getting-started' ||
+          m.id === 'tutorials' ||
           m.id === 'core-features' ||
           m.id === 'plugin-features' ||
           m.id === 'concepts' ||
@@ -44,11 +45,8 @@ export function getPackagesSections(items: MenuItem[]): MenuSection[] {
   return items
     .filter(
       (m) =>
-        m.id !== 'add-nx-to-monorepo' &&
-        m.id !== 'cra-to-nx' &&
         m.id !== 'create-nx-plugin' &&
         m.id !== 'create-nx-workspace' &&
-        m.id !== 'make-angular-cli-faster' &&
         m.id !== 'tao'
     )
     .map((m) => ({

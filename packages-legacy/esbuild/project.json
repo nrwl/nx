@@ -1,0 +1,36 @@
+{
+  "name": "esbuild-legacy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages-legacy/esbuild",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "dependsOn": ["^build"],
+      "options": {
+        "main": "packages-legacy/esbuild/index.ts",
+        "tsConfig": "packages-legacy/esbuild/tsconfig.json",
+        "outputPath": "build/packages/esbuild-legacy",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages-legacy/esbuild",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages-legacy/esbuild",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    }
+  }
+}

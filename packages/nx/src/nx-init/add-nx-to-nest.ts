@@ -1,35 +1,30 @@
-import { unlinkSync, writeFileSync } from 'fs-extra';
-import * as yargsParser from 'yargs-parser';
 import * as enquirer from 'enquirer';
+import { unlinkSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
+import { InitArgs } from '../command-line/init';
+import { NrwlJsPluginConfig, NxJsonConfiguration } from '../config/nx-json';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { PackageJson } from '../utils/package-json';
-import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
+import { getPackageManagerCommand } from '../utils/package-manager';
 import {
   addDepsToPackageJson,
   askAboutNxCloud,
   createNxJsonFile,
   initCloud,
+  markRootPackageJsonAsNxProject,
+  printFinalMessage,
   runInstall,
 } from './utils';
-import { getPackageManagerCommand } from '../utils/package-manager';
-import { markRootPackageJsonAsNxProject } from './add-nx-to-npm-repo';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { NrwlJsPluginConfig, NxJsonConfiguration } from '../config/nx-json';
 
+type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 type NestCLIConfiguration = any;
-const parsedArgs = yargsParser(process.argv, {
-  boolean: ['yes'],
-  string: ['cacheable'], // only used for testing
-  alias: {
-    yes: ['y'],
-  },
-});
 
-export async function addNxToNest(packageJson: PackageJson) {
+export async function addNxToNest(options: Options, packageJson: PackageJson) {
   const repoRoot = process.cwd();
 
-  output.log({ title: `🐳 Nx initialization` });
+  output.log({ title: '🐳 Nx initialization' });
 
   // we check upstream that nest-cli.json exists before it reaches this function
   // so it is guaranteed to be here
@@ -56,7 +51,7 @@ export async function addNxToNest(packageJson: PackageJson) {
     'test:watch',
   ];
 
-  const scripts = Object.keys(packageJson.scripts).filter((s) => {
+  const scripts = Object.keys(packageJson.scripts ?? {}).filter((s) => {
     if (nestCacheableScripts.includes(s) || nestIgnoreScripts.includes(s)) {
       return false;
     }
@@ -66,11 +61,12 @@ export async function addNxToNest(packageJson: PackageJson) {
 
   let cacheableOperations: string[];
   let scriptOutputs = {};
-  let useCloud: boolean;
+  let useNxCloud: boolean;
 
-  if (parsedArgs.yes !== true) {
+  if (options.interactive) {
     output.log({
-      title: `🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration`,
+      title:
+        '🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration',
     });
     cacheableOperations = (
       (await enquirer.prompt([
@@ -96,12 +92,10 @@ export async function addNxToNest(packageJson: PackageJson) {
       )[scriptName];
     }
 
-    useCloud = await askAboutNxCloud();
+    useNxCloud = options.nxCloud ?? (await askAboutNxCloud());
   } else {
-    cacheableOperations = parsedArgs.cacheable
-      ? parsedArgs.cacheable.split(',')
-      : [];
-    useCloud = false;
+    cacheableOperations = options.cacheable ?? [];
+    useNxCloud = options.nxCloud ?? false;
   }
 
   createNxJsonFile(
@@ -113,7 +107,7 @@ export async function addNxToNest(packageJson: PackageJson) {
 
   const pmc = getPackageManagerCommand();
 
-  addDepsToPackageJson(repoRoot, useCloud);
+  addDepsToPackageJson(repoRoot, useNxCloud);
   addNestPluginToPackageJson(repoRoot);
   markRootPackageJsonAsNxProject(
     repoRoot,
@@ -130,32 +124,25 @@ export async function addNxToNest(packageJson: PackageJson) {
     updateTsConfig(repoRoot, nestCLIConfiguration.sourceRoot);
   }
 
-  output.log({ title: `📦 Installing dependencies` });
+  output.log({ title: '📦 Installing dependencies' });
 
   runInstall(repoRoot);
 
-  if (useCloud) {
+  if (useNxCloud) {
+    output.log({ title: '🛠️ Setting up Nx Cloud' });
     initCloud(repoRoot, 'nx-init-nest');
   }
 
-  printFinalMessage();
-}
-
-function printFinalMessage() {
-  output.success({
-    title: `🎉 Done!`,
-    bodyLines: [
-      `- Enabled computation caching!`,
-      `- Learn more at https://nx.dev/recipes/adopting-nx/adding-to-monorepo`,
-    ],
+  printFinalMessage({
+    learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
   });
 }
 
 function addNestPluginToPackageJson(repoRoot: string) {
   const path = join(repoRoot, `package.json`);
   const json: PackageJson = readJsonFile(path);
-  json.devDependencies['@nrwl/nest'] = require('../../package.json').version;
-  json.devDependencies['@nrwl/jest'] = require('../../package.json').version;
+  json.devDependencies['@nx/nest'] = require('../../package.json').version;
+  json.devDependencies['@nx/jest'] = require('../../package.json').version;
   writeJsonFile(path, json);
 }
 
@@ -178,7 +165,7 @@ function createProjectJson(
 
   if (nestCLIOptions.language !== 'js') {
     json.targets['serve'] = {
-      executor: '@nrwl/js:node',
+      executor: '@nx/js:node',
       options: {
         buildTarget: `${packageName}:build`,
       },
@@ -188,7 +175,7 @@ function createProjectJson(
 
     if (nestCLIOptions.webpackOptions) {
       json.targets['build'] = {
-        executor: '@nrwl/webpack:webpack',
+        executor: '@nx/webpack:webpack',
         outputs: ['{options.outputPath}'],
         options: {
           target: 'node',
@@ -215,7 +202,7 @@ function createProjectJson(
       };
     } else {
       json.targets['build'] = {
-        executor: '@nrwl/js:tsc',
+        executor: '@nx/js:tsc',
         outputs: ['{options.outputPath}'],
         options: {
           outputPath: `dist/${packageName}`,
@@ -238,7 +225,7 @@ function createProjectJson(
 
     // lint
     json.targets['lint'] = {
-      executor: '@nrwl/linter:eslint',
+      executor: '@nx/linter:eslint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['src/**/*.ts', 'test/**/*.ts'],
@@ -296,7 +283,7 @@ function tryCreateJestPreset(repoRoot: string) {
     writeFileSync(
       jestPresetPath,
       `
-const nxPreset = require('@nrwl/jest/preset').default;
+const nxPreset = require('@nx/jest/preset').default;
 module.exports = {...nxPreset};
 `,
       'utf8'
@@ -342,7 +329,7 @@ function addJestTargets(
   );
 
   projectJson.targets['test'] = {
-    executor: '@nrwl/jest:jest',
+    executor: '@nx/jest:jest',
     outputs: [`{workspaceRoot}/coverage/${packageName}`],
     options: {
       passWithNoTests: true,
@@ -351,7 +338,7 @@ function addJestTargets(
   };
 
   projectJson.targets['e2e'] = {
-    executor: '@nrwl/jest:jest',
+    executor: '@nx/jest:jest',
     options: {
       passWithNoTests: true,
       jestConfig: e2eTestConfigPath,
@@ -368,7 +355,7 @@ function addNrwlJsPluginsConfig(repoRoot: string) {
 
   if (!json.pluginsConfig) {
     json.pluginsConfig = {
-      '@nrwl/js': {
+      '@nx/js': {
         analyzeSourceFiles: true,
       } as NrwlJsPluginConfig,
     };

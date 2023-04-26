@@ -1,5 +1,5 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { addDependenciesToPackageJson, readJson } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { addDependenciesToPackageJson, readJson } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
 import * as latestVersions from '../../utils/versions';
 import { angularVersion } from '../../utils/versions';

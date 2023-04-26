@@ -8,16 +8,17 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { cypressProjectGenerator } from '../../generators/cypress-project/cypress-project';
-import { libraryGenerator } from '@nrwl/workspace';
+import { libraryGenerator } from '@nx/js';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/devkit', () => {
+jest.mock('@nx/devkit', () => {
   return {
-    ...jest.requireActual('@nrwl/devkit'),
+    ...jest.requireActual('@nx/devkit'),
     createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
+    readTargetOptions: jest.fn().mockImplementation(() => ({})),
   };
 });
 jest.mock('../../utils/cypress-version');
@@ -304,6 +305,10 @@ export default defineConfig({
   });
   await cypressProjectGenerator(tree, { project: appName, name: e2eName });
   const e2eProjectConfig = readProjectConfiguration(tree, e2eName);
+  e2eProjectConfig.targets['e2e'] = {
+    ...e2eProjectConfig.targets['e2e'],
+    executor: '@nrwl/cypress:cypress',
+  };
   e2eProjectConfig.targets['e2e'].configurations = {
     ...e2eProjectConfig.targets['e2e'].configurations,
     sb: {

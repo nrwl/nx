@@ -4,8 +4,8 @@ import {
   readNxJson,
   readProjectConfiguration,
   updateNxJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateFileServerExecutor from './update-file-server-executor';
 
 describe('updateFileServerExecutor', () => {

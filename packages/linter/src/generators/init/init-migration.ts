@@ -6,7 +6,7 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { dirname } from 'path';
 import { findEslintFile } from '../utils/eslint-file';
 import { getGlobalEsLintConfiguration } from './global-eslint-config';
@@ -40,7 +40,9 @@ export function findLintTarget(
 ): TargetConfiguration {
   return Object.entries(project.targets ?? {}).find(
     ([name, target]) =>
-      name === 'lint' || target.executor === '@nrwl/linter:eslint'
+      name === 'lint' ||
+      target.executor === '@nx/linter:eslint' ||
+      target.executor === '@nrwl/linter:eslint'
   )?.[1];
 }
 
@@ -54,7 +56,9 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
       delete json.root;
       // remove nrwl/nx plugins
       if (json.plugins) {
-        json.plugins = json.plugins.filter((p) => p !== '@nrwl/nx');
+        json.plugins = json.plugins.filter(
+          (p) => p !== '@nx' && p !== '@nrwl/nx'
+        );
         if (json.plugins.length === 0) {
           delete json.plugins;
         }
@@ -73,7 +77,9 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
           if (override.extends) {
             override.extends = override.extends.filter(
               (ext) =>
+                ext !== 'plugin:@nx/typescript' &&
                 ext !== 'plugin:@nrwl/nx/typescript' &&
+                ext !== 'plugin:@nx/javascript' &&
                 ext !== 'plugin:@nrwl/nx/javascript'
             );
             if (override.extends.length === 0) {

@@ -1,4 +1,4 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
   getProjects,
   readJson,
@@ -6,14 +6,14 @@ import {
   readProjectConfiguration,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
 describe('app', () => {
   let appTree: Tree;
   let schema: Schema = {
@@ -24,7 +24,6 @@ describe('app', () => {
     linter: Linter.EsLint,
     style: 'css',
     strict: true,
-    standaloneConfig: false,
   };
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
@@ -103,7 +102,7 @@ describe('app', () => {
       expect(appTree.exists('apps/my-app/src/app/app.module.css')).toBeTruthy();
 
       const jestConfig = appTree.read('apps/my-app/jest.config.ts').toString();
-      expect(jestConfig).toContain('@nrwl/react/plugins/jest');
+      expect(jestConfig).toContain('@nx/react/plugins/jest');
 
       const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');
       expect(tsconfig.references).toEqual([
@@ -132,25 +131,25 @@ describe('app', () => {
 
       const eslintJson = readJson(appTree, 'apps/my-app/.eslintrc.json');
       expect(eslintJson.extends).toEqual([
-        'plugin:@nrwl/nx/react',
+        'plugin:@nx/react',
         '../../.eslintrc.json',
       ]);
 
       expect(appTree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = readJson(appTree, 'apps/my-app-e2e/tsconfig.json');
       expect(tsconfigE2E).toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
+        {
+          "compilerOptions": {
             "allowJs": true,
             "outDir": "../../dist/out-tsc",
             "sourceMap": false,
-            "types": Array [
+            "types": [
               "cypress",
               "node",
             ],
           },
           "extends": "../../tsconfig.base.json",
-          "include": Array [
+          "include": [
             "src/**/*.ts",
             "src/**/*.js",
             "cypress.config.ts",
@@ -248,7 +247,7 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: ['plugin:@nrwl/nx/react', '../../../.eslintrc.json'],
+          expectedValue: ['plugin:@nx/react', '../../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -305,7 +304,7 @@ describe('app', () => {
     await applicationGenerator(appTree, { ...schema, name: 'my-app' });
 
     expect(appTree.read('apps/my-app/jest.config.ts').toString()).toContain(
-      "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
+      "['babel-jest', { presets: ['@nx/react/babel'] }]"
     );
   });
 
@@ -326,7 +325,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     const targetConfig = projectsConfigurations.get('my-app').targets;
-    expect(targetConfig.build.executor).toEqual('@nrwl/webpack:webpack');
+    expect(targetConfig.build.executor).toEqual('@nx/webpack:webpack');
     expect(targetConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(targetConfig.build.options).toEqual({
       compiler: 'babel',
@@ -366,7 +365,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     const targetConfig = projectsConfigurations.get('my-app').targets;
-    expect(targetConfig.build.executor).toEqual('@nrwl/vite:build');
+    expect(targetConfig.build.executor).toEqual('@nx/vite:build');
     expect(targetConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(targetConfig.build.options).toEqual({
       outputPath: 'dist/apps/my-app',
@@ -388,7 +387,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     const targetConfig = projectsConfigurations.get('my-app').targets;
-    expect(targetConfig.serve.executor).toEqual('@nrwl/webpack:dev-server');
+    expect(targetConfig.serve.executor).toEqual('@nx/webpack:dev-server');
     expect(targetConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
       hmr: true,
@@ -408,7 +407,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     const targetConfig = projectsConfigurations.get('my-app').targets;
-    expect(targetConfig.serve.executor).toEqual('@nrwl/vite:dev-server');
+    expect(targetConfig.serve.executor).toEqual('@nx/vite:dev-server');
     expect(targetConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
     });
@@ -423,7 +422,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     expect(projectsConfigurations.get('my-app').targets.lint).toEqual({
-      executor: '@nrwl/linter:eslint',
+      executor: '@nx/linter:eslint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['apps/my-app/**/*.{ts,tsx,js,jsx}'],
@@ -446,14 +445,14 @@ describe('app', () => {
       expect(projectsConfigurations.get('my-app').targets.test).toBeUndefined();
       expect(projectsConfigurations.get('my-app').targets.lint)
         .toMatchInlineSnapshot(`
-        Object {
-          "executor": "@nrwl/linter:eslint",
-          "options": Object {
-            "lintFilePatterns": Array [
+        {
+          "executor": "@nx/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
               "apps/my-app/**/*.{ts,tsx,js,jsx}",
             ],
           },
-          "outputs": Array [
+          "outputs": [
             "{options.outputFile}",
           ],
         }
@@ -515,8 +514,8 @@ describe('app', () => {
     const packageJson = readJson(appTree, '/package.json');
 
     expect(packageJson.devDependencies.eslint).toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/linter']).toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/eslint-plugin-nx']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/linter']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/eslint-plugin']).toBeDefined();
     expect(packageJson.devDependencies['eslint-plugin-react']).toBeDefined();
     expect(
       packageJson.devDependencies['eslint-plugin-react-hooks']
@@ -531,37 +530,37 @@ describe('app', () => {
 
     const eslintJson = readJson(appTree, '/apps/my-app/.eslintrc.json');
     expect(eslintJson).toMatchInlineSnapshot(`
-      Object {
-        "extends": Array [
-          "plugin:@nrwl/nx/react",
+      {
+        "extends": [
+          "plugin:@nx/react",
           "../../.eslintrc.json",
         ],
-        "ignorePatterns": Array [
+        "ignorePatterns": [
           "!**/*",
         ],
-        "overrides": Array [
-          Object {
-            "files": Array [
+        "overrides": [
+          {
+            "files": [
               "*.ts",
               "*.tsx",
               "*.js",
               "*.jsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
-          Object {
-            "files": Array [
+          {
+            "files": [
               "*.ts",
               "*.tsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
-          Object {
-            "files": Array [
+          {
+            "files": [
               "*.js",
               "*.jsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
         ],
       }
@@ -610,7 +609,7 @@ describe('app', () => {
       await applicationGenerator(appTree, { ...schema, style: 'none' });
 
       const nxJson = readNxJson(appTree);
-      expect(nxJson.generators['@nrwl/react']).toMatchObject({
+      expect(nxJson.generators['@nx/react']).toMatchObject({
         application: {
           style: 'none',
         },
@@ -843,7 +842,7 @@ describe('app', () => {
       });
 
       const nxJson = readNxJson(appTree);
-      expect(nxJson.generators['@nrwl/react']).toMatchObject({
+      expect(nxJson.generators['@nx/react']).toMatchObject({
         application: {
           babel: true,
           style: 'styled-components',
@@ -948,8 +947,8 @@ describe('app', () => {
     it('should setup targets with vite configuration', () => {
       const projectsConfigurations = getProjects(viteAppTree);
       const targetConfig = projectsConfigurations.get('my-app').targets;
-      expect(targetConfig.build.executor).toEqual('@nrwl/vite:build');
-      expect(targetConfig.serve.executor).toEqual('@nrwl/vite:dev-server');
+      expect(targetConfig.build.executor).toEqual('@nx/vite:build');
+      expect(targetConfig.serve.executor).toEqual('@nx/vite:dev-server');
       expect(targetConfig.serve.options).toEqual({
         buildTarget: 'my-app:build',
       });

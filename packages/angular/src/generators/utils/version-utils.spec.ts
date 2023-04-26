@@ -1,5 +1,5 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { updateJson } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { updateJson } from '@nx/devkit';
 import {
   getGeneratorDirectoryForInstalledAngularVersion,
   getInstalledAngularMajorVersion,

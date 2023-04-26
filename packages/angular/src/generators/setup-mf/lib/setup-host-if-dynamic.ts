@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, readProjectConfiguration } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, readProjectConfiguration } from '@nx/devkit';
 import type { Schema } from '../schema';
 
 export function setupHostIfDynamic(tree: Tree, options: Schema) {

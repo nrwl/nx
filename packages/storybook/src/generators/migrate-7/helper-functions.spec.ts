@@ -4,8 +4,8 @@ import {
   ProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as allProjects from './test-configs/all-projects.json';
 import {
   addViteConfigFilePathInFrameworkOptions,
@@ -79,25 +79,25 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
             'You can run the following commands manually to upgrade your Storybook projects to Storybook 7:',
             '',
             '1. Call the Storybook upgrade script:',
-            'npx storybook@next upgrade --prerelease',
+            'npx storybook@latest upgrade',
             '',
             '2. Call the Nx generator to prepare your files for migration:',
-            'nx g @nrwl/storybook:migrate-7 --onlyPrepare',
+            'nx g @nx/storybook:migrate-7 --onlyPrepare',
             '',
             '3. Call the Storybook automigrate scripts:',
             'Run the following commands for each Storybook project:',
-            'npx sb@next automigrate --config-dir apps/nextapp/.storybook --renderer @storybook/react',
-            'npx sb@next automigrate --config-dir apps/nextapp-ts/.storybook --renderer @storybook/react',
-            'npx sb@next automigrate --config-dir apps/rv1/.storybook --renderer @storybook/react',
-            'npx sb@next automigrate --config-dir apps/rv2-ts/.storybook --renderer @storybook/react',
-            'npx sb@next automigrate --config-dir apps/rw1/.storybook --renderer @storybook/react',
-            'npx sb@next automigrate --config-dir apps/wv1/.storybook --renderer @storybook/web-components',
-            'npx sb@next automigrate --config-dir apps/ww1/.storybook --renderer @storybook/web-components',
-            'npx sb@next automigrate --config-dir apps/ngapp/.storybook --renderer @storybook/angular',
-            'npx sb@next automigrate --config-dir apps/ngapp-ts/.storybook --renderer @storybook/angular',
+            'npx storybook@latest automigrate --config-dir apps/nextapp/.storybook --renderer @storybook/react',
+            'npx storybook@latest automigrate --config-dir apps/nextapp-ts/.storybook --renderer @storybook/react',
+            'npx storybook@latest automigrate --config-dir apps/rv1/.storybook --renderer @storybook/react',
+            'npx storybook@latest automigrate --config-dir apps/rv2-ts/.storybook --renderer @storybook/react',
+            'npx storybook@latest automigrate --config-dir apps/rw1/.storybook --renderer @storybook/react',
+            'npx storybook@latest automigrate --config-dir apps/wv1/.storybook --renderer @storybook/web-components',
+            'npx storybook@latest automigrate --config-dir apps/ww1/.storybook --renderer @storybook/web-components',
+            'npx storybook@latest automigrate --config-dir apps/ngapp/.storybook --renderer @storybook/angular',
+            'npx storybook@latest automigrate --config-dir apps/ngapp-ts/.storybook --renderer @storybook/angular',
             '',
             '4. Call the Nx generator to finish the migration:',
-            'nx g @nrwl/storybook:migrate-7 --afterMigration',
+            'nx g @nx/storybook:migrate-7 --afterMigration',
           ],
           title: 'Storybook 7 Migration Guide',
         })
@@ -206,12 +206,12 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
       logResult(tree, {
         successfulProjects: {
           nextapp:
-            'npx sb@next automigrate --config-dir apps/nextapp/.storybook --renderer @storybook/react',
-          rv1: 'npx sb@next automigrate --config-dir apps/rv1/.storybook --renderer @storybook/react',
+            'npx storybook@latest automigrate --config-dir apps/nextapp/.storybook --renderer @storybook/react',
+          rv1: 'npx storybook@latest automigrate --config-dir apps/rv1/.storybook --renderer @storybook/react',
         },
         failedProjects: {
-          'rv2-ts': `npx sb@next automigrate --config-dir apps/rv2-ts/.storybook --renderer @storybook/react`,
-          rw1: 'npx sb@next automigrate --config-dir apps/rw1/.storybook --renderer @storybook/react',
+          'rv2-ts': `npx storybook@latest automigrate --config-dir apps/rv2-ts/.storybook --renderer @storybook/react`,
+          rw1: 'npx storybook@latest automigrate --config-dir apps/rw1/.storybook --renderer @storybook/react',
         },
       });
       expect(
@@ -252,7 +252,7 @@ function writeMainJs(tree: Tree) {
     `
     const { mergeConfig } = require('vite');
     const viteTsConfigPaths = require('vite-tsconfig-paths').default;
-    
+
     module.exports = {
       core: { builder: '@storybook/builder-vite' },
       stories: [
@@ -270,7 +270,7 @@ function writeMainJs(tree: Tree) {
         });
       },
     };
-  `
+`
   );
 
   tree.write(
@@ -280,7 +280,7 @@ function writeMainJs(tree: Tree) {
 
     import { mergeConfig } from 'vite';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
-    
+
     const config: StorybookConfig = {
       core: { builder: '@storybook/builder-vite' },
       stories: [
@@ -298,7 +298,7 @@ function writeMainJs(tree: Tree) {
         });
       },
     } as StorybookConfig;
-    
+
     module.exports = config;
   `
   );
@@ -316,7 +316,7 @@ function writeMainJs(tree: Tree) {
       ],
       addons: [
         '@storybook/addon-essentials',
-        '@nrwl/react/plugins/storybook',
+        '@nx/react/plugins/storybook',
         'storybook-addon-swc',
         {
           name: 'storybook-addon-next',
@@ -334,7 +334,7 @@ function writeMainJs(tree: Tree) {
     `
     import type { StorybookConfig } from '@storybook/core-common';
     import path from 'path';
-    
+
     const config: StorybookConfig = {
       core: { builder: 'webpack5' },
       stories: [
@@ -343,8 +343,7 @@ function writeMainJs(tree: Tree) {
       ],
       addons: [
         '@storybook/addon-essentials',
-        '@nrwl/react/plugins/storybook',
-    
+        '@nx/react/plugins/storybook',
         'storybook-addon-swc',
         {
           name: 'storybook-addon-next',
@@ -354,7 +353,7 @@ function writeMainJs(tree: Tree) {
         },
       ],
     } as StorybookConfig;
-    
+
     module.exports = config;
   `
   );

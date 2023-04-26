@@ -1,16 +1,18 @@
 import { execSync } from 'child_process';
 import * as enquirer from 'enquirer';
 import { join } from 'path';
+import { runNxSync } from '../utils/child-process';
 import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
+import { output } from '../utils/output';
+import { PackageJson } from '../utils/package-json';
 import {
   getPackageManagerCommand,
   PackageManagerCommands,
 } from '../utils/package-manager';
-import { runNxSync } from '../utils/child-process';
 import { joinPathFragments } from '../utils/path';
 
-export function askAboutNxCloud() {
-  return enquirer
+export async function askAboutNxCloud(): Promise<boolean> {
+  return await enquirer
     .prompt([
       {
         name: 'NxCloud',
@@ -109,7 +111,7 @@ export function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
   if (!json.devDependencies) json.devDependencies = {};
   json.devDependencies['nx'] = require('../../package.json').version;
   if (useCloud) {
-    json.devDependencies['@nrwl/nx-cloud'] = 'latest';
+    json.devDependencies['nx-cloud'] = 'latest';
   }
   writeJsonFile(path, json);
 }
@@ -130,13 +132,10 @@ export function initCloud(
     | 'nx-init-nest'
     | 'nx-init-npm-repo'
 ) {
-  runNxSync(
-    `g @nrwl/nx-cloud:init --installationSource=${installationSource}`,
-    {
-      stdio: [0, 1, 2],
-      cwd: repoRoot,
-    }
-  );
+  runNxSync(`g nx-cloud:init --installationSource=${installationSource}`, {
+    stdio: [0, 1, 2],
+    cwd: repoRoot,
+  });
 }
 
 export function addVsCodeRecommendedExtensions(
@@ -159,4 +158,59 @@ export function addVsCodeRecommendedExtensions(
   } else {
     writeJsonFile(vsCodeExtensionsPath, { recommendations: extensions });
   }
+}
+
+export function markRootPackageJsonAsNxProject(
+  repoRoot: string,
+  cacheableScripts: string[],
+  scriptOutputs: { [script: string]: string },
+  pmc: PackageManagerCommands
+) {
+  const json = readJsonFile<PackageJson>(
+    joinPathFragments(repoRoot, `package.json`)
+  );
+  json.nx = { targets: {} };
+  for (let script of Object.keys(scriptOutputs)) {
+    if (scriptOutputs[script]) {
+      json.nx.targets[script] = {
+        outputs: [`{projectRoot}/${scriptOutputs[script]}`],
+      };
+    }
+  }
+  for (let script of cacheableScripts) {
+    const scriptDefinition = json.scripts[script];
+    if (!scriptDefinition) {
+      continue;
+    }
+
+    if (scriptDefinition.includes('&&') || scriptDefinition.includes('||')) {
+      let backingScriptName = `_${script}`;
+      json.scripts[backingScriptName] = scriptDefinition;
+      json.scripts[script] = `nx exec -- ${pmc.run(backingScriptName, '')}`;
+    } else {
+      json.scripts[script] = `nx exec -- ${json.scripts[script]}`;
+    }
+  }
+  writeJsonFile(`package.json`, json);
+}
+
+export function printFinalMessage({
+  learnMoreLink,
+  bodyLines,
+}: {
+  learnMoreLink?: string;
+  bodyLines?: string[];
+}): void {
+  const normalizedBodyLines = (bodyLines ?? []).map((l) =>
+    l.startsWith('- ') ? l : `- ${l}`
+  );
+
+  output.success({
+    title: '🎉 Done!',
+    bodyLines: [
+      '- Enabled computation caching!',
+      ...normalizedBodyLines,
+      learnMoreLink ? `- Learn more at ${learnMoreLink}.` : undefined,
+    ].filter(Boolean),
+  });
 }

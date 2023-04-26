@@ -1,5 +1,5 @@
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { applicationGenerator } from '../../generators/application/application';
 import { update } from './update-to-webpack-5';
@@ -21,7 +21,7 @@ describe('Migration: enable webpack 5', () => {
     // Config that isn't configured properly
     tree.write(
       'apps/demo/next.config.js',
-      `const withNx = require('@nrwl/next/plugins/with-nx');
+      `const withNx = require('@nx/next/plugins/with-nx');
 const nextConfig = {
   webpack5: false,
 };
@@ -47,7 +47,7 @@ module.exports = withNx(nextConfig);
     // Config that isn't configured properly
     tree.write(
       'apps/demo/next.config.js',
-      `const withNx = require('@nrwl/next/plugins/with-nx');
+      `const withNx = require('@nx/next/plugins/with-nx');
 const withStylus = require('@zeit/next-stylus');
 
 const nextConfig = {
@@ -76,7 +76,7 @@ module.exports = withNx(withStylus(nextConfig));
     // Config that isn't configured properly
     tree.write(
       'apps/demo/next.config.js',
-      `const withNx = require('@nrwl/next/plugins/with-nx');
+      `const withNx = require('@nx/next/plugins/with-nx');
 const withLess = require('@zeit/next-less');
 
 const nextConfig = {

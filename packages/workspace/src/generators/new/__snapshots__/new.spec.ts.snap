@@ -1,49 +1,49 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`new --preset should generate necessary npm dependencies for empty preset 1`] = `
-Object {
-  "dependencies": Object {},
-  "devDependencies": Object {
-    "@nrwl/workspace": "0.0.1",
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@nx/workspace": "0.0.1",
     "nx": "0.0.1",
   },
   "license": "MIT",
   "name": "my-workspace",
   "private": true,
-  "scripts": Object {},
+  "scripts": {},
   "version": "0.0.0",
 }
 `;
 
 exports[`new should generate an empty nx.json 1`] = `
-Object {
+{
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "namedInputs": Object {
-    "default": Array [
+  "namedInputs": {
+    "default": [
       "{projectRoot}/**/*",
       "sharedGlobals",
     ],
-    "production": Array [
+    "production": [
       "default",
     ],
-    "sharedGlobals": Array [],
+    "sharedGlobals": [],
   },
   "npmScope": "npmScope",
-  "targetDefaults": Object {
-    "build": Object {
-      "dependsOn": Array [
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
         "^build",
       ],
-      "inputs": Array [
+      "inputs": [
         "production",
         "^production",
       ],
     },
   },
-  "tasksRunnerOptions": Object {
-    "default": Object {
-      "options": Object {
-        "cacheableOperations": Array [
+  "tasksRunnerOptions": {
+    "default": {
+      "options": {
+        "cacheableOperations": [
           "build",
           "lint",
           "test",

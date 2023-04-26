@@ -96,7 +96,6 @@ describe('nx-dev: Packages Section', () => {
       title: '@nrwl/angular:package',
       path: '/packages/angular/executors/package',
     },
-    { title: 'cra-to-nx', path: '/packages/cra-to-nx' },
     { title: 'create-nx-plugin', path: '/packages/create-nx-plugin' },
     {
       title: 'create-nx-workspace',
@@ -126,7 +125,7 @@ describe('nx-dev: Packages Section', () => {
       title: '@nrwl/esbuild:esbuild',
       path: '/packages/esbuild/executors/esbuild',
     },
-    { title: '@nrwl/eslint-plugin-nx', path: '/packages/eslint-plugin-nx' },
+    { title: '@nrwl/eslint-plugin', path: '/packages/eslint-plugin' },
     { title: '@nrwl/expo', path: '/packages/expo' },
     {
       title: '@nrwl/expo:init',
@@ -188,10 +187,6 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/linter/generators/workspace-rule',
     },
     { title: '@nrwl/linter', path: '/packages/linter/executors/eslint' },
-    {
-      title: 'make-angular-cli-faster',
-      path: '/packages/make-angular-cli-faster',
-    },
     { title: '@nrwl/nest', path: '/packages/nest' },
     {
       title: '@nrwl/nest:application',
@@ -264,7 +259,6 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/node/generators/application',
     },
     { title: '@nrwl/node:library', path: '/packages/node/generators/library' },
-    { title: '@nrwl/node:webpack', path: '/packages/node/executors/webpack' },
     { title: '@nrwl/node:node', path: '/packages/node/executors/node' },
     { title: 'nx', path: '/packages/nx' },
     { title: 'nx:noop', path: '/packages/nx/executors/noop' },
@@ -273,28 +267,28 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/nx/executors/run-commands',
     },
     { title: 'nx:run-script', path: '/packages/nx/executors/run-script' },
-    { title: 'nx-plugin', path: '/packages/nx-plugin' },
+    { title: 'nx-plugin', path: '/packages/plugin' },
     {
       title: '@nrwl/nx-plugin:plugin',
-      path: '/packages/nx-plugin/generators/plugin',
+      path: '/packages/plugin/generators/plugin',
     },
     {
       title: '@nrwl/nx-plugin:e2e-project',
-      path: '/packages/nx-plugin/generators/e2e-project',
+      path: '/packages/plugin/generators/e2e-project',
     },
     {
       title: '@nrwl/nx-plugin:migration',
-      path: '/packages/nx-plugin/generators/migration',
+      path: '/packages/plugin/generators/migration',
     },
     {
       title: '@nrwl/nx-plugin:generator',
-      path: '/packages/nx-plugin/generators/generator',
+      path: '/packages/plugin/generators/generator',
     },
     {
       title: '@nrwl/nx-plugin:executor',
-      path: '/packages/nx-plugin/generators/executor',
+      path: '/packages/plugin/generators/executor',
     },
-    { title: '@nrwl/nx-plugin:e2e', path: '/packages/nx-plugin/executors/e2e' },
+    { title: '@nrwl/nx-plugin:e2e', path: '/packages/plugin/executors/e2e' },
     { title: '@nrwl/react', path: '/packages/react' },
     { title: '@nrwl/react:init', path: '/packages/react/generators/init' },
     {
@@ -426,12 +420,6 @@ describe('nx-dev: Packages Section', () => {
       title: '@nrwl/web:application',
       path: '/packages/web/generators/application',
     },
-    { title: '@nrwl/web:webpack', path: '/packages/web/executors/webpack' },
-    { title: '@nrwl/web:rollup', path: '/packages/web/executors/rollup' },
-    {
-      title: '@nrwl/web:dev-server',
-      path: '/packages/web/executors/dev-server',
-    },
     {
       title: '@nrwl/web:file-server',
       path: '/packages/web/executors/file-server',
@@ -451,10 +439,6 @@ describe('nx-dev: Packages Section', () => {
     {
       title: '@nrwl/workspace:new',
       path: '/packages/workspace/generators/new',
-    },
-    {
-      title: '@nrwl/workspace:library',
-      path: '/packages/workspace/generators/library',
     },
     {
       title: '@nrwl/workspace:workspace-generator',
@@ -477,16 +461,8 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/workspace/generators/ci-workflow',
     },
     {
-      title: '@nrwl/workspace:run-commands',
-      path: '/packages/workspace/executors/run-commands',
-    },
-    {
       title: '@nrwl/workspace:counter',
       path: '/packages/workspace/executors/counter',
-    },
-    {
-      title: '@nrwl/workspace:run-script',
-      path: '/packages/workspace/executors/run-script',
     },
   ]).forEach((page) => assertTextOnPage(page.path, page.title));
 });

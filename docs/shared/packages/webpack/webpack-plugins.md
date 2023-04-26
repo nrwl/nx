@@ -37,7 +37,7 @@ module.exports = composePlugins(withNx(), (config) => {
 
 ## withWeb
 
-The `withWeb` plugin adds support for CSS/SASS/Less/Stylus stylesheets, assets (such as images and fonts), and `index.html` processing.
+The `withWeb` plugin adds support for CSS/SASS/Less stylesheets, assets (such as images and fonts), and `index.html` processing.
 
 ### Options
 

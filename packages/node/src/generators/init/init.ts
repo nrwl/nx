@@ -6,10 +6,10 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { jestInitGenerator } from '@nrwl/jest';
+} from '@nx/devkit';
+import { jestInitGenerator } from '@nx/jest';
 
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   nxVersion,
   tslibVersion,
@@ -18,14 +18,14 @@ import {
 import { Schema } from './schema';
 
 function updateDependencies(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, ['@nrwl/node'], []);
+  removeDependenciesFromPackageJson(tree, ['@nx/node'], []);
 
   return addDependenciesToPackageJson(
     tree,
     {
       tslib: tslibVersion,
     },
-    { '@nrwl/node': nxVersion, '@types/node': typesNodeVersion }
+    { '@nx/node': nxVersion, '@types/node': typesNodeVersion }
   );
 }
 

@@ -79,46 +79,72 @@
     }
   },
   "optionalDependencies": {
-    "@nrwl/nx-win32-x64-msvc": "*",
-    "@nrwl/nx-darwin-x64": "*",
-    "@nrwl/nx-linux-x64-gnu": "*",
-    "@nrwl/nx-darwin-arm64": "*",
-    "@nrwl/nx-linux-arm64-gnu": "*",
-    "@nrwl/nx-linux-arm64-musl": "*",
-    "@nrwl/nx-win32-arm64-msvc": "*",
-    "@nrwl/nx-linux-arm-gnueabihf": "*",
-    "@nrwl/nx-linux-x64-musl": "*"
+    "@nx/nx-win32-x64-msvc": "*",
+    "@nx/nx-darwin-x64": "*",
+    "@nx/nx-linux-x64-gnu": "*",
+    "@nx/nx-darwin-arm64": "*",
+    "@nx/nx-linux-arm64-gnu": "*",
+    "@nx/nx-linux-arm64-musl": "*",
+    "@nx/nx-win32-arm64-msvc": "*",
+    "@nx/nx-linux-arm-gnueabihf": "*",
+    "@nx/nx-linux-x64-musl": "*"
   },
   "nx-migrations": {
     "migrations": "./migrations.json",
     "packageGroup": [
+      "@nx/js",
       "@nrwl/js",
+      "@nx/jest",
       "@nrwl/jest",
+      "@nx/linter",
       "@nrwl/linter",
+      "@nx/workspace",
       "@nrwl/workspace",
+      "@nx/angular",
       "@nrwl/angular",
-      "@nrwl/cli",
+      "@nx/cypress",
       "@nrwl/cypress",
+      "@nx/detox",
       "@nrwl/detox",
+      "@nx/devkit",
       "@nrwl/devkit",
+      "@nx/esbuild",
       "@nrwl/esbuild",
+      "@nx/eslint-plugin",
       "@nrwl/eslint-plugin-nx",
+      "@nx/expo",
       "@nrwl/expo",
+      "@nx/express",
       "@nrwl/express",
+      "@nx/nest",
       "@nrwl/nest",
+      "@nx/next",
       "@nrwl/next",
+      "@nx/node",
       "@nrwl/node",
+      "@nx/nx-plugin",
       "@nrwl/nx-plugin",
+      "@nx/react",
       "@nrwl/react",
+      "@nx/react-native",
       "@nrwl/react-native",
+      "@nx/rollup",
       "@nrwl/rollup",
+      "@nx/storybook",
       "@nrwl/storybook",
       "@nrwl/tao",
+      "@nx/vite",
       "@nrwl/vite",
+      "@nx/web",
       "@nrwl/web",
+      "@nx/webpack",
       "@nrwl/webpack",
       {
         "package": "@nrwl/nx-cloud",
+        "version": "latest"
+      },
+      {
+        "package": "nx-cloud",
         "version": "latest"
       }
     ]
@@ -131,7 +157,7 @@
   "napi": {
     "name": "nx",
     "package": {
-      "name": "@nrwl/nx"
+      "name": "@nx/nx"
     },
     "triples": {
       "additional": [

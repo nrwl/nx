@@ -32,7 +32,7 @@ describe('params', () => {
     it('should use target options', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -58,7 +58,7 @@ describe('params', () => {
     it('should combine target, configuration', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -88,7 +88,7 @@ describe('params', () => {
         overriddenOpt: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -118,7 +118,7 @@ describe('params', () => {
         overriddenOpt: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOptAlias: 'target value',
         },
@@ -148,7 +148,7 @@ describe('params', () => {
         overriddenOptAlias: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -176,7 +176,7 @@ describe('params', () => {
     it('should handle targets without options', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
       };
 
       const options = combineOptionsForExecutor(

@@ -17,9 +17,10 @@ import { filterAffected } from '../project-graph/affected/affected-project-graph
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
+import { findMatchingProjects } from '../utils/find-matching-projects';
 
 export async function affected(
-  command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
+  command: 'graph' | 'print-affected' | 'affected',
   args: { [k: string]: any },
   extraTargetDependencies: Record<
     string,
@@ -50,46 +51,6 @@ export async function affected(
 
   try {
     switch (command) {
-      case 'apps':
-        const apps = projects
-          .filter((p) => p.type === 'app')
-          .map((p) => p.name);
-        if (args.plain) {
-          console.log(apps.join(' '));
-        } else {
-          if (apps.length) {
-            output.warn({
-              title:
-                'Deprecated: Use "nx print-affected --type=app --select=projects" instead. This command will be removed in v16.',
-            });
-            output.log({
-              title: 'Affected apps:',
-              bodyLines: apps.map((app) => `${output.dim('-')} ${app}`),
-            });
-          }
-        }
-        break;
-
-      case 'libs':
-        const libs = projects
-          .filter((p) => p.type === 'lib')
-          .map((p) => p.name);
-        if (args.plain) {
-          console.log(libs.join(' '));
-        } else {
-          if (libs.length) {
-            output.warn({
-              title:
-                'Deprecated: Use "nx print-affected --type=lib --select=projects" instead. This command will be removed in v16.',
-            });
-            output.log({
-              title: 'Affected libs:',
-              bodyLines: libs.map((lib) => `${output.dim('-')} ${lib}`),
-            });
-          }
-        }
-        break;
-
       case 'graph':
         const projectNames = projects.map((p) => p.name);
         await generateGraph(args as any, projectNames);
@@ -168,13 +129,16 @@ async function projectsToRun(
       );
 
   if (nxArgs.exclude) {
-    const excludedProjects = new Set(nxArgs.exclude);
+    const excludedProjects = new Set(
+      findMatchingProjects(nxArgs.exclude, affectedGraph.nodes)
+    );
+
     return Object.entries(affectedGraph.nodes)
       .filter(([projectName]) => !excludedProjects.has(projectName))
       .map(([, project]) => project);
   }
 
-  return Object.values(affectedGraph.nodes) as ProjectGraphProjectNode[];
+  return Object.values(affectedGraph.nodes);
 }
 
 function allProjectsWithTarget(

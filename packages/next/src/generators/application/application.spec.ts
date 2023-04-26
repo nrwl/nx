@@ -1,10 +1,10 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
   readJson,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { applicationGenerator } from './application';
 
@@ -224,7 +224,7 @@ describe('app', () => {
     });
 
     expect(tree.read('apps/my-app/jest.config.ts', 'utf-8')).toContain(
-      `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest'`
+      `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest'`
     );
   });
 
@@ -236,7 +236,7 @@ describe('app', () => {
 
     const projectConfiguration = readProjectConfiguration(tree, 'my-app');
     expect(projectConfiguration.targets.build.executor).toEqual(
-      '@nrwl/next:build'
+      '@nx/next:build'
     );
     expect(projectConfiguration.targets.build.options).toEqual({
       root: 'apps/my-app',
@@ -252,7 +252,7 @@ describe('app', () => {
 
     const projectConfiguration = readProjectConfiguration(tree, 'my-app');
     expect(projectConfiguration.targets.serve.executor).toEqual(
-      '@nrwl/next:server'
+      '@nx/next:server'
     );
     expect(projectConfiguration.targets.serve.options).toEqual({
       buildTarget: 'my-app:build',
@@ -275,7 +275,7 @@ describe('app', () => {
 
     const projectConfiguration = readProjectConfiguration(tree, 'my-app');
     expect(projectConfiguration.targets.export.executor).toEqual(
-      '@nrwl/next:export'
+      '@nx/next:export'
     );
     expect(projectConfiguration.targets.export.options).toEqual({
       buildTarget: 'my-app:build:production',
@@ -334,55 +334,79 @@ describe('app', () => {
 
         const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
         expect(eslintJson).toMatchInlineSnapshot(`
-          Object {
-            "env": Object {
+          {
+            "env": {
               "jest": true,
             },
-            "extends": Array [
-              "plugin:@nrwl/nx/react-typescript",
+            "extends": [
+              "plugin:@nx/react-typescript",
               "next",
               "next/core-web-vitals",
               "../../.eslintrc.json",
             ],
-            "ignorePatterns": Array [
+            "ignorePatterns": [
               "!**/*",
               ".next/**/*",
             ],
-            "overrides": Array [
-              Object {
-                "files": Array [
+            "overrides": [
+              {
+                "files": [
                   "*.ts",
                   "*.tsx",
                   "*.js",
                   "*.jsx",
                 ],
-                "rules": Object {
-                  "@next/next/no-html-link-for-pages": Array [
+                "rules": {
+                  "@next/next/no-html-link-for-pages": [
                     "error",
                     "apps/my-app/pages",
                   ],
                 },
               },
-              Object {
-                "files": Array [
+              {
+                "files": [
                   "*.ts",
                   "*.tsx",
                 ],
-                "rules": Object {},
+                "rules": {},
               },
-              Object {
-                "files": Array [
+              {
+                "files": [
                   "*.js",
                   "*.jsx",
                 ],
-                "rules": Object {},
+                "rules": {},
               },
             ],
-            "rules": Object {
+            "rules": {
               "@next/next/no-html-link-for-pages": "off",
             },
           }
         `);
+      });
+    });
+
+    describe('root level', () => {
+      it('should adjust eslint config for root level projects', async () => {
+        await applicationGenerator(tree, {
+          name: 'testApp',
+          style: 'css',
+          appDir: true,
+          rootProject: true,
+        });
+
+        const eslintJSON = readJson(tree, '.eslintrc.json');
+
+        expect(eslintJSON.extends).toMatchInlineSnapshot(
+          {},
+          `
+          [
+            "plugin:@nx/react-typescript",
+            "next",
+            "next/core-web-vitals",
+          ]
+        `
+        );
       });
     });
   });
@@ -428,12 +452,12 @@ describe('app', () => {
 
       expect(tree.exists('apps/testApp/pages/styles.css')).toBeFalsy();
 
-      expect(tree.exists('apps/testApp/app/global.css'));
-      expect(tree.exists('apps/testApp/app/page.tsx'));
-      expect(tree.exists('apps/testApp/app/layout.tsx'));
-      expect(tree.exists('apps/testApp/app/api/hello/route.ts'));
-      expect(tree.exists('apps/testApp/app/page.module.css'));
-      expect(tree.exists('apps/testApp/app/favicon.ico'));
+      expect(tree.exists('apps/test-app/app/global.css')).toBeTruthy();
+      expect(tree.exists('apps/test-app/app/page.tsx')).toBeTruthy();
+      expect(tree.exists('apps/test-app/app/layout.tsx')).toBeTruthy();
+      expect(tree.exists('apps/test-app/app/api/hello/route.ts')).toBeTruthy();
+      expect(tree.exists('apps/test-app/app/page.module.css')).toBeTruthy();
+      expect(tree.exists('apps/test-app/public/favicon.ico')).toBeTruthy();
     });
   });
 });

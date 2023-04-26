@@ -3,12 +3,14 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '../../../utils/lint';
-import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateEslintrcJson } from './update-eslintrc-json';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nx/js');
 
 describe('updateEslint', () => {
   let tree: Tree;
@@ -98,7 +100,7 @@ describe('updateEslint', () => {
     });
     updateJson(tree, 'libs/my-lib/.eslintrc.json', (eslintRcJson) => {
       eslintRcJson.extends = [
-        'plugin:@nrwl/nx/react',
+        'plugin:@nx/react',
         '../../.eslintrc.json',
         './customrc.json',
       ];
@@ -118,7 +120,7 @@ describe('updateEslint', () => {
     ).toEqual(
       expect.objectContaining({
         extends: [
-          'plugin:@nrwl/nx/react',
+          'plugin:@nx/react',
           '../../../.eslintrc.json',
           './customrc.json',
         ],

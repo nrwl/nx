@@ -13,7 +13,17 @@ import { runNxSync } from '../utils/child-process';
 import { directoryExists, readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
 
-export async function initHandler() {
+export interface InitArgs {
+  addE2e: boolean;
+  force: boolean;
+  integrated: boolean;
+  interactive: boolean;
+  vite: boolean;
+  nxCloud?: boolean;
+  cacheable?: string[];
+}
+
+export async function initHandler(options: InitArgs) {
   const args = process.argv.slice(2).join(' ');
   const flags = parser(args, {
     boolean: ['useDotNxInstallation'],
@@ -36,15 +46,15 @@ export async function initHandler() {
   } else if (existsSync('package.json')) {
     const packageJson: PackageJson = readJsonFile('package.json');
     if (existsSync('angular.json')) {
-      await addNxToAngularCliRepo();
+      await addNxToAngularCliRepo(options);
     } else if (isCRA(packageJson)) {
-      await addNxToCraRepo();
+      await addNxToCraRepo(options);
     } else if (isNestCLI(packageJson)) {
-      await addNxToNest(packageJson);
+      await addNxToNest(options, packageJson);
     } else if (isMonorepo(packageJson)) {
-      await addNxToMonorepo();
+      await addNxToMonorepo(options);
     } else {
-      await addNxToNpmRepo();
+      await addNxToNpmRepo(options);
     }
   } else {
     const useDotNxFolder = await prompt<{ useDotNxFolder: string }>([

@@ -1,7 +1,7 @@
-import { names, Tree } from '@nrwl/devkit';
+import { names, Tree } from '@nx/devkit';
 import { NormalizedSchema } from './normalized-schema';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

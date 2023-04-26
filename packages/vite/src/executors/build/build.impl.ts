@@ -1,17 +1,17 @@
 import 'dotenv/config';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { build, InlineConfig, mergeConfig } from 'vite';
 import {
   getViteBuildOptions,
   getViteSharedConfig,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
-import { copyAssets } from '@nrwl/js';
+import { copyAssets } from '@nx/js';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
-import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 
-import { registerTsConfigPaths } from 'nx/src/utils/register';
+import { registerTsConfigPaths } from '@nx/js/src/internal';
 
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
@@ -35,9 +35,11 @@ export async function* viteBuildExecutor(
 
   const libraryPackageJson = resolve(projectRoot, 'package.json');
   const rootPackageJson = resolve(context.root, 'package.json');
+  const distPackageJson = resolve(normalizedOptions.outputPath, 'package.json');
 
   // For buildable libs, copy package.json if it exists.
   if (
+    !existsSync(distPackageJson) &&
     existsSync(libraryPackageJson) &&
     rootPackageJson !== libraryPackageJson
   ) {

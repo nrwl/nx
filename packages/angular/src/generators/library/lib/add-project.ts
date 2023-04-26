@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { addProjectConfiguration, joinPathFragments } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { addProjectConfiguration, joinPathFragments } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import type { NormalizedSchema } from './normalized-schema';
 
@@ -19,8 +19,8 @@ export function addProject(
         libraryOptions.buildable || libraryOptions.publishable
           ? {
               executor: libraryOptions.publishable
-                ? '@nrwl/angular:package'
-                : '@nrwl/angular:ng-packagr-lite',
+                ? '@nx/angular:package'
+                : '@nx/angular:ng-packagr-lite',
               outputs: ['{workspaceRoot}/dist/{projectRoot}'],
               options: {
                 project: `${libraryOptions.projectRoot}/ng-package.json`,

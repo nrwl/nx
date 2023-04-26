@@ -1,7 +1,7 @@
 import { Tree } from 'nx/src/generators/tree';
 import { readProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
-import { generateFiles, joinPathFragments, names } from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { generateFiles, joinPathFragments, names } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
 import { Schema } from '../schema';
 
@@ -34,12 +34,20 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
 `
   );
 
-  const pathToHostRootRoutingFile = joinPathFragments(
+  let pathToHostRootRoutingFile = joinPathFragments(
     sourceRoot,
     'app/app.routes.ts'
   );
 
-  const hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
+  let hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
+
+  if (!hostRootRoutingFile) {
+    pathToHostRootRoutingFile = joinPathFragments(
+      sourceRoot,
+      'app/app-routing.module.ts'
+    );
+    hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
+  }
 
   let sourceFile = tsModule.createSourceFile(
     pathToHostRootRoutingFile,

@@ -12,7 +12,7 @@ A task, from Nx's perspective, is a target running on a project. i.e. The target
 
 ## Nx Cloud Schedules Your CI Tasks Automatically
 
-![when you turn on DTE, Nx will schedule your commands' tasks in CI.  for example, say you want to run these 3 commands to verify your code: nx affected --target=lint, nx affected --target=test and nx affected --target=build](../images/dte/schedule-tasks.jpeg)
+![when you turn on DTE, Nx will schedule your commands' tasks in CI.  for example, say you want to run these 3 commands to verify your code: nx affected -t lint, nx affected -t test and nx affected -t build](../images/dte/schedule-tasks.jpeg)
 
 Let's imagine for every PR in CI, you want to lint, test and build all affected projects. When you write your CI workflow, you have no way of knowing how many projects will be affected by each PR or how long each task will take. No matter how carefully you set things up, there will be wasted time if you manually assign a static number of agent machines for linting, testing and building. This approach is called binning.
 

@@ -12,7 +12,7 @@ import {
   readTargetOptions,
   ExecutorContext,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { readNxJson } from 'nx/src/project-graph/file-utils';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 
@@ -24,6 +24,7 @@ interface FindTargetOptions {
    */
   buildTarget?: string;
   validExecutorNames: Set<string>;
+  skipGetOptions?: boolean;
 }
 
 interface FoundTarget {
@@ -49,7 +50,7 @@ export async function findBuildConfig(
       tree,
       graph,
       options.project,
-      options.validExecutorNames
+      options
     );
     if (selfProject) {
       return selfProject;
@@ -124,7 +125,7 @@ async function findInGraph(
       tree,
       graph,
       parent.target,
-      options.validExecutorNames
+      options
     );
     if (parentProject) {
       potentialTargets.push(parentProject);
@@ -154,25 +155,29 @@ function findTargetOptionsInProject(
   tree: Tree,
   graph: ProjectGraph,
   projectName: string,
-  includes: Set<string>
+  options: FindTargetOptions
 ): FoundTarget {
   const projectConfig = readProjectConfiguration(tree, projectName);
+
+  const includes = options.validExecutorNames;
 
   for (const targetName in projectConfig.targets) {
     const targetConfig = projectConfig.targets[targetName];
     if (includes.has(targetConfig.executor)) {
       return {
         target: `${projectName}:${targetName}`,
-        config: readTargetOptions(
-          { project: projectName, target: targetName },
-          createExecutorContext(
-            graph,
-            projectConfig.targets,
-            projectName,
-            targetName,
-            null
-          )
-        ),
+        config: !options.skipGetOptions
+          ? readTargetOptions(
+              { project: projectName, target: targetName },
+              createExecutorContext(
+                graph,
+                projectConfig.targets,
+                projectName,
+                targetName,
+                null
+              )
+            )
+          : null,
       };
     }
   }

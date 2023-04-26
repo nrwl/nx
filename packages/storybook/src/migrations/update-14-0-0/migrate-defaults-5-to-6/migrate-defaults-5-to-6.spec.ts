@@ -4,8 +4,8 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { storybookVersion } from '../../../utils/versions';
 import configurationGenerator from '../../../generators/configuration/configuration';
 import {

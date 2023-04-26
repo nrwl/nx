@@ -2,11 +2,11 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import storiesGenerator from './stories';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 describe('nextjs:stories for applications', () => {
   let tree: Tree;
@@ -70,8 +70,8 @@ export async function createTestUIApp(name: string): Promise<Tree> {
 
   const config = readProjectConfiguration(tree, name);
   config.sourceRoot = config.root;
-  config.targets.build.executor = '@nrwl/next:build';
-  config.targets.serve.executor = '@nrwl/next:server';
+  config.targets.build.executor = '@nx/next:build';
+  config.targets.serve.executor = '@nx/next:server';
   updateProjectConfiguration(tree, name, config);
 
   return tree;

@@ -5,6 +5,7 @@ import type {
   PackageSnapshots,
 } from '@pnpm/lockfile-types';
 import {
+  isV6Lockfile,
   loadPnpmHoistedDepsDefinition,
   parseAndNormalizePnpmLockfile,
   stringifyToPnpmYaml,
@@ -40,7 +41,10 @@ function addNodes(
 
   Object.entries(data.packages).forEach(([key, snapshot]) => {
     const packageName = findPackageName(key, snapshot, data);
-    const version = findVersion(key, packageName).split('_')[0];
+    const rawVersion = findVersion(key, packageName);
+    const version = isV6Lockfile(data)
+      ? rawVersion.split('(')[0]
+      : rawVersion.split('_')[0];
 
     // we don't need to keep duplicates, we can just track the keys
     const existingNode = nodes.get(packageName)?.get(version);
@@ -103,7 +107,7 @@ function getHoistedVersion(
       k.startsWith(`/${packageName}/`)
     );
     if (key) {
-      version = key.slice(key.lastIndexOf('/') + 1).split('_')[0];
+      version = getVersion(key, packageName).split('_')[0];
     } else {
       // pnpm might not hoist every package
       // similarly those packages will not be available to be used via import
@@ -145,11 +149,12 @@ export function stringifyPnpmLockfile(
   packageJson: NormalizedPackageJson
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
+  const { lockfileVersion, packages } = data;
 
   const output: Lockfile = {
-    lockfileVersion: data.lockfileVersion,
+    lockfileVersion,
     importers: {
-      '.': mapRootSnapshot(packageJson, data.packages, graph.externalNodes),
+      '.': mapRootSnapshot(packageJson, packages, graph.externalNodes),
     },
     packages: sortObjectByKeys(
       mapSnapshots(data.packages, graph.externalNodes)
@@ -188,25 +193,33 @@ function findOriginalKeys(
     const snapshot = packages[key];
     // standard package
     if (key.startsWith(`/${packageName}/${version}`)) {
-      matchedKeys.push([returnFullKey ? key : key.split('/').pop(), snapshot]);
+      matchedKeys.push([
+        returnFullKey ? key : getVersion(key, packageName),
+        snapshot,
+      ]);
     }
     // tarball package
     if (key === version) {
       matchedKeys.push([version, snapshot]);
     }
     // alias package
-    if (
-      version.startsWith('npm:') &&
-      key.startsWith(
-        `/${version.slice(4, version.lastIndexOf('@'))}/${version.slice(
-          version.lastIndexOf('@') + 1
-        )}`
-      )
-    ) {
+    if (versionIsAlias(key, version)) {
       matchedKeys.push([key, snapshot]);
     }
   }
   return matchedKeys;
+}
+
+// check if version has a form of npm:packageName@version and
+// key starts with /packageName/version
+function versionIsAlias(key: string, versionExpr: string): boolean {
+  const PREFIX = 'npm:';
+  if (!versionExpr.startsWith(PREFIX)) return false;
+
+  const indexOfVersionSeparator = versionExpr.indexOf('@', PREFIX.length + 1);
+  const packageName = versionExpr.slice(PREFIX.length, indexOfVersionSeparator);
+  const version = versionExpr.slice(indexOfVersionSeparator + 1);
+  return key.startsWith(`/${packageName}/${version}`);
 }
 
 function mapRootSnapshot(
@@ -244,21 +257,22 @@ function mapRootSnapshot(
 
 function findVersion(key: string, packageName: string): string {
   if (key.startsWith(`/${packageName}/`)) {
-    return key.slice(key.lastIndexOf('/') + 1);
+    return getVersion(key, packageName);
   }
   // for alias packages prepend with "npm:"
   if (key.startsWith('/')) {
     const aliasName = key.slice(1, key.lastIndexOf('/'));
-    const version = key.slice(key.lastIndexOf('/') + 1);
+    const version = getVersion(key, aliasName);
     return `npm:${aliasName}@${version}`;
   }
+
   // for tarball package the entire key is the version spec
   return key;
 }
 
 function findPackageName(
   key: string,
-  value: PackageSnapshot,
+  snapshot: PackageSnapshot,
   data: Lockfile
 ): string {
   const matchPropValue = (record: Record<string, string>): string => {
@@ -272,18 +286,18 @@ function findPackageName(
   };
 
   const matchedDependencyName = (
-    snapshot: Partial<PackageSnapshot>
+    importer: Partial<PackageSnapshot>
   ): string => {
     return (
-      matchPropValue(snapshot.dependencies) ||
-      matchPropValue(snapshot.optionalDependencies) ||
-      matchPropValue(snapshot.peerDependencies)
+      matchPropValue(importer.dependencies) ||
+      matchPropValue(importer.optionalDependencies) ||
+      matchPropValue(importer.peerDependencies)
     );
   };
 
   // snapshot already has a name
-  if (value.name) {
-    return value.name;
+  if (snapshot.name) {
+    return snapshot.name;
   }
   // it'a a root dependency
   const rootDependencyName =
@@ -296,12 +310,31 @@ function findPackageName(
   // find a snapshot that has a dependency that points to this snapshot
   const snapshots = Object.values(data.packages);
   for (let i = 0; i < snapshots.length; i++) {
-    const snapshot = snapshots[i];
-    const dependencyName = matchedDependencyName(snapshot);
+    const dependencyName = matchedDependencyName(snapshots[i]);
     if (dependencyName) {
       return dependencyName;
     }
   }
-  // otherwise, it's a standard package
-  return key.startsWith('/') ? key.slice(1, key.lastIndexOf('/')) : key;
+  return extractNameFromKey(key);
+}
+
+function getVersion(key: string, packageName: string): string {
+  const KEY_NAME_SEPARATOR_LENGTH = 2; // leading and trailing slash
+
+  return key.slice(packageName.length + KEY_NAME_SEPARATOR_LENGTH);
+}
+
+function extractNameFromKey(key: string): string {
+  // if package name contains org e.g. "/@babel/runtime/7.12.5"
+  // we want slice until the third slash
+  if (key.startsWith('/@')) {
+    // find the position of the '/' after org name
+    const startFrom = key.indexOf('/', 1);
+    return key.slice(1, key.indexOf('/', startFrom + 1));
+  }
+  if (key.startsWith('/')) {
+    // if package has just a name e.g. "/react/7.12.5..."
+    return key.slice(1, key.indexOf('/', 1));
+  }
+  return key;
 }

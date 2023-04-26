@@ -2,8 +2,8 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 
 export async function updateExternalEmotionJsxRuntime(tree: Tree) {
   forEachExecutorOptions<any>(

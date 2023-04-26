@@ -1,4 +1,4 @@
-import { offsetFromRoot } from '@nrwl/devkit';
+import { offsetFromRoot } from '@nx/devkit';
 import type { Linter } from 'eslint';
 import {
   eslintPluginImportVersion,
@@ -21,7 +21,7 @@ export const extendReactEslintJson = (json: Linter.Config) => {
   const { extends: pluginExtends, ...config } = json;
 
   return {
-    extends: ['plugin:@nrwl/nx/react', ...(pluginExtends || [])],
+    extends: ['plugin:@nx/react', ...(pluginExtends || [])],
     ...config,
   };
 };
@@ -33,10 +33,7 @@ export const createReactEslintJson = (
   projectRoot: string,
   setParserOptionsProject: boolean
 ): Linter.Config => ({
-  extends: [
-    'plugin:@nrwl/nx/react',
-    `${offsetFromRoot(projectRoot)}.eslintrc.json`,
-  ],
+  extends: ['plugin:@nx/react', `${offsetFromRoot(projectRoot)}.eslintrc.json`],
   ignorePatterns: ['!**/*'],
   overrides: [
     {

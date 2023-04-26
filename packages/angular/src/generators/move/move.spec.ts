@@ -1,12 +1,12 @@
-import * as devkit from '@nrwl/devkit';
-import { readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+import * as devkit from '@nx/devkit';
+import { readJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { generateTestLibrary } from '../utils/testing';
 import { angularMoveGenerator } from './move';
 
-describe('@nrwl/angular:move', () => {
+describe('@nx/angular:move', () => {
   let tree: Tree;
 
   beforeEach(async () => {

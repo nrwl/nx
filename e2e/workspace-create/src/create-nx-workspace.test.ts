@@ -11,7 +11,7 @@ import {
   readJson,
   runCreateWorkspace,
   uniq,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { existsSync, mkdirSync } from 'fs-extra';
 
 describe('create-nx-workspace', () => {
@@ -179,7 +179,7 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
     expectNoTsJestInJestConfig(appName);
     const packageJson = readJson('package.json');
-    expect(packageJson.devDependencies['@nrwl/webpack']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/webpack']).toBeDefined();
     expectCodeIsFormatted();
   });
 
@@ -197,8 +197,8 @@ describe('create-nx-workspace', () => {
 
     expectNoAngularDevkit();
     const packageJson = readJson('package.json');
-    expect(packageJson.devDependencies['@nrwl/webpack']).not.toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/vite']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/webpack']).not.toBeDefined();
+    expect(packageJson.devDependencies['@nx/vite']).toBeDefined();
     expectCodeIsFormatted();
   });
 
@@ -208,6 +208,21 @@ describe('create-nx-workspace', () => {
     runCreateWorkspace(wsName, {
       preset: 'next',
       style: 'css',
+      appName,
+      packageManager,
+    });
+
+    expectNoAngularDevkit();
+    expectCodeIsFormatted();
+  });
+
+  it('should be able to create a nextjs standalone workspace', () => {
+    const wsName = uniq('next');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'nextjs-standalone',
+      style: 'css',
+      nextAppDir: true,
       appName,
       packageManager,
     });

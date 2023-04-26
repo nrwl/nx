@@ -1,4 +1,4 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
   DependencyType,
   joinPathFragments,
@@ -6,17 +6,17 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),
@@ -94,7 +94,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'libs/fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build',
@@ -156,7 +156,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'libs/fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build:development',
@@ -218,7 +218,7 @@ describe('Cypress Component Testing Configuration', () => {
         "Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
         Provided project? fancy-lib
         Provided build target? fancy-app:build
-        Provided Executors? @nrwl/angular:webpack-browser, @angular-devkit/build-angular:browser"
+        Provided Executors? @nx/angular:webpack-browser, @nrwl/angular:webpack-browser, @angular-devkit/build-angular:browser"
       `);
     });
     it('should use own project config', async () => {
@@ -249,7 +249,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-app').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'apps/fancy-app/cypress.config.ts',
           devServerTarget: 'fancy-app:build',
@@ -309,7 +309,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'libs/fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build',

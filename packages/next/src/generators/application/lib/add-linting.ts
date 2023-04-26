@@ -1,4 +1,4 @@
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nx/linter';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -6,11 +6,11 @@ import {
   runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   extendReactEslintJson,
   extraEslintDependencies,
-} from '@nrwl/react/src/utils/lint';
+} from '@nx/react/src/utils/lint';
 import { NormalizedSchema } from './normalize-options';
 
 export async function addLinting(
@@ -26,6 +26,7 @@ export async function addLinting(
     unitTestRunner: options.unitTestRunner,
     eslintFilePatterns: [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
+    rootProject: options.rootProject,
   });
 
   if (options.linter === Linter.EsLint) {
@@ -78,10 +79,11 @@ export async function addLinting(
         json.extends.unshift(...['next', 'next/core-web-vitals']);
         // remove nx/react plugin, as it conflicts with the next.js one
         json.extends = json.extends.filter(
-          (name) => name !== 'plugin:@nrwl/nx/react'
+          (name) =>
+            name !== 'plugin:@nx/react' && name !== 'plugin:@nrwl/nx/react'
         );
 
-        json.extends.unshift('plugin:@nrwl/nx/react-typescript');
+        json.extends.unshift('plugin:@nx/react-typescript');
         if (!json.env) {
           json.env = {};
         }

@@ -5,7 +5,7 @@
  * - Removed writing bundles as we don't generate them for incremental builds.
  */
 
-import { logger } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
 import { STATE_DONE } from 'ng-packagr/lib/graph/node';
 import { isInProgress } from 'ng-packagr/lib/graph/select';
 import type { Transform } from 'ng-packagr/lib/graph/transform';

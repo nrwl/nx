@@ -86,7 +86,7 @@ Snapshot files should be checked in with your code.
 
 ### Performance in CI
 
-Typically, in CI it's recommended to use `nx affected --target=test --parallel=[# CPUs] -- --runInBand` for the best performance.
+Typically, in CI it's recommended to use `nx affected -t test --parallel=[# CPUs] -- --runInBand` for the best performance.
 
 This is because each [jest process creates a workers based on system resources](https://jestjs.io/docs/cli#--maxworkersnumstring), running multiple projects via nx and using jest workers will create too many process overall causing the system to run slower than desired. Using the `--runInBand` flag tells jest to run in a single process.
 
@@ -95,6 +95,21 @@ This is because each [jest process creates a workers based on system resources](
 ### Jest
 
 Primary configurations for Jest will be via the `jest.config.ts` file that generated for your project. This file will extend the root `jest.preset.js` file. Learn more about [Jest configurations](https://jestjs.io/docs/configuration#options).
+
+The root level `jest.config.ts` file configures [Jest multi project support](https://jestjs.io/docs/configuration#projects-arraystring--projectconfig).
+This configuration allows editor/IDE integrations to pick up individual project's configurations rather than the one at the root.
+
+The set of Jest projects within Nx workspaces tends to change. Instead of statically defining a list in `jest.config.ts`, Nx provides a utility function called `getJestProjects` which queries for Jest configurations defined for targets which use the `@nrwl/jest:jest` executor.
+
+You can add Jest projects which are not included in `getJestProjects()`, because they do not use the Nx Jest executor, by doing something like the following:
+
+```typescript {% fileName="jest.config.ts"}
+import { getJestProjects } from '@nrwl/jest';
+
+export default {
+  projects: [...getJestProjects(), '<rootDir>/path/to/jest.config.ts'],
+};
+```
 
 ### Nx
 
@@ -120,7 +135,7 @@ In order to use Jest's global setup/teardown functions that reference nx librari
 Nx provides a helper function that you can import within your setup/teardown file.
 
 ```typescript {% fileName="global-setup.ts" %}
-import { registerTsProject } from 'nx/src/utils/register';
+import { registerTsProject } from '@nrwl/js/src/internal';
 const cleanupRegisteredPaths = registerTsProject('.', 'tsconfig.base.json');
 
 import { yourFancyFunction } from '@some-org/my-util-library';

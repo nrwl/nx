@@ -1,5 +1,5 @@
-import { readNxJson, Tree, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readNxJson, Tree, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { setDefaultBaseIfNotSet } from './set-default-base-if-not-set';
 
 describe('add `defaultBase` in nx.json', () => {

@@ -6,8 +6,8 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { jestVersion, typesNodeVersion } from '@nrwl/jest/src/utils/versions';
+} from '@nx/devkit';
+import { jestVersion, typesNodeVersion } from '@nx/jest/src/utils/versions';
 
 import { Schema } from './schema';
 import {
@@ -36,7 +36,7 @@ export function updateDependencies(host: Tree) {
     host,
     {},
     {
-      '@nrwl/detox': nxVersion,
+      '@nx/detox': nxVersion,
       detox: detoxVersion,
       '@testing-library/jest-dom': testingLibraryJestDom,
       '@types/node': typesNodeVersion,
@@ -46,7 +46,7 @@ export function updateDependencies(host: Tree) {
 }
 
 function moveDependency(host: Tree) {
-  return removeDependenciesFromPackageJson(host, ['@nrwl/detox'], []);
+  return removeDependenciesFromPackageJson(host, ['@nx/detox'], []);
 }
 
 export default detoxInitGenerator;

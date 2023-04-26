@@ -7,7 +7,7 @@ import {
   ProjectConfiguration,
   logger,
   stripIndents,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * Add support to display svg in react native:

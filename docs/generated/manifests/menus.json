@@ -3,13 +3,13 @@
     "id": "nx",
     "menu": [
       {
-        "name": "Getting Started",
+        "name": "Start Here",
         "path": "/getting-started",
         "id": "getting-started",
         "isExternal": false,
         "children": [
           {
-            "name": "Intro to Nx",
+            "name": "Getting Started",
             "path": "/getting-started/intro",
             "id": "intro",
             "isExternal": false,
@@ -17,40 +17,89 @@
             "disableCollapsible": false
           },
           {
-            "name": "Package-Based Repo Tutorial",
-            "path": "/getting-started/package-based-repo-tutorial",
+            "name": "Installation",
+            "path": "/getting-started/installation",
+            "id": "installation",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Why Nx?",
+            "path": "/getting-started/why-nx",
+            "id": "why-nx",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Getting Started",
+        "path": "/getting-started/intro",
+        "id": "intro",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Installation",
+        "path": "/getting-started/installation",
+        "id": "installation",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Why Nx?",
+        "path": "/getting-started/why-nx",
+        "id": "why-nx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "5 min Tutorials",
+        "path": "/tutorials",
+        "id": "tutorials",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Package-Based Monorepo",
+            "path": "/tutorials/package-based-repo-tutorial",
             "id": "package-based-repo-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Integrated Repo Tutorial",
-            "path": "/getting-started/integrated-repo-tutorial",
+            "name": "Integrated Monorepo",
+            "path": "/tutorials/integrated-repo-tutorial",
             "id": "integrated-repo-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "React Standalone Tutorial",
-            "path": "/getting-started/react-standalone-tutorial",
+            "name": "React Standalone",
+            "path": "/tutorials/react-standalone-tutorial",
             "id": "react-standalone-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Angular Standalone Tutorial",
-            "path": "/getting-started/angular-standalone-tutorial",
+            "name": "Angular Standalone",
+            "path": "/tutorials/angular-standalone-tutorial",
             "id": "angular-standalone-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Node Server Tutorial",
-            "path": "/getting-started/node-server-tutorial",
+            "name": "Node Standalone",
+            "path": "/tutorials/node-server-tutorial",
             "id": "node-server-tutorial",
             "isExternal": false,
             "children": [],
@@ -60,48 +109,40 @@
         "disableCollapsible": false
       },
       {
-        "name": "Intro to Nx",
-        "path": "/getting-started/intro",
-        "id": "intro",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Package-Based Repo Tutorial",
-        "path": "/getting-started/package-based-repo-tutorial",
+        "name": "Package-Based Monorepo",
+        "path": "/tutorials/package-based-repo-tutorial",
         "id": "package-based-repo-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Integrated Repo Tutorial",
-        "path": "/getting-started/integrated-repo-tutorial",
+        "name": "Integrated Monorepo",
+        "path": "/tutorials/integrated-repo-tutorial",
         "id": "integrated-repo-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "React Standalone Tutorial",
-        "path": "/getting-started/react-standalone-tutorial",
+        "name": "React Standalone",
+        "path": "/tutorials/react-standalone-tutorial",
         "id": "react-standalone-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Angular Standalone Tutorial",
-        "path": "/getting-started/angular-standalone-tutorial",
+        "name": "Angular Standalone",
+        "path": "/tutorials/angular-standalone-tutorial",
         "id": "angular-standalone-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Node Server Tutorial",
-        "path": "/getting-started/node-server-tutorial",
+        "name": "Node Standalone",
+        "path": "/tutorials/node-server-tutorial",
         "id": "node-server-tutorial",
         "isExternal": false,
         "children": [],
@@ -1932,6 +1973,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting Nx Install Issues",
+            "path": "/recipes/ci/troubleshoot-nx-install-issues",
+            "id": "troubleshoot-nx-install-issues",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -1996,6 +2045,14 @@
         "name": "Setting up Bitbucket",
         "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
         "id": "monorepo-ci-bitbucket-pipelines",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshooting Nx Install Issues",
+        "path": "/recipes/ci/troubleshoot-nx-install-issues",
+        "id": "troubleshoot-nx-install-issues",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2133,6 +2190,79 @@
         "name": "Manual migration",
         "path": "/recipes/adopting-nx/manual",
         "id": "manual",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Adopting Nx From Angular CLI",
+        "path": "/recipes/adopting-nx-angular",
+        "id": "adopting-nx-angular",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "From Angular CLI",
+            "path": "/recipes/adopting-nx-angular/migration-angular",
+            "id": "migration-angular",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "From Angular CLI to Integrated",
+            "path": "/recipes/adopting-nx-angular/angular-integrated",
+            "id": "angular-integrated",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "From Angular CLI Manually",
+            "path": "/recipes/adopting-nx-angular/angular-manual",
+            "id": "angular-manual",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "From Multiple Angular CLI Repos",
+            "path": "/recipes/adopting-nx-angular/angular-multiple",
+            "id": "angular-multiple",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "From Angular CLI",
+        "path": "/recipes/adopting-nx-angular/migration-angular",
+        "id": "migration-angular",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "From Angular CLI to Integrated",
+        "path": "/recipes/adopting-nx-angular/angular-integrated",
+        "id": "angular-integrated",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "From Angular CLI Manually",
+        "path": "/recipes/adopting-nx-angular/angular-manual",
+        "id": "angular-manual",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "From Multiple Angular CLI Repos",
+        "path": "/recipes/adopting-nx-angular/angular-multiple",
+        "id": "angular-multiple",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3295,14 +3425,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Billing and Utilization",
-            "path": "/nx-cloud/account/billing",
-            "id": "billing",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Users",
             "path": "/nx-cloud/account/users",
             "id": "users",
@@ -3343,14 +3465,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Billing and Utilization",
-        "path": "/nx-cloud/account/billing",
-        "id": "billing",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -3640,14 +3754,6 @@
   {
     "id": "packages",
     "menu": [
-      {
-        "id": "add-nx-to-monorepo",
-        "path": "/packages/add-nx-to-monorepo",
-        "name": "add-nx-to-monorepo",
-        "children": [],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
       {
         "id": "angular",
         "path": "/packages/angular",
@@ -3997,14 +4103,6 @@
         "disableCollapsible": false
       },
       {
-        "id": "cra-to-nx",
-        "path": "/packages/cra-to-nx",
-        "name": "cra-to-nx",
-        "children": [],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
         "id": "create-nx-plugin",
         "path": "/packages/create-nx-plugin",
         "name": "create-nx-plugin",
@@ -4307,18 +4405,18 @@
         "disableCollapsible": false
       },
       {
-        "id": "eslint-plugin-nx",
-        "path": "/packages/eslint-plugin-nx",
-        "name": "eslint-plugin-nx",
+        "id": "eslint-plugin",
+        "path": "/packages/eslint-plugin",
+        "name": "eslint-plugin",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/eslint-plugin-nx/documents",
+            "path": "/packages/eslint-plugin/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/eslint-plugin-nx/documents/overview",
+                "path": "/packages/eslint-plugin/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -4326,7 +4424,7 @@
               },
               {
                 "name": "The `enforce-module-boundaries` rule",
-                "path": "/packages/eslint-plugin-nx/documents/enforce-module-boundaries",
+                "path": "/packages/eslint-plugin/documents/enforce-module-boundaries",
                 "id": "enforce-module-boundaries",
                 "isExternal": false,
                 "children": [],
@@ -4395,62 +4493,6 @@
                 "id": "download",
                 "path": "/packages/expo/executors/download",
                 "name": "download",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "build-ios",
-                "path": "/packages/expo/executors/build-ios",
-                "name": "build-ios",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "build-android",
-                "path": "/packages/expo/executors/build-android",
-                "name": "build-android",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "build-web",
-                "path": "/packages/expo/executors/build-web",
-                "name": "build-web",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "build-status",
-                "path": "/packages/expo/executors/build-status",
-                "name": "build-status",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "publish",
-                "path": "/packages/expo/executors/publish",
-                "name": "publish",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "publish-set",
-                "path": "/packages/expo/executors/publish-set",
-                "name": "publish-set",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "rollback",
-                "path": "/packages/expo/executors/rollback",
-                "name": "rollback",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -4840,14 +4882,6 @@
         "disableCollapsible": false
       },
       {
-        "id": "make-angular-cli-faster",
-        "path": "/packages/make-angular-cli-faster",
-        "name": "make-angular-cli-faster",
-        "children": [],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
         "id": "nest",
         "path": "/packages/nest",
         "name": "nest",
@@ -5051,6 +5085,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "How to configure Next.js plugins",
+                "path": "/packages/next/documents/next-config-setup",
+                "id": "next-config-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -5141,6 +5183,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "cypress-component-configuration",
+                "path": "/packages/next/generators/cypress-component-configuration",
+                "name": "cypress-component-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -5177,14 +5227,6 @@
             "path": "/packages/node/executors",
             "name": "executors",
             "children": [
-              {
-                "id": "webpack",
-                "path": "/packages/node/executors/webpack",
-                "name": "webpack",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
               {
                 "id": "node",
                 "path": "/packages/node/executors/node",
@@ -5320,22 +5362,6 @@
                 "name": "affected:graph",
                 "path": "/packages/nx/documents/affected-dep-graph",
                 "id": "affected-dep-graph",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "affected:apps",
-                "path": "/packages/nx/documents/affected-apps",
-                "id": "affected-apps",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "affected:libs",
-                "path": "/packages/nx/documents/affected-libs",
-                "id": "affected-libs",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5502,18 +5528,18 @@
         "disableCollapsible": false
       },
       {
-        "id": "nx-plugin",
-        "path": "/packages/nx-plugin",
-        "name": "nx-plugin",
+        "id": "plugin",
+        "path": "/packages/plugin",
+        "name": "plugin",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/nx-plugin/documents",
+            "path": "/packages/plugin/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/nx-plugin/documents/overview",
+                "path": "/packages/plugin/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -5525,12 +5551,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/nx-plugin/executors",
+            "path": "/packages/plugin/executors",
             "name": "executors",
             "children": [
               {
                 "id": "e2e",
-                "path": "/packages/nx-plugin/executors/e2e",
+                "path": "/packages/plugin/executors/e2e",
                 "name": "e2e",
                 "children": [],
                 "isExternal": false,
@@ -5542,20 +5568,28 @@
           },
           {
             "id": "generators",
-            "path": "/packages/nx-plugin/generators",
+            "path": "/packages/plugin/generators",
             "name": "generators",
             "children": [
               {
                 "id": "plugin",
-                "path": "/packages/nx-plugin/generators/plugin",
+                "path": "/packages/plugin/generators/plugin",
                 "name": "plugin",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
+                "id": "create-package",
+                "path": "/packages/plugin/generators/create-package",
+                "name": "create-package",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "e2e-project",
-                "path": "/packages/nx-plugin/generators/e2e-project",
+                "path": "/packages/plugin/generators/e2e-project",
                 "name": "e2e-project",
                 "children": [],
                 "isExternal": false,
@@ -5563,7 +5597,7 @@
               },
               {
                 "id": "migration",
-                "path": "/packages/nx-plugin/generators/migration",
+                "path": "/packages/plugin/generators/migration",
                 "name": "migration",
                 "children": [],
                 "isExternal": false,
@@ -5571,7 +5605,7 @@
               },
               {
                 "id": "generator",
-                "path": "/packages/nx-plugin/generators/generator",
+                "path": "/packages/plugin/generators/generator",
                 "name": "generator",
                 "children": [],
                 "isExternal": false,
@@ -5579,7 +5613,7 @@
               },
               {
                 "id": "executor",
-                "path": "/packages/nx-plugin/generators/executor",
+                "path": "/packages/plugin/generators/executor",
                 "name": "executor",
                 "children": [],
                 "isExternal": false,
@@ -5587,7 +5621,7 @@
               },
               {
                 "id": "plugin-lint-checks",
-                "path": "/packages/nx-plugin/generators/plugin-lint-checks",
+                "path": "/packages/plugin/generators/plugin-lint-checks",
                 "name": "plugin-lint-checks",
                 "children": [],
                 "isExternal": false,
@@ -5595,7 +5629,7 @@
               },
               {
                 "id": "preset",
-                "path": "/packages/nx-plugin/generators/preset",
+                "path": "/packages/plugin/generators/preset",
                 "name": "preset",
                 "children": [],
                 "isExternal": false,
@@ -6392,30 +6426,6 @@
             "name": "executors",
             "children": [
               {
-                "id": "webpack",
-                "path": "/packages/web/executors/webpack",
-                "name": "webpack",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "rollup",
-                "path": "/packages/web/executors/rollup",
-                "name": "rollup",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "dev-server",
-                "path": "/packages/web/executors/dev-server",
-                "name": "dev-server",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "file-server",
                 "path": "/packages/web/executors/file-server",
                 "name": "file-server",
@@ -6600,25 +6610,9 @@
             "name": "executors",
             "children": [
               {
-                "id": "run-commands",
-                "path": "/packages/workspace/executors/run-commands",
-                "name": "run-commands",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "counter",
                 "path": "/packages/workspace/executors/counter",
                 "name": "counter",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "run-script",
-                "path": "/packages/workspace/executors/run-script",
-                "name": "run-script",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -6660,14 +6654,6 @@
                 "id": "new",
                 "path": "/packages/workspace/generators/new",
                 "name": "new",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "library",
-                "path": "/packages/workspace/generators/library",
-                "name": "library",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

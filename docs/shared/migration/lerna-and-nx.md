@@ -63,7 +63,7 @@ By default `useNx` will be set to `false`, so you have to explicitly opt-in.
 
 **3. Create a nx.json (optional but recommended)**
 
-Nx works even without `nx.json` but to configure some more details such as the `cacheableOperations` of your monorepo in particular, create a `nx.json` at the root of the monorepo. Alternatively you can also just run `npx nx init` to have one generated. Specify the cacheable operations, usually something like `build`, `test`, `lint` etc, depending on your workspace setup:
+Nx works even without `nx.json` but to configure some more details such as the `cacheableOperations` of your monorepo in particular, create a `nx.json` at the root of the monorepo. Alternatively you can also just run `npx nx@latest init` to have one generated. Specify the cacheable operations, usually something like `build`, `test`, `lint` etc, depending on your workspace setup:
 
 ```json {% fileName="nx.json" %}
 {
@@ -90,7 +90,7 @@ This does not include distributed caching or distributed task execution powered 
 Nx can be added to an existing Lerna monorepo by running the following command:
 
 ```shell
-npx add-nx-to-monorepo
+npx nx@latest init
 ```
 
 This will
@@ -114,19 +114,19 @@ Here's an overview of some more Lerna commands and the corresponding Nx version:
   "private": true,
   "scripts": {
 -   "build:all": "lerna run build",
-+   "build:all": "nx run-many --target=build",
++   "build:all": "nx run-many -t build",
 -   "build:app1": "lerna run build --scope=app1",
 +   "build:app1": "nx build app1",
 -   "build:since": "lerna run build --since=main",
-+   "build:since": "nx affected --target=build",
++   "build:since": "nx affected -t build",
 -   "test:all": "lerna run test",
-+   "test:all": "nx run-many --target=test",
++   "test:all": "nx run-many -t test",
 -   "test:app1": "lerna run test --scope=app1",
 +   "test:app1": "nx test app1",
 -   "test:since": "lerna run test --since=main",
-+   "test:since": "nx affected --target=test",
++   "test:since": "nx affected -t test",
 -   "dev": "lerna run dev --stream --parallel",
-+   "dev": "nx run-many --target=dev",
++   "dev": "nx run-many -t dev",
 -   "dev:app1": "lerna run dev --stream --scope=app1",
 +   "dev:app1": "nx dev app1"
   },

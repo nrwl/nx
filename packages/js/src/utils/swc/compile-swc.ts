@@ -1,7 +1,7 @@
-import { cacheDir, ExecutorContext, logger } from '@nrwl/devkit';
+import { cacheDir, ExecutorContext, logger } from '@nx/devkit';
 import { exec, execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
-import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { NormalizedSwcExecutorOptions, SwcCliOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
@@ -10,7 +10,7 @@ function getSwcCmd(
   { swcrcPath, srcPath, destPath }: SwcCliOptions,
   watch = false
 ) {
-  let swcCmd = `npx swc ${srcPath} -d ${destPath} --no-swcrc --config-file=${swcrcPath}`;
+  let swcCmd = `npx swc ${srcPath} -d ${destPath} --config-file=${swcrcPath}`;
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 

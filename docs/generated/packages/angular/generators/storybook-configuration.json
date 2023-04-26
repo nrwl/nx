@@ -87,7 +87,7 @@
       "storybook7Configuration": {
         "description": "Configure your workspace using Storybook version 7.",
         "type": "boolean",
-        "default": false,
+        "default": true,
         "hidden": true,
         "aliases": ["storybook7betaConfiguration"]
       }

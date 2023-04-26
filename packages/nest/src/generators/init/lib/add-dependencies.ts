@@ -1,5 +1,5 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { addDependenciesToPackageJson } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { addDependenciesToPackageJson } from '@nx/devkit';
 import {
   nestJsVersion,
   nxVersion,
@@ -22,7 +22,7 @@ export function addDependencies(tree: Tree): GeneratorCallback {
     {
       '@nestjs/schematics': nestJsVersion,
       '@nestjs/testing': nestJsVersion,
-      '@nrwl/nest': nxVersion,
+      '@nx/nest': nxVersion,
     }
   );
 }

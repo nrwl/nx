@@ -1,7 +1,9 @@
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
   createLockFile,
   getLockFileName,
 } from 'nx/src/plugins/js/lock-file/lock-file';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
 import {
   ExecutorContext,
@@ -12,7 +14,7 @@ import {
   readJsonFile,
   workspaceRoot,
   writeJsonFile,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { basename, dirname, join, parse, relative } from 'path';
 import { writeFileSync } from 'fs-extra';

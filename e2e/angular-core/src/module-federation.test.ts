@@ -1,4 +1,4 @@
-import { names } from '@nrwl/devkit';
+import { names } from '@nx/devkit';
 import {
   cleanupProject,
   killProcessAndPorts,
@@ -8,7 +8,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Angular Module Federation', () => {
   let proj: string;
@@ -33,12 +33,10 @@ describe('Angular Module Federation', () => {
     const remotePort = 4301;
 
     // generate host app
-    runCLI(
-      `generate @nrwl/angular:host ${hostApp} --style=css --no-interactive`
-    );
+    runCLI(`generate @nx/angular:host ${hostApp} --style=css --no-interactive`);
     // generate remote app
     runCLI(
-      `generate @nrwl/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-interactive`
+      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-interactive`
     );
 
     // check default generated host is built successfully
@@ -47,10 +45,10 @@ describe('Angular Module Federation', () => {
 
     // generate a shared lib with a seconary entry point
     runCLI(
-      `generate @nrwl/angular:library ${sharedLib} --buildable --no-interactive`
+      `generate @nx/angular:library ${sharedLib} --buildable --no-interactive`
     );
     runCLI(
-      `generate @nrwl/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
+      `generate @nx/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
     );
     // update host & remote files to use shared library
     updateFile(
@@ -139,16 +137,16 @@ describe('Angular Module Federation', () => {
 
     // generate apps
     runCLI(
-      `generate @nrwl/angular:application ${app1} --routing --no-interactive`
+      `generate @nx/angular:application ${app1} --routing --no-interactive`
     );
-    runCLI(`generate @nrwl/angular:application ${app2} --no-interactive`);
+    runCLI(`generate @nx/angular:application ${app2} --no-interactive`);
 
     // convert apps
     runCLI(
-      `generate @nrwl/angular:setup-mf ${app1} --mfType=host --port=${app1Port} --no-interactive`
+      `generate @nx/angular:setup-mf ${app1} --mfType=host --port=${app1Port} --no-interactive`
     );
     runCLI(
-      `generate @nrwl/angular:setup-mf ${app2} --mfType=remote --host=${app1} --port=${app2Port} --no-interactive`
+      `generate @nx/angular:setup-mf ${app2} --mfType=remote --host=${app1} --port=${app2Port} --no-interactive`
     );
 
     const process = await runCommandUntil(
@@ -170,7 +168,7 @@ describe('Angular Module Federation', () => {
 
     // generate remote apps
     runCLI(
-      `generate @nrwl/angular:host ${host} --ssr --remotes=${remote1},${remote2} --no-interactive`
+      `generate @nx/angular:host ${host} --ssr --remotes=${remote1},${remote2} --no-interactive`
     );
 
     // ports

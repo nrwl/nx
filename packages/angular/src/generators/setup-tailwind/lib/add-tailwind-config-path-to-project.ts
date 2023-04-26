@@ -4,7 +4,7 @@ import {
   stripIndents,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { NormalizedGeneratorOptions } from '../schema';
 
 export function addTailwindConfigPathToProject(
@@ -23,6 +23,8 @@ export function addTailwindConfigPathToProject(
   }
 
   const supportedLibraryExecutors = [
+    '@nx/angular:ng-packagr-lite',
+    '@nx/angular:package',
     '@nrwl/angular:ng-packagr-lite',
     '@nrwl/angular:package',
   ];

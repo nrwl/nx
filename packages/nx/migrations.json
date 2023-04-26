@@ -53,6 +53,24 @@
       "version": "15.8.2-beta.0",
       "description": "Updates the nx wrapper.",
       "implementation": "./src/migrations/update-15-8-2/update-nxw"
+    },
+    "16.0.0-remove-nrwl-cli": {
+      "cli": "nx",
+      "version": "16.0.0-beta.0",
+      "description": "Remove @nrwl/cli.",
+      "implementation": "./src/migrations/update-16-0-0/remove-nrwl-cli"
+    },
+    "16.0.0-tokens-for-depends-on": {
+      "cli": "nx",
+      "version": "16.0.0-beta.0",
+      "description": "Replace `dependsOn.projects` with {self} or {dependencies} tokens so that it matches the new expected formatting.",
+      "implementation": "./src/migrations/update-16-0-0/update-depends-on-to-tokens"
+    },
+    "16.0.0-update-nx-cloud-runner": {
+      "cli": "nx",
+      "version": "16.0.0-beta.0",
+      "description": "Replace @nrwl/nx-cloud with nx-cloud",
+      "implementation": "./src/migrations/update-16-0-0/update-nx-cloud-runner"
     }
   }
 }

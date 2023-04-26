@@ -43,10 +43,6 @@
               "label": "SASS(.scss)  [ http://sass-lang.com   ]"
             },
             {
-              "value": "styl",
-              "label": "Stylus(.styl)[ http://stylus-lang.com ]"
-            },
-            {
               "value": "less",
               "label": "LESS         [ http://lesscss.org     ]"
             }
@@ -77,15 +73,26 @@
       "bundler": {
         "description": "The bundler to use for building the application.",
         "type": "string",
-        "enum": ["webpack", "vite"],
+        "enum": ["webpack", "vite", "rspack"],
         "default": "vite"
       },
       "docker": {
         "description": "Generate a Dockerfile",
         "type": "boolean",
         "default": false
+      },
+      "nextAppDir": {
+        "description": "Enable experimental app/ for the project",
+        "type": "boolean",
+        "default": false
+      },
+      "e2eTestRunner": {
+        "description": "The tool to use for running e2e tests.",
+        "type": "string",
+        "enum": ["cypress", "jest", "detox", "none"]
       }
     },
+    "required": ["preset", "name"],
     "presets": []
   },
   "description": "Create application in an empty workspace.",

@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   logger,
   names,
   readProjectConfiguration,
   stripIndents,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { locateLibraryEntryPointFromDirectory } from './entry-point';
 import { getRelativeImportToFile } from './path';
 

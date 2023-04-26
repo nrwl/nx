@@ -1,4 +1,4 @@
-const { withNxMetro } = require('@nrwl/expo');
+const { withNxMetro } = require('@nx/expo');
 const { getDefaultConfig } = require('@expo/metro-config');
 
 const defaultConfig = getDefaultConfig(__dirname);

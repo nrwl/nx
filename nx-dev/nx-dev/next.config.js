@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-const { withNx } = require('@nrwl/next/plugins/with-nx');
+const { withNx } = require('@nx/next/plugins/with-nx');
 const { copySync } = require('fs-extra');
 const path = require('path');
 const redirectRules = require('./redirect-rules.config');
@@ -173,6 +173,14 @@ module.exports = withNx({
       rules.push({
         source: s,
         destination: redirectRules.nxCloudUrls[s],
+        permanent: true,
+      });
+    }
+    // Tutorials / Getting started
+    for (let s of Object.keys(redirectRules.conceptUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.conceptUrls[s],
         permanent: true,
       });
     }

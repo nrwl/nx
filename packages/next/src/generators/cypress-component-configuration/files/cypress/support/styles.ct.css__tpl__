@@ -1,0 +1,4 @@
+/* This is where you can load global styles to apply to all components. */
+<% if(tailwind) { %>@tailwind base;
+@tailwind components;
+@tailwind utilities;<% } %>

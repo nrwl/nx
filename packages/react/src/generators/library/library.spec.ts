@@ -1,20 +1,20 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
   getProjects,
   readJson,
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
 describe('lib', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
@@ -36,11 +36,11 @@ describe('lib', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     updateJson(tree, '/package.json', (json) => {
       json.devDependencies = {
-        '@nrwl/cypress': nxVersion,
-        '@nrwl/jest': nxVersion,
-        '@nrwl/rollup': nxVersion,
-        '@nrwl/vite': nxVersion,
-        '@nrwl/webpack': nxVersion,
+        '@nx/cypress': nxVersion,
+        '@nx/jest': nxVersion,
+        '@nx/rollup': nxVersion,
+        '@nx/vite': nxVersion,
+        '@nx/webpack': nxVersion,
       };
       return json;
     });
@@ -53,7 +53,7 @@ describe('lib', () => {
       expect(project.root).toEqual('libs/my-lib');
       expect(project.targets.build).toBeUndefined();
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -192,37 +192,37 @@ describe('lib', () => {
 
       const eslintJson = readJson(tree, 'libs/my-lib/.eslintrc.json');
       expect(eslintJson).toMatchInlineSnapshot(`
-        Object {
-          "extends": Array [
-            "plugin:@nrwl/nx/react",
+        {
+          "extends": [
+            "plugin:@nx/react",
             "../../.eslintrc.json",
           ],
-          "ignorePatterns": Array [
+          "ignorePatterns": [
             "!**/*",
           ],
-          "overrides": Array [
-            Object {
-              "files": Array [
+          "overrides": [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
           ],
         }
@@ -235,7 +235,7 @@ describe('lib', () => {
         compiler: 'babel',
       });
       expect(tree.read('libs/my-lib/jest.config.ts', 'utf-8')).toContain(
-        "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
+        "['babel-jest', { presets: ['@nx/react/babel'] }]"
       );
     });
   });
@@ -292,7 +292,7 @@ describe('lib', () => {
         compiler: 'babel',
       });
       expect(tree.read('libs/my-dir/my-lib/jest.config.ts', 'utf-8')).toContain(
-        "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
+        "['babel-jest', { presets: ['@nx/react/babel'] }]"
       );
     });
 
@@ -302,7 +302,7 @@ describe('lib', () => {
 
       expect(config.root).toEqual('libs/my-dir/my-lib');
       expect(config.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-dir/my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -396,14 +396,14 @@ describe('lib', () => {
       const config = readProjectConfiguration(tree, 'my-lib');
       expect(config.targets.test).toBeUndefined();
       expect(config.targets.lint).toMatchInlineSnapshot(`
-        Object {
-          "executor": "@nrwl/linter:eslint",
-          "options": Object {
-            "lintFilePatterns": Array [
+        {
+          "executor": "@nx/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
               "libs/my-lib/**/*.{ts,tsx,js,jsx}",
             ],
           },
-          "outputs": Array [
+          "outputs": [
             "{options.outputFile}",
           ],
         }
@@ -493,7 +493,7 @@ describe('lib', () => {
       const projectsConfigurations = getProjects(tree);
 
       expect(projectsConfigurations.get('my-lib').targets.build).toMatchObject({
-        executor: '@nrwl/rollup:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         options: {
           external: ['react/jsx-runtime'],
@@ -501,7 +501,7 @@ describe('lib', () => {
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',
           tsConfig: 'libs/my-lib/tsconfig.lib.json',
-          rollupConfig: '@nrwl/react/plugins/bundle-rollup',
+          rollupConfig: '@nx/react/plugins/bundle-rollup',
         },
       });
     });

@@ -1,5 +1,5 @@
-import { names, readJson, Tree } from '@nrwl/devkit';
-import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
+import { names, readJson, Tree } from '@nx/devkit';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { dirname } from 'path';
 import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions';
 import type { NgRxGeneratorOptions } from '../schema';

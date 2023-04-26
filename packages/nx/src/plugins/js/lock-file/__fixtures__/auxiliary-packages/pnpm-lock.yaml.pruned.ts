@@ -1,23 +1,22 @@
 export default `lockfileVersion: 5.4
 
-importers:
+specifiers:
+  '@nrwl/devkit': 15.0.13
+  eslint-plugin-disable-autofix: npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0
+  postgres: github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb
+  react: 18.2.0
+  typescript: 4.8.4
+  yargs: 17.6.2
 
-  .:
-    specifiers:
-      '@nrwl/devkit': 15.0.13
-      eslint-plugin-disable-autofix: npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0
-      postgres: github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb
-      react: 18.2.0
-      typescript: 4.8.4
-      yargs: 17.6.2
-    dependencies:
-      '@nrwl/devkit': 15.0.13_nx@15.3.0+typescript@4.8.4
-      eslint-plugin-disable-autofix: /@mattlewis92/eslint-plugin-disable-autofix/3.0.0
-      postgres: github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb
-      typescript: 4.8.4
-      yargs: 17.6.2
-    devDependencies:
-      react: 18.2.0
+dependencies:
+  '@nrwl/devkit': 15.0.13_nx@15.3.0+typescript@4.8.4
+  eslint-plugin-disable-autofix: /@mattlewis92/eslint-plugin-disable-autofix/3.0.0
+  postgres: github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb
+  typescript: 4.8.4
+  yargs: 17.6.2
+
+devDependencies:
+  react: 18.2.0
 
 packages:
 

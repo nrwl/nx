@@ -6,7 +6,7 @@
   "targets": {
     "test": {},
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "assets": [
           {
@@ -87,7 +87,8 @@
           },
           {
             "command": "node ./scripts/add-dependency-to-build.js workspace nx"
-          }
+          },
+          "node ./scripts/add-dependency-to-build.js workspace @nrwl/workspace"
         ],
         "parallel": false
       }

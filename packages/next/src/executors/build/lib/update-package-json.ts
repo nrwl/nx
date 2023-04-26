@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function updatePackageJson(

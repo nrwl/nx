@@ -4,9 +4,9 @@ import {
   formatFiles,
   removeDependenciesFromPackageJson,
   Tree,
-} from '@nrwl/devkit';
-import { initGenerator as nodeInitGenerator } from '@nrwl/node';
-import { tslibVersion } from '@nrwl/node/src/utils/versions';
+} from '@nx/devkit';
+import { initGenerator as nodeInitGenerator } from '@nx/node';
+import { tslibVersion } from '@nx/node/src/utils/versions';
 import {
   expressTypingsVersion,
   expressVersion,
@@ -15,7 +15,7 @@ import {
 import type { Schema } from './schema';
 
 function updateDependencies(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, ['@nrwl/express'], []);
+  removeDependenciesFromPackageJson(tree, ['@nx/express'], []);
 
   return addDependenciesToPackageJson(
     tree,
@@ -25,7 +25,7 @@ function updateDependencies(tree: Tree) {
     },
     {
       '@types/express': expressTypingsVersion,
-      '@nrwl/express': nxVersion,
+      '@nx/express': nxVersion,
     }
   );
 }

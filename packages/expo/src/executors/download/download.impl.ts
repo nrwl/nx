@@ -1,4 +1,4 @@
-import { ExecutorContext, logger, names } from '@nrwl/devkit';
+import { ExecutorContext, logger, names } from '@nx/devkit';
 import {
   copyFile,
   createReadStream,

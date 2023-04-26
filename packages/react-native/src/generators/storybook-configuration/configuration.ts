@@ -6,7 +6,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 
 import storiesGenerator from '../stories/stories';
@@ -29,8 +29,8 @@ export async function storybookConfigurationGenerator(
   schema: StorybookConfigureSchema
 ): Promise<GeneratorCallback> {
   const { configurationGenerator } = ensurePackage<
-    typeof import('@nrwl/storybook')
-  >('@nrwl/storybook', nxVersion);
+    typeof import('@nx/storybook')
+  >('@nx/storybook', nxVersion);
 
   const installTask = await configurationGenerator(host, {
     name: schema.name,
@@ -59,7 +59,7 @@ export async function storybookConfigurationGenerator(
 function addStorybookTask(host: Tree, projectName: string) {
   const projectConfig = readProjectConfiguration(host, projectName);
   projectConfig.targets['storybook'] = {
-    executor: '@nrwl/react-native:storybook',
+    executor: '@nx/react-native:storybook',
     options: {
       searchDir: [projectConfig.root],
       outputFile: './.storybook/story-loader.js',

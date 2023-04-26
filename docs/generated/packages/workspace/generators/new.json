@@ -68,6 +68,16 @@
         "description": "The framework which the application is using",
         "type": "string",
         "enum": ["express", "koa", "fastify", "nest", "none"]
+      },
+      "nextAppDir": {
+        "description": "Enable experimental app directory for the project",
+        "type": "boolean",
+        "default": false
+      },
+      "e2eTestRunner": {
+        "description": "The tool to use for running e2e tests.",
+        "type": "string",
+        "enum": ["cypress", "jest", "detox", "none"]
       }
     },
     "additionalProperties": true,

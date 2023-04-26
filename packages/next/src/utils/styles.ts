@@ -3,10 +3,10 @@ import {
   GeneratorCallback,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import { lessVersion, stylusVersion } from '@nrwl/react/src/utils/versions';
-import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react/src/utils/styled';
+import { lessVersion, stylusVersion } from '@nx/react/src/utils/versions';
+import { CSS_IN_JS_DEPENDENCIES } from '@nx/react/src/utils/styled';
 import {
   babelPluginStyledComponentsVersion,
   emotionServerVersion,

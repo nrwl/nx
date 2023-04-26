@@ -1,9 +1,9 @@
-import type { Tree } from '@nrwl/devkit';
-import { writeJson } from '@nrwl/devkit';
-import { tsConfigBaseOptions } from '@nrwl/js';
+import type { Tree } from '@nx/devkit';
+import { writeJson } from '@nx/devkit';
+import { tsConfigBaseOptions } from '@nx/js';
 import { getInstalledAngularMajorVersion } from './version-utils';
 
-export { extractTsConfigBase } from '@nrwl/js';
+export { extractTsConfigBase } from '@nx/js';
 
 export function createTsConfig(
   host: Tree,

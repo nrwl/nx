@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "install-required-packages": {
       "cli": "nx",
       "version": "15.7.0-beta.1",
@@ -121,7 +121,7 @@
       "factory": "./src/migrations/update-15-2-0/update-workspace-config"
     },
     "update-platform-server-exports": {
-      "cli": "ng",
+      "cli": "nx",
       "version": "15.2.0-beta.0",
       "requires": {
         "@angular/core": ">=15.0.0"
@@ -130,7 +130,7 @@
       "factory": "./src/migrations/update-15-2-0/remove-platform-server-exports"
     },
     "update-karma-main-file": {
-      "cli": "ng",
+      "cli": "nx",
       "version": "15.2.0-beta.0",
       "requires": {
         "@angular/core": ">=15.0.0"
@@ -164,6 +164,30 @@
       "version": "15.9.0-beta.9",
       "description": "Update the file-server executor to use @nrwl/web:file-server",
       "factory": "./src/migrations/update-15-9-0/update-file-server-executor"
+    },
+    "remove-library-generator-simple-module-name-option": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace the deprecated library generator 'simpleModuleName' option from generator defaults with 'simpleName'",
+      "factory": "./src/migrations/update-16-0-0/remove-library-generator-simple-module-name-option"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/angular with @nx/angular",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "remove-protractor-defaults-from-generators": {
+      "cli": "nx",
+      "version": "16.0.0-beta.6",
+      "description": "Remove protractor as default e2eTestRunner from nxJson and project configurations",
+      "implementation": "./src/migrations/update-16-0-0/remove-protractor-defaults"
+    },
+    "remove-karma-defaults-from-generators": {
+      "cli": "nx",
+      "version": "16.0.0-beta.6",
+      "description": "Remove karma as default unitTestRunner from nxJson and project configurations",
+      "implementation": "./src/migrations/update-16-0-0/remove-karma-defaults"
     }
   },
   "packageJsonUpdates": {

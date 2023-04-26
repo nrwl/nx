@@ -1,4 +1,4 @@
-import { normalizePath } from '@nrwl/devkit';
+import { normalizePath } from '@nx/devkit';
 
 export type NameInfo = { name: string; path: string };
 

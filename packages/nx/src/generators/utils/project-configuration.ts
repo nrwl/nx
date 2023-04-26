@@ -1,4 +1,4 @@
-import { basename, dirname, join, relative } from 'path';
+import { basename, join, relative } from 'path';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
@@ -18,7 +18,7 @@ import { readJson, writeJson } from './json';
 import { PackageJson } from '../../utils/package-json';
 import { readNxJson } from './nx-json';
 import { output } from '../../utils/output';
-import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
+import { getNxRequirePaths } from '../../utils/installation-directory';
 
 export { readNxJson, updateNxJson } from './nx-json';
 export {

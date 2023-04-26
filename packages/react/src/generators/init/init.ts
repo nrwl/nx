@@ -9,9 +9,9 @@ import {
   Tree,
   updateNxJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   babelPresetReactVersion,
   nxVersion,
@@ -30,10 +30,10 @@ function setDefault(host: Tree) {
   const workspace = readNxJson(host);
 
   workspace.generators = workspace.generators || {};
-  const reactGenerators = workspace.generators['@nrwl/react'] || {};
+  const reactGenerators = workspace.generators['@nx/react'] || {};
   const generators = {
     ...workspace.generators,
-    '@nrwl/react': {
+    '@nx/react': {
       ...reactGenerators,
       application: {
         ...reactGenerators.application,
@@ -46,7 +46,7 @@ function setDefault(host: Tree) {
 }
 
 function updateDependencies(host: Tree, schema: InitSchema) {
-  removeDependenciesFromPackageJson(host, ['@nrwl/react'], []);
+  removeDependenciesFromPackageJson(host, ['@nx/react'], []);
 
   const dependencies = {
     react: reactVersion,
@@ -58,7 +58,7 @@ function updateDependencies(host: Tree, schema: InitSchema) {
   }
 
   return addDependenciesToPackageJson(host, dependencies, {
-    '@nrwl/react': nxVersion,
+    '@nx/react': nxVersion,
     '@types/node': typesNodeVersion,
     '@types/react': typesReactVersion,
     '@types/react-dom': typesReactDomVersion,
@@ -100,9 +100,9 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
   setDefault(host);
 
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    ensurePackage('@nrwl/cypress', nxVersion);
+    ensurePackage('@nx/cypress', nxVersion);
     const { cypressInitGenerator } = await import(
-      '@nrwl/cypress/src/generators/init/init'
+      '@nx/cypress/src/generators/init/init'
     );
     const cypressTask = await cypressInitGenerator(host, {});
     tasks.push(cypressTask);

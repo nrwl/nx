@@ -1,4 +1,4 @@
-import { parseJson } from '@nrwl/devkit';
+import { parseJson } from '@nx/devkit';
 import {
   createFileSync,
   ensureDirSync,

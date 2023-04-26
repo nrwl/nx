@@ -8,10 +8,10 @@
       "dependsOn": [
         {
           "target": "build-base",
-          "projects": "dependencies"
+          "projects": "{dependencies}"
         }
       ],
-      "executor": "@nrwl/cypress:cypress",
+      "executor": "@nx/cypress:cypress",
       "options": {
         "cypressConfig": "nx-dev/nx-dev-e2e/cypress.config.ts",
         "devServerTarget": "nx-dev:serve:production",

@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
@@ -105,6 +105,6 @@ function createRunAndroidOptions(options: ReactNativeRunAndroidOptions) {
   return getCliOptions<ReactNativeRunAndroidOptions>(
     options,
     [...nxOptions, ...startOptions, ...deprecatedOptions],
-    ['appId', 'appIdSuffix']
+    ['appId', 'appIdSuffix', 'deviceId']
   );
 }

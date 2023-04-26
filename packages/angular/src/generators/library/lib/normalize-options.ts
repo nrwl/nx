@@ -4,11 +4,11 @@ import {
   joinPathFragments,
   names,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { normalizePrefix } from '../../utils/project';
 
@@ -47,8 +47,7 @@ export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
   const projectName = fullProjectDirectory
     .replace(new RegExp('/', 'g'), '-')
     .replace(/-\d+/g, '');
-  const fileName =
-    options.simpleName || options.simpleModuleName ? name : projectName;
+  const fileName = options.simpleName ? name : projectName;
   const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
   const moduleName = `${names(fileName).className}Module`;

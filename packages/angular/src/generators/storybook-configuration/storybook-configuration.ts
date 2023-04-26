@@ -1,4 +1,4 @@
-import { formatFiles, GeneratorCallback, Tree } from '@nrwl/devkit';
+import { formatFiles, GeneratorCallback, Tree } from '@nx/devkit';
 import { assertCompatibleStorybookVersion } from './lib/assert-compatible-storybook-version';
 import { generateStories } from './lib/generate-stories';
 import { generateStorybookConfiguration } from './lib/generate-storybook-configuration';

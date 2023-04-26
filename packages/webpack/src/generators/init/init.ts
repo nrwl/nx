@@ -2,9 +2,11 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
+  GeneratorCallback,
+  runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
+} from '@nx/devkit';
+import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 
 import { Schema } from './schema';
 import {
@@ -12,25 +14,25 @@ import {
   reactRefreshVersion,
   reactRefreshWebpackPluginVersion,
   svgrWebpackVersion,
-  swcHelpersVersion,
   swcLoaderVersion,
   tsLibVersion,
   urlLoaderVersion,
 } from '../../utils/versions';
-import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
+import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
 
 export async function webpackInitGenerator(tree: Tree, schema: Schema) {
+  const tasks: GeneratorCallback[] = [];
   if (schema.compiler === 'babel') {
     addBabelInputs(tree);
   }
   const devDependencies = {
-    '@nrwl/webpack': nxVersion,
+    '@nx/webpack': nxVersion,
   };
 
   if (schema.compiler === 'swc') {
-    devDependencies['@swc/helpers'] = swcHelpersVersion;
-    devDependencies['@swc/core'] = swcCoreVersion;
     devDependencies['swc-loader'] = swcLoaderVersion;
+    const addSwcTask = addSwcDependencies(tree);
+    tasks.push(addSwcTask);
   }
 
   if (schema.compiler === 'tsc') {
@@ -49,7 +51,14 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
     await formatFiles(tree);
   }
 
-  return addDependenciesToPackageJson(tree, {}, devDependencies);
+  const baseInstalTask = addDependenciesToPackageJson(
+    tree,
+    {},
+    devDependencies
+  );
+  tasks.push(baseInstalTask);
+
+  return runTasksInSerial(...tasks);
 }
 
 export default webpackInitGenerator;

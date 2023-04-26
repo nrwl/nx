@@ -1,5 +1,5 @@
-import { detectPackageManager, joinPathFragments } from '@nrwl/devkit';
-import { capitalize } from '@nrwl/devkit/src/utils/string-utils';
+import { detectPackageManager, joinPathFragments } from '@nx/devkit';
+import { capitalize } from '@nx/devkit/src/utils/string-utils';
 import {
   checkFilesExist,
   cleanupProject,
@@ -18,10 +18,9 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import * as http from 'http';
 import { checkApp } from './utils';
-import { removeSync } from 'fs-extra';
 
 describe('Next.js Applications', () => {
   let proj: string;
@@ -45,11 +44,11 @@ describe('Next.js Applications', () => {
     const jsLib = uniq('tslib');
     const buildableLib = uniq('buildablelib');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
-    runCLI(`generate @nrwl/next:lib ${nextLib} --no-interactive`);
-    runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
+    runCLI(`generate @nx/next:lib ${nextLib} --no-interactive`);
+    runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
     runCLI(
-      `generate @nrwl/js:lib ${buildableLib} --no-interactive --bundler=vite`
+      `generate @nx/js:lib ${buildableLib} --no-interactive --bundler=vite`
     );
 
     // Create file in public that should be copied to dist
@@ -72,7 +71,7 @@ describe('Next.js Applications', () => {
     // create a css file in node_modules so that it can be imported in a lib
     // to test that it works as expected
     updateFile(
-      'node_modules/@nrwl/next/test-styles.css',
+      'node_modules/@nx/next/test-styles.css',
       'h1 { background-color: red; }'
     );
 
@@ -107,7 +106,8 @@ describe('Next.js Applications', () => {
       `
           import { jsLibAsync } from '@${proj}/${jsLib}';
 
-          export default async function handler(_, res) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          export default async function handler(_: any, res: any) {
             const value = await jsLibAsync();
             res.send(value);
           }
@@ -185,7 +185,7 @@ describe('Next.js Applications', () => {
       cwd: distPath,
     });
     runCLI(
-      `generate @nrwl/workspace:run-commands serve-prod --project ${appName} --cwd=dist/apps/${appName} --command="npx next start --port=${selfContainedPort}"`
+      `generate @nx/workspace:run-commands serve-prod --project ${appName} --cwd=dist/apps/${appName} --command="npx next start --port=${selfContainedPort}"`
     );
     const selfContainedProcess = await runCommandUntil(
       `run ${appName}:serve-prod`,
@@ -202,7 +202,7 @@ describe('Next.js Applications', () => {
 
   it('should build and install pruned lock file', () => {
     const appName = uniq('app');
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
 
     const result = runCLI(`build ${appName} --generateLockfile=true`);
     expect(result).not.toMatch(/Graph is not consistent/);
@@ -221,8 +221,8 @@ describe('Next.js Applications', () => {
 
     const port = 4200;
 
-    runCLI(`generate @nrwl/next:app ${appName}`);
-    runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
+    runCLI(`generate @nx/next:app ${appName}`);
+    runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
 
     const proxyConf = {
       '/external-api': {
@@ -262,7 +262,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/pages/api/hello.js`,
       `
-        export default (_req, res) => {
+        export default (_req: any, res: any) => {
           res.status(200).send('Welcome');
         };
       `
@@ -287,12 +287,12 @@ describe('Next.js Applications', () => {
   it('should support custom next.config.js and output it in dist', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
 
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-        const { withNx } = require('@nrwl/next/plugins/with-nx');
+        const { withNx } = require('@nx/next/plugins/with-nx');
         const nextConfig = {
           nx: {
             svgr: false,
@@ -327,7 +327,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-        const { withNx } = require('@nrwl/next/plugins/with-nx');
+        const { withNx } = require('@nx/next/plugins/with-nx');
         // Not including "nx" entry should still work.
         const nextConfig = {};
 
@@ -344,7 +344,7 @@ describe('Next.js Applications', () => {
   it('should support --js flag', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --js`);
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --js`);
 
     checkFilesExist(`apps/${appName}/pages/index.js`);
 
@@ -359,7 +359,7 @@ describe('Next.js Applications', () => {
     const libName = uniq('lib');
 
     runCLI(
-      `generate @nrwl/next:lib ${libName} --no-interactive --style=none --js`
+      `generate @nx/next:lib ${libName} --no-interactive --style=none --js`
     );
 
     const mainPath = `apps/${appName}/pages/index.js`;
@@ -396,7 +396,7 @@ describe('Next.js Applications', () => {
   it('should support --no-swc flag', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --no-swc`);
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --no-swc`);
 
     // Next.js enables SWC when custom .babelrc is not provided.
     checkFilesExist(`apps/${appName}/.babelrc`);
@@ -414,7 +414,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nrwl/next:app ${appName} --style=css --no-interactive --custom-server`
+      `generate @nx/next:app ${appName} --style=css --no-interactive --custom-server`
     );
 
     checkFilesExist(`apps/${appName}/server/main.ts`);
@@ -423,6 +423,27 @@ describe('Next.js Applications', () => {
       checkUnitTest: false,
       checkLint: false,
       checkE2E: true,
+      checkExport: false,
+    });
+  }, 300_000);
+
+  it('should create a generate a next.js app with app layout enabled', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --style=css --appDir --no-interactive`
+    );
+
+    checkFilesExist(`apps/${appName}/app/api/hello/route.ts`);
+    checkFilesExist(`apps/${appName}/app/page.tsx`);
+    checkFilesExist(`apps/${appName}/app/layout.tsx`);
+    checkFilesExist(`apps/${appName}/app/global.css`);
+    checkFilesExist(`apps/${appName}/app/page.module.css`);
+
+    await checkApp(appName, {
+      checkUnitTest: false,
+      checkLint: false,
+      checkE2E: false,
       checkExport: false,
     });
   }, 300_000);

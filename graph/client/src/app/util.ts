@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-import { ProjectGraphDependency, ProjectGraphProjectNode } from '@nrwl/devkit';
+import { ProjectGraphDependency, ProjectGraphProjectNode } from '@nx/devkit';
 import { getEnvironmentConfig } from './hooks/use-environment-config';
 import { To, useParams, useSearchParams } from 'react-router-dom';
 

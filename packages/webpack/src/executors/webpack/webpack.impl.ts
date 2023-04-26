@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { ExecutorContext, logger } from '@nrwl/devkit';
-import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
+import { ExecutorContext, logger } from '@nx/devkit';
+import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';
 import { from, of } from 'rxjs';
 import {
@@ -14,7 +14,7 @@ import { resolve } from 'path';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
-} from '@nrwl/js/src/utils/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils';
 
 import { getWebpackConfig } from './lib/get-webpack-config';
 import { runWebpack } from './lib/run-webpack';

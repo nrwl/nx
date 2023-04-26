@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "add-project-root-metro-config-14-0-0": {
       "version": "14.0.1-beta.0",
       "cli": "nx",
@@ -41,6 +41,18 @@
       "cli": "nx",
       "description": "Change webpack to metro in expo projects",
       "factory": "./src/migrations/update-15-8-3/change-webpack-to-metro"
+    },
+    "remove-deprecated-expo-targets": {
+      "version": "16.0.0-beta.0",
+      "cli": "nx",
+      "description": "Remove deprecated expo targets",
+      "factory": "./src/migrations/update-16-0-0/remove-deprecated-targets"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/expo with @nx/expo",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },
   "packageJsonUpdates": {
@@ -715,6 +727,40 @@
         "@types/react-native": {
           "version": "0.71.4",
           "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.0",
+      "packages": {
+        "expo": {
+          "version": "48.0.11",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.71.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.71.6",
+          "alwaysAddToPackageJson": false
+        },
+        "eas-cli": {
+          "version": "~3.10.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/cli": {
+          "version": "~0.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "12.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-expo": {
+          "version": "48.0.0",
+          "alwaysAddToPackageJson": false,
+          "addToPackageJson": "devDependencies"
         }
       }
     }

@@ -15,7 +15,7 @@ describe('createTargetDefaults', () => {
 
   it('should work', async () => {
     const nxJson = readNxJson(tree);
-    nxJson.targetDependencies = {
+    (nxJson as any).targetDependencies = {
       a: [],
       b: [
         'bb',
@@ -33,7 +33,7 @@ describe('createTargetDefaults', () => {
         dependsOn: ['bb', 'bbb', '^c'],
       },
     });
-    expect(updated.targetDependencies).toBeUndefined();
+    expect((updated as any).targetDependencies).toBeUndefined();
   });
 
   it('should not error when nxJson does not exist', async () => {

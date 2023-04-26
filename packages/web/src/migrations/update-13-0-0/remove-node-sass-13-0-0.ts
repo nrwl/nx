@@ -4,7 +4,7 @@ import {
   readJson,
   removeDependenciesFromPackageJson,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * For web/react apps with style scss option, remove node-sass sine it is deprecated.

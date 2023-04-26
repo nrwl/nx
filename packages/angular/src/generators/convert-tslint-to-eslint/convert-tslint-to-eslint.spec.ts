@@ -6,9 +6,9 @@ import {
   readProjectConfiguration,
   Tree,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { exampleRootTslintJson } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { exampleRootTslintJson } from '@nx/linter';
 import { conversionGenerator } from './convert-tslint-to-eslint';
 
 /**
@@ -321,7 +321,7 @@ describe('convert-tslint-to-eslint', () => {
      * We will make a change to the eslint config before the next step
      */
     eslintContent.overrides[0].rules[
-      '@nrwl/nx/enforce-module-boundaries'
+      '@nx/enforce-module-boundaries'
     ][1].enforceBuildableLibDependency = false;
     writeJson(host, '.eslintrc.json', eslintContent);
 

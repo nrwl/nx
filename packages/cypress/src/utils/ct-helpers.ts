@@ -1,11 +1,11 @@
-import type { ExecutorContext, ProjectGraph } from '@nrwl/devkit';
+import type { ExecutorContext, ProjectGraph } from '@nx/devkit';
 import {
   normalizePath,
   ProjectConfiguration,
   stripIndents,
   TargetConfiguration,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { extname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 import {
@@ -39,7 +39,7 @@ export function getTempTailwindPath(context: ExecutorContext) {
 }
 
 /**
- * Checks if the childProjectName is a decendent of the parentProjectName
+ * Checks if the childProjectName is a descendent of the parentProjectName
  * in the project graph
  **/
 export function isCtProjectUsingBuildProject(

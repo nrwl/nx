@@ -179,6 +179,11 @@ export function createLockFile(
           'If you run `npm install --package-lock-only` in your output folder it will regenerate the correct pruned lockfile.'
         );
       }
+      if (packageManager === 'pnpm') {
+        additionalInfo.push(
+          'If you run `pnpm install --lockfile-only` in your output folder it will regenerate the correct pruned lockfile.'
+        );
+      }
       output.error({
         title: 'An error occured while creating pruned lockfile',
         bodyLines: errorBodyLines(e, additionalInfo),

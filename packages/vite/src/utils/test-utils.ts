@@ -1,4 +1,4 @@
-import { Tree, writeJson } from '@nrwl/devkit';
+import { Tree, writeJson } from '@nx/devkit';
 import * as reactAppConfig from './test-files/react-project.config.json';
 import * as reactViteConfig from './test-files/react-vite-project.config.json';
 import * as webAppConfig from './test-files/web-project.config.json';
@@ -50,8 +50,8 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
         "types": ["node"]
       },
       "files": [
-        "../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-        "../../node_modules/@nrwl/react/typings/image.d.ts"
+        "../../node_modules/@nx/react/typings/cssmodule.d.ts",
+        "../../node_modules/@nx/react/typings/image.d.ts"
       ],
       "exclude": [
         "src/**/*.spec.ts",
@@ -184,8 +184,8 @@ export function mockReactAppGenerator(tree: Tree): Tree {
         "outDir": "../../dist/out-tsc"
       },
       "files": [
-        "../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-        "../../node_modules/@nrwl/react/typings/image.d.ts"
+        "../../node_modules/@nx/react/typings/cssmodule.d.ts",
+        "../../node_modules/@nx/react/typings/image.d.ts"
       ],
       "exclude": [
         "jest.config.ts",
@@ -284,8 +284,8 @@ export function mockReactMixedAppGenerator(tree: Tree): Tree {
         "outDir": "../../dist/out-tsc"
       },
       "files": [
-        "../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-        "../../node_modules/@nrwl/react/typings/image.d.ts"
+        "../../node_modules/@nx/react/typings/cssmodule.d.ts",
+        "../../node_modules/@nx/react/typings/image.d.ts"
       ],
       "exclude": [
         "jest.config.ts",
@@ -488,8 +488,8 @@ export function mockReactLibNonBuildableJestTestRunnerGenerator(
         "types": ["node"]
       },
       "files": [
-        "../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-        "../../node_modules/@nrwl/react/typings/image.d.ts"
+        "../../node_modules/@nx/react/typings/cssmodule.d.ts",
+        "../../node_modules/@nx/react/typings/image.d.ts"
       ],
       "exclude": [
         "jest.config.ts",
@@ -592,8 +592,8 @@ export function mockReactLibNonBuildableVitestRunnerGenerator(
         "types": ["node"]
       },
       "files": [
-        "../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-        "../../node_modules/@nrwl/react/typings/image.d.ts"
+        "../../node_modules/@nx/react/typings/cssmodule.d.ts",
+        "../../node_modules/@nx/react/typings/image.d.ts"
       ],
       "exclude": [
         "**/*.spec.ts",

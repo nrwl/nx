@@ -1,6 +1,4 @@
 import * as express from 'express';
-import * as path from 'path';
-import next from 'next';
 import { NextServerOptions, ProxyConfig } from '../../../utils/types';
 
 /**
@@ -11,6 +9,7 @@ export async function defaultServer(
   settings: NextServerOptions,
   proxyConfig?: ProxyConfig
 ): Promise<void> {
+  const next = require('next');
   const app = next(settings);
   const handle = app.getRequestHandler();
 
@@ -18,9 +17,6 @@ export async function defaultServer(
 
   const server: express.Express = express();
   server.disable('x-powered-by');
-
-  // Serve shared assets copied to `public` folder
-  server.use(express.static(path.resolve(settings.dir, 'public')));
 
   // Set up the proxy.
   if (proxyConfig) {

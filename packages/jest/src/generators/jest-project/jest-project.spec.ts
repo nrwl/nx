@@ -4,8 +4,8 @@ import {
   readProjectConfiguration,
   Tree,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { jestConfigObject } from '../../utils/config/functions';
 
 import { jestProjectGenerator } from './jest-project';
@@ -73,7 +73,7 @@ describe('jestProject', () => {
     } as JestProjectSchema);
     const lib1 = readProjectConfiguration(tree, 'lib1');
     expect(lib1.targets.test).toEqual({
-      executor: '@nrwl/jest:jest',
+      executor: '@nx/jest:jest',
       outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
       options: {
         jestConfig: 'libs/lib1/jest.config.ts',

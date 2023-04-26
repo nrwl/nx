@@ -1,3 +1,6 @@
+<% if (styledModule && (styledModule === 'styled-jsx' || styledModule === 'styled-components'))  {%>
+'use client';
+<% }%> 
 <% if (styledModule && styledModule !== 'styled-jsx') {
   var wrapper = 'StyledPage';
 %>import styled from '<%= styledModule %>';<% } else {
@@ -11,7 +14,7 @@
 const StyledPage = styled.div`<%- pageStyleContent %>`;
 <% }%>
 
-export async function Index() {
+export default async function Index() {
   /*
    * Replace the elements below with your own.
    *
@@ -24,5 +27,3 @@ export async function Index() {
     </<%= wrapper %>>
   );
 };
-
-export default Index;

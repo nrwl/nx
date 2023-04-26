@@ -63,11 +63,10 @@ module.exports = function (path, options) {
   }
   // Try to use the defaultResolver
   try {
-    if (path.startsWith('@nrwl/') && !path.startsWith('@nrwl/nx-cloud'))
-      throw new Error('custom resolution');
+    if (path.startsWith('@nx/')) throw new Error('custom resolution');
     if (path.startsWith('nx/')) throw new Error('custom resolution');
 
-    if (path.indexOf('@nrwl/workspace') > -1) {
+    if (path.indexOf('@nx/workspace') > -1) {
       throw new Error(
         'Reference to local Nx package found. Use local version instead.'
       );
@@ -86,12 +85,16 @@ module.exports = function (path, options) {
 
     // TODO(v17): Remove this workaround
     // We have some weird d.ts + .js business going on for these 2 imports so this is a workaround
-    if (path === '@nrwl/devkit') {
+    if (path === '@nx/devkit') {
       return join(__dirname, '../', './packages/devkit/index.js');
-    } else if (path === '@nrwl/devkit/testing') {
+    } else if (path === '@nx/devkit/testing') {
       return join(__dirname, '../', './packages/devkit/testing.js');
     }
-    return ts.resolveModuleName(path, options.basedir, compilerOptions, host)
-      .resolvedModule.resolvedFileName;
+    return ts.resolveModuleName(
+      path,
+      join(options.basedir, 'fake-placeholder.ts'),
+      compilerOptions,
+      host
+    ).resolvedModule.resolvedFileName;
   }
 };

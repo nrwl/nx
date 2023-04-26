@@ -5,7 +5,7 @@ import {
   getProjects,
   joinPathFragments,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename, join } from 'path';
 import type * as ts from 'typescript';
 import {
@@ -13,7 +13,7 @@ import {
   getComponentNode,
   getComponentPropsInterface,
 } from '../../utils/ast-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

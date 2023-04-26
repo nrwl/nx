@@ -1,0 +1,506 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Nx Plugin Migration - jest 29 update configs should NOT update ts-jest with no globals are preset 1`] = `
+"const nxPreset = require('@nrwl/jest/preset').default;
+module.exports = {
+  ...nxPreset,
+  testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
+  transform: {
+    '^.+.(ts|js|html)$': 'ts-jest',
+  },
+  resolver: '@nrwl/jest/plugins/resolver',
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageReporters: ['html'],
+  /* TODO: Update to latest Jest snapshotFormat
+   * By default Nx has kept the older style of Jest Snapshot formats
+   * to prevent breaking of any existing tests with snapshots.
+   * It's recommend you update to the latest format.
+   * You can do this by removing snapshotFormat property
+   * and running tests with --update-snapshot flag.
+   * Example: "nx affected --targets=test --update-snapshot"
+   * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
+   */
+  snapshotFormat: { escapeString: true, printBasicPrototype: true },
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should add snapshot config with no root preset 1`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'my-lib',
+  preset: '../../jest.preset.js',
+  globals: {},
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/my-lib',
+  /* TODO: Update to latest Jest snapshotFormat
+   * By default Nx has kept the older style of Jest Snapshot formats
+   * to prevent breaking of any existing tests with snapshots.
+   * It's recommend you update to the latest format.
+   * You can do this by removing snapshotFormat property
+   * and running tests with --update-snapshot flag.
+   * Example: From within the project directory, run "nx test --update-snapshot"
+   * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
+   */
+  snapshotFormat: { escapeString: true, printBasicPrototype: true },
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should add snapshot config with no root preset 2`] = `
+"module.exports = {
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  // I am a comment and shouldn't be removed
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  globals: { something: 'else', abc: [1234, true, { abc: 'yes' }] },
+  /**
+   * Multi-line comment shouldn't be removed
+   */
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+  /* TODO: Update to latest Jest snapshotFormat
+   * By default Nx has kept the older style of Jest Snapshot formats
+   * to prevent breaking of any existing tests with snapshots.
+   * It's recommend you update to the latest format.
+   * You can do this by removing snapshotFormat property
+   * and running tests with --update-snapshot flag.
+   * Example: From within the project directory, run "nx test --update-snapshot"
+   * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
+   */
+  snapshotFormat: { escapeString: true, printBasicPrototype: true },
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should be idempotent 1`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'my-lib',
+  preset: '../../jest.preset.js',
+  globals: {},
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/my-lib',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should be idempotent 2`] = `
+"module.exports = {
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  // I am a comment and shouldn't be removed
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  globals: { something: 'else', abc: [1234, true, { abc: 'yes' }] },
+  /**
+   * Multi-line comment shouldn't be removed
+   */
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should update globalThis.ngJest.teardown to testEnvironmentOptions  1`] = `
+"globalThis.ngJest = {};
+
+export default {
+  globals: {},
+  transform: {
+    '^.+.(ts|mjs|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '.(html|svg)$',
+      },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+  testEnvironmentOptions: { teardown: true },
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should update globalThis.ngJest.teardown to testEnvironmentOptions  2`] = `
+"globalThis.ngJest = {
+  ngcc: true,
+};
+
+module.exports = {
+  globals: {},
+  transform: {
+    '^.+.(ts|mjs|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '.(html|svg)$',
+      },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  testEnvironmentOptions: {
+    blah: 123,
+    teardown: false,
+  },
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should update jest.config.ts 1`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'my-lib',
+  preset: '../../jest.preset.js',
+  globals: {},
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/my-lib',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should update jest.config.ts 2`] = `
+"module.exports = {
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  // I am a comment and shouldn't be removed
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  globals: { something: 'else', abc: [1234, true, { abc: 'yes' }] },
+  /**
+   * Multi-line comment shouldn't be removed
+   */
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should update root preset 1`] = `
+"const nxPreset = require('@nrwl/jest/preset').default;
+
+module.exports = {
+  ...nxPreset,
+  /* TODO: Update to latest Jest snapshotFormat
+   * By default Nx has kept the older style of Jest Snapshot formats
+   * to prevent breaking of any existing tests with snapshots.
+   * It's recommend you update to the latest format.
+   * You can do this by removing snapshotFormat property
+   * and running tests with --update-snapshot flag.
+   * Example: "nx affected --targets=test --update-snapshot"
+   * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
+   */
+  snapshotFormat: { escapeString: true, printBasicPrototype: true },
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should update root preset 2`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'my-lib',
+  preset: '../../jest.preset.js',
+  globals: {},
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/my-lib',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should update root preset 3`] = `
+"module.exports = {
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  // I am a comment and shouldn't be removed
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  globals: { something: 'else', abc: [1234, true, { abc: 'yes' }] },
+  /**
+   * Multi-line comment shouldn't be removed
+   */
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should update root preset if ts-jest is preset 1`] = `
+"const nxPreset = require('@nrwl/jest/preset').default;
+module.exports = {
+  ...nxPreset,
+  testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
+  globals: { something: 'else', abc: [1234, true, { abc: 'yes' }] },
+  transform: {
+    '^.+.(ts|js|html)$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  resolver: '@nrwl/jest/plugins/resolver',
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageReporters: ['html'],
+  /* TODO: Update to latest Jest snapshotFormat
+   * By default Nx has kept the older style of Jest Snapshot formats
+   * to prevent breaking of any existing tests with snapshots.
+   * It's recommend you update to the latest format.
+   * You can do this by removing snapshotFormat property
+   * and running tests with --update-snapshot flag.
+   * Example: "nx affected --targets=test --update-snapshot"
+   * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
+   */
+  snapshotFormat: { escapeString: true, printBasicPrototype: true },
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should work if not using ts-jest transformer 1`] = `
+"export default {
+  transform: {
+    '^.+\\\\.[tj]sx?$': 'babel-jest',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should work if not using ts-jest transformer 2`] = `
+"module.exports = {
+  transform: {
+    '^.+\\\\.[tj]sx?$': 'babel-jest',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should work snapshotFormat is defined 1`] = `
+"export default {
+  transform: {
+    '^.+\\\\.[tj]sx?$': 'babel-jest',
+  },
+  globals: { something: 'else', abc: [1234, true, { abc: 'yes' }] },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+  snapshotFormat: { escapeString: false, printBasicPrototype: true },
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should work snapshotFormat is defined 2`] = `
+"module.exports = {
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+  globals: { something: 'else', abc: [1234, true, { abc: 'yes' }] },
+  snapshotFormat: { escapeString: false, printBasicPrototype: true },
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should work with jest-preset-angular 1`] = `
+"export default {
+  globals: {},
+  transform: {
+    '^.+.(ts|mjs|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '.(html|svg)$',
+      },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should work with jest-preset-angular 2`] = `
+"module.exports = {
+  globals: {},
+  transform: {
+    '^.+.(ts|mjs|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '.(html|svg)$',
+      },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should work with multiple projects + configs 1`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'my-lib',
+  preset: '../../jest.preset.js',
+  globals: {},
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/my-lib',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should work with multiple projects + configs 2`] = `
+"module.exports = {
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  // I am a comment and shouldn't be removed
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  globals: { something: 'else', abc: [1234, true, { abc: 'yes' }] },
+  /**
+   * Multi-line comment shouldn't be removed
+   */
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should work with multiple projects + configs 3`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'another-lib',
+  preset: '../../jest.preset.js',
+  globals: {},
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/another-lib',
+};
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 update configs should work with multiple projects + configs 4`] = `
+"module.exports = {
+  transform: {
+    '^.+\\\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+      },
+    ],
+  },
+  // I am a comment and shouldn't be removed
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  globals: { something: 'else', abc: [1234, true, { abc: 'yes' }] },
+  /**
+   * Multi-line comment shouldn't be removed
+   */
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};
+"
+`;

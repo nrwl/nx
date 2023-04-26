@@ -34,9 +34,9 @@ export async function viewLogs(): Promise<number> {
 
     try {
       output.log({
-        title: 'Installing @nrwl/nx-cloud',
+        title: 'Installing nx-cloud',
       });
-      execSync(`${pmc.addDev} @nrwl/nx-cloud@latest`, { stdio: 'ignore' });
+      execSync(`${pmc.addDev} nx-cloud@latest`, { stdio: 'ignore' });
     } catch (e) {
       output.log({
         title: 'Installation failed',
@@ -49,7 +49,7 @@ export async function viewLogs(): Promise<number> {
       output.log({
         title: 'Connecting to Nx Cloud',
       });
-      runNxSync(`g @nrwl/nx-cloud:init --installation-source=view-logs`, {
+      runNxSync(`g nx-cloud:init --installation-source=view-logs`, {
         stdio: 'ignore',
       });
     } catch (e) {

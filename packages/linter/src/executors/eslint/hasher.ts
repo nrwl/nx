@@ -5,7 +5,7 @@ import {
   ProjectsConfigurations,
   Hasher,
   Hash,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export default async function run(
   task: Task,

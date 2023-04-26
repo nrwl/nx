@@ -43,23 +43,23 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
           ],
-          "sharedGlobals": Array [],
+          "sharedGlobals": [],
         },
-        "targetDefaults": Object {
-          "build": Object {
-            "dependsOn": Array [
+        "targetDefaults": {
+          "build": {
+            "dependsOn": [
               "^build",
             ],
-            "inputs": Array [
+            "inputs": [
               "production",
               "^production",
             ],
@@ -95,20 +95,20 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
           ],
-          "sharedGlobals": Array [],
+          "sharedGlobals": [],
         },
-        "targetDefaults": Object {
-          "prepare": Object {
-            "dependsOn": Array [
+        "targetDefaults": {
+          "prepare": {
+            "dependsOn": [
               "^prepare",
             ],
           },
@@ -282,6 +282,130 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     const updatedWorkspace = readNxJson(tree);
     expect(updatedWorkspace.namedInputs).not.toBeDefined();
+  });
+
+  it('should not override production inputs when migrating "implicitDependencies"', async () => {
+    updateNxJson(tree, {
+      namedInputs: {
+        default: ['{projectRoot}/**/*', 'sharedGlobals'],
+        production: [
+          'default',
+          '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+          '!{projectRoot}/tsconfig.spec.json',
+          '!{projectRoot}/jest.config.[jt]s',
+          '!{projectRoot}/.eslintrc.json',
+        ],
+        sharedGlobals: ['{workspaceRoot}/nx.json'],
+      },
+      implicitDependencies: {
+        '.eslintrc.json': '*',
+      },
+    });
+    await migrateToInputs(tree);
+
+    const updated = readNxJson(tree);
+
+    expect(updated.implicitDependencies).toBeUndefined();
+    expect(updated).toMatchInlineSnapshot(`
+      {
+        "namedInputs": {
+          "default": [
+            "{projectRoot}/**/*",
+            "sharedGlobals",
+          ],
+          "production": [
+            "default",
+            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+            "!{projectRoot}/tsconfig.spec.json",
+            "!{projectRoot}/jest.config.[jt]s",
+            "!{projectRoot}/.eslintrc.json",
+          ],
+          "sharedGlobals": [
+            "{workspaceRoot}/nx.json",
+          ],
+        },
+      }
+    `);
+  });
+
+  it('should only preppend "default" to production inputs if missing when migrating "implicitDependencies"', async () => {
+    updateNxJson(tree, {
+      namedInputs: {
+        default: ['{projectRoot}/**/*', 'sharedGlobals'],
+        production: [
+          '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+          '!{projectRoot}/tsconfig.spec.json',
+          '!{projectRoot}/jest.config.[jt]s',
+          '!{projectRoot}/.eslintrc.json',
+        ],
+        sharedGlobals: ['{workspaceRoot}/nx.json'],
+      },
+      implicitDependencies: {
+        '.eslintrc.json': '*',
+      },
+    });
+    await migrateToInputs(tree);
+
+    const updated = readNxJson(tree);
+
+    expect(updated.implicitDependencies).toBeUndefined();
+    expect(updated).toMatchInlineSnapshot(`
+      {
+        "namedInputs": {
+          "default": [
+            "{projectRoot}/**/*",
+            "sharedGlobals",
+          ],
+          "production": [
+            "default",
+            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+            "!{projectRoot}/tsconfig.spec.json",
+            "!{projectRoot}/jest.config.[jt]s",
+            "!{projectRoot}/.eslintrc.json",
+          ],
+          "sharedGlobals": [
+            "{workspaceRoot}/nx.json",
+          ],
+        },
+      }
+    `);
+  });
+
+  it('should not modify production inputs if "default" is missing when migrating "implicitDependencies"', async () => {
+    updateNxJson(tree, {
+      namedInputs: {
+        production: [
+          '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+          '!{projectRoot}/tsconfig.spec.json',
+          '!{projectRoot}/jest.config.[jt]s',
+          '!{projectRoot}/.eslintrc.json',
+        ],
+        sharedGlobals: ['{workspaceRoot}/nx.json'],
+      },
+      implicitDependencies: {
+        '.eslintrc.json': '*',
+      },
+    });
+    await migrateToInputs(tree);
+
+    const updated = readNxJson(tree);
+
+    expect(updated.implicitDependencies).toBeUndefined();
+    expect(updated).toMatchInlineSnapshot(`
+      {
+        "namedInputs": {
+          "production": [
+            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+            "!{projectRoot}/tsconfig.spec.json",
+            "!{projectRoot}/jest.config.[jt]s",
+            "!{projectRoot}/.eslintrc.json",
+          ],
+          "sharedGlobals": [
+            "{workspaceRoot}/nx.json",
+          ],
+        },
+      }
+    `);
   });
 });
 

@@ -7,8 +7,8 @@ description: This is an overview page for the Storybook plugin in Nx. It explain
 
 This guide will briefly walk you through using Storybook within an Nx workspace.
 
-{% callout type="info" title="Try out Storybook 7" %}
-You can set up your workspace to use Storybook 7 with Nx by following the instructions in the [Storybook 7 setup](/packages/storybook/documents/storybook-7-setup) guide.
+{% callout type="info" title="Storybook 7 by default" %}
+Starting with Nx 16, Storybook 7 is going to be used by default to configure your projects.
 {% /callout %}
 
 ## Setting Up Storybook
@@ -42,16 +42,24 @@ You can generate Storybook configuration for an individual project with this com
 nx g @nrwl/storybook:configuration project-name
 ```
 
-You can choose to use Storybook for one of the supported frameworks:
+If you are NOT using a framework-specific generator, in the field `storybook7UiFramework` you must choose one of the following Storybook frameworks:
 
 - `@storybook/angular`
-- `@storybook/react`
-- `@storybook/react-native`
-- `@storybook/html`
-- `@storybook/web-components`
-- `@storybook/vue`
-- `@storybook/vue3`
-- `@storybook/svelte`
+- `@storybook/html-webpack5`
+- `@storybook/nextjs`
+- `@storybook/preact-webpack5`
+- `@storybook/react-webpack5`
+- `@storybook/react-vite`
+- `@storybook/server-webpack5`
+- `@storybook/svelte-webpack5`
+- `@storybook/svelte-vite`
+- `@storybook/sveltekit`
+- `@storybook/vue-webpack5`
+- `@storybook/vue-vite`
+- `@storybook/vue3-webpack5`
+- `@storybook/vue3-vite`
+- `@storybook/web-components-webpack5`
+- `@storybook/web-components-vite`
 
 Choosing one of these frameworks will have the following effects on your workspace:
 
@@ -59,11 +67,17 @@ Choosing one of these frameworks will have the following effects on your workspa
 
 2. Nx will generate a project-level `.storybook` folder (located under `libs/your-project/.storybook` or `apps/your-project/.storybook`) containing the essential configuration files for Storybook.
 
-3. If you are working on an Angular, a React or a React Native project (and you choose `@storybook/angular`, `@storybook/react` or `@storybook/react-native`) the Nx generator will also generate stories for all the components in your project.
+3. Nx will create new `targets` in your project's `project.json`, called `storybook` and `build-storybook`, containing all the necessary configuration to serve and build Storybook.
 
-4. Nx will create new `targets` in your project's `project.json`, called `storybook` and `build-storybook`, containing all the necessary configuration to serve and build Storybook.
+4. Nx will generate a new Cypress e2e app for your project (if there isn't one already) to run against the Storybook instance.
 
-5. Nx will generate a new Cypress e2e app for your project (if there isn't one already) to run against the Storybook instance.
+Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js or React Native: [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nrwl/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration), for example:
+
+```shell
+nx g @nrwl/angular:storybook-configuration my-angular-project --storybook7Configuration
+```
+
+These framework-specific generators will also **generate stories** for you.
 
 ### Configure your project using TypeScript
 
@@ -125,36 +139,19 @@ The project-specific Storybook configuration is pretty much similar what you wou
 
 To register a [Storybook addon](https://storybook.js.org/addons/) for all storybook instances in your workspace:
 
-1. In `/.storybook/main.js`, in the `addons` array of the `module.exports` object, add the new addon:
-   ```typescript {% fileName="/.storybook/main.js" %}
+1. In your project's `.storybook/main.js` file, in the `addons` array of the `module.exports` object, add the new addon:
+
+   ```typescript {% fileName="<project-path>/.storybook/main.js" %}
    module.exports = {
    stories: [...],
    ...,
    addons: [..., '@storybook/addon-essentials'],
    };
    ```
+
 2. If a decorator is required, in each project's `<project-path>/.storybook/preview.js`, you can export an array called `decorators`.
 
    ```typescript {% fileName="<project-path>/.storybook/preview.js" %}
-   import someDecorator from 'some-storybook-addon';
-   export const decorators = [someDecorator];
-   ```
-
-**-- OR --**
-
-To register an [addon](https://storybook.js.org/addons/) for a single storybook instance, go to that project's `.storybook` folder:
-
-1. In `main.js`, in the `addons` array of the `module.exports` object, add the new addon:
-   ```typescript
-   module.exports = {
-   stories: [...],
-   ...,
-   addons: [..., '@storybook/addon-essentials'],
-   };
-   ```
-2. If a decorator is required, in `preview.js` you can export an array called `decorators`.
-
-   ```typescript
    import someDecorator from 'some-storybook-addon';
    export const decorators = [someDecorator];
    ```
@@ -165,6 +162,7 @@ You can find dedicated information for React and Angular:
 
 - [Set up Storybook for Angular Projects](/packages/storybook/documents/overview-angular)
 - [Set up Storybook for React Projects](/packages/storybook/documents/overview-react)
+- [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup)
 
 You can find all Storybook-related Nx documentation [here](/packages#storybook).
 
@@ -176,3 +174,4 @@ Here's more information on common migration scenarios for Storybook with Nx. For
 
 - [Upgrading to Storybook 6](/packages/storybook/documents/upgrade-storybook-v6-react)
 - [Migrate to the Nx React Storybook Addon](/packages/storybook/documents/migrate-webpack-final-react)
+- [Storybook 7 migration generator](/packages/storybook/generators/migrate-7)

@@ -1,13 +1,13 @@
 {
   "/getting-started": {
     "id": "getting-started",
-    "name": "Getting Started",
+    "name": "Start Here",
     "description": "Get started with basic information, concepts and tutorials.",
     "file": "",
     "itemList": [
       {
         "id": "intro",
-        "name": "Intro to Nx",
+        "name": "Getting Started",
         "description": "",
         "file": "shared/getting-started/intro",
         "itemList": [],
@@ -16,53 +16,23 @@
         "tags": []
       },
       {
-        "id": "package-based-repo-tutorial",
-        "name": "Package-Based Repo Tutorial",
+        "id": "installation",
+        "name": "Installation",
         "description": "",
-        "file": "shared/npm-tutorial/package-based",
+        "file": "shared/getting-started/installation",
         "itemList": [],
         "isExternal": false,
-        "path": "/getting-started/package-based-repo-tutorial",
+        "path": "/getting-started/installation",
         "tags": []
       },
       {
-        "id": "integrated-repo-tutorial",
-        "name": "Integrated Repo Tutorial",
+        "id": "why-nx",
+        "name": "Why Nx?",
         "description": "",
-        "file": "shared/npm-tutorial/integrated",
+        "file": "shared/getting-started/why-nx",
         "itemList": [],
         "isExternal": false,
-        "path": "/getting-started/integrated-repo-tutorial",
-        "tags": []
-      },
-      {
-        "id": "react-standalone-tutorial",
-        "name": "React Standalone Tutorial",
-        "description": "",
-        "file": "shared/react-standalone-tutorial/1-code-generation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/react-standalone-tutorial",
-        "tags": []
-      },
-      {
-        "id": "angular-standalone-tutorial",
-        "name": "Angular Standalone Tutorial",
-        "description": "",
-        "file": "shared/angular-standalone-tutorial/1-code-generation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/angular-standalone-tutorial",
-        "tags": []
-      },
-      {
-        "id": "node-server-tutorial",
-        "name": "Node Server Tutorial",
-        "description": "",
-        "file": "shared/node-server-tutorial/1-code-generation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/node-server-tutorial",
+        "path": "/getting-started/why-nx",
         "tags": []
       }
     ],
@@ -72,7 +42,7 @@
   },
   "/getting-started/intro": {
     "id": "intro",
-    "name": "Intro to Nx",
+    "name": "Getting Started",
     "description": "",
     "file": "shared/getting-started/intro",
     "itemList": [],
@@ -80,54 +50,135 @@
     "path": "/getting-started/intro",
     "tags": []
   },
-  "/getting-started/package-based-repo-tutorial": {
+  "/getting-started/installation": {
+    "id": "installation",
+    "name": "Installation",
+    "description": "",
+    "file": "shared/getting-started/installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/installation",
+    "tags": []
+  },
+  "/getting-started/why-nx": {
+    "id": "why-nx",
+    "name": "Why Nx?",
+    "description": "",
+    "file": "shared/getting-started/why-nx",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/why-nx",
+    "tags": []
+  },
+  "/tutorials": {
+    "id": "tutorials",
+    "name": "5 min Tutorials",
+    "description": "Get started with basic information, concepts and tutorials.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "package-based-repo-tutorial",
+        "name": "Package-Based Monorepo",
+        "description": "",
+        "file": "shared/npm-tutorial/package-based",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/tutorials/package-based-repo-tutorial",
+        "tags": []
+      },
+      {
+        "id": "integrated-repo-tutorial",
+        "name": "Integrated Monorepo",
+        "description": "",
+        "file": "shared/npm-tutorial/integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/tutorials/integrated-repo-tutorial",
+        "tags": []
+      },
+      {
+        "id": "react-standalone-tutorial",
+        "name": "React Standalone",
+        "description": "",
+        "file": "shared/react-standalone-tutorial/1-code-generation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/tutorials/react-standalone-tutorial",
+        "tags": []
+      },
+      {
+        "id": "angular-standalone-tutorial",
+        "name": "Angular Standalone",
+        "description": "",
+        "file": "shared/angular-standalone-tutorial/1-code-generation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/tutorials/angular-standalone-tutorial",
+        "tags": []
+      },
+      {
+        "id": "node-server-tutorial",
+        "name": "Node Standalone",
+        "description": "",
+        "file": "shared/node-server-tutorial/1-code-generation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/tutorials/node-server-tutorial",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/tutorials",
+    "tags": []
+  },
+  "/tutorials/package-based-repo-tutorial": {
     "id": "package-based-repo-tutorial",
-    "name": "Package-Based Repo Tutorial",
+    "name": "Package-Based Monorepo",
     "description": "",
     "file": "shared/npm-tutorial/package-based",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/package-based-repo-tutorial",
+    "path": "/tutorials/package-based-repo-tutorial",
     "tags": []
   },
-  "/getting-started/integrated-repo-tutorial": {
+  "/tutorials/integrated-repo-tutorial": {
     "id": "integrated-repo-tutorial",
-    "name": "Integrated Repo Tutorial",
+    "name": "Integrated Monorepo",
     "description": "",
     "file": "shared/npm-tutorial/integrated",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/integrated-repo-tutorial",
+    "path": "/tutorials/integrated-repo-tutorial",
     "tags": []
   },
-  "/getting-started/react-standalone-tutorial": {
+  "/tutorials/react-standalone-tutorial": {
     "id": "react-standalone-tutorial",
-    "name": "React Standalone Tutorial",
+    "name": "React Standalone",
     "description": "",
     "file": "shared/react-standalone-tutorial/1-code-generation",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/react-standalone-tutorial",
+    "path": "/tutorials/react-standalone-tutorial",
     "tags": []
   },
-  "/getting-started/angular-standalone-tutorial": {
+  "/tutorials/angular-standalone-tutorial": {
     "id": "angular-standalone-tutorial",
-    "name": "Angular Standalone Tutorial",
+    "name": "Angular Standalone",
     "description": "",
     "file": "shared/angular-standalone-tutorial/1-code-generation",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/angular-standalone-tutorial",
+    "path": "/tutorials/angular-standalone-tutorial",
     "tags": []
   },
-  "/getting-started/node-server-tutorial": {
+  "/tutorials/node-server-tutorial": {
     "id": "node-server-tutorial",
-    "name": "Node Server Tutorial",
+    "name": "Node Standalone",
     "description": "",
     "file": "shared/node-server-tutorial/1-code-generation",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/node-server-tutorial",
+    "path": "/tutorials/node-server-tutorial",
     "tags": []
   },
   "/core-tutorial": {

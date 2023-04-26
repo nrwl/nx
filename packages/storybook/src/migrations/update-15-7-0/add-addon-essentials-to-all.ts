@@ -4,8 +4,8 @@ import {
   formatFiles,
   logger,
   Tree,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { removeRootConfig } from './remove-root-config';
 import ts = require('typescript');

@@ -1,10 +1,10 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   detectWorkspaceScope,
   joinPathFragments,
   names,
   readJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { GeneratorOptions } from '../schema';
 import type { WorkspaceProjects } from './types';
 

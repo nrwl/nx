@@ -1,17 +1,17 @@
-import { joinPathFragments, logger, normalizePath } from '@nrwl/devkit';
+import { joinPathFragments, logger, normalizePath } from '@nx/devkit';
 import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { dirname, join, relative, resolve } from 'path';
 import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
 import { getSourceDirOfDependentProjects } from 'nx/src/utils/project-graph-utils';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
-import ignore, { Ignore } from 'ignore';
+import ignore from 'ignore';
 import {
   createProjectRootMappings,
   findProjectForPath,
 } from 'nx/src/project-graph/utils/find-project-for-path';
 
 function configureIgnore() {
-  let ig: Ignore;
+  let ig: ReturnType<typeof ignore>;
   const pathToGitIgnore = join(workspaceRoot, '.gitignore');
   if (existsSync(pathToGitIgnore)) {
     ig = ignore();
@@ -46,7 +46,7 @@ export function createGlobPatternsForDependencies(
 
     if (!projectName) {
       throw new Error(
-        `Could not find any project containing the file "${filenameRelativeToWorkspaceRoot}" among it's project files`
+        `createGlobPatternsForDependencies: Could not find any project containing the file "${filenameRelativeToWorkspaceRoot}" among it's project files`
       );
     }
   } catch (e) {

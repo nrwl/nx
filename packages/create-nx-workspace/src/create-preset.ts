@@ -39,7 +39,9 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
     }
   }
 
-  if (process.env.NX_VERBOSE_LOGGING !== 'true') {
+  if (
+    !(process.env.NX_VERBOSE_LOGGING === 'true' || args.includes('--verbose'))
+  ) {
     args = '--quiet ' + args;
   }
   const command = `g ${preset}:preset ${args}`;
@@ -52,10 +54,6 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
       ...command.split(' ')
     );
     await spawnAndWait(exec, args, directory);
-
-    output.log({
-      title: `Successfully applied preset: ${preset}.`,
-    });
   } catch (e) {
     output.error({
       title: `Failed to apply preset: ${preset}`,

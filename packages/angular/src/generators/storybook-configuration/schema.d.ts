@@ -1,4 +1,4 @@
-import type { Linter } from '@nrwl/linter';
+import type { Linter } from '@nx/linter';
 
 export interface StorybookConfigurationOptions {
   configureCypress: boolean;

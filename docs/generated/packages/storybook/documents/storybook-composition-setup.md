@@ -57,7 +57,7 @@ In order to get it working for you, you need to two things:
 1. Make sure your "composed" Storybook instances are running. For that you can do:
 
 ```shell
-nx run-many --target=storybook --projects=one-composed,two-composed,three-composed --parallel=3
+nx run-many -t storybook -p one-composed two-composed three-composed --parallel=3
 ```
 
 2. Start your host Storybook in another tab of your terminal:
@@ -94,7 +94,7 @@ In your project's targets, in the `storybook` target, you will notice that the d
 
 We can keep this port for the project which will serve as the host of our configuration, but we must change the port numbers of the other projects, the projects which will be composed/composed. The reason for that is the following:
 
-- When the `nx run-many --target=storybook --parallel=3` command executes, it will go and look into your `project.json` file to see the port you have assigned for that project's Storybook.
+- When the `nx run-many -t storybook --parallel=3` command executes, it will go and look into your `project.json` file to see the port you have assigned for that project's Storybook.
 - When it finds a port that it is already used, it will change the port number randomly (usually adding `1` until it finds an empty port).
 
 Since we are using the `--parallel` flag, and the commands are executed in parallel, we cannot know for sure the order that the `storybook` command will be executed. So, we cannot be sure which port will correspond to which of the projects.

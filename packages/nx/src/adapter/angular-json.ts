@@ -17,8 +17,8 @@ export function shouldMergeAngularProjects(
     // Include projects from angular.json if explicitly required.
     // e.g. when invoked from `packages/devkit/src/utils/convert-nx-executor.ts`
     (includeProjectsFromAngularJson ||
-      // Or if a workspace has `@nrwl/angular` installed then projects from `angular.json` to be considered by Nx.
-      isNrwlAngularInstalled())
+      // Or if a workspace has `@nrwl/angular`/`@nx/angular` installed then projects from `angular.json` to be considered by Nx.
+      isAngularPluginInstalled())
   ) {
     return true;
   } else {
@@ -26,12 +26,17 @@ export function shouldMergeAngularProjects(
   }
 }
 
-function isNrwlAngularInstalled() {
+function isAngularPluginInstalled() {
   try {
-    require.resolve('@nrwl/angular');
+    require.resolve('@nx/angular');
     return true;
   } catch {
-    return false;
+    try {
+      require.resolve('@nrwl/angular');
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 

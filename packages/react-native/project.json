@@ -7,7 +7,7 @@
     "lint": {},
     "test": {},
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "assets": [
           "packages/react-native/*.md",
@@ -54,7 +54,10 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/react-native"],
       "options": {
-        "command": "node ./scripts/copy-readme.js react-native"
+        "commands": [
+          "node ./scripts/copy-readme.js react-native",
+          "node ./scripts/add-dependency-to-build.js react-native @nrwl/react-native"
+        ]
       }
     }
   }

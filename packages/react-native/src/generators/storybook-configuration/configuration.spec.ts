@@ -1,7 +1,7 @@
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
-import { logger } from '@nrwl/devkit';
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
+import { logger } from '@nx/devkit';
 
 import libraryGenerator from '../library/library';
 import applicationGenerator from '../application/application';
@@ -95,7 +95,7 @@ describe('react-native:storybook-configuration', () => {
       });
 
       // Currently the auto-generate stories feature only picks up components under the 'lib' directory.
-      // In our 'createTestAppLib' function, we call @nrwl/react-native:component to generate a component
+      // In our 'createTestAppLib' function, we call @nx/react-native:component to generate a component
       // under the specified 'lib' directory
       expect(
         appTree.exists(

@@ -1,35 +1,35 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Cypress e2e configuration v10+ should not override eslint settings if preset 1`] = `
-Object {
-  "extends": Array [
+{
+  "extends": [
     "plugin:cypress/recommended",
     "../../.eslintrc.json",
   ],
-  "ignorePatterns": Array [
+  "ignorePatterns": [
     "!**/*",
   ],
-  "overrides": Array [
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular",
+  "overrides": [
+    {
+      "extends": [
+        "plugin:@nx/angular",
         "plugin:@angular-eslint/template/process-inline-templates",
       ],
-      "files": Array [
+      "files": [
         "*.ts",
       ],
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
+      "rules": {
+        "@angular-eslint/component-selector": [
           "error",
-          Object {
+          {
             "prefix": "cy-port-test",
             "style": "kebab-case",
             "type": "element",
           },
         ],
-        "@angular-eslint/directive-selector": Array [
+        "@angular-eslint/directive-selector": [
           "error",
-          Object {
+          {
             "prefix": "cyPortTest",
             "style": "camelCase",
             "type": "attribute",
@@ -37,21 +37,21 @@ Object {
         ],
       },
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular-template",
+    {
+      "extends": [
+        "plugin:@nx/angular-template",
       ],
-      "files": Array [
+      "files": [
         "*.html",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.cy.{ts,js,tsx,jsx}",
         "cypress/**/*.{ts,js,tsx,jsx}",
       ],
-      "rules": Object {},
+      "rules": {},
     },
   ],
 }

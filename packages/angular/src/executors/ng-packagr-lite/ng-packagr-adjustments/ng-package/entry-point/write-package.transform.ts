@@ -6,7 +6,7 @@
  * - Remove package exports.
  */
 
-import { logger } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
 import { BuildGraph } from 'ng-packagr/lib/graph/build-graph';
 import { Node } from 'ng-packagr/lib/graph/node';
 import { transformFromPromise } from 'ng-packagr/lib/graph/transform';

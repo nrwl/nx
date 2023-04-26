@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "add-target-dependencies": {
       "version": "12.5.0-beta.1",
       "description": "Rename the workspace-schematic script into workspace-generator script",
@@ -83,6 +83,18 @@
       "description": "Split global configuration files (e.g., workspace.json) into individual project.json files.",
       "cli": "nx",
       "implementation": "./src/migrations/update-15-7-0/split-configuration-into-project-json-files"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/workspace with @nx/workspace",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "16-0-0-move-workspace-generators-into-local-plugin": {
+      "version": "16.0.0-beta.4",
+      "description": "Generates a plugin called 'workspace-plugin' containing your workspace generators.",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-16-0-0/move-workspace-generators-to-local-plugin"
     }
   },
   "packageJsonUpdates": {

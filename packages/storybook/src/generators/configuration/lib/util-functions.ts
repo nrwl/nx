@@ -16,9 +16,9 @@ import {
   updateProjectConfiguration,
   workspaceRoot,
   writeJson,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import { Linter } from '@nx/linter';
 import { join, relative } from 'path';
 import {
   dedupe,
@@ -43,7 +43,7 @@ export function addStorybookTask(
   }
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['storybook'] = {
-    executor: '@nrwl/storybook:storybook',
+    executor: '@nx/storybook:storybook',
     options: {
       port: DEFAULT_PORT,
       configDir: `${projectConfig.root}/.storybook`,
@@ -56,7 +56,7 @@ export function addStorybookTask(
   };
 
   projectConfig.targets['build-storybook'] = {
-    executor: '@nrwl/storybook:build',
+    executor: '@nx/storybook:build',
     outputs: ['{options.outputDir}'],
     options: {
       outputDir: joinPathFragments('dist/storybook', projectName),
@@ -143,10 +143,7 @@ export function addAngularStorybookTask(
 }
 
 export function addStaticTarget(tree: Tree, opts: StorybookConfigureSchema) {
-  const nrwlWeb = ensurePackage<typeof import('@nrwl/web')>(
-    '@nrwl/web',
-    nxVersion
-  );
+  const nrwlWeb = ensurePackage<typeof import('@nx/web')>('@nx/web', nxVersion);
   nrwlWeb.webStaticServeGenerator(tree, {
     buildTarget: `${opts.name}:build-storybook`,
     outputPath: joinPathFragments('dist/storybook', opts.name),
@@ -483,7 +480,7 @@ export async function getE2EProjectName(
   const graph = await createProjectGraphAsync();
   forEachExecutorOptions(
     tree,
-    '@nrwl/cypress:cypress',
+    '@nx/cypress:cypress',
     (options, projectName) => {
       if (e2eProject) {
         return;

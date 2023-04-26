@@ -31,7 +31,7 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/webpack:webpack",
+      "executor": "@nx/webpack:webpack",
       "options": {
         "maxWorkers": 8,
         "outputPath": "build/apps/graph",
@@ -182,7 +182,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "serve-base": {
-      "executor": "@nrwl/webpack:dev-server",
+      "executor": "@nx/webpack:dev-server",
       "configurations": {
         "dev": {
           "buildTarget": "graph-client:build-base:dev",
@@ -243,9 +243,8 @@
     "lint": {},
     "test": {},
     "storybook": {
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
-        "uiFramework": "@storybook/react",
         "port": 4400,
         "configDir": "graph/client/.storybook"
       },
@@ -256,10 +255,9 @@
       }
     },
     "build-storybook": {
-      "executor": "@nrwl/storybook:build",
+      "executor": "@nx/storybook:build",
       "outputs": ["{options.outputDir}"],
       "options": {
-        "uiFramework": "@storybook/react",
         "configDir": "graph/client/.storybook",
         "outputDir": "dist/storybook/graph-client"
       },

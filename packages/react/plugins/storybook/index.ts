@@ -1,6 +1,6 @@
-import { ExecutorContext, logger, workspaceRoot } from '@nrwl/devkit';
-import { composePluginsSync } from '@nrwl/webpack/src/utils/config';
-import { NormalizedWebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
+import { ExecutorContext, logger, workspaceRoot } from '@nx/devkit';
+import { composePluginsSync } from '@nx/webpack/src/utils/config';
+import { NormalizedWebpackExecutorOptions } from '@nx/webpack/src/executors/webpack/schema';
 import { join } from 'path';
 import {
   Configuration,
@@ -63,19 +63,19 @@ export const webpack = async (
   options: any
 ): Promise<Configuration> => {
   logger.info(
-    '=> Loading Nx React Storybook Addon from "@nrwl/react/plugins/storybook"'
+    '=> Loading Nx React Storybook Addon from "@nx/react/plugins/storybook"'
   );
   // In case anyone is missing dep and did not run migrations.
   // See: https://github.com/nrwl/nx/issues/14455
   try {
-    require.resolve('@nrwl/webpack');
+    require.resolve('@nx/webpack');
   } catch {
     throw new Error(
-      `'@nrwl/webpack' package is not installed. Install it and try again.`
+      `'@nx/webpack' package is not installed. Install it and try again.`
     );
   }
 
-  const { withNx, withWeb } = require('@nrwl/webpack');
+  const { withNx, withWeb } = require('@nx/webpack');
   const tsconfigPath = join(options.configDir, 'tsconfig.json');
 
   const builderOptions: NormalizedWebpackExecutorOptions = {
@@ -116,6 +116,14 @@ export const webpack = async (
     },
     resolve: {
       ...storybookWebpackConfig.resolve,
+      fallback: {
+        ...storybookWebpackConfig.resolve?.fallback,
+        // Next.js and other React frameworks may have server-code that uses these modules.
+        // They are not meant for client-side components so skip the fallbacks.
+        assert: false,
+        path: false,
+        util: false,
+      },
       plugins: mergePlugins(
         ...((storybookWebpackConfig.resolve.plugins ??
           []) as ResolvePluginInstance[]),

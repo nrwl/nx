@@ -1,4 +1,4 @@
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type { PropertyDeclaration } from 'typescript';
 
 let tsModule: typeof import('typescript');

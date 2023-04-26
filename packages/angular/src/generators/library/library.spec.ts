@@ -7,9 +7,9 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
@@ -22,9 +22,9 @@ import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { Schema } from './schema';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/devkit', () => {
+jest.mock('@nx/devkit', () => {
   return {
-    ...jest.requireActual('@nrwl/devkit'),
+    ...jest.requireActual('@nx/devkit'),
     createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
   };
 });
@@ -1078,7 +1078,7 @@ describe('lib', () => {
 
       // check to see if the workspace configuration has been updated to use strict
       // mode by default in future libraries
-      expect(generators['@nrwl/angular:library'].strict).not.toBeDefined();
+      expect(generators['@nx/angular:library'].strict).not.toBeDefined();
     });
 
     it('should set defaults when --strict=false', async () => {
@@ -1093,7 +1093,7 @@ describe('lib', () => {
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future libraries
       const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(generators['@nrwl/angular:library'].strict).toBe(false);
+      expect(generators['@nx/angular:library'].strict).toBe(false);
     });
   });
 
@@ -1107,15 +1107,15 @@ describe('lib', () => {
         expect(tree.exists('libs/my-lib/tslint.json')).toBe(false);
         expect(readProjectConfiguration(tree, 'my-lib').targets['lint'])
           .toMatchInlineSnapshot(`
-          Object {
-            "executor": "@nrwl/linter:eslint",
-            "options": Object {
-              "lintFilePatterns": Array [
+          {
+            "executor": "@nx/linter:eslint",
+            "options": {
+              "lintFilePatterns": [
                 "libs/my-lib/**/*.ts",
                 "libs/my-lib/**/*.html",
               ],
             },
-            "outputs": Array [
+            "outputs": [
               "{options.outputFile}",
             ],
           }
@@ -1130,34 +1130,34 @@ describe('lib', () => {
 
         const eslintConfig = readJson(tree, 'libs/my-lib/.eslintrc.json');
         expect(eslintConfig).toMatchInlineSnapshot(`
-          Object {
-            "extends": Array [
+          {
+            "extends": [
               "../../.eslintrc.json",
             ],
-            "ignorePatterns": Array [
+            "ignorePatterns": [
               "!**/*",
             ],
-            "overrides": Array [
-              Object {
-                "extends": Array [
-                  "plugin:@nrwl/nx/angular",
+            "overrides": [
+              {
+                "extends": [
+                  "plugin:@nx/angular",
                   "plugin:@angular-eslint/template/process-inline-templates",
                 ],
-                "files": Array [
+                "files": [
                   "*.ts",
                 ],
-                "rules": Object {
-                  "@angular-eslint/component-selector": Array [
+                "rules": {
+                  "@angular-eslint/component-selector": [
                     "error",
-                    Object {
+                    {
                       "prefix": "proj",
                       "style": "kebab-case",
                       "type": "element",
                     },
                   ],
-                  "@angular-eslint/directive-selector": Array [
+                  "@angular-eslint/directive-selector": [
                     "error",
-                    Object {
+                    {
                       "prefix": "proj",
                       "style": "camelCase",
                       "type": "attribute",
@@ -1165,14 +1165,14 @@ describe('lib', () => {
                   ],
                 },
               },
-              Object {
-                "extends": Array [
-                  "plugin:@nrwl/nx/angular-template",
+              {
+                "extends": [
+                  "plugin:@nx/angular-template",
                 ],
-                "files": Array [
+                "files": [
                   "*.html",
                 ],
-                "rules": Object {},
+                "rules": {},
               },
             ],
           }
@@ -1234,7 +1234,7 @@ describe('lib', () => {
       // ASSERT
       expect(tree.read('libs/my-lib/tailwind.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
         const { join } = require('path');
 
         /** @type {import('tailwindcss').Config} */
@@ -1369,7 +1369,7 @@ describe('lib', () => {
         tree.read('libs/my-lib/src/lib/lib.routes.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.children('libs/my-lib/src/lib')).toMatchInlineSnapshot(`
-        Array [
+        [
           "lib.routes.ts",
           "my-lib.component.css",
           "my-lib.component.html",
@@ -1378,7 +1378,7 @@ describe('lib', () => {
         ]
       `);
       expect(tree.children('libs/my-lib/src')).toMatchInlineSnapshot(`
-        Array [
+        [
           "index.ts",
           "lib",
           "test-setup.ts",

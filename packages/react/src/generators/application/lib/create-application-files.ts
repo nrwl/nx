@@ -1,5 +1,5 @@
-import { names, offsetFromRoot, Tree, toJS, generateFiles } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+import { names, offsetFromRoot, Tree, toJS, generateFiles } from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
 import { createTsConfig } from '../../../utils/create-ts-config';
 import { getInSourceVitestTestsTemplate } from '../../../utils/get-in-source-vitest-tests-template';
@@ -34,17 +34,16 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     inSourceVitestTests: getInSourceVitestTestsTemplate(appTests),
   };
 
-  generateFiles(
-    host,
-    join(
-      __dirname,
-      options.bundler === 'vite'
-        ? '../files/base-vite'
-        : '../files/base-webpack'
-    ),
-    options.appProjectRoot,
-    templateVariables
-  );
+  let fileDirectory: string;
+  if (options.bundler === 'vite') {
+    fileDirectory = join(__dirname, '../files/base-vite');
+  } else if (options.bundler === 'webpack') {
+    fileDirectory = join(__dirname, '../files/base-webpack');
+  } else if (options.bundler === 'rspack') {
+    fileDirectory = join(__dirname, '../files/base-rspack');
+  }
+
+  generateFiles(host, fileDirectory, options.appProjectRoot, templateVariables);
 
   if (
     options.unitTestRunner === 'none' ||

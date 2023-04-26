@@ -1,43 +1,43 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nrwl/linter:lint-project --linter eslint should extend to .eslintrc.js when an .eslintrc.js already exist 1`] = `
+exports[`@nx/linter:lint-project --linter eslint should extend to .eslintrc.js when an .eslintrc.js already exist 1`] = `
 "{
-  \\"extends\\": [\\"../../.eslintrc.js\\"],
-  \\"ignorePatterns\\": [\\"!**/*\\"],
-  \\"overrides\\": [
+  "extends": ["../../.eslintrc.js"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
     {
-      \\"files\\": [\\"*.ts\\", \\"*.tsx\\", \\"*.js\\", \\"*.jsx\\"],
-      \\"rules\\": {}
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
     },
     {
-      \\"files\\": [\\"*.ts\\", \\"*.tsx\\"],
-      \\"rules\\": {}
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
     },
     {
-      \\"files\\": [\\"*.js\\", \\"*.jsx\\"],
-      \\"rules\\": {}
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
     }
   ]
 }
 "
 `;
 
-exports[`@nrwl/linter:lint-project --linter eslint should generate a eslint config 1`] = `
+exports[`@nx/linter:lint-project --linter eslint should generate a eslint config 1`] = `
 "{
-  \\"extends\\": [\\"../../.eslintrc.json\\"],
-  \\"ignorePatterns\\": [\\"!**/*\\"],
-  \\"overrides\\": [
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
     {
-      \\"files\\": [\\"*.ts\\", \\"*.tsx\\", \\"*.js\\", \\"*.jsx\\"],
-      \\"rules\\": {}
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
     },
     {
-      \\"files\\": [\\"*.ts\\", \\"*.tsx\\"],
-      \\"rules\\": {}
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
     },
     {
-      \\"files\\": [\\"*.js\\", \\"*.jsx\\"],
-      \\"rules\\": {}
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
     }
   ]
 }

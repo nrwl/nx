@@ -4,8 +4,8 @@ import {
   getProjects,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { nxVersion } from '@nrwl/workspace/src/utils/versions';
+} from '@nx/devkit';
+import { nxVersion } from '@nx/workspace/src/utils/versions';
 
 export default async function update(host: Tree) {
   const projects = getProjects(host);

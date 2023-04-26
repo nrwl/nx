@@ -6,7 +6,7 @@
   "targets": {
     "test": {},
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "assets": [
           {
@@ -68,7 +68,10 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/storybook"],
       "options": {
-        "command": "node ./scripts/copy-readme.js storybook"
+        "commands": [
+          "node ./scripts/copy-readme.js storybook",
+          "node ./scripts/add-dependency-to-build.js storybook @nrwl/storybook"
+        ]
       }
     },
     "lint": {}

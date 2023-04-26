@@ -1,5 +1,5 @@
-import { addProjectConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   STANDARD_HOST_MFE_CONFIG,
   STANDARD_REMOTE_MFE_CONFIG,
@@ -19,7 +19,7 @@ describe('convertToWithMF', () => {
       sourceRoot: 'apps/host1/src',
       targets: {
         build: {
-          executor: '@nrwl/angular:webpack-browser',
+          executor: '@nx/angular:webpack-browser',
           options: {
             customWebpackConfig: {
               path: 'apps/host1/webpack.config.js',
@@ -50,7 +50,7 @@ describe('convertToWithMF', () => {
       sourceRoot: 'apps/remote1/src',
       targets: {
         build: {
-          executor: '@nrwl/angular:webpack-browser',
+          executor: '@nx/angular:webpack-browser',
           options: {
             customWebpackConfig: {
               path: 'apps/remote1/webpack.config.js',
@@ -81,7 +81,7 @@ describe('convertToWithMF', () => {
       sourceRoot: 'apps/remote1/src',
       targets: {
         build: {
-          executor: '@nrwl/angular:webpack-browser',
+          executor: '@nx/angular:webpack-browser',
           options: {
             customWebpackConfig: {
               path: 'apps/remote1/webpack.config.js',
@@ -112,7 +112,7 @@ describe('convertToWithMF', () => {
       sourceRoot: 'apps/remote1/src',
       targets: {
         build: {
-          executor: '@nrwl/angular:webpack-browser',
+          executor: '@nx/angular:webpack-browser',
           options: {
             customWebpackConfig: {
               path: 'apps/remote1/webpack.config.js',
@@ -141,7 +141,7 @@ describe('convertToWithMF', () => {
       sourceRoot: 'apps/host1/src',
       targets: {
         build: {
-          executor: '@nrwl/angular:webpack-browser',
+          executor: '@nx/angular:webpack-browser',
           options: {
             customWebpackConfig: {
               path: 'apps/host1/webpack.config.js',

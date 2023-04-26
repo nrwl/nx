@@ -63,7 +63,7 @@ describe('convertTslintNxRuleToEslintNxRule()', () => {
         },
       },
       expected: {
-        ruleName: '@nrwl/nx/enforce-module-boundaries',
+        ruleName: '@nx/enforce-module-boundaries',
         ruleConfig: ['error', configFromNxExamplesRepo],
       },
     },
@@ -76,7 +76,7 @@ describe('convertTslintNxRuleToEslintNxRule()', () => {
         },
       },
       expected: {
-        ruleName: '@nrwl/nx/enforce-module-boundaries',
+        ruleName: '@nx/enforce-module-boundaries',
         ruleConfig: ['off', configFromNxExamplesRepo],
       },
     },
@@ -89,7 +89,7 @@ describe('convertTslintNxRuleToEslintNxRule()', () => {
         },
       },
       expected: {
-        ruleName: '@nrwl/nx/enforce-module-boundaries',
+        ruleName: '@nx/enforce-module-boundaries',
         ruleConfig: ['warn', configFromNxExamplesRepo],
       },
     },
@@ -104,7 +104,7 @@ describe('convertTslintNxRuleToEslintNxRule()', () => {
         },
       },
       expected: {
-        ruleName: '@nrwl/nx/enforce-module-boundaries',
+        ruleName: '@nx/enforce-module-boundaries',
         ruleConfig: ['error', configFromNxExamplesRepo],
       },
     },
@@ -119,7 +119,7 @@ describe('convertTslintNxRuleToEslintNxRule()', () => {
         },
       },
       expected: {
-        ruleName: '@nrwl/nx/enforce-module-boundaries',
+        ruleName: '@nx/enforce-module-boundaries',
         ruleConfig: ['warn', configFromNxExamplesRepo],
       },
     },
@@ -134,7 +134,7 @@ describe('convertTslintNxRuleToEslintNxRule()', () => {
         },
       },
       expected: {
-        ruleName: '@nrwl/nx/enforce-module-boundaries',
+        ruleName: '@nx/enforce-module-boundaries',
         ruleConfig: ['off', configFromNxExamplesRepo],
       },
     },
@@ -150,7 +150,7 @@ describe('convertTslintNxRuleToEslintNxRule()', () => {
         },
       },
       expected: {
-        ruleName: '@nrwl/nx/enforce-module-boundaries',
+        ruleName: '@nx/enforce-module-boundaries',
         ruleConfig: ['warn', configFromNxExamplesRepo],
       },
     },

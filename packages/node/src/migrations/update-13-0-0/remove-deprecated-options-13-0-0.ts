@@ -4,7 +4,7 @@ import {
   logger,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export default async function update(host: Tree) {
   const projects = getProjects(host);

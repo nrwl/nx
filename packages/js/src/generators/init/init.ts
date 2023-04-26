@@ -10,7 +10,7 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
   nxVersion,
@@ -33,7 +33,7 @@ export async function initGenerator(
     });
   }
   const devDependencies = {
-    '@nrwl/js': nxVersion,
+    '@nx/js': nxVersion,
     prettier: prettierVersion,
   };
 

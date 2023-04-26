@@ -42,11 +42,8 @@ function main() {
           `To create a workspace run:`,
           chalk.bold.white(`npx create-nx-workspace@latest <workspace name>`),
           '',
-          `To add Nx to existing workspace run with a workspace-specific nx.json:`,
-          chalk.bold.white(`npx add-nx-to-monorepo@latest`),
-          '',
-          `To add the default nx.json file run:`,
-          chalk.bold.white(`nx init`),
+          `To add Nx to an existing workspace with a workspace-specific nx.json, run:`,
+          chalk.bold.white(`npx nx@latest init`),
         ],
       });
 
@@ -115,6 +112,7 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
       paths: workspace ? [workspace.dir] : undefined,
     });
   } catch {
+    // TODO(v17): Remove this
     // fallback for old CLI install setup
     return require.resolve('@nrwl/cli/bin/nx.js', {
       paths: workspace ? [workspace.dir] : undefined,
@@ -138,6 +136,11 @@ function warnIfUsingOutdatedGlobalInstall(
   globalNxVersion: string,
   localNxVersion?: string
 ) {
+  // Never display this warning if Nx is already running via Nx
+  if (process.env.NX_CLI_SET) {
+    return;
+  }
+
   const isOutdatedGlobalInstall =
     globalNxVersion &&
     ((localNxVersion && major(globalNxVersion) < major(localNxVersion)) ||
@@ -164,6 +167,7 @@ function warnIfUsingOutdatedGlobalInstall(
 }
 
 function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
+  // TODO(v17): Remove @nrwl/cli from this list
   const localNxPackages = ['nx', '@nrwl/tao', '@nrwl/cli'];
   for (const pkg of localNxPackages) {
     try {

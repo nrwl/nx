@@ -7,14 +7,14 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema } from './schema';
 
-import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
-import { jestInitGenerator } from '@nrwl/jest';
-import { detoxInitGenerator } from '@nrwl/detox';
-import { babelPresetReactVersion } from '@nrwl/react/src/utils/versions';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
+import { jestInitGenerator } from '@nx/jest';
+import { detoxInitGenerator } from '@nx/detox';
+import { babelPresetReactVersion } from '@nx/react/src/utils/versions';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
   babelRuntimeVersion,
@@ -22,11 +22,9 @@ import {
   metroVersion,
   nxVersion,
   reactDomVersion,
-  reactNativeAsyncStorageAsyncStorageVersion,
   reactNativeCommunityCli,
   reactNativeCommunityCliAndroid,
   reactNativeCommunityCliIos,
-  reactNativeConfigVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeVersion,
@@ -90,7 +88,7 @@ export function updateDependencies(host: Tree) {
       'react-native': reactNativeVersion,
     },
     {
-      '@nrwl/react-native': nxVersion,
+      '@nx/react-native': nxVersion,
       '@types/node': typesNodeVersion,
       '@types/react': typesReactVersion,
       '@types/react-native': typesReactNativeVersion,
@@ -109,9 +107,6 @@ export function updateDependencies(host: Tree) {
       'react-test-renderer': reactTestRendererVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
-      'react-native-config': reactNativeConfigVersion,
-      '@react-native-async-storage/async-storage':
-        reactNativeAsyncStorageAsyncStorageVersion,
       '@babel/preset-react': babelPresetReactVersion,
       ...(isPnpm
         ? {
@@ -124,7 +119,7 @@ export function updateDependencies(host: Tree) {
 }
 
 function moveDependency(host: Tree) {
-  return removeDependenciesFromPackageJson(host, ['@nrwl/react-native'], []);
+  return removeDependenciesFromPackageJson(host, ['@nx/react-native'], []);
 }
 
 export default reactNativeInitGenerator;

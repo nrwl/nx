@@ -1,4 +1,4 @@
-import { ExecutorContext, names } from '@nrwl/devkit';
+import { ExecutorContext, names } from '@nx/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 

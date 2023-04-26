@@ -4,18 +4,23 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const targets: Record<string, any> = {};
 
+  const outputPath = joinPathFragments(
+    'dist',
+    options.appProjectRoot,
+    ...(options.rootProject ? [options.name] : [])
+  );
   targets.build = {
-    executor: '@nrwl/next:build',
+    executor: '@nx/next:build',
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
       root: options.appProjectRoot,
-      outputPath: joinPathFragments('dist', options.appProjectRoot),
+      outputPath: outputPath,
     },
     configurations: {
       development: {
@@ -26,7 +31,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   };
 
   targets.serve = {
-    executor: '@nrwl/next:server',
+    executor: '@nx/next:server',
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
@@ -44,15 +49,8 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     },
   };
 
-  if (options.server) {
-    targets.serve.options = {
-      ...targets.serve.options,
-      customServerPath: options.server,
-    };
-  }
-
   targets.export = {
-    executor: '@nrwl/next:export',
+    executor: '@nx/next:export',
     options: {
       buildTarget: `${options.projectName}:build:production`,
     },
@@ -66,12 +64,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  addProjectConfiguration(
-    host,
-    options.projectName,
-    {
-      ...project,
-    },
-    options.standaloneConfig
-  );
+  addProjectConfiguration(host, options.projectName, {
+    ...project,
+  });
 }

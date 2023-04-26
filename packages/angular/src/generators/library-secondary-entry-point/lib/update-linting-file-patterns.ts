@@ -1,4 +1,4 @@
-import { Tree, updateProjectConfiguration } from '@nrwl/devkit';
+import { Tree, updateProjectConfiguration } from '@nx/devkit';
 import { NormalizedGeneratorOptions } from '../schema';
 
 export function updateLintingFilePatterns(

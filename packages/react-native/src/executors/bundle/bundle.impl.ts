@@ -1,5 +1,5 @@
-import { createDirectory } from '@nrwl/workspace/src/utilities/fileutils';
-import { names, ExecutorContext } from '@nrwl/devkit';
+import { createDirectory } from '@nx/workspace/src/utilities/fileutils';
+import { names, ExecutorContext } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 

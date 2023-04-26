@@ -1,11 +1,14 @@
 import path = require('path');
 import json = require('./migrations.json');
+import { MigrationsJsonEntry } from 'nx/src/config/misc-interfaces';
 
 describe('Vite migrations', () => {
   it('should have valid paths', () => {
-    Object.values(json.schematics).forEach((m) => {
+    Object.values(json.generators).forEach((m: MigrationsJsonEntry) => {
       expect(() =>
-        require.resolve(path.join(__dirname, `${m.factory}.ts`))
+        require.resolve(
+          path.join(__dirname, `${m.factory ?? m.implementation}.ts`)
+        )
       ).not.toThrow();
     });
   });

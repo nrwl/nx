@@ -6,6 +6,7 @@ import { logger } from './logger';
 import { output } from './output';
 import { Schema } from './params';
 import { nxVersion } from './versions';
+import { readModulePackageJson } from './package-json';
 
 export function printHelp(
   header: string,
@@ -97,6 +98,11 @@ function generateGeneratorOverviewOutput({
     // The `:` char
     1;
 
+  let installedVersion: string;
+  try {
+    installedVersion = readModulePackageJson(pluginName).packageJson.version;
+  } catch {}
+
   ui.div(
     ...[
       {
@@ -107,9 +113,7 @@ function generateGeneratorOverviewOutput({
       {
         text:
           pluginName +
-          (pluginName.startsWith('@nrwl/')
-            ? chalk.dim(` (v${nxVersion})`)
-            : ''),
+          (installedVersion ? chalk.dim(` (v${installedVersion})`) : ''),
         padding: [1, 0, 0, 2],
       },
     ]
@@ -327,13 +331,19 @@ function generateLinkOutput({
   name: string;
   type: 'generators' | 'executors';
 }): string {
+  const nxPackagePrefix = '@nx/';
   const nrwlPackagePrefix = '@nrwl/';
-  if (!pluginName.startsWith(nrwlPackagePrefix)) {
+  if (
+    !pluginName.startsWith(nxPackagePrefix) &&
+    !pluginName.startsWith(nrwlPackagePrefix)
+  ) {
     return '';
   }
 
   const link = `https://nx.dev/packages/${pluginName.substring(
-    nrwlPackagePrefix.length
+    pluginName.startsWith(nxPackagePrefix)
+      ? nxPackagePrefix.length
+      : nrwlPackagePrefix.length
   )}/${type}/${name}`;
 
   return `\n\n${chalk.dim(

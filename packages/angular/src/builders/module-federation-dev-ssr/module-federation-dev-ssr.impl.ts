@@ -1,10 +1,6 @@
 import type { Schema } from './schema';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import {
-  readCachedProjectGraph,
-  workspaceRoot,
-  Workspaces,
-} from '@nrwl/devkit';
+import { readCachedProjectGraph, workspaceRoot, Workspaces } from '@nx/devkit';
 import {
   getDynamicRemotes,
   getStaticRemotes,

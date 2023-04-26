@@ -4,9 +4,9 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { libraryGenerator as workspaceLib } from '@nx/js';
 import jestInitGenerator from '../../generators/init/init';
 import { updateJestConfigExt } from './update-jest-config-ext';
 

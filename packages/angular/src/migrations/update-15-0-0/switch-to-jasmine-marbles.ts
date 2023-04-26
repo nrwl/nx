@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -6,7 +6,7 @@ import {
   readJson,
   readProjectConfiguration,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { extname } from 'path';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { jasmineMarblesVersion } from '../../utils/versions';

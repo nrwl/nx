@@ -3,7 +3,7 @@ import {
   logger,
   readJson,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 // Putting this here because React Native 0.67 is incompatible with React 18.
 // Waiting for 0.68 to come out with support for React 18.

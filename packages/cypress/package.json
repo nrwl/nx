@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/cypress",
+  "name": "@nx/cypress",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
@@ -34,14 +34,13 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/js": "file:../js",
-    "@nrwl/linter": "file:../linter",
-    "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "dotenv": "~10.0.0",
     "semver": "7.3.4",
-    "detect-port": "^1.5.1"
+    "detect-port": "^1.5.1",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter"
   },
   "peerDependencies": {
     "cypress": ">= 3 < 13"

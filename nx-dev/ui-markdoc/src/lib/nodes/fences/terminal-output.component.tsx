@@ -19,7 +19,7 @@ export function TerminalOutput({
         </div>
         <span>Terminal</span>
       </div>
-      <div className="p-4 pt-2">
+      <div className="overflow-x-auto p-4 pt-2">
         <div className="flex items-center">
           <p className="mt-0.5">
             <span className="text-purple-600 dark:text-fuchsia-500">

@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  detectPackageManager,
   GeneratorCallback,
   readJson,
   readNxJson,
@@ -8,8 +9,8 @@ import {
   Tree,
   updateJson,
   updateNxJson,
-} from '@nrwl/devkit';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+} from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
   babelCoreVersion,
@@ -30,6 +31,11 @@ import {
   webpack5Version,
 } from '../../utils/versions';
 import { Schema } from './schema';
+import {
+  getInstalledStorybookVersion,
+  storybookMajorVersion,
+} from '../../utils/utilities';
+import { gte } from 'semver';
 
 function checkDependenciesInstalled(host: Tree, schema: Schema) {
   const packageJson = readJson(host, 'package.json');
@@ -40,9 +46,18 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   packageJson.devDependencices = packageJson.devDependencices || {};
 
   // base deps
-  devDependencies['@nrwl/storybook'] = nxVersion;
+  devDependencies['@nx/storybook'] = nxVersion;
 
   if (schema.storybook7Configuration) {
+    let storybook7VersionToInstall = storybook7Version;
+    if (
+      storybookMajorVersion() === 7 &&
+      getInstalledStorybookVersion() &&
+      gte(getInstalledStorybookVersion(), '7.0.0')
+    ) {
+      storybook7VersionToInstall = getInstalledStorybookVersion();
+    }
+
     // Needed for Storybook 7
     // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
     if (
@@ -61,10 +76,21 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     if (schema.uiFramework === '@storybook/react-native') {
       devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
     } else {
-      devDependencies[schema.uiFramework] = storybook7Version;
+      devDependencies[schema.uiFramework] = storybook7VersionToInstall;
+      const isPnpm = detectPackageManager(host.root) === 'pnpm';
+      if (isPnpm) {
+        // If it's pnpm, it needs the framework without the builder
+        // as a dependency too (eg. @storybook/react)
+        const matchResult = schema.uiFramework?.match(/^@storybook\/(\w+)/);
+        const uiFrameworkWithoutBuilder = matchResult ? matchResult[0] : null;
+        if (uiFrameworkWithoutBuilder) {
+          devDependencies[uiFrameworkWithoutBuilder] =
+            storybook7VersionToInstall;
+        }
+      }
     }
-    devDependencies['@storybook/core-server'] = storybook7Version;
-    devDependencies['@storybook/addon-essentials'] = storybook7Version;
+    devDependencies['@storybook/core-server'] = storybook7VersionToInstall;
+    devDependencies['@storybook/addon-essentials'] = storybook7VersionToInstall;
 
     if (schema.uiFramework === '@storybook/angular') {
       if (
@@ -133,7 +159,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       devDependencies['@babel/preset-typescript'] =
         babelPresetTypescriptVersion;
       if (schema.bundler === 'webpack') {
-        devDependencies['@nrwl/webpack'] = nxVersion;
+        devDependencies['@nx/webpack'] = nxVersion;
       }
     }
 
@@ -164,7 +190,7 @@ function addCacheableOperation(tree: Tree) {
     !nxJson.tasksRunnerOptions ||
     !nxJson.tasksRunnerOptions.default ||
     (nxJson.tasksRunnerOptions.default.runner !==
-      '@nrwl/workspace/tasks-runners/default' &&
+      '@nx/workspace/tasks-runners/default' &&
       nxJson.tasksRunnerOptions.default.runner !== 'nx/tasks-runners/default')
   ) {
     return;
@@ -192,10 +218,10 @@ function moveToDevDependencies(tree: Tree) {
     packageJson.dependencies = packageJson.dependencies || {};
     packageJson.devDependencies = packageJson.devDependencies || {};
 
-    if (packageJson.dependencies['@nrwl/storybook']) {
-      packageJson.devDependencies['@nrwl/storybook'] =
-        packageJson.dependencies['@nrwl/storybook'];
-      delete packageJson.dependencies['@nrwl/storybook'];
+    if (packageJson.dependencies['@nx/storybook']) {
+      packageJson.devDependencies['@nx/storybook'] =
+        packageJson.dependencies['@nx/storybook'];
+      delete packageJson.dependencies['@nx/storybook'];
     }
     return packageJson;
   });

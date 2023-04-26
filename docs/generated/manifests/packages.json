@@ -1,16 +1,4 @@
 {
-  "add-nx-to-monorepo": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "add-nx-to-monorepo",
-    "packageName": "add-nx-to-monorepo",
-    "description": "Make any monorepo faster by adding Nx to it",
-    "documents": {},
-    "root": "/packages/add-nx-to-monorepo",
-    "source": "/packages/add-nx-to-monorepo/src",
-    "executors": {},
-    "generators": {},
-    "path": "/packages/add-nx-to-monorepo"
-  },
   "angular": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "angular",
@@ -381,18 +369,6 @@
     },
     "path": "/packages/angular"
   },
-  "cra-to-nx": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "cra-to-nx",
-    "packageName": "cra-to-nx",
-    "description": "This package will turn your React app into an Nx workspace. To use this package, your React app must have been generated and kept the structure of Create-React-App, with files generated either in js/jsx or ts/tsx.",
-    "documents": {},
-    "root": "/packages/cra-to-nx",
-    "source": "/packages/cra-to-nx/src",
-    "executors": {},
-    "generators": {},
-    "path": "/packages/cra-to-nx"
-  },
   "create-nx-plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "create-nx-plugin",
@@ -669,40 +645,40 @@
     },
     "path": "/packages/esbuild"
   },
-  "eslint-plugin-nx": {
+  "eslint-plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "eslint-plugin-nx",
+    "name": "eslint-plugin",
     "packageName": "@nrwl/eslint-plugin-nx",
-    "description": "The eslint-plugin-nx package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
+    "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
     "documents": {
-      "/packages/eslint-plugin-nx/documents/overview": {
+      "/packages/eslint-plugin/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "The eslint-plugin-nx package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin-nx/documents/overview",
+        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
+        "file": "generated/packages/eslint-plugin/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/packages/eslint-plugin-nx/documents/overview",
+        "path": "/packages/eslint-plugin/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/linter/eslint-plugin-nx"
+        "originalFilePath": "shared/packages/linter/eslint-plugin"
       },
-      "/packages/eslint-plugin-nx/documents/enforce-module-boundaries": {
+      "/packages/eslint-plugin/documents/enforce-module-boundaries": {
         "id": "enforce-module-boundaries",
         "name": "The `enforce-module-boundaries` rule",
-        "description": "The eslint-plugin-nx package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin-nx/documents/enforce-module-boundaries",
+        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
+        "file": "generated/packages/eslint-plugin/documents/enforce-module-boundaries",
         "itemList": [],
         "isExternal": false,
-        "path": "/packages/eslint-plugin-nx/documents/enforce-module-boundaries",
+        "path": "/packages/eslint-plugin/documents/enforce-module-boundaries",
         "tags": [],
         "originalFilePath": "shared/packages/linter/enforce-module-boundaries"
       }
     },
-    "root": "/packages/eslint-plugin-nx",
-    "source": "/packages/eslint-plugin-nx/src",
+    "root": "/packages/eslint-plugin",
+    "source": "/packages/eslint-plugin/src",
     "executors": {},
     "generators": {},
-    "path": "/packages/eslint-plugin-nx"
+    "path": "/packages/eslint-plugin"
   },
   "expo": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -759,69 +735,6 @@
         "name": "download",
         "originalFilePath": "/packages/expo/src/executors/download/schema.json",
         "path": "/packages/expo/executors/download",
-        "type": "executor"
-      },
-      "/packages/expo/executors/build-ios": {
-        "description": "Build and sign a standalone IPA for the Apple App Store",
-        "file": "generated/packages/expo/executors/build-ios.json",
-        "hidden": false,
-        "name": "build-ios",
-        "originalFilePath": "/packages/expo/src/executors/build-ios/schema.json",
-        "path": "/packages/expo/executors/build-ios",
-        "type": "executor"
-      },
-      "/packages/expo/executors/build-android": {
-        "description": "Build and sign a standalone APK or App Bundle for the Google Play Store",
-        "file": "generated/packages/expo/executors/build-android.json",
-        "hidden": false,
-        "name": "build-android",
-        "originalFilePath": "/packages/expo/src/executors/build-android/schema.json",
-        "path": "/packages/expo/executors/build-android",
-        "type": "executor"
-      },
-      "/packages/expo/executors/build-web": {
-        "description": "Build the web app for production",
-        "file": "generated/packages/expo/executors/build-web.json",
-        "hidden": false,
-        "name": "build-web",
-        "originalFilePath": "/packages/expo/src/executors/build-web/schema.json",
-        "path": "/packages/expo/executors/build-web",
-        "type": "executor"
-      },
-      "/packages/expo/executors/build-status": {
-        "description": "Get the status of the latest build for the project",
-        "file": "generated/packages/expo/executors/build-status.json",
-        "hidden": false,
-        "name": "build-status",
-        "originalFilePath": "/packages/expo/src/executors/build-status/schema.json",
-        "path": "/packages/expo/executors/build-status",
-        "type": "executor"
-      },
-      "/packages/expo/executors/publish": {
-        "description": "Deploy a project to Expo hosting",
-        "file": "generated/packages/expo/executors/publish.json",
-        "hidden": false,
-        "name": "publish",
-        "originalFilePath": "/packages/expo/src/executors/publish/schema.json",
-        "path": "/packages/expo/executors/publish",
-        "type": "executor"
-      },
-      "/packages/expo/executors/publish-set": {
-        "description": "Specify the channel to serve a published release",
-        "file": "generated/packages/expo/executors/publish-set.json",
-        "hidden": false,
-        "name": "publish-set",
-        "originalFilePath": "/packages/expo/src/executors/publish-set/schema.json",
-        "path": "/packages/expo/executors/publish-set",
-        "type": "executor"
-      },
-      "/packages/expo/executors/rollback": {
-        "description": "Undo an update to a channel",
-        "file": "generated/packages/expo/executors/rollback.json",
-        "hidden": false,
-        "name": "rollback",
-        "originalFilePath": "/packages/expo/src/executors/rollback/schema.json",
-        "path": "/packages/expo/executors/rollback",
         "type": "executor"
       },
       "/packages/expo/executors/run": {
@@ -1157,18 +1070,6 @@
     },
     "path": "/packages/linter"
   },
-  "make-angular-cli-faster": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "make-angular-cli-faster",
-    "packageName": "make-angular-cli-faster",
-    "description": "Make Angular CLI faster by enabling distributed computation caching",
-    "documents": {},
-    "root": "/packages/make-angular-cli-faster",
-    "source": "/packages/make-angular-cli-faster/src",
-    "executors": {},
-    "generators": {},
-    "path": "/packages/make-angular-cli-faster"
-  },
   "nest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nest",
@@ -1380,7 +1281,18 @@
         "isExternal": false,
         "path": "/packages/next/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/next/next-plugin"
+        "originalFilePath": "shared/packages/next/plugin-overview"
+      },
+      "/packages/next/documents/next-config-setup": {
+        "id": "next-config-setup",
+        "name": "How to configure Next.js plugins",
+        "description": "A guide for configuring Next.js plugins with Nx",
+        "file": "generated/packages/next/documents/next-config-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/next/documents/next-config-setup",
+        "tags": [],
+        "originalFilePath": "shared/packages/next/next-config-setup"
       }
     },
     "root": "/packages/next",
@@ -1468,6 +1380,15 @@
         "originalFilePath": "/packages/next/src/generators/custom-server/schema.json",
         "path": "/packages/next/generators/custom-server",
         "type": "generator"
+      },
+      "/packages/next/generators/cypress-component-configuration": {
+        "description": "cypress-component-configuration generator",
+        "file": "generated/packages/next/generators/cypress-component-configuration.json",
+        "hidden": false,
+        "name": "cypress-component-configuration",
+        "originalFilePath": "/packages/next/src/generators/cypress-component-configuration/schema.json",
+        "path": "/packages/next/generators/cypress-component-configuration",
+        "type": "generator"
       }
     },
     "path": "/packages/next"
@@ -1493,15 +1414,6 @@
     "root": "/packages/node",
     "source": "/packages/node/src",
     "executors": {
-      "/packages/node/executors/webpack": {
-        "description": "Build a Node application using Webpack.",
-        "file": "generated/packages/node/executors/webpack.json",
-        "hidden": false,
-        "name": "webpack",
-        "originalFilePath": "/packages/node/src/executors/webpack/schema.json",
-        "path": "/packages/node/executors/webpack",
-        "type": "executor"
-      },
       "/packages/node/executors/node": {
         "description": "Execute a Node application.",
         "file": "generated/packages/node/executors/node.json",
@@ -1656,28 +1568,6 @@
         "path": "/packages/nx/documents/affected-dep-graph",
         "tags": [],
         "originalFilePath": "generated/cli/affected-graph"
-      },
-      "/packages/nx/documents/affected-apps": {
-        "id": "affected-apps",
-        "name": "affected:apps",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/affected-apps",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/nx/documents/affected-apps",
-        "tags": [],
-        "originalFilePath": "generated/cli/affected-apps"
-      },
-      "/packages/nx/documents/affected-libs": {
-        "id": "affected-libs",
-        "name": "affected:libs",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/affected-libs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/nx/documents/affected-libs",
-        "tags": [],
-        "originalFilePath": "generated/cli/affected-libs"
       },
       "/packages/nx/documents/print-affected": {
         "id": "print-affected",
@@ -1879,103 +1769,112 @@
     "generators": {},
     "path": "/packages/nx"
   },
-  "nx-plugin": {
+  "plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "nx-plugin",
+    "name": "plugin",
     "packageName": "@nrwl/nx-plugin",
     "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
     "documents": {
-      "/packages/nx-plugin/documents/overview": {
+      "/packages/plugin/documents/overview": {
         "id": "overview",
         "name": "Overview",
         "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
-        "file": "generated/packages/nx-plugin/documents/overview",
+        "file": "generated/packages/plugin/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/packages/nx-plugin/documents/overview",
+        "path": "/packages/plugin/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/nx-plugin/nx-plugin"
+        "originalFilePath": "shared/packages/plugin/plugin"
       }
     },
-    "root": "/packages/nx-plugin",
-    "source": "/packages/nx-plugin/src",
+    "root": "/packages/plugin",
+    "source": "/packages/plugin/src",
     "executors": {
-      "/packages/nx-plugin/executors/e2e": {
+      "/packages/plugin/executors/e2e": {
         "description": "Creates and runs the E2E tests for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/executors/e2e.json",
+        "file": "generated/packages/plugin/executors/e2e.json",
         "hidden": false,
         "name": "e2e",
-        "originalFilePath": "/packages/nx-plugin/src/executors/e2e/schema.json",
-        "path": "/packages/nx-plugin/executors/e2e",
+        "originalFilePath": "/packages/plugin/src/executors/e2e/schema.json",
+        "path": "/packages/plugin/executors/e2e",
         "type": "executor"
       }
     },
     "generators": {
-      "/packages/nx-plugin/generators/plugin": {
+      "/packages/plugin/generators/plugin": {
         "description": "Create a Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/plugin.json",
+        "file": "generated/packages/plugin/generators/plugin.json",
         "hidden": false,
         "name": "plugin",
-        "originalFilePath": "/packages/nx-plugin/src/generators/plugin/schema.json",
-        "path": "/packages/nx-plugin/generators/plugin",
+        "originalFilePath": "/packages/plugin/src/generators/plugin/schema.json",
+        "path": "/packages/plugin/generators/plugin",
         "type": "generator"
       },
-      "/packages/nx-plugin/generators/e2e-project": {
+      "/packages/plugin/generators/create-package": {
+        "description": "Create a package which can be used by npx to create a new workspace",
+        "file": "generated/packages/plugin/generators/create-package.json",
+        "hidden": false,
+        "name": "create-package",
+        "originalFilePath": "/packages/plugin/src/generators/create-package/schema.json",
+        "path": "/packages/plugin/generators/create-package",
+        "type": "generator"
+      },
+      "/packages/plugin/generators/e2e-project": {
         "description": "Create a E2E application for a Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/e2e-project.json",
-        "hidden": true,
+        "file": "generated/packages/plugin/generators/e2e-project.json",
+        "hidden": false,
         "name": "e2e-project",
-        "originalFilePath": "/packages/nx-plugin/src/generators/e2e-project/schema.json",
-        "path": "/packages/nx-plugin/generators/e2e-project",
+        "originalFilePath": "/packages/plugin/src/generators/e2e-project/schema.json",
+        "path": "/packages/plugin/generators/e2e-project",
         "type": "generator"
       },
-      "/packages/nx-plugin/generators/migration": {
+      "/packages/plugin/generators/migration": {
         "description": "Create a migration for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/migration.json",
+        "file": "generated/packages/plugin/generators/migration.json",
         "hidden": false,
         "name": "migration",
-        "originalFilePath": "/packages/nx-plugin/src/generators/migration/schema.json",
-        "path": "/packages/nx-plugin/generators/migration",
+        "originalFilePath": "/packages/plugin/src/generators/migration/schema.json",
+        "path": "/packages/plugin/generators/migration",
         "type": "generator"
       },
-      "/packages/nx-plugin/generators/generator": {
+      "/packages/plugin/generators/generator": {
         "description": "Create a generator for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/generator.json",
+        "file": "generated/packages/plugin/generators/generator.json",
         "hidden": false,
         "name": "generator",
-        "originalFilePath": "/packages/nx-plugin/src/generators/generator/schema.json",
-        "path": "/packages/nx-plugin/generators/generator",
+        "originalFilePath": "/packages/plugin/src/generators/generator/schema.json",
+        "path": "/packages/plugin/generators/generator",
         "type": "generator"
       },
-      "/packages/nx-plugin/generators/executor": {
+      "/packages/plugin/generators/executor": {
         "description": "Create an executor for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/executor.json",
+        "file": "generated/packages/plugin/generators/executor.json",
         "hidden": false,
         "name": "executor",
-        "originalFilePath": "/packages/nx-plugin/src/generators/executor/schema.json",
-        "path": "/packages/nx-plugin/generators/executor",
+        "originalFilePath": "/packages/plugin/src/generators/executor/schema.json",
+        "path": "/packages/plugin/generators/executor",
         "type": "generator"
       },
-      "/packages/nx-plugin/generators/plugin-lint-checks": {
+      "/packages/plugin/generators/plugin-lint-checks": {
         "description": "Adds linting configuration to validate common json files for nx plugins.",
-        "file": "generated/packages/nx-plugin/generators/plugin-lint-checks.json",
+        "file": "generated/packages/plugin/generators/plugin-lint-checks.json",
         "hidden": false,
         "name": "plugin-lint-checks",
-        "originalFilePath": "/packages/nx-plugin/src/generators/lint-checks/schema.json",
-        "path": "/packages/nx-plugin/generators/plugin-lint-checks",
+        "originalFilePath": "/packages/plugin/src/generators/lint-checks/schema.json",
+        "path": "/packages/plugin/generators/plugin-lint-checks",
         "type": "generator"
       },
-      "/packages/nx-plugin/generators/preset": {
+      "/packages/plugin/generators/preset": {
         "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nrwl/nx-plugin`.",
-        "file": "generated/packages/nx-plugin/generators/preset.json",
+        "file": "generated/packages/plugin/generators/preset.json",
         "hidden": true,
         "name": "preset",
-        "originalFilePath": "/packages/nx-plugin/src/generators/preset/schema.json",
-        "path": "/packages/nx-plugin/generators/preset",
+        "originalFilePath": "/packages/plugin/src/generators/preset/schema.json",
+        "path": "/packages/plugin/generators/preset",
         "type": "generator"
       }
     },
-    "path": "/packages/nx-plugin"
+    "path": "/packages/plugin"
   },
   "react": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2772,33 +2671,6 @@
     "root": "/packages/web",
     "source": "/packages/web/src",
     "executors": {
-      "/packages/web/executors/webpack": {
-        "description": "Build an application using Webpack.",
-        "file": "generated/packages/web/executors/webpack.json",
-        "hidden": false,
-        "name": "webpack",
-        "originalFilePath": "/packages/web/src/executors/webpack/schema.json",
-        "path": "/packages/web/executors/webpack",
-        "type": "executor"
-      },
-      "/packages/web/executors/rollup": {
-        "description": "Package a library using Rollup.",
-        "file": "generated/packages/web/executors/rollup.json",
-        "hidden": false,
-        "name": "rollup",
-        "originalFilePath": "/packages/web/src/executors/rollup/schema.json",
-        "path": "/packages/web/executors/rollup",
-        "type": "executor"
-      },
-      "/packages/web/executors/dev-server": {
-        "description": "Serve a web application.",
-        "file": "generated/packages/web/executors/dev-server.json",
-        "hidden": false,
-        "name": "dev-server",
-        "originalFilePath": "/packages/web/src/executors/dev-server/schema.json",
-        "path": "/packages/web/executors/dev-server",
-        "type": "executor"
-      },
       "/packages/web/executors/file-server": {
         "description": "Serve a web application from a folder.",
         "file": "generated/packages/web/executors/file-server.json",
@@ -2965,15 +2837,6 @@
     "root": "/packages/workspace",
     "source": "/packages/workspace/src",
     "executors": {
-      "/packages/workspace/executors/run-commands": {
-        "description": "Run any custom commands with Nx.",
-        "file": "generated/packages/workspace/executors/run-commands.json",
-        "hidden": false,
-        "name": "run-commands",
-        "originalFilePath": "/packages/workspace/src/executors/run-commands/schema.json",
-        "path": "/packages/workspace/executors/run-commands",
-        "type": "executor"
-      },
       "/packages/workspace/executors/counter": {
         "description": "A dummy executor useful for E2E tests.",
         "file": "generated/packages/workspace/executors/counter.json",
@@ -2981,15 +2844,6 @@
         "name": "counter",
         "originalFilePath": "/packages/workspace/src/executors/counter/schema.json",
         "path": "/packages/workspace/executors/counter",
-        "type": "executor"
-      },
-      "/packages/workspace/executors/run-script": {
-        "description": "Run an NPM script using Nx.",
-        "file": "generated/packages/workspace/executors/run-script.json",
-        "hidden": false,
-        "name": "run-script",
-        "originalFilePath": "/packages/workspace/src/executors/run-script/schema.json",
-        "path": "/packages/workspace/executors/run-script",
         "type": "executor"
       }
     },
@@ -3028,15 +2882,6 @@
         "name": "new",
         "originalFilePath": "/packages/workspace/src/generators/new/schema.json",
         "path": "/packages/workspace/generators/new",
-        "type": "generator"
-      },
-      "/packages/workspace/generators/library": {
-        "description": "Create a library.",
-        "file": "generated/packages/workspace/generators/library.json",
-        "hidden": false,
-        "name": "library",
-        "originalFilePath": "/packages/workspace/src/generators/library/schema.json",
-        "path": "/packages/workspace/generators/library",
         "type": "generator"
       },
       "/packages/workspace/generators/workspace-generator": {

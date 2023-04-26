@@ -4,8 +4,8 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
 
 import configurationGenerator from './configuration';
@@ -22,7 +22,7 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
 jest.mock('enquirer');
 // @ts-ignore
 enquirer.prompt = jest.fn();
-describe('@nrwl/storybook:configuration for workspaces with Root project', () => {
+describe('@nx/storybook:configuration for workspaces with Root project', () => {
   beforeAll(() => {
     process.env.NX_INTERACTIVE = 'true';
   });
@@ -85,10 +85,16 @@ describe('@nrwl/storybook:configuration for workspaces with Root project', () =>
       });
       writeJson(tree, 'package.json', {
         devDependencies: {
-          '@storybook/addon-essentials': '~6.2.9',
-          '@storybook/react': '~6.2.9',
+          '@storybook/addon-essentials': '7.0.2',
+          '@storybook/react': '7.0.2',
+          '@storybook/core-server': '7.0.2',
         },
       });
+
+      jest.resetModules();
+      jest.doMock('@storybook/core-server/package.json', () => ({
+        version: '7.0.2',
+      }));
     });
 
     it('should generate files for root app', async () => {

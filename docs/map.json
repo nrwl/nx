@@ -9,37 +9,54 @@
       "description": "Nx documentation for you to discover!",
       "itemList": [
         {
-          "name": "Getting Started",
+          "name": "Start Here",
           "id": "getting-started",
           "description": "Get started with basic information, concepts and tutorials.",
           "itemList": [
             {
-              "name": "Intro to Nx",
+              "name": "Getting Started",
               "id": "intro",
               "file": "shared/getting-started/intro"
             },
             {
-              "name": "Package-Based Repo Tutorial",
+              "name": "Installation",
+              "id": "installation",
+              "file": "shared/getting-started/installation"
+            },
+            {
+              "name": "Why Nx?",
+              "id": "why-nx",
+              "file": "shared/getting-started/why-nx"
+            }
+          ]
+        },
+        {
+          "name": "5 min Tutorials",
+          "id": "tutorials",
+          "description": "Get started with basic information, concepts and tutorials.",
+          "itemList": [
+            {
+              "name": "Package-Based Monorepo",
               "id": "package-based-repo-tutorial",
               "file": "shared/npm-tutorial/package-based"
             },
             {
-              "name": "Integrated Repo Tutorial",
+              "name": "Integrated Monorepo",
               "id": "integrated-repo-tutorial",
               "file": "shared/npm-tutorial/integrated"
             },
             {
-              "name": "React Standalone Tutorial",
+              "name": "React Standalone",
               "id": "react-standalone-tutorial",
               "file": "shared/react-standalone-tutorial/1-code-generation"
             },
             {
-              "name": "Angular Standalone Tutorial",
+              "name": "Angular Standalone",
               "id": "angular-standalone-tutorial",
               "file": "shared/angular-standalone-tutorial/1-code-generation"
             },
             {
-              "name": "Node Server Tutorial",
+              "name": "Node Standalone",
               "id": "node-server-tutorial",
               "file": "shared/node-server-tutorial/1-code-generation"
             }
@@ -792,6 +809,11 @@
               "name": "Setting up Bitbucket",
               "id": "monorepo-ci-bitbucket-pipelines",
               "file": "shared/monorepo-ci-bitbucket-pipelines"
+            },
+            {
+              "name": "Troubleshooting Nx Install Issues",
+              "id": "troubleshoot-nx-install-issues",
+              "file": "shared/installation/troubleshoot-installation"
             }
           ]
         },
@@ -839,6 +861,33 @@
               "name": "Manual migration",
               "id": "manual",
               "file": "shared/migration/manual"
+            }
+          ]
+        },
+        {
+          "name": "Adopting Nx From Angular CLI",
+          "id": "adopting-nx-angular",
+          "description": "Advanced guides to adopt Nx coming from the Angular CLI",
+          "itemList": [
+            {
+              "name": "From Angular CLI",
+              "id": "migration-angular",
+              "file": "shared/migration/migration-angular"
+            },
+            {
+              "name": "From Angular CLI to Integrated",
+              "id": "angular-integrated",
+              "file": "shared/migration/angular-integrated"
+            },
+            {
+              "name": "From Angular CLI Manually",
+              "id": "angular-manual",
+              "file": "shared/migration/angular-manual"
+            },
+            {
+              "name": "From Multiple Angular CLI Repos",
+              "id": "angular-multiple",
+              "file": "shared/migration/angular-multiple"
             }
           ]
         },
@@ -1310,11 +1359,6 @@
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
             {
-              "name": "Billing and Utilization",
-              "id": "billing",
-              "file": "nx-cloud/account/billing"
-            },
-            {
               "name": "Users",
               "id": "users",
               "file": "nx-cloud/account/users"
@@ -1484,16 +1528,6 @@
               "file": "generated/cli/affected-graph"
             },
             {
-              "name": "affected:apps",
-              "id": "affected-apps",
-              "file": "generated/cli/affected-apps"
-            },
-            {
-              "name": "affected:libs",
-              "id": "affected-libs",
-              "file": "generated/cli/affected-libs"
-            },
-            {
               "name": "print-affected",
               "id": "print-affected",
               "file": "generated/cli/print-affected"
@@ -1593,14 +1627,14 @@
         },
         {
           "name": "Nx Plugin",
-          "id": "nx-plugin",
+          "id": "plugin",
           "description": "Plugin package.",
           "itemList": [
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/nx-plugin",
-              "file": "shared/packages/nx-plugin/nx-plugin"
+              "path": "/packages/plugin",
+              "file": "shared/packages/plugin/plugin"
             }
           ]
         },
@@ -1892,20 +1926,20 @@
           ]
         },
         {
-          "name": "eslint-plugin-nx",
-          "id": "eslint-plugin-nx",
+          "name": "eslint-plugin",
+          "id": "eslint-plugin",
           "description": "ESLint plugin package.",
           "itemList": [
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/eslint-plugin-nx",
-              "file": "shared/packages/linter/eslint-plugin-nx"
+              "path": "/packages/eslint-plugin",
+              "file": "shared/packages/linter/eslint-plugin"
             },
             {
               "id": "enforce-module-boundaries",
               "name": "The `enforce-module-boundaries` rule",
-              "path": "/packages/eslint-plugin-nx",
+              "path": "/packages/eslint-plugin",
               "file": "shared/packages/linter/enforce-module-boundaries"
             }
           ]
@@ -1958,7 +1992,13 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/next",
-              "file": "shared/packages/next/next-plugin"
+              "file": "shared/packages/next/plugin-overview"
+            },
+            {
+              "id": "next-config-setup",
+              "name": "How to configure Next.js plugins",
+              "description": "A guide for configuring Next.js plugins with Nx",
+              "file": "shared/packages/next/next-config-setup"
             }
           ]
         },

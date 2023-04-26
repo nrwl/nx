@@ -12,7 +12,7 @@ import * as path from 'path';
 import next from 'next';
 
 // Next.js server options:
-// - The environment variable is set by `@nrwl/next:server` when running the dev server.
+// - The environment variable is set by `@nx/next:server` when running the dev server.
 // - The fallback `__dirname` is for production builds.
 // - Feel free to change this to suit your needs.
 const dir = process.env.NX_NEXT_DIR || path.join(__dirname, '..');

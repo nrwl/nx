@@ -7,9 +7,9 @@ import {
   Tree,
   updateJson,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { lte } from 'semver';
-import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { storybookVersion } from '../../../utils/versions';
 import { createProjectStorybookDir } from '../../../generators/configuration/lib/util-functions';
 import { StorybookConfigureSchema } from '../../../generators/configuration/schema';

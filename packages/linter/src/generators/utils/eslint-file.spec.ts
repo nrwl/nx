@@ -4,10 +4,10 @@ import {
   findEslintFile,
 } from './eslint-file';
 
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-describe('@nrwl/linter:eslint-file', () => {
+describe('@nx/linter:eslint-file', () => {
   let tree: Tree;
 
   beforeEach(() => {

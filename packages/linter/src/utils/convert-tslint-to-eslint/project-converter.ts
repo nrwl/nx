@@ -1,8 +1,4 @@
-import type {
-  GeneratorCallback,
-  ProjectConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import type { GeneratorCallback, ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   getProjects,
   installPackagesTask,
@@ -16,7 +12,7 @@ import {
   updateJson,
   updateNxJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Linter } from 'eslint';
 import { removeParserOptionsProjectIfNotRequired } from '../rules-requiring-type-checking';
 import { convertTSLintDisableCommentsForProject } from './convert-to-eslint-config';
@@ -39,7 +35,7 @@ export interface ConvertTSLintToESLintSchema {
 
 /**
  * When we convert a TSLint setup to an ESLint setup for a particular project, there are a number of
- * shared/common concerns (implemented as library utilities within @nrwl/linter), and a few things
+ * shared/common concerns (implemented as library utilities within @nx/linter), and a few things
  * which are specific to this package and the types of projects it produces.
  *
  * The key structure of the converted ESLint support is as follows:
@@ -196,9 +192,9 @@ export class ProjectConverter {
     /**
      * The only piece of the converted root tslint.json that we need to pull out to
      * apply to the existing overrides within the root .eslintrc.json is the
-     * @nrwl/nx/enforce-module-boundaries rule.
+     * @nx/enforce-module-boundaries rule.
      */
-    const nxRuleName = '@nrwl/nx/enforce-module-boundaries';
+    const nxRuleName = '@nx/enforce-module-boundaries';
     const nxEnforceModuleBoundariesRule =
       convertedRootESLintConfig.rules[nxRuleName];
     if (nxEnforceModuleBoundariesRule) {
@@ -520,7 +516,10 @@ export class ProjectConverter {
     const projects = getProjects(this.host);
     for (const [projectName, projectConfig] of projects.entries()) {
       for (const [, targetConfig] of Object.entries(projectConfig.targets)) {
-        if (targetConfig.executor === '@nrwl/cypress:cypress') {
+        if (
+          targetConfig.executor === '@nx/cypress:cypress' ||
+          targetConfig.executor === '@nrwl/cypress:cypress'
+        ) {
           if (
             targetConfig.options.devServerTarget === `${this.projectName}:serve`
           ) {

@@ -1,12 +1,12 @@
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
-import { readJson } from '@nrwl/devkit';
+import type { NxJsonConfiguration, Tree } from '@nx/devkit';
+import { readJson } from '@nx/devkit';
 import Ajv from 'ajv';
 import { generateWorkspaceFiles } from './generate-workspace-files';
-import { createTree } from '@nrwl/devkit/testing';
+import { createTree } from '@nx/devkit/testing';
 import { Preset } from '../utils/presets';
 import * as nxSchema from '../../../../nx/schemas/nx-schema.json';
 
-describe('@nrwl/workspace:generateWorkspaceFiles', () => {
+describe('@nx/workspace:generateWorkspaceFiles', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -41,6 +41,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
             Preset.WebComponents,
             Preset.Express,
             Preset.NodeStandalone,
+            Preset.NextJsStandalone,
           ].includes(Preset[preset])
         ) {
           appName = 'app1';
@@ -82,20 +83,20 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toMatchInlineSnapshot(`
-      Object {
+      {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
         "npmScope": "proj",
-        "targetDefaults": Object {
-          "build": Object {
-            "dependsOn": Array [
+        "targetDefaults": {
+          "build": {
+            "dependsOn": [
               "^build",
             ],
           },
         },
-        "tasksRunnerOptions": Object {
-          "default": Object {
-            "options": Object {
-              "cacheableOperations": Array [
+        "tasksRunnerOptions": {
+          "default": {
+            "options": {
+              "cacheableOperations": [
                 "build",
                 "lint",
                 "test",
@@ -121,34 +122,34 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toMatchInlineSnapshot(`
-      Object {
+      {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
-        "namedInputs": Object {
-          "default": Array [
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
           ],
-          "sharedGlobals": Array [],
+          "sharedGlobals": [],
         },
         "npmScope": "proj",
-        "targetDefaults": Object {
-          "build": Object {
-            "dependsOn": Array [
+        "targetDefaults": {
+          "build": {
+            "dependsOn": [
               "^build",
             ],
-            "inputs": Array [
+            "inputs": [
               "production",
               "^production",
             ],
           },
         },
-        "tasksRunnerOptions": Object {
-          "default": Object {
-            "options": Object {
-              "cacheableOperations": Array [
+        "tasksRunnerOptions": {
+          "default": {
+            "options": {
+              "cacheableOperations": [
                 "build",
                 "lint",
                 "test",
@@ -209,13 +210,13 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     expect(tree.exists('/proj/libs/.gitkeep')).toBe(false);
     const nx = readJson(tree, '/proj/nx.json');
     expect(nx).toMatchInlineSnapshot(`
-      Object {
+      {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
         "extends": "nx/presets/npm.json",
-        "tasksRunnerOptions": Object {
-          "default": Object {
-            "options": Object {
-              "cacheableOperations": Array [
+        "tasksRunnerOptions": {
+          "default": {
+            "options": {
+              "cacheableOperations": [
                 "build",
                 "lint",
                 "test",
@@ -230,17 +231,17 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
 
     const packageJson = readJson(tree, '/proj/package.json');
     expect(packageJson).toMatchInlineSnapshot(`
-      Object {
-        "dependencies": Object {},
-        "devDependencies": Object {
+      {
+        "dependencies": {},
+        "devDependencies": {
           "nx": "0.0.1",
         },
         "license": "MIT",
         "name": "proj",
         "private": true,
-        "scripts": Object {},
+        "scripts": {},
         "version": "0.0.0",
-        "workspaces": Array [
+        "workspaces": [
           "packages/*",
         ],
       }
@@ -259,15 +260,15 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     });
     const packageJson = readJson(tree, '/proj/package.json');
     expect(packageJson).toMatchInlineSnapshot(`
-      Object {
-        "dependencies": Object {},
-        "devDependencies": Object {
+      {
+        "dependencies": {},
+        "devDependencies": {
           "nx": "0.0.1",
         },
         "license": "MIT",
         "name": "proj",
         "private": true,
-        "scripts": Object {},
+        "scripts": {},
         "version": "0.0.0",
       }
     `);

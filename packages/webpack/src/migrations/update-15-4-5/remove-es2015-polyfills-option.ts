@@ -1,4 +1,4 @@
-import { getProjects, Tree, updateProjectConfiguration } from '@nrwl/devkit';
+import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
 
 export default async function (tree: Tree) {
   const projects = getProjects(tree);

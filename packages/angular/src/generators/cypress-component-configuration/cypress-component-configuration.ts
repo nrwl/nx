@@ -1,5 +1,5 @@
-import { cypressComponentProject } from '@nrwl/cypress';
-import { findBuildConfig } from '@nrwl/cypress/src/utils/find-target-options';
+import { cypressComponentProject } from '@nx/cypress';
+import { findBuildConfig } from '@nx/cypress/src/utils/find-target-options';
 import {
   formatFiles,
   generateFiles,
@@ -8,7 +8,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { relative } from 'path';
 import { componentTestGenerator } from '../component-test/component-test';
 import {
@@ -108,6 +108,7 @@ async function updateProjectConfig(
     project: options.project,
     buildTarget: options.buildTarget,
     validExecutorNames: new Set<string>([
+      '@nx/angular:webpack-browser',
       '@nrwl/angular:webpack-browser',
       '@angular-devkit/build-angular:browser',
     ]),

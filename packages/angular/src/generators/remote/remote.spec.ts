@@ -1,12 +1,12 @@
-import { E2eTestRunner } from '@nrwl/angular/src/utils/test-runners';
+import { E2eTestRunner } from '@nx/angular/src/utils/test-runners';
 import {
   getProjects,
   readNxJson,
   readProjectConfiguration,
   stripIndents,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   generateTestHostApplication,
   generateTestRemoteApplication,

@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   convertNxGenerator,
   formatFiles,
@@ -8,7 +8,7 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { esbuildInitGenerator } from '../init/init';
 import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
@@ -82,7 +82,7 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
     targets: {
       ...project.targets,
       build: {
-        executor: '@nrwl/esbuild:esbuild',
+        executor: '@nx/esbuild:esbuild',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: buildOptions,

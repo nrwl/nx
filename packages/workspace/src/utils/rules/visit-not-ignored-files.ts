@@ -5,18 +5,22 @@ import {
   SchematicContext,
   Tree,
 } from '@angular-devkit/schematics';
-import ignore, { Ignore } from 'ignore';
+import ignore from 'ignore';
 
+/**
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. This function can be replaced with 'visitNotIgnoredFiles' from @nx/devkit.
+ */
 export function visitNotIgnoredFiles(
   visitor: (file: Path, host: Tree, context: SchematicContext) => void | Rule,
   dir: Path = normalize('')
 ): Rule {
   return (host, context) => {
-    let ig: Ignore | undefined;
+    let ig: ReturnType<typeof ignore> | undefined;
     if (host.exists('.gitignore')) {
       ig = ignore();
       ig.add(host.read('.gitignore').toString());
     }
+
     function visit(_dir: Path) {
       if (_dir && ig?.ignores(_dir)) {
         return;

@@ -10,13 +10,3 @@ export function projectRootDir(projectType: ProjectType) {
     return 'libs';
   }
 }
-
-export function projectDir(projectType: ProjectType) {
-  if (projectType == ProjectType.Application) {
-    // apps/test-app/src/app
-    return 'app';
-  } else if (projectType == ProjectType.Library) {
-    // libs/test-lib/src/lib
-    return 'lib';
-  }
-}

@@ -1,15 +1,15 @@
 //@ts-check
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { withNx } = require('@nrwl/next/plugins/with-nx');
+const { composePlugins, withNx } = require('@nx/next');
 
 <% if (style === 'less') { %>
 // This plugin is needed until this PR is merged.
 // https://github.com/vercel/next.js/pull/23185
-const { withLess } = require('@nrwl/next/plugins/with-less');
+const { withLess } = require('@nx/next/plugins/with-less');
 
 /**
- * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
   nx: {
@@ -18,18 +18,24 @@ const nextConfig = {
     svgr: false,
   },
   <% if(appDir) { %>
-  experimental: { 
+  experimental: {
     appDir: true
   },
   <% } %>
 };
 
-module.exports = withLess(withNx(nextConfig));
+const plugins = [
+  // Add more Next.js plugins to this list if needed.
+  withLess,
+  withNx,
+];
+
+module.exports = composePlugins(...plugins)(nextConfig);
 <% } else if (style === 'styl') { %>
-const { withStylus } = require('@nrwl/next/plugins/with-stylus');
+const { withStylus } = require('@nx/next/plugins/with-stylus');
 
 /**
- * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
   nx: {
@@ -38,13 +44,19 @@ const nextConfig = {
     svgr: false,
   },
   <% if(appDir) { %>
-  experimental: { 
+  experimental: {
     appDir: true
   },
   <% } %>
 };
 
-module.exports = withStylus(withNx(nextConfig));
+const plugins = [
+  // Add more Next.js plugins to this list if needed.
+  withStylus,
+  withNx,
+];
+
+module.exports = composePlugins(...plugins)(nextConfig);
 <% } else if (
   style === 'styled-components'
   ||style === '@emotion/styled'
@@ -52,7 +64,7 @@ module.exports = withStylus(withNx(nextConfig));
   || style === 'none'
 ) { %>
 /**
- * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
   nx: {
@@ -61,17 +73,22 @@ const nextConfig = {
     svgr: false,
   },
   <% if(appDir) { %>
-  experimental: { 
+  experimental: {
     appDir: true
   },
   <% } %>
 };
 
-module.exports = withNx(nextConfig);
+const plugins = [
+  // Add more Next.js plugins to this list if needed.
+  withNx,
+];
+
+module.exports = composePlugins(...plugins)(nextConfig);
 <% } else {
 // Defaults to CSS/SASS (which don't need plugin as of Next 9.3) %>
 /**
- * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
   nx: {
@@ -80,11 +97,16 @@ const nextConfig = {
     svgr: false,
   },
   <% if(appDir) { %>
-  experimental: { 
+  experimental: {
     appDir: true
   },
   <% } %>
 };
 
-module.exports = withNx(nextConfig);
+const plugins = [
+  // Add more Next.js plugins to this list if needed.
+  withNx,
+];
+
+module.exports = composePlugins(...plugins)(nextConfig);
 <% } %>

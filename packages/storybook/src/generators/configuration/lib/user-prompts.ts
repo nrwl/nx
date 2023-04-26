@@ -1,5 +1,5 @@
-import { UiFramework, UiFramework7 } from '@nrwl/storybook/src/utils/models';
-import { Constants } from '@nrwl/storybook/src/utils/utilities';
+import { UiFramework, UiFramework7 } from '../../../utils/models';
+import { Constants } from '../../../utils/utilities';
 import { prompt } from 'enquirer';
 import { StorybookConfigureSchema } from '../schema';
 

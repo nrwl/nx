@@ -2,11 +2,11 @@ import { ESLint, Linter as LinterType } from 'eslint';
 
 /**
  * This configuration is intended to apply to all TypeScript source files.
- * See the eslint-plugin-nx package for what is in the referenced shareable config.
+ * See the eslint-plugin package for what is in the referenced shareable config.
  */
 export const globalTypeScriptOverrides = {
   files: ['*.ts', '*.tsx'],
-  extends: ['plugin:@nrwl/nx/typescript'],
+  extends: ['plugin:@nx/typescript'],
   /**
    * Having an empty rules object present makes it more obvious to the user where they would
    * extend things from if they needed to
@@ -16,11 +16,11 @@ export const globalTypeScriptOverrides = {
 
 /**
  * This configuration is intended to apply to all JavaScript source files.
- * See the eslint-plugin-nx package for what is in the referenced shareable config.
+ * See the eslint-plugin package for what is in the referenced shareable config.
  */
 export const globalJavaScriptOverrides = {
   files: ['*.js', '*.jsx'],
-  extends: ['plugin:@nrwl/nx/javascript'],
+  extends: ['plugin:@nx/javascript'],
   /**
    * Having an empty rules object present makes it more obvious to the user where they would
    * extend things from if they needed to
@@ -35,7 +35,7 @@ export const globalJavaScriptOverrides = {
 export const moduleBoundariesOverride = {
   files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
   rules: {
-    '@nrwl/nx/enforce-module-boundaries': [
+    '@nx/enforce-module-boundaries': [
       'error',
       {
         enforceBuildableLibDependency: true,
@@ -50,10 +50,10 @@ export const getGlobalEsLintConfiguration = (
   unitTestRunner?: string,
   rootProject?: boolean
 ) => {
-  const config: ESLint.ConfigData = {
+  const config: LinterType.Config = {
     root: true,
     ignorePatterns: rootProject ? ['!**/*'] : ['**/*'],
-    plugins: ['@nrwl/nx'],
+    plugins: ['@nx'],
     /**
      * We leverage ESLint's "overrides" capability so that we can set up a root config which will support
      * all permutations of Nx workspaces across all frameworks, libraries and tools.

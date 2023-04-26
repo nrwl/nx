@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   removeProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { checkDestination } from './lib/check-destination';
 import { createProjectConfigurationInNewDestination } from './lib/create-project-configuration-in-new-destination';
 import { moveProjectFiles } from './lib/move-project-files';

@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import type { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   e2eCwd,
@@ -16,7 +16,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { renameSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
@@ -36,8 +36,8 @@ describe('Nx Commands', () => {
         runCLI('show projects').replace(/.*nx show projects( --verbose)?\n/, '')
       ).toEqual('');
 
-      runCLI(`generate @nrwl/web:app ${app1}`);
-      runCLI(`generate @nrwl/web:app ${app2}`);
+      runCLI(`generate @nx/web:app ${app1}`);
+      runCLI(`generate @nx/web:app ${app2}`);
 
       const s = runCLI('show projects').split('\n');
 
@@ -55,10 +55,10 @@ describe('Nx Commands', () => {
 
       expect(reportOutput).toEqual(
         expect.stringMatching(
-          new RegExp(`\@nrwl\/workspace.*:.*${getPublishedVersion()}`)
+          new RegExp(`\@nx\/workspace.*:.*${getPublishedVersion()}`)
         )
       );
-      expect(reportOutput).toContain('@nrwl/workspace');
+      expect(reportOutput).toContain('@nx/workspace');
     }, 120000);
 
     it(`should list plugins`, async () => {
@@ -67,35 +67,34 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('NX   Installed plugins');
 
       // just check for some, not all
-      expect(listOutput).toContain('@nrwl/angular');
+      expect(listOutput).toContain('@nx/workspace');
 
       // temporarily make it look like this isn't installed
       renameSync(
-        tmpProjPath('node_modules/@nrwl/angular'),
-        tmpProjPath('node_modules/@nrwl/angular_tmp')
+        tmpProjPath('node_modules/@nx/angular'),
+        tmpProjPath('node_modules/@nx/angular_tmp')
       );
 
       listOutput = runCLI('list');
       expect(listOutput).toContain('NX   Also available');
 
       // look for specific plugin
-      listOutput = runCLI('list @nrwl/workspace');
+      listOutput = runCLI('list @nx/workspace');
 
-      expect(listOutput).toContain('Capabilities in @nrwl/workspace');
+      expect(listOutput).toContain('Capabilities in @nx/workspace');
 
       // check for schematics
       expect(listOutput).toContain('workspace');
       expect(listOutput).toContain('library');
-      expect(listOutput).toContain('workspace-generator');
 
       // check for builders
       expect(listOutput).toContain('run-commands');
 
       // // look for uninstalled core plugin
-      listOutput = runCLI('list @nrwl/angular');
+      listOutput = runCLI('list @nx/angular');
 
       expect(listOutput).toContain(
-        'NX   @nrwl/angular is not currently installed'
+        'NX   @nx/angular is not currently installed'
       );
 
       // look for an unknown plugin
@@ -105,10 +104,10 @@ describe('Nx Commands', () => {
         'NX   @wibble/fish is not currently installed'
       );
 
-      // put back the @nrwl/angular module (or all the other e2e tests after this will fail)
+      // put back the @nx/angular module (or all the other e2e tests after this will fail)
       renameSync(
-        tmpProjPath('node_modules/@nrwl/angular_tmp'),
-        tmpProjPath('node_modules/@nrwl/angular')
+        tmpProjPath('node_modules/@nx/angular_tmp'),
+        tmpProjPath('node_modules/@nx/angular')
       );
     }, 120000);
   });
@@ -118,8 +117,8 @@ describe('Nx Commands', () => {
     const mylib = uniq('mylib');
 
     beforeAll(() => {
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      runCLI(`generate @nrwl/js:lib ${mylib}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
     });
 
     beforeEach(() => {
@@ -297,6 +296,8 @@ describe('migrate', () => {
             description: '1.1.0',
             factory: './run11',
           },
+        },
+        generators: {
           run20: {
             version: '2.0.0',
             description: '2.0.0',
@@ -309,6 +310,7 @@ describe('migrate', () => {
     updateFile(
       `./node_modules/migrate-parent-package/run11.js`,
       `
+        var angular_devkit_core1 = require("@angular-devkit/core");
         exports.default = function default_1() {
           return function(host) {
             host.create('file-11', 'content11')

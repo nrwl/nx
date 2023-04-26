@@ -39,7 +39,7 @@ interface NxInstallationConfiguration {
   version: string;
   /**
    * Record<pluginPackageName, pluginVersion>. e.g.
-   * plugins: { '@nrwl/angular': '1.0.0' }
+   * plugins: { '@nx/angular': '1.0.0' }
    */
   plugins?: Record<string, string>;
 }
@@ -56,13 +56,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   extends?: string;
   /**
    * Map of files to projects that implicitly depend on them
+   * @deprecated use {@link namedInputs} instead. For more information see https://nx.dev/deprecated/global-implicit-dependencies#global-implicit-dependencies
    */
   implicitDependencies?: ImplicitDependencyEntry<T>;
-  /**
-   * @deprecated use targetDefaults instead
-   * Dependencies between different target names across all projects
-   */
-  targetDependencies?: TargetDependencies;
   /**
    * Named inputs targets can refer to reduce duplication
    */
@@ -110,7 +106,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    *
    * ```
    * {
-   *   "@nrwl/react": {
+   *   "@nx/react": {
    *     "library": {
    *       "style": "scss"
    *     }

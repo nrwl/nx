@@ -139,9 +139,7 @@ exports[`Host App Generator --ssr should generate the correct files 6`] = `
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 7`] = `
-"const {
-  withModuleFederationForSSR,
-} = require('@nrwl/angular/module-federation');
+"const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederationForSSR(config);
 "
@@ -161,24 +159,24 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 9`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
     },
-    "production": Object {
+    "production": {
       "outputHashing": "media",
     },
   },
   "defaultConfiguration": "production",
-  "dependsOn": Array [
+  "dependsOn": [
     "build",
   ],
-  "executor": "@nrwl/angular:webpack-server",
-  "options": Object {
-    "customWebpackConfig": Object {
+  "executor": "@nx/angular:webpack-server",
+  "options": {
+    "customWebpackConfig": {
       "path": "apps/test/webpack.server.config.js",
     },
     "main": "apps/test/server.ts",
@@ -189,38 +187,38 @@ Object {
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 10`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
       "browserTarget": "test:build:development",
       "serverTarget": "test:server:development",
     },
-    "production": Object {
+    "production": {
       "browserTarget": "test:build:production",
       "serverTarget": "test:server:production",
     },
   },
   "defaultConfiguration": "development",
-  "executor": "@nrwl/angular:module-federation-dev-ssr",
+  "executor": "@nx/angular:module-federation-dev-ssr",
 }
 `;
 
 exports[`Host App Generator should generate a host app with a remote 1`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+"const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);
 "
 `;
 
 exports[`Host App Generator should generate a host app with a remote 2`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+"const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);
 "
 `;
 
 exports[`Host App Generator should generate a host app with no remotes 1`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+"const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);
 "

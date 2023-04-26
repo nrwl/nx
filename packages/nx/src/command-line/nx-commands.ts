@@ -2,14 +2,12 @@ import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as yargs from 'yargs';
-import { nxVersion } from '../utils/versions';
-import { examples } from './examples';
-import { workspaceRoot } from '../utils/workspace-root';
-import { getPackageManagerCommand } from '../utils/package-manager';
-import { writeJsonFile } from '../utils/fileutils';
-import { WatchArguments } from './watch';
 import { runNxSync } from '../utils/child-process';
-import { stripIndents } from '../utils/strip-indents';
+import { writeJsonFile } from '../utils/fileutils';
+import { getPackageManagerCommand } from '../utils/package-manager';
+import { workspaceRoot } from '../utils/workspace-root';
+import { examples } from './examples';
+import { WatchArguments } from './watch';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -150,40 +148,6 @@ export const commandsObject = yargs
       }),
   })
   .command({
-    command: 'affected:apps',
-    deprecated:
-      'Use `nx print-affected --type=app --select=projects` instead. This command will be removed in v15.',
-    describe: `Print applications affected by changes`,
-    builder: (yargs) =>
-      linkToNxDevAndExamples(
-        withAffectedOptions(withPlainOption(yargs)),
-        'affected:apps'
-      ),
-    handler: async (args) => {
-      await (await import('./affected')).affected('apps', { ...args });
-      process.exit(0);
-    },
-  })
-  .command({
-    command: 'affected:libs',
-    deprecated:
-      'Use `nx print-affected --type=lib --select=projects` instead. This command will be removed in v15.',
-    describe: 'Print libraries affected by changes',
-    builder: (yargs) =>
-      linkToNxDevAndExamples(
-        withAffectedOptions(withPlainOption(yargs)),
-        'affected:libs'
-      ),
-    handler: async (args) => {
-      await (
-        await import('./affected')
-      ).affected('libs', {
-        ...args,
-      });
-      process.exit(0);
-    },
-  })
-  .command({
     command: 'affected:graph',
     describe: 'Graph dependencies affected by changes',
     aliases: ['affected:dep-graph'],
@@ -263,21 +227,24 @@ export const commandsObject = yargs
   .command({
     command: 'workspace-lint [files..]',
     describe: 'Lint nx specific workspace files (nx.json, workspace.json)',
+    deprecated:
+      'workspace-lint is deprecated, and will be removed in v17. The checks it used to perform are no longer relevant.',
     handler: async () => {
       await (await import('./lint')).workspaceLint();
       process.exit(0);
     },
   })
-
+  /**
+   * @deprecated(v17): Remove `workspace-generator in v17. Use local plugins.
+   */
   .command({
-    command: 'workspace-generator [name]',
+    command: 'workspace-generator [generator]',
     describe: 'Runs a workspace generator from the tools/generators directory',
-    aliases: ['workspace-schematic [name]'],
+    deprecated:
+      'Use a local plugin instead. See: https://nx.dev/deprecated/workspace-generators',
+    aliases: ['workspace-schematic [generator]'],
     builder: async (yargs) =>
-      linkToNxDevAndExamples(
-        await withWorkspaceGeneratorOptions(yargs, process.argv.slice(3)),
-        'workspace-generator'
-      ),
+      linkToNxDevAndExamples(withGenerateOptions(yargs), 'workspace-generator'),
     handler: workspaceGeneratorHandler,
   })
   .command({
@@ -303,9 +270,11 @@ export const commandsObject = yargs
   })
   .command({
     command: 'init',
-    describe: 'Adds nx.json file and installs nx if not installed already',
-    handler: async () => {
-      await (await import('./init')).initHandler();
+    describe:
+      'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up distributed caching. For more info, check https://nx.dev/recipes/adopting-nx.',
+    builder: (yargs) => withInitOptions(yargs),
+    handler: async (args: any) => {
+      await (await import('./init')).initHandler(args);
       process.exit(0);
     },
   })
@@ -369,7 +338,7 @@ export const commandsObject = yargs
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
       }),
-    handler: async (args) =>
+    handler: async (args: yargs.ArgumentsCamelCase<{ verbose: boolean }>) =>
       process.exit(await (await import('./repair')).repair(args)),
   })
   .command({
@@ -470,18 +439,11 @@ function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     });
 }
 
-function withPlainOption(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('plain', {
-    describe: 'Produces a plain output for affected:apps and affected:libs',
-  });
-}
-
 function withExcludeOption(yargs: yargs.Argv): yargs.Argv {
   return yargs.option('exclude', {
     describe: 'Exclude certain projects from being processed',
     type: 'string',
     coerce: parseCSV,
-    default: '',
   });
 }
 
@@ -825,142 +787,11 @@ function withRunOneOptions(yargs: yargs.Argv) {
   }
 }
 
-type OptionArgumentDefinition = {
-  type: yargs.Options['type'];
-  describe?: string;
-  default?: any;
-  choices?: yargs.Options['type'][];
-  demandOption?: boolean;
-};
-
-type WorkspaceGeneratorProperties = {
-  [name: string]:
-    | {
-        type: yargs.Options['type'];
-        description?: string;
-        default?: any;
-        enum?: yargs.Options['type'][];
-        demandOption?: boolean;
-      }
-    | {
-        type: yargs.PositionalOptionsType;
-        description?: string;
-        default?: any;
-        enum?: yargs.PositionalOptionsType[];
-        $default: {
-          $source: 'argv';
-          index: number;
-        };
-      };
-};
-
-function isPositionalProperty(
-  property: WorkspaceGeneratorProperties[keyof WorkspaceGeneratorProperties]
-): property is { type: yargs.PositionalOptionsType } {
-  return property['$default']?.['$source'] === 'argv';
-}
-
-async function withWorkspaceGeneratorOptions(
-  yargs: yargs.Argv,
-  args: string[]
-) {
-  // filter out only positional arguments
-  args = args.filter((a) => !a.startsWith('-'));
-  if (args.length) {
-    // this is an actual workspace generator
-    return withCustomGeneratorOptions(yargs, args[0]);
-  } else {
-    yargs
-      .option('list-generators', {
-        describe: 'List the available workspace-generators',
-        type: 'boolean',
-      })
-      .positional('name', {
-        type: 'string',
-        describe: 'The name of your generator',
-      });
-    /**
-     * Don't require `name` if only listing available
-     * schematics
-     */
-    if ((await yargs.argv).listGenerators !== true) {
-      yargs.demandOption('name');
-    }
-    return yargs;
-  }
-}
-
-async function withCustomGeneratorOptions(
-  yargs: yargs.Argv,
-  generatorName: string
-) {
-  const schema = (
-    await import('./workspace-generators')
-  ).workspaceGeneratorSchema(generatorName);
-  const options = [];
-  const positionals = [];
-
-  Object.entries(
-    (schema.properties ?? {}) as WorkspaceGeneratorProperties
-  ).forEach(([name, prop]) => {
-    const option: { name: string; definition: OptionArgumentDefinition } = {
-      name,
-      definition: {
-        describe: prop.description,
-        type: prop.type,
-        default: prop.default,
-        choices: prop.enum,
-      },
-    };
-    if (schema.required && schema.required.includes(name)) {
-      option.definition.demandOption = true;
-    }
-    options.push(option);
-    if (isPositionalProperty(prop)) {
-      positionals.push({
-        name,
-        definition: {
-          describe: prop.description,
-          type: prop.type,
-          choices: prop.enum,
-        },
-      });
-    }
-  });
-
-  let command = generatorName;
-  positionals.forEach(({ name }) => {
-    command += ` [${name}]`;
-  });
-  if (options.length) {
-    command += ' (options)';
-  }
-
-  yargs
-    .command({
-      // this is the default and only command
-      command,
-      describe: schema.description || '',
-      builder: (y) => {
-        options.forEach(({ name, definition }) => {
-          y.option(name, definition);
-        });
-        positionals.forEach(({ name, definition }) => {
-          y.positional(name, definition);
-        });
-        return linkToNxDevAndExamples(y, 'workspace-generator');
-      },
-      handler: workspaceGeneratorHandler,
-    })
-    .fail(() => void 0); // no action is needed on failure as Nx will handle it based on schema validation
-
-  return yargs;
-}
-
-async function workspaceGeneratorHandler() {
-  await (
-    await import('./workspace-generators')
-  ).workspaceGenerators(process.argv.slice(3));
+/**
+ * @deprecated(v17): Remove `workspace-generator in v17. Use local plugins.
+ */
+async function workspaceGeneratorHandler(args: yargs.Arguments) {
+  await (await import('./workspace-generators')).workspaceGenerators(args);
   process.exit(0);
 }
 
@@ -1094,7 +925,10 @@ function parseCSV(args: string[] | string) {
   if (Array.isArray(args)) {
     return args;
   }
-  return args.split(',');
+  const items = args.split(',');
+  return items.map((i) =>
+    i.startsWith('"') && i.endsWith('"') ? i.slice(1, -1) : i
+  );
 }
 
 function linkToNxDevAndExamples(yargs: yargs.Argv, command: string) {
@@ -1116,6 +950,56 @@ function withListOptions(yargs) {
     type: 'string',
     description: 'The name of an installed plugin to query',
   });
+}
+
+function withInitOptions(yargs: yargs.Argv) {
+  // TODO(leo): make them visible in docs/help once the feature is released in Nx 16
+  return yargs
+    .options('nxCloud', {
+      type: 'boolean',
+      description: 'Set up distributed caching with Nx Cloud.',
+      hidden: true,
+    })
+    .option('interactive', {
+      describe: 'When false disables interactive input prompts for options.',
+      type: 'boolean',
+      default: true,
+      hidden: true,
+    })
+    .option('integrated', {
+      type: 'boolean',
+      description:
+        'Migrate to an Nx integrated layout workspace. Only for Angular CLI workspaces and CRA projects.',
+      default: false,
+      hidden: true,
+    })
+    .option('addE2e', {
+      describe:
+        'Set up Cypress E2E tests in integrated workspaces. Only for CRA projects.',
+      type: 'boolean',
+      default: false,
+      hidden: true,
+    })
+    .option('force', {
+      describe:
+        'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
+      type: 'boolean',
+      default: false,
+      hidden: true,
+    })
+    .options('vite', {
+      type: 'boolean',
+      description: 'Use Vite as the bundler. Only for CRA projects.',
+      default: true,
+      hidden: true,
+    })
+    .options('cacheable', {
+      type: 'string',
+      description:
+        'Comma-separated list of cacheable operations. Only used for internal testing.',
+      coerce: parseCSV,
+      hidden: true,
+    });
 }
 
 function runMigration() {

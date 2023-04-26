@@ -167,6 +167,17 @@ export class FsTree implements Tree {
   ): void {
     this.assertUnlocked();
     filePath = this.normalize(filePath);
+
+    // Remove any recorded changes where a parent directory has been
+    // deleted when writing a new file within the directory.
+    let parent = dirname(this.rp(filePath));
+    while (parent !== '.') {
+      if (this.recordedChanges[parent]?.isDeleted) {
+        delete this.recordedChanges[parent];
+      }
+      parent = dirname(parent);
+    }
+
     if (
       this.fsExists(this.rp(filePath)) &&
       Buffer.from(content).equals(this.fsReadFile(filePath))
@@ -175,6 +186,7 @@ export class FsTree implements Tree {
       delete this.recordedChanges[this.rp(filePath)];
       return;
     }
+
     try {
       this.recordedChanges[this.rp(filePath)] = {
         content: Buffer.from(content),

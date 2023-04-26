@@ -4,7 +4,7 @@ import {
   readJson,
   removeDependenciesFromPackageJson,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { WORKSPACE_PLUGIN_DIR } from '../../generators/workspace-rules-project/workspace-rules-project';
 import { typescriptESLintVersion } from '../../utils/versions';
 

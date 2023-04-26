@@ -1,8 +1,8 @@
 import {
   nxBaseCypressPreset,
   NxComponentTestingOptions,
-} from '@nrwl/cypress/plugins/cypress-preset';
-import type { CypressExecutorOptions } from '@nrwl/cypress/src/executors/cypress/cypress.impl';
+} from '@nx/cypress/plugins/cypress-preset';
+import type { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
 import {
   ExecutorContext,
   logger,
@@ -13,11 +13,11 @@ import {
   stripIndents,
   Target,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   createExecutorContext,
   getProjectConfigByPath,
-} from '@nrwl/cypress/src/utils/ct-helpers';
+} from '@nx/cypress/src/utils/ct-helpers';
 
 import type { Configuration } from 'webpack';
 type ViteDevServer = {
@@ -135,7 +135,7 @@ export function nxComponentTestingPreset(
 }
 
 /**
- * apply the schema.json defaults from the @nrwl/web:webpack executor to the target options
+ * apply the schema.json defaults from the @nx/web:webpack executor to the target options
  */
 function withSchemaDefaults(target: Target, context: ExecutorContext) {
   const options = readTargetOptions(target, context);
@@ -188,13 +188,13 @@ function buildTargetWebpack(
 
   const {
     normalizeOptions,
-  } = require('@nrwl/webpack/src/executors/webpack/lib/normalize-options');
+  } = require('@nx/webpack/src/executors/webpack/lib/normalize-options');
   const {
     resolveCustomWebpackConfig,
-  } = require('@nrwl/webpack/src/utils/webpack/custom-webpack');
+  } = require('@nx/webpack/src/utils/webpack/custom-webpack');
   const {
     getWebpackConfig,
-  } = require('@nrwl/webpack/src/executors/webpack/lib/get-webpack-config');
+  } = require('@nx/webpack/src/executors/webpack/lib/get-webpack-config');
 
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),
@@ -213,7 +213,7 @@ function buildTargetWebpack(
 
     return async () => {
       customWebpack = await customWebpack;
-      // TODO(jack): Once webpackConfig is always set in @nrwl/webpack:webpack, we no longer need this default.
+      // TODO(jack): Once webpackConfig is always set in @nx/webpack:webpack, we no longer need this default.
       const defaultWebpack = getWebpackConfig(context, {
         ...options,
         root: workspaceRoot,

@@ -1,4 +1,4 @@
-import { getProjects, readJson, Tree, updateJson } from '@nrwl/devkit';
+import { getProjects, readJson, Tree, updateJson } from '@nx/devkit';
 
 export default async function update(tree: Tree) {
   const packageJson = readJson(tree, 'package.json');

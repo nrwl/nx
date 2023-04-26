@@ -4,9 +4,13 @@ In Nx 13.10, we introduced the ability to run generators from Nx plugins in the 
 
 By using a "local" plugin, you can set the plugin as your workspace's default collection and get several other affordances that are not provided to workspace generators. This is the preferred method for "workspace generators", and existing generators will eventually be transitioned to use a local plugin.
 
-Check the [nx-plugin guide](/packages/nx-plugin) for information on creating a new plugin.
+Check the [nx-plugin guide](/packages/plugin) for information on creating a new plugin.
 
 ## Converting workspace generators to local generators
+
+{% callout type="info" %}
+When migrating to Nx 16, a new workspace plugin is automatically generated in the tools folder if you already have workspace-generators.
+{% /callout %}
 
 - If you don't already have a local plugin, use Nx to generate one:
 

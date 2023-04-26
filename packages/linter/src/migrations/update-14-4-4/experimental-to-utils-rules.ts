@@ -1,4 +1,4 @@
-import { formatFiles, Tree, visitNotIgnoredFiles } from '@nrwl/devkit';
+import { formatFiles, Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 
 function updateFile(fileAst: any, fileContents: string): string | undefined {

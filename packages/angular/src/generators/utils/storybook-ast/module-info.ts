@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   logger,
   normalizePath,
   stripIndents,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
+} from '@nx/devkit';
+import { findNodes } from '@nx/js';
 import { extname } from 'path';
 import type {
   ClassDeclaration,
@@ -15,7 +15,7 @@ import type {
 } from 'typescript';
 import { getDecoratorMetadata } from '../../../utils/nx-devkit/ast-utils';
 import type { EntryPoint } from './entry-point';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -191,7 +191,7 @@ function getDeclarationsArray(
 
   if (!declarationArray) {
     logger.warn(
-      stripIndents`No stories generated because the declarations in ${moduleFilePath} is not an array literal or the variable could not be found. Hint: you can always generate stories later with the 'nx generate @nrwl/angular:stories --name=${projectName}' command.`
+      stripIndents`No stories generated because the declarations in ${moduleFilePath} is not an array literal or the variable could not be found. Hint: you can always generate stories later with the 'nx generate @nx/angular:stories --name=${projectName}' command.`
     );
   }
 
@@ -358,7 +358,7 @@ function getNgModuleDeclarationsPropertyAssignment(
 
   if (!declarationsPropertyAssignment) {
     logger.warn(
-      stripIndents`No stories generated because there were no components declared in ${moduleFilePath}. Hint: you can always generate stories later with the 'nx generate @nrwl/angular:stories --name=${projectName}' command.`
+      stripIndents`No stories generated because there were no components declared in ${moduleFilePath}. Hint: you can always generate stories later with the 'nx generate @nx/angular:stories --name=${projectName}' command.`
     );
   }
 

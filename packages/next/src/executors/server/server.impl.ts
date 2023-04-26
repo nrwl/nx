@@ -5,7 +5,7 @@ import {
   parseTargetString,
   readTargetOptions,
   runExecutor,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import * as chalk from 'chalk';
 import { existsSync } from 'fs';
 import { join, resolve } from 'path';
@@ -13,11 +13,9 @@ import { join, resolve } from 'path';
 import {
   NextBuildBuilderOptions,
   NextServeBuilderOptions,
-  NextServer,
   NextServerOptions,
   ProxyConfig,
 } from '../../utils/types';
-import { customServer } from './lib/custom-server';
 import { defaultServer } from './lib/default-server';
 
 export default async function* serveExecutor(
@@ -43,14 +41,13 @@ export default async function* serveExecutor(
   if (options.customServerTarget) {
     yield* runCustomServer(root, options, buildOptions, context);
   } else {
-    yield* runNextDevServer(root, options, buildOptions, context);
+    yield* runNextDevServer(root, options, context);
   }
 }
 
 async function* runNextDevServer(
   root: string,
   options: NextServeBuilderOptions,
-  buildOptions: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
   const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
@@ -62,14 +59,7 @@ async function* runNextDevServer(
     port: options.port,
     customServer: !!options.customServerTarget,
     hostname: options.hostname || 'localhost',
-
-    // TOOD(jack): Remove in Nx 15
-    path: options.customServerPath,
   };
-
-  const server: NextServer = options.customServerPath
-    ? customServer
-    : defaultServer;
 
   // look for the proxy.conf.json
   let proxyConfig: ProxyConfig;
@@ -86,7 +76,7 @@ async function* runNextDevServer(
   }
 
   try {
-    await server(settings, proxyConfig);
+    await defaultServer(settings, proxyConfig);
     logger.info(`[ ${chalk.green('ready')} ] on ${baseUrl}`);
 
     yield {

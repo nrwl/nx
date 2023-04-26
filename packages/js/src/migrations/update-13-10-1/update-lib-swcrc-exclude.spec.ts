@@ -4,8 +4,8 @@ import {
   readJson,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateSwcRcExclude from './update-lib-swcrc-exclude';
 
 const projectConfig: ProjectConfiguration = {

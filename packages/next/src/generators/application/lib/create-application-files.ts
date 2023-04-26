@@ -1,6 +1,14 @@
 import { join } from 'path';
-import { generateFiles, names, toJS, Tree } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+import {
+  generateFiles,
+  joinPathFragments,
+  names,
+  readJson,
+  toJS,
+  Tree,
+  updateJson,
+} from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 
 import { NormalizedSchema } from './normalize-options';
 import {
@@ -12,6 +20,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const templateVariables = {
     ...names(options.name),
     ...options,
+    dot: '.',
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(
       host,
@@ -40,6 +49,13 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       join(options.appProjectRoot, 'app'),
       templateVariables
     );
+    host.delete(
+      joinPathFragments(
+        options.appProjectRoot,
+        'specs',
+        `index.spec.${options.js ? 'jsx' : 'tsx'}`
+      )
+    );
   } else {
     generateFiles(
       host,
@@ -47,6 +63,43 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       join(options.appProjectRoot, 'pages'),
       templateVariables
     );
+  }
+
+  if (options.rootProject) {
+    updateJson(host, 'tsconfig.base.json', (json) => {
+      const appJSON = readJson(host, 'tsconfig.json');
+
+      let { extends: _, ...updatedJson } = json;
+
+      // Don't generate the `paths` object or else workspace libs will not work later.
+      // It'll be generated as needed when a lib is first added.
+      delete json.compilerOptions.paths;
+
+      updatedJson = {
+        ...updateJson,
+        compilerOptions: {
+          ...updatedJson.compilerOptions,
+          ...appJSON.compilerOptions,
+        },
+        include: [
+          ...new Set([
+            ...(updatedJson.include || []),
+            ...(appJSON.include || []),
+          ]),
+        ],
+        exclude: [
+          ...new Set([
+            ...(updatedJson.exclude || []),
+            ...(appJSON.exclude || []),
+            '**e2e/**/*',
+            `dist/${options.name}/**/*`,
+          ]),
+        ],
+      };
+      return updatedJson;
+    });
+    host.delete('tsconfig.json');
+    host.rename('tsconfig.base.json', 'tsconfig.json');
   }
 
   if (options.unitTestRunner === 'none') {
@@ -60,9 +113,13 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   }
 
   if (options.styledModule) {
-    host.delete(
-      `${options.appProjectRoot}/pages/${options.fileName}.module.${options.style}`
-    );
+    if (options.appDir) {
+      host.delete(`${options.appProjectRoot}/app/page.module.${options.style}`);
+    } else {
+      host.delete(
+        `${options.appProjectRoot}/pages/${options.fileName}.module.${options.style}`
+      );
+    }
   }
 
   if (options.style !== 'styled-components') {

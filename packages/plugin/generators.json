@@ -1,0 +1,81 @@
+{
+  "name": "nx/plugin",
+  "version": "0.1",
+  "extends": ["@nx/workspace"],
+  "generators": {
+    "plugin": {
+      "factory": "./src/generators/plugin/plugin",
+      "schema": "./src/generators/plugin/schema.json",
+      "description": "Create a Nx Plugin."
+    },
+    "create-package": {
+      "factory": "./src/generators/create-package/create-package",
+      "schema": "./src/generators/create-package/schema.json",
+      "description": "Create a package which can be used by npx to create a new workspace"
+    },
+    "e2e-project": {
+      "factory": "./src/generators/e2e-project/e2e",
+      "schema": "./src/generators/e2e-project/schema.json",
+      "description": "Create a E2E application for a Nx Plugin."
+    },
+    "migration": {
+      "factory": "./src/generators/migration/migration",
+      "schema": "./src/generators/migration/schema.json",
+      "description": "Create a migration for an Nx Plugin."
+    },
+    "generator": {
+      "factory": "./src/generators/generator/generator",
+      "schema": "./src/generators/generator/schema.json",
+      "description": "Create a generator for an Nx Plugin."
+    },
+    "executor": {
+      "factory": "./src/generators/executor/executor",
+      "schema": "./src/generators/executor/schema.json",
+      "description": "Create an executor for an Nx Plugin."
+    },
+    "plugin-lint-checks": {
+      "factory": "./src/generators/lint-checks/generator",
+      "schema": "./src/generators/lint-checks/schema.json",
+      "description": "Adds linting configuration to validate common json files for nx plugins."
+    },
+    "preset": {
+      "factory": "./src/generators/preset/generator",
+      "schema": "./src/generators/preset/schema.json",
+      "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nrwl/nx-plugin`.",
+      "hidden": true,
+      "x-use-standalone-layout": true
+    }
+  },
+  "schematics": {
+    "plugin": {
+      "factory": "./src/generators/plugin/plugin#pluginSchematic",
+      "schema": "./src/generators/plugin/schema.json",
+      "description": "Create a Nx Plugin."
+    },
+    "create-package": {
+      "factory": "./src/generators/create-package/create-package#createPackageSchematic",
+      "schema": "./src/generators/create-package/schema.json",
+      "description": "Create a package which can be used by npx to create a new workspace"
+    },
+    "e2e-project": {
+      "factory": "./src/generators/e2e-project/e2e#e2eProjectSchematic",
+      "schema": "./src/generators/e2e-project/schema.json",
+      "description": "Create a E2E application for a Nx Plugin."
+    },
+    "migration": {
+      "factory": "./src/generators/migration/migration#migrationSchematic",
+      "schema": "./src/generators/migration/schema.json",
+      "description": "Create a migration for an Nx Plugin."
+    },
+    "generator": {
+      "factory": "./src/generators/generator/generator#generatorSchematic",
+      "schema": "./src/generators/generator/schema.json",
+      "description": "Create a generator for an Nx Plugin."
+    },
+    "executor": {
+      "factory": "./src/generators/executor/executor#executorSchematic",
+      "schema": "./src/generators/executor/schema.json",
+      "description": "Create an executor for an Nx Plugin."
+    }
+  }
+}

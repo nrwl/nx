@@ -1,7 +1,7 @@
 import { updateCypressVersionIf10 } from './update-cypress-version-if-10';
 import { installedCypressVersion } from '../../utils/cypress-version';
-import { readJson, Tree, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readJson, Tree, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('Update Cypress if v10 migration', () => {
   let tree: Tree;

@@ -11,7 +11,7 @@ import {
   readCachedProjectGraph,
   sharePackages,
   shareWorkspaceLibraries,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export async function getModuleFederationConfig(
   mfConfig: ModuleFederationConfig,
@@ -40,10 +40,10 @@ export async function getModuleFederationConfig(
 
   if (mfConfig.shared) {
     dependencies.workspaceLibraries = dependencies.workspaceLibraries.filter(
-      (lib) => mfConfig.shared(lib.importKey, {})
+      (lib) => mfConfig.shared(lib.importKey, {}) !== false
     );
-    dependencies.npmPackages = dependencies.npmPackages.filter((pkg) =>
-      mfConfig.shared(pkg, {})
+    dependencies.npmPackages = dependencies.npmPackages.filter(
+      (pkg) => mfConfig.shared(pkg, {}) !== false
     );
   }
 

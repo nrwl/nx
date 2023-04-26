@@ -1,5 +1,5 @@
-import type { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
-import { normalizePath, readJsonFile } from '@nrwl/devkit';
+import type { ExecutorContext, ProjectGraphProjectNode } from '@nx/devkit';
+import { normalizePath, readJsonFile } from '@nx/devkit';
 import {
   copySync,
   readdirSync,
@@ -36,7 +36,7 @@ export function handleInliningBuild(
 ): InlineProjectGraph {
   const tsConfigJson = readJsonFile(tsConfigPath);
   const pathAliases =
-    tsConfigJson['compilerOptions']['paths'] || readBasePathAliases(context);
+    tsConfigJson['compilerOptions']?.['paths'] || readBasePathAliases(context);
   const inlineGraph = createInlineGraph(context, options, pathAliases);
 
   if (isInlineGraphEmpty(inlineGraph)) {

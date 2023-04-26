@@ -13,6 +13,7 @@ import {
   satisfies,
   valid,
 } from 'semver';
+import { URL } from 'url';
 import { promisify } from 'util';
 import {
   MigrationsJson,
@@ -50,13 +51,14 @@ import { connectToNxCloudCommand } from './connect';
 import { output } from '../utils/output';
 import { messages, recordStat } from '../utils/ab-testing';
 import { nxVersion } from '../utils/versions';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { workspaceRoot } from '../utils/workspace-root';
 import { isCI } from '../utils/is-ci';
 import { getNxRequirePaths } from '../utils/installation-directory';
 import { readNxJson } from '../config/configuration';
 import { runNxSync } from '../utils/child-process';
 import { daemonClient } from '../daemon/client/client';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -610,8 +612,7 @@ const LEGACY_NRWL_PACKAGE_GROUP: ArrayPackageGroup = [
   { package: '@nrwl/storybook', version: '*' },
   { package: '@nrwl/web', version: '*' },
   { package: '@nrwl/js', version: '*' },
-  { package: '@nrwl/cli', version: '*' },
-  { package: '@nrwl/nx-cloud', version: 'latest' },
+  { package: 'nx-cloud', version: 'latest' },
   { package: '@nrwl/react-native', version: '*' },
   { package: '@nrwl/detox', version: '*' },
   { package: '@nrwl/expo', version: '*' },
@@ -875,7 +876,7 @@ function createFetcher() {
     migrations = fetchMigrations(packageName, packageVersion, setCache).then(
       (result) => {
         if (result.schematics) {
-          result.generators = result.schematics;
+          result.generators = { ...result.schematics, ...result.generators };
           delete result.schematics;
         }
         resolvedVersion = result.version;
@@ -904,12 +905,14 @@ async function getPackageMigrationsUsingRegistry(
 
   if (!migrationsConfig) {
     return {
+      name: packageName,
       version: packageVersion,
     };
   }
 
   if (!migrationsConfig.migrations) {
     return {
+      name: packageName,
       version: packageVersion,
       packageGroup: migrationsConfig.packageGroup,
     };
@@ -932,14 +935,33 @@ async function getPackageMigrationsConfigFromRegistry(
   const result = await packageRegistryView(
     packageName,
     packageVersion,
-    'nx-migrations ng-update --json'
+    'nx-migrations ng-update dist --json'
   );
 
   if (!result) {
     return null;
   }
 
-  return readNxMigrateConfig(JSON.parse(result));
+  const json = JSON.parse(result);
+
+  if (!json['nx-migrations'] && !json['ng-update']) {
+    const registry = new URL('dist' in json ? json.dist.tarball : json.tarball)
+      .hostname;
+
+    // Registries other than npmjs and the local registry may not support full metadata via npm view
+    // so throw error so that fetcher falls back to getting config via install
+    if (
+      !['registry.npmjs.org', 'localhost', 'artifactory'].some((v) =>
+        registry.includes(v)
+      )
+    ) {
+      throw new Error(
+        `Getting migration config from registry is not supported from ${registry}`
+      );
+    }
+  }
+
+  return readNxMigrateConfig(json);
 }
 
 async function downloadPackageMigrationsFromRegistry(
@@ -1146,6 +1168,8 @@ function readNxVersion(packageJson: PackageJson) {
   return (
     packageJson?.devDependencies?.['nx'] ??
     packageJson?.dependencies?.['nx'] ??
+    packageJson?.devDependencies?.['@nx/workspace'] ??
+    packageJson?.dependencies?.['@nx/workspace'] ??
     packageJson?.devDependencies?.['@nrwl/workspace'] ??
     packageJson?.dependencies?.['@nrwl/workspace']
   );
@@ -1169,7 +1193,8 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       if (
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
-        !isCI()
+        !isCI() &&
+        !isNxCloudUsed()
       ) {
         const useCloud = await connectToNxCloudCommand(
           messages.getPromptMessage('nxCloudMigration')
@@ -1322,16 +1347,19 @@ export async function executeMigrations(
 
   const migrationsWithNoChanges: typeof migrations = [];
 
-  let ngCliAdapter: typeof import('../adapter/ngcli-adapter');
-  if (migrations.some((m) => m.cli !== 'nx')) {
-    ngCliAdapter = await import('../adapter/ngcli-adapter');
-    require('../adapter/compat');
-  }
-
   for (const m of migrations) {
     try {
-      if (m.cli === 'nx') {
-        const changes = await runNxMigration(root, m.package, m.name);
+      const { collection, collectionPath } = readMigrationCollection(
+        m.package,
+        root
+      );
+      if (!isAngularMigration(collection, collectionPath, m.name)) {
+        const changes = await runNxMigration(
+          root,
+          collectionPath,
+          collection,
+          m.name
+        );
 
         if (changes.length < 1) {
           migrationsWithNoChanges.push(m);
@@ -1343,6 +1371,7 @@ export async function executeMigrations(
         logger.info(`  ${m.description}\n`);
         printChanges(changes, '  ');
       } else {
+        const ngCliAdapter = await getNgCompatLayer();
         const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
           root,
           m.package,
@@ -1508,36 +1537,18 @@ function getLatestCommitSha(): string | null {
   }
 }
 
-async function runNxMigration(root: string, packageName: string, name: string) {
-  const collectionPath = readPackageMigrationConfig(
-    packageName,
-    root
-  ).migrations;
-
-  const collection = readJsonFile<MigrationsJson>(collectionPath);
-  const g = collection.generators || collection.schematics;
-  if (!g[name]) {
-    const source = collection.generators ? 'generators' : 'schematics';
-    throw new Error(
-      `Unable to determine implementation path for "${collectionPath}:${name}" using collection.${source}`
-    );
-  }
-  const implRelativePath = g[name].implementation || g[name].factory;
-
-  let implPath: string;
-
-  try {
-    implPath = require.resolve(implRelativePath, {
-      paths: [dirname(collectionPath)],
-    });
-  } catch (e) {
-    // workaround for a bug in node 12
-    implPath = require.resolve(
-      `${dirname(collectionPath)}/${implRelativePath}`
-    );
-  }
-
-  const fn = require(implPath).default;
+async function runNxMigration(
+  root: string,
+  collectionPath: string,
+  collection: MigrationsJson,
+  name: string
+) {
+  const { path: implPath, fnSymbol } = getImplementationPath(
+    collection,
+    collectionPath,
+    name
+  );
+  const fn = require(implPath)[fnSymbol];
   const host = new FsTree(root, false);
   await fn(host, {});
   host.lock();
@@ -1573,3 +1584,124 @@ export async function migrate(
     }
   });
 }
+
+function readMigrationCollection(packageName: string, root: string) {
+  const collectionPath = readPackageMigrationConfig(
+    packageName,
+    root
+  ).migrations;
+  const collection = readJsonFile<MigrationsJson>(collectionPath);
+  collection.name ??= packageName;
+  return {
+    collection,
+    collectionPath,
+  };
+}
+
+function getImplementationPath(
+  collection: MigrationsJson,
+  collectionPath: string,
+  name: string
+): { path: string; fnSymbol: string } {
+  const g = collection.generators?.[name] || collection.schematics?.[name];
+  if (!g) {
+    throw new Error(
+      `Unable to determine implementation path for "${collectionPath}:${name}"`
+    );
+  }
+  const implRelativePathAndMaybeSymbol = g.implementation || g.factory;
+  const [implRelativePath, fnSymbol = 'default'] =
+    implRelativePathAndMaybeSymbol.split('#');
+
+  let implPath: string;
+
+  try {
+    implPath = require.resolve(implRelativePath, {
+      paths: [dirname(collectionPath)],
+    });
+  } catch (e) {
+    // workaround for a bug in node 12
+    implPath = require.resolve(
+      `${dirname(collectionPath)}/${implRelativePath}`
+    );
+  }
+
+  return { path: implPath, fnSymbol };
+}
+
+// TODO (v17): This should just become something like:
+// ```
+// return !collection.generators[name] && collection.schematics[name]
+// ```
+function isAngularMigration(
+  collection: MigrationsJson,
+  collectionPath: string,
+  name: string
+) {
+  const entry = collection.generators?.[name] || collection.schematics?.[name];
+
+  // In the future we will determine this based on the location of the entry in the collection.
+  // If the entry is under `schematics`, it will be assumed to be an angular cli migration.
+  // If the entry is under `generators`, it will be assumed to be an nx migration.
+  // For now, we will continue to obey the cli property, if it exists.
+  // If it doesn't exist, we will check if the implementation references @angular/devkit.
+  const shouldBeNx = !!collection.generators?.[name];
+  const shouldBeNg = !!collection.schematics?.[name];
+  let useAngularDevkitToRunMigration = false;
+
+  const { path: implementationPath } = getImplementationPath(
+    collection,
+    collectionPath,
+    name
+  );
+  const implStringContents = readFileSync(implementationPath, 'utf-8');
+  // TODO (v17): Remove this check and the cli property access - it is only here for backwards compatibility.
+  if (
+    ['@angular/material', '@angular/cdk'].includes(collection.name) ||
+    [
+      "import('@angular-devkit",
+      'import("@angular-devkit',
+      "require('@angular-devkit",
+      'require("@angular-devkit',
+      "from '@angular-devkit",
+      'from "@angular-devkit',
+    ].some((s) => implStringContents.includes(s))
+  ) {
+    useAngularDevkitToRunMigration = true;
+  }
+
+  if (useAngularDevkitToRunMigration && shouldBeNx) {
+    output.warn({
+      title: `The migration '${collection.name}:${name}' appears to be an Angular CLI migration, but is located in the 'generators' section of migrations.json.`,
+      bodyLines: [
+        'In Nx 17, migrations inside `generators` will be treated as Angular Devkit migrations.',
+        "Please open an issue on the plugin's repository if you believe this is an error.",
+      ],
+    });
+  }
+
+  if (!useAngularDevkitToRunMigration && entry.cli === 'nx' && shouldBeNg) {
+    output.warn({
+      title: `The migration '${collection.name}:${name}' appears to be an Nx migration, but is located in the 'schematics' section of migrations.json.`,
+      bodyLines: [
+        'In Nx 17, migrations inside `generators` will be treated as nx devkit migrations.',
+        "Please open an issue on the plugin's repository if you believe this is an error.",
+      ],
+    });
+  }
+
+  // Currently, if the cli property exists we listen to it. If its nx, its not an ng cli migration.
+  // If the property is not set, we will fall back to our intuition.
+  return entry.cli ? entry.cli !== 'nx' : useAngularDevkitToRunMigration;
+}
+
+const getNgCompatLayer = (() => {
+  let _ngCliAdapter: typeof import('../adapter/ngcli-adapter');
+  return async function getNgCompatLayer() {
+    if (!_ngCliAdapter) {
+      _ngCliAdapter = await import('../adapter/ngcli-adapter');
+      require('../adapter/compat');
+    }
+    return _ngCliAdapter;
+  };
+})();

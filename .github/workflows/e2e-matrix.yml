@@ -39,10 +39,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install PNPM
+        run: |
+          npm install -g @pnpm/exe@8.3.1
+
       - name: Set node
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
+          cache: 'pnpm'
 
       - name: Cache node_modules
         id: cache-modules
@@ -50,11 +55,11 @@ jobs:
         with:
           lookup-only: true
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+        run: pnpm install --frozen-lockfile
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -102,10 +107,8 @@ jobs:
           - yarn
           - pnpm
         project:
-          - e2e-add-nx-to-monorepo
           - e2e-angular-core
           - e2e-angular-extensions
-          - e2e-cra-to-nx
           - e2e-cypress
           - e2e-detox
           - e2e-esbuild
@@ -114,14 +117,14 @@ jobs:
           - e2e-js
           - e2e-lerna-smoke-tests
           - e2e-linter
-          - e2e-make-angular-cli-faster
           - e2e-next
           - e2e-node
           - e2e-nx-init
           - e2e-nx-misc
           - e2e-nx-plugin
           - e2e-nx-run
-          - e2e-react
+          - e2e-react-core
+          - e2e-react-extensions
           - e2e-react-native
           - e2e-web
           - e2e-rollup
@@ -143,14 +146,10 @@ jobs:
           - os: macos-latest
             os_timeout: 90
           # codeowner groups
-          - project: e2e-add-nx-to-monorepo
-            codeowners: 'S04SYHYKGNP'
           - project: e2e-angular-core
             codeowners: 'S04SS457V38'
           - project: e2e-angular-extensions
             codeowners: 'S04SS457V38'
-          - project: e2e-cra-to-nx
-            codeowners: 'S04TNCNJG5N'
           - project: e2e-cypress
             codeowners: 'S04T16BTJJY'
           - project: e2e-detox
@@ -167,8 +166,6 @@ jobs:
             codeowners: 'S04TNCVEETS'
           - project: e2e-linter
             codeowners: 'S04SYJGKSCT'
-          - project: e2e-make-angular-cli-faster
-            codeowners: 'S04SS457V38'
           - project: e2e-next
             codeowners: 'S04TNCNJG5N'
           - project: e2e-node
@@ -181,7 +178,9 @@ jobs:
             codeowners: 'S04SYHYKGNP'
           - project: e2e-nx-run
             codeowners: 'S04SYHYKGNP'
-          - project: e2e-react
+          - project: e2e-react-core
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-react-extensions
             codeowners: 'S04TNCNJG5N'
           - project: e2e-react-native
             codeowners: 'S04TNCNJG5N'
@@ -211,13 +210,9 @@ jobs:
             project: e2e-expo
           # exclude non-CNW/Lerna tests from non-LTS node versions
           - node_version: 16
-            project: e2e-add-nx-to-monorepo
-          - node_version: 16
             project: e2e-angular-core
           - node_version: 16
             project: e2e-angular-extensions
-          - node_version: 16
-            project: e2e-cra-to-nx
           - node_version: 16
             project: e2e-cypress
           - node_version: 16
@@ -233,8 +228,6 @@ jobs:
           - node_version: 16
             project: e2e-linter
           - node_version: 16
-            project: e2e-make-angular-cli-faster
-          - node_version: 16
             project: e2e-next
           - node_version: 16
             project: e2e-node
@@ -247,7 +240,9 @@ jobs:
           - node_version: 16
             project: e2e-lerna-smoke-tests
           - node_version: 16
-            project: e2e-react
+            project: e2e-react-core
+          - node_version: 16
+            project: e2e-react-extensions
           - node_version: 16
             project: e2e-react-native
           - node_version: 16
@@ -263,13 +258,9 @@ jobs:
           - node_version: 16
             project: e2e-webpack
           - node_version: 19
-            project: e2e-add-nx-to-monorepo
-          - node_version: 19
             project: e2e-angular-core
           - node_version: 19
             project: e2e-angular-extensions
-          - node_version: 19
-            project: e2e-cra-to-nx
           - node_version: 19
             project: e2e-cypress
           - node_version: 19
@@ -285,8 +276,6 @@ jobs:
           - node_version: 19
             project: e2e-linter
           - node_version: 19
-            project: e2e-make-angular-cli-faster
-          - node_version: 19
             project: e2e-next
           - node_version: 19
             project: e2e-node
@@ -299,7 +288,9 @@ jobs:
           - node_version: 19
             project: e2e-lerna-smoke-tests
           - node_version: 19
-            project: e2e-react
+            project: e2e-react-core
+          - node_version: 19
+            project: e2e-react-extensions
           - node_version: 19
             project: e2e-react-native
           - node_version: 19
@@ -334,15 +325,14 @@ jobs:
         run: mkdir -p outputs
 
       - name: Install PNPM
-        if: ${{ matrix.package_manager == 'pnpm' }}
-        uses: pnpm/action-setup@v2
-        with:
-          version: 7.30.5
+        run: |
+          npm install -g @pnpm/exe@8.3.1
 
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
+          cache: 'pnpm'
           registry-url: http://localhost:4872
 
       - name: Cache node_modules
@@ -350,11 +340,10 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
 
       - name: Install packages
-        if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+        run: pnpm install --frozen-lockfile
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -405,9 +394,14 @@ jobs:
           git config --global user.email test@test.com
           git config --global user.name "Test Test"
 
+      - name: Set starting timestamp
+        id: before-e2e
+        run: |
+          echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
+
       - name: Run e2e tests
         id: e2e-run
-        run: yarn nx run-many --target=e2e --projects="${{ join(matrix.project) }}" --parallel=1
+        run: yarn nx run-many -t e2e,e2e-macos -p ${{ matrix.project }}
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
           GIT_AUTHOR_EMAIL: test@test.com
@@ -428,10 +422,14 @@ jobs:
       - name: Save matrix config in file
         if: ${{ always() }}
         id: save-matrix
+        shell: bash
         run: |
+          before=${{ steps.before-e2e.outputs.timestamp }}
+          now=$(date +%s)
+          delta=$(($now - $before))
           matrix=$((
             echo '${{ toJSON(matrix) }}'
-          ) | jq -c '. + { "status": "${{ steps.e2e-run.outcome}}" }')
+          ) | jq --argjson delta $delta -c '. + { "status": "${{ steps.e2e-run.outcome}}", "duration": $delta }')
           echo "$matrix" > matrix
           path=outputs/${{ matrix.os_name}}-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
           echo "path=$path" >> $GITHUB_OUTPUT
@@ -455,6 +453,8 @@ jobs:
     needs: e2e
     outputs:
       message: ${{ steps.process-json.outputs.SLACK_MESSAGE }}
+      proj-duration: ${{ steps.process-json.outputs.SLACK_PROJ_DURATION }}
+      pm-duration: ${{ steps.process-json.outputs.SLACK_PM_DURATION }}
       codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
     steps:
       - name: Load outputs
@@ -486,7 +486,11 @@ jobs:
             });
             core.setOutput('CODEOWNERS', Array.from(codeowners).join(','));
 
-            // message
+            function trimSpace(res) {
+              return res.split('\n').map((l) => l.trim()).join('\n');
+            }
+
+            // failed message
             let lastProject;
             let result = `
               \`\`\`
@@ -498,8 +502,105 @@ jobs:
               lastProject = matrix.project;
             });
             result += `\`\`\``;
-            const message = result.split('\n').map(l => l.trim()).join('\n');
-            core.setOutput('SLACK_MESSAGE', message);
+            core.setOutput('SLACK_MESSAGE', trimSpace(result));
+
+            function humanizeDuration(num) {
+              let res = '';
+              const hours = Math.floor(num / 3600);
+              if (hours) {
+                res += `${hours}h `;
+              }
+              const mins = Math.floor((num % 3600) / 60);
+              if (mins) {
+                res += `${mins}m `;
+              }
+              const sec = num % 60;
+              if (sec) {
+                res += `${sec}s`
+              }
+              return res;
+            }
+
+            // duration message
+            const timeReport = {};
+            const pmReport = {
+              npm: 0,
+              yarn: 0,
+              pnpm: 0
+            };
+            const macosProjects = ['e2e-detox', 'e2e-expo', 'e2e-react-native'];
+            combined.forEach((matrix) => {
+              if (matrix.os_name === 'Linux' && matrix.node_version === 18) {
+                pmReport[matrix.package_manager] += matrix.duration;
+              }
+              if (matrix.os_name === 'Linux' || macosProjects.includes(matrix.project)) {
+                if (timeReport[matrix.project]) {
+                  if (matrix.duration > timeReport[matrix.project].max) {
+                    timeReport[matrix.project].max = matrix.duration;
+                    timeReport[
+                      matrix.project
+                    ].maxEnv = `${matrix.os_name}, ${matrix.package_manager}`;
+                  }
+                  if (matrix.duration < timeReport[matrix.project].min) {
+                    timeReport[matrix.project].min = matrix.duration;
+                    timeReport[
+                      matrix.project
+                    ].minEnv = `${matrix.os_name}, ${matrix.package_manager}`;
+                  }
+                } else {
+                  timeReport[matrix.project] = {
+                    min: matrix.duration,
+                    max: matrix.duration,
+                    minEnv: `${matrix.os_name}, ${matrix.package_manager}`,
+                    maxEnv: `${matrix.os_name}, ${matrix.package_manager}`,
+                  };
+                }
+              }
+            });
+
+            // project time report
+            let resultPkg = `
+                \`\`\`
+                | Project                        | Time                      |
+                |--------------------------------|---------------------------|`;
+            function mapProjectTime(proj, section) {
+              let res = '';
+              res += `${humanizeDuration(timeReport[proj][section])}`;
+              res += ` (${timeReport[proj][section + 'Env']})`
+              return res;
+            }
+            function durationIcon(proj, section) {
+              if (timeReport[proj][section] < 12 * 60) {
+                return `${section} ✅`;
+              }
+              if (timeReport[proj][section] < 15 * 60) {
+                return `${section} ❗`;
+              }
+              return `${section} ❌`;
+            }
+            Object.keys(timeReport).forEach(proj => {
+              resultPkg += `\n| ${proj.padEnd(30)} |                           |`;
+              resultPkg += `\n| ${durationIcon(proj, 'min').padStart(29)} | ${mapProjectTime(proj, 'min').padEnd(25)} |`;
+              resultPkg += `\n| ${durationIcon(proj, 'max').padStart(29)} | ${mapProjectTime(proj, 'max').padEnd(25)} |`;
+            });
+            resultPkg += `\`\`\``;
+            core.setOutput('SLACK_PROJ_DURATION', trimSpace(resultPkg));
+
+            // Print project duration report inline to allow reviewing on manual runs (when no slack message will be sent)
+            console.log(trimSpace(resultPkg));
+
+            let resultPm = `
+                \`\`\`
+                | PM   | Total time  |
+                |------|-------------|`;
+            Object.keys(pmReport).forEach(pm => {
+              resultPm += `\n| ${pm.padEnd(4)} | ${humanizeDuration(pmReport[pm]).padEnd(11)} |`
+            });
+            resultPm += `\`\`\``;
+            core.setOutput('SLACK_PM_DURATION', trimSpace(resultPm));
+
+            // Print package manager duration report inline to allow reviewing on manual runs (when no slack message will be sent)
+            console.log(trimSpace(resultPm));
 
   report-failure:
     if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
@@ -531,5 +632,35 @@ jobs:
           message_format: '{emoji} Workflow has {status_message}'
           notification_title: '{workflow}'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
+  report-pm-time:
+    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: process-result
+    runs-on: ubuntu-latest
+    name: Report duration per package manager
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: 'skipped'
+          message_format: '${{ needs.process-result.outputs.pm-duration }}'
+          notification_title: 'Total duration per package manager (ubuntu only)'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
+  report-proj-time:
+    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: process-result
+    runs-on: ubuntu-latest
+    name: Report duration per package manager
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: 'skipped'
+          message_format: '${{ needs.process-result.outputs.proj-duration }}'
+          notification_title: 'E2E Project duration stats'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}

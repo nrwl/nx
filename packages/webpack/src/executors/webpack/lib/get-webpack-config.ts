@@ -1,5 +1,5 @@
 import type { Configuration } from 'webpack';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 
 import { NormalizedWebpackExecutorOptions } from '../schema';
 import { withNx } from '../../../utils/with-nx';

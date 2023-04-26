@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`convert-tslint-to-eslint should work for Cypress applications 1`] = `
-Object {
-  "dependencies": Object {},
-  "devDependencies": Object {
-    "@nrwl/eslint-plugin-nx": "0.0.1",
-    "@nrwl/linter": "0.0.1",
-    "@typescript-eslint/eslint-plugin": "^5.36.1",
-    "@typescript-eslint/parser": "^5.36.1",
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@nx/eslint-plugin": "0.0.1",
+    "@nx/linter": "0.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
     "eslint": "~8.15.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-cypress": "^2.10.3",
@@ -18,20 +18,20 @@ Object {
 `;
 
 exports[`convert-tslint-to-eslint should work for Cypress applications 2`] = `
-Object {
+{
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "e2e-app-1",
   "projectType": "application",
   "root": "apps/e2e-app-1",
-  "targets": Object {
-    "lint": Object {
-      "executor": "@nrwl/linter:eslint",
-      "options": Object {
-        "lintFilePatterns": Array [
+  "targets": {
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
           "apps/e2e-app-1/**/*.{js,ts}",
         ],
       },
-      "outputs": Array [
+      "outputs": [
         "{options.outputFile}",
       ],
     },
@@ -40,35 +40,35 @@ Object {
 `;
 
 exports[`convert-tslint-to-eslint should work for Cypress applications 3`] = `
-Object {
-  "ignorePatterns": Array [
+{
+  "ignorePatterns": [
     "**/*",
   ],
-  "overrides": Array [
-    Object {
-      "files": Array [
+  "overrides": [
+    {
+      "files": [
         "*.ts",
         "*.tsx",
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {
-        "@nrwl/nx/enforce-module-boundaries": Array [
+      "rules": {
+        "@nx/enforce-module-boundaries": [
           "error",
-          Object {
-            "allow": Array [
+          {
+            "allow": [
               "@nx-example/shared/product/data/testing",
             ],
-            "depConstraints": Array [
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+            "depConstraints": [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:feature",
                   "type:ui",
                 ],
                 "sourceTag": "type:app",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:ui",
                   "type:data",
                   "type:types",
@@ -76,48 +76,48 @@ Object {
                 ],
                 "sourceTag": "type:feature",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                 ],
                 "sourceTag": "type:types",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:state",
                   "type:types",
                   "type:data",
                 ],
                 "sourceTag": "type:state",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                 ],
                 "sourceTag": "type:data",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:e2e-utils",
                 ],
                 "sourceTag": "type:e2e",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                   "type:ui",
                 ],
                 "sourceTag": "type:ui",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "scope:products",
                   "scope:shared",
                 ],
                 "sourceTag": "scope:products",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "scope:cart",
                   "scope:shared",
                 ],
@@ -129,49 +129,49 @@ Object {
         ],
       },
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/typescript",
+    {
+      "extends": [
+        "plugin:@nx/typescript",
       ],
-      "files": Array [
+      "files": [
         "*.ts",
         "*.tsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/javascript",
+    {
+      "extends": [
+        "plugin:@nx/javascript",
       ],
-      "files": Array [
+      "files": [
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.ts",
       ],
-      "plugins": Array [
+      "plugins": [
         "eslint-plugin-import",
         "@typescript-eslint",
       ],
       "root": true,
-      "rules": Object {
+      "rules": {
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/dot-notation": "off",
-        "@typescript-eslint/explicit-member-accessibility": Array [
+        "@typescript-eslint/explicit-member-accessibility": [
           "off",
-          Object {
+          {
             "accessibility": "explicit",
           },
         ],
         "@typescript-eslint/member-ordering": "error",
-        "@typescript-eslint/naming-convention": Array [
+        "@typescript-eslint/naming-convention": [
           "error",
-          Object {
-            "format": Array [
+          {
+            "format": [
               "camelCase",
               "UPPER_CASE",
             ],
@@ -182,17 +182,17 @@ Object {
         ],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-interface": "error",
-        "@typescript-eslint/no-inferrable-types": Array [
+        "@typescript-eslint/no-inferrable-types": [
           "error",
-          Object {
+          {
             "ignoreParameters": true,
           },
         ],
         "@typescript-eslint/no-misused-new": "error",
         "@typescript-eslint/no-non-null-assertion": "error",
-        "@typescript-eslint/no-shadow": Array [
+        "@typescript-eslint/no-shadow": [
           "error",
-          Object {
+          {
             "hoist": "all",
           },
         ],
@@ -202,7 +202,7 @@ Object {
         "arrow-body-style": "error",
         "constructor-super": "error",
         "dot-notation": "off",
-        "eqeqeq": Array [
+        "eqeqeq": [
           "error",
           "smart",
         ],
@@ -212,9 +212,9 @@ Object {
         "import/no-deprecated": "warn",
         "no-bitwise": "error",
         "no-caller": "error",
-        "no-console": Array [
+        "no-console": [
           "error",
-          Object {},
+          {},
         ],
         "no-debugger": "error",
         "no-empty": "off",
@@ -222,7 +222,7 @@ Object {
         "no-eval": "error",
         "no-fallthrough": "error",
         "no-new-wrappers": "error",
-        "no-restricted-imports": Array [
+        "no-restricted-imports": [
           "error",
           "rxjs/Rx",
         ],
@@ -237,37 +237,37 @@ Object {
       },
     },
   ],
-  "plugins": Array [
-    "@nrwl/nx",
+  "plugins": [
+    "@nx",
   ],
   "root": true,
 }
 `;
 
 exports[`convert-tslint-to-eslint should work for Cypress applications 4`] = `
-Object {
-  "extends": Array [
+{
+  "extends": [
     "plugin:cypress/recommended",
     "../../.eslintrc.json",
   ],
-  "ignorePatterns": Array [
+  "ignorePatterns": [
     "!**/*",
   ],
-  "overrides": Array [
-    Object {
-      "files": Array [
+  "overrides": [
+    {
+      "files": [
         "*.ts",
         "*.tsx",
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
   ],
-  "plugins": Array [
+  "plugins": [
     "@typescript-eslint",
   ],
-  "rules": Object {
+  "rules": {
     "@typescript-eslint/no-empty-interface": "error",
   },
 }

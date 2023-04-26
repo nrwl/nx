@@ -1,12 +1,12 @@
-import { assertValidStyle } from '@nrwl/react/src/utils/assertion';
+import { assertValidStyle } from '@nx/react/src/utils/assertion';
 import {
   extractLayoutDirectory,
   getWorkspaceLayout,
   joinPathFragments,
   names,
   Tree,
-} from '@nrwl/devkit';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { Linter } from '@nx/linter';
 
 import { Schema } from '../schema';
 
@@ -36,10 +36,15 @@ export function normalizeOptions(
   const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
-  const e2eProjectName = `${appProjectName}-e2e`;
+  const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
 
-  const appProjectRoot = joinPathFragments(appsDir, appDirectory);
-  const e2eProjectRoot = joinPathFragments(appsDir, `${appDirectory}-e2e`);
+  const appProjectRoot = options.rootProject
+    ? '.'
+    : joinPathFragments(appsDir, appDirectory);
+
+  const e2eProjectRoot = options.rootProject
+    ? '.'
+    : joinPathFragments(appsDir, `${appDirectory}-e2e`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

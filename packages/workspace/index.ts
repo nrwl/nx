@@ -7,7 +7,7 @@ export {
   createDirectory,
 } from './src/utilities/fileutils';
 
-export { names } from '@nrwl/devkit';
+export { names } from '@nx/devkit';
 
 export { output } from './src/utilities/output';
 
@@ -16,9 +16,6 @@ export {
   readPackageJson,
 } from 'nx/src/project-graph/file-utils';
 export { ProjectGraphCache } from 'nx/src/project-graph/nx-deps-cache';
-export {
-  findNodes, // TODO(v16): remove this
-} from './src/utils/ast-utils';
 
 export {
   getWorkspacePath,
@@ -37,7 +34,6 @@ export { Linter } from './src/utils/lint';
 export { addInstallTask } from './src/utils/rules/add-install-task';
 export { formatFiles } from './src/utils/rules/format-files';
 export { deleteFile } from './src/utils/rules/deleteFile';
-export * from './src/utils/rules/ng-add';
 
 export { visitNotIgnoredFiles } from './src/utils/rules/visit-not-ignored-files';
 import * as strings from './src/utils/strings';
@@ -45,7 +41,6 @@ import * as strings from './src/utils/strings';
 // TODO(v17): Remove this export.
 export { checkAndCleanWithSemver } from './src/utils/version-utils';
 
-export { libraryGenerator } from './src/generators/library/library';
 export { moveGenerator } from './src/generators/move/move';
 export { removeGenerator } from './src/generators/remove/remove';
 export { runCommandsGenerator } from './src/generators/run-commands/run-commands';

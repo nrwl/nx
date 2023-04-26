@@ -7,17 +7,22 @@ import { commandsObject } from '../src/command-line/nx-commands';
 import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
 import { stripIndents } from '../src/utils/strip-indents';
 
+import * as Mod from 'module';
+
 /**
  * Nx is being run inside a workspace.
  *
  * @param workspace Relevant local workspace properties
  */
-process.env.NX_CLI_SET = 'true';
 
 export function initLocal(workspace: WorkspaceTypeAndRoot) {
+  process.env.NX_CLI_SET = 'true';
+
   try {
     performance.mark('init-local');
     require('nx/src/utils/perf-logging');
+
+    monkeyPatchRequire();
 
     if (workspace.type !== 'nx' && shouldDelegateToAngularCLI()) {
       console.warn(
@@ -216,4 +221,43 @@ function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
       process.exit(1);
     }
   }
+}
+
+// TODO(v17): Remove this once the @nrwl/* packages are not
+function monkeyPatchRequire() {
+  const originalRequire = Mod.prototype.require;
+
+  (Mod.prototype.require as any) = function (...args) {
+    const modulePath = args[0];
+    if (!modulePath.startsWith('@nrwl/')) {
+      return originalRequire.apply(this, args);
+    } else {
+      try {
+        // Try the original require
+        return originalRequire.apply(this, args);
+      } catch (e) {
+        if (e.code !== 'MODULE_NOT_FOUND') {
+          throw e;
+        }
+
+        try {
+          // Retry the require with the @nx package
+          return originalRequire.apply(
+            this,
+            args.map((value, i) => {
+              if (i !== 0) {
+                return value;
+              } else {
+                return value.replace('@nrwl/', '@nx/');
+              }
+            })
+          );
+        } catch {
+          // Throw the original error
+          throw e;
+        }
+      }
+    }
+    // do some side-effect of your own
+  };
 }

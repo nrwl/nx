@@ -1,9 +1,9 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
   readProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Schema } from './schema';
 
 import {
@@ -49,7 +49,7 @@ export async function setupMf(tree: Tree, options: Schema) {
     installTask = addDependenciesToPackageJson(
       tree,
       {},
-      { '@nrwl/web': nxVersion }
+      { '@nx/web': nxVersion }
     );
   }
 

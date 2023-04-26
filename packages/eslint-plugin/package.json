@@ -1,0 +1,49 @@
+{
+  "name": "@nx/eslint-plugin",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/eslint-plugin"
+  },
+  "keywords": [
+    "Monorepo",
+    "Web",
+    "Lint",
+    "ESLint",
+    "CLI"
+  ],
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "peerDependencies": {
+    "@typescript-eslint/parser": "^5.58.0",
+    "eslint-config-prettier": "^8.1.0"
+  },
+  "peerDependenciesMeta": {
+    "eslint-config-prettier": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
+    "@typescript-eslint/utils": "^5.58.0",
+    "chalk": "^4.1.0",
+    "confusing-browser-globals": "^1.0.9",
+    "semver": "7.3.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  }
+}

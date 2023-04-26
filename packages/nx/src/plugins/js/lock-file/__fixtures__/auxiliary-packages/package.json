@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "license": "MIT",
   "dependencies": {
-    "@nrwl/devkit": "15.0.13",
     "eslint-plugin-disable-autofix": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
     "postgres": "charsleysa/postgres#fix-errors-compiled",
-    "yargs": "17.6.2"
+    "yargs": "17.6.2",
+    "@nrwl/devkit": "15.0.13"
   },
   "devDependencies": {
     "react": "18.2.0"

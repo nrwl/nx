@@ -1,7 +1,7 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, names } from '@nrwl/devkit';
-import { insertImport } from '@nrwl/js';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, names } from '@nx/devkit';
+import { insertImport } from '@nx/js';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type { NormalizedSchema } from '../schema';
 
 let tsModule: typeof import('typescript');

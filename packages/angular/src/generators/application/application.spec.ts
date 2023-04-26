@@ -1,6 +1,6 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import type { Tree } from '@nrwl/devkit';
-import * as devkit from '@nrwl/devkit';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import {
   NxJsonConfiguration,
   parseJson,
@@ -9,9 +9,9 @@ import {
   readProjectConfiguration,
   stripIndents,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import * as enquirer from 'enquirer';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -24,7 +24,7 @@ import type { Schema } from './schema';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
 jest.mock('enquirer');
 
 describe('app', () => {
@@ -462,29 +462,29 @@ describe('app', () => {
         await generateApp(appTree, 'myApp', { linter: Linter.EsLint });
         expect(readProjectConfiguration(appTree, 'my-app').targets.lint)
           .toMatchInlineSnapshot(`
-          Object {
-            "executor": "@nrwl/linter:eslint",
-            "options": Object {
-              "lintFilePatterns": Array [
+          {
+            "executor": "@nx/linter:eslint",
+            "options": {
+              "lintFilePatterns": [
                 "apps/my-app/**/*.ts",
                 "apps/my-app/**/*.html",
               ],
             },
-            "outputs": Array [
+            "outputs": [
               "{options.outputFile}",
             ],
           }
         `);
         expect(readProjectConfiguration(appTree, 'my-app-e2e').targets.lint)
           .toMatchInlineSnapshot(`
-          Object {
-            "executor": "@nrwl/linter:eslint",
-            "options": Object {
-              "lintFilePatterns": Array [
+          {
+            "executor": "@nx/linter:eslint",
+            "options": {
+              "lintFilePatterns": [
                 "apps/my-app-e2e/**/*.{js,ts}",
               ],
             },
-            "outputs": Array [
+            "outputs": [
               "{options.outputFile}",
             ],
           }
@@ -496,34 +496,34 @@ describe('app', () => {
 
         const eslintConfig = readJson(appTree, 'apps/my-app/.eslintrc.json');
         expect(eslintConfig).toMatchInlineSnapshot(`
-          Object {
-            "extends": Array [
+          {
+            "extends": [
               "../../.eslintrc.json",
             ],
-            "ignorePatterns": Array [
+            "ignorePatterns": [
               "!**/*",
             ],
-            "overrides": Array [
-              Object {
-                "extends": Array [
-                  "plugin:@nrwl/nx/angular",
+            "overrides": [
+              {
+                "extends": [
+                  "plugin:@nx/angular",
                   "plugin:@angular-eslint/template/process-inline-templates",
                 ],
-                "files": Array [
+                "files": [
                   "*.ts",
                 ],
-                "rules": Object {
-                  "@angular-eslint/component-selector": Array [
+                "rules": {
+                  "@angular-eslint/component-selector": [
                     "error",
-                    Object {
+                    {
                       "prefix": "proj",
                       "style": "kebab-case",
                       "type": "element",
                     },
                   ],
-                  "@angular-eslint/directive-selector": Array [
+                  "@angular-eslint/directive-selector": [
                     "error",
-                    Object {
+                    {
                       "prefix": "proj",
                       "style": "camelCase",
                       "type": "attribute",
@@ -531,14 +531,14 @@ describe('app', () => {
                   ],
                 },
               },
-              Object {
-                "extends": Array [
-                  "plugin:@nrwl/nx/angular-template",
+              {
+                "extends": [
+                  "plugin:@nx/angular-template",
                 ],
-                "files": Array [
+                "files": [
                   "*.html",
                 ],
-                "rules": Object {},
+                "rules": {},
               },
             ],
           }
@@ -666,7 +666,7 @@ describe('app', () => {
       // should not update workspace configuration since --strict=true is the default
       const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
       expect(
-        nxJson.generators['@nrwl/angular:application'].strict
+        nxJson.generators['@nx/angular:application'].strict
       ).not.toBeDefined();
     });
 
@@ -676,7 +676,7 @@ describe('app', () => {
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future applications
       const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
-      expect(nxJson.generators['@nrwl/angular:application'].strict).toBe(false);
+      expect(nxJson.generators['@nx/angular:application'].strict).toBe(false);
     });
   });
 
@@ -712,7 +712,7 @@ describe('app', () => {
       // ASSERT
       expect(appTree.read('apps/app1/tailwind.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
+        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
         const { join } = require('path');
 
         /** @type {import('tailwindcss').Config} */

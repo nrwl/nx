@@ -1,6 +1,6 @@
-import { NxJsonConfiguration } from '@nrwl/devkit';
-import { Tree, readJson, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { NxJsonConfiguration } from '@nx/devkit';
+import { Tree, readJson, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { reactNativeInitGenerator } from './init';
 
 describe('init', () => {

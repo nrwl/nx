@@ -1,6 +1,11 @@
-import { readJson, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
+import {
+  readJson,
+  readProjectConfiguration,
+  updateJson,
+  updateProjectConfiguration,
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { libraryGenerator as workspaceLib } from '@nx/js';
 import {
   checkDeps,
   updateConfigsJest28,
@@ -114,7 +119,7 @@ describe('Jest Migration - jest 28 config support', () => {
     tree.write(
       'jest.preset.js',
       `
-const nxPreset = require('@nrwl/jest/preset').default;
+const nxPreset = require('@nx/jest/preset').default;
 module.exports = {
   ...nxPreset,
   testRunner: 'jest-jasmine2',
@@ -155,6 +160,18 @@ module.exports = {
   it('should update deps from jest.config.ts', async () => {
     let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await workspaceLib(tree, { name: 'my-lib', unitTestRunner: 'jest' });
+    const projectConfiguration = readProjectConfiguration(tree, 'my-lib');
+    updateProjectConfiguration(tree, 'my-lib', {
+      ...projectConfiguration,
+      targets: {
+        ...projectConfiguration.targets,
+        test: {
+          ...projectConfiguration.targets.test,
+          executor: '@nrwl/jest:jest',
+        },
+      },
+    });
+
     updateJson(tree, 'package.json', (json) => {
       json.devDependencies['jest'] = '27.1.1';
       json.devDependencies['jest-environment-jsdom'] = '27.1.1';

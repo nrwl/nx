@@ -1,5 +1,5 @@
 import { Preset } from '../utils/presets';
-import { PackageManager } from '@nrwl/devkit';
+import { PackageManager } from '@nx/devkit';
 
 export interface Schema {
   name: string;
@@ -10,8 +10,10 @@ export interface Schema {
   standaloneConfig?: boolean;
   framework?: string;
   packageManager?: PackageManager;
-  bundler?: 'vite' | 'webpack';
+  bundler?: 'vite' | 'webpack' | 'rspack';
   docker?: boolean;
+  nextAppDir?: boolean;
   routing?: boolean;
   standaloneApi?: boolean;
+  e2eTestRunner?: 'cypress' | 'jest' | 'detox' | 'none';
 }

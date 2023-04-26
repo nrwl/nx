@@ -16,31 +16,30 @@ import { projectGraphCacheDirectory } from '../../utils/cache-directory';
 import { readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ensureDirSync } from 'fs-extra';
-import { removeNpmNodes } from 'nx/src/plugins/js/lock-file/remove-npm-nodes';
+import { removeNpmNodes } from './lock-file/remove-npm-nodes';
 
 export const processProjectGraph: ProjectGraphProcessor = async (
   graph,
   context
 ) => {
   const builder = new ProjectGraphBuilder(graph);
+  const pluginConfig = jsPluginConfig(readNxJson());
 
-  // during the create-nx-workspace lock file might not exists yet
-  if (lockFileExists()) {
-    const lockHash = lockFileHash() ?? 'n/a';
-    if (lockFileNeedsReprocessing(lockHash)) {
-      removeNpmNodes(graph, builder);
-      parseLockFile(builder);
+  if (pluginConfig.analyzePackageJson) {
+    // during the create-nx-workspace lock file might not exists yet
+    if (lockFileExists()) {
+      const lockHash = lockFileHash() ?? 'n/a';
+      if (lockFileNeedsReprocessing(lockHash)) {
+        removeNpmNodes(graph, builder);
+        parseLockFile(builder);
+      }
+      writeLastProcessedLockfileHash(lockHash);
     }
-    writeLastProcessedLockfileHash(lockHash);
+
+    buildNpmPackageNodes(builder);
   }
 
-  buildNpmPackageNodes(builder);
-
-  await buildExplicitDependencies(
-    jsPluginConfig(readNxJson()),
-    context,
-    builder
-  );
+  await buildExplicitDependencies(pluginConfig, context, builder);
 
   return builder.getUpdatedProjectGraph();
 };
@@ -60,6 +59,10 @@ function writeLastProcessedLockfileHash(hash: string) {
 }
 
 function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
+  if (nxJson?.pluginsConfig?.['@nx/js']) {
+    return nxJson?.pluginsConfig?.['@nx/js'];
+  }
+
   if (nxJson?.pluginsConfig?.['@nrwl/js']) {
     return nxJson?.pluginsConfig?.['@nrwl/js'];
   }
@@ -80,6 +83,13 @@ function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
     ...packageJson.devDependencies,
   };
   if (
+    packageJsonDeps['@nx/workspace'] ||
+    packageJsonDeps['@nx/js'] ||
+    packageJsonDeps['@nx/node'] ||
+    packageJsonDeps['@nx/next'] ||
+    packageJsonDeps['@nx/react'] ||
+    packageJsonDeps['@nx/angular'] ||
+    packageJsonDeps['@nx/web'] ||
     packageJsonDeps['@nrwl/workspace'] ||
     packageJsonDeps['@nrwl/js'] ||
     packageJsonDeps['@nrwl/node'] ||

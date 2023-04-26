@@ -1,4 +1,4 @@
-import type { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
 import { ESLint } from 'eslint';
 
 import { writeFileSync, mkdirSync } from 'fs';

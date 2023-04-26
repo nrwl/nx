@@ -1,39 +1,26 @@
 import { prompt } from 'enquirer';
-import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
+import { readdirSync, readFileSync, statSync } from 'fs';
 import ignore from 'ignore';
 import { join, relative } from 'path';
-import * as yargsParser from 'yargs-parser';
+import { InitArgs } from '../command-line/init';
 import { readJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
-import { joinPathFragments } from '../utils/path';
 import {
   addDepsToPackageJson,
   askAboutNxCloud,
   createNxJsonFile,
   initCloud,
+  printFinalMessage,
   runInstall,
 } from './utils';
 
-const parsedArgs = yargsParser(process.argv, {
-  boolean: ['yes'],
-  string: ['cacheable'], // only used for testing
-  alias: {
-    yes: ['y'],
-  },
-});
+type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 
-export async function addNxToMonorepo() {
+export async function addNxToMonorepo(options: Options) {
   const repoRoot = process.cwd();
 
-  if (!existsSync(joinPathFragments(repoRoot, 'package.json'))) {
-    output.error({
-      title: `Run the command in the folder with a package.json file.`,
-    });
-    process.exit(1);
-  }
-
-  output.log({ title: `🐳 Nx initialization` });
+  output.log({ title: '🐳 Nx initialization' });
 
   const packageJsonFiles = allProjectPackageJsonFiles(repoRoot);
   const scripts = combineAllScriptNames(repoRoot, packageJsonFiles);
@@ -41,11 +28,12 @@ export async function addNxToMonorepo() {
   let targetDefaults: string[];
   let cacheableOperations: string[];
   let scriptOutputs = {} as { [script: string]: string };
-  let useCloud: boolean;
+  let useNxCloud: boolean;
 
-  if (parsedArgs.yes !== true && scripts.length > 0) {
+  if (options.interactive && scripts.length > 0) {
     output.log({
-      title: `🧑‍🔧 Please answer the following questions about the scripts found in your workspace in order to generate task runner configuration`,
+      title:
+        '🧑‍🔧 Please answer the following questions about the scripts found in your workspace in order to generate task runner configuration',
     });
 
     targetDefaults = (
@@ -53,7 +41,8 @@ export async function addNxToMonorepo() {
         {
           type: 'multiselect',
           name: 'targetDefaults',
-          message: `Which scripts need to be run in order?  (e.g. before building a project, dependent projects must be built.)`,
+          message:
+            'Which scripts need to be run in order? (e.g. before building a project, dependent projects must be built)',
           choices: scripts,
         },
       ])) as any
@@ -83,13 +72,13 @@ export async function addNxToMonorepo() {
       )[scriptName];
     }
 
-    useCloud = await askAboutNxCloud();
+    useNxCloud = options.nxCloud ?? (await askAboutNxCloud());
   } else {
     targetDefaults = [];
-    cacheableOperations = parsedArgs.cacheable
-      ? parsedArgs.cacheable.split(',')
-      : [];
-    useCloud = false;
+    cacheableOperations = options.cacheable ?? [];
+    useNxCloud =
+      options.nxCloud ??
+      (options.interactive ? await askAboutNxCloud() : false);
   }
 
   createNxJsonFile(
@@ -99,16 +88,25 @@ export async function addNxToMonorepo() {
     scriptOutputs
   );
 
-  addDepsToPackageJson(repoRoot, useCloud);
+  addDepsToPackageJson(repoRoot, useNxCloud);
 
-  output.log({ title: `📦 Installing dependencies` });
+  output.log({ title: '📦 Installing dependencies' });
   runInstall(repoRoot);
 
-  if (useCloud) {
+  if (useNxCloud) {
+    output.log({ title: '🛠️ Setting up Nx Cloud' });
     initCloud(repoRoot, 'nx-init-monorepo');
   }
 
-  printFinalMessage();
+  const pmc = getPackageManagerCommand();
+  printFinalMessage({
+    learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
+    bodyLines: [
+      `- Run "${pmc.exec} nx run-many --target=build" to run the build script for every project in the monorepo.`,
+      '- Run it again to replay the cached computation.',
+      `- Run "${pmc.exec} nx graph" to see the structure of the monorepo.`,
+    ],
+  });
 }
 
 // scanning package.json files
@@ -168,18 +166,4 @@ function combineAllScriptNames(
     );
   });
   return [...res];
-}
-
-function printFinalMessage() {
-  const pmc = getPackageManagerCommand();
-  output.success({
-    title: `🎉 Done!`,
-    bodyLines: [
-      `- Enabled computation caching!`,
-      `- Run "${pmc.exec} nx run-many --target=build" to run the build script for every project in the monorepo.`,
-      `- Run it again to replay the cached computation.`,
-      `- Run "${pmc.exec} nx graph" to see the structure of the monorepo.`,
-      `- Learn more at https://nx.dev/recipes/adopting-nx/adding-to-monorepo`,
-    ],
-  });
 }

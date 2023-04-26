@@ -39,6 +39,7 @@ export interface PackageJson {
   name: string;
   version: string;
   license?: string;
+  private?: boolean;
   scripts?: Record<string, string>;
   type?: 'module' | 'commonjs';
   main?: string;

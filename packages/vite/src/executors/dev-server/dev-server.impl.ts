@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { createServer, InlineConfig, mergeConfig, ViteDevServer } from 'vite';
 
 import {
@@ -11,7 +11,7 @@ import {
 
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
-import { registerTsConfigPaths } from 'nx/src/utils/register';
+import { registerTsConfigPaths } from '@nx/js/src/internal';
 import { resolve } from 'path';
 
 export async function* viteDevServerExecutor(

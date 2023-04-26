@@ -18,21 +18,6 @@
       "x-dropdown": "projects",
       "x-priority": "important"
     },
-    "uiFramework": {
-      "type": "string",
-      "description": "Storybook UI Framework to use.",
-      "enum": [
-        "@storybook/angular",
-        "@storybook/react",
-        "@storybook/react-native",
-        "@storybook/html",
-        "@storybook/web-components",
-        "@storybook/vue",
-        "@storybook/vue3",
-        "@storybook/svelte"
-      ],
-      "x-priority": "important"
-    },
     "configureCypress": {
       "type": "boolean",
       "description": "Run the cypress-configure generator.",
@@ -83,9 +68,9 @@
       "x-priority": "important"
     },
     "storybook7Configuration": {
-      "description": "Configure your workspace using Storybook version 7.",
+      "description": "Configure your workspace using Storybook version 7. Defaults to true.",
       "type": "boolean",
-      "default": false,
+      "default": true,
       "hidden": true,
       "aliases": ["storybook7betaConfiguration"]
     },
@@ -110,7 +95,22 @@
         "@storybook/web-components-webpack5",
         "@storybook/web-components-vite"
       ],
-      "hidden": true
+      "x-priority": "important",
+      "hidden": false
+    },
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook UI Framework to use.",
+      "enum": [
+        "@storybook/angular",
+        "@storybook/react",
+        "@storybook/react-native",
+        "@storybook/html",
+        "@storybook/web-components",
+        "@storybook/vue",
+        "@storybook/vue3",
+        "@storybook/svelte"
+      ]
     },
     "skipFormat": {
       "description": "Skip formatting files.",

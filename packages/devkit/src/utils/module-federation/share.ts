@@ -12,7 +12,7 @@ import {
   collectWorkspaceLibrarySecondaryEntryPoints,
 } from './secondary-entry-points';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getRootTsConfigPath } from 'nx/src/utils/typescript';
+import { getRootTsConfigPath } from 'nx/src/plugins/js/utils/typescript';
 import type { ProjectGraph } from 'nx/src/config/project-graph';
 import { requireNx } from '../../../nx';
 

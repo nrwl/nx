@@ -66,12 +66,6 @@
       "enum": ["eslint"],
       "default": "eslint"
     },
-    "standaloneConfig": {
-      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
-    },
     "ignorePaths": {
       "type": "array",
       "description": "Paths to ignore when looking for components.",
@@ -99,7 +93,7 @@
     "storybook7Configuration": {
       "description": "Configure your workspace using Storybook version 7.",
       "type": "boolean",
-      "default": false,
+      "default": true,
       "hidden": true,
       "aliases": ["storybook7betaConfiguration"]
     }

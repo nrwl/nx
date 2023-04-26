@@ -1,7 +1,7 @@
 {
   "presets": [
     [
-      "@nrwl/react/babel", {
+      "@nx/react/babel", {
         "runtime": "automatic"<% if (style === '@emotion/styled') { %>,<% } %>
         <% if (style === '@emotion/styled') { %>"importSource": "@emotion/react" <% } %>
       }

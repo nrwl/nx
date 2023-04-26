@@ -4,7 +4,7 @@ import {
   logger,
   parseTargetString,
   runExecutor,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { calculateProjectDependencies } from '../../utils/buildable-libs-utils';
 import { ChildProcess, fork } from 'child_process';
 import { randomUUID } from 'crypto';

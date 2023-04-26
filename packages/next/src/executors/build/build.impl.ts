@@ -4,21 +4,19 @@ import {
   readJsonFile,
   workspaceRoot,
   writeJsonFile,
-} from '@nrwl/devkit';
-import { createLockFile, createPackageJson } from '@nrwl/js';
+} from '@nx/devkit';
+import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
 import build from 'next/dist/build';
 import { join, resolve } from 'path';
 import { copySync, existsSync, mkdir, writeFileSync } from 'fs-extra';
-import { gte } from 'semver';
-import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
+import { lt, gte } from 'semver';
+import { directoryExists } from '@nx/workspace/src/utilities/fileutils';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 
 import { updatePackageJson } from './lib/update-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';
 import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
-
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 
 export default async function buildExecutor(
   options: NextBuildBuilderOptions,
@@ -47,7 +45,20 @@ export default async function buildExecutor(
     (process.env as any).__NEXT_REACT_ROOT ||= 'true';
   }
 
-  await build(root);
+  // Get the installed Next.js version (will be removed after Nx 16 and Next.js update)
+  const nextVersion = require('next/package.json').version;
+
+  const debug = !!process.env.NX_VERBOSE_LOGGING || options.debug;
+
+  // Check the major and minor version numbers
+  if (lt(nextVersion, '13.2.0')) {
+    // If the version is lower than 13.2.0, use the second parameter as the config object
+    await build(root, null, false, debug);
+  } else {
+    // Otherwise, use the third parameter as a boolean flag for verbose logging
+    // @ts-ignore
+    await build(root, false, debug);
+  }
 
   if (!directoryExists(options.outputPath)) {
     mkdir(options.outputPath);

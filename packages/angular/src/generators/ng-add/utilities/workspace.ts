@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import type { NxJsonConfiguration, Tree } from '@nx/devkit';
 import {
   generateFiles,
   getProjects,
@@ -8,14 +8,14 @@ import {
   updateJson,
   updateNxJson,
   writeJson,
-} from '@nrwl/devkit';
-import { Linter, lintInitGenerator } from '@nrwl/linter';
+} from '@nx/devkit';
+import { Linter, lintInitGenerator } from '@nx/linter';
 import {
   getRootTsConfigPathInTree,
   initGenerator as jsInitGenerator,
-} from '@nrwl/js';
+} from '@nx/js';
 import { deduceDefaultBase } from 'nx/src/utils/default-base';
-import { prettierVersion } from '@nrwl/js/src/utils/versions';
+import { prettierVersion } from '@nx/js/src/utils/versions';
 import { toNewFormat } from 'nx/src/adapter/angular-json';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';
@@ -172,8 +172,11 @@ export function updatePackageJson(tree: Tree): void {
     if (!packageJson.devDependencies['@angular/cli']) {
       packageJson.devDependencies['@angular/cli'] = angularDevkitVersion;
     }
-    if (!packageJson.devDependencies['@nrwl/workspace']) {
-      packageJson.devDependencies['@nrwl/workspace'] = nxVersion;
+    if (
+      !packageJson.devDependencies['@nx/workspace'] &&
+      !packageJson.devDependencies['@nrwl/workspace']
+    ) {
+      packageJson.devDependencies['@nx/workspace'] = nxVersion;
     }
     if (!packageJson.devDependencies['nx']) {
       packageJson.devDependencies['nx'] = nxVersion;
@@ -209,9 +212,11 @@ export function updateRootEsLintConfig(
   }
 
   existingEsLintConfig.ignorePatterns = ['**/*'];
-  existingEsLintConfig.plugins = Array.from(
-    new Set([...(existingEsLintConfig.plugins ?? []), '@nrwl/nx'])
-  );
+  if (!(existingEsLintConfig.plugins ?? []).includes('@nrwl/nx')) {
+    existingEsLintConfig.plugins = Array.from(
+      new Set([...(existingEsLintConfig.plugins ?? []), '@nx'])
+    );
+  }
   existingEsLintConfig.overrides?.forEach((override) => {
     if (!override.parserOptions?.project) {
       return;
@@ -219,13 +224,13 @@ export function updateRootEsLintConfig(
 
     delete override.parserOptions.project;
   });
-  // add the @nrwl/nx/enforce-module-boundaries rule
+  // add the @nx/enforce-module-boundaries rule
   existingEsLintConfig.overrides = [
     ...(existingEsLintConfig.overrides ?? []),
     {
       files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
       rules: {
-        '@nrwl/nx/enforce-module-boundaries': [
+        '@nx/enforce-module-boundaries': [
           'error',
           {
             enforceBuildableLibDependency: true,

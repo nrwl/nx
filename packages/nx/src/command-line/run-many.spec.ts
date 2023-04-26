@@ -1,6 +1,6 @@
-import { ProjectGraph } from '@nrwl/nx-cloud/lib/core/models/run-context.model';
 import { projectsToRun } from './run-many';
 import { performance } from 'perf_hooks';
+import { ProjectGraph } from '../config/project-graph';
 
 describe('run-many', () => {
   describe('projectsToRun', () => {
@@ -13,6 +13,7 @@ describe('run-many', () => {
             type: 'lib',
             data: {
               root: 'proj1',
+              tags: ['api', 'theme1'],
               targets: {
                 build: {},
                 test: {},
@@ -24,12 +25,13 @@ describe('run-many', () => {
             type: 'lib',
             data: {
               root: 'proj2',
+              tags: ['ui', 'theme2'],
               targets: {
                 test: {},
               },
             },
           },
-        },
+        } as any,
         dependencies: {},
       };
     });
@@ -71,6 +73,50 @@ describe('run-many', () => {
       expect(projects).toContain('proj2');
     });
 
+    it('should filter projects by tag', () => {
+      const projects = projectsToRun(
+        {
+          targets: ['test'],
+          projects: ['tag:api'],
+        },
+        projectGraph
+      ).map(({ name }) => name);
+      expect(projects).toContain('proj1');
+      expect(projects).not.toContain('proj2');
+    });
+
+    it('should filter projects by tag pattern', () => {
+      const projects = projectsToRun(
+        {
+          targets: ['test'],
+          projects: ['tag:theme*'],
+        },
+        projectGraph
+      ).map(({ name }) => name);
+      expect(projects).toContain('proj1');
+      expect(projects).toContain('proj2');
+    });
+
+    it('should filter projects by name and tag', () => {
+      let projects = projectsToRun(
+        {
+          targets: ['test'],
+          projects: ['proj1', 'tag:ui'],
+        },
+        projectGraph
+      ).map(({ name }) => name);
+      expect(projects).toContain('proj1');
+      expect(projects).toContain('proj2');
+      projects = projectsToRun(
+        {
+          targets: ['test'],
+          projects: ['proj1', 'tag:a*'],
+        },
+        projectGraph
+      ).map(({ name }) => name);
+      expect(projects).toContain('proj1');
+    });
+
     it('should exclude projects', () => {
       const projects = projectsToRun(
         {
@@ -99,6 +145,34 @@ describe('run-many', () => {
       expect(projects).not.toContain('proj2');
     });
 
+    it('should exclude projects by tag', () => {
+      const projects = projectsToRun(
+        {
+          all: true,
+          targets: ['test'],
+          projects: [],
+          exclude: ['tag:ui'],
+        },
+        projectGraph
+      ).map(({ name }) => name);
+      expect(projects).toContain('proj1');
+      expect(projects).not.toContain('proj2');
+    });
+
+    it('should exclude projects with a tag pattern', () => {
+      const projects = projectsToRun(
+        {
+          all: true,
+          targets: ['test'],
+          projects: [],
+          exclude: ['tag:theme*'],
+        },
+        projectGraph
+      ).map(({ name }) => name);
+      expect(projects).not.toContain('proj1');
+      expect(projects).not.toContain('proj2');
+    });
+
     describe('perf testing', () => {
       beforeEach(() => {
         for (let i = 0; i < 1000000; i++) {
@@ -110,7 +184,7 @@ describe('run-many', () => {
               targets: {
                 test: {},
               },
-            },
+            } as any,
           };
         }
       });

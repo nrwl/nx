@@ -1,9 +1,9 @@
 import { Linter } from '../utils/linter';
-import { readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintInitGenerator } from './init';
 
-describe('@nrwl/linter:init', () => {
+describe('@nx/linter:init', () => {
   let tree: Tree;
 
   beforeEach(() => {

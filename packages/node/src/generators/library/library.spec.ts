@@ -1,11 +1,10 @@
 import {
   getProjects,
-  NxJsonConfiguration,
   readJson,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { Schema } from './schema.d';
 import { libraryGenerator } from './library';
@@ -29,14 +28,14 @@ describe('lib', () => {
       expect(configuration.root).toEqual('libs/my-lib');
       expect(configuration.targets.build).toBeUndefined();
       expect(configuration.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-lib/**/*.ts'],
         },
       });
       expect(configuration.targets.test).toEqual({
-        executor: '@nrwl/jest:jest',
+        executor: '@nx/jest:jest',
         outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
         options: {
           jestConfig: 'libs/my-lib/jest.config.ts',
@@ -94,15 +93,18 @@ describe('lib', () => {
       await libraryGenerator(tree, baseLibraryConfig);
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toMatchInlineSnapshot(`
-        Object {
+        {
+          "compilerOptions": {
+            "module": "commonjs",
+          },
           "extends": "../../tsconfig.base.json",
-          "files": Array [],
-          "include": Array [],
-          "references": Array [
-            Object {
+          "files": [],
+          "include": [],
+          "references": [
+            {
               "path": "./tsconfig.lib.json",
             },
-            Object {
+            {
               "path": "./tsconfig.spec.json",
             },
           ],
@@ -140,36 +142,36 @@ describe('lib', () => {
 
       const eslintrc = readJson(tree, 'libs/my-lib/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
-        Object {
-          "extends": Array [
+        {
+          "extends": [
             "../../.eslintrc.json",
           ],
-          "ignorePatterns": Array [
+          "ignorePatterns": [
             "!**/*",
           ],
-          "overrides": Array [
-            Object {
-              "files": Array [
+          "overrides": [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
           ],
         }
@@ -226,7 +228,7 @@ describe('lib', () => {
       const project = readProjectConfiguration(tree, 'my-dir-my-lib');
       expect(project.root).toEqual('libs/my-dir/my-lib');
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
@@ -309,7 +311,7 @@ describe('lib', () => {
 
       const { build } = readProjectConfiguration(tree, 'my-lib').targets;
 
-      expect(build.executor).toEqual('@nrwl/js:tsc');
+      expect(build.executor).toEqual('@nx/js:tsc');
     });
 
     it('should specify swc as compiler', async () => {
@@ -321,7 +323,7 @@ describe('lib', () => {
 
       const { build } = readProjectConfiguration(tree, 'my-lib').targets;
 
-      expect(build.executor).toEqual('@nrwl/js:swc');
+      expect(build.executor).toEqual('@nx/js:swc');
     });
   });
 
@@ -358,10 +360,10 @@ describe('lib', () => {
       expect(projectConfiguration.root).toEqual('libs/my-lib');
 
       expect(projectConfiguration.targets.build).toMatchInlineSnapshot(`
-        Object {
-          "executor": "@nrwl/js:tsc",
-          "options": Object {
-            "assets": Array [
+        {
+          "executor": "@nx/js:tsc",
+          "options": {
+            "assets": [
               "libs/my-lib/*.md",
             ],
             "main": "libs/my-lib/src/index.ts",
@@ -369,7 +371,7 @@ describe('lib', () => {
             "packageJson": "libs/my-lib/package.json",
             "tsConfig": "libs/my-lib/tsconfig.lib.json",
           },
-          "outputs": Array [
+          "outputs": [
             "{options.outputPath}",
           ],
         }
@@ -461,9 +463,9 @@ describe('lib', () => {
           preset: '../../jest.preset.js',
           testEnvironment: 'node',
           transform: {
-            '^.+\\\\\\\\.[tj]sx?$': 'babel-jest',
+            '^.+\\\\.[tj]s$': 'babel-jest',
           },
-          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/libs/my-lib',
         };
         "
@@ -486,6 +488,7 @@ describe('lib', () => {
         readJson(tree, 'libs/my-lib/tsconfig.json').compilerOptions
       ).toEqual({
         allowJs: true,
+        module: 'commonjs',
       });
       expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').include).toEqual([
         'src/**/*.ts',

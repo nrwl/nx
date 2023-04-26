@@ -5,8 +5,9 @@ import {
   shouldRecomputeWholeGraph,
 } from './nx-deps-cache';
 import { ProjectGraph } from '../config/project-graph';
-import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../config/nx-json';
+import { nxVersion } from '../utils/versions';
 
 describe('nx deps utils', () => {
   describe('shouldRecomputeWholeGraph', () => {
@@ -15,7 +16,7 @@ describe('nx deps utils', () => {
         shouldRecomputeWholeGraph(
           createCache({ version: '5.1' }),
           createPackageJsonDeps({}),
-          createWorkspaceJson({}),
+          createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson()
         )
@@ -27,24 +28,21 @@ describe('nx deps utils', () => {
         shouldRecomputeWholeGraph(
           createCache({ version: '4.0' }),
           createPackageJsonDeps({}),
-          createWorkspaceJson({}),
+          createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson()
         )
       ).toEqual(true);
     });
 
-    it('should be true when version of nrwl/workspace changes', () => {
+    it('should be true when version of nx changes', () => {
       expect(
         shouldRecomputeWholeGraph(
           createCache({
-            deps: {
-              '@nrwl/workspace': '12.0.1',
-              plugin: '1.0.0',
-            },
+            nxVersion: '12.0.1',
           }),
           createPackageJsonDeps({}),
-          createWorkspaceJson({}),
+          createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson()
         )
@@ -60,7 +58,7 @@ describe('nx deps utils', () => {
             },
           }),
           createPackageJsonDeps({}),
-          createWorkspaceJson({}),
+          createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson()
         )
@@ -72,7 +70,7 @@ describe('nx deps utils', () => {
         shouldRecomputeWholeGraph(
           createCache({}),
           createPackageJsonDeps({}),
-          createWorkspaceJson({}),
+          createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson({ mylib: ['libs/mylib/changed.ts'] })
         )
@@ -84,7 +82,7 @@ describe('nx deps utils', () => {
         shouldRecomputeWholeGraph(
           createCache({}),
           createPackageJsonDeps({}),
-          createWorkspaceJson({}),
+          createProjectsConfiguration({}),
           createNxJson({
             plugins: ['plugin', 'plugin2'],
           }),
@@ -98,7 +96,7 @@ describe('nx deps utils', () => {
         shouldRecomputeWholeGraph(
           createCache({}),
           createPackageJsonDeps({ plugin: '2.0.0' }),
-          createWorkspaceJson({}),
+          createProjectsConfiguration({}),
           createNxJson({}),
           createTsConfigJson()
         )
@@ -110,7 +108,7 @@ describe('nx deps utils', () => {
         shouldRecomputeWholeGraph(
           createCache({}),
           createPackageJsonDeps({ plugin: '2.0.0' }),
-          createWorkspaceJson({}),
+          createProjectsConfiguration({}),
           createNxJson({ pluginsConfig: { one: 1 } }),
           createTsConfigJson()
         )
@@ -317,10 +315,8 @@ describe('nx deps utils', () => {
   function createCache(p: Partial<ProjectGraphCache>): ProjectGraphCache {
     const defaults: ProjectGraphCache = {
       version: '5.1',
-      deps: {
-        '@nrwl/workspace': '12.0.0',
-        plugin: '1.0.0',
-      },
+      nxVersion: nxVersion,
+      deps: {},
       pathMappings: {
         mylib: ['libs/mylib/index.ts'],
       },
@@ -337,13 +333,13 @@ describe('nx deps utils', () => {
     p: Record<string, string>
   ): Record<string, string> {
     const defaults = {
-      '@nrwl/workspace': '12.0.0',
+      '@nx/workspace': '12.0.0',
       plugin: '1.0.0',
     };
     return { ...defaults, ...p };
   }
 
-  function createWorkspaceJson(p: any): WorkspaceJsonConfiguration {
+  function createProjectsConfiguration(p: any): ProjectsConfigurations {
     const defaults = {
       projects: { mylib: {} },
     } as any;
@@ -354,7 +350,6 @@ describe('nx deps utils', () => {
     const defaults: NxJsonConfiguration = {
       npmScope: '',
       workspaceLayout: {} as any,
-      targetDependencies: {},
       plugins: ['plugin'],
     };
     return { ...defaults, ...p };

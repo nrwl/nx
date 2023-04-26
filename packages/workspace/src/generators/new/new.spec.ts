@@ -1,5 +1,5 @@
-import { readJson, Tree, writeJson } from '@nrwl/devkit';
-import { createTree } from '@nrwl/devkit/testing';
+import { readJson, Tree, writeJson } from '@nx/devkit';
+import { createTree } from '@nx/devkit/testing';
 import { Linter } from '../../utils/lint';
 import {
   angularCliVersion,
@@ -8,6 +8,14 @@ import {
 } from '../../utils/versions';
 import { Preset } from '../utils/presets';
 import { newGenerator, NormalizedSchema } from './new';
+
+const DEFAULT_PACKAGE_VERSION = '1.0.0';
+jest.mock('./../utils/get-npm-package-version', () => ({
+  ...jest.requireActual<any>('./../utils/get-npm-package-version'),
+  getNpmPackageVersion: jest
+    .fn()
+    .mockImplementation((name, version) => version ?? DEFAULT_PACKAGE_VERSION),
+}));
 
 const defaultOptions: Omit<
   NormalizedSchema,
@@ -64,10 +72,10 @@ describe('new', () => {
 
       const { devDependencies } = readJson(tree, 'my-workspace/package.json');
       expect(devDependencies).toStrictEqual({
-        '@nrwl/react': nxVersion,
-        '@nrwl/cypress': nxVersion,
-        '@nrwl/vite': nxVersion,
-        '@nrwl/workspace': nxVersion,
+        '@nx/react': nxVersion,
+        '@nx/cypress': nxVersion,
+        '@nx/vite': nxVersion,
+        '@nx/workspace': nxVersion,
         nx: nxVersion,
       });
     });
@@ -86,13 +94,70 @@ describe('new', () => {
         tree,
         'my-workspace/package.json'
       );
-      expect(dependencies).toStrictEqual({ '@nrwl/angular': nxVersion });
+      expect(dependencies).toStrictEqual({ '@nx/angular': nxVersion });
       expect(devDependencies).toStrictEqual({
         '@angular-devkit/core': angularCliVersion,
-        '@nrwl/workspace': nxVersion,
+        '@nx/workspace': nxVersion,
         nx: nxVersion,
         typescript: typescriptVersion,
       });
+    });
+
+    describe('custom presets', () => {
+      let originalValue;
+      beforeEach(() => {
+        originalValue = process.env['NX_E2E_PRESET_VERSION'];
+      });
+
+      afterEach(() => {
+        if (originalValue) {
+          process.env['NX_E2E_PRESET_VERSION'] = originalValue;
+        } else {
+          delete process.env['NX_E2E_PRESET_VERSION'];
+        }
+      });
+      // the process of actual resolving of a version relies on npm and is mocked here,
+      // thus "package@2" is expected to be resolved with version "2" instead of "2.0.0"
+      const versionAsPath =
+        '/Users/username/3rd-party-pkg/dist/packages/3rd-party-pkg-1.12.5.tgz';
+      test.each`
+        preset                       | presetVersion    | expectedVersion
+        ${'3rd-party-package'}       | ${undefined}     | ${DEFAULT_PACKAGE_VERSION}
+        ${'3rd-party-package@1.1.2'} | ${undefined}     | ${'1.1.2'}
+        ${'3rd-party-package@2'}     | ${undefined}     | ${'2'}
+        ${'3rd-party-package'}       | ${'latest'}      | ${'latest'}
+        ${'3rd-party-package'}       | ${'1.1.1'}       | ${'1.1.1'}
+        ${'3rd-party-package'}       | ${versionAsPath} | ${versionAsPath}
+        ${'3rd-party-package@2.3.4'} | ${'1.1.1'}       | ${'1.1.1'}
+      `(
+        'should add custom preset "$preset" with a correct expectedVersion "$expectedVersion" when presetVersion is "$presetVersion"',
+        async ({ presetVersion, preset, expectedVersion }) => {
+          if (presetVersion) {
+            process.env['NX_E2E_PRESET_VERSION'] = presetVersion;
+          }
+
+          await newGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-workspace',
+            directory: 'my-workspace',
+            npmScope: 'npmScope',
+            appName: 'app',
+            preset,
+          });
+
+          const { devDependencies, dependencies } = readJson(
+            tree,
+            'my-workspace/package.json'
+          );
+          expect(dependencies).toStrictEqual({
+            '3rd-party-package': expectedVersion,
+          });
+          expect(devDependencies).toStrictEqual({
+            '@nx/workspace': nxVersion,
+            nx: nxVersion,
+          });
+        }
+      );
     });
   });
 

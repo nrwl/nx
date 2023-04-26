@@ -1,5 +1,5 @@
-import { addDependenciesToPackageJson, readJson, Tree } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+import { addDependenciesToPackageJson, readJson, Tree } from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { isStringLiteralLike, PropertyAssignment } from 'typescript';
 import { JestExecutorOptions } from '../../executors/jest/schema';

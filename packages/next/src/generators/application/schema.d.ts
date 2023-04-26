@@ -1,10 +1,9 @@
-import { Linter } from '@nrwl/linter';
-import { SupportedStyles } from '@nrwl/react';
+import { Linter } from '@nx/linter';
+import { SupportedStyles } from '@nx/react';
 
 export interface Schema {
   name: string;
   style?: SupportedStyles;
-  server?: string;
   skipFormat?: boolean;
   directory?: string;
   tags?: string;
@@ -13,9 +12,9 @@ export interface Schema {
   linter?: Linter;
   js?: boolean;
   setParserOptionsProject?: boolean;
-  standaloneConfig?: boolean;
   swc?: boolean;
   customServer?: boolean;
   skipPackageJson?: boolean;
   appDir?: boolean;
+  rootProject?: boolean;
 }

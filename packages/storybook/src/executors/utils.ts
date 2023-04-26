@@ -1,5 +1,5 @@
-import { joinPathFragments, logger } from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
+import { joinPathFragments, logger } from '@nx/devkit';
+import { findNodes } from '@nx/js';
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
@@ -50,9 +50,9 @@ function isStorybookV62onwards(uiFramework: string) {
     } catch (e) {
       throw new Error(
         `Error: ${e}
-        
-        It looks like you don\'t have Storybook installed. 
-        Please run the @nrwl/storybook:configuration generator, 
+
+        It looks like you don\'t have Storybook installed.
+        Please run the @nx/storybook:configuration generator,
         or run "npm/yarn" again to install your dependencies.`
       );
     }
@@ -65,6 +65,18 @@ export function runStorybookSetupCheck(
 ) {
   webpackFinalPropertyCheck(options);
   reactWebpack5Check(options);
+}
+
+export function pleaseUpgrade() {
+  logger.warn(
+    `
+    Please consider upgrading to Storybook version 7,
+    as version 6 is no longer maintained.
+
+    Here is a guide on how to upgrade:
+    https://nx.dev/packages/storybook/generators/migrate-7
+    `
+  );
 }
 
 // TODO(katerina): Remove when Storybook 7
@@ -81,9 +93,9 @@ function reactWebpack5Check(options: CLIOptions & CommonNxStorybookConfig) {
       It looks like you use Webpack 5 but your Storybook setup is not configured to leverage that
       and thus falls back to Webpack 4.
       Make sure you upgrade your Storybook config to use Webpack 5.
-      
+
         - https://gist.github.com/shilman/8856ea1786dcd247139b47b270912324#upgrade
-            
+
       `);
     }
   }

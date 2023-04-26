@@ -2,7 +2,7 @@
 import type {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { interpret } from 'xstate';
 import { projectGraphMachine } from './project-graph.machine';
 

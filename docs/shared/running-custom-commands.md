@@ -50,11 +50,11 @@ nx make my-app
 You can also run the `make` command for all projects it has been defined on:
 
 ```shell
-nx run-many --target=make
+nx run-many -t make
 ```
 
 Or just on a subset of projects that are [affected by a given change](/concepts/affected):
 
 ```shell
-nx affected --target=make
+nx affected -t make
 ```

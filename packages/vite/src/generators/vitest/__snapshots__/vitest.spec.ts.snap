@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`vitest generator insourceTests should add the insourceSource option in the vite config 1`] = `
-"/// <reference types=\\"vitest\\" />
+"/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -42,7 +42,7 @@ export default defineConfig({
 `;
 
 exports[`vitest generator vite.config should create correct vite.config.ts file for apps 1`] = `
-"/// <reference types=\\"vitest\\" />
+"/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -79,7 +79,7 @@ export default defineConfig({
 `;
 
 exports[`vitest generator vite.config should create correct vite.config.ts file for non buildable libs 1`] = `
-"/// <reference types=\\"vitest\\" />
+"/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import viteTsConfigPaths from 'vite-tsconfig-paths';

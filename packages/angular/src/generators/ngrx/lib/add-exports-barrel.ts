@@ -1,7 +1,7 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, names } from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
-import { addGlobal } from '@nrwl/js';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, names } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { addGlobal } from '@nx/js';
 import type { NormalizedNgRxGeneratorOptions } from './normalize-options';
 
 let tsModule: typeof import('typescript');

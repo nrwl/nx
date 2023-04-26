@@ -1,6 +1,6 @@
 import type { Configuration } from 'webpack';
-import type { WithWebOptions } from '@nrwl/webpack';
-import type { NxWebpackExecutionContext } from '@nrwl/webpack';
+import type { WithWebOptions } from '@nx/webpack';
+import type { NxWebpackExecutionContext } from '@nx/webpack';
 
 const processed = new Set();
 
@@ -55,7 +55,7 @@ export function withReact(pluginOptions: WithReactOptions = {}) {
     config: Configuration,
     context: NxWebpackExecutionContext
   ): Configuration {
-    const { withWeb } = require('@nrwl/webpack');
+    const { withWeb } = require('@nx/webpack');
 
     if (processed.has(config)) return config;
 

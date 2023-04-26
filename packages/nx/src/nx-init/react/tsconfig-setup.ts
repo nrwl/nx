@@ -30,8 +30,8 @@ const defaultTsConfigApp = (relativePathToRoot: string) => ({
     types: ['node'],
   },
   files: [
-    join(relativePathToRoot, 'node_modules/@nrwl/react/typings/cssmodule.d.ts'),
-    join(relativePathToRoot, 'node_modules/@nrwl/react/typings/image.d.ts'),
+    join(relativePathToRoot, 'node_modules/@nx/react/typings/cssmodule.d.ts'),
+    join(relativePathToRoot, 'node_modules/@nx/react/typings/image.d.ts'),
   ],
   exclude: ['**/*.spec.ts', '**/*.spec.tsx'],
   include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
@@ -52,8 +52,8 @@ const defaultTsConfigSpec = (relativePathToRoot: string) => ({
     '**/*.d.ts',
   ],
   files: [
-    join(relativePathToRoot, 'node_modules/@nrwl/react/typings/cssmodule.d.ts'),
-    join(relativePathToRoot, 'node_modules/@nrwl/react/typings/image.d.ts'),
+    join(relativePathToRoot, 'node_modules/@nx/react/typings/cssmodule.d.ts'),
+    join(relativePathToRoot, 'node_modules/@nx/react/typings/image.d.ts'),
   ],
 });
 

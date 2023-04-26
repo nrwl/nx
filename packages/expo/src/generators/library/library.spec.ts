@@ -4,9 +4,9 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 
 import { expoLibraryGenerator } from './library';
 import { Schema } from './schema';
@@ -39,7 +39,7 @@ describe('lib', () => {
       expect(projectConfiguration.root).toEqual('libs/my-lib');
       expect(projectConfiguration.targets.build).toBeUndefined();
       expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -144,7 +144,7 @@ describe('lib', () => {
         'my-dir-my-lib'
       );
       expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-dir/my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -199,7 +199,7 @@ describe('lib', () => {
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
       expect(projectConfiguration.targets.test).toBeUndefined();
       expect(projectConfiguration.targets.lint).toMatchObject({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           lintFilePatterns: ['libs/my-lib/**/*.{ts,tsx,js,jsx}'],
         },
@@ -232,7 +232,7 @@ describe('lib', () => {
       const projects = getProjects(appTree);
 
       expect(projects.get('my-lib').targets.build).toMatchObject({
-        executor: '@nrwl/web:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         options: {
           external: ['react/jsx-runtime', 'react-native'],
@@ -240,7 +240,7 @@ describe('lib', () => {
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',
           tsConfig: 'libs/my-lib/tsconfig.lib.json',
-          rollupConfig: '@nrwl/react/plugins/bundle-rollup',
+          rollupConfig: '@nx/react/plugins/bundle-rollup',
         },
       });
     });

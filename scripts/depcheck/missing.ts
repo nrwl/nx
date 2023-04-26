@@ -7,16 +7,13 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'nx',
     'prettier',
     'typescript',
-    'rxjs',
-    '@nrwl/cli',
-    '@nrwl/workspace',
     // These are installed as needed and should not be added to package.json
-    '@nrwl/cypress',
-    '@nrwl/jest',
-    '@nrwl/rollup',
-    '@nrwl/storybook',
-    '@nrwl/vite',
-    '@nrwl/webpack',
+    '@nx/cypress',
+    '@nx/jest',
+    '@nx/rollup',
+    '@nx/storybook',
+    '@nx/vite',
+    '@nx/webpack',
   ],
   angular: [
     '@angular-devkit/architect',
@@ -52,23 +49,25 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'sass',
     'stylus',
     'tailwindcss',
+    // used in the CT angular plugin where Cy is already installed to use it.
+    'cypress',
   ],
   cli: ['nx'],
-  cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress', 'vite'],
+  cypress: ['cypress', '@angular-devkit/schematics', 'vite'],
   devkit: [
     '@angular-devkit/architect',
     '@angular-devkit/schematics',
     'rxjs',
     'webpack',
   ],
-  'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
+  'eslint-plugin': ['@angular-eslint/eslint-plugin'],
   jest: [
     'jest',
     '@jest/types',
     'identity-obj-proxy',
     '@angular-devkit/schematics',
   ],
-  js: ['@nrwl/linter'],
+  js: [],
   linter: [
     'eslint',
     '@angular-devkit/schematics',
@@ -80,7 +79,6 @@ const IGNORE_MATCHES_IN_PACKAGE = {
   ],
   next: [
     '@angular-devkit/architect',
-    '@nrwl/devkit',
     'express',
     'http-proxy-middleware',
     'next',
@@ -117,6 +115,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'webpack',
     'webpack-merge',
   ],
+  'react-native': ['@nx/storybook'],
   rollup: ['@swc/core'],
   storybook: [
     '@angular-devkit/architect',
@@ -128,7 +127,11 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@storybook/core-server',
     '@storybook/types',
     // lazy installed with ensurePackage
-    '@nrwl/web',
+    '@nx/web',
+    '@nx/jest',
+    '@nx/rollup',
+    '@nx/vite',
+    '@nx/webpack',
     'rxjs',
   ],
   nx: [
@@ -138,47 +141,48 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@angular-devkit/architect',
     '@angular/cli',
     '@nrwl/angular',
+    '@nx/angular',
+    '@nrwl/cli',
+    'rxjs',
     '@nestjs/cli', // nx init nest makes use of nestjs cli (which should be available in NestJS CLI app) to parse the nest-cli.json file
     'ts-node', // We *may* fall back on ts-node, but we want to encourage the use of @swc-node instead so we don't explicitly list ts-node as an optional dep
-    '@nrwl/nx-android-arm-eabi', // native optional deps
-    '@nrwl/nx-android-arm64', // native optional deps
-    '@nrwl/nx-darwin-arm64', // native optional deps
-    '@nrwl/nx-darwin-universal', // native optional deps
-    '@nrwl/nx-darwin-x64', // native optional deps
-    '@nrwl/nx-freebsd-x64', // native optional deps
-    '@nrwl/nx-linux-arm-gnueabihf', // native optional deps
-    '@nrwl/nx-linux-arm64-gnu', // native optional deps
-    '@nrwl/nx-linux-arm64-musl', // native optional deps
-    '@nrwl/nx-linux-x64-gnu', // native optional deps
-    '@nrwl/nx-linux-x64-musl', // native optional deps
-    '@nrwl/nx-win32-arm64-msvc', // native optional deps
-    '@nrwl/nx-win32-ia32-msvc', // native optional deps
-    '@nrwl/nx-win32-x64-msvc', // native optional deps
+    '@nx/nx-android-arm-eabi', // native optional deps
+    '@nx/nx-android-arm64', // native optional deps
+    '@nx/nx-darwin-arm64', // native optional deps
+    '@nx/nx-darwin-universal', // native optional deps
+    '@nx/nx-darwin-x64', // native optional deps
+    '@nx/nx-freebsd-x64', // native optional deps
+    '@nx/nx-linux-arm-gnueabihf', // native optional deps
+    '@nx/nx-linux-arm64-gnu', // native optional deps
+    '@nx/nx-linux-arm64-musl', // native optional deps
+    '@nx/nx-linux-x64-gnu', // native optional deps
+    '@nx/nx-linux-x64-musl', // native optional deps
+    '@nx/nx-win32-arm64-msvc', // native optional deps
+    '@nx/nx-win32-ia32-msvc', // native optional deps
+    '@nx/nx-win32-x64-msvc', // native optional deps
     'memfs', // used in mock for handling .node files in tests
   ],
   web: [
-    // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.
+    // we don't want to bloat the install of @nx/web by including @swc/core and swc-loader as a dependency.
     '@swc/core',
     'swc-loader',
 
+    '@nx/cypress',
+    '@nx/jest',
+    '@nx/rollup',
+    '@nx/vite',
+    '@nx/webpack',
     'fibers',
     'node-sass',
   ],
   webpack: ['@swc/core', 'style-loader', 'swc-loader'],
   workspace: [
-    'tslint',
     '@angular-devkit/architect',
     '@angular-devkit/core',
     '@angular-devkit/schematics',
-    'webpack',
-    'webpack-dev-server',
-    '@nrwl/cli',
-    '@nrwl/jest',
-    '@nrwl/linter',
-    'tsconfig-paths',
+    '@phenomnomnominal/tsquery',
   ],
   nest: ['semver'],
-  'make-angular-cli-faster': ['@angular/core'],
 };
 
 const IGNORE_MATCHES_BY_FILE: Record<string, string[]> = {
@@ -186,6 +190,16 @@ const IGNORE_MATCHES_BY_FILE: Record<string, string[]> = {
     join(
       __dirname,
       '../../packages/angular/src/migrations/update-12-3-0/update-storybook.ts'
+    ),
+  ],
+  '@nx/plugin': [
+    join(
+      __dirname,
+      '../../packages/workspace/src/migrations/update-16-0-0/move-workspace-generators-to-local-plugin.spec.ts'
+    ),
+    join(
+      __dirname,
+      '../../packages/workspace/src/migrations/update-16-0-0/move-workspace-generators-to-local-plugin.ts'
     ),
   ],
 };

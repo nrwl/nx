@@ -1,32 +1,18 @@
-import {
-  createProjectGraphAsync,
-  joinPathFragments,
-  offsetFromRoot,
-  parseTargetString,
-  ProjectGraph,
-  ProjectGraphProjectNode,
-  Target,
-  workspaceRoot,
-} from '@nrwl/devkit';
-import {
-  calculateProjectDependencies,
-  DependentBuildableProjectNode,
-} from '@nrwl/js/src/utils/buildable-libs-utils';
-import type { NextConfig } from 'next';
-import { PHASE_PRODUCTION_SERVER } from 'next/constants';
-
+/**
+ * WARNING: Do not add development dependencies to top-level imports.
+ * Instead, `require` them inline during the build phase.
+ */
 import * as path from 'path';
-import { createWebpackConfig } from '../src/utils/config';
-import { NextBuildBuilderOptions } from '../src/utils/types';
+import type { NextConfig } from 'next';
+import type { NextConfigFn } from '../src/utils/config';
+import type { NextBuildBuilderOptions } from '../src/utils/types';
+import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
+import type { ProjectGraph, ProjectGraphProjectNode, Target } from '@nx/devkit';
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
     svgr?: boolean;
   };
-}
-
-export interface NextConfigFn {
-  (phase: string): Promise<NextConfig>;
 }
 
 export interface WithNxContext {
@@ -50,7 +36,7 @@ function regexEqual(x, y) {
  * To this function that hard-codes the libsDir.
  */
 function getWithNxContext(): WithNxContext {
-  const { workspaceRoot, workspaceLayout } = require('@nrwl/devkit');
+  const { workspaceRoot, workspaceLayout } = require('@nx/devkit');
   return {
     workspaceRoot,
     libsDir: workspaceLayout().libsDir,
@@ -82,9 +68,13 @@ function getNxContext(
   targetName: string;
   configurationName?: string;
 } {
+  const { parseTargetString } = require('@nx/devkit');
   const targetConfig = getTargetConfig(graph, target);
 
-  if ('@nrwl/next:build' === targetConfig.executor) {
+  if (
+    '@nx/next:build' === targetConfig.executor ||
+    '@nrwl/next:build' === targetConfig.executor
+  ) {
     return {
       node: graph.nodes[target.project],
       options: getOptions(graph, target),
@@ -105,7 +95,12 @@ function getNxContext(
 
     return getNxContext(graph, devServerTarget);
   } else if (
-    ['@nrwl/next:server', '@nrwl/next:export'].includes(targetConfig.executor)
+    [
+      '@nx/next:server',
+      '@nx/next:export',
+      '@nrwl/next:server',
+      '@nrwl/next:export',
+    ].includes(targetConfig.executor)
   ) {
     const buildTarget = parseTargetString(targetOptions.buildTarget, graph);
     return getNxContext(graph, buildTarget);
@@ -115,7 +110,6 @@ function getNxContext(
     );
   }
 }
-
 /**
  * Try to read output dir from project, and default to '.next' if executing outside of Nx (e.g. dist is added to a docker image).
  */
@@ -126,34 +120,56 @@ async function determineDistDirForProdServer(
   const target = process.env.NX_TASK_TARGET_TARGET;
   const configuration = process.env.NX_TASK_TARGET_CONFIGURATION;
 
-  if (project && target) {
-    const originalTarget = { project, target, configuration };
-    const graph = await createProjectGraphAsync();
+  try {
+    if (project && target) {
+      // If NX env vars are set, then devkit must be available.
+      const {
+        createProjectGraphAsync,
+        joinPathFragments,
+        offsetFromRoot,
+      } = require('@nx/devkit');
+      const originalTarget = { project, target, configuration };
+      const graph = await createProjectGraphAsync();
 
-    const { options, node: projectNode } = getNxContext(graph, originalTarget);
-    const outputDir = `${offsetFromRoot(projectNode.data.root)}${
-      options.outputPath
-    }`;
-    return nextConfig.distDir && nextConfig.distDir !== '.next'
-      ? joinPathFragments(outputDir, nextConfig.distDir)
-      : joinPathFragments(outputDir, '.next');
-  } else {
-    return '.next';
+      const { options, node: projectNode } = getNxContext(
+        graph,
+        originalTarget
+      );
+      const outputDir = `${offsetFromRoot(projectNode.data.root)}${
+        options.outputPath
+      }`;
+      return nextConfig.distDir && nextConfig.distDir !== '.next'
+        ? joinPathFragments(outputDir, nextConfig.distDir)
+        : joinPathFragments(outputDir, '.next');
+    }
+  } catch {
+    // ignored -- fallback to Next.js default of '.next'
   }
+
+  return nextConfig.distDir || '.next';
 }
-export function withNx(
+
+function withNx(
   _nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
 ): NextConfigFn {
   return async (phase: string) => {
+    const { PHASE_PRODUCTION_SERVER } = await import('next/constants');
     if (phase === PHASE_PRODUCTION_SERVER) {
       // If we are running an already built production server, just return the configuration.
       const { nx, ...validNextConfig } = _nextConfig;
       return {
         ...validNextConfig,
-        distDir: await determineDistDirForProdServer(validNextConfig),
+        distDir: await determineDistDirForProdServer(_nextConfig),
       };
     } else {
+      const {
+        createProjectGraphAsync,
+        joinPathFragments,
+        offsetFromRoot,
+        workspaceRoot,
+      } = require('@nx/devkit');
+
       // Otherwise, add in webpack and eslint configuration for build or test.
       let dependencies: DependentBuildableProjectNode[] = [];
 
@@ -175,6 +191,9 @@ export function withNx(
       const projectDirectory = projectNode.data.root;
 
       if (options.buildLibsFromSource === false && targetName) {
+        const {
+          calculateProjectDependencies,
+        } = require('@nx/js/src/utils/buildable-libs-utils');
         const result = calculateProjectDependencies(
           graph,
           workspaceRoot,
@@ -198,6 +217,7 @@ export function withNx(
 
       const userWebpackConfig = nextConfig.webpack;
 
+      const { createWebpackConfig } = require('../src/utils/config');
       nextConfig.webpack = (a, b) =>
         createWebpackConfig(
           workspaceRoot,
@@ -398,8 +418,10 @@ function addNxEnvVariables(config: any) {
   }
 }
 
-// Support for older generated code: `const withNx = require('@nrwl/next/plugins/with-nx');`
+// Support for older generated code: `const withNx = require('@nx/next/plugins/with-nx');`
 module.exports = withNx;
 // Support for newer generated code: `const { withNx } = require(...);`
 module.exports.withNx = withNx;
 module.exports.getNextConfig = getNextConfig;
+
+export { withNx };

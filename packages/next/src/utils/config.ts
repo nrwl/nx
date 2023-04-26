@@ -1,3 +1,4 @@
+import type { NextConfig } from 'next';
 import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration, RuleSetRule } from 'webpack';
@@ -6,7 +7,19 @@ import { createCopyPlugin } from './create-copy-plugin';
 import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nrwl/js/src/utils/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils';
+
+export interface NextConfigFn {
+  (phase: string, context?: any): Promise<NextConfig> | NextConfig;
+}
+
+export interface NextPlugin {
+  (config: NextConfig): NextConfig;
+}
+
+export interface NextPluginThatReturnsConfigFn {
+  (config: NextConfig): NextConfigFn;
+}
 
 export function createWebpackConfig(
   workspaceRoot: string,

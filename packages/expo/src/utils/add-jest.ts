@@ -1,5 +1,5 @@
-import { Tree } from '@nrwl/devkit';
-import { jestProjectGenerator } from '@nrwl/jest';
+import { Tree } from '@nx/devkit';
+import { jestProjectGenerator } from '@nx/jest';
 
 export async function addJest(
   host: Tree,
@@ -25,15 +25,15 @@ export async function addJest(
   const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'ts'}`;
   const content = `module.exports = {
     displayName: '${projectName}',
-    resolver: '@nrwl/jest/plugins/resolver',
-    preset: 'react-native',
+    resolver: '@nx/jest/plugins/resolver',
+    preset: 'jest-expo',
     transformIgnorePatterns: [
       'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
     ],
     moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
     setupFilesAfterEnv: ['<rootDir>/test-setup.${js ? 'js' : 'ts'}'],
     moduleNameMapper: {
-      '\\\\.svg$': '@nrwl/expo/plugins/jest/svg-mock'
+      '\\\\.svg$': '@nx/expo/plugins/jest/svg-mock'
     }
   };`;
   host.write(configPath, content);

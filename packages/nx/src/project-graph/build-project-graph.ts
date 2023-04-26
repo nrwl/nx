@@ -16,7 +16,7 @@ import { buildWorkspaceProjectNodes } from './build-nodes';
 import { loadNxPlugins } from '../utils/nx-plugin';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { createProjectFileMap } from './file-map-utils';
-import { getRootTsConfigPath } from '../utils/typescript';
+import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   ProjectFileMap,
   ProjectGraph,
@@ -24,7 +24,6 @@ import {
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {
   ProjectConfiguration,
@@ -75,7 +74,7 @@ export async function buildProjectGraphUsingProjectFileMap(
 
   let filesToProcess;
   let cachedFileData;
-  if (
+  const useCacheData =
     cache &&
     !shouldRecomputeWholeGraph(
       cache,
@@ -83,8 +82,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       projectsConfigurations,
       nxJson,
       rootTsConfig
-    )
-  ) {
+    );
+  if (useCacheData) {
     const fromCache = extractCachedFileData(projectFileMap, cache);
     filesToProcess = fromCache.filesToProcess;
     cachedFileData = fromCache.cachedFileData;
@@ -104,7 +103,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     context,
     cachedFileData,
     projectGraphVersion,
-    cache
+    useCacheData ? cache : null
   );
   const projectGraphCache = createCache(
     nxJson,
@@ -235,15 +234,12 @@ async function updateProjectGraphWithPlugins(
     try {
       graph = await plugin.processProjectGraph(graph, context);
     } catch (e) {
-      const message = `Failed to process the project graph with "${plugin.name}". This will error in the future!`;
-      if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.error(e);
-        logger.error(message);
-        return graph;
-      } else {
-        logger.warn(message);
-        logger.warn(`Run with NX_VERBOSE_LOGGING=true to see the error.`);
+      let message = `Failed to process the project graph with "${plugin.name}".`;
+      if (e instanceof Error) {
+        e.message = message + '\n' + e.message;
+        throw e;
       }
+      throw new Error(message);
     }
   }
   return graph;

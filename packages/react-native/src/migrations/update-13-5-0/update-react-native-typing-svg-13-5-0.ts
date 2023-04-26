@@ -5,7 +5,7 @@ import {
   updateJson,
   offsetFromRoot,
   ProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * Update svg typings in tsconfig for react native app

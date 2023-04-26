@@ -27,7 +27,7 @@ describe('NPM lock file utility', () => {
     });
 
     it('should parse root lock file', async () => {
-      expect(Object.keys(graph.externalNodes).length).toEqual(1285); // 1143
+      expect(Object.keys(graph.externalNodes).length).toEqual(1285);
     });
 
     it('should prune lock file', async () => {
@@ -96,8 +96,8 @@ describe('NPM lock file utility', () => {
       expect(Object.keys(graph.externalNodes).length).toEqual(212); // 202
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==",
             "packageName": "minimatch",
             "version": "3.1.2",
@@ -107,8 +107,8 @@ describe('NPM lock file utility', () => {
         }
       `);
       expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "sha512-362NP+zlprccbEt/SkxKfRMHnNY85V74mVnpUpNyr3F35covl09Kec7/sEFLt3RA4oXmewtoaanoIf67SE5Y5g==",
             "packageName": "minimatch",
             "version": "5.1.1",
@@ -118,8 +118,8 @@ describe('NPM lock file utility', () => {
         }
       `);
       expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "sha512-M7i4XVjrrReHG+IjWEeDSfBnyNg2Q5OQpxrr3dqCGpleYx0FyUpMQZfk8zb6yyPrn6ut3KbrkYfnAf+TG6DPLQ==",
             "packageName": "postgres",
             "version": "git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
@@ -130,8 +130,8 @@ describe('NPM lock file utility', () => {
       `);
       expect(graph.externalNodes['npm:eslint-plugin-disable-autofix'])
         .toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "sha512-zYDdpaj+1Al8Ki3WpY2I9bOAd8NSgFWGT7yR6KemSi25qWwDMNArnR2q6gDEDKSw+KuYY4shFxkY/JpoNF64tg==",
             "packageName": "eslint-plugin-disable-autofix",
             "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
@@ -151,11 +151,11 @@ describe('NPM lock file utility', () => {
       const builder = new ProjectGraphBuilder();
       parseNpmLockfile(JSON.stringify(rootV2LockFile), builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(212); // 202
+      expect(Object.keys(graph.externalNodes).length).toEqual(212);
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==",
             "packageName": "minimatch",
             "version": "3.1.2",
@@ -165,8 +165,8 @@ describe('NPM lock file utility', () => {
         }
       `);
       expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "sha512-362NP+zlprccbEt/SkxKfRMHnNY85V74mVnpUpNyr3F35covl09Kec7/sEFLt3RA4oXmewtoaanoIf67SE5Y5g==",
             "packageName": "minimatch",
             "version": "5.1.1",
@@ -176,8 +176,8 @@ describe('NPM lock file utility', () => {
         }
       `);
       expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "sha512-M7i4XVjrrReHG+IjWEeDSfBnyNg2Q5OQpxrr3dqCGpleYx0FyUpMQZfk8zb6yyPrn6ut3KbrkYfnAf+TG6DPLQ==",
             "packageName": "postgres",
             "version": "git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
@@ -188,8 +188,8 @@ describe('NPM lock file utility', () => {
       `);
       expect(graph.externalNodes['npm:eslint-plugin-disable-autofix'])
         .toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
+        {
+          "data": {
             "hash": "sha512-zYDdpaj+1Al8Ki3WpY2I9bOAd8NSgFWGT7yR6KemSi25qWwDMNArnR2q6gDEDKSw+KuYY4shFxkY/JpoNF64tg==",
             "packageName": "eslint-plugin-disable-autofix",
             "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
@@ -336,7 +336,7 @@ describe('NPM lock file utility', () => {
       const builder = new ProjectGraphBuilder();
       parseNpmLockfile(JSON.stringify(rootLockFile), builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(369); // 338
+      expect(Object.keys(graph.externalNodes).length).toEqual(369);
     });
     it('should parse v3', async () => {
       const rootLockFile = require(joinPathFragments(
@@ -347,7 +347,7 @@ describe('NPM lock file utility', () => {
       const builder = new ProjectGraphBuilder();
       parseNpmLockfile(JSON.stringify(rootLockFile), builder);
       const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(369); //338
+      expect(Object.keys(graph.externalNodes).length).toEqual(369);
     });
   });
 

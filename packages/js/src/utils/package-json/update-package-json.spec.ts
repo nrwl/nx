@@ -6,7 +6,7 @@ import {
   UpdatePackageJsonOption,
 } from './update-package-json';
 import { vol } from 'memfs';
-import { DependencyType, ExecutorContext, ProjectGraph } from '@nrwl/devkit';
+import { DependencyType, ExecutorContext, ProjectGraph } from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
@@ -385,7 +385,7 @@ describe('updatePackageJson', () => {
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson).toMatchInlineSnapshot(`
-      Object {
+      {
         "main": "./main.js",
         "name": "@org/lib1",
         "types": "./main.d.ts",
@@ -438,10 +438,10 @@ describe('updatePackageJson', () => {
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson).toMatchInlineSnapshot(`
-      Object {
-        "dependencies": Object {
-          "external1": "1.0.0",
-          "external2": "4.5.6",
+      {
+        "dependencies": {
+          "external1": "~1.0.0",
+          "external2": "^4.0.0",
         },
         "main": "./main.js",
         "name": "@org/lib1",

@@ -6,8 +6,8 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import { cypressComponentProject } from './cypress-component-project';
 
@@ -18,13 +18,13 @@ let projectConfig: ProjectConfiguration = {
   root: 'libs/cool-lib',
   targets: {
     build: {
-      executor: '@nrwl/web:rollup',
+      executor: '@nx/rollup:rollup',
       options: {
         tsConfig: 'libs/cool-lib/tsconfig.lib.json',
       },
     },
     test: {
-      executor: '@nrwl/jest:jest',
+      executor: '@nx/jest:jest',
       options: {
         jestConfig: 'libs/cool-lib/jest.config.js',
       },
@@ -129,7 +129,7 @@ describe('Cypress Component Project', () => {
       '../**/*.cy.jsx',
       '../**/*.d.ts',
     ]);
-    expect(cyTsConfig.compilerOptions.outDir).toEqual('../../../dist/out-tsc');
+    expect(cyTsConfig.compilerOptions.outDir).toEqual('../../dist/out-tsc');
     const libTsConfig = readJson(tree, 'libs/cool-lib/tsconfig.lib.json');
     expect(libTsConfig.exclude).toEqual(
       expect.arrayContaining([
@@ -181,7 +181,7 @@ describe('Cypress Component Project', () => {
     tree.write('libs/cool-lib/cypress.config.ts', '');
     const newTarget = {
       ['component-test']: {
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'libs/cool-lib/cypress.config.ts',
           testingType: 'component',

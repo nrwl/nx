@@ -1,6 +1,6 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
-import type { TypeScriptCompilationOptions } from '@nrwl/workspace/src/utilities/typescript/compilation';
+import type { TypeScriptCompilationOptions } from '@nx/workspace/src/utilities/typescript/compilation';
 import { join, resolve } from 'path';
 import {
   CustomTransformers,

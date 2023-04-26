@@ -1,7 +1,7 @@
-import type { Tree } from '@nrwl/devkit';
-import { updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+import type { Tree } from '@nx/devkit';
+import { updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { angularDevkitVersion } from '../../utils/versions';
 import { applicationGenerator } from '../application/application';
@@ -57,7 +57,7 @@ export async function createStorybookTestWorkspaceForLib(
   addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
 
-  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
+  const { wrapAngularDevkitSchematic } = require('@nx/devkit/ngcli-adapter');
   const moduleGenerator = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'module'

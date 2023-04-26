@@ -5,7 +5,7 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import {
   addOrChangeBuildTarget,
@@ -73,7 +73,7 @@ export async function viteConfigurationGenerator(
      */
     if (!validFoundTargetName.build && projectContainsUnsupportedExecutor) {
       throw new Error(
-        `The project ${schema.project} cannot be converted to use the @nrwl/vite executors.`
+        `The project ${schema.project} cannot be converted to use the @nx/vite executors.`
       );
     }
 
@@ -83,7 +83,7 @@ export async function viteConfigurationGenerator(
       alreadyHasNxViteTargets.test
     ) {
       throw new Error(
-        `The project ${schema.project} is already configured to use the @nrwl/vite executors.
+        `The project ${schema.project} is already configured to use the @nx/vite executors.
         Please try a different project, or remove the existing targets 
         and re-run this generator to reset the existing Vite Configuration.
         `

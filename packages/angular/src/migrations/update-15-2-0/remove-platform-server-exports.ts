@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { formatFiles, visitNotIgnoredFiles } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
 import * as ts from 'typescript';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
 

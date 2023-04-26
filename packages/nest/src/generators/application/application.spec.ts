@@ -1,6 +1,6 @@
-import type { Tree } from '@nrwl/devkit';
-import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 
 describe('application generator', () => {
@@ -57,6 +57,22 @@ describe('application generator', () => {
       'src/**/*.spec.ts',
       'src/**/*.test.ts',
     ]);
+  });
+
+  it('should add strict checks with --strict', async () => {
+    await applicationGenerator(tree, { name: appName, strict: true });
+    const tsConfig = devkit.readJson(
+      tree,
+      `apps/${appDirectory}/tsconfig.app.json`
+    );
+
+    expect(tsConfig.compilerOptions.strictNullChecks).toBeTruthy();
+    expect(tsConfig.compilerOptions.noImplicitAny).toBeTruthy();
+    expect(tsConfig.compilerOptions.strictBindCallApply).toBeTruthy();
+    expect(
+      tsConfig.compilerOptions.forceConsistentCasingInFileNames
+    ).toBeTruthy();
+    expect(tsConfig.compilerOptions.noFallthroughCasesInSwitch).toBeTruthy();
   });
 
   describe('--skipFormat', () => {

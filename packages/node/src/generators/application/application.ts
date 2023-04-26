@@ -21,16 +21,15 @@ import {
   updateJson,
   updateProjectConfiguration,
   updateTsConfigsToJs,
-} from '@nrwl/devkit';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { jestProjectGenerator } from '@nrwl/jest';
+} from '@nx/devkit';
+import { Linter, lintProjectGenerator } from '@nx/linter';
+import { jestProjectGenerator } from '@nx/jest';
 
-import { getRelativePathToRootTsConfig, tsConfigBaseOptions } from '@nrwl/js';
+import { getRelativePathToRootTsConfig, tsConfigBaseOptions } from '@nx/js';
 import { join } from 'path';
 
 import { initGenerator } from '../init/init';
 import {
-  esbuildVersion,
   expressTypingsVersion,
   expressVersion,
   fastifyAutoloadVersion,
@@ -45,7 +44,8 @@ import { e2eProjectGenerator } from '../e2e-project/e2e-project';
 import { setupDockerGenerator } from '../setup-docker/setup-docker';
 
 import { Schema } from './schema';
-import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
+import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
+import { esbuildVersion } from '@nx/js/src/utils/versions';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -57,7 +57,7 @@ function getWebpackBuildConfig(
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
-    executor: `@nrwl/webpack:webpack`,
+    executor: `@nx/webpack:webpack`,
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
@@ -93,7 +93,7 @@ function getEsBuildConfig(
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
-    executor: '@nrwl/esbuild:esbuild',
+    executor: '@nx/esbuild:esbuild',
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
@@ -134,7 +134,7 @@ function getEsBuildConfig(
 
 function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/js:node',
+    executor: '@nx/js:node',
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.name}:build`,
@@ -295,10 +295,10 @@ function addProjectDependencies(
 ): GeneratorCallback {
   const bundlers = {
     webpack: {
-      '@nrwl/webpack': nxVersion,
+      '@nx/webpack': nxVersion,
     },
     esbuild: {
-      '@nrwl/esbuild': nxVersion,
+      '@nx/esbuild': nxVersion,
       esbuild: esbuildVersion,
     },
   };
@@ -370,7 +370,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   if (options.framework === 'nest') {
-    const { applicationGenerator } = ensurePackage('@nrwl/nest', nxVersion);
+    const { applicationGenerator } = ensurePackage('@nx/nest', nxVersion);
     return await applicationGenerator(tree, { ...options, skipFormat: true });
   }
 
@@ -483,7 +483,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? 'jest',
     rootProject: options.rootProject ?? false,
-    port: options.port ?? 3333,
+    port: options.port ?? 3000,
   };
 }
 

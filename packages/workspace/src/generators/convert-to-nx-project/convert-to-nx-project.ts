@@ -6,7 +6,7 @@ import {
   Tree,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import { Schema } from './schema';
 import { toNewFormat, toOldFormat } from 'nx/src/adapter/angular-json';

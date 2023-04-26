@@ -1,5 +1,5 @@
-import { formatFiles, logger, stripIndents, Tree } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+import { formatFiles, logger, stripIndents, Tree } from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { join } from 'path';
 import { JestExecutorOptions } from '../../executors/jest/schema';
 import {

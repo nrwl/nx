@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, normalizePath } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, normalizePath } from '@nx/devkit';
 import { basename, dirname } from 'path';
 import type { NormalizedSchema } from '../schema';
 
@@ -72,7 +72,9 @@ function findModule(
     if (filteredMatches.length == 1) {
       return filteredMatches[0];
     } else if (filteredMatches.length > 1) {
-      return null;
+      throw new Error(
+        "Found more than one candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option."
+      );
     }
 
     dir = dirname(dir);

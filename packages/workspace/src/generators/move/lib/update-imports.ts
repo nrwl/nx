@@ -11,10 +11,12 @@ import {
   writeJson,
   readJson,
   getImportPath,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type * as ts from 'typescript';
-import { getRootTsConfigPathInTree } from '../../../utilities/ts-config';
-import { findNodes } from 'nx/src/utils/typescript';
+import {
+  getRootTsConfigPathInTree,
+  findNodes,
+} from '../../../utilities/ts-config';
 import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
 import { relative } from 'path';
@@ -108,7 +110,9 @@ export function updateImports(
 
     if (schema.updateImportPath) {
       tsConfig.compilerOptions.paths[projectRef.to] = updatedPath;
-      delete tsConfig.compilerOptions.paths[projectRef.from];
+      if (projectRef.from !== projectRef.to) {
+        delete tsConfig.compilerOptions.paths[projectRef.from];
+      }
     } else {
       tsConfig.compilerOptions.paths[projectRef.from] = updatedPath;
     }

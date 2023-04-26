@@ -3,14 +3,14 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addMountCommand,
   updateCyFile,
   updateCyMountUsage,
 } from './update-cy-mount-usage';
-import { libraryGenerator } from '@nrwl/workspace';
+import { libraryGenerator } from '@nx/js';
 import { cypressComponentProject } from '../../generators/cypress-component-project/cypress-component-project';
 
 jest.mock('../../utils/cypress-version');
@@ -192,6 +192,7 @@ async function setup(tree: Tree) {
     executor: '@nrwl/angular:webpack-browser',
     options: {},
   };
+  myLib.targets['component-test'].executor = '@nrwl/cypress:cypress';
   myLib.targets['component-test'].options.devServerTarget = 'my-lib:build';
   updateProjectConfiguration(tree, 'my-lib', myLib);
   const anotherLib = readProjectConfiguration(tree, 'another-lib');
@@ -199,6 +200,7 @@ async function setup(tree: Tree) {
     executor: '@nrwl/webpack:webpack',
     options: {},
   };
+  anotherLib.targets['component-test'].executor = '@nrwl/cypress:cypress';
   anotherLib.targets['component-test'].options.devServerTarget =
     'another-lib:build';
   updateProjectConfiguration(tree, 'another-lib', anotherLib);

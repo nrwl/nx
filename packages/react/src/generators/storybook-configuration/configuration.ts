@@ -3,16 +3,17 @@ import storiesGenerator from '../stories/stories';
 import {
   convertNxGenerator,
   ensurePackage,
+  formatFiles,
   logger,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
-  ensurePackage('@nrwl/cypress', nxVersion);
+  ensurePackage('@nx/cypress', nxVersion);
   const { getE2eProjectName } = await import(
-    '@nrwl/cypress/src/utils/project-name'
+    '@nx/cypress/src/utils/project-name'
   );
   const projectConfig = readProjectConfiguration(host, schema.name);
   const cypressProject = getE2eProjectName(
@@ -36,15 +37,16 @@ export async function storybookConfigurationGenerator(
   schema: StorybookConfigureSchema
 ) {
   const { configurationGenerator } = ensurePackage<
-    typeof import('@nrwl/storybook')
-  >('@nrwl/storybook', nxVersion);
+    typeof import('@nx/storybook')
+  >('@nx/storybook', nxVersion);
 
   let bundler = schema.bundler ?? 'webpack';
   const projectConfig = readProjectConfiguration(host, schema.name);
 
   if (
     projectConfig.projectType === 'application' &&
-    projectConfig.targets['build']?.executor === '@nrwl/vite:build'
+    (projectConfig.targets['build']?.executor === '@nx/vite:build' ||
+      projectConfig.targets['build']?.executor === '@nrwl/vite:build')
   ) {
     bundler = 'vite';
     if (schema.bundler !== 'vite') {
@@ -62,7 +64,6 @@ export async function storybookConfigurationGenerator(
     js: schema.js,
     linter: schema.linter,
     cypressDirectory: schema.cypressDirectory,
-    standaloneConfig: schema.standaloneConfig,
     tsConfiguration: schema.tsConfiguration,
     configureTestRunner: schema.configureTestRunner,
     configureStaticServe: schema.configureStaticServe,
@@ -78,6 +79,8 @@ export async function storybookConfigurationGenerator(
   if (schema.generateStories) {
     await generateStories(host, schema);
   }
+
+  await formatFiles(host);
 
   return installTask;
 }

@@ -1,4 +1,4 @@
-import { names } from '@nrwl/devkit';
+import { names } from '@nx/devkit';
 
 /**
  * This function normalizes the options passed in to the Nx and returns an array of strings that can be passed to the React Native CLI.

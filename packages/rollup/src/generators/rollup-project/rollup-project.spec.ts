@@ -4,8 +4,8 @@ import {
   readProjectConfiguration,
   Tree,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { rollupProjectGenerator } from './rollup-project';
 
@@ -30,7 +30,7 @@ describe('rollupProjectGenerator', () => {
 
     expect(project.targets).toMatchObject({
       build: {
-        executor: '@nrwl/rollup:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: {
@@ -70,7 +70,7 @@ describe('rollupProjectGenerator', () => {
 
     expect(project.targets).toMatchObject({
       build: {
-        executor: '@nrwl/rollup:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: {
@@ -90,7 +90,7 @@ describe('rollupProjectGenerator', () => {
 
     expect(project.targets).toMatchObject({
       build: {
-        executor: '@nrwl/rollup:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: {

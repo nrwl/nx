@@ -41,9 +41,8 @@ To create a generic TypeScript library (i.e. non-framework specific), use the [`
 ```shell
 nx g @nrwl/js:lib my-new-lib
 
-# If you want the library to be buildable or publishable to npm
-nx g @nrwl/web:lib my-new-lib --buildable
-nx g @nrwl/web:lib my-new-lib \
+# If you want the library to be publishable to npm
+nx g @nrwl/js:lib my-new-lib \
 --publishable \
 --importPath=@myorg/my-new-lib
 ```

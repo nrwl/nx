@@ -1,8 +1,8 @@
-import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { NxJsonConfiguration, readJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintWorkspaceRuleGenerator } from './workspace-rule';
 
-describe('@nrwl/linter:workspace-rule', () => {
+describe('@nx/linter:workspace-rule', () => {
   let tree: Tree;
 
   beforeEach(async () => {
@@ -66,7 +66,7 @@ describe('@nrwl/linter:workspace-rule', () => {
        * following generator command and provide your desired rule name:
        *
        * \`\`\`sh
-       * npx nx g @nrwl/linter:workspace-rule {{ NEW_RULE_NAME }}
+       * npx nx g @nx/linter:workspace-rule {{ NEW_RULE_NAME }}
        * \`\`\`
        */
 

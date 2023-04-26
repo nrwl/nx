@@ -5,7 +5,7 @@
       "error",
       {
         "paths": [
-          "@nrwl/workspace",
+          "@nx/workspace",
           "@angular-devkit/core",
           "@angular-devkit/architect",
           "@angular-devkit/schematics"
@@ -17,7 +17,7 @@
             "allowTypeImports": true
           },
           {
-            "group": ["@nrwl/devkit/**/*"],
+            "group": ["@nx/devkit/**/*"],
             "message": "Use a relative import"
           }
         ]
@@ -50,7 +50,7 @@
       "files": ["./package.json"],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nrwl/nx/nx-plugin-checks": "error"
+        "@nx/nx-plugin-checks": "error"
       }
     }
   ]

@@ -1,6 +1,6 @@
-import type { Tree } from '@nrwl/devkit';
-import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nestJsVersion, nxVersion } from '../../utils/versions';
 import { initGenerator } from './init';
 
@@ -24,12 +24,12 @@ describe('init generator', () => {
     expect(packageJson.dependencies['reflect-metadata']).toBeDefined();
     expect(packageJson.dependencies['rxjs']).toBeDefined();
     expect(packageJson.dependencies['tslib']).toBeDefined();
-    expect(packageJson.dependencies['@nrwl/nest']).toBeUndefined();
+    expect(packageJson.dependencies['@nx/nest']).toBeUndefined();
     expect(packageJson.devDependencies['@nestjs/schematics']).toBe(
       nestJsVersion
     );
     expect(packageJson.devDependencies['@nestjs/testing']).toBe(nestJsVersion);
-    expect(packageJson.devDependencies['@nrwl/nest']).toBe(nxVersion);
+    expect(packageJson.devDependencies['@nx/nest']).toBe(nxVersion);
   });
 
   it('should add jest config when unitTestRunner is jest', async () => {

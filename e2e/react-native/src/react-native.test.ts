@@ -12,7 +12,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
 import { join } from 'path';
 
@@ -24,10 +24,10 @@ describe('react native', () => {
   beforeAll(() => {
     proj = newProject();
     runCLI(
-      `generate @nrwl/react-native:application ${appName} --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName} --install=false --no-interactive`
     );
     runCLI(
-      `generate @nrwl/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
+      `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
     );
   });
   afterAll(() => cleanupProject());
@@ -35,7 +35,7 @@ describe('react native', () => {
   it('should test and lint', async () => {
     const componentName = uniq('component');
     runCLI(
-      `generate @nrwl/react-native:component ${componentName} --project=${libName} --export --no-interactive`
+      `generate @nx/react-native:component ${componentName} --project=${libName} --export --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
@@ -109,7 +109,8 @@ describe('react native', () => {
   });
 
   if (isOSX()) {
-    it('should pod install', async () => {
+    // TODO(@meeroslav): this test is causing git-hasher to overflow with arguments. Enable when it's fixed.
+    xit('should pod install', async () => {
       expect(async () => {
         await runCLIAsync(`pod-install ${appName}`);
         checkFilesExist(`apps/${appName}/ios/Podfile.lock`);
@@ -119,7 +120,7 @@ describe('react native', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nrwl/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
     );
     expect(() =>
       checkFilesExist(
@@ -145,7 +146,7 @@ describe('react native', () => {
   it('should upgrade native for application', async () => {
     expect(() =>
       runCLI(
-        `generate @nrwl/react-native:upgrade-native ${appName} --install=false`
+        `generate @nx/react-native:upgrade-native ${appName} --install=false`
       )
     ).not.toThrow();
   });
@@ -154,7 +155,7 @@ describe('react native', () => {
     const componentName = uniq('component');
 
     runCLI(
-      `generate @nrwl/react-native:component ${componentName} --project=${libName} --export`
+      `generate @nx/react-native:component ${componentName} --project=${libName} --export`
     );
     expect(() => {
       runCLI(`build ${libName}`);
@@ -170,6 +171,8 @@ describe('react native', () => {
       json.dependencies['react-native-image-picker'] = '1.0.0';
       json.dependencies['react-native-gesture-handler'] = '1.0.0';
       json.dependencies['react-native-safe-area-contex'] = '1.0.0';
+      json.dependencies['react-native-config'] = '1.0.0';
+      json.dependencies['@react-native-async-storage/async-storage'] = '1.0.0';
       return JSON.stringify(json, null, 2);
     });
     // Add import for Nx to pick up

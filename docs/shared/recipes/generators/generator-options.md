@@ -15,7 +15,7 @@ Import the TypeScript schema into your generator file and replace the `any` in y
 
 ```typescript
 import { Tree, formatFiles, installPackagesTask } from '@nrwl/devkit';
-import { libraryGenerator } from '@nrwl/workspace/generators';
+import { libraryGenerator } from '@nrwl/js';
 
 export default async function (tree: Tree, schema: GeneratorOptions) {
   await libraryGenerator(tree, { name: `${schema.name}-${schema.type || ''}` });
@@ -903,7 +903,7 @@ Make sure that the number is less than the specified number.
 {
   "value": {
     "type": "number",
-    "maximum": 201
+    "exclusiveMaximum": 201
   }
 }
 ```

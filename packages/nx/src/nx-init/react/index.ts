@@ -1,14 +1,15 @@
 import { execSync } from 'child_process';
 import { copySync, moveSync, readdirSync, removeSync } from 'fs-extra';
 import { join } from 'path';
-import * as yargsParser from 'yargs-parser';
+import { InitArgs } from '../../command-line/init';
 import { fileExists, readJsonFile } from '../../utils/fileutils';
 import { output } from '../../utils/output';
 import {
-  PackageManagerCommands,
   detectPackageManager,
   getPackageManagerCommand,
+  PackageManagerCommands,
 } from '../../utils/package-manager';
+import { askAboutNxCloud, printFinalMessage } from '../utils';
 import { checkForCustomWebpackSetup } from './check-for-custom-webpack-setup';
 import { checkForUncommittedChanges } from './check-for-uncommitted-changes';
 import { cleanUpFiles } from './clean-up-files';
@@ -20,15 +21,9 @@ import { writeCracoConfig } from './write-craco-config';
 import { writeViteConfig } from './write-vite-config';
 import { writeViteIndexHtml } from './write-vite-index-html';
 
-export interface Options {
-  force: boolean;
-  e2e: boolean;
-  nxCloud: boolean;
-  vite: boolean;
-  integrated: boolean;
-}
+type Options = InitArgs;
 
-interface NormalizedOptions extends Options {
+type NormalizedOptions = Options & {
   packageManager: string;
   pmc: PackageManagerCommands;
   appIsJs: boolean;
@@ -37,38 +32,44 @@ interface NormalizedOptions extends Options {
   npxYesFlagNeeded: boolean;
   isVite: boolean;
   isStandalone: boolean;
-}
+};
 
-const parsedArgs = yargsParser(process.argv, {
-  boolean: ['force', 'e2e', 'nxCloud', 'vite', 'integrated'],
-  default: {
-    nxCloud: true,
-    vite: true,
-  },
-  configuration: {
-    'strip-dashed': true,
-  },
-});
-
-export async function addNxToCraRepo() {
-  if (!parsedArgs.force) {
+export async function addNxToCraRepo(options: Options) {
+  if (!options.force) {
     checkForUncommittedChanges();
     checkForCustomWebpackSetup();
   }
 
-  output.log({ title: '✨ Nx initialization' });
+  output.log({ title: '🐳 Nx initialization' });
 
-  const normalizedOptions = normalizeOptions(parsedArgs as unknown as Options);
+  const normalizedOptions = await normalizeOptions(options);
   await reorgnizeWorkspaceStructure(normalizedOptions);
 }
 
-function addDependencies(pmc: PackageManagerCommands, ...deps: string[]) {
-  const depsArg = deps.join(' ');
-  output.log({ title: `📦 Adding dependencies: ${depsArg}` });
-  execSync(`${pmc.addDev} ${depsArg}`, { stdio: [0, 1, 2] });
+function installDependencies(options: NormalizedOptions) {
+  const dependencies = [
+    '@testing-library/jest-dom',
+    'eslint-config-react-app',
+    'web-vitals',
+    'jest-watch-typeahead',
+  ];
+  if (options.isVite) {
+    dependencies.push('vite', 'vitest', '@vitejs/plugin-react');
+  } else {
+    dependencies.push(
+      '@craco/craco',
+      'cross-env',
+      'react-scripts',
+      'tsconfig-paths-webpack-plugin'
+    );
+  }
+
+  execSync(`${options.pmc.addDev} ${dependencies.join(' ')}`, {
+    stdio: [0, 1, 2],
+  });
 }
 
-function normalizeOptions(options: Options): NormalizedOptions {
+async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
   const packageManager = detectPackageManager();
   const pmc = getPackageManagerCommand(packageManager);
 
@@ -87,8 +88,12 @@ function normalizeOptions(options: Options): NormalizedOptions {
   const isVite = options.vite;
   const isStandalone = !options.integrated;
 
+  const nxCloud =
+    options.nxCloud ?? (options.interactive ? await askAboutNxCloud() : false);
+
   return {
     ...options,
+    nxCloud,
     packageManager,
     pmc,
     appIsJs,
@@ -120,31 +125,19 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   output.log({ title: '🙂 Please be patient, one final step remaining!' });
 
-  output.log({
-    title: '🧶  Adding npm packages to your new Nx workspace',
+  output.log({ title: '📦 Installing dependencies' });
+  installDependencies(options);
+
+  const buildCommand = options.integrated
+    ? `npx nx build ${options.reactAppName}`
+    : 'npm run build';
+  printFinalMessage({
+    learnMoreLink: 'https://nx.dev/recipes/adopting-nx/migration-cra',
+    bodyLines: [
+      `- Execute "${buildCommand}" twice to see the computation caching in action.`,
+    ],
   });
 
-  addDependencies(
-    options.pmc,
-    '@testing-library/jest-dom',
-    'eslint-config-react-app',
-    'web-vitals',
-    'jest-watch-typeahead'
-  );
-
-  if (options.isVite) {
-    addDependencies(options.pmc, 'vite', 'vitest', '@vitejs/plugin-react');
-  } else {
-    addDependencies(
-      options.pmc,
-      '@craco/craco',
-      'cross-env',
-      'react-scripts',
-      'tsconfig-paths-webpack-plugin'
-    );
-  }
-
-  output.log({ title: '🎉 Done!' });
   output.note({
     title: 'First time using Nx? Check out this interactive Nx tutorial.',
     bodyLines: [
@@ -166,19 +159,6 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
       title: `A new ${indexPath} has been created. Compare it to the previous ${oldIndexPath} file and make any changes needed, then delete the previous file.`,
     });
   }
-
-  output.note({
-    title: 'Or, you can try the commands!',
-    bodyLines: [
-      options.integrated ? `npx nx serve ${options.reactAppName}` : 'npm start',
-      options.integrated
-        ? `npx nx build ${options.reactAppName}`
-        : 'npm run build',
-      options.integrated ? `npx nx test ${options.reactAppName}` : `npm test`,
-      ` `,
-      `https://nx.dev/getting-started/intro#10-try-the-commands`,
-    ],
-  });
 }
 
 function createTempWorkspace(options: NormalizedOptions) {
@@ -307,12 +287,12 @@ function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
 
   setupTsConfig(options.reactAppName, options.isStandalone);
 
-  if (options.e2e && !options.isStandalone) {
+  if (options.addE2e && !options.isStandalone) {
     output.log({ title: '📃 Setup e2e tests' });
     setupE2eProject(options.reactAppName);
   } else {
     removeSync(join('apps', `${options.reactAppName}-e2e`));
-    execSync(`${options.pmc.rm} @nrwl/cypress eslint-plugin-cypress`);
+    execSync(`${options.pmc.rm} @nx/cypress eslint-plugin-cypress`);
   }
 
   if (options.isStandalone) {

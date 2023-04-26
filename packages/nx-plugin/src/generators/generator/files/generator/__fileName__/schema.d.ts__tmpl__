@@ -1,5 +1,0 @@
-export interface <%= className %>GeneratorSchema {
-    name: string;
-    tags?: string;
-    directory?: string;
-}

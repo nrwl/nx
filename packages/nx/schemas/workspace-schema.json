@@ -65,9 +65,19 @@
                                   "type": "object",
                                   "properties": {
                                     "projects": {
-                                      "type": "string",
-                                      "description": "The projects that the targets belong to.",
-                                      "enum": ["self", "dependencies"]
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "description": "{self}, {dependencies}, or a project name."
+                                        },
+                                        {
+                                          "type": "array",
+                                          "description": "An array of project specifiers: {self}, {dependencies}, or a project name.",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      ]
                                     },
                                     "target": {
                                       "type": "string",

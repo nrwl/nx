@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "update-jest-for-react-native": {
       "version": "12.5.0-beta.0",
       "cli": "nx",
@@ -77,6 +77,12 @@
       "version": "15.9.1-beta.0",
       "description": "Add target build-ios and pod-install for react native apps",
       "factory": "./src/migrations/update-15-9-1/add-build-ios-target"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/react-native with @nx/react-native",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },
   "packageJsonUpdates": {
@@ -128,18 +134,6 @@
           "version": "0.64.1",
           "alwaysAddToPackageJson": false
         },
-        "@nrwl/react": {
-          "version": "12.3.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@nrwl/jest": {
-          "version": "12.3.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@nrwl/linter": {
-          "version": "12.3.6",
-          "alwaysAddToPackageJson": false
-        },
         "@types/react": {
           "version": "17.0.6",
           "alwaysAddToPackageJson": false
@@ -185,14 +179,6 @@
     "12.5.0": {
       "version": "12.5.0-beta.0",
       "packages": {
-        "@nrwl/jest": {
-          "version": "12.5.7",
-          "alwaysAddToPackageJson": false
-        },
-        "@nrwl/linter": {
-          "version": "12.5.7",
-          "alwaysAddToPackageJson": false
-        },
         "react": {
           "version": "17.0.2",
           "alwaysAddToPackageJson": false
@@ -1277,6 +1263,31 @@
         },
         "@react-native-community/cli-platform-ios": {
           "version": "10.2.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.0",
+      "packages": {
+        "@react-native-community/cli": {
+          "version": "10.2.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.71.7",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.71.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "12.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "13.9.0",
           "alwaysAddToPackageJson": false
         }
       }

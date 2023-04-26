@@ -116,7 +116,7 @@ function run(): void {
     console.log(\`Node Express server listening on http://localhost:\${port}\`);
 
     /**
-     * DO NOT REMOVE IF USING @nrwl/angular:module-federation-dev-ssr executor
+     * DO NOT REMOVE IF USING @nx/angular:module-federation-dev-ssr executor
      * to serve your Host application with this Remote application.
      * This message allows Nx to determine when the Remote is ready to be
      * consumed by the Host.
@@ -147,9 +147,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 6`] = `
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 7`] = `
-"const {
-  withModuleFederationForSSR,
-} = require('@nrwl/angular/module-federation');
+"const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederationForSSR(config);
 "
@@ -190,24 +188,24 @@ export const remoteRoutes: Route[] = [
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 11`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
     },
-    "production": Object {
+    "production": {
       "outputHashing": "media",
     },
   },
   "defaultConfiguration": "production",
-  "dependsOn": Array [
+  "dependsOn": [
     "build",
   ],
-  "executor": "@nrwl/angular:webpack-server",
-  "options": Object {
-    "customWebpackConfig": Object {
+  "executor": "@nx/angular:webpack-server",
+  "options": {
+    "customWebpackConfig": {
       "path": "apps/test/webpack.server.config.js",
     },
     "main": "apps/test/server.ts",
@@ -228,34 +226,34 @@ export const remoteRoutes: Route[] = [
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 13`] = `
-Object {
-  "dependsOn": Array [
+{
+  "dependsOn": [
     "build",
     "server",
   ],
   "executor": "nx:run-commands",
-  "options": Object {
+  "options": {
     "command": "PORT=4201 node dist/apps/test/server/main.js",
   },
 }
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host 1`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+"const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);
 "
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host 2`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+"const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);
 "
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with no host 1`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+"const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);
 "
