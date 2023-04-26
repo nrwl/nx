@@ -37,8 +37,9 @@ describe('update-depends-on-to-tokens', () => {
     const nxJson = readNxJson(tree);
     const build = nxJson.targetDefaults.build.dependsOn[0] as any;
     const test = nxJson.targetDefaults.test.dependsOn[0] as any;
-    expect(build.projects).toEqual('{self}');
-    expect(test.projects).toEqual('{dependencies}');
+    expect(build.projects).not.toBeDefined();
+    expect(test.projects).not.toBeDefined();
+    expect(test.dependencies).toEqual(true);
     expect(nxJson.targetDefaults.other.dependsOn).toEqual(['^deps']);
   });
 
@@ -72,8 +73,10 @@ describe('update-depends-on-to-tokens', () => {
     const project = readProjectConfiguration(tree, 'proj1');
     const build = project.targets.build.dependsOn[0] as any;
     const test = project.targets.test.dependsOn[0] as any;
-    expect(build.projects).toEqual('{self}');
-    expect(test.projects).toEqual('{dependencies}');
+    expect(build.projects).not.toBeDefined();
+    expect(build.dependencies).not.toBeDefined();
+    expect(test.projects).not.toBeDefined();
+    expect(test.dependencies).toEqual(true);
     expect(project.targets.other.dependsOn).toEqual(['^deps']);
   });
 

@@ -63,7 +63,7 @@
     "16.0.0-tokens-for-depends-on": {
       "cli": "nx",
       "version": "16.0.0-beta.0",
-      "description": "Replace `dependsOn.projects` with {self} or {dependencies} tokens so that it matches the new expected formatting.",
+      "description": "Replace `dependsOn.projects` and `inputs` definitions with new configuration format.",
       "implementation": "./src/migrations/update-16-0-0/update-depends-on-to-tokens"
     },
     "16.0.0-update-nx-cloud-runner": {

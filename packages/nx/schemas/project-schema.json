@@ -58,16 +58,19 @@
                       "oneOf": [
                         {
                           "type": "string",
-                          "description": "{self}, {dependencies}, or a project name."
+                          "description": "A project name"
                         },
                         {
                           "type": "array",
-                          "description": "An array of project specifiers: {self}, {dependencies}, or a project name.",
+                          "description": "An array of project names",
                           "items": {
                             "type": "string"
                           }
                         }
                       ]
+                    },
+                    "dependencies": {
+                      "type": "boolean"
                     },
                     "target": {
                       "type": "string",
@@ -80,8 +83,24 @@
                       "default": "ignore"
                     }
                   },
-                  "additionalProperties": false,
-                  "required": ["projects", "target"]
+                  "oneOf": [
+                    {
+                      "required": ["projects", "target"]
+                    },
+                    {
+                      "required": ["dependencies", "target"]
+                    },
+                    {
+                      "required": ["target"],
+                      "not": {
+                        "anyOf": [
+                          { "required": ["projects"] },
+                          { "required": ["dependencies"] }
+                        ]
+                      }
+                    }
+                  ],
+                  "additionalProperties": false
                 }
               ]
             }

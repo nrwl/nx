@@ -18,10 +18,11 @@ export default async function (tree: Tree) {
       for (const dependency of targetConfiguration.dependsOn ?? []) {
         if (typeof dependency !== 'string') {
           if (dependency.projects === 'self') {
-            dependency.projects = '{self}';
+            delete dependency.projects;
             projectChanged = true;
           } else if (dependency.projects === 'dependencies') {
-            dependency.projects = '{dependencies}';
+            delete dependency.projects
+            dependency.dependencies = true;
             projectChanged = true;
           }
         }
@@ -41,10 +42,11 @@ function updateDependsOnInsideNxJson(tree: Tree) {
     for (const dependency of defaults.dependsOn ?? []) {
       if (typeof dependency !== 'string') {
         if (dependency.projects === 'self') {
-          dependency.projects = '{self}';
+          delete dependency.projects;
           nxJsonChanged = true;
         } else if (dependency.projects === 'dependencies') {
-          dependency.projects = '{dependencies}';
+          delete dependency.projects
+          dependency.dependencies = true;
           nxJsonChanged = true;
         }
       }
