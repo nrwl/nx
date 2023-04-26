@@ -37,6 +37,7 @@ export interface NextBuildBuilderOptions {
   includeDevDependenciesInPackageJson?: boolean;
   generateLockfile?: boolean;
   watch?: boolean;
+  debug?: boolean;
 }
 
 export interface NextServeBuilderOptions {
