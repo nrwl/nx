@@ -61,23 +61,6 @@ async function determinePluginName(
   return results.pluginName;
 }
 
-async function determineCreatePackageName(
-  parsedArgs: CreateNxPluginArguments
-): Promise<string> {
-  if (parsedArgs.createPackageName) {
-    return parsedArgs.createPackageName;
-  }
-
-  const results = await enquirer.prompt<{ createPackageName: string }>([
-    {
-      name: 'createPackageName',
-      message: `Create a package which can be used by npx to create a new workspace (Leave blank to not create this package)`,
-      type: 'input',
-    },
-  ]);
-  return results.createPackageName;
-}
-
 interface CreateNxPluginArguments {
   pluginName: string;
   createPackageName?: string;
@@ -177,7 +160,6 @@ async function normalizeArgsMiddleware(
 ): Promise<void> {
   try {
     const pluginName = await determinePluginName(argv);
-    const createPackageName = await determineCreatePackageName(argv);
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud = await determineNxCloud(argv);
@@ -185,12 +167,11 @@ async function normalizeArgsMiddleware(
 
     Object.assign(argv, {
       pluginName,
-      createPackageName,
       nxCloud,
       packageManager,
       defaultBase,
       ci,
-    } as Partial<CreateNxPluginArguments & CreateWorkspaceOptions>);
+    } as Partial<CreateNxPluginArguments>);
   } catch (e) {
     console.error(e);
     process.exit(1);
