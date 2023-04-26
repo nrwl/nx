@@ -8,4 +8,5 @@ export interface VitestExecutorOptions {
   update?: boolean;
   reportsDirectory?: string;
   coverage?: boolean;
+  testFile?: string;
 }
