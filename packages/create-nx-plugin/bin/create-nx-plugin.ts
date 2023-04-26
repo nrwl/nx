@@ -133,7 +133,10 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
     ],
   });
 
-  const workspaceInfo = await createWorkspace('@nx/plugin', populatedArguments);
+  const workspaceInfo = await createWorkspace(
+    `@nx/plugin@${nxVersion}`,
+    populatedArguments
+  );
 
   showNxWarning(parsedArgs.pluginName);
 
