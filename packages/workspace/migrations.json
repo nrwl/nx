@@ -95,6 +95,12 @@
       "description": "Generates a plugin called 'workspace-plugin' containing your workspace generators.",
       "cli": "nx",
       "implementation": "./src/migrations/update-16-0-0/move-workspace-generators-to-local-plugin"
+    },
+    "16-0-0-fix-invalid-babelrc": {
+      "version": "16.0.0-beta.9",
+      "description": "Fix .babelrc presets if it contains an invalid entry for @nx/web/babel.",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-16-0-0/fix-invalid-babelrc"
     }
   },
   "packageJsonUpdates": {
