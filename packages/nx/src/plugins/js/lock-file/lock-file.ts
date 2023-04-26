@@ -100,7 +100,7 @@ export function parseLockFile(
       return builder.getUpdatedProjectGraph();
     }
   } catch (e) {
-    if (!isPostInstallProcess()) {
+    if (shouldLogErrors()) {
       output.error({
         title: `Failed to parse ${packageManager} lockfile`,
         bodyLines: errorBodyLines(e),
@@ -170,7 +170,7 @@ export function createLockFile(
       return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
   } catch (e) {
-    if (!isPostInstallProcess()) {
+    if (shouldLogErrors()) {
       const additionalInfo = [
         'To prevent the build from breaking we are returning the root lock file.',
       ];
@@ -205,8 +205,9 @@ function errorBodyLines(originalError: Error, additionalInfo: string[] = []) {
   ];
 }
 
-function isPostInstallProcess(): boolean {
-  return (
+function shouldLogErrors(): boolean {
+  return !(
+    process.env.VERCEL &&
     process.env.npm_command === 'install' &&
     process.env.npm_lifecycle_event === 'postinstall'
   );
