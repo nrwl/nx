@@ -9,13 +9,13 @@ import { useEnvironmentConfig } from './hooks/use-environment-config';
 import { getGraphService } from './machines/graph.service';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import { ThemePanel } from './feature-projects/panels/theme-panel';
-import { Dropdown } from '@nrwl/graph/ui-components';
+import { Dropdown } from '@nx/graph/ui-components';
 import { useCurrentPath } from './hooks/use-current-path';
 import { ExperimentalFeature } from './ui-components/experimental-feature';
 import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
 import { getProjectGraphService } from './machines/get-services';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
-import { Tooltip } from '@nrwl/graph/ui-tooltips';
+import { Tooltip } from '@nx/graph/ui-tooltips';
 import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
 
 export function Shell(): JSX.Element {

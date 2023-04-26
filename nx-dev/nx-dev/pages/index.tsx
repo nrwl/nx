@@ -1,4 +1,4 @@
-import { Footer, Header } from '@nrwl/nx-dev/ui-common';
+import { Footer, Header } from '@nx/nx-dev/ui-common';
 import {
   ExtensibleAndIntegrated,
   GettingStarted,
@@ -11,7 +11,7 @@ import {
   NxIsFast,
   NxStatistics,
   Testimonials,
-} from '@nrwl/nx-dev/ui-home';
+} from '@nx/nx-dev/ui-home';
 import { NextSeo } from 'next-seo';
 
 export default function Index(): JSX.Element {

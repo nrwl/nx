@@ -1,7 +1,7 @@
 import { Popover, Transition } from '@headlessui/react';
 import { Bars4Icon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
-import { ThemeSwitcher } from '@nrwl/nx-dev/ui-theme';
+import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
+import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';

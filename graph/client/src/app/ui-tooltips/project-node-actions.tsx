@@ -1,8 +1,8 @@
-import { ProjectNodeToolTipProps } from '@nrwl/graph/ui-tooltips';
+import { ProjectNodeToolTipProps } from '@nx/graph/ui-tooltips';
 import { getProjectGraphService } from '../machines/get-services';
 import { useRouteConstructor } from '../util';
 import { useNavigate } from 'react-router-dom';
-import { TooltipButton, TooltipLinkButton } from '@nrwl/graph/ui-tooltips';
+import { TooltipButton, TooltipLinkButton } from '@nx/graph/ui-tooltips';
 import { FlagIcon, MapPinIcon } from '@heroicons/react/24/solid';
 
 export function ProjectNodeActions({ id }: ProjectNodeToolTipProps) {
