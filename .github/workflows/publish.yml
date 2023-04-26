@@ -15,7 +15,7 @@ jobs:
           - host: macos-latest
             target: x86_64-apple-darwin
             build: |
-              pnpm nx -- run-many --target=build-native -- --target=x86_64-apple-darwin
+              pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
           - host: windows-latest
             build: pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
