@@ -164,11 +164,10 @@ export class Hasher {
 
 const DEFAULT_INPUTS: ReadonlyArray<InputDefinition> = [
   {
-    projects: 'self',
     fileset: '{projectRoot}/**/*',
   },
   {
-    projects: 'dependencies',
+    dependencies: true,
     input: 'default',
   },
 ];
@@ -201,15 +200,19 @@ class TaskHasher {
       const targetDefaults = (this.nxJson.targetDefaults || {})[
         task.target.target
       ];
-      const { selfInputs, depsInputs } = splitInputsIntoSelfAndDependencies(
-        targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),
-        namedInputs
-      );
+      const { selfInputs, depsInputs, projectInputs } =
+        splitInputsIntoSelfAndDependencies(
+          targetData.inputs ||
+            targetDefaults?.inputs ||
+            (DEFAULT_INPUTS as any),
+          namedInputs
+        );
 
       const selfAndInputs = await this.hashSelfAndDepsInputs(
         task.target.project,
         selfInputs,
         depsInputs,
+        projectInputs,
         visited
       );
 
@@ -224,7 +227,7 @@ class TaskHasher {
     });
   }
 
-  private async hashNamedInput(
+  private async hashNamedInputForDependencies(
     projectName: string,
     namedInput: string,
     visited: string[]
@@ -240,11 +243,12 @@ class TaskHasher {
     };
 
     const selfInputs = expandNamedInput(namedInput, namedInputs);
-    const depsInputs = [{ input: namedInput }];
+    const depsInputs = [{ input: namedInput, dependencies: true as true }]; // true is boolean by default
     return this.hashSelfAndDepsInputs(
       projectName,
       selfInputs,
       depsInputs,
+      [],
       visited
     );
   }
@@ -252,19 +256,21 @@ class TaskHasher {
   private async hashSelfAndDepsInputs(
     projectName: string,
     selfInputs: ExpandedSelfInput[],
-    depsInputs: { input: string }[],
+    depsInputs: { input: string; dependencies: true }[],
+    projectInputs: { input: string; projects: string[] }[],
     visited: string[]
   ) {
     const projectGraphDeps = this.projectGraph.dependencies[projectName] ?? [];
     // we don't want random order of dependencies to change the hash
     projectGraphDeps.sort((a, b) => a.target.localeCompare(b.target));
 
-    const self = await this.hashSelfInputs(projectName, selfInputs);
+    const self = await this.hashSingleProjectInputs(projectName, selfInputs);
     const deps = await this.hashDepsInputs(
       depsInputs,
       projectGraphDeps,
       visited
     );
+    const projects = await this.hashProjectInputs(projectInputs, visited);
 
     let details = {};
     for (const s of self) {
@@ -273,10 +279,14 @@ class TaskHasher {
     for (const s of deps) {
       details = { ...details, ...s.details };
     }
+    for (const s of projects) {
+      details = { ...details, ...s.details };
+    }
 
     const value = this.hashing.hashArray([
       ...self.map((d) => d.value),
       ...deps.map((d) => d.value),
+      ...projects.map((d) => d.value),
     ]);
 
     return { value, details };
@@ -296,7 +306,7 @@ class TaskHasher {
                 return null;
               } else {
                 visited.push(d.target);
-                return await this.hashNamedInput(
+                return await this.hashNamedInputForDependencies(
                   d.target,
                   input.input || 'default',
                   visited
@@ -366,7 +376,7 @@ class TaskHasher {
     };
   }
 
-  private async hashSelfInputs(
+  private async hashSingleProjectInputs(
     projectName: string,
     inputs: ExpandedSelfInput[]
   ): Promise<PartialHash[]> {
@@ -420,6 +430,29 @@ class TaskHasher {
         r['runtime'] ? this.hashRuntime(r['runtime']) : this.hashEnv(r['env'])
       ),
     ]);
+  }
+
+  private async hashProjectInputs(
+    projectInputs: { input: string; projects: string[] }[],
+    visited: string[]
+  ): Promise<PartialHash[]> {
+    const partialHashes: Promise<PartialHash[]>[] = [];
+    for (const input of projectInputs) {
+      for (const project of input.projects) {
+        const namedInputs = getNamedInputs(
+          this.nxJson,
+          this.projectGraph.nodes[project]
+        );
+        const expandedInput = expandSingleProjectInputs(
+          [{ input: input.input }],
+          namedInputs
+        );
+        partialHashes.push(
+          this.hashSingleProjectInputs(project, expandedInput)
+        );
+      }
+    }
+    return Promise.all(partialHashes).then((hashes) => hashes.flat());
   }
 
   private async hashRootFileset(fileset: string): Promise<PartialHash> {
@@ -559,30 +592,55 @@ export function splitInputsIntoSelfAndDependencies(
   inputs: ReadonlyArray<InputDefinition | string>,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): {
-  depsInputs: { input: string }[];
+  depsInputs: { input: string; dependencies: true }[];
+  projectInputs: { input: string; projects: string[] }[];
   selfInputs: ExpandedSelfInput[];
 } {
-  const depsInputs = [];
+  const depsInputs: { input: string; dependencies: true }[] = [];
+  const projectInputs: { input: string; projects: string[] }[] = [];
   const selfInputs = [];
   for (const d of inputs) {
     if (typeof d === 'string') {
       if (d.startsWith('^')) {
-        depsInputs.push({ input: d.substring(1) });
+        depsInputs.push({ input: d.substring(1), dependencies: true });
       } else {
         selfInputs.push(d);
       }
     } else {
-      if ((d as any).projects === 'dependencies') {
-        depsInputs.push(d as any);
+      if (
+        ('dependencies' in d && d.dependencies) ||
+        // Todo(@AgentEnder): Remove check in v17
+        ('projects' in d &&
+          typeof d.projects === 'string' &&
+          d.projects === 'dependencies')
+      ) {
+        depsInputs.push({
+          input: d.input,
+          dependencies: true,
+        });
+      } else if (
+        'projects' in d &&
+        d.projects &&
+        // Todo(@AgentEnder): Remove check in v17
+        !(d.projects === 'self')
+      ) {
+        projectInputs.push({
+          input: d.input,
+          projects: Array.isArray(d.projects) ? d.projects : [d.projects],
+        });
       } else {
         selfInputs.push(d);
       }
     }
   }
-  return { depsInputs, selfInputs: expandSelfInputs(selfInputs, namedInputs) };
+  return {
+    depsInputs,
+    projectInputs,
+    selfInputs: expandSingleProjectInputs(selfInputs, namedInputs),
+  };
 }
 
-function expandSelfInputs(
+function expandSingleProjectInputs(
   inputs: ReadonlyArray<InputDefinition | string>,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): ExpandedSelfInput[] {
@@ -598,9 +656,9 @@ function expandSelfInputs(
         expanded.push({ fileset: d });
       }
     } else {
-      if ((d as any).projects === 'dependencies') {
+      if ((d as any).projects || (d as any).dependencies) {
         throw new Error(
-          `namedInputs definitions cannot contain any inputs with projects == 'dependencies'`
+          `namedInputs definitions can only refer to other namedInputs definitions within the same project.`
         );
       }
       if ((d as any).fileset || (d as any).env || (d as any).runtime) {
@@ -619,7 +677,7 @@ export function expandNamedInput(
 ): ExpandedSelfInput[] {
   namedInputs ||= {};
   if (!namedInputs[input]) throw new Error(`Input '${input}' is not defined`);
-  return expandSelfInputs(namedInputs[input], namedInputs);
+  return expandSingleProjectInputs(namedInputs[input], namedInputs);
 }
 
 export function filterUsingGlobPatterns(

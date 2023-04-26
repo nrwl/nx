@@ -24,11 +24,10 @@ describe('createTaskGraph', () => {
                 executor: 'nx:run-commands',
                 dependsOn: [
                   {
-                    projects: '{dependencies}',
+                    dependencies: true,
                     target: 'build',
                   },
                   {
-                    projects: '{self}',
                     target: 'prebuild',
                   },
                   {
@@ -173,7 +172,7 @@ describe('createTaskGraph', () => {
                 },
                 dependsOn: [
                   {
-                    projects: '{dependencies}',
+                    dependencies: true,
                     target: 'build',
                   },
                 ],
@@ -196,7 +195,7 @@ describe('createTaskGraph', () => {
                 defaultConfiguration: 'libDefault',
                 dependsOn: [
                   {
-                    projects: '{dependencies}',
+                    dependencies: true,
                     target: 'build',
                   },
                 ],
@@ -337,7 +336,7 @@ describe('createTaskGraph', () => {
                 executor: 'my-executor',
                 dependsOn: [
                   {
-                    projects: '{dependencies}',
+                    dependencies: true,
                     target: 'build',
                   },
                 ],
@@ -508,11 +507,11 @@ describe('createTaskGraph', () => {
                 executor: 'nx:run-commands',
                 dependsOn: [
                   {
-                    projects: '{dependencies}',
+                    dependencies: true,
                     target: 'build',
                     params: 'forward',
                   },
-                  { projects: '{self}', target: 'prebuild', params: 'forward' },
+                  { target: 'prebuild', params: 'forward' },
                 ],
               },
               test: {
@@ -535,7 +534,7 @@ describe('createTaskGraph', () => {
                 executor: 'nx:run-commands',
                 dependsOn: [
                   {
-                    projects: '{dependencies}',
+                    dependencies: true,
                     target: 'build',
                     params: 'ignore',
                   },
@@ -844,7 +843,7 @@ describe('createTaskGraph', () => {
       {
         build: [
           {
-            projects: '{dependencies}',
+            dependencies: true,
             target: 'build',
           },
         ],
@@ -1005,9 +1004,9 @@ describe('createTaskGraph', () => {
       {
         build: ['^build'],
         apply: [
-          { projects: '{dependencies}', target: 'build' },
+          { dependencies: true, target: 'build' },
           {
-            projects: '{dependencies}',
+            dependencies: true,
             target: 'apply',
             params: 'forward',
           },
@@ -1083,11 +1082,11 @@ describe('createTaskGraph', () => {
             targets: {
               build: {
                 executor: 'nx:run-commands',
-                dependsOn: [{ target: 'test', projects: '{self}' }],
+                dependsOn: [{ target: 'test' }],
               },
               test: {
                 executor: 'nx:run-commands',
-                dependsOn: [{ target: 'build', projects: '{self}' }],
+                dependsOn: [{ target: 'build' }],
               },
             },
           },
@@ -1192,7 +1191,7 @@ describe('createTaskGraph', () => {
     const taskGraph = createTaskGraph(
       projectGraph,
       {
-        build: [{ target: 'build', projects: '{dependencies}' }],
+        build: [{ target: 'build', dependencies: true }],
       },
       ['app1'],
       ['build'],
@@ -1283,7 +1282,7 @@ describe('createTaskGraph', () => {
     const taskGraph = createTaskGraph(
       projectGraph,
       {
-        build: [{ target: 'build', projects: '{dependencies}' }],
+        build: [{ target: 'build', dependencies: true }],
       },
       ['app1'],
       ['build'],
@@ -1338,8 +1337,8 @@ describe('createTaskGraph', () => {
               build: {
                 executor: 'nx:run-commands',
                 dependsOn: [
-                  { target: 'prebuild', projects: '{self}' },
-                  { target: 'build', projects: '{dependencies}' },
+                  { target: 'prebuild' },
+                  { target: 'build', dependencies: true },
                 ],
               },
               prebuild: {

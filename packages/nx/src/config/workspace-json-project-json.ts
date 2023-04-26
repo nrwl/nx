@@ -102,18 +102,20 @@ export interface ProjectConfiguration {
 
 export interface TargetDependencyConfig {
   /**
-   * A list of projects that have `target`. Supports project names or two special values:
-   *
-   * - '{self}': This target depends on another target of the same project
-   * - '{dependencies}': This target depends on targets of the projects of it's deps.
-   *
-   * The special values {self}/{dependencies} should be preferred - they prevent cases where a project
-   * that needs to be built is missed.
+   * A list of projects that have `target`.
+   * Should not be specified together with `dependencies`.
    */
-  projects: string[] | string;
+  projects?: string[] | string;
 
   /**
-   * The name of the target
+   * If true, the target will be executed for each project that this project depends on.
+   * Should not be specified together with `projects`.
+   */
+  dependencies?: boolean;
+
+  /**
+   * The name of the target to run. If `projects` and `dependencies` are not specified,
+   * the target will be executed for the same project the the current target is running on`.
    */
   target: string;
 
@@ -124,7 +126,9 @@ export interface TargetDependencyConfig {
 }
 
 export type InputDefinition =
-  | { input: string; projects: 'self' | 'dependencies' }
+  | { input: string; projects: string | string[] }
+  | { input: string; dependencies: true }
+  | { input: string }
   | { fileset: string }
   | { runtime: string }
   | { env: string };

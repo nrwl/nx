@@ -7,7 +7,7 @@ import {
 import { Tree } from '../../generators/tree';
 
 export default async function (tree: Tree) {
-  updateDependsOnInsideNxJson(tree);
+  updateDependsOnAndInputsInsideNxJson(tree);
 
   const projectsConfigurations = getProjects(tree);
   for (const [projectName, projectConfiguration] of projectsConfigurations) {
@@ -17,11 +17,41 @@ export default async function (tree: Tree) {
     )) {
       for (const dependency of targetConfiguration.dependsOn ?? []) {
         if (typeof dependency !== 'string') {
-          if (dependency.projects === 'self') {
-            dependency.projects = '{self}';
+          if (
+            dependency.projects === 'self' ||
+            dependency.projects === '{self}'
+          ) {
+            delete dependency.projects;
             projectChanged = true;
-          } else if (dependency.projects === 'dependencies') {
-            dependency.projects = '{dependencies}';
+          } else if (
+            dependency.projects === 'dependencies' ||
+            dependency.projects === '{dependencies}'
+          ) {
+            delete dependency.projects;
+            dependency.dependencies = true;
+            projectChanged = true;
+          }
+        }
+      }
+      for (let i = 0; i < targetConfiguration.inputs?.length ?? 0; i++) {
+        const input = targetConfiguration.inputs[i];
+        if (typeof input !== 'string') {
+          if (
+            'projects' in input &&
+            (input.projects === 'self' || input.projects === '{self}')
+          ) {
+            delete input.projects;
+            projectChanged = true;
+          } else if (
+            'projects' in input &&
+            (input.projects === 'dependencies' ||
+              input.projects === '{dependencies}')
+          ) {
+            delete input.projects;
+            targetConfiguration.inputs[i] = {
+              ...input,
+              dependencies: true,
+            };
             projectChanged = true;
           }
         }
@@ -32,7 +62,7 @@ export default async function (tree: Tree) {
     }
   }
 }
-function updateDependsOnInsideNxJson(tree: Tree) {
+function updateDependsOnAndInputsInsideNxJson(tree: Tree) {
   const nxJson = readNxJson(tree);
   let nxJsonChanged = false;
   for (const [target, defaults] of Object.entries(
@@ -40,11 +70,41 @@ function updateDependsOnInsideNxJson(tree: Tree) {
   )) {
     for (const dependency of defaults.dependsOn ?? []) {
       if (typeof dependency !== 'string') {
-        if (dependency.projects === 'self') {
-          dependency.projects = '{self}';
+        if (
+          dependency.projects === 'self' ||
+          dependency.projects === '{self}'
+        ) {
+          delete dependency.projects;
           nxJsonChanged = true;
-        } else if (dependency.projects === 'dependencies') {
-          dependency.projects = '{dependencies}';
+        } else if (
+          dependency.projects === 'dependencies' ||
+          dependency.projects === '{dependencies}'
+        ) {
+          delete dependency.projects;
+          dependency.dependencies = true;
+          nxJsonChanged = true;
+        }
+      }
+    }
+    for (let i = 0; i < defaults.inputs?.length ?? 0; i++) {
+      const input = defaults.inputs[i];
+      if (typeof input !== 'string') {
+        if (
+          'projects' in input &&
+          (input.projects === 'self' || input.projects === '{self}')
+        ) {
+          delete input.projects;
+          nxJsonChanged = true;
+        } else if (
+          'projects' in input &&
+          (input.projects === 'dependencies' ||
+            input.projects === '{dependencies}')
+        ) {
+          delete input.projects;
+          defaults.inputs[i] = {
+            ...input,
+            dependencies: true,
+          };
           nxJsonChanged = true;
         }
       }

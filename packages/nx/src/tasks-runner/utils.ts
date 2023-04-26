@@ -36,22 +36,29 @@ export function getDependencyConfigs(
       typeof dependencyConfig.projects === 'string'
         ? [dependencyConfig.projects]
         : dependencyConfig.projects;
-    for (const specifier of specifiers) {
+    for (const specifier of specifiers ?? []) {
       if (
         !(specifier in projectGraph.nodes) &&
-        // Todo(@agentender): Remove the non-token forms of these for v17
-        !['{self}', '{dependencies}', 'self', 'dependencies'].includes(
-          specifier
-        )
+        // Todo(@agentender): Remove the check for self / dependencies in v17
+        !['self', 'dependencies'].includes(specifier)
       ) {
         output.error({
           title: `dependsOn is improperly configured for ${project}:${target}`,
           bodyLines: [
-            `${specifier} in dependsOn.projects is invalid. It should be "{self}", "{dependencies}", or a project name.`,
+            `${specifier} in dependsOn.projects is invalid. It should be "self", "dependencies", or a project name.`,
           ],
         });
         process.exit(1);
       }
+    }
+    if (dependencyConfig.projects && dependencyConfig.dependencies) {
+      output.error({
+        title: `dependsOn is improperly configured for ${project}:${target}`,
+        bodyLines: [
+          `dependsOn.projects and dependsOn.dependencies cannot be used together.`,
+        ],
+      });
+      process.exit(1);
     }
   }
   return dependencyConfigs;
@@ -63,9 +70,9 @@ function expandDependencyConfigSyntaxSugar(
   return deps.map((d) => {
     if (typeof d === 'string') {
       if (d.startsWith('^')) {
-        return { projects: '{dependencies}', target: d.substring(1) };
+        return { dependencies: true, target: d.substring(1) };
       } else {
-        return { projects: '{self}', target: d };
+        return { target: d };
       }
     } else {
       return d;
