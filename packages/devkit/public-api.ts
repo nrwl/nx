@@ -112,24 +112,25 @@ export { moveFilesToNewDirectory } from './src/utils/move-dir';
 
 /**
  * @category Utils
+ * @deprecated Accessing the Module Federation Utils from the Public API of @nx/devkit is deprecated and they will be removed from the Public API in v17.
  */
 export {
+  AdditionalSharedConfig,
+  ModuleFederationConfig,
   SharedLibraryConfig,
   SharedWorkspaceLibraryConfig,
-  AdditionalSharedConfig,
-  applySharedFunction,
-  applyAdditionalShared,
-  mapRemotes,
-  mapRemotesForSSR,
-  getNpmPackageSharedConfig,
-  shareWorkspaceLibraries,
-  sharePackages,
-  getDependentPackagesForProject,
-  ModuleFederationConfig,
-  ModuleFederationLibrary,
-  readRootPackageJson,
   WorkspaceLibrary,
   SharedFunction,
   WorkspaceLibrarySecondaryEntryPoint,
   Remotes,
-} from './src/utils/module-federation';
+  ModuleFederationLibrary,
+  applySharedFunction,
+  applyAdditionalShared,
+  getNpmPackageSharedConfig,
+  shareWorkspaceLibraries,
+  sharePackages,
+  mapRemotes,
+  mapRemotesForSSR,
+  getDependentPackagesForProject,
+  readRootPackageJson,
+} from './src/utils/module-federation/public-api';

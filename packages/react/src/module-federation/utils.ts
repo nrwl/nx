@@ -1,16 +1,18 @@
 import {
   applyAdditionalShared,
   applySharedFunction,
-  createProjectGraphAsync,
   getDependentPackagesForProject,
   mapRemotes,
   mapRemotesForSSR,
   ModuleFederationConfig,
-  ProjectConfiguration,
-  ProjectGraph,
-  readCachedProjectGraph,
   sharePackages,
   shareWorkspaceLibraries,
+} from '@nx/devkit/src/utils/module-federation';
+
+import {
+  createProjectGraphAsync,
+  ProjectGraph,
+  readCachedProjectGraph,
 } from '@nx/devkit';
 
 export async function getModuleFederationConfig(
