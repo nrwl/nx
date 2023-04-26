@@ -5,9 +5,7 @@ import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
 import { setupCI } from './utils/ci/setup-ci';
-import { messages, recordStat } from './utils/nx/ab-testing';
 import { initializeGitRepo } from './utils/git/git';
-import { nxVersion } from './utils/nx/nx-version';
 import { getThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { mapErrorToBodyLines } from './utils/error-utils';
 

@@ -71,6 +71,5 @@ describe('create-nx-plugin', () => {
     checkFilesExist(`dist/create-${pluginName}-package/bin/index.js`);
 
     expect(() => runCLI(`e2e e2e`)).not.toThrow();
-    expect(() => runCLI(`e2e create-${pluginName}-package-e2e`)).not.toThrow();
   });
 });

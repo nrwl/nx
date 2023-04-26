@@ -12,6 +12,7 @@
       "name": {
         "type": "string",
         "description": "The package name of cli, e.g. `create-framework-package`. Note this must be a valid NPM name to be published.",
+        "pattern": "create-.+|^@.+/create(?:-.+)?",
         "$default": { "$source": "argv", "index": 0 },
         "x-priority": "important"
       },

@@ -197,10 +197,7 @@ function addProject(
       const publishScriptPath = addMinimalPublishScript(tree);
 
       projectConfiguration.targets.publish = {
-        executor: 'nx:run-commands',
-        options: {
-          command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
-        },
+        command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
         dependsOn: ['build'],
       };
     }

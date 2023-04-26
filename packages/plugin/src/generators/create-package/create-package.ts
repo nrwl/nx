@@ -39,9 +39,6 @@ export async function createPackageGenerator(
   tasks.push(installTask);
 
   await createCliPackage(host, options, pluginPackageName);
-  if (options.e2eTestRunner !== 'none') {
-    tasks.push(await addE2eProject(host, options));
-  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

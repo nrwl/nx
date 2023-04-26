@@ -957,11 +957,8 @@ describe('lib', () => {
 
         const config = readProjectConfiguration(tree, 'my-lib');
         expect(config.targets.publish).toEqual({
-          executor: 'nx:run-commands',
-          options: {
-            command:
-              'node tools/scripts/publish.mjs my-lib {args.ver} {args.tag}',
-          },
+          command:
+            'node tools/scripts/publish.mjs my-lib {args.ver} {args.tag}',
           dependsOn: ['build'],
         });
       });
