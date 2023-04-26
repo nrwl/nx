@@ -58,6 +58,10 @@
         "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
         "oneOf": [{ "type": "boolean" }, { "type": "string" }]
       },
+      "target": {
+        "description": "Browser compatibility target for the final bundle. For more info: https://vitejs.dev/config/build-options.html#build-target",
+        "type": "string"
+      },
       "minify": {
         "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
         "oneOf": [{ "type": "boolean" }, { "type": "string" }]
