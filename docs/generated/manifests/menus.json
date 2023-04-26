@@ -872,14 +872,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Create Your Own Plugin",
-            "path": "/plugin-features/create-your-own-plugin",
-            "id": "create-your-own-plugin",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -896,14 +888,6 @@
         "name": "Use Code Generators",
         "path": "/plugin-features/use-code-generators",
         "id": "use-code-generators",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Create Your Own Plugin",
-        "path": "/plugin-features/create-your-own-plugin",
-        "id": "create-your-own-plugin",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3303,14 +3287,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Create a Plugin",
-            "path": "/plugins/intro/create-plugin",
-            "id": "create-plugin",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Plugin Registry",
             "path": "/plugins/registry",
             "id": "registry",
@@ -3330,14 +3306,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Create a Plugin",
-        "path": "/plugins/intro/create-plugin",
-        "id": "create-plugin",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Plugin Registry",
         "path": "/plugins/registry",
         "id": "registry",
@@ -3346,152 +3314,127 @@
         "disableCollapsible": false
       },
       {
-        "name": "Executors",
-        "path": "/plugins/executors",
-        "id": "executors",
+        "name": "5 Min Tutorials",
+        "path": "/plugins/tutorials",
+        "id": "tutorials",
         "isExternal": false,
         "children": [
           {
-            "name": "Local Executors",
-            "path": "/plugins/executors/creating-custom-executors",
-            "id": "creating-custom-executors",
+            "name": "Create a Local Plugin",
+            "path": "/plugins/tutorials/create-plugin",
+            "id": "create-plugin",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Maintain a Published Plugin",
+            "path": "/plugins/tutorials/publish-plugin",
+            "id": "publish-plugin",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Use Nx as Your Framework CLI",
+            "path": "/plugins/tutorials/nx-framework-cli",
+            "id": "nx-framework-cli",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Create a Local Plugin",
+        "path": "/plugins/tutorials/create-plugin",
+        "id": "create-plugin",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Maintain a Published Plugin",
+        "path": "/plugins/tutorials/publish-plugin",
+        "id": "publish-plugin",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Use Nx as Your Framework CLI",
+        "path": "/plugins/tutorials/nx-framework-cli",
+        "id": "nx-framework-cli",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Recipes",
+        "path": "/plugins/recipes",
+        "id": "recipes",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Write a Simple Executor",
+            "path": "/plugins/recipes/local-executors",
+            "id": "local-executors",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
             "name": "Compose Executors",
-            "path": "/plugins/executors/compose-executors",
+            "path": "/plugins/recipes/compose-executors",
             "id": "compose-executors",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Local Executors",
-        "path": "/plugins/executors/creating-custom-executors",
-        "id": "creating-custom-executors",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Compose Executors",
-        "path": "/plugins/executors/compose-executors",
-        "id": "compose-executors",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Generators",
-        "path": "/plugins/generators",
-        "id": "generators",
-        "isExternal": false,
-        "children": [
+          },
           {
-            "name": "Local Generators",
-            "path": "/plugins/generators/local-generators",
+            "name": "Write a Simple Generator",
+            "path": "/plugins/recipes/local-generators",
             "id": "local-generators",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Composing Generators",
-            "path": "/plugins/generators/composing-generators",
+            "name": "Compose Generators",
+            "path": "/plugins/recipes/composing-generators",
             "id": "composing-generators",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Generator Options",
-            "path": "/plugins/generators/generator-options",
+            "name": "Provide Options for Generators",
+            "path": "/plugins/recipes/generator-options",
             "id": "generator-options",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Creating Files",
-            "path": "/plugins/generators/creating-files",
+            "name": "Create Files",
+            "path": "/plugins/recipes/creating-files",
             "id": "creating-files",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Modifying Files",
-            "path": "/plugins/generators/modifying-files",
+            "name": "Modify Files",
+            "path": "/plugins/recipes/modifying-files",
             "id": "modifying-files",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Local Generators",
-        "path": "/plugins/generators/local-generators",
-        "id": "local-generators",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Composing Generators",
-        "path": "/plugins/generators/composing-generators",
-        "id": "composing-generators",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Generator Options",
-        "path": "/plugins/generators/generator-options",
-        "id": "generator-options",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Creating Files",
-        "path": "/plugins/generators/creating-files",
-        "id": "creating-files",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Modifying Files",
-        "path": "/plugins/generators/modifying-files",
-        "id": "modifying-files",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Advanced",
-        "path": "/plugins/advanced",
-        "id": "advanced",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Share Your Plugin",
-            "path": "/plugins/advanced/share-your-plugin",
-            "id": "share-your-plugin",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Migration Generators",
-            "path": "/plugins/advanced/migration-generators",
+            "name": "Write a Migration",
+            "path": "/plugins/recipes/migration-generators",
             "id": "migration-generators",
             "isExternal": false,
             "children": [],
@@ -3499,23 +3442,23 @@
           },
           {
             "name": "Create a Preset",
-            "path": "/plugins/advanced/create-preset",
+            "path": "/plugins/recipes/create-preset",
             "id": "create-preset",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Project Graph Plugins",
-            "path": "/plugins/advanced/project-graph-plugins",
+            "name": "Modify the Project Graph",
+            "path": "/plugins/recipes/project-graph-plugins",
             "id": "project-graph-plugins",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Project Inference Plugins",
-            "path": "/plugins/advanced/project-inference-plugins",
+            "name": "Identify Custom Projects",
+            "path": "/plugins/recipes/project-inference-plugins",
             "id": "project-inference-plugins",
             "isExternal": false,
             "children": [],
@@ -3525,16 +3468,64 @@
         "disableCollapsible": false
       },
       {
-        "name": "Share Your Plugin",
-        "path": "/plugins/advanced/share-your-plugin",
-        "id": "share-your-plugin",
+        "name": "Write a Simple Executor",
+        "path": "/plugins/recipes/local-executors",
+        "id": "local-executors",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Migration Generators",
-        "path": "/plugins/advanced/migration-generators",
+        "name": "Compose Executors",
+        "path": "/plugins/recipes/compose-executors",
+        "id": "compose-executors",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Write a Simple Generator",
+        "path": "/plugins/recipes/local-generators",
+        "id": "local-generators",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Compose Generators",
+        "path": "/plugins/recipes/composing-generators",
+        "id": "composing-generators",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Provide Options for Generators",
+        "path": "/plugins/recipes/generator-options",
+        "id": "generator-options",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Create Files",
+        "path": "/plugins/recipes/creating-files",
+        "id": "creating-files",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Modify Files",
+        "path": "/plugins/recipes/modifying-files",
+        "id": "modifying-files",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Write a Migration",
+        "path": "/plugins/recipes/migration-generators",
         "id": "migration-generators",
         "isExternal": false,
         "children": [],
@@ -3542,23 +3533,23 @@
       },
       {
         "name": "Create a Preset",
-        "path": "/plugins/advanced/create-preset",
+        "path": "/plugins/recipes/create-preset",
         "id": "create-preset",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Project Graph Plugins",
-        "path": "/plugins/advanced/project-graph-plugins",
+        "name": "Modify the Project Graph",
+        "path": "/plugins/recipes/project-graph-plugins",
         "id": "project-graph-plugins",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Project Inference Plugins",
-        "path": "/plugins/advanced/project-inference-plugins",
+        "name": "Identify Custom Projects",
+        "path": "/plugins/recipes/project-inference-plugins",
         "id": "project-inference-plugins",
         "isExternal": false,
         "children": [],

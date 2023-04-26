@@ -16,9 +16,7 @@ export function PluginDirectory({
 }): JSX.Element {
   const [searchTerm, setSearchTerm] = useState('');
   return (
-    <div
-      id="plugin-directory"
-    >
+    <div id="plugin-directory">
       <div className="flex w-full flex-col justify-between gap-8 md:flex-row ">
         <SectionHeading as="h2" variant="display" id="plugins-registry">
           Nx Plugins Registry

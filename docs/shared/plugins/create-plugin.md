@@ -32,7 +32,7 @@ To create a new generator run:
 nx generate @nx/nx-plugin:generator my-generator --project=my-plugin
 ```
 
-The new generator is located in `/src/generators/my-generator`.  The `my-generator.ts` file contains the code that runs the generator.  This generator creates a new project using a folder of template files.
+The new generator is located in `/src/generators/my-generator`. The `my-generator.ts` file contains the code that runs the generator. This generator creates a new project using a folder of template files.
 
 For more information about this sample generator, read the [simple generator recipe](/plugins/recipes/local-generator).
 
@@ -60,7 +60,7 @@ To create a new executor run:
 nx generate @nx/nx-plugin:executor my-executor --project=my-plugin
 ```
 
-The new executor is located in `/src/executors/my-executor`.  The `my-executor.ts` file contains the code that runs the executor.  This executor emits a console log, but executors can compile code, deploy an app, publish to NPM and much more.
+The new executor is located in `/src/executors/my-executor`. The `my-executor.ts` file contains the code that runs the executor. This executor emits a console log, but executors can compile code, deploy an app, publish to NPM and much more.
 
 For more information about this sample executor, read the [simple executor recipe](/plugins/recipes/local-executor).
 
@@ -68,7 +68,7 @@ For more information about this sample executor, read the [simple executor recip
 
 The executor spec file contains boilerplate to run the default exported function from the executor.
 
-These tests should make sure that the executor is executing and calling the functions that it relies on.  Typically, unit tests are more useful for generators and e2e tests are more useful for executors.
+These tests should make sure that the executor is executing and calling the functions that it relies on. Typically, unit tests are more useful for generators and e2e tests are more useful for executors.
 
 ## Testing your plugin
 

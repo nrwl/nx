@@ -335,12 +335,6 @@
               "id": "use-code-generators",
               "tags": ["use-code-generators"],
               "file": "shared/plugin-features/use-code-generators"
-            },
-            {
-              "name": "Create Your Own Plugin",
-              "id": "create-your-own-plugin",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/plugin-features/create-your-own-plugin"
             }
           ]
         },
@@ -783,12 +777,12 @@
             {
               "name": "Maintain a Published Plugin",
               "id": "publish-plugin",
-              "file": "shared/plugins/publish-plugin"
+              "file": "shared/plugins/maintain-published-plugin"
             },
             {
               "name": "Use Nx as Your Framework CLI",
               "id": "nx-framework-cli",
-              "file": "shared/plugins/nx-framework-cli"
+              "file": "shared/plugins/use-nx-as-your-framework-cli"
             }
           ]
         },
