@@ -40,6 +40,8 @@ describe('nx init (for React)', () => {
     expect(packageJson.devDependencies['@nx/jest']).toBeDefined();
     expect(packageJson.devDependencies['@nx/vite']).toBeUndefined();
     expect(packageJson.devDependencies['@nx/webpack']).toBeDefined();
+    expect(packageJson.dependencies['redux']).toBeDefined();
+    expect(packageJson.name).toEqual(appName);
 
     runCLI(`build ${appName}`, {
       env: {
@@ -149,6 +151,8 @@ describe('nx init (for React)', () => {
 
     const packageJson = readJson('package.json');
     expect(packageJson.devDependencies['@nx/jest']).toBeUndefined();
+    expect(packageJson.dependencies['redux']).toBeDefined();
+    expect(packageJson.name).toEqual(appName);
 
     const viteConfig = readFile(`vite.config.js`);
     expect(viteConfig).toContain('port: 4200'); // default port
@@ -186,6 +190,7 @@ function createReactApp(appName: string) {
       'react-dom': '^18.2.0',
       'react-scripts': '5.0.1',
       'web-vitals': '2.1.4',
+      redux: '^3.6.0',
     },
     scripts: {
       start: 'react-scripts start',
