@@ -19,6 +19,7 @@ describe('update-depends-on-to-tokens', () => {
               projects: 'self',
             },
           ],
+          inputs: [{ projects: 'self', input: 'someInput' }],
         },
         test: {
           dependsOn: [
@@ -26,6 +27,7 @@ describe('update-depends-on-to-tokens', () => {
               projects: 'dependencies',
             },
           ],
+          inputs: [{ projects: 'dependencies', input: 'someInput' }],
         },
         other: {
           dependsOn: ['^deps'],
@@ -35,11 +37,21 @@ describe('update-depends-on-to-tokens', () => {
     });
     await update(tree);
     const nxJson = readNxJson(tree);
-    const build = nxJson.targetDefaults.build.dependsOn[0] as any;
-    const test = nxJson.targetDefaults.test.dependsOn[0] as any;
-    expect(build.projects).not.toBeDefined();
-    expect(test.projects).not.toBeDefined();
-    expect(test.dependencies).toEqual(true);
+    const buildDependencyConfiguration = nxJson.targetDefaults.build
+      .dependsOn[0] as any;
+    const testDependencyConfiguration = nxJson.targetDefaults.test
+      .dependsOn[0] as any;
+    const buildInputConfiguration = nxJson.targetDefaults.build
+      .inputs[0] as any;
+    const testInputConfiguration = nxJson.targetDefaults.test.inputs[0] as any;
+    expect(buildDependencyConfiguration.projects).not.toBeDefined();
+    expect(buildDependencyConfiguration.dependencies).not.toBeDefined();
+    expect(buildInputConfiguration.projects).not.toBeDefined();
+    expect(buildInputConfiguration.dependencies).not.toBeDefined();
+    expect(testInputConfiguration.projects).not.toBeDefined();
+    expect(testInputConfiguration.dependencies).toEqual(true);
+    expect(testDependencyConfiguration.projects).not.toBeDefined();
+    expect(testDependencyConfiguration.dependencies).toEqual(true);
     expect(nxJson.targetDefaults.other.dependsOn).toEqual(['^deps']);
   });
 
@@ -55,6 +67,7 @@ describe('update-depends-on-to-tokens', () => {
               target: 'build',
             },
           ],
+          inputs: [{ projects: 'self', input: 'someInput' }],
         },
         test: {
           dependsOn: [
@@ -63,6 +76,7 @@ describe('update-depends-on-to-tokens', () => {
               target: 'test',
             },
           ],
+          inputs: [{ projects: 'dependencies', input: 'someInput' }],
         },
         other: {
           dependsOn: ['^deps'],
@@ -71,13 +85,22 @@ describe('update-depends-on-to-tokens', () => {
     });
     await update(tree);
     const project = readProjectConfiguration(tree, 'proj1');
-    const build = project.targets.build.dependsOn[0] as any;
-    const test = project.targets.test.dependsOn[0] as any;
-    expect(build.projects).not.toBeDefined();
-    expect(build.dependencies).not.toBeDefined();
-    expect(test.projects).not.toBeDefined();
-    expect(test.dependencies).toEqual(true);
+    const buildDependencyConfiguration = project.targets.build
+      .dependsOn[0] as any;
+    const testDependencyConfiguration = project.targets.test
+      .dependsOn[0] as any;
+    const buildInputConfiguration = project.targets.build.inputs[0] as any;
+    const testInputConfiguration = project.targets.test.inputs[0] as any;
+    expect(buildDependencyConfiguration.projects).not.toBeDefined();
+    expect(buildDependencyConfiguration.dependencies).not.toBeDefined();
+    expect(buildInputConfiguration.projects).not.toBeDefined();
+    expect(buildInputConfiguration.dependencies).not.toBeDefined();
+    expect(testDependencyConfiguration.projects).not.toBeDefined();
+    expect(testDependencyConfiguration.dependencies).toEqual(true);
+    expect(testInputConfiguration.projects).not.toBeDefined();
+    expect(testInputConfiguration.dependencies).toEqual(true);
     expect(project.targets.other.dependsOn).toEqual(['^deps']);
+    expect(project.targets.other.inputs).not.toBeDefined();
   });
 
   it('should not throw on nulls', async () => {

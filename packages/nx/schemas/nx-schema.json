@@ -98,15 +98,44 @@
             "type": "object",
             "properties": {
               "projects": {
-                "type": "string",
-                "description": "The projects that the targets belong to.",
-                "enum": ["self", "dependencies"]
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "description": "The project that the targets belong to."
+                  },
+                  {
+                    "type": "array",
+                    "description": "The projects that the targets belong to.",
+                    "items": { "type": "string" }
+                  }
+                ]
+              },
+              "dependencies": {
+                "type": "boolean",
+                "description": "Include files belonging to the input for all the project dependencies of this target."
               },
               "input": {
                 "type": "string",
                 "description": "The name of the input."
               }
             },
+            "oneOf": [
+              {
+                "required": ["projects", "input"]
+              },
+              {
+                "required": ["dependencies", "input"]
+              },
+              {
+                "required": ["input"],
+                "not": {
+                  "anyOf": [
+                    { "required": ["projects"] },
+                    { "required": ["dependencies"] }
+                  ]
+                }
+              }
+            ],
             "additionalProperties": false
           },
           {
