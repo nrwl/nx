@@ -62,7 +62,7 @@
     },
     "16.0.0-tokens-for-depends-on": {
       "cli": "nx",
-      "version": "16.0.0-beta.0",
+      "version": "16.0.0-beta.9",
       "description": "Replace `dependsOn.projects` and `inputs` definitions with new configuration format.",
       "implementation": "./src/migrations/update-16-0-0/update-depends-on-to-tokens"
     },

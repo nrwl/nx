@@ -88,10 +88,20 @@ describe('Hasher', () => {
                     { runtime: 'echo runtime123' },
                     { env: 'TESTENV' },
                     { env: 'NONEXISTENTENV' },
+                    { input: 'default', projects: ['unrelated'] },
                   ],
                 },
               },
               files: [{ file: '/file', hash: 'file.hash' }],
+            },
+          },
+          unrelated: {
+            name: 'unrelated',
+            type: 'lib',
+            data: {
+              root: 'libs/unrelated',
+              targets: { build: {} },
+              files: [{ file: 'libs/unrelated/filec.ts', hash: 'filec.hash' }],
             },
           },
         },
@@ -121,12 +131,15 @@ describe('Hasher', () => {
     expect(hash.value).toContain('runtime123');
     expect(hash.value).toContain('runtime456');
     expect(hash.value).toContain('env123');
+    expect(hash.value).toContain('filec.hash');
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
       'parent:{projectRoot}/**/*':
-        '/file|file.hash|{"root":"libs/parent","targets":{"build":{"executor":"unknown","inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"}]}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
+        '/file|file.hash|{"root":"libs/parent","targets":{"build":{"executor":"unknown","inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"},{"input":"default","projects":["unrelated"]}]}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
       parent: 'unknown',
+      'unrelated:{projectRoot}/**/*':
+        'libs/unrelated/filec.ts|filec.hash|{"root":"libs/unrelated","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
       '{workspaceRoot}/nx.json': 'nx.json.hash',
       '{workspaceRoot}/.gitignore': '',
       '{workspaceRoot}/.nxignore': '',
@@ -774,7 +787,7 @@ describe('Hasher', () => {
       const expanded = expandNamedInput('c', {
         a: ['a.txt', { fileset: 'myfileset' }],
         b: ['b.txt'],
-        c: ['a', { input: 'b', projects: 'self' }],
+        c: ['a', { input: 'b' }],
       });
       expect(expanded).toEqual([
         { fileset: 'a.txt' },
@@ -787,7 +800,7 @@ describe('Hasher', () => {
       expect(() => expandNamedInput('c', {})).toThrow();
       expect(() =>
         expandNamedInput('b', {
-          b: [{ input: 'c', projects: 'self' }],
+          b: [{ input: 'c' }],
         })
       ).toThrow();
     });

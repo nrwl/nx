@@ -163,7 +163,7 @@ _Named Inputs_
 Examples:
 
 - `inputs: ["production"]`
-- same as `inputs: [{input: "production", projects: "self"}]`
+- same as `"inputs": [{"input": "production", "projects": "self"}]` in versions prior to Nx 16, or `"inputs": [{"input": "production"}]` after version 16.
 
 Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
 keeping them in sync is error-prone, we recommend defining `namedInputs`, which you can then reference in all of those
@@ -174,7 +174,7 @@ places.
 Examples:
 
 - `inputs: ["^production"]`
-- same as `inputs: [{input: "production", projects: "dependencies"}]`
+- same as `inputs: [{"input": "production", "projects": "dependencies"}]` prior to Nx 16, or `"inputs": [{"input": "production", "dependencies": true }]` after version 16.
 
 Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
 an example.
