@@ -1316,6 +1316,16 @@
         "tags": []
       },
       {
+        "id": "include-assets-in-build",
+        "name": "Include Assets in Build",
+        "description": "",
+        "file": "shared/recipes/include-assets-in-build",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/include-assets-in-build",
+        "tags": []
+      },
+      {
         "id": "identify-dependencies-between-folders",
         "name": "Identify Dependencies Between Folders",
         "description": "",
@@ -1648,6 +1658,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/include-all-packagejson",
+    "tags": []
+  },
+  "/recipes/other/include-assets-in-build": {
+    "id": "include-assets-in-build",
+    "name": "Include Assets in Build",
+    "description": "",
+    "file": "shared/recipes/include-assets-in-build",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/include-assets-in-build",
     "tags": []
   },
   "/recipes/other/identify-dependencies-between-folders": {

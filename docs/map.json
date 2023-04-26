@@ -1367,6 +1367,12 @@
               "file": "shared/recipes/include-all-packagejson"
             },
             {
+              "name": "Include Assets in Build",
+              "id": "include-assets-in-build",
+              "tags": [],
+              "file": "shared/recipes/include-assets-in-build"
+            },
+            {
               "name": "Identify Dependencies Between Folders",
               "id": "identify-dependencies-between-folders",
               "tags": [],

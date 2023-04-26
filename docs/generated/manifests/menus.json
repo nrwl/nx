@@ -2977,6 +2977,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Include Assets in Build",
+            "path": "/recipes/other/include-assets-in-build",
+            "id": "include-assets-in-build",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Identify Dependencies Between Folders",
             "path": "/recipes/other/identify-dependencies-between-folders",
             "id": "identify-dependencies-between-folders",
@@ -3239,6 +3247,14 @@
         "name": "Include All package.json Files as Projects",
         "path": "/recipes/other/include-all-packagejson",
         "id": "include-all-packagejson",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Include Assets in Build",
+        "path": "/recipes/other/include-assets-in-build",
+        "id": "include-assets-in-build",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
