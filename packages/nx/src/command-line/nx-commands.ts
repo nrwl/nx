@@ -254,8 +254,8 @@ export const commandsObject = yargs
   - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.`,
     builder: (yargs) =>
       linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
-    handler: () => {
-      runMigration();
+    handler: (argv) => {
+      runMigration(argv);
       process.exit(0);
     },
   })
@@ -1002,14 +1002,14 @@ function withInitOptions(yargs: yargs.Argv) {
     });
 }
 
-function runMigration() {
+function runMigration(args: yargs.Arguments) {
   const runLocalMigrate = () => {
     runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
       stdio: ['inherit', 'inherit', 'inherit'],
     });
   };
   if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
-    const p = nxCliPath();
+    const p = installNxVersionForMigrate(getNxVersionForMigrate(args));
     if (p === null) {
       runLocalMigrate();
     } else {
@@ -1022,14 +1022,20 @@ function runMigration() {
   }
 }
 
-function nxCliPath() {
+function getNxVersionForMigrate(args: yargs.Arguments) {
+  if (args.packageAndVersion === 'next') {
+    return 'next';
+  } else {
+    return process.env.NX_MIGRATE_USE_NEXT === 'true' ? 'next' : 'latest';
+  }
+}
+
+function installNxVersionForMigrate(version: string) {
   try {
     const packageManager = getPackageManagerCommand();
 
     const { dirSync } = require('tmp');
     const tmpDir = dirSync().name;
-    const version =
-      process.env.NX_MIGRATE_USE_NEXT === 'true' ? 'next' : 'latest';
     writeJsonFile(path.join(tmpDir, 'package.json'), {
       dependencies: {
         nx: version,
