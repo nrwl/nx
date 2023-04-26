@@ -33,8 +33,9 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Choose what to create                 · angular
-✔ Repository name                       · store
 ✔ Application name                      · store
+✔ Would you like to use Standalone Components in your application? · No
+✔ Would you like to add routing? · Yes
 ✔ Default stylesheet format             · css
 ✔ Enable distributed caching to make your CI faster · Yes
 ```

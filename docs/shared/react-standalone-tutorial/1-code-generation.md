@@ -34,8 +34,9 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Choose what to create                 · react
-✔ Repository name                       · store
 ✔ Application name                      · store
+✔ What framework would you like to use? · none
+✔ Bundler to be used to build the application · vite
 ✔ Default stylesheet format             · css
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
@@ -72,6 +73,7 @@ As far as Nx is concerned, the root-level `store` app owns every file that doesn
 
 >  NX  Generating @nrwl/react:component
 
+✔ Which stylesheet format would you like to use? · css
 ✔ Should this component be exported in the project? (y/N) · false
 CREATE src/app/shop/shop.module.css
 CREATE src/app/shop/shop.spec.tsx
@@ -87,7 +89,8 @@ To create the `cart` and `shared/ui` libraries, use the `@nrwl/react:lib` genera
 ```{% command="npx nx g @nrwl/react:library cart" path="~/store" %}
 
 >  NX  Generating @nrwl/react:library
-
+✔ Which stylesheet format would you like to use? · css
+✔ What unit test runner should be used? · vitest
 ✔ Which bundler would you like to use to build the library? · vite
 UPDATE nx.json
 CREATE cart/project.json
