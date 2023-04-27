@@ -1,11 +1,11 @@
 ---
 title: 'run - CLI command'
-description: 'Runs a target defined for your project. Target definitions can be found in the `scripts` property of the project's `package.json`, or in the `targets` property of the project's `project.json` file.'
+description: 'Runs a target defined for your project. Target definitions can be found in the `scripts` property of the project `package.json`, or in the `targets` property of the project `project.json` file.'
 ---
 
 # run
 
-Runs a target defined for your project. Target definitions can be found in the `scripts` property of the project's `package.json`, or in the `targets` property of the project's `project.json` file.
+Runs a target defined for your project. Target definitions can be found in the `scripts` property of the project `package.json`, or in the `targets` property of the project `project.json` file.
 
 ## Usage
 
