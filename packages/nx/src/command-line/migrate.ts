@@ -406,7 +406,7 @@ export class Migrator {
     for (const packageJsonUpdate of Object.values(packageJsonUpdates)) {
       if (
         !packageJsonUpdate.packages ||
-        this.lte(packageJsonUpdate.version, this.getPkgVersion(packageName)) ||
+        this.lt(packageJsonUpdate.version, this.getPkgVersion(packageName)) ||
         this.gt(packageJsonUpdate.version, targetVersion)
       ) {
         continue;
@@ -588,6 +588,10 @@ export class Migrator {
 
   private gt(v1: string, v2: string) {
     return gt(normalizeVersion(v1), normalizeVersion(v2));
+  }
+
+  private lt(v1: string, v2: string) {
+    return lt(normalizeVersion(v1), normalizeVersion(v2));
   }
 
   private lte(v1: string, v2: string) {
