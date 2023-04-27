@@ -26,37 +26,35 @@ Nx plugins help you scaffold new projects, pre-configure tooling, follow best pr
 
 ## Create a Local Plugin
 
-Local plugins allow you to automate and centralize repository specific tasks. You can automate code creation and modification tasks with [code generators](/plugins/recipes/local-generators). Instead of writing a 7 step guide in a readme file, you can create a generator to prompt the developer for inputs and modify the code directly. Make scripts and their flags easily discoverable with [executors](/plugins/recipes/local-executors). And [Nx Console](/core-features/integrate-with-editors) offers a ready-made UI for your repo specific tasks.
+Local plugins allow you to automate repository specific tasks and enforce best practices (e.g., generating projects or components, running third-party tools).
 
 {% cards cols="3" %}
 
-{% card title="Create a Plugin" description="Set up a new plugin" url="/plugins/intro/create-plugin" /%}
-{% card title="Local Generators" description="Add a generator to your plugin" url="/plugins/generators/local-generators" /%}
-{% card title="Local Executors" description="Add an executor to your plugin" url="/plugins/executors/creating-custom-executors" /%}
+{% card title="Create a Plugin" description="Set up a new plugin" url="/plugins/tutorials/create-plugin" /%}
+{% card title="Local Generators" description="Add a generator to your plugin" url="/plugins/recipes/local-generators" /%}
+{% card title="Local Executors" description="Add an executor to your plugin" url="/plugins/recipes/local-executors" /%}
 
 {% /cards %}
 
 ## Maintain a Published Plugin
 
-If your plugin has functionality that would be useful in more than just your repo, you can publish it to npm and register it on the nx.dev site for others to find. When other repos start using your plugin, you'll want to create migration generators to help them stay up to date whenever you make breaking changes.
+If your plugin has functionality that would be useful in more than just your repo, you can publish it to npm and register it on the nx.dev site for others to find.
 
 {% cards cols="2" %}
 
-{% card title="Migration Generators" description="Update repos when you introduce breaking changes" url="/plugins/advanced/migration-generators" /%}
-{% card title="Share Your Plugin" description="Submit your plugin to the Nx plugin registry" url="/plugins/advanced/share-your-plugin" /%}
+{% card title="Share Your Plugin" description="Submit your plugin to the Nx plugin registry" url="/plugins/tutorials/publish-plugin" /%}
+{% card title="Migration Generators" description="Update repos when you introduce breaking changes" url="/plugins/recipes/migration-generators" /%}
 
 {% /cards %}
 
 ## Use Nx as Your Framework CLI
 
-Framework authors can build a CLI tool for their users on top of Nx. Generators allow users to create the building blocks for the framework. Executors allow users to focus on using the framework instead of worrying about the build and test tooling. Migration generators make it easy for users to stay up to date with the latest version of the framework.
-
-With Nx 16, framework authors can now provide a seamless initial express by authoring a `create-my-framework` package that will automatically run a `preset` generator to scaffold a new workspace. Authors can also hook into the way Nx identifies projects and creates the project graph so the users aren't required to have `project.json` files if the dependency information is already specified in a different file.
+Framework authors can build a CLI tool for their users on top of Nx. With Nx 16, framework authors can now provide a seamless initial experience by authoring a `create-my-framework` package that will automatically create a new repository configured for your framework.
 
 {% cards cols="3" %}
 
-{% card title="Scaffold a New Workspace" description="Set up your framework in a new repo" url="/plugins/advanced/create-preset" /%}
-{% card title="Project Inference Plugins" description="Modify how Nx identifies projects" url="/plugins/advanced/project-inference-plugins" /%}
-{% card title="Project Graph Plugins" description="Modify the Nx graph" url="/plugins/advanced/project-graph-plugins" /%}
+{% card title="Scaffold a New Workspace" description="Set up your framework in a new repo" url="/plugins/recipes/create-preset" /%}
+{% card title="Project Inference Plugins" description="Modify how Nx identifies projects" url="/plugins/recipes/project-inference-plugins" /%}
+{% card title="Project Graph Plugins" description="Modify the Nx graph" url="/plugins/recipes/project-graph-plugins" /%}
 
 {% /cards %}

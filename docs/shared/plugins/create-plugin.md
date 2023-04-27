@@ -34,7 +34,7 @@ nx generate @nx/nx-plugin:generator my-generator --project=my-plugin
 
 The new generator is located in `/src/generators/my-generator`. The `my-generator.ts` file contains the code that runs the generator. This generator creates a new project using a folder of template files.
 
-For more information about this sample generator, read the [simple generator recipe](/plugins/recipes/local-generator).
+For more information about this sample generator, read the [simple generator recipe](/plugins/recipes/local-generators).
 
 ### Generator options
 
@@ -62,7 +62,7 @@ nx generate @nx/nx-plugin:executor my-executor --project=my-plugin
 
 The new executor is located in `/src/executors/my-executor`. The `my-executor.ts` file contains the code that runs the executor. This executor emits a console log, but executors can compile code, deploy an app, publish to NPM and much more.
 
-For more information about this sample executor, read the [simple executor recipe](/plugins/recipes/local-executor).
+For more information about this sample executor, read the [simple executor recipe](/plugins/recipes/local-executors).
 
 ### Executor testing
 

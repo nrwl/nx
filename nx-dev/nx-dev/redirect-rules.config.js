@@ -201,7 +201,7 @@ const diataxis = {
   '/using-nx/updating-nx': '/core-features/automate-updating-dependencies',
   '/using-nx/nx-nodejs-typescript-version-matrix':
     '/workspace/nx-nodejs-typescript-version-matrix',
-  '/extending-nx/nx-devkit': '/plugin-features/create-your-own-plugin',
+  '/extending-nx/nx-devkit': '/plugins/intro/getting-started',
   '/extending-nx/project-inference-plugins':
     '/recipes/advanced-plugins/project-inference-plugins',
   '/extending-nx/project-graph-plugins':

@@ -53,10 +53,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
     sourceRoot: `${normalizedOptions.projectRoot}/src`,
     targets: {
       exec: {
-        executor: 'nx:run-commands',
-        options: {
-          command: `node ${projectRoot}/src/index.js`,
-        },
+        command: `node ${projectRoot}/src/index.js`,
       },
     },
     tags: normalizedOptions.parsedTags,
@@ -66,17 +63,14 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 }
 ```
 
-To get an in-depth guide on customizing/running or debugging your generator see [local generators](/plugins/generators/local-generators).
+To get an in-depth guide on customizing/running or debugging your generator see [local generators](/plugins/recipes/local-generators).
 
 ## Publish create-my-plugin
 
 Once you're happy with the `preset` generator, build and publish the `create-my-plugin` and `my-plugin` projects:
 
 ```bash
-nx build create-my-plugin
-nx publish create-my-plugin --ver=1.0.0
-nx build my-plugin
-nx publish my-plugin --ver=1.0.0
+nx run-many -t publish --ver=1.0.0
 ```
 
 ## Use create-my-plugin

@@ -86,22 +86,21 @@ const sitemapLinks = readSiteMapIndex(
   join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
-console.log(sitemapLinks.join('\n'));
-// const errors: Array<{ file: string; link: string }> = [];
-// for (let file in documentLinks) {
-//   for (let link of documentLinks[file]) {
-//     if (!sitemapLinks.includes(['https://nx.dev', link].join('')))
-//       errors.push({ file, link });
-//   }
-// }
+const errors: Array<{ file: string; link: string }> = [];
+for (let file in documentLinks) {
+  for (let link of documentLinks[file]) {
+    if (!sitemapLinks.includes(['https://nx.dev', link].join('')))
+      errors.push({ file, link });
+  }
+}
 
-// console.log(`i/ Internal Link Check`);
-// if (errors.length) {
-//   console.log(`ERROR\n${errors.length} links are pointing to nowhere:`);
-//   errors.forEach((error) =>
-//     console.error(`⚠ File:${error.file}\n -> ${error.link}\n`)
-//   );
-//   process.exit(1);
-// }
-// console.log(`i/ No internal 404 link detected.`);
+console.log(`i/ Internal Link Check`);
+if (errors.length) {
+  console.log(`ERROR\n${errors.length} links are pointing to nowhere:`);
+  errors.forEach((error) =>
+    console.error(`⚠ File:${error.file}\n -> ${error.link}\n`)
+  );
+  process.exit(1);
+}
+console.log(`i/ No internal 404 link detected.`);
 process.exit(0);
