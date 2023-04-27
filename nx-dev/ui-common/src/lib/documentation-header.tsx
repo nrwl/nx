@@ -58,7 +58,7 @@ export function DocumentationHeader({
     },
     {
       name: 'Plugins',
-      href: '/plugins/intro/use-cases',
+      href: '/plugins/intro/getting-started',
       current: isPlugins,
     },
     {

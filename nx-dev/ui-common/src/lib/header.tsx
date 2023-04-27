@@ -70,7 +70,7 @@ export function Header(): JSX.Element {
     {
       name: 'Plugins',
       description: 'Add capabilities to your workspace with plugins.',
-      href: '/plugins/intro/use-cases',
+      href: '/plugins/intro/getting-started',
     },
     {
       name: 'Nx Conf',
@@ -186,7 +186,7 @@ export function Header(): JSX.Element {
               Community
             </Link>
             <Link
-              href="/plugins"
+              href="/plugins/registry"
               title="Check Nx available plugins"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
