@@ -288,14 +288,14 @@ export const examples: Record<string, Example[]> = {
   ],
   migrate: [
     {
-      command: 'migrate next',
+      command: 'migrate latest',
       description:
-        'Update @nrwl/workspace to "next". This will update other packages and will generate migrations.json',
+        'Update all Nx plugins to "latest". This will generate migrations.json',
     },
     {
       command: 'migrate 9.0.0',
       description:
-        'Update @nrwl/workspace to "9.0.0". This will update other packages and will generate migrations.json',
+        'Update all Nx plugins to "9.0.0". This will generate migrations.json',
     },
     {
       command:
