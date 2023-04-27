@@ -35,6 +35,7 @@ All other packages keep the same name, but change scope from `@nrwl` to `@nx`.
 | @nrwl/angular      | @nx/angular      |
 | @nrwl/cypress      | @nx/cypress      |
 | @nrwl/detox        | @nx/detox        |
+| @nrwl/devkit       | @nx/devkit       |
 | @nrwl/esbuild      | @nx/esbuild      |
 | @nrwl/expo         | @nx/expo         |
 | @nrwl/express      | @nx/express      |
