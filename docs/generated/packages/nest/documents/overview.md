@@ -93,7 +93,7 @@ nx build my-nest-lib
 
 #### Waiting for other builds
 
-Setting the `waitUntilTargets` option with an array of projects (with the following format: `"project:architect"`) will execute those commands before serving the Nest application.
+Setting the `waitUntilTargets` option with an array of projects (with the following format: `"project:target"`) will execute those commands before serving the Nest application.
 
 ### Serve
 

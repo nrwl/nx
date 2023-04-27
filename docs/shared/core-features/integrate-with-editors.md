@@ -1,6 +1,6 @@
 # Integrate with Editors
 
-Nx Console is the UI for Nx. It works for any generator or any architect commands. Nx Console does not have a specific UI for, say, generating a component. Instead, Nx Console does what the command-line version of Nx does - it analyzes the same meta information to create the needed UI. This means that anything you can do with Nx, you can do with Nx Console.
+Nx Console is the UI for Nx. It works for any installed generators or any targets defined in your workspace. Nx Console does not have a specific UI for, say, generating a component. Instead, Nx Console does what the command-line version of Nx does - it analyzes the same meta information to create the needed UI. This means that anything you can do with Nx, you can do with Nx Console.
 
 ## Download
 
