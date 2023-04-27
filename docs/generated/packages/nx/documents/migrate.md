@@ -23,13 +23,13 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ### Examples
 
-Update @nrwl/workspace to "next". This will update other packages and will generate migrations.json:
+Update all Nx plugins to "latest". This will generate migrations.json:
 
 ```shell
- nx migrate next
+ nx migrate latest
 ```
 
-Update @nrwl/workspace to "9.0.0". This will update other packages and will generate migrations.json:
+Update all Nx plugins to "9.0.0". This will generate migrations.json:
 
 ```shell
  nx migrate 9.0.0
