@@ -51,7 +51,7 @@ export async function format(
       break;
     case 'check':
       const pass = chunkList.reduce(
-        (pass, chunk) => check(chunk) && pass,
+        (pass, chunk) => check(chunk, args.verbose) && pass,
         true
       );
       if (!pass) {
@@ -176,12 +176,13 @@ function write(patterns: string[]) {
   }
 }
 
-function check(patterns: string[]): boolean {
+function check(patterns: string[], verbose: boolean): boolean {
   if (patterns.length === 0) {
     return true;
   }
   try {
-    execSync(`node "${PRETTIER_PATH}" --check ${patterns.join(' ')}`, {
+    const logFlag = verbose ? "--check" : "--list-different"
+    execSync(`node "${PRETTIER_PATH}" ${logFlag} ${patterns.join(' ')}`, {
       stdio: [0, 1, 2],
     });
     return true;
