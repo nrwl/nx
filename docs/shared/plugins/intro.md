@@ -7,7 +7,7 @@ Nx plugins contain [generators](/plugin-features/use-code-generators) and [execu
 {% title-card title="Use a Plugin" url="#use-a-plugin" /%}
 {% title-card title="Create a Local Plugin" url="#create-a-local-plugin" /%}
 {% title-card title="Maintain a Published Plugin" url="#maintain-a-published-plugin" /%}
-{% title-card title="Use Nx as Your Framework CLI" url="#use-nx-as-your-framework-cli" /%}
+{% title-card title="Advanced Plugins" url="#advanced-plugins" /%}
 
 {% /cards %}
 
@@ -47,13 +47,13 @@ If your plugin has functionality that would be useful in more than just your rep
 
 {% /cards %}
 
-## Use Nx as Your Framework CLI
+## Advanced Plugins
 
-Framework authors can build a CLI tool for their users on top of Nx. With Nx 16, framework authors can now provide a seamless initial experience by authoring a `create-my-framework` package that will automatically create a new repository configured for your framework.
+You can also hook into the way Nx works and modify it to suit your needs
 
 {% cards cols="3" %}
 
-{% card title="Scaffold a New Workspace" description="Set up your framework in a new repo" url="/plugins/recipes/create-preset" /%}
+{% card title="Scaffold a New Workspace" description="Set up a new repo" url="/plugins/recipes/create-preset" /%}
 {% card title="Project Inference Plugins" description="Modify how Nx identifies projects" url="/plugins/recipes/project-inference-plugins" /%}
 {% card title="Project Graph Plugins" description="Modify the Nx graph" url="/plugins/recipes/project-graph-plugins" /%}
 

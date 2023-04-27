@@ -778,11 +778,6 @@
               "name": "Maintain a Published Plugin",
               "id": "publish-plugin",
               "file": "shared/plugins/maintain-published-plugin"
-            },
-            {
-              "name": "Use Nx as Your Framework CLI",
-              "id": "nx-framework-cli",
-              "file": "shared/plugins/use-nx-as-your-framework-cli"
             }
           ]
         },

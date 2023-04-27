@@ -75,16 +75,6 @@
         "isExternal": false,
         "path": "/plugins/tutorials/publish-plugin",
         "tags": []
-      },
-      {
-        "id": "nx-framework-cli",
-        "name": "Use Nx as Your Framework CLI",
-        "description": "",
-        "file": "shared/plugins/use-nx-as-your-framework-cli",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/plugins/tutorials/nx-framework-cli",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -109,16 +99,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/plugins/tutorials/publish-plugin",
-    "tags": []
-  },
-  "/plugins/tutorials/nx-framework-cli": {
-    "id": "nx-framework-cli",
-    "name": "Use Nx as Your Framework CLI",
-    "description": "",
-    "file": "shared/plugins/use-nx-as-your-framework-cli",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/plugins/tutorials/nx-framework-cli",
     "tags": []
   },
   "/plugins/recipes": {

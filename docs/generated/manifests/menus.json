@@ -3350,14 +3350,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Use Nx as Your Framework CLI",
-            "path": "/plugins/tutorials/nx-framework-cli",
-            "id": "nx-framework-cli",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3374,14 +3366,6 @@
         "name": "Maintain a Published Plugin",
         "path": "/plugins/tutorials/publish-plugin",
         "id": "publish-plugin",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Use Nx as Your Framework CLI",
-        "path": "/plugins/tutorials/nx-framework-cli",
-        "id": "nx-framework-cli",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
