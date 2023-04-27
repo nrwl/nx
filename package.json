@@ -62,7 +62,7 @@
     "@ngrx/router-store": "~15.3.0",
     "@ngrx/store": "~15.3.0",
     "@nguniversal/builders": "~15.2.0",
-    "nx-cloud": "16.0.1",
+    "nx-cloud": "16.0.4",
     "@nx/webpack": "16.0.0-beta.6",
     "@parcel/watcher": "2.0.4",
     "@phenomnomnominal/tsquery": "~5.0.1",
