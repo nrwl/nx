@@ -1,28 +1,11 @@
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { ModuleFederationConfig } from '@nx/devkit/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
-
-function determineRemoteUrl(remote: string) {
-  const remoteProjectConfiguration = readCachedProjectConfiguration(remote);
-  let publicHost = '';
-  try {
-    publicHost = remoteProjectConfiguration.targets.serve.options.publicHost;
-  } catch (error) {
-    throw new Error(
-      `Cannot automatically determine URL of remote (${remote}). Looked for property "publicHost" in the project's "serve" target.\n
-      You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
-    );
-  }
-  return `${
-    publicHost.endsWith('/') ? publicHost.slice(0, -1) : publicHost
-  }/server/remoteEntry.js`;
-}
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig
 ) {
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
-    await getModuleFederationConfig(options, determineRemoteUrl, {
+    await getModuleFederationConfig(options, {
       isServer: true,
     });
 
