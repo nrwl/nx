@@ -64,7 +64,7 @@ describe('Node Applications + webpack', () => {
     const expressApp = uniq('expressapp');
     const fastifyApp = uniq('fastifyapp');
     const koaApp = uniq('koaapp');
-    const nestApp = uniq('koaapp');
+    const nestApp = uniq('nest');
 
     runCLI(`generate @nx/node:lib ${testLib1}`);
     runCLI(`generate @nx/node:lib ${testLib2} --importPath=@acme/test2`);
@@ -98,7 +98,22 @@ describe('Node Applications + webpack', () => {
     expect(() => runCLI(`lint ${nestApp}-e2e`)).not.toThrow();
 
     // Only Fastify generates with unit tests since it supports them without additional libraries.
-    expect(() => runCLI(`lint ${fastifyApp}`)).not.toThrow();
+    expect(() => runCLI(`test ${fastifyApp}`)).not.toThrow();
+
+    // https://github.com/nrwl/nx/issues/16601
+    const nestMainContent = readFile(`apps/${nestApp}/src/main.ts`);
+    updateFile(
+      `apps/${nestApp}/src/main.ts`,
+      `
+      ${nestMainContent}
+      // Make sure this is not replaced during build time
+      console.log('env: ' + process.env['NODE_ENV']);
+      `
+    );
+    runCLI(`build ${nestApp}`);
+    expect(readFile(`dist/apps/${nestApp}/main.js`)).toContain(
+      `'env: ' + process.env['NODE_ENV']`
+    );
 
     addLibImport(expressApp, testLib1);
     addLibImport(expressApp, testLib2, '@acme/test2');
