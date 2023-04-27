@@ -10,13 +10,10 @@ import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationP
 export async function withModuleFederation(
   options: ModuleFederationConfig
 ): Promise<AsyncNxWebpackPlugin> {
-  const reactWebpackConfig = require('../../plugins/webpack');
-
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     await getModuleFederationConfig(options);
 
   return (config, ctx) => {
-    config = reactWebpackConfig(config, ctx);
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';
 
