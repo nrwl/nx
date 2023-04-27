@@ -4203,9 +4203,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "cypress-component-project",
-                "path": "/packages/cypress/generators/cypress-component-project",
-                "name": "cypress-component-project",
+                "id": "cypress-component-configuration",
+                "path": "/packages/cypress/generators/cypress-component-configuration",
+                "name": "cypress-component-configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

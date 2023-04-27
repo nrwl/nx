@@ -1,10 +1,10 @@
 This is a framework-agnostic generator for adding component testing to a project.
 
 ```bash
-nx g cypress-component-project --project=my-cool-project
+nx g cypress-component-configuration --project=my-cool-project
 ```
 
-Running this generator, adds the required files to the specified project without any configurations for Cypress. It's best to use the framework specific generator, instead `cypress-component-project` directly
+Running this generator, adds the required files to the specified project without any configurations for Cypress. It's best to use the framework specific generator, instead `cypress-component-configuration` directly
 
 - [React component testing](/packages/react/generators/cypress-component-configuration)
 - [Angular component testing](/packages/angular/generators/cypress-component-configuration)

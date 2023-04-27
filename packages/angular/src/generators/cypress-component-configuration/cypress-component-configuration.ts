@@ -1,4 +1,4 @@
-import { cypressComponentProject } from '@nx/cypress';
+import { cypressComponentConfiguration as baseCyCTConfig } from '@nx/cypress';
 import { findBuildConfig } from '@nx/cypress/src/utils/find-target-options';
 import {
   formatFiles,
@@ -28,7 +28,7 @@ export async function cypressComponentConfiguration(
   options: CypressComponentConfigSchema
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
-  const installTask = await cypressComponentProject(tree, {
+  const installTask = await baseCyCTConfig(tree, {
     project: options.project,
     skipFormat: true,
   });

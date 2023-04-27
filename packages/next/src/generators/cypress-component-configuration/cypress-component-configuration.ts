@@ -23,11 +23,11 @@ export async function cypressComponentConfiguration(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { cypressComponentProject } = ensurePackage<
+  const { cypressComponentConfiguration } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
   tasks.push(
-    await cypressComponentProject(tree, {
+    await cypressComponentConfiguration(tree, {
       project: options.project,
       skipFormat: true,
     })
