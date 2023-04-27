@@ -380,29 +380,11 @@ export class ProjectGraphBuilder {
     if (this.graph.dependencies[sourceProject]) {
       const removed = this.removedEdges[sourceProject];
       for (const d of this.graph.dependencies[sourceProject]) {
-        if (!removed || !removed.has(d.target)) {
+        if (d.type === DependencyType.implicit && !removed?.has(d.target)) {
           if (!alreadySetTargetProjects.has(d.target)) {
             alreadySetTargetProjects.set(d.target, new Map([[d.type, d]]));
           } else {
             alreadySetTargetProjects.get(d.target).set(d.type, d);
-          }
-        }
-      }
-    }
-    // cleanup stale dependencies
-    for (const [targetProject, types] of alreadySetTargetProjects.entries()) {
-      const node = this.graph.nodes[sourceProject];
-      if (node) {
-        for (const depType of types.keys()) {
-          if (
-            depType !== 'implicit' &&
-            !node.data.files.some((f) =>
-              f.dependencies?.some(
-                (d) => d.target === targetProject && d.type === depType
-              )
-            )
-          ) {
-            types.delete(depType);
           }
         }
       }
