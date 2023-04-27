@@ -70,6 +70,7 @@ jobs:
         if: ${{ matrix.os == 'macos-latest' }}
         uses: actions/cache@v3
         with:
+          lookup-only: true
           path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
           key: brew-${{ matrix.node_version }}
           restore-keys: |
@@ -401,7 +402,7 @@ jobs:
 
       - name: Run e2e tests
         id: e2e-run
-        run: yarn nx run-many -t e2e,e2e-macos -p ${{ matrix.project }}
+        run: pnpm nx run-many -t e2e,e2e-macos -p ${{ matrix.project }}
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
           GIT_AUTHOR_EMAIL: test@test.com

@@ -44,6 +44,7 @@ jobs:
         id: cache-modules
         uses: actions/cache@v3
         with:
+          lookup-only: true
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
 
@@ -67,7 +68,6 @@ jobs:
     needs: preinstall
     permissions:
       contents: read
-
     runs-on: windows-latest
     strategy:
       matrix:
@@ -287,7 +287,7 @@ jobs:
 
       - name: Run e2e tests
         id: e2e-run
-        run: yarn nx run ${{ matrix.project }}:e2e
+        run: pnpm nx run ${{ matrix.project }}:e2e
         timeout-minutes: 120
         env:
           GIT_AUTHOR_EMAIL: test@test.com
