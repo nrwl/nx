@@ -4,6 +4,7 @@ import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { AnnouncementBanner } from './announcement-banner';
 
 function Menu({ tabs }: { tabs: any[] }): JSX.Element {
   return (
@@ -191,6 +192,9 @@ export function DocumentationHeader({
         </div>
         {/*NAVIGATION*/}
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
+        <div className="hidden lg:flex">
+          <AnnouncementBanner />
+        </div>
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="accessory-nav"
