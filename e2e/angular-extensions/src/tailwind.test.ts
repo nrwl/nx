@@ -73,7 +73,7 @@ describe('Tailwind support', () => {
 
   const createTailwindConfigFile = (
     tailwindConfigFile = 'tailwind.config.js',
-    libSpacing: typeof spacing['projectVariant1']
+    libSpacing: (typeof spacing)['projectVariant1']
   ) => {
     const tailwindConfig = `const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
     const { join } = require('path');
@@ -99,7 +99,7 @@ describe('Tailwind support', () => {
 
   const updateTailwindConfig = (
     tailwindConfigPath: string,
-    projectSpacing: typeof spacing['root']
+    projectSpacing: (typeof spacing)['root']
   ) => {
     const tailwindConfig = readFile(tailwindConfigPath);
 
@@ -174,7 +174,7 @@ describe('Tailwind support', () => {
 
     const assertLibComponentStyles = (
       lib: string,
-      libSpacing: typeof spacing['root']
+      libSpacing: (typeof spacing)['root']
     ) => {
       const builtComponentContent = readFile(
         `dist/libs/${lib}/esm2020/lib/foo.component.mjs`
@@ -342,7 +342,7 @@ describe('Tailwind support', () => {
 
     const assertAppComponentStyles = (
       app: string,
-      appSpacing: typeof spacing['root']
+      appSpacing: (typeof spacing)['root']
     ) => {
       const mainBundlePath = listFiles(`dist/apps/${app}`).find((file) =>
         file.startsWith('main.')
