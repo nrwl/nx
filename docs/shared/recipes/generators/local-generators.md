@@ -15,14 +15,14 @@ If you don't already have a local plugin, use Nx to generate one:
 
 ```shell
 # replace `latest` with the version that matches your Nx version
-npm install @nx/nx-plugin@latest
-nx g @nx/nx-plugin:plugin my-plugin
+npm install @nx/plugin@latest
+nx g @nx/plugin:plugin my-plugin
 ```
 
 Use the Nx CLI to generate the initial files needed for your generator.
 
 ```shell
-nx generate @nx/nx-plugin:generator my-generator --project=my-plugin
+nx generate @nx/plugin:generator my-generator --project=my-plugin
 ```
 
 After the command is finished, the generator is created in the plugin `generators` folder.

@@ -20,14 +20,6 @@ npm install -D @nx/react
 yarn add -D @nx/react
 ```
 
-{% callout type="check" title="Rescope from @nrwl to @nx" %}
-
-For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
-
-[Read more about the rescope ≫](/recipes/other/rescope)
-
-{% /callout %}
-
 ### Creating Applications and Libraries
 
 You can add a new application with the following:

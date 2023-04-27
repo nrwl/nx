@@ -30,14 +30,6 @@ yarn add -D @nx/esbuild
 {% /tab %}
 {% /tabs %}
 
-{% callout type="check" title="Rescope from @nrwl to @nx" %}
-
-For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
-
-[Read more about the rescope ≫](/recipes/other/rescope)
-
-{% /callout %}
-
 ### Creating a new JS library
 
 You can add a new library that builds using esbuild with:

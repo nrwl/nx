@@ -22,14 +22,6 @@ yarn add --dev @nx/next
 npm install --save-dev @nx/next
 ```
 
-{% callout type="check" title="Rescope from @nrwl to @nx" %}
-
-For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
-
-[Read more about the rescope ≫](/recipes/other/rescope)
-
-{% /callout %}
-
 ### Creating Applications
 
 You can add a new application with the following:

@@ -25,17 +25,9 @@ This command creates a brand-new workspace, and sets up a pre-configured plugin 
 
 > Note, the command above will create a plugin with the package name set to `@my-org/my-plugin`. You can pass `--importPath` to provide a different package name.
 
-> If you do not want to create a new workspace, install the `@nx/nx-plugin` dependency in an already existing workspace with npm or yarn. Then run `nx g @nx/nx-plugin:plugin [pluginName]`.
+> If you do not want to create a new workspace, install the `@nx/plugin` dependency in an already existing workspace with npm or yarn. Then run `nx g @nx/plugin:plugin [pluginName]`.
 
 A new plugin is created with a default generator, executor, and e2e app.
-
-{% callout type="check" title="Rescope from @nrwl to @nx" %}
-
-For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
-
-[Read more about the rescope ≫](/recipes/other/rescope)
-
-{% /callout %}
 
 ## Generator
 
@@ -59,7 +51,7 @@ The `schema.d.ts` file is used for type checking inside the implementation file.
 ### Adding more generators
 
 To add more generators to the plugin, run the following command:
-`nx generate @nx/nx-plugin:generator [generatorName] --project=[pluginName]`.
+`nx generate @nx/plugin:generator [generatorName] --project=[pluginName]`.
 
 This will scaffold out a new generator and update the necessary files to support it.
 
@@ -84,7 +76,7 @@ The default executor is set up to just emit a console log. Some examples of what
 ### Adding more executors
 
 To add more executors to the plugin, run the following command:
-`nx generate @nx/nx-plugin:executor [executor] --project=[pluginName]`.
+`nx generate @nx/plugin:executor [executor] --project=[pluginName]`.
 
 This will scaffold out a new generator and update the necessary files to support it.
 
@@ -125,7 +117,7 @@ it('should create my-plugin', async (done) => {
 - The `ensureNxProject` is the function that will create the temporary directory. It takes two arguments, the plugin package name and the dist directory of when it's built.
 - The `runNxCommandAsync` will execute a `nx` command in the E2E directory.
 
-There are additional functions that the `@nx/nx-plugin/testing` package exports. Most of them are file utilities to manipulate and read files in the E2E directory.
+There are additional functions that the `@nx/plugin/testing` package exports. Most of them are file utilities to manipulate and read files in the E2E directory.
 
 ## Including Assets
 

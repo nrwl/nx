@@ -1,4 +1,4 @@
-The `@nx/nx/enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. Enforcing strict boundaries helps to prevent unplanned cross-dependencies.
+The `@nx/enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. Enforcing strict boundaries helps to prevent unplanned cross-dependencies.
 
 ## Usage
 
@@ -11,7 +11,7 @@ You can use the `enforce-module-boundaries` rule by adding it to your ESLint rul
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
-        "@nx/nx/enforce-module-boundaries": [
+        "@nx/enforce-module-boundaries": [
           "error",
           {
             // ...rule specific configuration

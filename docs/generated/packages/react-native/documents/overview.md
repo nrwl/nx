@@ -47,14 +47,6 @@ yarn add --dev @nx/react-native
 {% /tab %}
 {% /tabs %}
 
-{% callout type="check" title="Rescope from @nrwl to @nx" %}
-
-For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
-
-[Read more about the rescope ≫](/recipes/other/rescope)
-
-{% /callout %}
-
 ### Generating Applications
 
 To create additional React Native apps run:

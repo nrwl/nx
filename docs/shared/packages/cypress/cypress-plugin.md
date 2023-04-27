@@ -23,14 +23,6 @@ yarn add --dev @nx/cypress
 npm install --save-dev @nx/cypress
 ```
 
-{% callout type="check" title="Rescope from @nrwl to @nx" %}
-
-For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
-
-[Read more about the rescope ≫](/recipes/other/rescope)
-
-{% /callout %}
-
 ## E2E Testing
 
 By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.

@@ -23,14 +23,6 @@ yarn add --dev @nx/js
 {% /tab %}
 {% /tabs %}
 
-{% callout type="check" title="Rescope from @nrwl to @nx" %}
-
-For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
-
-[Read more about the rescope ≫](/recipes/other/rescope)
-
-{% /callout %}
-
 ### `ts` Preset
 
 When initializing a new Nx workspace, specifying `--preset=ts` will generate a workspace with `@nx/js` pre-installed.

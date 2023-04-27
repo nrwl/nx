@@ -31,14 +31,6 @@ npm install -D @nx/nest
 yarn add -D @nx/nest
 ```
 
-{% callout type="check" title="Rescope from @nrwl to @nx" %}
-
-For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
-
-[Read more about the rescope ≫](/recipes/other/rescope)
-
-{% /callout %}
-
 ### Create Applications
 
 You can add a new Nest application with the following command:

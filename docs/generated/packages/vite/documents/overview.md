@@ -94,14 +94,6 @@ pnpm install -D @nx/vite
 {% /tab %}
 {% /tabs %}
 
-{% callout type="check" title="Rescope from @nrwl to @nx" %}
-
-For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
-
-[Read more about the rescope ≫](/recipes/other/rescope)
-
-{% /callout %}
-
 #### Ask Nx to install the necessary dependencies
 
 After you install the plugin, you can initialize Vite.js. You can do this by running the `init` executor. This executor will make sure to install all the necessary dependencies.

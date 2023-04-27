@@ -26,14 +26,6 @@ npm install --save-dev @nx/jest
 yarn add --dev @nx/jest
 ```
 
-{% callout type="check" title="Rescope from @nrwl to @nx" %}
-
-For Nx version 16+, official Nx plugins use the `@nx` npm scope. For older versions of Nx, use the `@nrwl` npm scope.
-
-[Read more about the rescope ≫](/recipes/other/rescope)
-
-{% /callout %}
-
 Once installed, run the `jest-project` generator
 
 ```shell
