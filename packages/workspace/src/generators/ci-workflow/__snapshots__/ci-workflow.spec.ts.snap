@@ -91,7 +91,7 @@ pipelines:
 
                 - pnpm install --frozen-lockfile
                 - pnpm exec nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
-                - pnpm exec nx-cloud record -- yarn nx format:check
+                - pnpm exec nx-cloud record -- pnpm exec nx format:check
                 - pnpm exec nx affected --target=lint & pnpm exec nx affected --target=test & pnpm exec nx affected --target=build
                 - pnpm exec nx-cloud stop-all-agents
           - step: *agent
@@ -385,7 +385,7 @@ pipelines:
 
                 - pnpm install --frozen-lockfile
                 - pnpm exec nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
-                - pnpm exec nx-cloud record -- yarn nx format:check
+                - pnpm exec nx-cloud record -- pnpm exec nx format:check
                 - pnpm exec nx affected --target=lint & pnpm exec nx affected --target=test & pnpm exec nx affected --target=build
                 - pnpm exec nx-cloud stop-all-agents
           - step: *agent
@@ -679,7 +679,7 @@ pipelines:
 
                 - pnpm install --frozen-lockfile
                 - pnpm exec nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
-                - pnpm exec nx-cloud record -- yarn nx format:check
+                - pnpm exec nx-cloud record -- pnpm exec nx format:check
                 - pnpm exec nx affected --target=lint & pnpm exec nx affected --target=test & pnpm exec nx affected --target=build
                 - pnpm exec nx-cloud stop-all-agents
           - step: *agent

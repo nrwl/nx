@@ -15,7 +15,7 @@
       }
     },
     "artifacts": {
-      "command": "yarn napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages/nx/native-packages"
+      "command": "pnpm napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages/nx/native-packages"
     },
     "build-base": {
       "executor": "@nx/js:tsc",

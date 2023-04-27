@@ -15,7 +15,7 @@ export function generateDevkitDocumentation() {
   );
 
   execSync(
-    `rm -rf docs/generated/devkit && npx typedoc packages/devkit/index.d.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/generated/devkit --hideBreadcrumbs true --disableSources --publicPath ../../devkit/ --theme nx-markdown-theme --readme none`,
+    `rm -rf docs/generated/devkit && pnpm typedoc packages/devkit/index.d.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/generated/devkit --hideBreadcrumbs true --disableSources --publicPath ../../devkit/ --theme nx-markdown-theme --readme none`,
     execSyncOptions
   );
   execSync(
@@ -27,7 +27,7 @@ export function generateDevkitDocumentation() {
     execSyncOptions
   );
   execSync(
-    `npx prettier docs/generated/devkit --write --config ${join(
+    `pnpm prettier docs/generated/devkit --write --config ${join(
       __dirname,
       '..',
       '..',
