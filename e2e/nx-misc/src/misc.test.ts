@@ -16,7 +16,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { renameSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
@@ -36,8 +36,8 @@ describe('Nx Commands', () => {
         runCLI('show projects').replace(/.*nx show projects( --verbose)?\n/, '')
       ).toEqual('');
 
-      runCLI(`generate @nrwl/web:app ${app1}`);
-      runCLI(`generate @nrwl/web:app ${app2}`);
+      runCLI(`generate @nx/web:app ${app1}`);
+      runCLI(`generate @nx/web:app ${app2}`);
 
       const s = runCLI('show projects').split('\n');
 
@@ -55,10 +55,10 @@ describe('Nx Commands', () => {
 
       expect(reportOutput).toEqual(
         expect.stringMatching(
-          new RegExp(`\@nrwl\/workspace.*:.*${getPublishedVersion()}`)
+          new RegExp(`\@nx\/workspace.*:.*${getPublishedVersion()}`)
         )
       );
-      expect(reportOutput).toContain('@nrwl/workspace');
+      expect(reportOutput).toContain('@nx/workspace');
     }, 120000);
 
     it(`should list plugins`, async () => {
@@ -71,8 +71,8 @@ describe('Nx Commands', () => {
 
       // temporarily make it look like this isn't installed
       renameSync(
-        tmpProjPath('node_modules/@nrwl/angular'),
-        tmpProjPath('node_modules/@nrwl/angular_tmp')
+        tmpProjPath('node_modules/@nx/angular'),
+        tmpProjPath('node_modules/@nx/angular_tmp')
       );
 
       listOutput = runCLI('list');
@@ -106,8 +106,8 @@ describe('Nx Commands', () => {
 
       // put back the @nx/angular module (or all the other e2e tests after this will fail)
       renameSync(
-        tmpProjPath('node_modules/@nrwl/angular_tmp'),
-        tmpProjPath('node_modules/@nrwl/angular')
+        tmpProjPath('node_modules/@nx/angular_tmp'),
+        tmpProjPath('node_modules/@nx/angular')
       );
     }, 120000);
   });
@@ -117,8 +117,8 @@ describe('Nx Commands', () => {
     const mylib = uniq('mylib');
 
     beforeAll(() => {
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      runCLI(`generate @nrwl/js:lib ${mylib}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
     });
 
     beforeEach(() => {

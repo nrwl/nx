@@ -14,4 +14,5 @@ export interface ViteBuildExecutorOptions {
   mode?: string;
   ssr?: boolean | string;
   watch?: object | boolean;
+  target?: string | string[];
 }

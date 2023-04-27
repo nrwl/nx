@@ -165,6 +165,10 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 
   if (isKnownPreset(parsedArgs.preset)) {
     pointToTutorialAndCourse(parsedArgs.preset as Preset);
+  } else {
+    output.log({
+      title: `Successfully applied preset: ${parsedArgs.preset}`,
+    });
   }
 }
 

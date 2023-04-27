@@ -4,6 +4,7 @@ import { requireNx } from '../../nx';
 import { NX_VERSION } from './package-json';
 import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files';
 import { basename } from 'path';
+import { isBinaryPath } from './binary-extensions';
 
 const {
   getProjects,
@@ -148,7 +149,17 @@ function replaceMentions(
   newPackageName: string
 ) {
   visitNotIgnoredFiles(tree, '.', (path) => {
-    if (['yarn.lock', 'package-lock.json', 'pnpm-lock.yaml'].includes(path)) {
+    if (isBinaryPath(path)) {
+      return;
+    }
+
+    const ignoredFiles = [
+      'yarn.lock',
+      'package-lock.json',
+      'pnpm-lock.yaml',
+      'CHANGELOG.md',
+    ];
+    if (ignoredFiles.includes(basename(path))) {
       return;
     }
 

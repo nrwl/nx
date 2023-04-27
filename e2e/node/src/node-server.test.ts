@@ -10,7 +10,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Node Applications + webpack', () => {
   let proj: string;
@@ -66,19 +66,17 @@ describe('Node Applications + webpack', () => {
     const koaApp = uniq('koaapp');
     const nestApp = uniq('koaapp');
 
-    runCLI(`generate @nrwl/node:lib ${testLib1}`);
-    runCLI(`generate @nrwl/node:lib ${testLib2} --importPath=@acme/test2`);
+    runCLI(`generate @nx/node:lib ${testLib1}`);
+    runCLI(`generate @nx/node:lib ${testLib2} --importPath=@acme/test2`);
     runCLI(
-      `generate @nrwl/node:app ${expressApp} --framework=express --no-interactive`
+      `generate @nx/node:app ${expressApp} --framework=express --no-interactive`
     );
     runCLI(
-      `generate @nrwl/node:app ${fastifyApp} --framework=fastify --no-interactive`
+      `generate @nx/node:app ${fastifyApp} --framework=fastify --no-interactive`
     );
+    runCLI(`generate @nx/node:app ${koaApp} --framework=koa --no-interactive`);
     runCLI(
-      `generate @nrwl/node:app ${koaApp} --framework=koa --no-interactive`
-    );
-    runCLI(
-      `generate @nrwl/node:app ${nestApp} --framework=nest --bundler=webpack --no-interactive`
+      `generate @nx/node:app ${nestApp} --framework=nest --bundler=webpack --no-interactive`
     );
 
     // Use esbuild by default
@@ -122,7 +120,7 @@ describe('Node Applications + webpack', () => {
     const expressApp = uniq('expressapp');
 
     runCLI(
-      `generate @nrwl/node:app  ${expressApp} --framework=express --docker --no-interactive`
+      `generate @nx/node:app  ${expressApp} --framework=express --docker --no-interactive`
     );
 
     checkFilesExist(`apps/${expressApp}/Dockerfile`);

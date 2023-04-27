@@ -1,4 +1,4 @@
-import { ModuleFederationConfig } from '@nx/devkit';
+import { ModuleFederationConfig } from '@nx/devkit/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
 
 export async function withModuleFederationForSSR(

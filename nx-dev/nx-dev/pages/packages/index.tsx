@@ -1,18 +1,18 @@
-import { Heading1 } from '@nrwl/nx-dev-feature-package-schema-viewer';
-import { getPackagesSections } from '@nrwl/nx-dev/data-access-menu';
+import { Heading1 } from '@nx/nx-dev/feature-package-schema-viewer';
+import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import {
   filterMigrationPackages,
   sortCorePackagesFirst,
-} from '@nrwl/nx-dev/data-access-packages';
-import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
-import { IntrinsicPackageMetadata } from '@nrwl/nx-dev/models-package';
+} from '@nx/nx-dev/data-access-packages';
+import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { IntrinsicPackageMetadata } from '@nx/nx-dev/models-package';
 import {
   Breadcrumbs,
   DocumentationHeader,
   Footer,
   SidebarContainer,
-} from '@nrwl/nx-dev/ui-common';
-import { iconsMap } from '@nrwl/nx-dev/ui-references';
+} from '@nx/nx-dev/ui-common';
+import { iconsMap } from '@nx/nx-dev/ui-references';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';

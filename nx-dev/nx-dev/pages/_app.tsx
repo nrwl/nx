@@ -1,4 +1,4 @@
-import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
+import { sendPageViewEvent } from '@nx/nx-dev/feature-analytics';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
 import Head from 'next/head';

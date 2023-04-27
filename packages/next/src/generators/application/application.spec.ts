@@ -452,12 +452,12 @@ describe('app', () => {
 
       expect(tree.exists('apps/testApp/pages/styles.css')).toBeFalsy();
 
-      expect(tree.exists('apps/testApp/app/global.css'));
-      expect(tree.exists('apps/testApp/app/page.tsx'));
-      expect(tree.exists('apps/testApp/app/layout.tsx'));
-      expect(tree.exists('apps/testApp/app/api/hello/route.ts'));
-      expect(tree.exists('apps/testApp/app/page.module.css'));
-      expect(tree.exists('apps/testApp/app/favicon.ico'));
+      expect(tree.exists('apps/test-app/app/global.css')).toBeTruthy();
+      expect(tree.exists('apps/test-app/app/page.tsx')).toBeTruthy();
+      expect(tree.exists('apps/test-app/app/layout.tsx')).toBeTruthy();
+      expect(tree.exists('apps/test-app/app/api/hello/route.ts')).toBeTruthy();
+      expect(tree.exists('apps/test-app/app/page.module.css')).toBeTruthy();
+      expect(tree.exists('apps/test-app/public/favicon.ico')).toBeTruthy();
     });
   });
 });

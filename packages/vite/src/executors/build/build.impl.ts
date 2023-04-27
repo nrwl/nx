@@ -35,9 +35,11 @@ export async function* viteBuildExecutor(
 
   const libraryPackageJson = resolve(projectRoot, 'package.json');
   const rootPackageJson = resolve(context.root, 'package.json');
+  const distPackageJson = resolve(normalizedOptions.outputPath, 'package.json');
 
   // For buildable libs, copy package.json if it exists.
   if (
+    !existsSync(distPackageJson) &&
     existsSync(libraryPackageJson) &&
     rootPackageJson !== libraryPackageJson
   ) {

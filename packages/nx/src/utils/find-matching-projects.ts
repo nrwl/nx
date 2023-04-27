@@ -1,11 +1,15 @@
 import minimatch = require('minimatch');
 import type { ProjectGraphProjectNode } from '../config/project-graph';
 
-const globCharacters = ['*', '|', '{', '}', '(', ')'];
+type ProjectNodeMap =
+  | Record<string, ProjectGraphProjectNode>
+  | Map<string, ProjectGraphProjectNode>;
 
 const validPatternTypes = [
   'name', // Pattern is based on the project's name
   'tag', // Pattern is based on the project's tags
+  'directory', // Pattern is based on the project's root directory
+  'unlabeled', // Pattern was passed without specifying a type
 ] as const;
 type ProjectPatternType = typeof validPatternTypes[number];
 
@@ -18,6 +22,8 @@ interface ProjectPattern {
   value: string;
 }
 
+const globCharacters = ['*', '|', '{', '}', '(', ')'];
+
 /**
  * Find matching project names given a list of potential project names or globs.
  *
@@ -27,20 +33,16 @@ interface ProjectPattern {
  */
 export function findMatchingProjects(
   patterns: string[] = [],
-  projects:
-    | Record<string, ProjectGraphProjectNode>
-    | Map<string, ProjectGraphProjectNode>
+  projects: ProjectNodeMap
 ): string[] {
   const projectNames = keys(projects);
-
-  const patternObjects: ProjectPattern[] = patterns.map((p) =>
-    parseStringPattern(p, projects)
-  );
 
   const selectedProjects: Set<string> = new Set();
   const excludedProjects: Set<string> = new Set();
 
-  for (const pattern of patternObjects) {
+  for (const stringPattern of patterns) {
+    const pattern = parseStringPattern(stringPattern, projects);
+
     // Handle wildcard with short-circuit, as its a common case with potentially
     // large project sets and we can avoid the more expensive glob matching.
     if (pattern.value === '*') {
@@ -54,46 +56,67 @@ export function findMatchingProjects(
       continue;
     }
 
-    if (pattern.type === 'tag') {
-      for (const projectName of projectNames) {
-        const tags =
-          getItemInMapOrRecord(projects, projectName).data.tags || [];
-
-        if (tags.includes(pattern.value)) {
-          (pattern.exclude ? excludedProjects : selectedProjects).add(
-            projectName
-          );
-          continue;
-        }
-
-        if (!globCharacters.some((c) => pattern.value.includes(c))) {
-          continue;
-        }
-
-        if (minimatch.match(tags, pattern.value).length)
-          (pattern.exclude ? excludedProjects : selectedProjects).add(
-            projectName
-          );
-      }
-      continue;
-    } else if (pattern.type === 'name') {
-      if (hasKey(projects, pattern.value)) {
-        (pattern.exclude ? excludedProjects : selectedProjects).add(
-          pattern.value
+    switch (pattern.type) {
+      case 'tag': {
+        addMatchingProjectsByTag(
+          projectNames,
+          projects,
+          pattern,
+          excludedProjects,
+          selectedProjects
         );
         continue;
       }
-
-      if (!globCharacters.some((c) => pattern.value.includes(c))) {
+      case 'name': {
+        addMatchingProjectsByName(
+          projectNames,
+          projects,
+          pattern,
+          excludedProjects,
+          selectedProjects
+        );
         continue;
       }
-
-      const matchedProjectNames = minimatch.match(projectNames, pattern.value);
-      for (const projectName of matchedProjectNames) {
-        if (pattern.exclude) {
-          excludedProjects.add(projectName);
-        } else {
-          selectedProjects.add(projectName);
+      case 'directory': {
+        addMatchingProjectsByDirectory(
+          projectNames,
+          projects,
+          pattern,
+          excludedProjects,
+          selectedProjects
+        );
+        continue;
+      }
+      // Same thing as `type:unlabeled`. If no specific type is set,
+      // we can waterfall through the different types until we find a match
+      default: {
+        // The size of the selected and excluded projects set, before we
+        // start updating it with this pattern. If the size changes, we
+        // know we found a match and can skip the other types.
+        const originalSize = selectedProjects.size + excludedProjects.size;
+        addMatchingProjectsByName(
+          projectNames,
+          projects,
+          pattern,
+          excludedProjects,
+          selectedProjects
+        );
+        if (selectedProjects.size + excludedProjects.size > originalSize) {
+          // There was some match by name, don't check other types
+          continue;
+        }
+        addMatchingProjectsByDirectory(
+          projectNames,
+          projects,
+          pattern,
+          excludedProjects,
+          selectedProjects
+        );
+        if (selectedProjects.size + excludedProjects.size > originalSize) {
+          // There was some match by directory, don't check other types
+          // Note - this doesn't do anything currently, but preps for future
+          // types
+          continue;
         }
       }
     }
@@ -104,6 +127,75 @@ export function findMatchingProjects(
   }
 
   return Array.from(selectedProjects);
+}
+
+function addMatchingProjectsByDirectory(
+  projectNames: string[],
+  projects: ProjectNodeMap,
+  pattern: ProjectPattern,
+  excludedProjects: Set<string>,
+  selectedProjects: Set<string>
+) {
+  for (const projectName of projectNames) {
+    const root = getItemInMapOrRecord(projects, projectName).data.root;
+    if (getMatchingStringsWithCache(pattern.value, [root]).length > 0) {
+      (pattern.exclude ? excludedProjects : selectedProjects).add(projectName);
+    }
+  }
+}
+
+function addMatchingProjectsByName(
+  projectNames: string[],
+  projects: ProjectNodeMap,
+  pattern: ProjectPattern,
+  excludedProjects: Set<string>,
+  selectedProjects: Set<string>
+) {
+  if (hasKey(projects, pattern.value)) {
+    (pattern.exclude ? excludedProjects : selectedProjects).add(pattern.value);
+    return;
+  }
+
+  if (!globCharacters.some((c) => pattern.value.includes(c))) {
+    return;
+  }
+
+  const matchedProjectNames = getMatchingStringsWithCache(
+    pattern.value,
+    projectNames
+  );
+  for (const projectName of matchedProjectNames) {
+    if (pattern.exclude) {
+      excludedProjects.add(projectName);
+    } else {
+      selectedProjects.add(projectName);
+    }
+  }
+}
+
+function addMatchingProjectsByTag(
+  projectNames: string[],
+  projects: ProjectNodeMap,
+  pattern: ProjectPattern,
+  excludedProjects: Set<string>,
+  selectedProjects: Set<string>
+) {
+  for (const projectName of projectNames) {
+    const tags = getItemInMapOrRecord(projects, projectName).data.tags || [];
+
+    if (tags.includes(pattern.value)) {
+      (pattern.exclude ? excludedProjects : selectedProjects).add(projectName);
+      continue;
+    }
+
+    if (!globCharacters.some((c) => pattern.value.includes(c))) {
+      continue;
+    }
+
+    if (getMatchingStringsWithCache(pattern.value, tags).length) {
+      (pattern.exclude ? excludedProjects : selectedProjects).add(projectName);
+    }
+  }
 }
 
 function keys(
@@ -128,12 +220,8 @@ function getItemInMapOrRecord<T>(
 
 function parseStringPattern(
   pattern: string,
-  projects:
-    | Map<string, ProjectGraphProjectNode>
-    | Record<string, ProjectGraphProjectNode>
+  projects: ProjectNodeMap
 ): ProjectPattern {
-  let type: ProjectPatternType;
-  let value: string;
   const isExclude = pattern.startsWith('!');
 
   // Support for things like: `!{type}:value`
@@ -142,23 +230,44 @@ function parseStringPattern(
   }
 
   const indexOfFirstPotentialSeparator = pattern.indexOf(':');
-  if (indexOfFirstPotentialSeparator === -1 || hasKey(projects, pattern)) {
-    type = 'name';
-    value = pattern;
+  // There is a project that matches directly
+  if (hasKey(projects, pattern)) {
+    return { type: 'name', value: pattern, exclude: isExclude };
+    // The pattern does not contain a label
+  } else if (indexOfFirstPotentialSeparator === -1) {
+    return { type: 'unlabeled', value: pattern, exclude: isExclude };
+    // The pattern may contain a label
   } else {
     const potentialType = pattern.substring(0, indexOfFirstPotentialSeparator);
-    if (isValidPatternType(potentialType)) {
-      type = potentialType;
-      value = pattern.substring(indexOfFirstPotentialSeparator + 1);
-    } else {
-      type = 'name';
-      value = pattern;
-    }
+    return {
+      type: isValidPatternType(potentialType) ? potentialType : 'unlabeled',
+      value: pattern.substring(indexOfFirstPotentialSeparator + 1),
+      exclude: isExclude,
+    };
   }
-
-  return { type, value, exclude: isExclude };
 }
 
 function isValidPatternType(type: string): type is ProjectPatternType {
   return validPatternTypes.includes(type as ProjectPatternType);
 }
+
+export const getMatchingStringsWithCache = (() => {
+  // Map< Pattern, Map< Item, Result >>
+  const minimatchCache = new Map<string, Map<string, boolean>>();
+  return (pattern: string, items: string[]) => {
+    if (!minimatchCache.has(pattern)) {
+      minimatchCache.set(pattern, new Map());
+    }
+    const patternCache = minimatchCache.get(pattern)!;
+    let matcher = null;
+    return items.filter((item) => {
+      let entry = patternCache.get(item);
+      if (entry === undefined || entry === null) {
+        matcher ??= minimatch.makeRe(pattern);
+        entry = item === pattern ? true : matcher.test(item);
+        patternCache.set(item, entry);
+      }
+      return entry;
+    });
+  };
+})();

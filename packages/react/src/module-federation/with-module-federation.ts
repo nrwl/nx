@@ -1,7 +1,7 @@
-import { ModuleFederationConfig } from '@nx/devkit';
+import { ModuleFederationConfig } from '@nx/devkit/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
-import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 import type { AsyncNxWebpackPlugin } from '@nx/webpack';
+import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 /**
  * @param {ModuleFederationConfig} options

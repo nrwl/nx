@@ -1,8 +1,8 @@
 import { HandRaisedIcon } from '@heroicons/react/24/outline';
 import { XCircleIcon } from '@heroicons/react/24/solid';
-import { getSchemaFromReference } from '@nrwl/nx-dev/data-access-packages';
-import { JsonSchema1, NxSchema } from '@nrwl/nx-dev/models-package';
-import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
+import { getSchemaFromReference } from '@nx/nx-dev/data-access-packages';
+import { JsonSchema1, NxSchema } from '@nx/nx-dev/models-package';
+import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { ReactNode, useState } from 'react';

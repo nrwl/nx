@@ -1773,8 +1773,6 @@ parseTargetString('proj:test:production', graph); // returns { project: "proj", 
 
 ▸ **readAllWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/documents/nrwl_devkit#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/documents/nrwl_devkit#nxjsonconfiguration)
 
-TODO(vsavkin): Remove after Nx 16 is out
-
 **`Deprecated`**
 
 Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())

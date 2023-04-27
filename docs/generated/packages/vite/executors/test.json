@@ -57,6 +57,10 @@
       "reportsDirectory": {
         "type": "string",
         "description": "Directory to write coverage report to."
+      },
+      "testFile": {
+        "description": "The name of the file to test.",
+        "type": "string"
       }
     },
     "required": [],

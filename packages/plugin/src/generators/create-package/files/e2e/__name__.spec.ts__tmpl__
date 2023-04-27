@@ -1,11 +1,10 @@
 import {
-  uniq,
   runCreatePackageCli,
   removeTmpProject,
 } from '@nx/plugin/testing';
 
 describe('<%= name %> e2e', () => {
-  const project = uniq('<%= name %>');
+  const project = '<%= name %>';
   let createPackageResult;
 
   beforeAll(async () => {

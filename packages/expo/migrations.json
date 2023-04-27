@@ -729,6 +729,40 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.0",
+      "packages": {
+        "expo": {
+          "version": "48.0.11",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.71.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.71.6",
+          "alwaysAddToPackageJson": false
+        },
+        "eas-cli": {
+          "version": "~3.10.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/cli": {
+          "version": "~0.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "12.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-expo": {
+          "version": "48.0.0",
+          "alwaysAddToPackageJson": false,
+          "addToPackageJson": "devDependencies"
+        }
+      }
     }
   }
 }

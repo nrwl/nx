@@ -401,10 +401,7 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
 
     config.plugins.push(...plugins);
 
-    config.resolve.mainFields = [
-      'browser',
-      ...(config.resolve.mainFields ?? []),
-    ];
+    config.resolve.mainFields = ['browser', 'module', 'main'];
 
     config.module = {
       ...config.module,

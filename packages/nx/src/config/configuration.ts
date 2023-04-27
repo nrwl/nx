@@ -7,8 +7,8 @@ export function readNxJson(): NxJsonConfiguration {
   return new Workspaces(workspaceRoot).readNxJson();
 }
 
+// TODO(vsavkin): Remove after Nx 16 is out
 /**
- * TODO(vsavkin): Remove after Nx 16 is out
  * @deprecated Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
  */
 export function readAllWorkspaceConfiguration(): ProjectsConfigurations &

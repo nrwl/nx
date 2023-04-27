@@ -42,6 +42,7 @@ export async function addLinting(
         'node_modules',
         'web-build',
         'cache',
+        'dist',
       ];
 
       return json;

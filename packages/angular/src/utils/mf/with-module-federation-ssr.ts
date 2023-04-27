@@ -1,5 +1,5 @@
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
-import { ModuleFederationConfig } from '@nx/devkit';
+import { ModuleFederationConfig } from '@nx/devkit/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
 
 function determineRemoteUrl(remote: string) {

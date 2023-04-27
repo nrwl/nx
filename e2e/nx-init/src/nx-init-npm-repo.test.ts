@@ -8,7 +8,7 @@ import {
   runCLI,
   runCommand,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('nx init (NPM repo)', () => {
   const pmc = getPackageManagerCommand({

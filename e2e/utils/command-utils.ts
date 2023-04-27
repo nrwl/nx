@@ -48,9 +48,9 @@ export function setMaxWorkers() {
 
       const executor = build.executor as string;
       if (
-        executor.startsWith('@nrwl/node') ||
-        executor.startsWith('@nrwl/web') ||
-        executor.startsWith('@nrwl/jest')
+        executor.startsWith('@nx/node') ||
+        executor.startsWith('@nx/web') ||
+        executor.startsWith('@nx/jest')
       ) {
         build.options.maxWorkers = 4;
       }
@@ -152,7 +152,7 @@ export function getPackageManagerCommand({
       ciInstall: 'yarn --frozen-lockfile',
       addProd: isYarnWorkspace ? 'yarn add -W' : 'yarn add',
       addDev: isYarnWorkspace ? 'yarn add -DW' : 'yarn add -D',
-      list: 'npm ls --depth 10',
+      list: 'yarn list --pattern',
       runLerna: `yarn --silent lerna`,
     },
     // Pnpm 3.5+ adds nx to
@@ -166,7 +166,7 @@ export function getPackageManagerCommand({
       ciInstall: 'pnpm install --frozen-lockfile',
       addProd: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
       addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
-      list: 'npm ls --depth 10',
+      list: 'pnpm ls --depth 10',
       runLerna: `pnpm exec lerna`,
     },
   }[packageManager.trim() as PackageManager];

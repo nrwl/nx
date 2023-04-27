@@ -35,20 +35,35 @@ Source code and documentation are included in the top-level folders listed below
 - `scripts` - Miscellaneous scripts for project tasks such as building documentation, testing, and code formatting.
 - `tmp` - Folder used by e2e tests. If you are a WebStorm user, make sure to mark this folder as excluded.
 
+## Development Workstation Setup
+
+If you are using `VSCode`, and provided you have [Docker](https://docker.com) installed on your machine, then you can leverage [Dev Containers](https://containers.dev) through this [VSCode extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), to easily setup your development environment, with everything needed to contribute to Nx, already installed (namely `NodeJS`, `Yarn`, `Rust`, `Cargo`, plus some useful extensions like `Nx Console`).
+
+To do so, simply:
+
+- Checkout the repo
+- Open it with VSCode
+- Open the "Commands prompt" and select "Dev Containers: Open Folder in Container..."
+
+The repo comes with a preconfigured `devcontainer.json` file (located in `.devcontainer/` folder at root), that `VSCode` will automatically use to install the aforementioned tools, inside a Docker image. It will even run `pnpm install` for you, so you can start contributing to Nx right after.
+
+If you open the repo in [Github Codespace](https://github.com/features/codespaces), it will also leverage this config file, to setup the codespace, with the same required tools.
+
 ## Building the Project
 
 > Nx uses Rust to build native bindings for Node. Please make sure that you have Rust installed via [rustup.rs](https://rustup.rs)
+> If you have VSCode + Docker, this can be automated for you, see [section](#development-workstation-setup) above
 
 After cloning the project to your machine, to install the dependencies, run:
 
 ```bash
-yarn
+pnpm i
 ```
 
 To build all the packages, run:
 
 ```bash
-yarn build
+pnpm build
 ```
 
 ## Publishing to a local registry
@@ -58,19 +73,19 @@ it can be useful to publish to a local registry.
 
 Check out [this video for a live walkthrough](https://youtu.be/Tx257WpNsxc) or follow the instructions below:
 
-- Run `yarn local-registry start` in Terminal 1 (keep it running)
+- Run `pnpm local-registry start` in Terminal 1 (keep it running)
 - Run `npm adduser --registry http://localhost:4873` in Terminal 2 (real credentials are not required, you just need to
   be logged in. You can use test/test/test@test.io.)
-- Run `yarn local-registry enable` in Terminal 2
-- Run `yarn nx-release 16.0.0 --local` in Terminal 2 - you can choose any nonexistent version number here, but it's recommended to use the next major
+- Run `pnpm local-registry enable` in Terminal 2
+- Run `pnpm nx-release 16.0.0 --local` in Terminal 2 - you can choose any nonexistent version number here, but it's recommended to use the next major
 - Run `cd ./tmp` in Terminal 2
 - Run `npx create-nx-workspace@16.0.0` in Terminal 2
 
 If you have problems publishing, make sure you use Node 18 and NPM 8.
 
-**NOTE:** After you finish with local testing don't forget to stop the local registry (e.g. closing the Terminal 1) and disabling the local registy using `yarn local-registry disable`. Keeping local registry enabled will change your lock file resolutions to `localhost:4873` on the next `yarn install`. You can also run `yarn local-registry clear` to clean all packages in that local registry.
+**NOTE:** After you finish with local testing don't forget to stop the local registry (e.g. closing the Terminal 1) and disabling the local registy using `pnpm local-registry disable`. Keeping local registry enabled will change your lock file resolutions to `localhost:4873` on the next `pnpm i`. You can also run `pnpm local-registry clear` to clean all packages in that local registry.
 
-**NOTE:** To use this newly published local version, you need to make a new workspace or change all of your target packages to this new version, eg: `"nx": "^16.0.0",` and re-run `yarn install` in your testing project.
+**NOTE:** To use this newly published local version, you need to make a new workspace or change all of your target packages to this new version, eg: `"nx": "^16.0.0",` and re-run `pnpm i` in your testing project.
 
 ### Publishing for Yarn 2+ (Berry)
 
@@ -78,13 +93,15 @@ Yarn Berry operates slightly differently than Yarn Classic. In order to publish 
 
 - Run `yarn set version berry` to switch to latest Yarn version.
 - Create `.yarnrc.yml` in root with following contents:
+
   ```yml
   nodeLinker: node-modules
   npmRegistryServer: 'http://localhost:4873'
   unsafeHttpWhitelist:
     - localhost
   ```
-- Run `yarn local-registry start` in Terminal 1 (keep it running)
+
+- Run `pnpm local-registry start` in Terminal 1 (keep it running)
 - If you are creating nx workspace outside of your nx repo, make sure to add npm registry info to your root yarnrc (
   usually in ~/.yarnrc.yml). The file should look something like this:
 
@@ -93,13 +110,12 @@ Yarn Berry operates slightly differently than Yarn Classic. In order to publish 
     'https://registry.yarnpkg.com':
       npmAuthToken: npm_******************
   yarnPath: .yarn/releases/yarn-3.2.2.cjs
-
   npmRegistryServer: 'http://localhost:4873'
   unsafeHttpWhitelist:
     - localhost
   ```
 
-- Run `yarn nx-release --local` in Terminal 2 to publish next minor version. If this version already exists, you can
+- Run `pnpm nx-release --local` in Terminal 2 to publish next minor version. If this version already exists, you can
   bump the minor version in `lerna.json` to toggle the next minor. The output will report the version of published
   packages.
 - Go to your target folder (e.g. `cd ./tmp`) in Terminal 2
@@ -138,7 +154,7 @@ nx e2e e2e-cli -t versions # I often add qqqq to my test name so I can use -t qq
 Sometimes tests pass locally but they fail on the CI. To reproduce the CI environment and be able to debug the issue, run:
 
 ```bash
-NX_VERBOSE_LOGGING=true CI=true SELECTED_PM=pnpm yarn nx e2e e2e-cli --t="should do something is this test"
+NX_VERBOSE_LOGGING=true CI=true SELECTED_PM=pnpm pnpm nx e2e e2e-cli --t="should do something is this test"
 ```
 
 The above command sets verbose logging (this exposes stack traces and underlying errors), sets the defaults to be CI-like and sets Pnpm as the selected package manager.
@@ -147,7 +163,7 @@ The above command sets verbose logging (this exposes stack traces and underlying
 
 To build Nx on Windows, you need to use WSL.
 
-- Run `yarn install` in WSL. Yarn will compile several dependencies. If you don't run `install` in WSL, they will be
+- Run `pnpm install` in WSL. Yarn will compile several dependencies. If you don't run `install` in WSL, they will be
   compiled for Windows.
 - Run `nx affected --target=test` and other commands in WSL.
 
@@ -184,7 +200,7 @@ corresponding `schema.json` file for the given command.
 After adjusting the `schema.json` file, `.md` files for these commands can be generated by running:
 
 ```bash
-yarn documentation
+pnpm documentation
 ```
 
 This will update the corresponding contents of the `docs` directory. These are generated automatically on push (via
@@ -235,7 +251,7 @@ reproducible scenario gives us wealth of important information without going bac
 additional information, such as:
 
 - the output of `nx report`
-- `yarn.lock` or `package-lock.json`
+- `yarn.lock` or `package-lock.json` or `pnpm-lock.yaml`
 - and most importantly - a use-case that fails
 
 A minimal reproduction allows us to quickly confirm a bug (or point out a coding problem) as well as confirm that we are
@@ -261,9 +277,9 @@ Please follow the following guidelines:
 - Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`nx affected --target=e2e`)
   - Target a specific e2e test with `nx e2e e2e-cypress`
 - Make sure you run `nx format`
-- Update documentation with `yarn documentation`. For documentation, check for spelling and grammatical errors.
-- Update your commit message to follow the guidelines below (use `yarn commit` to automate compliance)
-  - `yarn check-commit` will check to make sure your commit messages are formatted correctly
+- Update documentation with `pnpm documentation`. For documentation, check for spelling and grammatical errors.
+- Update your commit message to follow the guidelines below (use `pnpm commit` to automate compliance)
+  - `pnpm check-commit` will check to make sure your commit messages are formatted correctly
 
 #### Commit Message Guidelines
 
@@ -339,4 +355,4 @@ Closes #157
 
 To simplify and automate the process of committing with this format,
 **Nx is a [Commitizen](https://github.com/commitizen/cz-cli) friendly repository**, just do `git add` and
-execute `yarn commit`.
+execute `pnpm commit`.

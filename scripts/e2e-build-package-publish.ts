@@ -7,7 +7,7 @@ process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 async function buildPackagePublishAndCleanPorts() {
-  if (!process.env.NX_E2E_SKIP_BUILD_CLEANUP) {
+  if (process.env.NX_E2E_SKIP_BUILD_CLEANUP !== 'true') {
     if (!process.env.CI) {
       console.log(
         stripIndent(`
@@ -29,7 +29,10 @@ async function buildPackagePublishAndCleanPorts() {
       remove('./tmp/local-registry'),
     ]);
   }
-  if (!process.env.NX_E2E_SKIP_BUILD_CLEANUP || !existsSync('./build')) {
+  if (
+    process.env.NX_E2E_SKIP_BUILD_CLEANUP !== 'true' ||
+    !existsSync('./build')
+  ) {
     try {
       await updateVersionsAndPublishPackages();
     } catch (e) {
@@ -46,7 +49,7 @@ async function updateVersionsAndPublishPackages() {
   const isVerbose =
     process.env.NX_VERBOSE_LOGGING === 'true' ||
     process.argv.includes('--verbose');
-  const response = execSync(`yarn nx-release major --local`, {
+  const response = execSync(`pnpm nx-release major --local`, {
     stdio: isVerbose ? 'inherit' : 'pipe',
     encoding: 'utf8',
   });

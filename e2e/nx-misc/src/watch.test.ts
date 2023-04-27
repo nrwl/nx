@@ -8,7 +8,7 @@ import {
   getStrippedEnvironmentVariables,
   updateJson,
   isVerboseE2ERun,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { spawn } from 'child_process';
 
 describe('Nx Commands', () => {
@@ -17,9 +17,9 @@ describe('Nx Commands', () => {
   let proj3 = uniq('proj3');
   beforeAll(() => {
     newProject({ packageManager: 'npm' });
-    runCLI(`generate @nrwl/js:lib ${proj1}`);
-    runCLI(`generate @nrwl/js:lib ${proj2}`);
-    runCLI(`generate @nrwl/js:lib ${proj3}`);
+    runCLI(`generate @nx/js:lib ${proj1}`);
+    runCLI(`generate @nx/js:lib ${proj2}`);
+    runCLI(`generate @nx/js:lib ${proj3}`);
   });
 
   afterAll(() => cleanupProject());

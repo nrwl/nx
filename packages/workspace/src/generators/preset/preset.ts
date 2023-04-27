@@ -151,6 +151,7 @@ async function createPreset(tree: Tree, options: Schema) {
     const { applicationGenerator: nodeApplicationGenerator } = require('@nx' +
       '/node');
     return nodeApplicationGenerator(tree, {
+      bundler: options.bundler,
       name: options.name,
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,

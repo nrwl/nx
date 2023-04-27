@@ -206,3 +206,9 @@ The cache is stored in `node_modules/.cache/nx` by default. To change the cache 
   }
 }
 ```
+
+## Outputs vs Output Path
+
+Several executors have a property in `options` called `outputPath`. On its own, this property does not influence caching or what is stored at the end of a run. Frequently though, this property would point to your build artifacts. In these cases, you can include `"{options.outputPath}"` in the `outputs` array for your target to avoid duplicating the value.
+
+The properties inside `options` are never considered for determining where artifacts are located, and are just passed into the executor when running a task. If there are artifacts that save to disk they **_must_** be included in the `outputs` array or they will not be restored when there is a cache hit for that particular target.

@@ -18,7 +18,7 @@ export function runNxCommand(
 ): string {
   function _runNxCommand(c) {
     const execSyncOptions: ExecOptions = {
-      cwd: opts.cwd,
+      cwd: opts.cwd ?? tmpProjPath(),
       env: { ...process.env, ...opts.env },
     };
     if (fileExists(tmpProjPath('package.json'))) {

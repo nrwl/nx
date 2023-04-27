@@ -32,7 +32,7 @@ export function runPodInstall(
       return;
     }
 
-    if (!install) {
+    if (!install || !existsSync(join(iosDirectory, 'Podfile'))) {
       logger.info('Skipping `pod install`');
       return;
     }

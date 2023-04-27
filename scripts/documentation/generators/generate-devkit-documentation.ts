@@ -10,7 +10,7 @@ export function generateDevkitDocumentation() {
   };
 
   execSync(
-    'nx build typedoc-theme && rm -rf node_modules/@nrwl/typedoc-theme && cp -R dist/typedoc-theme node_modules/@nrwl/typedoc-theme',
+    'nx build typedoc-theme && rm -rf node_modules/@nx/typedoc-theme && cp -R dist/typedoc-theme node_modules/@nx/typedoc-theme',
     execSyncOptions
   );
 

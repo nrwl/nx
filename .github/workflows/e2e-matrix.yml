@@ -39,10 +39,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install PNPM
+        run: |
+          npm install -g @pnpm/exe@8.3.1
+
       - name: Set node
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
+          cache: 'pnpm'
 
       - name: Cache node_modules
         id: cache-modules
@@ -54,7 +59,7 @@ jobs:
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+        run: pnpm install --frozen-lockfile
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -320,15 +325,14 @@ jobs:
         run: mkdir -p outputs
 
       - name: Install PNPM
-        if: ${{ matrix.package_manager == 'pnpm' }}
-        uses: pnpm/action-setup@v2
-        with:
-          version: 7.30.5
+        run: |
+          npm install -g @pnpm/exe@8.3.1
 
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
+          cache: 'pnpm'
           registry-url: http://localhost:4872
 
       - name: Cache node_modules
@@ -339,8 +343,7 @@ jobs:
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
 
       - name: Install packages
-        if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+        run: pnpm install --frozen-lockfile
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -525,30 +528,33 @@ jobs:
               yarn: 0,
               pnpm: 0
             };
+            const macosProjects = ['e2e-detox', 'e2e-expo', 'e2e-react-native'];
             combined.forEach((matrix) => {
               if (matrix.os_name === 'Linux' && matrix.node_version === 18) {
                 pmReport[matrix.package_manager] += matrix.duration;
               }
-              if (timeReport[matrix.project]) {
-                if (matrix.duration > timeReport[matrix.project].max) {
-                  timeReport[matrix.project].max = matrix.duration;
-                  timeReport[
-                    matrix.project
-                  ].maxEnv = `${matrix.os_name}, ${matrix.package_manager}`;
+              if (matrix.os_name === 'Linux' || macosProjects.includes(matrix.project)) {
+                if (timeReport[matrix.project]) {
+                  if (matrix.duration > timeReport[matrix.project].max) {
+                    timeReport[matrix.project].max = matrix.duration;
+                    timeReport[
+                      matrix.project
+                    ].maxEnv = `${matrix.os_name}, ${matrix.package_manager}`;
+                  }
+                  if (matrix.duration < timeReport[matrix.project].min) {
+                    timeReport[matrix.project].min = matrix.duration;
+                    timeReport[
+                      matrix.project
+                    ].minEnv = `${matrix.os_name}, ${matrix.package_manager}`;
+                  }
+                } else {
+                  timeReport[matrix.project] = {
+                    min: matrix.duration,
+                    max: matrix.duration,
+                    minEnv: `${matrix.os_name}, ${matrix.package_manager}`,
+                    maxEnv: `${matrix.os_name}, ${matrix.package_manager}`,
+                  };
                 }
-                if (matrix.duration < timeReport[matrix.project].min) {
-                  timeReport[matrix.project].min = matrix.duration;
-                  timeReport[
-                    matrix.project
-                  ].minEnv = `${matrix.os_name}, ${matrix.package_manager}`;
-                }
-              } else {
-                timeReport[matrix.project] = {
-                  min: matrix.duration,
-                  max: matrix.duration,
-                  minEnv: `${matrix.os_name}, ${matrix.package_manager}`,
-                  maxEnv: `${matrix.os_name}, ${matrix.package_manager}`,
-                };
               }
             });
 
@@ -580,6 +586,9 @@ jobs:
             resultPkg += `\`\`\``;
             core.setOutput('SLACK_PROJ_DURATION', trimSpace(resultPkg));
 
+            // Print project duration report inline to allow reviewing on manual runs (when no slack message will be sent)
+            console.log(trimSpace(resultPkg));
+
             let resultPm = `
                 \`\`\`
                 | PM   | Total time  |
@@ -589,6 +598,9 @@ jobs:
             });
             resultPm += `\`\`\``;
             core.setOutput('SLACK_PM_DURATION', trimSpace(resultPm));
+
+            // Print package manager duration report inline to allow reviewing on manual runs (when no slack message will be sent)
+            console.log(trimSpace(resultPm));
 
   report-failure:
     if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}

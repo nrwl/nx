@@ -98,15 +98,44 @@
             "type": "object",
             "properties": {
               "projects": {
-                "type": "string",
-                "description": "The projects that the targets belong to.",
-                "enum": ["self", "dependencies"]
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "description": "The project that the targets belong to."
+                  },
+                  {
+                    "type": "array",
+                    "description": "The projects that the targets belong to.",
+                    "items": { "type": "string" }
+                  }
+                ]
+              },
+              "dependencies": {
+                "type": "boolean",
+                "description": "Include files belonging to the input for all the project dependencies of this target."
               },
               "input": {
                 "type": "string",
                 "description": "The name of the input."
               }
             },
+            "oneOf": [
+              {
+                "required": ["projects", "input"]
+              },
+              {
+                "required": ["dependencies", "input"]
+              },
+              {
+                "required": ["input"],
+                "not": {
+                  "anyOf": [
+                    { "required": ["projects"] },
+                    { "required": ["dependencies"] }
+                  ]
+                }
+              }
+            ],
             "additionalProperties": false
           },
           {
@@ -161,7 +190,39 @@
         },
         "options": {
           "type": "object",
-          "description": "Default options for the runner."
+          "description": "Default options for the runner.",
+          "properties": {
+            "accessToken": {
+              "type": "string"
+            },
+            "captureStderr": {
+              "type": "boolean",
+              "description": "Defines whether the cache captures stderr or just stdout."
+            },
+            "parallel": {
+              "type": "number",
+              "description": "Defines the max number of targets ran in parallel."
+            },
+            "cacheableOperations": {
+              "type": "array",
+              "description": "Defines the list of targets/operations that are cached by Nx.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "cacheDirectory": {
+              "type": "string",
+              "description": "Defines where the local cache is stored."
+            },
+            "skipNxCache": {
+              "type": "boolean",
+              "description": "Defines whether the Nx Cache should be skipped."
+            },
+            "encryptionKey": {
+              "type": "string",
+              "description": "Defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key NX_CLOUD_ENCRYPTION_KEY that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable."
+            }
+          }
         }
       },
       "additionalProperties": false
@@ -211,16 +272,19 @@
                     "oneOf": [
                       {
                         "type": "string",
-                        "description": "{self}, {dependencies}, or a project name."
+                        "description": "A project name"
                       },
                       {
                         "type": "array",
-                        "description": "An array of project specifiers: {self}, {dependencies}, or a project name.",
+                        "description": "An array of project names",
                         "items": {
                           "type": "string"
                         }
                       }
                     ]
+                  },
+                  "dependencies": {
+                    "type": "boolean"
                   },
                   "target": {
                     "type": "string",
@@ -233,8 +297,24 @@
                     "default": "ignore"
                   }
                 },
-                "additionalProperties": false,
-                "required": ["projects", "target"]
+                "oneOf": [
+                  {
+                    "required": ["projects", "target"]
+                  },
+                  {
+                    "required": ["dependencies", "target"]
+                  },
+                  {
+                    "required": ["target"],
+                    "not": {
+                      "anyOf": [
+                        { "required": ["projects"] },
+                        { "required": ["dependencies"] }
+                      ]
+                    }
+                  }
+                ],
+                "additionalProperties": false
               }
             ]
           }

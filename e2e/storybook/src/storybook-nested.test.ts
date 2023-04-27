@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  getSelectedPackageManager,
   killPorts,
   readJson,
   runCLI,
@@ -8,8 +9,9 @@ import {
   runCreateWorkspace,
   tmpProjPath,
   uniq,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { writeFileSync } from 'fs';
+import { createFileSync } from 'fs-extra';
 
 describe('Storybook generators and executors for standalone workspaces - using React + Vite', () => {
   const wsName = uniq('react');
@@ -22,10 +24,11 @@ describe('Storybook generators and executors for standalone workspaces - using R
       appName,
       style: 'css',
       bundler: 'vite',
+      packageManager: getSelectedPackageManager(),
     });
 
     runCLI(
-      `generate @nrwl/react:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
 
     runCLI(`report`);
@@ -50,8 +53,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
     });
   });
 
-  // TODO: Use --storybook7Configuration and re-enable this test - or else it NEEDS NODE 16
-  xdescribe('serve storybook', () => {
+  describe('serve storybook', () => {
     afterEach(() => killPorts());
 
     it('should serve a React based Storybook setup that uses Vite', async () => {
@@ -59,73 +61,86 @@ describe('Storybook generators and executors for standalone workspaces - using R
         return /Storybook.*started/gi.test(output);
       });
       p.kill();
-    }, 40000);
+    }, 60000);
   });
 
-  // TODO: Use --storybook7Configuration and re-enable this test - or else it NEEDS NODE 16
-  xdescribe('build storybook', () => {
+  describe('build storybook', () => {
     it('should build a React based storybook that uses Vite', () => {
       runCLI(`run ${appName}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${appName}/index.html`);
-    }, 40000);
+    }, 60000);
 
-    // This test makes sure path resolution works
+    // This needs fixing on the Storybook side
+    // vite paths resolution is not working on standalone
     xit('should build a React based storybook that references another lib and uses Vite', () => {
-      const reactLib = uniq('test-lib-react');
-      runCLI(`generate @nrwl/react:lib ${reactLib} --no-interactive`);
+      const anotherReactLib = uniq('test-another-lib-react');
+      runCLI(`generate @nx/react:lib ${anotherReactLib} --no-interactive`);
       // create a React component we can reference
+      createFileSync(tmpProjPath(`${anotherReactLib}/src/lib/mytestcmp.tsx`));
       writeFileSync(
-        tmpProjPath(`${reactLib}/src/lib/mytestcmp.tsx`),
+        tmpProjPath(`${anotherReactLib}/src/lib/mytestcmp.tsx`),
         `
-            import React from 'react';
-
-            /* eslint-disable-next-line */
-            export interface MyTestCmpProps {}
-
-            export const MyTestCmp = (props: MyTestCmpProps) => {
-              return (
-                <div>
-                  <h1>Welcome to test cmp!</h1>
-                </div>
-              );
-            };
-
-            export default MyTestCmp;
+        export function MyTestCmp() {
+          return (
+            <div>
+              <h1>Welcome to OtherLib!</h1>
+            </div>
+          );
+        }
+        
+        export default MyTestCmp;
         `
       );
       // update index.ts and export it
       writeFileSync(
-        tmpProjPath(`${reactLib}/src/index.ts`),
+        tmpProjPath(`${anotherReactLib}/src/index.ts`),
         `
             export * from './lib/mytestcmp';
         `
       );
 
-      // create a story in the first lib to reference the cmp from the 2nd lib
+      // create a component and a story in the first lib to reference the cmp from the 2nd lib
+      createFileSync(tmpProjPath(`src/app/test-button.tsx`));
       writeFileSync(
-        tmpProjPath(`${reactLib}/src/lib/myteststory.stories.tsx`),
+        tmpProjPath(`src/app/test-button.tsx`),
         `
-            import React from 'react';
+          import { MyTestCmp } from '@${wsName}/${anotherReactLib}';
 
-            import { MyTestCmp, MyTestCmpProps } from '@${wsName}/${reactLib}';
+          export function TestButton() {
+            return (
+              <div>
+                <MyTestCmp />
+              </div>
+            );
+          }
 
-            export default {
-              component: MyTestCmp,
-              title: 'MyTestCmp',
-            };
-
-            export const primary = () => {
-              /* eslint-disable-next-line */
-              const props: MyTestCmpProps = {};
-
-              return <MyTestCmp />;
-            };
+          export default TestButton;
         `
       );
 
+      // create a story in the first lib to reference the cmp from the 2nd lib
+      createFileSync(tmpProjPath(`src/app/test-button.stories.tsx`));
+      writeFileSync(
+        tmpProjPath(`src/app/test-button.stories.tsx`),
+        `
+        import type { Meta } from '@storybook/react';
+        import { TestButton } from './test-button';
+        
+        const Story: Meta<typeof TestButton> = {
+          component: TestButton,
+          title: 'TestButton',
+        };
+        export default Story;
+        
+        export const Primary = {
+          args: {},
+        };
+              `
+      );
+
       // build React lib
-      runCLI(`run ${reactLib}:build-storybook --verbose`);
-      checkFilesExist(`dist/storybook/${reactLib}/index.html`);
-    }, 40000);
+      runCLI(`run ${appName}:build-storybook --verbose`);
+      checkFilesExist(`dist/storybook/${appName}/index.html`);
+    }, 60000);
   });
 });

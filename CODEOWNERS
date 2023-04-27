@@ -5,7 +5,7 @@
 /scripts/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /tools/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 package.json @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
-yarn.lock @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
+pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 
 # Docs Site + Graph
 /docs @bcabanes @isaacplmann @juristr

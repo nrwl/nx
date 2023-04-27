@@ -2,11 +2,10 @@ import {
   createFile,
   newProject,
   runCLI,
+  runCypressTests,
   uniq,
   updateFile,
-  runCypressTests,
-  updateJson,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('NextJs Component Testing', () => {
   beforeAll(() => {
@@ -66,9 +65,9 @@ describe('NextJs Component Testing', () => {
 });
 
 function createAppWithCt(appName: string) {
-  runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+  runCLI(`generate @nx/next:app ${appName} --no-interactive`);
   runCLI(
-    `generate @nrwl/next:component button --project=${appName} --directory=components --flat --no-interactive`
+    `generate @nx/next:component button --project=${appName} --directory=components --flat --no-interactive`
   );
   createFile(
     `apps/${appName}/public/data.json`,
@@ -100,13 +99,13 @@ export default function Button(props: ButtonProps) {
   });
 
   runCLI(
-    `generate @nrwl/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
+    `generate @nx/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
   );
 }
 
 function addTailwindToApp(appName: string) {
   runCLI(
-    `generate @nrwl/react:setup-tailwind --project=${appName} --no-interactive`
+    `generate @nx/react:setup-tailwind --project=${appName} --no-interactive`
   );
   updateFile(`apps/${appName}/cypress/support/component.ts`, (content) => {
     return `${content}
@@ -134,11 +133,11 @@ describe(Button.name, () => {
 
 function createLibWithCt(libName: string, buildable: boolean) {
   runCLI(
-    `generate @nrwl/next:lib ${libName} --buildable=${buildable} --no-interactive`
+    `generate @nx/next:lib ${libName} --buildable=${buildable} --no-interactive`
   );
 
   runCLI(
-    `generate @nrwl/next:component button --project=${libName} --flat --export --no-interactive`
+    `generate @nx/next:component button --project=${libName} --flat --export --no-interactive`
   );
   updateFile(`libs/${libName}/src/lib/button.tsx`, (content) => {
     return `import { useEffect, useState } from 'react';
@@ -155,13 +154,13 @@ export default Button;
   });
 
   runCLI(
-    `generate @nrwl/next:cypress-component-configuration --project=${libName} --generate-tests --no-interactive`
+    `generate @nx/next:cypress-component-configuration --project=${libName} --generate-tests --no-interactive`
   );
 }
 function addTailwindToLib(libName: string) {
   createFile(`libs/${libName}/src/lib/styles.css`, ``);
   runCLI(
-    `generate @nrwl/react:setup-tailwind --project=${libName} --no-interactive`
+    `generate @nx/react:setup-tailwind --project=${libName} --no-interactive`
   );
   updateFile(`libs/${libName}/src/lib/button.cy.tsx`, (content) => {
     return `import * as React from 'react';

@@ -14,7 +14,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 import { ASYNC_GENERATOR_EXECUTOR_CONTENTS } from './nx-plugin.fixtures';
@@ -31,7 +31,7 @@ describe('Nx Plugin', () => {
   it('should be able to generate a Nx Plugin ', async () => {
     const plugin = uniq('plugin');
 
-    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
+    runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     const lintResults = runCLI(`lint ${plugin}`);
     expect(lintResults).toContain('All files pass linting.');
 
@@ -51,9 +51,9 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     const version = '1.0.0';
 
-    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
+    runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nrwl/nx-plugin:migration --project=${plugin} --packageVersion=${version} --packageJsonUpdates=false`
+      `generate @nx/plugin:migration --project=${plugin} --packageVersion=${version} --packageJsonUpdates=false`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -84,10 +84,8 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     const generator = uniq('generator');
 
-    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
-    runCLI(
-      `generate @nrwl/nx-plugin:generator ${generator} --project=${plugin}`
-    );
+    runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
+    runCLI(`generate @nx/plugin:generator ${generator} --project=${plugin}`);
 
     const lintResults = runCLI(`lint ${plugin}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -121,9 +119,9 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     const executor = uniq('executor');
 
-    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
+    runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nrwl/nx-plugin:executor ${executor} --project=${plugin} --includeHasher`
+      `generate @nx/plugin:executor ${executor} --project=${plugin} --includeHasher`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -169,34 +167,32 @@ describe('Nx Plugin', () => {
 
     // Generating the plugin results in a generator also called {plugin},
     // as well as an executor called "build"
-    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
+    runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
 
     runCLI(
-      `generate @nrwl/nx-plugin:generator ${goodGenerator} --project=${plugin}`
+      `generate @nx/plugin:generator ${goodGenerator} --project=${plugin}`
     );
 
     runCLI(
-      `generate @nrwl/nx-plugin:generator ${badFactoryPath} --project=${plugin}`
+      `generate @nx/plugin:generator ${badFactoryPath} --project=${plugin}`
+    );
+
+    runCLI(`generate @nx/plugin:executor ${goodExecutor} --project=${plugin}`);
+
+    runCLI(
+      `generate @nx/plugin:executor ${badExecutorBadImplPath} --project=${plugin}`
     );
 
     runCLI(
-      `generate @nrwl/nx-plugin:executor ${goodExecutor} --project=${plugin}`
+      `generate @nx/plugin:migration ${badMigrationVersion} --project=${plugin} --packageVersion="invalid"`
     );
 
     runCLI(
-      `generate @nrwl/nx-plugin:executor ${badExecutorBadImplPath} --project=${plugin}`
+      `generate @nx/plugin:migration ${missingMigrationVersion} --project=${plugin} --packageVersion="0.1.0"`
     );
 
     runCLI(
-      `generate @nrwl/nx-plugin:migration ${badMigrationVersion} --project=${plugin} --packageVersion="invalid"`
-    );
-
-    runCLI(
-      `generate @nrwl/nx-plugin:migration ${missingMigrationVersion} --project=${plugin} --packageVersion="0.1.0"`
-    );
-
-    runCLI(
-      `generate @nrwl/nx-plugin:migration ${goodMigration} --project=${plugin} --packageVersion="0.1.0"`
+      `generate @nx/plugin:migration ${goodMigration} --project=${plugin} --packageVersion="0.1.0"`
     );
 
     updateFile(`libs/${plugin}/generators.json`, (f) => {
@@ -262,7 +258,7 @@ describe('Nx Plugin', () => {
     let plugin: string;
     beforeEach(() => {
       plugin = uniq('plugin');
-      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
+      runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     });
 
     it('should be able to infer projects and targets', async () => {
@@ -310,13 +306,9 @@ describe('Nx Plugin', () => {
       const executor = uniq('executor');
       const generatedProject = uniq('project');
 
-      runCLI(
-        `generate @nrwl/nx-plugin:generator ${generator} --project=${plugin}`
-      );
+      runCLI(`generate @nx/plugin:generator ${generator} --project=${plugin}`);
 
-      runCLI(
-        `generate @nrwl/nx-plugin:executor ${executor} --project=${plugin}`
-      );
+      runCLI(`generate @nx/plugin:executor ${executor} --project=${plugin}`);
 
       updateFile(
         `libs/${plugin}/src/executors/${executor}/executor.ts`,
@@ -352,7 +344,7 @@ describe('Nx Plugin', () => {
 
       expect(() => {
         runCLI(
-          `generate @nrwl/nx-plugin:generator ${generator} --project=${plugin}`
+          `generate @nx/plugin:generator ${generator} --project=${plugin}`
         );
 
         runCLI(
@@ -370,9 +362,9 @@ describe('Nx Plugin', () => {
     it('should work with generate wrapper', () => {
       custom = uniq('custom');
       const project = uniq('generated-project');
-      runCLI(`g @nrwl/nx-plugin:plugin workspace-plugin --no-interactive`);
+      runCLI(`g @nx/plugin:plugin workspace-plugin --no-interactive`);
       runCLI(
-        `g @nrwl/nx-plugin:generator ${custom} --project workspace-plugin --no-interactive`
+        `g @nx/plugin:generator ${custom} --project workspace-plugin --no-interactive`
       );
       runCLI(
         `workspace-generator ${custom} --name ${project} --no-interactive`
@@ -390,7 +382,7 @@ describe('Nx Plugin', () => {
     it('should create a plugin in the specified directory', () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir --e2eTestRunner=jest`
+        `generate @nx/plugin:plugin ${plugin} --linter=eslint --directory subdir --e2eTestRunner=jest`
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
       const pluginProject = readProjectConfig(`subdir-${plugin}`);
@@ -403,7 +395,7 @@ describe('Nx Plugin', () => {
     it('should add tags to project configuration', async () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage `
+        `generate @nx/plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage `
       );
       const pluginProject = readProjectConfig(plugin);
       expect(pluginProject.tags).toEqual(['e2etag', 'e2ePackage']);
@@ -413,9 +405,9 @@ describe('Nx Plugin', () => {
   it('should be able to generate a create-package plugin ', async () => {
     const plugin = uniq('plugin');
     const createAppName = `create-${plugin}-app`;
-    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin}`);
+    runCLI(`generate @nx/plugin:plugin ${plugin}`);
     runCLI(
-      `generate @nrwl/nx-plugin:create-package ${createAppName} --project=${plugin}`
+      `generate @nx/plugin:create-package ${createAppName} --project=${plugin}`
     );
 
     const buildResults = runCLI(`build ${createAppName}`);
@@ -432,7 +424,7 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     expect(() =>
       runCLI(
-        `generate @nrwl/nx-plugin:create-package ${plugin} --project=invalid-plugin`
+        `generate @nx/plugin:create-package ${plugin} --project=invalid-plugin`
       )
     ).toThrow();
   });

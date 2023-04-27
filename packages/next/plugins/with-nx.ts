@@ -4,7 +4,6 @@
  */
 import * as path from 'path';
 import type { NextConfig } from 'next';
-import { PHASE_PRODUCTION_SERVER } from 'next/constants';
 import type { NextConfigFn } from '../src/utils/config';
 import type { NextBuildBuilderOptions } from '../src/utils/types';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
@@ -155,6 +154,7 @@ function withNx(
   context: WithNxContext = getWithNxContext()
 ): NextConfigFn {
   return async (phase: string) => {
+    const { PHASE_PRODUCTION_SERVER } = await import('next/constants');
     if (phase === PHASE_PRODUCTION_SERVER) {
       // If we are running an already built production server, just return the configuration.
       const { nx, ...validNextConfig } = _nextConfig;

@@ -163,7 +163,7 @@ _Named Inputs_
 Examples:
 
 - `inputs: ["production"]`
-- same as `inputs: [{input: "production", projects: "self"}]`
+- same as `"inputs": [{"input": "production", "projects": "self"}]` in versions prior to Nx 16, or `"inputs": [{"input": "production"}]` after version 16.
 
 Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
 keeping them in sync is error-prone, we recommend defining `namedInputs`, which you can then reference in all of those
@@ -174,7 +174,7 @@ places.
 Examples:
 
 - `inputs: ["^production"]`
-- same as `inputs: [{input: "production", projects: "dependencies"}]`
+- same as `inputs: [{"input": "production", "projects": "dependencies"}]` prior to Nx 16, or `"inputs": [{"input": "production", "dependencies": true }]` after version 16.
 
 Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
 an example.
@@ -290,12 +290,37 @@ You can also express task dependencies with an object syntax:
 ```
 
 {% /tab %}
-{% tab label="Version 16+" %}
+{% tab label="Version 16+ (self)" %}
 
 ```json
 "build": {
   "dependsOn": [{
-    "projects": "{dependencies}", // "{dependencies}", "{self}" or "project-name"
+    "target": "build", // target name
+    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+  }]
+}
+```
+
+{% /tab %}
+{% tab label="Version 16+ (dependencies)" %}
+
+```json
+"build": {
+  "dependsOn": [{
+    "dependencies": true, // Run this target on all dependencies first
+    "target": "build", // target name
+    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+  }]
+}
+```
+
+{% /tab %}
+{% tab label="Version 16+ (specific projects)" %}
+
+```json
+"build": {
+  "dependsOn": [{
+    "projects": ["my-app"], // Run build on "my-app" first
     "target": "build", // target name
     "params": "ignore" // "forward" or "ignore", defaults to "ignore"
   }]
@@ -326,10 +351,10 @@ You can write the shorthand configuration above in the object syntax like this:
 
 ```json
 "build": {
-  "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
+  "dependsOn": [{ "dependencies": true, "target": "build" }] // Run build on my dependencies first
 },
 "test": {
-  "dependsOn": [{ "projects": "{self}", "target": "build" }]
+  "dependsOn": [{ "target": "build" }] // Run build on myself first
 }
 ```
 
@@ -395,7 +420,7 @@ This also works when defining a relation for the target of the project itself us
 ```json
 "build": {
    // forward params passed to this target to the project target
-  "dependsOn": [{ "projects": "{self}", "target": "pre-build", "params": "forward" }]
+  "dependsOn": [{ "target": "pre-build", "params": "forward" }]
 }
 ```
 

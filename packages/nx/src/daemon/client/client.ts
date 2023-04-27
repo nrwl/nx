@@ -1,6 +1,6 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ChildProcess, spawn } from 'child_process';
-import { openSync, readFileSync, statSync } from 'fs';
+import { readFileSync, statSync } from 'fs';
 import { FileHandle, open } from 'fs/promises';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
@@ -386,6 +386,10 @@ function isDocker() {
     statSync('/.dockerenv');
     return true;
   } catch {
+    try {
+      return readFileSync('/proc/self/cgroup', 'utf8')?.includes('docker');
+    } catch {}
+
     return false;
   }
 }

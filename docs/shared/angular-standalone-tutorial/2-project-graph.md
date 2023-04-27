@@ -230,7 +230,7 @@ Now run `npx nx graph` again:
     "shared-ui": [],
     "e2e": [{ "source": "e2e", "target": "store", "type": "implicit" }],
     "store": [
-      { "source": "store", "target": "cart", "type": "static" },
+      { "source": "store", "target": "cart", "type": "dynamic" },
       { "source": "store", "target": "shared-ui", "type": "static" }
     ]
   },

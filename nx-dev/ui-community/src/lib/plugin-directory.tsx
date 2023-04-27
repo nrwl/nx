@@ -1,5 +1,5 @@
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
-import { PluginCard, SectionHeading } from '@nrwl/nx-dev/ui-common';
+import { PluginCard, SectionHeading } from '@nx/nx-dev/ui-common';
 import { useState } from 'react';
 
 interface Plugin {

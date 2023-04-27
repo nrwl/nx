@@ -22,11 +22,9 @@ import {
   metroVersion,
   nxVersion,
   reactDomVersion,
-  reactNativeAsyncStorageAsyncStorageVersion,
   reactNativeCommunityCli,
   reactNativeCommunityCliAndroid,
   reactNativeCommunityCliIos,
-  reactNativeConfigVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeVersion,
@@ -109,9 +107,6 @@ export function updateDependencies(host: Tree) {
       'react-test-renderer': reactTestRendererVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
-      'react-native-config': reactNativeConfigVersion,
-      '@react-native-async-storage/async-storage':
-        reactNativeAsyncStorageAsyncStorageVersion,
       '@babel/preset-react': babelPresetReactVersion,
       ...(isPnpm
         ? {

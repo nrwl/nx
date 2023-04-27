@@ -105,47 +105,83 @@ export class ProcessTasks {
         dependencyConfig.params === 'forward'
           ? overrides
           : { __overrides_unparsed__: [] };
-      const targetProjectSpecifiers =
-        typeof dependencyConfig.projects === 'string'
-          ? [dependencyConfig.projects]
-          : dependencyConfig.projects;
-      for (const projectSpecifier of targetProjectSpecifiers) {
-        // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
-        // support for it until lerna can be updated to use the new tokens.
-        // TODO(@agentender): Remove this part in v17
-        if (
-          projectSpecifier === '{dependencies}' ||
-          (projectSpecifier === 'dependencies' &&
-            !this.projectGraph.nodes[projectSpecifier])
-        ) {
-          this.processTasksForDependencies(
-            projectUsedToDeriveDependencies,
-            dependencyConfig,
-            configuration,
-            task,
-            taskOverrides,
-            overrides
-          );
-        } else {
-          // Since we need to maintain support for dependencies, it is more coherent
-          // that we also support self.
-          // TODO(@agentender): Remove this part in v17
-          const projectName =
-            projectSpecifier === '{self}' ||
-            (projectSpecifier === 'self' &&
-              !this.projectGraph.nodes[projectSpecifier])
-              ? task.target.project
-              : projectSpecifier;
+      if (dependencyConfig.projects) {
+        this.processTasksForMatchingProjects(
+          dependencyConfig,
+          projectUsedToDeriveDependencies,
+          configuration,
+          task,
+          taskOverrides,
+          overrides
+        );
+      } else if (dependencyConfig.dependencies) {
+        this.processTasksForDependencies(
+          projectUsedToDeriveDependencies,
+          dependencyConfig,
+          configuration,
+          task,
+          taskOverrides,
+          overrides
+        );
+      } else {
+        this.processTasksForSingleProject(
+          task,
+          task.target.project,
+          dependencyConfig,
+          configuration,
+          taskOverrides,
+          overrides
+        );
+      }
+    }
+  }
 
-          this.processTasksForSingleProject(
-            task,
-            projectName,
-            dependencyConfig,
-            configuration,
-            taskOverrides,
-            overrides
-          );
-        }
+  private processTasksForMatchingProjects(
+    dependencyConfig: TargetDependencyConfig,
+    projectUsedToDeriveDependencies: string,
+    configuration: string,
+    task: Task,
+    taskOverrides: Object | { __overrides_unparsed__: any[] },
+    overrides: Object
+  ) {
+    const targetProjectSpecifiers =
+      typeof dependencyConfig.projects === 'string'
+        ? [dependencyConfig.projects]
+        : dependencyConfig.projects;
+    for (const projectSpecifier of targetProjectSpecifiers) {
+      // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
+      // support for it until lerna can be updated to use the syntax.
+      // TODO(@agentender): Remove this part in v17
+      if (
+        projectSpecifier === 'dependencies' &&
+        !this.projectGraph.nodes[projectSpecifier]
+      ) {
+        this.processTasksForDependencies(
+          projectUsedToDeriveDependencies,
+          dependencyConfig,
+          configuration,
+          task,
+          taskOverrides,
+          overrides
+        );
+      } else {
+        // Since we need to maintain support for dependencies, it is more coherent
+        // that we also support self.
+        // TODO(@agentender): Remove this part in v17
+        const projectName =
+          projectSpecifier === 'self' &&
+          !this.projectGraph.nodes[projectSpecifier]
+            ? task.target.project
+            : projectSpecifier;
+
+        this.processTasksForSingleProject(
+          task,
+          projectName,
+          dependencyConfig,
+          configuration,
+          taskOverrides,
+          overrides
+        );
       }
     }
   }

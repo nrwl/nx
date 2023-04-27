@@ -47,6 +47,9 @@
     "./package.json": {
       "require": "./package.json"
     },
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
     "./executors": "./executors.js",
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
     "./src/executors/*.impl": "./src/executors/*.impl.js",

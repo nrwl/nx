@@ -197,10 +197,7 @@ function addProject(
       const publishScriptPath = addMinimalPublishScript(tree);
 
       projectConfiguration.targets.publish = {
-        executor: 'nx:run-commands',
-        options: {
-          command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
-        },
+        command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
         dependsOn: ['build'],
       };
     }
@@ -318,10 +315,14 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     'package.json'
   );
   if (tree.exists(packageJsonPath)) {
-    updateJson(tree, packageJsonPath, (json) => {
+    updateJson<PackageJson>(tree, packageJsonPath, (json) => {
       json.name = options.importPath;
       json.version = '0.0.1';
       json.type = 'commonjs';
+      // If the package is publishable, we should remove the private field.
+      if (json.private && options.publishable) {
+        delete json.private;
+      }
       return json;
     });
   } else {

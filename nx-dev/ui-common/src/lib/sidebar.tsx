@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
+import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';

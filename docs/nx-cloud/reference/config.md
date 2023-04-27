@@ -77,3 +77,23 @@ This is an alternative to providing the encryption key through `nx.json`, but fu
 ## Loading Env Variables From a File
 
 If you create an env file called `nx-cloud.env` at the root of the workspace, the Nx Cloud runner is going to load `NX_CLOUD_ENCRYPTION_KEY` and `NX_CLOUD_AUTH_TOKEN` from it. The file is often added to `.gitignore`.
+
+## Disabling Connections to Nx Cloud
+
+If your organization has a security reason to disable Nx Cloud, you can cause all methods of connection to fail by adding the `neverConnectToCloud` property to `nx.json`.
+
+This does not disable the prompts themselves, as the `nx-cloud` package handles this property to provide maximum compatibility with Nx.
+
+A side effect of this is that the `nx-cloud` or `@nrwl/nx-cloud` package may still be installed in your workspace. You can safely remove this, and its presence will send no data (telemetry or otherwise) to Nx Cloud.
+
+You must be on version `16.0.4` or later of `nx-cloud` or `@nrwl/nx-cloud` for this value to be respected.
+
+```json
+{
+  "tasksRunnerOptions": {
+    ...
+  },
+  // The following will cause all attempts to connect your workspace to Nx Cloud to fail
+  "neverConnectToCloud": true
+}
+```

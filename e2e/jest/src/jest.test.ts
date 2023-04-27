@@ -7,7 +7,7 @@ import {
   updateFile,
   expectJestTestsToPass,
   cleanupProject,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Jest', () => {
   beforeAll(() => {
@@ -17,15 +17,15 @@ describe('Jest', () => {
   afterAll(() => cleanupProject());
 
   it('should be able test projects using jest', async () => {
-    await expectJestTestsToPass('@nrwl/js:lib');
+    await expectJestTestsToPass('@nx/js:lib');
   }, 500000);
 
   it('should merge with jest config globals', async () => {
     const testGlobal = `'My Test Global'`;
     const mylib = uniq('mylib');
     const utilLib = uniq('util-lib');
-    runCLI(`generate @nrwl/js:lib ${mylib} --unit-test-runner jest`);
-    runCLI(`generate @nrwl/js:lib ${utilLib} --importPath=@global-fun/globals`);
+    runCLI(`generate @nx/js:lib ${mylib} --unit-test-runner jest`);
+    runCLI(`generate @nx/js:lib ${utilLib} --importPath=@global-fun/globals`);
     updateFile(
       `libs/${utilLib}/src/index.ts`,
       stripIndents`
@@ -95,7 +95,7 @@ describe('Jest', () => {
 
   it('should set the NODE_ENV to `test`', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nrwl/js:lib ${mylib} --unit-test-runner jest`);
+    runCLI(`generate @nx/js:lib ${mylib} --unit-test-runner jest`);
 
     updateFile(
       `libs/${mylib}/src/lib/${mylib}.spec.ts`,
@@ -113,7 +113,7 @@ describe('Jest', () => {
 
   it('should support multiple `coverageReporters` through CLI', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nrwl/js:lib ${mylib} --unit-test-runner jest`);
+    runCLI(`generate @nx/js:lib ${mylib} --unit-test-runner jest`);
 
     updateFile(
       `libs/${mylib}/src/lib/${mylib}.spec.ts`,
@@ -136,7 +136,7 @@ describe('Jest', () => {
   it('should be able to test node lib with babel-jest', async () => {
     const libName = uniq('babel-test-lib');
     runCLI(
-      `generate @nrwl/node:lib ${libName} --buildable --importPath=@some-org/babel-test --publishable --babelJest`
+      `generate @nx/node:lib ${libName} --buildable --importPath=@some-org/babel-test --publishable --babelJest`
     );
 
     const cliResults = await runCLIAsync(`test ${libName}`);
