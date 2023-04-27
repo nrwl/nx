@@ -5,6 +5,7 @@ import {
   updateProjectConfiguration,
 } from '../../generators/utils/project-configuration';
 import { Tree } from '../../generators/tree';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 
 export default async function (tree: Tree) {
   updateDependsOnAndInputsInsideNxJson(tree);
@@ -61,6 +62,8 @@ export default async function (tree: Tree) {
       updateProjectConfiguration(tree, projectName, projectConfiguration);
     }
   }
+
+  formatChangedFilesWithPrettierIfAvailable(tree);
 }
 function updateDependsOnAndInputsInsideNxJson(tree: Tree) {
   const nxJson = readNxJson(tree);
