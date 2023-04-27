@@ -37,7 +37,7 @@
         "examples": ["Debug", "Release"],
         "x-priority": "important"
       },
-      "schema": {
+      "scheme": {
         "type": "string",
         "description": "Explicitly set Xcode scheme to use"
       },
