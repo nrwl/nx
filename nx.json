@@ -188,6 +188,5 @@
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
     }
   },
-  "defaultProject": "@nrwl/nx-source",
   "plugins": ["@monodon/rust"]
 }

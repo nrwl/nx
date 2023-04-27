@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/nx-source",
+  "name": "@nx/nx-source",
   "description": "Smart, Fast and Extensible Build System",
   "homepage": "https://nx.dev",
   "private": true,
