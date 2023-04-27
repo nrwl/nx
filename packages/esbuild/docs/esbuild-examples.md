@@ -6,7 +6,7 @@
   "targets": {
     //...
     "build": {
-      "executor": "@nrwl/esbuild:esbuild",
+      "executor": "@nx/esbuild:esbuild",
       "options": {
         "main": "<app-root>",
         "tsConfig": "<app-root>/tsconfig.app.json",
@@ -36,7 +36,7 @@ nx build <app-name> # defaults to es# defaults to esm
 
 ```json
 "build": {
-  "executor": "@nrwl/esbuild:esbuild",
+  "executor": "@nx/esbuild:esbuild",
   "options": {
   "main": "<app-root>",
   "tsConfig": "<app-root>/tsconfig.app.json",
@@ -54,7 +54,7 @@ You can also use `*` wildcard to match assets.
 
 ```json
 "build": {
-  "executor": "@nrwl/esbuild:esbuild",
+  "executor": "@nx/esbuild:esbuild",
   "options": {
   "main": "<app-root>",
   "tsConfig": "<app-root>/tsconfig.app.json",
@@ -70,7 +70,7 @@ Type checking is the slowest part of the build. You may want to skip type checki
 
 ```json
 "build": {
-  "executor": "@nrwl/esbuild:esbuild",
+  "executor": "@nx/esbuild:esbuild",
   "options": {
   "main": "<app-root>",
   "tsConfig": "<app-root>/tsconfig.app.json",
@@ -86,7 +86,7 @@ Additional [esbuild options](https://esbuild.github.io/api/) can be passed using
 
 ```json
 "build": {
-  "executor": "@nrwl/esbuild:esbuild",
+  "executor": "@nx/esbuild:esbuild",
   "options": {
   "main": "<app-root>",
   "tsConfig": "<app-root>/tsconfig.app.json",

@@ -10,7 +10,7 @@ Let's take an example of an ESLint config that Nx might generate for you out of 
 
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
-  "extends": ["plugin:@nrwl/nx/react", "../../.eslintrc.json"],
+  "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
   "overrides": [
     {
@@ -35,7 +35,7 @@ If we now come in and add a rule which does require type information, for exampl
 
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
-  "extends": ["plugin:@nrwl/nx/react", "../../.eslintrc.json"],
+  "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
   "overrides": [
     {
@@ -76,7 +76,7 @@ The solution is to update our config once more, this time to set `parserOptions.
 
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
-  "extends": ["plugin:@nrwl/nx/react", "../../.eslintrc.json"],
+  "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
   "overrides": [
     {

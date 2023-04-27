@@ -13,7 +13,7 @@ JSON files are fairly simple to modify, given their predictable structure.
 The following example adds a `package.json` script that issues a friendly greeting.
 
 ```typescript
-import { updateJson } from '@nrwl/devkit';
+import { updateJson } from '@nx/devkit';
 
 export default async function (tree: Tree, schema: any) {
   updateJson(tree, 'package.json', (pkgJson) => {
@@ -85,7 +85,7 @@ Second, we need to choose a selector to target this node. Just like with CSS sel
 The finished code looks like this:
 
 ```typescript
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { TypeReferenceNode } from 'typescript';
 

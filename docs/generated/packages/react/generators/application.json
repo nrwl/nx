@@ -186,7 +186,7 @@
       }
     },
     "required": [],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/react:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/react:app my-app --bundler=vite\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory and style extension\" %}\n\nCreate an application named `my-app` in the `my-dir` directory and use `scss` for styles:\n\n```bash\nnx g @nrwl/react:app my-app --directory=my-dir --style=scss\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nrwl/react:app my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/react:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/react:app my-app --bundler=vite\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory and style extension\" %}\n\nCreate an application named `my-app` in the `my-dir` directory and use `scss` for styles:\n\n```bash\nnx g @nx/react:app my-app --directory=my-dir --style=scss\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nx/react:app my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },
   "aliases": ["app"],

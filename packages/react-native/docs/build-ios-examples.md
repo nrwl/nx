@@ -7,7 +7,7 @@
   "targets": {
     //...
     "build-ios": {
-      "executor": "@nrwl/react-native:build-ios",
+      "executor": "@nx/react-native:build-ios",
       "options": {}
     }
   }
@@ -26,7 +26,7 @@ The `buildFolder` option allows to specify the location for ios build artifacts.
 
 ```json
     "build-ios": {
-      "executor": "@nrwl/react-native:build-ios",
+      "executor": "@nx/react-native:build-ios",
       "options": {
         "buildFolder": "dist/ios/build"
       }
@@ -43,7 +43,7 @@ The `mode` option allows to specify the xcode configuartion, such as `Debug` or 
 
 ```json
     "build-ios": {
-      "executor": "@nrwl/react-native:build-ios",
+      "executor": "@nx/react-native:build-ios",
       "options": {
         "mode": "Release"
       }
@@ -67,7 +67,7 @@ xcrun simctl list devices available
 
 ```json
     "build-ios": {
-      "executor": "@nrwl/react-native:build-ios",
+      "executor": "@nx/react-native:build-ios",
       "options": {
         "simulator": "iPhone 14 Pro"
       }
@@ -90,7 +90,7 @@ xcrun simctl list devices available
 
 ```json
     "build-ios": {
-      "executor": "@nrwl/react-native:build-ios",
+      "executor": "@nx/react-native:build-ios",
       "options": {
         "device": "deviceName"
       }
@@ -113,7 +113,7 @@ xcrun simctl list devices available
 
 ```json
     "build-ios": {
-      "executor": "@nrwl/react-native:build-ios",
+      "executor": "@nx/react-native:build-ios",
       "options": {
         "udid": "device udid"
       }

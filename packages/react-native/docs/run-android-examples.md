@@ -7,7 +7,7 @@
   "targets": {
     //...
     "run-android": {
-      "executor": "@nrwl/react-native:run-android",
+      "executor": "@nx/react-native:run-android",
       "options": {}
     }
   }
@@ -32,7 +32,7 @@ The `deviceId` option allows you to launch your android app in a specific device
 
 ```json
     "run-android": {
-      "executor": "@nrwl/react-native:run-android",
+      "executor": "@nx/react-native:run-android",
       "options": {
         "deviceId": "Pixel_5_API_30"
       }
@@ -45,7 +45,7 @@ The `mode` option allows to specify the build variant, such as `debug` or `relea
 
 ```json
     "run-android": {
-      "executor": "@nrwl/react-native:run-android",
+      "executor": "@nx/react-native:run-android",
       "options": {
         "mode": "release"
       }

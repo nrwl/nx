@@ -30,7 +30,7 @@ export const commandsObject = yargs
   .command({
     command: 'generate <generator> [_..]',
     describe:
-      'Generate or update source code (e.g., nx generate @nrwl/js:lib mylib).',
+      'Generate or update source code (e.g., nx generate @nx/js:lib mylib).',
     aliases: ['g'],
     builder: (yargs) => withGenerateOptions(yargs),
     handler: async (args) => {
@@ -250,7 +250,7 @@ export const commandsObject = yargs
   .command({
     command: 'migrate [packageAndVersion]',
     describe: `Creates a migrations file or runs migrations from the migrations file.
-  - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
+  - Migrate packages and create migrations.json (e.g., nx migrate @nx/workspace@latest)
   - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.`,
     builder: (yargs) =>
       linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
@@ -698,7 +698,7 @@ function withGenerateOptions(yargs: yargs.Argv) {
     process.argv[3] && !process.argv[3].startsWith('-');
   const res = yargs
     .positional('generator', {
-      describe: 'Name of the generator (e.g., @nrwl/js:library, library)',
+      describe: 'Name of the generator (e.g., @nx/js:library, library)',
       type: 'string',
       required: true,
     })
@@ -800,7 +800,7 @@ function withMigrationOptions(yargs: yargs.Argv) {
 
   return yargs
     .positional('packageAndVersion', {
-      describe: `The target package and version (e.g, @nrwl/workspace@13.0.0)`,
+      describe: `The target package and version (e.g, @nx/workspace@13.0.0)`,
       type: 'string',
     })
     .option('runMigrations', {
@@ -814,12 +814,12 @@ function withMigrationOptions(yargs: yargs.Argv) {
     })
     .option('from', {
       describe:
-        'Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nrwl/react@12.0.0,@nrwl/js@12.0.0")',
+        'Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nx/react@12.0.0,@nx/js@12.0.0")',
       type: 'string',
     })
     .option('to', {
       describe:
-        'Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nrwl/react@12.0.0,@nrwl/js@12.0.0")',
+        'Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nx/react@12.0.0,@nx/js@12.0.0")',
       type: 'string',
     })
     .option('createCommits', {

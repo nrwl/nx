@@ -8,7 +8,7 @@ For new workspaces you can create a Nx workspace with serverless function with o
 
 ```shell
 npx create-nx-workspace@latest my-functions \
---preset=@nrwl/netlify \
+--preset=@nx/netlify \
 --site=my-site \ # Site ID or name to deploy the functions
 ```
 
@@ -16,27 +16,27 @@ npx create-nx-workspace@latest my-functions \
 
 **Skip this step if you are not configuring an existing project.**
 
-You will need to install `@nrwl/netlify` if you haven't already.
+You will need to install `@nx/netlify` if you haven't already.
 
 {% tabs %}
 {% tab label="npm" %}
 
 ```shell
-npm i -D @nrwl/netlify
+npm i -D @nx/netlify
 ```
 
 {% /tab %}
 {% tab label="yarn" %}
 
 ```shell
-yarn add -D @nrwl/netlify
+yarn add -D @nx/netlify
 ```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
 ```shell
-pnpm add -D @nrwl/netlify
+pnpm add -D @nx/netlify
 ```
 
 {% /tab %}
@@ -45,13 +45,13 @@ pnpm add -D @nrwl/netlify
 - Add serverless configuration by running the following command:
 
 ```shell
-nx generate @nrwl/netlify:setup-serverless
+nx generate @nx/netlify:setup-serverless
 ```
 
 - Create a new netlify serverless project with:
 
 ```shell
-nx generate @nrwl/netlfiy:serverless
+nx generate @nx/netlfiy:serverless
 ```
 
 This will do a few things:

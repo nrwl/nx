@@ -18,14 +18,14 @@ Install the expo plugin
 {%tab label="npm"%}
 
 ```shell
-npm i --save-dev @nrwl/expo
+npm i --save-dev @nx/expo
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nrwl/expo
+yarn add --dev @nx/expo
 ```
 
 {% /tab %}
@@ -36,7 +36,7 @@ yarn add --dev @nrwl/expo
 Add a new application to your workspace with the following command:
 
 ```shell
-nx g @nrwl/expo:app my-app
+nx g @nx/expo:app my-app
 ```
 
 Start the application by running:
@@ -50,7 +50,7 @@ nx start my-app
 To generate a new library run:
 
 ```shell
-npx nx g @nrwl/react-native:lib your-lib-name
+npx nx g @nx/react-native:lib your-lib-name
 ```
 
 ### Generating Components
@@ -58,7 +58,7 @@ npx nx g @nrwl/react-native:lib your-lib-name
 To generate a new component inside library run:
 
 ```shell
-npx nx g @nrwl/react-native:component your-component-name --project=your-lib-name --export
+npx nx g @nx/react-native:component your-component-name --project=your-lib-name --export
 ```
 
 Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`

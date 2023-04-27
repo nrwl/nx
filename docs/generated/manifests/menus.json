@@ -1454,7 +1454,7 @@
           },
           {
             "name": "Nx Devkit",
-            "path": "/packages/devkit/documents/nrwl_devkit",
+            "path": "/packages/devkit/documents/nx_devkit",
             "id": "packages-devkit",
             "isExternal": true,
             "children": [],
@@ -1521,7 +1521,7 @@
       },
       {
         "name": "Nx Devkit",
-        "path": "/packages/devkit/documents/nrwl_devkit",
+        "path": "/packages/devkit/documents/nx_devkit",
         "id": "packages-devkit",
         "isExternal": true,
         "children": [],
@@ -3049,6 +3049,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Rescope Packages from @nrwl to @nx",
+            "path": "/recipes/other/rescope",
+            "id": "rescope",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Standalone NgRx APIs",
             "path": "/recipes/other/standalone-ngrx-apis",
             "id": "standalone-ngrx-apis",
@@ -3303,6 +3311,14 @@
         "name": "Identify Dependencies Between Folders",
         "path": "/recipes/other/identify-dependencies-between-folders",
         "id": "identify-dependencies-between-folders",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Rescope Packages from @nrwl to @nx",
+        "path": "/recipes/other/rescope",
+        "id": "rescope",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4314,8 +4330,8 @@
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/devkit/documents/nrwl_devkit",
-                "id": "nrwl_devkit",
+                "path": "/packages/devkit/documents/nx_devkit",
+                "id": "nx_devkit",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false

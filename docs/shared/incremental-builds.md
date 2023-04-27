@@ -4,8 +4,8 @@ As your applications are getting bigger, one of the main ways to scale your deve
 Right now, for instance, say we generate an application and a library as follows:
 
 ```shell
-nx g @nrwl/react:app myapp
-nx g @nrwl/react:lib mylib
+nx g @nx/react:app myapp
+nx g @nx/react:lib mylib
 ```
 
 ...and then import the library from the application. In this case, `mylib` isn't a buildable library. We cannot test and lint it independently, but the only way to build it is by building some application using it (in this case `myapp`). The default setup is to use Webpack, which builds "mylib" and bundles it directly into "myapp".
@@ -18,13 +18,13 @@ This provides the best dev experience for small and medium-size applications, be
 Nx has **publishable libraries**. As the name suggests, such libraries are meant to be built and published to some package registry s.t. they can be consumed also from outside the Nx workspace. The executor for building a publishable library does more than just building. It makes sure the output is properly compressed and might even produce more bundles s.t. the package can be consumed in a variety of ways (e.g. also produces UMD bundles).
 
 ```shell
-nx g @nrwl/react:lib mylib --publishable --importPath=@myorg/mylib
+nx g @nx/react:lib mylib --publishable --importPath=@myorg/mylib
 ```
 
 On the other hand, the executor of a **buildable library**, performs a subset of the operations compared to the publishable library's executor. That's because buildable libraries are not intended to be published and thus only produce the minimum necessary output for the incremental build scenario to work. For example, no UMD bundles or minification is being done. The main goal of the executor is to perform the build as fast as possible.
 
 ```shell
-nx g @nrwl/react:lib mylib --buildable
+nx g @nx/react:lib mylib --buildable
 ```
 
 Read more about [Publishable and Buildable Nx Libraries here.](/more-concepts/buildable-and-publishable-libraries)
@@ -35,9 +35,9 @@ In an incremental build scenario, when building the app, all it's dependencies n
 
 It is costly to rebuild all the buildable libraries from scratch every time you want to serve the app. That's why the Nx computation caching is so important. The caching allows us to only rebuild a small subset of the libraries, which results in much better performance.
 
-If we can share the cache with our teammates, we can get a much better dev experience. For instance, [this repo](https://github.com/nrwl/nx-incremental-large-repo) has a large application, where `nx serve` takes just a few seconds.
+If we can share the cache with our teammates, we can get a much better dev experience. For instance, [this repo](https://github.com/nx/nx-incremental-large-repo) has a large application, where `nx serve` takes just a few seconds.
 
-{% github-repository url="https://github.com/nrwl/nx-incremental-large-repo" /%}
+{% github-repository url="https://github.com/nx/nx-incremental-large-repo" /%}
 
 ![comparison: webpack vs incremental build](/shared/incremental-build-webpack-vs-incremental.png)
 
@@ -68,7 +68,7 @@ If you are only planning to use incremental builds to speed up your CI, then the
 
 ## Custom Serve Target
 
-If you are implementing a custom serve command, you can use `WebpackNxBuildCoordinationPlugin` provided by `@nrwl/webpack`. It's a webpack plugin you can use to coordinate the compiling of the libs and the webpack linking.
+If you are implementing a custom serve command, you can use `WebpackNxBuildCoordinationPlugin` provided by `@nx/webpack`. It's a webpack plugin you can use to coordinate the compiling of the libs and the webpack linking.
 
 ## Using Webpack Module Federation to implement incremental builds
 

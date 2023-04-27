@@ -3,12 +3,12 @@
 {% tabs %}
 {% tab label="Inline libraries" %}
 
-`@nrwl/js:swc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.
+`@nx/js:swc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
   "build": {
-    "executor": "@nrwl/js:swc",
+    "executor": "@nx/js:swc",
     "options": {
       "outputPath": "dist/libs/ts-lib",
       "main": "libs/ts-lib/src/index.ts",
@@ -24,12 +24,12 @@
 npx nx build ts-lib --external=all
 ```
 
-`@nrwl/js:swc` can also inline buildable libraries by setting `external: 'none'`
+`@nx/js:swc` can also inline buildable libraries by setting `external: 'none'`
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
   "build": {
-    "executor": "@nrwl/js:swc",
+    "executor": "@nx/js:swc",
     "options": {
       "outputPath": "dist/libs/ts-lib",
       "main": "libs/ts-lib/src/index.ts",
@@ -48,12 +48,12 @@ npx nx build ts-lib --external=none
 {% /tab %}
 {% tab label="Custom swcrc" %}
 
-`@nrwl/js:swc` can compile your code with a custom `.swcrc`
+`@nx/js:swc` can compile your code with a custom `.swcrc`
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
   "build": {
-    "executor": "@nrwl/js:swc",
+    "executor": "@nx/js:swc",
     "options": {
       "outputPath": "dist/libs/ts-lib",
       "main": "libs/ts-lib/src/index.ts",

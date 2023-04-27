@@ -7,7 +7,7 @@
   "targets": {
     //...
     "run-ios": {
-      "executor": "@nrwl/react-native:run-ios",
+      "executor": "@nx/react-native:run-ios",
       "options": {}
     }
   }
@@ -26,7 +26,7 @@ The `mode` option allows to specify the xcode configuartion schema, such as `Deb
 
 ```json
     "run-ios": {
-      "executor": "@nrwl/react-native:run-ios",
+      "executor": "@nx/react-native:run-ios",
       "options": {
         "mode": "Release"
       }
@@ -49,7 +49,7 @@ xcrun simctl list devices available
 
 ```json
     "run-ios": {
-      "executor": "@nrwl/react-native:run-ios",
+      "executor": "@nx/react-native:run-ios",
       "options": {
         "simulator": "iPhone 14 Pro (16.2)"
       }
@@ -72,7 +72,7 @@ xcrun simctl list devices available
 
 ```json
     "run-ios": {
-      "executor": "@nrwl/react-native:run-ios",
+      "executor": "@nx/react-native:run-ios",
       "options": {
         "device": "deviceName"
       }
@@ -95,7 +95,7 @@ xcrun simctl list devices available
 
 ```json
     "run-ios": {
-      "executor": "@nrwl/react-native:run-ios",
+      "executor": "@nx/react-native:run-ios",
       "options": {
         "udid": "device udid"
       }

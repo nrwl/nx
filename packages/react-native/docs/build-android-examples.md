@@ -7,7 +7,7 @@
   "targets": {
     //...
     "build-android": {
-      "executor": "@nrwl/react-native:build-android",
+      "executor": "@nx/react-native:build-android",
       "outputs": [
         "{projectRoot}/build/outputs/bundle",
         "{projectRoot}/build/outputs/apk"
@@ -33,7 +33,7 @@ Pass in `installDebug` or `installRelease` to tasks, it will create a build with
 
 ```json
     "build-android": {
-      "executor": "@nrwl/react-native:build-android",
+      "executor": "@nx/react-native:build-android",
       "outputs": [
         "{projectRoot}/build/outputs/bundle",
         "{projectRoot}/build/outputs/apk"
@@ -51,7 +51,7 @@ The `mode` option allows you determine whether to build for debug/release apk.
 
 ```json
     "build-android": {
-      "executor": "@nrwl/react-native:build-android",
+      "executor": "@nx/react-native:build-android",
       "outputs": [
         "{projectRoot}/build/outputs/bundle",
         "{projectRoot}/build/outputs/apk"
@@ -69,7 +69,7 @@ The `activeArchOnly` option allows you to build native libraries only for the cu
 
 ```json
     "build-android": {
-      "executor": "@nrwl/react-native:build-android",
+      "executor": "@nx/react-native:build-android",
       "outputs": [
         "{projectRoot}/build/outputs/bundle",
         "{projectRoot}/build/outputs/apk"

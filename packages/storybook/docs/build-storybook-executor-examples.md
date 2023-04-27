@@ -1,6 +1,6 @@
 ---
 title: Storybook builder executor examples
-description: This page contains examples for the @nrwl/storybook:build executor.
+description: This page contains examples for the @nx/storybook:build executor.
 ---
 
 `project.json`:
@@ -11,7 +11,7 @@ description: This page contains examples for the @nrwl/storybook:build executor.
     "targets": {
         //...
         "build-storybook": {
-            "executor": "@nrwl/storybook:build",
+            "executor": "@nx/storybook:build",
             "outputs": ["{options.outputDir}"],
             "options": {
                 "outputDir": "dist/storybook/ui",
@@ -43,7 +43,7 @@ Read more on the [Storybook documentation page for `addon-docs`](https://storybo
 
 ```json
 "storybook": {
-    "executor": "@nrwl/storybook:build",
+    "executor": "@nx/storybook:build",
     "options": {
         "port": 4400,
         "configDir": "libs/ui/.storybook",

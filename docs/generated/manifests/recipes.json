@@ -1588,6 +1588,16 @@
         "tags": []
       },
       {
+        "id": "rescope",
+        "name": "Rescope Packages from @nrwl to @nx",
+        "description": "",
+        "file": "shared/recipes/rescope",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/rescope",
+        "tags": []
+      },
+      {
         "id": "standalone-ngrx-apis",
         "name": "Standalone NgRx APIs",
         "description": "",
@@ -1910,6 +1920,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/identify-dependencies-between-folders",
+    "tags": []
+  },
+  "/recipes/other/rescope": {
+    "id": "rescope",
+    "name": "Rescope Packages from @nrwl to @nx",
+    "description": "",
+    "file": "shared/recipes/rescope",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/rescope",
     "tags": []
   },
   "/recipes/other/standalone-ngrx-apis": {

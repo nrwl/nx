@@ -13,15 +13,15 @@ You first need to set up Storybook for your Nx workspace, if you haven't already
 
 ## Generate Storybook Configuration for an Angular project
 
-You can generate Storybook configuration for an individual Angular project by using the [`@nrwl/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration), like this:
+You can generate Storybook configuration for an individual Angular project by using the [`@nx/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration), like this:
 
 ```shell
-nx g @nrwl/angular:storybook-configuration project-name
+nx g @nx/angular:storybook-configuration project-name
 ```
 
 ## Auto-generate Stories
 
-The [`@nrwl/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
+The [`@nx/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```text
 <some-folder>/
@@ -29,10 +29,10 @@ The [`@nrwl/angular:storybook-configuration` generator](/packages/angular/genera
 └── my.component.stories.ts
 ```
 
-If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nrwl/angular:stories` generator](/packages/angular/generators/stories):
+If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/angular:stories` generator](/packages/angular/generators/stories):
 
 ```shell
-nx g @nrwl/angular:stories --project=<project-name>
+nx g @nx/angular:stories --project=<project-name>
 ```
 
 {% callout type="note" title="Example" %}
@@ -41,7 +41,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 The command to generate stories for that library would be:
 
 ```shell
-nx g @nrwl/angular:stories --project=feature-ui
+nx g @nx/angular:stories --project=feature-ui
 ```
 
 and the result would be the following:
@@ -75,7 +75,7 @@ and the result would be the following:
 
 ## Cypress tests for Stories
 
-The [`@nrwl/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration) gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
+The [`@nx/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration) gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
 To launch Storybook and run the Cypress tests against the iframe inside of Storybook:
 
@@ -99,7 +99,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 
 ### Story file
 
-The [`@nrwl/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration) would generate a Story file that looks like this:
+The [`@nx/angular:storybook-configuration` generator](/packages/angular/generators/storybook-configuration) would generate a Story file that looks like this:
 
 ```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.component.stories.ts" %}
 import { Meta } from '@storybook/angular';

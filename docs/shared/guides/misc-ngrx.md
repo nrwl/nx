@@ -7,7 +7,7 @@ build out application flows that track unique events and manage the state of sha
 
 Nx provides a schematic to build out a new NgRx feature area that manages shared state.
 
-The **@nrwl/angular** package has an `ngrx` schematic to generate files that implement best practices when using NgRx for state management. This schematic generates source files that include enhancements to NgRx for data persistence strategies, and simplified testing.
+The **@nx/angular** package has an `ngrx` schematic to generate files that implement best practices when using NgRx for state management. This schematic generates source files that include enhancements to NgRx for data persistence strategies, and simplified testing.
 
 The `ngrx` schematic generates an NgRx feature set containing the following files:
 
@@ -26,7 +26,7 @@ The `ngrx` schematic only provides a sub-set of schematics for the NgRx librarie
 The following command is used to run the `ngrx` schematic:
 
 ```shell
-nx g @nrwl/angular:ngrx <featurename> --module=<path-to-module> --no-interactive [options]
+nx g @nx/angular:ngrx <featurename> --module=<path-to-module> --no-interactive [options]
 ```
 
 {% callout type="note" title="Command" %}
@@ -49,7 +49,7 @@ To get started with NgRx in an Angular application, you set up the root level st
 The example below shows you how to setup NgRx in the root of your application.
 
 ```shell
-nx g @nrwl/angular:ngrx app --module=apps/<appname>/src/app/app.module.ts --root
+nx g @nx/angular:ngrx app --module=apps/<appname>/src/app/app.module.ts --root
 ```
 
 The above command applies the following changes to the provided module:
@@ -69,7 +69,7 @@ state to be easily shared across other libraries and applications. The steps bel
 The example below generates a library to begin a new feature. For this example, `products` is used as the library name.
 
 ```shell
-nx g @nrwl/angular:lib products
+nx g @nx/angular:lib products
 ```
 
 To manage the feature state:
@@ -78,7 +78,7 @@ To manage the feature state:
 - Provide a path to the `products` library module.
 
 ```shell
-nx g @nrwl/angular:ngrx products --module=libs/products/src/lib/products.module.ts --directory +state/products --no-interactive
+nx g @nx/angular:ngrx products --module=libs/products/src/lib/products.module.ts --directory +state/products --no-interactive
 ```
 
 {% callout type="note" title="Enabling Facades" %}

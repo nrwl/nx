@@ -1,12 +1,12 @@
 # Using environment variables in Angular applications
 
-Angular builders (e.g. `@nrwl/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) don't have built-in support for using environment variables when building applications.
+Angular builders (e.g. `@nx/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) don't have built-in support for using environment variables when building applications.
 
 To add support for environment variables we need to use the webpack `DefinePlugin` in our own custom webpack configuration. We'll see how to do so in the following sections.
 
 ## A note on `NODE_ENV`
 
-The webpack-based Angular builders (e.g. `@nrwl/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) set the webpack's `mode` configuration option based on the values for the following in the builder options:
+The webpack-based Angular builders (e.g. `@nx/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) set the webpack's `mode` configuration option based on the values for the following in the builder options:
 
 - `optimization`
 - `optimization.scripts`
@@ -42,7 +42,7 @@ Next, update the `build` and `serve` targets (in `project.json` or `angular.json
 {
   "build": {
     // NOTE: change the executor to one that supports custom webpack config.
-    "executor": "@nrwl/angular:webpack-browser",
+    "executor": "@nx/angular:webpack-browser",
     // snip
     "options": {
       // NOTE: This file needs to be created.
@@ -54,7 +54,7 @@ Next, update the `build` and `serve` targets (in `project.json` or `angular.json
   },
   "serve": {
     // NOTE: use dev-server that supports custom webpack config.
-    "executor": "@nrwl/angular:webpack-dev-server"
+    "executor": "@nx/angular:webpack-dev-server"
     // snip
   }
 }

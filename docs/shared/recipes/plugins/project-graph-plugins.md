@@ -45,7 +45,7 @@ import {
   ProjectGraphBuilder,
   ProjectGraphProcessorContext,
   DependencyType,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function processProjectGraph(
   graph: ProjectGraph,
@@ -120,7 +120,7 @@ Dynamic dependencies are a special type of explicit dependencies. In contrast to
 A typical example would be lazy-loaded routes. Having separation between these two allows us to identify situations where static import breaks the lazy-loading.
 
 ```typescript
-import { DependencyType } from '@nrwl/devkit';
+import { DependencyType } from '@nx/devkit';
 
 // Add a new edge
 builder.addDynamicDependency(

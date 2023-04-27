@@ -11,7 +11,7 @@ For this example, we'll create a new migration generator that updates repos to u
 ### 1. Generate a migration
 
 ```shell
-nx generate @nrwl/nx-plugin:migration 'Change Executor Name' --packageVersion=2.0.1 --project=pluginName --description='Changes the executor name from oldExecutorName to newExecutorName'
+nx generate @nx/plugin:migration 'Change Executor Name' --packageVersion=2.0.1 --project=pluginName --description='Changes the executor name from oldExecutorName to newExecutorName'
 ```
 
 This command will update the following files:
@@ -42,7 +42,7 @@ And it creates a blank generator under: `libs/pluginName/src/migrations/change-e
 ### 2. Write the Generator Code
 
 ```ts {% fileName="change-executor-name.ts" %}
-import { getProjects, Tree, updateProjectConfiguration } from '@nrwl/devkit';
+import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
 
 export function changeExecutorNameToNewName(tree: Tree) {
   const projects = getProjects(tree);

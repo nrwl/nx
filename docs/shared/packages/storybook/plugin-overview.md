@@ -19,14 +19,14 @@ Starting with Nx 16, Storybook 7 is going to be used by default to configure you
 {% tab label="yarn" %}
 
 ```shell
-yarn add -D @nrwl/storybook
+yarn add -D @nx/storybook
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nrwl/storybook
+npm install -D @nx/storybook
 ```
 
 {% /tab %}
@@ -39,7 +39,7 @@ npm install -D @nrwl/storybook
 You can generate Storybook configuration for an individual project with this command:
 
 ```shell
-nx g @nrwl/storybook:configuration project-name
+nx g @nx/storybook:configuration project-name
 ```
 
 If you are NOT using a framework-specific generator, in the field `storybook7UiFramework` you must choose one of the following Storybook frameworks:
@@ -84,7 +84,7 @@ These framework-specific generators will also **generate stories** for you.
 You can choose to configure your project using TypeScript instead of JavaScript. To do that, just add the `--tsConfiguration=true` flag to the above command, like this:
 
 ```shell
-nx g @nrwl/storybook:configuration project-name --tsConfiguration=true
+nx g @nx/storybook:configuration project-name --tsConfiguration=true
 ```
 
 [Here is the Storybook documentation](https://storybook.js.org/docs/react/configure/overview#configure-your-project-with-typescript) if you want to learn more.

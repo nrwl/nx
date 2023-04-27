@@ -9,7 +9,7 @@ With more recent versions of Nx, we publish native binaries that should be autom
 Some npm users are experiencing errors like the following:
 
 ```shell
-NX   Cannot find module '@nrwl/nx-linux-x64-gnu'
+NX   Cannot find module '@nx/nx-linux-x64-gnu'
 ```
 
 There are two reasons why this could potentially happen:

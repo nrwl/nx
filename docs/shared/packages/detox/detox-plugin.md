@@ -28,21 +28,21 @@ npm install -g jest
 By default, when creating a mobile application, Nx will use Detox to create the e2e tests project.
 
 ```shell
-nx g @nrwl/react-native:app frontend
+nx g @nx/react-native:app frontend
 ```
 
 ### Creating a Detox E2E project for an existing project
 
 You can create a new Detox E2E project for an existing mobile project.
 
-If the `@nrwl/detox` package is not installed, install the version that matches your `@nrwl/workspace` version.
+If the `@nx/detox` package is not installed, install the version that matches your `@nx/workspace` version.
 
 {% tabs %}
 {%tab label="npm"%}
 
 ```sh
 # npm
-npm install --save-dev @nrwl/detox
+npm install --save-dev @nx/detox
 ```
 
 {% /tab %}
@@ -50,7 +50,7 @@ npm install --save-dev @nrwl/detox
 
 ```sh
 # yarn
-yarn add --dev @nrwl/detox
+yarn add --dev @nx/detox
 ```
 
 {% /tab %}
@@ -59,7 +59,7 @@ yarn add --dev @nrwl/detox
 Next, generate an E2E project based on an existing project.
 
 ```sh
-nx g @nrwl/detox:app your-app-name-e2e --project=your-app-name
+nx g @nx/detox:app your-app-name-e2e --project=your-app-name
 ```
 
 Replace `your-app-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`.

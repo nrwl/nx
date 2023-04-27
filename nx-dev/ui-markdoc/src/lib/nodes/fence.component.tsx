@@ -1,4 +1,5 @@
 import {
+  CheckCircleIcon,
   ClipboardDocumentCheckIcon,
   ClipboardDocumentIcon,
 } from '@heroicons/react/24/outline';
@@ -25,6 +26,7 @@ function CodeWrapper(options: {
   fileName: string;
   command: string;
   path: string;
+  isMessageBelow: boolean;
 }): ({ children }: { children: ReactNode }) => JSX.Element {
   return ({ children }: { children: ReactNode }) =>
     options.command ? (
@@ -32,9 +34,14 @@ function CodeWrapper(options: {
         content={children}
         command={options.command}
         path={options.path}
+        isMessageBelow={options.isMessageBelow}
       />
     ) : (
-      <CodeOutput content={children} fileName={options.fileName} />
+      <CodeOutput
+        content={children}
+        fileName={options.fileName}
+        isMessageBelow={options.isMessageBelow}
+      />
     );
 }
 
@@ -63,32 +70,54 @@ export function Fence({
       t && clearTimeout(t);
     };
   }, [copied]);
+  const showRescopeMessage =
+    children.includes('@nx/') || command.includes('@nx/');
   return (
     <div className="my-8 w-full">
       <div className="code-block group relative inline-flex w-auto min-w-[50%] max-w-full">
-        <CopyToClipboard
-          text={children}
-          onCopy={() => {
-            setCopied(true);
-          }}
-        >
-          <button
-            type="button"
-            className="not-prose absolute top-0 right-0 z-10 flex rounded-tr-lg border border-slate-200 bg-slate-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800"
+        <div>
+          <CopyToClipboard
+            text={children}
+            onCopy={() => {
+              setCopied(true);
+            }}
           >
-            {copied ? (
-              <ClipboardDocumentCheckIcon className="h-5 w-5 text-blue-500 dark:text-sky-500" />
-            ) : (
-              <ClipboardDocumentIcon className="h-5 w-5" />
-            )}
-          </button>
-        </CopyToClipboard>
-        <SyntaxHighlighter
-          useInlineStyles={false}
-          language={resolveLanguage(language)}
-          children={children}
-          PreTag={CodeWrapper({ fileName, command, path })}
-        />
+            <button
+              type="button"
+              className="not-prose absolute top-0 right-0 z-10 flex rounded-tr-lg border border-slate-200 bg-slate-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800"
+            >
+              {copied ? (
+                <ClipboardDocumentCheckIcon className="h-5 w-5 text-blue-500 dark:text-sky-500" />
+              ) : (
+                <ClipboardDocumentIcon className="h-5 w-5" />
+              )}
+            </button>
+          </CopyToClipboard>
+          <SyntaxHighlighter
+            useInlineStyles={false}
+            language={resolveLanguage(language)}
+            children={children}
+            PreTag={CodeWrapper({
+              fileName,
+              command,
+              path,
+              isMessageBelow: showRescopeMessage,
+            })}
+          />
+          {showRescopeMessage && (
+            <a
+              className="relative block rounded-b-md border border-green-100 bg-green-50 px-4 py-2 text-xs font-medium text-green-600 no-underline hover:underline dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
+              href="/recipes/other/rescope"
+              title="Nx 16 package name changes"
+            >
+              <CheckCircleIcon
+                className="mr-2 inline-block h-5 w-5 text-green-500 dark:text-green-400"
+                aria-hidden="true"
+              />
+              Nx 15 and lower use @nrwl/ instead of @nx/
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

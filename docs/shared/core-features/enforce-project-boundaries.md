@@ -11,17 +11,17 @@ Nx provides an `enforce-module-boundaries` eslint rule that enforces the public 
 To set up the lint rule, install these dependencies:
 
 ```shell
-npm i @nrwl/eslint-plugin-nx @nrwl/devkit
+npm i @nx/eslint-plugin @nx/devkit
 ```
 
 And configure the rule in your root `.eslintrc.json` file:
 
 ```jsonc {% fileName=".eslintrc.json" %}
 {
-  "plugins": ["@nrwl/nx"],
+  "plugins": ["@nx/nx"],
   // ...
   "rules": {
-    "@nrwl/nx/enforce-module-boundaries": [
+    "@nx/enforce-module-boundaries": [
       "error",
       {
         /* options */
@@ -96,14 +96,14 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 
 Next you should update your root lint configuration:
 
-- If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `"@nrwl/nx/enforce-module-boundaries"` and you should update the `"depConstraints"`:
+- If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `"@nx/enforce-module-boundaries"` and you should update the `"depConstraints"`:
 
 ```jsonc {% fileName=".eslintrc.json" %}
 {
   // ... more ESLint config here
 
-  // @nrwl/nx/enforce-module-boundaries should already exist within an "overrides" block using `"files": ["*.ts", "*.tsx", "*.js", "*.jsx",]`
-  "@nrwl/nx/enforce-module-boundaries": [
+  // @nx/enforce-module-boundaries should already exist within an "overrides" block using `"files": ["*.ts", "*.tsx", "*.js", "*.jsx",]`
+  "@nx/enforce-module-boundaries": [
     "error",
     {
       "allow": [],

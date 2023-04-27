@@ -47,7 +47,7 @@ describe('nx-dev: Additional API references section', () => {
       path: '/storybook/storybook-composition-setup',
     },
     {
-      title: 'Module: @nrwl/devkit',
+      title: 'Module: @nx/devkit',
       path: '/devkit/index',
     },
     {
