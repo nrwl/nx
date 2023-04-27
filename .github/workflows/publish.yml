@@ -34,7 +34,7 @@ jobs:
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: set -e && yarn nx -- run-many --target=build-native -- --target=x86_64-unknown-linux-musl
+            build: set -e && pnpm nx run-many --target=build-native -- --target=x86_64-unknown-linux-musl
           - host: macos-latest
             target: aarch64-apple-darwin
             build: |
@@ -131,7 +131,7 @@ jobs:
         with:
           node-version: 18
           check-latest: true
-          cache: yarn
+          cache: pnpm
           architecture: x86
       - name: Build in docker
         uses: addnab/docker-run-action@v3

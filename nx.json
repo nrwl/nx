@@ -129,10 +129,10 @@
       "options": {
         "commands": [
           {
-            "command": "yarn e2e-start-local-registry"
+            "command": "pnpm e2e-start-local-registry"
           },
           {
-            "command": "yarn e2e-build-package-publish"
+            "command": "pnpm e2e-build-package-publish"
           },
           {
             "command": "nx run-e2e-tests {projectName}"
@@ -159,10 +159,10 @@
       "options": {
         "commands": [
           {
-            "command": "yarn e2e-start-local-registry"
+            "command": "pnpm e2e-start-local-registry"
           },
           {
-            "command": "yarn e2e-build-package-publish"
+            "command": "pnpm e2e-build-package-publish"
           },
           {
             "command": "nx run-e2e-tests {projectName}"
