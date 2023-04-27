@@ -2,6 +2,7 @@ import { Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
 import { replaceNrwlPackageWithNxPackage } from '@nx/devkit/src/utils/replace-package';
 
 import { basename } from 'path';
+import { isBinaryPath } from '@nx/devkit/src/utils/binary-extensions';
 
 const eslintFileNames = [
   '.eslintrc',
@@ -28,6 +29,10 @@ export default async function replacePackage(tree: Tree): Promise<void> {
    */
   const ignoreLineRegex = /(eslint-disable(?:(?:-next)?-line)?\s*)@nrwl\/nx/g;
   visitNotIgnoredFiles(tree, '.', (path) => {
+    if (isBinaryPath(path)) {
+      return;
+    }
+
     let contents = tree.read(path).toString();
     if (eslintFileNames.includes(basename(path))) {
       if (!contents.includes('@nrwl/nx')) {
