@@ -1,14 +1,14 @@
 # Migrating an Angular CLI workspace to an Integrated Nx Monorepo
 
-To take advantage of Nx's monorepo features provided by Nx and the Nx Angular plugin, you can also perform a migration from an Angular CLI to an Integrated Nx Monorepo with the command:
+If you want to migrate your Angular CLI project to an [Integrated Nx Monorepo](/concepts/integrated-vs-package-based#integrated-repos), run the following command:
 
 ```shell
-ng add @nx/angular@<version_number>
+npx nx@latest init --integrated
 ```
 
-This installs the `@nx/angular` (or `@nx/workspace`) package into your workspace and runs a generator (or schematic) to transform your workspace. The generator applies the following changes to your workspace:
+The command applies the following changes to your workspace:
 
-- Installs the `nx` and `@nx/workspace` packages.
+- Installs the `nx`, `@nx/angular` and `@nx/workspace` packages.
 - Moves your applications into the `apps` folder, and updates the relevant file paths in your configuration files.
 - Moves your e2e suites into the `apps/<app name>-e2e` folder, and updates the relevant file paths in your configuration files.
 - Moves your libraries into the `libs` folder, and updates the relevant file paths in your configuration files.
@@ -63,14 +63,6 @@ Your workspace is now powered by Nx! You can verify that your application still 
 > Your project graph will grow as you add and use more applications and libraries. You can add the `--watch` flag to `nx graph` to see the changes in-browser as you add them.
 
 ## Older Versions of Angular
-
-To migrate to legacy versions of Nx prior to Nx 13.10, run the command:
-
-```shell
-ng add @nx/workspace@<version_number>
-```
-
-Refer to the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) for matching Angular and Nx versions.
 
 Support for workspaces with multiple applications and libraries was added in Nx v14.1.0. If you are migrating using an older version of Nx, your workspace can only contain one application and no libraries in order to use the automated migration, otherwise, you can still [migrate manually](/recipes/adopting-nx-angular/angular-manual).
 

@@ -4,7 +4,7 @@
 If you are using older versions of Angular (version 13 or lower), make sure to use the appropriate version of Nx that matches your version of Angular. See the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) to find the correct version. The generated files will also be slightly different.
 {% /callout %}
 
-If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](#transforming-an-angular-cli-workspace-to-an-nx-workspace) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
+If you are unable to automatically transform your Angular CLI workspace to an [Nx Integrated workspace](/recipes/adopting-nx-angular/angular-integrated), there are some manual steps you can take to move your project(s) into an Nx workspace.
 
 ### Generating a new workspace
 
