@@ -29,13 +29,10 @@ function determineRemoteUrl(remote: string) {
 export async function withModuleFederation(
   options: ModuleFederationConfig
 ): Promise<AsyncNxWebpackPlugin> {
-  const reactWebpackConfig = require('../../plugins/webpack');
-
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     await getModuleFederationConfig(options, determineRemoteUrl);
 
   return (config, ctx) => {
-    config = reactWebpackConfig(config, ctx);
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';
 

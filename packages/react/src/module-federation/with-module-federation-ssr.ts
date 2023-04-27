@@ -23,16 +23,12 @@ function determineRemoteUrl(remote: string) {
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig
 ) {
-  const reactWebpackConfig = require('../../plugins/webpack');
-
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
     await getModuleFederationConfig(options, determineRemoteUrl, {
       isServer: true,
     });
 
   return (config) => {
-    config = reactWebpackConfig(config);
-
     config.target = false;
     config.output.uniqueName = options.name;
     config.optimization = {

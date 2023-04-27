@@ -12,7 +12,7 @@ import { getOutputHashFormat } from './hash-format';
 import { PostcssCliResources } from './webpack/plugins/postcss-cli-resources';
 import { normalizeExtraEntryPoints } from './webpack/normalize-entry';
 
-import { NxWebpackPlugin } from './config';
+import { NxWebpackExecutionContext, NxWebpackPlugin } from './config';
 import {
   ExtraEntryPointClass,
   NormalizedWebpackExecutorOptions,
@@ -25,7 +25,6 @@ import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
-import { NxWebpackExecutionContext } from './config';
 
 interface PostcssOptions {
   (loader: any): any;
@@ -47,6 +46,7 @@ export interface WithWebOptions {
   stylePreprocessorOptions?: any;
   styles?: Array<ExtraEntryPointClass | string>;
   subresourceIntegrity?: boolean;
+  ssr?: boolean;
 }
 
 // Omit deprecated options
@@ -110,11 +110,13 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
         })
       );
     }
-    plugins.push(
-      new webpack.DefinePlugin(
-        getClientEnvironment(process.env.NODE_ENV).stringified
-      )
-    );
+    if (!pluginOptions.ssr) {
+      plugins.push(
+        new webpack.DefinePlugin(
+          getClientEnvironment(process.env.NODE_ENV).stringified
+        )
+      );
+    }
 
     const entry: { [key: string]: string[] } = {};
     const globalStylePaths: string[] = [];
@@ -557,7 +559,6 @@ function getCommonLoadersForGlobalStyle(
 
 function postcssOptionsCreator(
   options: MergedOptions,
-
   {
     includePaths,
     forCssModules = false,
