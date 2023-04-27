@@ -41,7 +41,11 @@ import { parseJson } from '../utils/json';
 import { NX_ERROR, NX_PREFIX } from '../utils/logger';
 import { readModulePackageJson } from '../utils/package-json';
 import { detectPackageManager } from '../utils/package-manager';
-import { toNewFormat, toOldFormat } from './angular-json';
+import {
+  isAngularPluginInstalled,
+  toNewFormat,
+  toOldFormat,
+} from './angular-json';
 import { normalizeExecutorSchema, Workspaces } from '../config/workspaces';
 import {
   CustomHasher,
@@ -899,7 +903,8 @@ export function wrapAngularDevkitSchematic(
 
       if (event.kind === 'error') {
       } else if (event.kind === 'update') {
-        if (eventPath === 'angular.json') {
+        // Apply special handling for the angular.json file, but only when in an Nx workspace
+        if (eventPath === 'angular.json' && isAngularPluginInstalled()) {
           saveProjectsConfigurationsInWrappedSchematic(
             host,
             event.content.toString()
@@ -1002,7 +1007,10 @@ function saveProjectsConfigurationsInWrappedSchematic(
     ? Object.keys(existingAngularJson.projects)
     : [];
 
-  const newAngularJson = { projects: {} };
+  const newAngularJson = existingAngularJson || {};
+
+  // Reset projects in order to rebuild them, but leave other properties untouched
+  newAngularJson.projects = {};
 
   Object.keys(projects).forEach((projectName) => {
     if (projectsInAngularJson.includes(projectName)) {

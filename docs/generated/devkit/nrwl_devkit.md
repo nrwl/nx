@@ -832,7 +832,7 @@ Path to the directory where Nx stores its cache and daemon-related files.
 
 ### workspaceRoot
 
-• `Const` **workspaceRoot**: `string`
+• **workspaceRoot**: `string`
 
 The root of the workspace
 

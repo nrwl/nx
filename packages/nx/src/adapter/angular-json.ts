@@ -26,7 +26,7 @@ export function shouldMergeAngularProjects(
   }
 }
 
-function isAngularPluginInstalled() {
+export function isAngularPluginInstalled() {
   try {
     require.resolve('@nx/angular');
     return true;

@@ -4,7 +4,11 @@ import { fileExists } from './fileutils';
 /**
  * The root of the workspace
  */
-export const workspaceRoot = workspaceRootInner(process.cwd(), process.cwd());
+export let workspaceRoot = workspaceRootInner(process.cwd(), process.cwd());
+
+export function setWorkspaceRoot(root: string): void {
+  workspaceRoot = root;
+}
 
 export function workspaceRootInner(
   dir: string,
