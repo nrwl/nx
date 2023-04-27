@@ -695,8 +695,8 @@ devDependencies:
     specifier: 16.0.0-rc.0
     version: 16.0.0-rc.0(@swc-node/register@1.5.4)(@swc/core@1.3.51)
   nx-cloud:
-    specifier: 16.0.1
-    version: 16.0.1
+    specifier: 16.0.5
+    version: 16.0.5
   octokit:
     specifier: ^2.0.14
     version: 2.0.14
@@ -8277,10 +8277,10 @@ packages:
       - webpack
     dev: true
 
-  /@nrwl/nx-cloud@16.0.1:
-    resolution: {integrity: sha512-z5Ydlw9BU6DJCvwVI0LPVdMRORAxeHdIS4wzdsrSvoCeVEL6l6RCk1c3bXQ6IHtA2EdVt0yDirMp0Q0ybf5fIQ==}
+  /@nrwl/nx-cloud@16.0.5:
+    resolution: {integrity: sha512-1p82ym8WE9ziejwgPslstn19iV/VkHfHfKr/5YOnfCHQS+NxUf92ogcYhHXtqWLblVZ9Zs4W4pkSXK4e04wCmQ==}
     dependencies:
-      nx-cloud: 16.0.1
+      nx-cloud: 16.0.5
     transitivePeerDependencies:
       - debug
     dev: true
@@ -21823,16 +21823,17 @@ packages:
     resolution: {integrity: sha512-90yv+6538zuvUMnN+zCr8LuV6bPFdq50304114vJYJ8RDyK8D5O9Phpbd6SZWgI7PwzmmfN1upeOJlvybDSgCw==}
     dev: true
 
-  /nx-cloud@16.0.1:
-    resolution: {integrity: sha512-epCxvKVK9niHzZ5TiCJ+93PtXcZmXqkITiqV/qwihJEM4xY4H16qYGYN76Y8sF7dRYC+vlYE5WgFwuGlPXo2Fw==}
+  /nx-cloud@16.0.5:
+    resolution: {integrity: sha512-13P7r0aKikjBtmdZrNorwXzVPeVIV4MLEwqGY+DEG6doLBtI5KqEQk/d5B5l2dCF2BEi/LXEmLYCmf9gwbOJ+Q==}
     hasBin: true
     dependencies:
-      '@nrwl/nx-cloud': 16.0.1
+      '@nrwl/nx-cloud': 16.0.5
       axios: 1.1.3
       chalk: 4.1.2
       dotenv: 10.0.0
       fs-extra: 11.1.0
       node-machine-id: 1.1.12
+      open: 8.4.1
       strip-json-comments: 3.1.1
       tar: 6.1.11
       yargs-parser: 21.1.1
