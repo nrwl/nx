@@ -18,10 +18,11 @@ If you maintain a Nx plugin, please update it to use the `@nx/*` packages.
 
 The packages are being renamed as defined in the tables below:
 
-These packages change names as well as changing scope from `@nrwl` to `@nx`.
+The following packages were not simply rescoped `@nrwl` to `@nx`.
 
 | Nx 15 and lower        | Nx 16 and higher  |
 | ---------------------- | ----------------- |
+| @nrwl/nx-cloud         | nx-cloud          |
 | @nrwl/eslint-plugin-nx | @nx/eslint-plugin |
 | @nrwl/nx-plugin        | @nx/plugin        |
 

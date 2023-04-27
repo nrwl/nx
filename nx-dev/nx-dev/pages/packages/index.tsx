@@ -108,8 +108,8 @@ export default function Packages({
 
                   <section id="packages-section" className="py-1">
                     <p>
-                      For version 16 and up, use <code>@nx/package-name</code>{' '}
-                      rather than <code>@nrwl/package-name</code>.{' '}
+                      In version 16, we have rescoped our packages to{' '}
+                      <code>@nx/*</code> from <code>@nrwl/*</code>.{' '}
                       <a href="/recipes/other/rescope" className="underline">
                         Read more about the rescope ≫
                       </a>

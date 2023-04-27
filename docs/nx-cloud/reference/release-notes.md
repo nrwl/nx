@@ -1,5 +1,11 @@
 # `nx-cloud` - Release notes
 
+{% callout type="check" title="@nrwl/nx-cloud was changed to nx-cloud" %}
+
+[Read more about the rescope ≫](/recipes/other/rescope)
+
+{% /callout %}
+
 ## 14.3.0
 
 - Fix: Resolve issue where sometimes cache hits would be reported as misses when paired with Nx 13.0-13.5
