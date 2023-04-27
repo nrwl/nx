@@ -11,7 +11,6 @@ export interface LibraryGeneratorSchema {
   directory?: string;
   skipFormat?: boolean;
   tags?: string;
-  simpleModuleName?: boolean;
   skipTsConfig?: boolean;
   includeBabelRc?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
@@ -30,6 +29,7 @@ export interface LibraryGeneratorSchema {
   skipTypeCheck?: boolean;
   minimal?: boolean;
   rootProject?: boolean;
+  simpleName?: boolean;
 }
 
 export interface ExecutorOptions {

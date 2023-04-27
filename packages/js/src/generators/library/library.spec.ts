@@ -183,7 +183,6 @@ describe('lib', () => {
           name: 'myLib2',
           directory: 'myDir',
           tags: 'one,two',
-          simpleModuleName: true,
         });
         projects = Object.fromEntries(getProjects(tree));
         expect(projects).toMatchObject({
@@ -1145,6 +1144,22 @@ describe('lib', () => {
 
       const project = readProjectConfiguration(tree, 'my-lib');
       expect(project.targets.build.options.assets).toEqual([]);
+    });
+  });
+
+  describe('--simpleName', () => {
+    it('should generate a simple name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        simpleName: true,
+        directory: 'web',
+      });
+
+      expect(tree.read('libs/web/my-lib/src/index.ts', 'utf-8')).toContain(
+        `export * from './lib/my-lib';`
+      );
+      expect(tree.exists('libs/web/my-lib/src/lib/my-lib.ts')).toBeTruthy();
     });
   });
 });
