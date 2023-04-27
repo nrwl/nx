@@ -226,6 +226,10 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             "runner": "nx/tasks-runners/default",
           },
         },
+        "workspaceLayout": {
+          "appsDir": "packages",
+          "libsDir": "packages",
+        },
       }
     `);
 

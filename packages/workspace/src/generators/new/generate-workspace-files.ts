@@ -51,6 +51,10 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
       delete json.targetDefaults;
       delete json.workspaceLayout;
       delete json.npmScope;
+      json.workspaceLayout = {
+        appsDir: 'packages',
+        libsDir: 'packages',
+      };
     }
     return json;
   });
