@@ -17,6 +17,7 @@ import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { serverLogger } from './logger';
 import { Workspaces } from '../../config/workspaces';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { execSync } from 'child_process';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -104,12 +105,29 @@ function computeWorkspaceConfigHash(projectsConfigurations: any) {
   return new HashingImpl().hashArray([JSON.stringify(projectsConfigurations)]);
 }
 
+/**
+ * Temporary work around to handle nested gitignores. The parcel file watcher doesn't handle them well,
+ * so we need to filter them out here.
+ */
+function filterUpdatedFiles(files: string[]) {
+  try {
+    const quoted = files.map((f) => '"' + f + '"');
+    const ignored = execSync(`git check-ignore ${quoted.join(' ')}`)
+      .toString()
+      .split('\n');
+    return files.filter((f) => ignored.indexOf(f) === -1);
+  } catch (e) {
+    // none of the files were ignored
+    return files;
+  }
+}
+
 async function processCollectedUpdatedAndDeletedFiles() {
   try {
     performance.mark('hash-watched-changes-start');
-    const updatedFiles = await defaultFileHasher.hashFiles([
-      ...collectedUpdatedFiles.values(),
-    ]);
+    const updatedFiles = await defaultFileHasher.hashFiles(
+      filterUpdatedFiles([...collectedUpdatedFiles.values()])
+    );
     const deletedFiles = [...collectedDeletedFiles.values()];
     performance.mark('hash-watched-changes-end');
     performance.measure(
