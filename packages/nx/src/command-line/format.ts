@@ -181,7 +181,7 @@ function check(patterns: string[]): boolean {
     return true;
   }
   try {
-    execSync(`node "${PRETTIER_PATH}" --list-different ${patterns.join(' ')}`, {
+    execSync(`node "${PRETTIER_PATH}" --check ${patterns.join(' ')}`, {
       stdio: [0, 1, 2],
     });
     return true;
