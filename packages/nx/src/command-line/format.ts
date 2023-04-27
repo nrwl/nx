@@ -181,7 +181,7 @@ function check(patterns: string[], verbose: boolean): boolean {
     return true;
   }
   try {
-    const logFlag = verbose ? "--check" : "--list-different";
+    const logFlag = verbose ? '--check' : '--list-different';
     execSync(`node "${PRETTIER_PATH}" ${logFlag} ${patterns.join(' ')}`, {
       stdio: [0, 1, 2],
     });
