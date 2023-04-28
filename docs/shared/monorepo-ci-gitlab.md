@@ -3,7 +3,7 @@
 Below is an example of a GitLab pipeline setup for an Nx workspace - building and testing only what is affected.
 
 ```yaml
-image: node:16
+image: node:18
 
 stages:
   - test
@@ -63,8 +63,6 @@ Read more about [Distributed Task Execution (DTE)](/core-features/distribute-tas
 
 ```yaml
 image: node:18
-variables:
-  CI: 'true'
 
 # Creating template for DTE agents
 .dte-agent:
