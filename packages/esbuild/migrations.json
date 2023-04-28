@@ -11,6 +11,12 @@
       "version": "16.0.0-beta.1",
       "description": "Replace @nrwl/esbuild with @nx/esbuild",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-0-1-set-thirdparty-true": {
+      "version": "16.0.1",
+      "description": "Set thirdParty to true to maintain the existing behavior of bundling dependencies.",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-16-0-1-set-thirdparty-true/update-16-0-1-set-thirdparty-true"
     }
   },
   "packageJsonUpdates": {
