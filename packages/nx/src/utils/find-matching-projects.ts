@@ -35,12 +35,20 @@ export function findMatchingProjects(
   patterns: string[] = [],
   projects: ProjectNodeMap
 ): string[] {
+  if (!patterns.length || patterns.filter((p) => p.length).length === 0) {
+    return []; // Short circuit if called with no patterns
+  }
+
   const projectNames = keys(projects);
 
   const selectedProjects: Set<string> = new Set();
   const excludedProjects: Set<string> = new Set();
 
   for (const stringPattern of patterns) {
+    if (!stringPattern.length) {
+      continue;
+    }
+
     const pattern = parseStringPattern(stringPattern, projects);
 
     // Handle wildcard with short-circuit, as its a common case with potentially
@@ -254,16 +262,19 @@ function isValidPatternType(type: string): type is ProjectPatternType {
 export const getMatchingStringsWithCache = (() => {
   // Map< Pattern, Map< Item, Result >>
   const minimatchCache = new Map<string, Map<string, boolean>>();
+  const regexCache = new Map<string, RegExp>();
   return (pattern: string, items: string[]) => {
     if (!minimatchCache.has(pattern)) {
       minimatchCache.set(pattern, new Map());
     }
     const patternCache = minimatchCache.get(pattern)!;
-    let matcher = null;
+    if (!regexCache.has(pattern)) {
+      regexCache.set(pattern, minimatch.makeRe(pattern));
+    }
+    const matcher = regexCache.get(pattern);
     return items.filter((item) => {
       let entry = patternCache.get(item);
       if (entry === undefined || entry === null) {
-        matcher ??= minimatch.makeRe(pattern);
         entry = item === pattern ? true : matcher.test(item);
         patternCache.set(item, entry);
       }
