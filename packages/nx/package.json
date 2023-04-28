@@ -122,7 +122,7 @@
       "@nrwl/next",
       "@nx/node",
       "@nrwl/node",
-      "@nx/nx-plugin",
+      "@nx/plugin",
       "@nrwl/nx-plugin",
       "@nx/react",
       "@nrwl/react",
@@ -140,11 +140,11 @@
       "@nx/webpack",
       "@nrwl/webpack",
       {
-        "package": "@nrwl/nx-cloud",
+        "package": "nx-cloud",
         "version": "latest"
       },
       {
-        "package": "nx-cloud",
+        "package": "@nrwl/nx-cloud",
         "version": "latest"
       }
     ]
