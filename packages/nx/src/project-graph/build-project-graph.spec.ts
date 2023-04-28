@@ -232,6 +232,7 @@ describe('project graph', () => {
     expect(graph.dependencies).toEqual({
       api: [{ source: 'api', target: 'npm:express', type: 'static' }],
       demo: [
+        { source: 'demo', target: 'api', type: 'implicit' },
         {
           source: 'demo',
           target: 'ui',
@@ -243,7 +244,6 @@ describe('project graph', () => {
           target: 'lazy-lib',
           type: 'dynamic',
         },
-        { source: 'demo', target: 'api', type: 'implicit' },
       ],
       'demo-e2e': [],
       'lazy-lib': [],

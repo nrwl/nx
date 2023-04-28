@@ -2,6 +2,7 @@ import { ProjectGraphBuilder } from './project-graph-builder';
 
 describe('ProjectGraphBuilder', () => {
   let builder: ProjectGraphBuilder;
+
   beforeEach(() => {
     builder = new ProjectGraphBuilder();
     builder.addNode({
@@ -208,5 +209,114 @@ describe('ProjectGraphBuilder', () => {
       target: [],
       target2: [],
     });
+  });
+
+  it('should prune dependencies when removing explicit dependencies from the files', () => {
+    builder.addImplicitDependency('source', 'target');
+    builder.addExternalNode({
+      name: 'npm:external',
+      type: 'npm',
+      data: {
+        version: '1.0.0',
+        packageName: 'external',
+      },
+    });
+    builder.addExternalNode({
+      name: 'npm:external2',
+      type: 'npm',
+      data: {
+        version: '1.0.0',
+        packageName: 'external2',
+      },
+    });
+    builder.addStaticDependency('npm:external', 'npm:external2');
+    builder.addStaticDependency('source', 'npm:external', 'source/index.ts');
+    builder.addDynamicDependency('source', 'npm:external2', 'source/second.ts');
+    const graph = builder.getUpdatedProjectGraph();
+
+    expect(graph.dependencies).toMatchInlineSnapshot(`
+      {
+        "npm:external": [
+          {
+            "source": "npm:external",
+            "target": "npm:external2",
+            "type": "static",
+          },
+        ],
+        "source": [
+          {
+            "source": "source",
+            "target": "target",
+            "type": "implicit",
+          },
+          {
+            "source": "source",
+            "target": "npm:external",
+            "type": "static",
+          },
+          {
+            "source": "source",
+            "target": "npm:external2",
+            "type": "dynamic",
+          },
+        ],
+        "target": [],
+      }
+    `);
+    expect(graph.nodes['source'].data.files).toMatchInlineSnapshot(`
+      [
+        {
+          "dependencies": [
+            {
+              "source": "source",
+              "target": "npm:external",
+              "type": "static",
+            },
+          ],
+          "file": "source/index.ts",
+        },
+        {
+          "dependencies": [
+            {
+              "source": "source",
+              "target": "npm:external2",
+              "type": "dynamic",
+            },
+          ],
+          "file": "source/second.ts",
+        },
+      ]
+    `);
+
+    const newBuilder = new ProjectGraphBuilder(graph);
+    // remove static dependency from the file
+    delete newBuilder.graph.nodes['source'].data.files[0].dependencies;
+
+    const updatedGraph = newBuilder.getUpdatedProjectGraph();
+
+    expect(updatedGraph.dependencies).toMatchInlineSnapshot(`
+      {
+        "npm:external": [
+          {
+            "source": "npm:external",
+            "target": "npm:external2",
+            "type": "static",
+          },
+        ],
+        "source": [
+          {
+            "source": "source",
+            "target": "target",
+            "type": "implicit",
+          },
+          {
+            "source": "source",
+            "target": "npm:external2",
+            "type": "dynamic",
+          },
+        ],
+        "target": [],
+      }
+    `);
   });
 });
