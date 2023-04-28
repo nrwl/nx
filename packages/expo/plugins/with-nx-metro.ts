@@ -28,6 +28,7 @@ export function withNxMetro(config: any, opts: WithNxOptions = {}) {
   watchFolders = watchFolders.concat([
     join(workspaceRoot, 'node_modules'),
     join(workspaceRoot, workspaceLayout().libsDir),
+    join(workspaceRoot, 'packages'),
   ]);
   if (opts.watchFolders?.length) {
     watchFolders = watchFolders.concat(opts.watchFolders);

@@ -63,6 +63,7 @@ function runCliTest(
       ['test', ...createDetoxTestOptions(options)],
       {
         cwd: join(workspaceRoot, projectRoot),
+        env: process.env,
       }
     );
 

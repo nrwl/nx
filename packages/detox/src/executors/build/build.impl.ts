@@ -39,6 +39,7 @@ export function runCliBuild(
       ['build', ...createDetoxBuildOptions(options)],
       {
         cwd: join(workspaceRoot, projectRoot),
+        env: process.env,
       }
     );
 
