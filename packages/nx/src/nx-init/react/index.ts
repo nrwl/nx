@@ -2,13 +2,14 @@ import { execSync } from 'child_process';
 import { copySync, moveSync, readdirSync, removeSync } from 'fs-extra';
 import { join } from 'path';
 import { InitArgs } from '../../command-line/init';
-import { fileExists, readJsonFile } from '../../utils/fileutils';
+import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { output } from '../../utils/output';
 import {
   detectPackageManager,
   getPackageManagerCommand,
   PackageManagerCommands,
 } from '../../utils/package-manager';
+import { PackageJson } from '../../utils/package-json';
 import { askAboutNxCloud, printFinalMessage } from '../utils';
 import { checkForCustomWebpackSetup } from './check-for-custom-webpack-setup';
 import { checkForUncommittedChanges } from './check-for-uncommitted-changes';
@@ -76,7 +77,7 @@ async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
   const appIsJs = !fileExists(`tsconfig.json`);
 
   const reactAppName = readNameFromPackageJson();
-  const packageJson = readJsonFile('package.json');
+  const packageJson = readJsonFile(join(process.cwd(), 'package.json'));
   const deps = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,
@@ -105,6 +106,13 @@ async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
   };
 }
 
+/**
+ * - Create a temp workspace
+ * - Move all files to temp workspace
+ * - Add bundler to temp workspace
+ * - Move files back to root
+ * - Clean up unused files
+ */
 async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
   createTempWorkspace(options);
 
@@ -162,6 +170,8 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 }
 
 function createTempWorkspace(options: NormalizedOptions) {
+  removeSync('temp-workspace');
+
   execSync(
     `npx ${
       options.npxYesFlagNeeded ? '-y' : ''
@@ -187,12 +197,60 @@ function createTempWorkspace(options: NormalizedOptions) {
   removeSync('node_modules');
 }
 
+function copyPackageJsonDepsFromTempWorkspace() {
+  const repoRoot = process.cwd();
+  let rootPackageJson = readJsonFile(join(repoRoot, 'package.json'));
+  const tempWorkspacePackageJson = readJsonFile(
+    join(repoRoot, 'temp-workspace', 'package.json')
+  );
+
+  rootPackageJson = overridePackageDeps(
+    'dependencies',
+    rootPackageJson,
+    tempWorkspacePackageJson
+  );
+  rootPackageJson = overridePackageDeps(
+    'devDependencies',
+    rootPackageJson,
+    tempWorkspacePackageJson
+  );
+  rootPackageJson.scripts = {}; // remove existing scripts
+  writeJsonFile(join(repoRoot, 'package.json'), rootPackageJson);
+  writeJsonFile(
+    join(repoRoot, 'temp-workspace', 'package.json'),
+    rootPackageJson
+  );
+}
+
+function overridePackageDeps(
+  depConfigName: 'dependencies' | 'devDependencies',
+  base: PackageJson,
+  override: PackageJson
+): PackageJson {
+  if (!base[depConfigName]) {
+    base[depConfigName] = override[depConfigName];
+    return base;
+  }
+  const deps = override[depConfigName];
+  Object.keys(deps).forEach((dep) => {
+    if (base.dependencies?.[dep]) {
+      delete base.dependencies[dep];
+    }
+    if (base.devDependencies?.[dep]) {
+      delete base.devDependencies[dep];
+    }
+    base[depConfigName][dep] = deps[dep];
+  });
+  return base;
+}
+
 function moveFilesToTempWorkspace(options: NormalizedOptions) {
   output.log({ title: '🚚 Moving your React app in your new Nx workspace' });
 
+  copyPackageJsonDepsFromTempWorkspace();
   const requiredCraFiles = [
     'project.json',
-    options.isStandalone ? null : 'package.json',
+    'package.json',
     'src',
     'public',
     options.appIsJs ? null : 'tsconfig.json',
@@ -292,7 +350,7 @@ function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
     setupE2eProject(options.reactAppName);
   } else {
     removeSync(join('apps', `${options.reactAppName}-e2e`));
-    execSync(`${options.pmc.rm} @nx/cypress eslint-plugin-cypress`);
+    execSync(`${options.pmc.rm} cypress @nx/cypress eslint-plugin-cypress`);
   }
 
   if (options.isStandalone) {
