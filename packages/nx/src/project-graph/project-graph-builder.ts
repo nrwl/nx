@@ -88,6 +88,8 @@ export class ProjectGraphBuilder {
     targetProjectName: string,
     sourceProjectFile?: string
   ): void {
+    // internal nodes must provide sourceProjectFile when creating static dependency
+    // externalNodes do not have sourceProjectFile
     if (this.graph.nodes[sourceProjectName] && !sourceProjectFile) {
       throw new Error(`Source project file is required`);
     }
@@ -110,6 +112,7 @@ export class ProjectGraphBuilder {
     if (this.graph.externalNodes[sourceProjectName]) {
       throw new Error(`External projects can't have "dynamic" dependencies`);
     }
+    // dynamic dependency is always bound to a file
     if (!sourceProjectFile) {
       throw new Error(`Source project file is required`);
     }
@@ -380,6 +383,9 @@ export class ProjectGraphBuilder {
     if (this.graph.dependencies[sourceProject]) {
       const removed = this.removedEdges[sourceProject];
       for (const d of this.graph.dependencies[sourceProject]) {
+        // static and dynamic dependencies of internal projects
+        // will be rebuilt based on the file dependencies
+        // we only need to keep the implicit dependencies
         if (d.type === DependencyType.implicit && !removed?.has(d.target)) {
           if (!alreadySetTargetProjects.has(d.target)) {
             alreadySetTargetProjects.set(d.target, new Map([[d.type, d]]));
