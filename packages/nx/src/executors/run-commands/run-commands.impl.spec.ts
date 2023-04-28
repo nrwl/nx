@@ -282,6 +282,27 @@ describe('Run Commands', () => {
       expect(normalize(readFile(f))).toBe(childFolder);
     });
 
+    it('should terminate properly with an error if the cwd is not valid', async () => {
+      const root = dirSync().name;
+      const cwd = 'bla';
+
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo "command does not run"`,
+            },
+          ],
+          cwd,
+          parallel: true,
+          __unparsed__: [],
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: false }));
+    }, 1000);
+
     it('should run the task in the specified absolute cwd', async () => {
       const root = dirSync().name;
       const childFolder = dirSync({ dir: root }).name;
