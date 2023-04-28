@@ -197,13 +197,15 @@ describe('report', () => {
   describe('findInstalledPackagesWeCareAbout', () => {
     it('should not list packages that are not installed', () => {
       const installed: [string, packageJsonUtils.PackageJson][] =
-        packagesWeCareAbout.map((x) => [
-          x,
-          {
-            name: x,
-            version: '1.0.0',
-          },
-        ]);
+        packagesWeCareAbout
+          .filter((x) => !x.startsWith('@nrwl'))
+          .map((x) => [
+            x,
+            {
+              name: x,
+              version: '1.0.0',
+            },
+          ]);
       const uninstalled: [string, packageJsonUtils.PackageJson][] = [
         installed.pop(),
         installed.pop(),
@@ -224,6 +226,33 @@ describe('report', () => {
       for (const [pkg] of installed) {
         expect(result).toContain(pkg);
       }
+    });
+
+    it('should not list @nrwl packages that are the same version as their equivalent @nx package', () => {
+      jest.spyOn(packageJsonUtils, 'readModulePackageJson').mockImplementation(
+        provideMockPackages({
+          '@nrwl/nx-plugin': { version: '16.0.0' },
+          '@nx/plugin': { version: '16.0.0' },
+          '@nrwl/linter': { version: '16.0.0' },
+          '@nx/linter': { version: '16.0.0' },
+          '@nrwl/workspace': { version: '16.0.0' },
+          '@nx/workspace': { version: '16.0.2' },
+          '@nrwl/tao': { version: '16.0.0' },
+          '@nrwl/nx-cloud': { version: '16.0.0' },
+          'nx-cloud': { version: '16.0.0' },
+        })
+      );
+
+      const result = findInstalledPackagesWeCareAbout().map((x) => x.package);
+      expect(result).not.toContain('@nrwl/nx-plugin');
+      expect(result).toContain('@nx/plugin');
+      expect(result).not.toContain('@nrwl/linter');
+      expect(result).toContain('@nx/linter');
+      expect(result).toContain('@nrwl/workspace');
+      expect(result).toContain('@nx/workspace');
+      expect(result).toContain('@nrwl/tao');
+      expect(result).toContain('nx-cloud');
+      expect(result).not.toContain('@nrwl/nx-cloud');
     });
   });
 
