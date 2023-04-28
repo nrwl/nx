@@ -284,10 +284,6 @@ export class ProjectGraphBuilder {
     const isDuplicate = !!this.graph.dependencies[sourceProjectName].find(
       (d) => d.target === targetProjectName && d.type === type
     );
-    // do not add duplicate to project
-    if (isDuplicate && !sourceProjectFile) {
-      return;
-    }
 
     const dependency = {
       source: sourceProjectName,
@@ -321,13 +317,11 @@ export class ProjectGraphBuilder {
       ) {
         fileData.dependencies.push(dependency);
       }
+    } else if (!isDuplicate) {
+      // only add to dependencies section if the source file is not specified
+      // and not already added
+      this.graph.dependencies[sourceProjectName].push(dependency);
     }
-
-    if (isDuplicate) {
-      return;
-    }
-
-    this.graph.dependencies[sourceProjectName].push(dependency);
   }
 
   private removeDependenciesWithNode(name: string) {
