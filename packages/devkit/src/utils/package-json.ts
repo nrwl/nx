@@ -17,6 +17,7 @@ const {
   getPackageManagerCommand,
   workspaceRoot,
   detectPackageManager,
+  createTempNpmDirectory,
 } = requireNx();
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
@@ -450,7 +451,9 @@ export function ensurePackage<T extends any = any>(
     );
   }
 
-  const tempDir = dirSync().name;
+  const { dir: tempDir } = createTempNpmDirectory?.() ?? {
+    dir: dirSync().name,
+  };
 
   console.log(`Fetching ${pkg}...`);
   const packageManager = detectPackageManager();
