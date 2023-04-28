@@ -64,26 +64,26 @@ When the E2E app runs, a temporary E2E directory is created in the root of the w
 
 ### E2E Testing file
 
-When the plugin is generated, a test file is created in the `my-plugin-e2e` app. Inside this test file, there are already tests for making sure that the executor ran, checking if directories are created with the `--directory` option, and checking if tags are added to the project configuration.
+When the plugin is generated, a test file is created in the `my-plugin-e2e` app. Inside this test file, there is a disabled test that gives you a starting point for writing your own tests. To enable the test, change `xit` to `it`.
 
 We'll go over a few parts of a test file below:
 
 ```typescript
-it('should create my-plugin', async (done) => {
-  const plugin = uniq('my-plugin');
-  ensureNxProject('@my-org/my-plugin', 'dist/packages/my-plugin');
-  await runNxCommandAsync(`generate @my-org/my-plugin:myPlugin ${plugin}`);
+beforeAll(() => {
+  ensureNxProject('my-plugin', 'dist/./.');
+});
 
-  const result = await runNxCommandAsync(`build ${plugin}`);
-  expect(result.stdout).toContain('Executor ran');
-
-  done();
+xit('should be able to build generated projects', async () => {
+  const name = 'proj';
+  const generator = 'PLACEHOLDER';
+  await runNxCommandAsync(`generate my-plugin:${generator} --name ${name}`);
+  expect(() => runNxCommand('build ${proj}')).not.toThrow();
+  expect(() => checkFilesExist(`dist/${name}/index.js`)).not.toThrow();
 });
 ```
 
-- The `uniq` function creates a random name with the prefix and a random number.
 - The `ensureNxProject` is the function that will create the temporary directory. It takes two arguments, the plugin package name and the dist directory of when it's built.
-- The `runNxCommandAsync` will execute a `nx` command in the E2E directory.
+- The `runNxCommandAsync` function will execute a `nx` command in the E2E directory.
 
 There are additional functions that the `@nx/plugin/testing` package exports. Most of them are file utilities to manipulate and read files in the E2E directory.
 

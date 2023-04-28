@@ -6,8 +6,8 @@ To create a plugin, see the [create a local plugin tutorial](/plugins/tutorials/
 
 In order to use your plugin in other workspaces or share it with the community, you will need to publish it to an npm registry. To publish your plugin follow these steps:
 
-1. Build your plugin with the command `nx run my-plugin:build`
-2. `npm publish ./dist/package/my-plugin` and follow the prompts from npm.
+1. `nx publish my-plugin --ver=1.0.0` which automatically builds `my-plugin`
+2. Follow the prompts from npm.
 3. That's it!
 
 {% callout type="warning" title="Version bump" %}
