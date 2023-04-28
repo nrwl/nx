@@ -49,5 +49,18 @@
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
   },
-  "packageJsonUpdates": {}
+  "packageJsonUpdates": {
+    "16.1.0": {
+      "version": "16.1.0-beta.0",
+      "requires": {
+        "cypress": ">=12.0.0 <12.11.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^12.11.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
 }
