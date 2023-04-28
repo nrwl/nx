@@ -1,14 +1,18 @@
-import { Breadcrumbs, Footer, Header } from '@nrwl/nx-dev/ui-common';
-import { DocumentationHeader, SidebarContainer } from '@nrwl/nx-dev/ui-common';
-import { PluginDirectory } from '@nrwl/nx-dev/ui-community';
+import { getBasicPluginsSection } from '@nx/nx-dev/data-access-menu';
+import { Menu } from '@nx/nx-dev/models-menu';
+import {
+  Breadcrumbs,
+  DocumentationHeader,
+  Footer,
+  SidebarContainer,
+} from '@nx/nx-dev/ui-common';
+import { PluginDirectory } from '@nx/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
-import { useRef } from 'react';
-import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { useRouter } from 'next/router';
-import { nxPackagesApi } from '../../lib/packages.api';
-import { Menu } from '@nrwl/nx-dev/models-menu';
-import { getBasicPluginsSection } from '@nrwl/nx-dev/data-access-menu';
+import { useRef } from 'react';
 import { menusApi } from '../../lib/menus.api';
+import { useNavToggle } from '../../lib/navigation-toggle.effect';
+import { nxPackagesApi } from '../../lib/packages.api';
 
 declare const fetch: any;
 
