@@ -150,6 +150,9 @@
     "update-angular-cli-version-15-2-0": {
       "cli": "nx",
       "version": "15.8.0-beta.4",
+      "requires": {
+        "@angular/core": ">=15.2.0"
+      },
       "description": "Update the @angular/cli package version to ~15.2.0.",
       "factory": "./src/migrations/update-15-8-0/update-angular-cli"
     },
