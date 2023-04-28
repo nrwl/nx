@@ -1,14 +1,14 @@
 import {
-  CheckCircleIcon,
   ClipboardDocumentCheckIcon,
   ClipboardDocumentIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import React, { ReactNode, useEffect, useState } from 'react';
 // @ts-ignore
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 // @ts-ignore
 import SyntaxHighlighter from 'react-syntax-highlighter';
-import { CodeOutput } from './fences/codeOutput.component';
+import { CodeOutput } from './fences/code-output.component';
 import { TerminalOutput } from './fences/terminal-output.component';
 
 function resolveLanguage(lang: string) {
@@ -74,7 +74,7 @@ export function Fence({
     children.includes('@nx/') || command.includes('@nx/');
   return (
     <div className="my-8 w-full">
-      <div className="code-block group relative inline-flex w-auto min-w-[50%] max-w-full">
+      <div className="code-block group relative w-full">
         <div>
           <CopyToClipboard
             text={children}
@@ -84,7 +84,7 @@ export function Fence({
           >
             <button
               type="button"
-              className="not-prose absolute top-0 right-0 z-10 flex rounded-tr-lg border border-slate-200 bg-slate-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800"
+              className="not-prose absolute top-0 right-0 z-10 flex rounded-tr-lg border border-slate-200 bg-slate-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800/60"
             >
               {copied ? (
                 <ClipboardDocumentCheckIcon className="h-5 w-5 text-blue-500 dark:text-sky-500" />
@@ -106,12 +106,12 @@ export function Fence({
           />
           {showRescopeMessage && (
             <a
-              className="relative block rounded-b-md border border-green-100 bg-green-50 px-4 py-2 text-xs font-medium text-green-600 no-underline hover:underline dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
+              className="relative block rounded-b-md border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium no-underline hover:underline dark:border-slate-700 dark:bg-slate-800"
               href="/recipes/other/rescope"
               title="Nx 16 package name changes"
             >
-              <CheckCircleIcon
-                className="mr-2 inline-block h-5 w-5 text-green-500 dark:text-green-400"
+              <InformationCircleIcon
+                className="mr-2 inline-block h-5 w-5"
                 aria-hidden="true"
               />
               Nx 15 and lower use @nrwl/ instead of @nx/
