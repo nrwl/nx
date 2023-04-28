@@ -4,6 +4,7 @@ import {
   ensureCypressInstallation,
   newProject,
   runCLI,
+  runCypressTests,
   uniq,
   updateFile,
   updateJson,
@@ -146,18 +147,22 @@ export default Input;
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`
     );
-    expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
-      'All specs passed!'
-    );
+    if (runCypressTests()) {
+      expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
   }, 300_000);
 
   it('should successfully component test lib being used in app', () => {
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
-    expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
-      'All specs passed!'
-    );
+    if (runCypressTests()) {
+      expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
   }, 300_000);
 
   it('should test buildable lib not being used in app', () => {
@@ -184,9 +189,12 @@ describe(Input.name, () => {
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build`
     );
-    expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
-      'All specs passed!'
-    );
+
+    if (runCypressTests()) {
+      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
 
     // add tailwind
     runCLI(`generate @nx/react:setup-tailwind --project=${buildableLibName}`);
@@ -213,9 +221,11 @@ ${content}`;
       }
     );
 
-    expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
-      'All specs passed!'
-    );
+    if (runCypressTests()) {
+      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
   }, 300_000);
 
   it('should work with async webpack config', () => {
@@ -250,8 +260,41 @@ ${content}`;
       return config;
     });
 
-    const results = runCLI(`component-test ${appName}`);
-    expect(results).toContain('I am from the custom async Webpack config');
-    expect(results).toContain('All specs passed!');
+    if (runCypressTests()) {
+      const results = runCLI(`component-test ${appName}`);
+      expect(results).toContain('I am from the custom async Webpack config');
+      expect(results).toContain('All specs passed!');
+    }
+  });
+
+  // flaky bc of upstream issue https://github.com/cypress-io/cypress/issues/25913
+  it.skip('should CT vite projects importing other projects', () => {
+    const viteLibName = uniq('vite-lib');
+    runCLI(
+      `generate @nrwl/react:lib ${viteLibName} --bundler=vite --no-interactive`
+    );
+
+    updateFile(`libs/${viteLibName}/src/lib/${viteLibName}.tsx`, () => {
+      return `import { Btn } from '@${projectName}/${usedInAppLibName}';
+
+export function MyComponent() {
+  return (
+    <>
+      <Btn text={'I am the app'}/>
+      <p>hello</p>
+    </>
+  );
+}
+export default MyComponent;`;
+    });
+
+    runCLI(
+      `generate @nrwl/react:cypress-component-configuration --project=${viteLibName} --generate-tests --bundler=vite --build-target=${appName}:build`
+    );
+    if (runCypressTests()) {
+      expect(runCLI(`component-test ${viteLibName}`)).toContain(
+        'All specs passed!'
+      );
+    }
   });
 });

@@ -56,6 +56,13 @@ export async function addFiles(
     addDependenciesToPackageJson(tree, {}, { '@nx/webpack': nxVersion });
   }
 
+  if (
+    options.bundler === 'vite' ||
+    (!options.bundler && actualBundler === 'vite')
+  ) {
+    addDependenciesToPackageJson(tree, {}, { '@nx/vite': nxVersion });
+  }
+
   if (options.generateTests) {
     const filePaths = [];
     visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (filePath) => {

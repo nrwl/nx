@@ -114,6 +114,8 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'url-loader',
     'webpack',
     'webpack-merge',
+    // used via the CT react plugin installed via vite plugin
+    'vite',
   ],
   'react-native': ['@nx/storybook'],
   rollup: ['@swc/core'],
