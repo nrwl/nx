@@ -64,13 +64,6 @@ export function podInstall(
         }
         logger.info(stdout);
         if (stdout.includes('Pod installation complete')) {
-          // Remove build folder after pod install
-          if (buildFolder) {
-            buildFolder = join(iosDirectory, buildFolder);
-            if (existsSync(buildFolder)) {
-              rmdirSync(buildFolder, { recursive: true });
-            }
-          }
           resolve();
         } else {
           reject(new Error(podInstallErrorMessage));

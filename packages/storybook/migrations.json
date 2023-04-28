@@ -161,6 +161,26 @@
         "@storybook/addon-viewport": {
           "version": "^7.0.8",
           "alwaysAddToPackageJson": false
+        },
+        "@storybook/react-native": {
+          "version": "^6.5.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-actions": {
+          "version": "^6.5.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-backgrounds": {
+          "version": "^6.5.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-controls": {
+          "version": "^6.5.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-notes": {
+          "version": "^6.5.3",
+          "alwaysAddToPackageJson": false
         }
       }
     },

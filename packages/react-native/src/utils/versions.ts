@@ -25,3 +25,6 @@ export const reactNativeSvgTransformerVersion = '1.0.0';
 export const reactNativeSvgVersion = '13.9.0';
 
 export const babelRuntimeVersion = '7.21.0';
+
+export const reactNativeAsyncStorageVersion = '1.18.1';
+export const reactNativeSafeAreaContextVersion = '4.5.1';

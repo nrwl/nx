@@ -1,13 +1,19 @@
 import {
+  addDependenciesToPackageJson,
   convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  reactNativeAsyncStorageVersion,
+  reactNativeSafeAreaContextVersion,
+} from '../../utils/versions';
 
 import storiesGenerator from '../stories/stories';
 import { addResolverMainFieldsToMetroConfig } from './lib/add-resolver-main-fields-to-metro-config';
@@ -43,6 +49,16 @@ export async function storybookConfigurationGenerator(
     skipFormat: true,
   });
 
+  const installRequiredPackagesTask = await addDependenciesToPackageJson(
+    host,
+    {},
+    {
+      '@react-native-async-storage/async-storage':
+        reactNativeAsyncStorageVersion,
+      'react-native-safe-area-context': reactNativeSafeAreaContextVersion,
+    }
+  );
+
   addStorybookTask(host, schema.name);
   createStorybookFiles(host, schema);
   replaceAppImportWithStorybookToggle(host, schema);
@@ -53,7 +69,7 @@ export async function storybookConfigurationGenerator(
   }
 
   await formatFiles(host);
-  return installTask;
+  return runTasksInSerial(installTask, installRequiredPackagesTask);
 }
 
 function addStorybookTask(host: Tree, projectName: string) {
@@ -61,10 +77,9 @@ function addStorybookTask(host: Tree, projectName: string) {
   projectConfig.targets['storybook'] = {
     executor: '@nx/react-native:storybook',
     options: {
-      searchDir: [projectConfig.root],
-      outputFile: './.storybook/story-loader.js',
+      searchDir: [projectConfig.sourceRoot],
+      outputFile: './.storybook/story-loader.ts',
       pattern: '**/*.stories.@(js|jsx|ts|tsx|md)',
-      silent: false,
     },
   };
 

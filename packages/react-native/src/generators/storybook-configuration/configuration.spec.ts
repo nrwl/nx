@@ -20,15 +20,6 @@ describe('react-native:storybook-configuration', () => {
   let appTree;
 
   beforeEach(async () => {
-    // jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
-    //   devDependencies: {
-    //     '@storybook/addon-essentials': '*',
-    //     '@storybook/react-native': '*',
-    //     '@storybook/addon-ondevice-actions': '*',
-    //     '@storybook/addon-ondevice-knobs': '*',
-    //   },
-    // });
-
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
   });
