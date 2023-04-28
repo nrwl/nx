@@ -233,6 +233,10 @@ function createProcess(
         res(true);
       }
     });
+    childProcess.on('error', (err) => {
+      process.stderr.write(addColorAndPrefix(err.toString(), commandConfig));
+      res(false);
+    });
     childProcess.on('exit', (code) => {
       if (!readyWhen) {
         res(code === 0);
