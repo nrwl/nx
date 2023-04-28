@@ -1,8 +1,9 @@
 import { existsSync } from 'fs';
 import { ParsedCommandLine } from 'typescript';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getRootTsConfigPath } from 'nx/src/plugins/js/utils/typescript';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
+import { requireNx } from '../../../nx';
+
+const { workspaceRoot } = requireNx();
 
 let tsConfig: ParsedCommandLine;
 let tsPathMappings: ParsedCommandLine['options']['paths'];
@@ -47,4 +48,21 @@ export function readTsConfig(tsConfigPath: string): ParsedCommandLine {
     tsModule.sys,
     dirname(tsConfigPath)
   );
+}
+
+export function getRootTsConfigPath(): string | null {
+  const tsConfigFileName = getRootTsConfigFileName();
+
+  return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
+}
+
+function getRootTsConfigFileName(): string | null {
+  for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
+    const tsConfigPath = join(workspaceRoot, tsConfigName);
+    if (existsSync(tsConfigPath)) {
+      return tsConfigName;
+    }
+  }
+
+  return null;
 }

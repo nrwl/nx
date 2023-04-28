@@ -1,10 +1,4 @@
-import {
-  joinPathFragments,
-  offsetFromRoot,
-  Tree,
-  updateJson,
-  workspaceRoot,
-} from '@nx/devkit';
+import { offsetFromRoot, Tree, updateJson, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
@@ -40,6 +34,12 @@ export function getRelativePathToRootTsConfig(
   targetPath: string
 ): string {
   return offsetFromRoot(targetPath) + getRootTsConfigPathInTree(tree);
+}
+
+export function getRootTsConfigPath(): string | null {
+  const tsConfigFileName = getRootTsConfigFileName();
+
+  return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
 }
 
 export function getRootTsConfigFileName(tree?: Tree): string | null {
