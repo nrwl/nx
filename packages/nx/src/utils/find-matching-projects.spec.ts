@@ -54,6 +54,18 @@ describe('findMatchingProjects', () => {
     },
   };
 
+  it('should return no projects when passed no patterns', () => {
+    expect(findMatchingProjects([], projectGraph)).toEqual([]);
+  });
+
+  it('should return no projects when passed empty string', () => {
+    expect(findMatchingProjects([''], projectGraph)).toEqual([]);
+  });
+
+  it('should not throw when a pattern is empty string', () => {
+    expect(findMatchingProjects(['', 'a'], projectGraph)).toEqual(['a']);
+  });
+
   it('should expand "*"', () => {
     expect(findMatchingProjects(['*'], projectGraph)).toEqual([
       'test-project',
