@@ -141,6 +141,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       pascalCaseFiles: options.pascalCaseFiles,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      globalCss: options.globalCss,
     });
     tasks.push(componentTask);
   }
