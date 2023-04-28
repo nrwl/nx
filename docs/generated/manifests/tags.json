@@ -600,14 +600,23 @@
       "path": "/packages/nx/documents/generate"
     }
   ],
-  "create-your-own-plugin": [
+  "intro": [
     {
       "description": "",
-      "file": "shared/plugin-features/create-your-own-plugin",
-      "id": "create-your-own-plugin",
-      "name": "Create Your Own Plugin",
-      "path": "/plugin-features/create-your-own-plugin"
+      "file": "shared/concepts/integrated-vs-package-based",
+      "id": "integrated-vs-package-based",
+      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+      "path": "/concepts/integrated-vs-package-based"
     },
+    {
+      "description": "",
+      "file": "shared/mental-model",
+      "id": "mental-model",
+      "name": "Mental Model",
+      "path": "/concepts/mental-model"
+    }
+  ],
+  "create-your-own-plugin": [
     {
       "description": "",
       "file": "shared/guides/nx-devkit-angular-devkit",
@@ -624,68 +633,31 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/plugins/local-executors",
-      "id": "creating-custom-executors",
-      "name": "Local Executors",
-      "path": "/plugins/executors/creating-custom-executors"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/generators/local-generators",
-      "id": "local-generators",
-      "name": "Local Generators",
-      "path": "/plugins/generators/local-generators"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/share-your-plugin",
-      "id": "share-your-plugin",
-      "name": "Share Your Plugin",
-      "path": "/plugins/advanced/share-your-plugin"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/plugins/migration-generators",
       "id": "migration-generators",
-      "name": "Migration Generators",
-      "path": "/plugins/advanced/migration-generators"
+      "name": "Write a Migration",
+      "path": "/plugins/recipes/migration-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/create-preset",
       "id": "create-preset",
       "name": "Create a Preset",
-      "path": "/plugins/advanced/create-preset"
+      "path": "/plugins/recipes/create-preset"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
-      "name": "Project Graph Plugins",
-      "path": "/plugins/advanced/project-graph-plugins"
+      "name": "Modify the Project Graph",
+      "path": "/plugins/recipes/project-graph-plugins"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/project-inference-plugins",
       "id": "project-inference-plugins",
-      "name": "Project Inference Plugins",
-      "path": "/plugins/advanced/project-inference-plugins"
-    }
-  ],
-  "intro": [
-    {
-      "description": "",
-      "file": "shared/concepts/integrated-vs-package-based",
-      "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-      "path": "/concepts/integrated-vs-package-based"
-    },
-    {
-      "description": "",
-      "file": "shared/mental-model",
-      "id": "mental-model",
-      "name": "Mental Model",
-      "path": "/concepts/mental-model"
+      "name": "Identify Custom Projects",
+      "path": "/plugins/recipes/project-inference-plugins"
     }
   ],
   "environment-variables": [
