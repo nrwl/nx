@@ -14,7 +14,24 @@ describe('update-16-0-1-set-thirdparty-true', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should add thirdParty property if bundling is enabled', async () => {
+  it('should add thirdParty property if bundling is enabled implicitly', async () => {
+    addProjectConfiguration(tree, 'myapp', {
+      root: 'myapp',
+      targets: {
+        build: {
+          executor: '@nx/esbuild:esbuild',
+        },
+      },
+    });
+    await update(tree);
+
+    const config = readProjectConfiguration(tree, 'myapp');
+
+    expect(config.targets.build.options).toEqual({
+      thirdParty: true,
+    });
+  });
+  it('should add thirdParty property if bundling is enabled explicitly', async () => {
     addProjectConfiguration(tree, 'myapp', {
       root: 'myapp',
       targets: {

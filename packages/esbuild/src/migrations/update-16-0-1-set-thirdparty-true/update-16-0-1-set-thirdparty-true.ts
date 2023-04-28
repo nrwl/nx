@@ -19,7 +19,7 @@ export default async function update(host: Tree) {
           targetConfig.executor === '@nx/esbuild:esbuild'
         ) {
           projectConfig.targets[targetName].options ??= {};
-          if (projectConfig.targets[targetName].options.bundle === true) {
+          if (projectConfig.targets[targetName].options.bundle !== false) {
             shouldUpdate = true;
 
             projectConfig.targets[targetName].options.thirdParty ??= true;
