@@ -79,11 +79,12 @@ export default function Browse(props: BrowseProps): JSX.Element {
     <>
       <NextSeo
         title="Nx Plugin Listing"
-        description="Browse the list of Nx Plugins"
+        description="Nx Plugins enhance the developer experience in you workspace to make your life simpler. Browse the list of available Nx Plugins."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx Plugin Listing',
-          description: 'Browse the list of Nx Plugins',
+          description:
+            'Nx Plugins enhance the developer experience in you workspace to make your life simpler. Browse the list of available Nx Plugins.',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
