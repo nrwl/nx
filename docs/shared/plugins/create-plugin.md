@@ -15,7 +15,7 @@ This will create a `my-plugin` project that contains all your plugin code and `m
 To create a new generator run:
 
 ```shell
-nx generate @nx/nx-plugin:generator my-generator --project=my-plugin
+nx generate @nx/plugin:generator my-generator --project=my-plugin
 ```
 
 The new generator is located in `/src/generators/my-generator`. The `my-generator.ts` file contains the code that runs the generator. This generator creates a new project using a folder of template files.
@@ -43,7 +43,7 @@ Full E2Es are supported and will run everything on the file system like a user w
 To create a new executor run:
 
 ```shell
-nx generate @nx/nx-plugin:executor my-executor --project=my-plugin
+nx generate @nx/plugin:executor my-executor --project=my-plugin
 ```
 
 The new executor is located in `/src/executors/my-executor`. The `my-executor.ts` file contains the code that runs the executor. This executor emits a console log, but executors can compile code, deploy an app, publish to NPM and much more.
@@ -85,7 +85,7 @@ it('should create my-plugin', async (done) => {
 - The `ensureNxProject` is the function that will create the temporary directory. It takes two arguments, the plugin package name and the dist directory of when it's built.
 - The `runNxCommandAsync` will execute a `nx` command in the E2E directory.
 
-There are additional functions that the `@nrwl/nx-plugin/testing` package exports. Most of them are file utilities to manipulate and read files in the E2E directory.
+There are additional functions that the `@nx/plugin/testing` package exports. Most of them are file utilities to manipulate and read files in the E2E directory.
 
 ## Using your Nx Plugin Locally
 
