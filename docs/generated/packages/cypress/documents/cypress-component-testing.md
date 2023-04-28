@@ -34,6 +34,21 @@ The build target option can be changed later via updating the `devServerTarget` 
 When using component testing make sure to set `skipServe: true` in the component test target options, otherwise `@nx/cypress` will attempt to run the build first which can slow down your component tests. `skipServe: true` is automatically set when using the `cypress-component-configuration` generator.
 {% /callout %}
 
+## Configuration
+
+When using the `cypress-component-configuration` generator, a helper function is used in the `cypress.config.ts` to setup the ideal settings for your project.
+
+If you need to add additional configuration properties, you can spread the returned object from the helper function.
+
+```ts {%filename="cypress.config.ts"}
+export default defineConfig({
+  component: {
+    ...nxComponentTestingPreset(__filename),
+    // add your own config here
+  },
+});
+```
+
 ## Testing Projects
 
 Run `nx component-test your-lib` to execute the component tests with Cypress.
