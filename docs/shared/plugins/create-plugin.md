@@ -1,28 +1,14 @@
 # Create a Local Plugin
 
-To get started with building a Nx Plugin, run the following command:
+To get started with building a local Nx Plugin, install the `@nx/plugin` package and generate a plugin:
 
 ```shell
-npx create-nx-plugin my-plugin
+nx g @nx/plugin:plugin my-plugin
 ```
 
-The file structure should look like this:
+This will create a `my-plugin` project that contains all your plugin code and `my-plugin-e2e` for e2e tests.
 
-```treeview
-my-plugin/
-├── e2e/
-├── src/
-├── nx.json
-├── package.json
-├── README.md
-└── tsconfig.base.json
-```
-
-This command creates a brand-new workspace, and sets up a pre-configured plugin with the specified name.
-
-> If you do not want to create a new workspace, install the `@nrwl/nx-plugin` dependency in an already existing workspace with npm or yarn. Then run `nx g @nrwl/nx-plugin:plugin [pluginName]`.
-
-A new plugin is created with an e2e app.
+> If you want to create a new workspace for your plugin, run `npx create-nx-plugin my-plugin`. This command will create a new workspace with `my-plugin` and `e2e` projects set up for you.
 
 ## Generator
 
