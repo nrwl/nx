@@ -4,7 +4,7 @@ import {
   cleanupProject,
   createFile,
   ensureCypressInstallation,
-  killPorts,
+  killPort,
   newProject,
   readJson,
   runCLI,
@@ -91,7 +91,7 @@ describe('env vars', () => {
       `e2e ${myapp}-e2e --no-watch --env.cliArg="i am from the cli args"`
     );
     expect(run1).toContain('All specs passed!');
-    await killPorts(4200);
+    await killPort(4200);
     // tests should not fail because of a config change
     updateFile(
       `apps/${myapp}-e2e/cypress.config.ts`,
@@ -111,7 +111,7 @@ export default defineConfig({
       `e2e ${myapp}-e2e --no-watch --env.cliArg="i am from the cli args"`
     );
     expect(run2).toContain('All specs passed!');
-    await killPorts(4200);
+    await killPort(4200);
 
     // make sure project.json env vars also work
     updateFile(
@@ -140,10 +140,13 @@ describe('env vars', () => {
     const run3 = runCLI(`e2e ${myapp}-e2e --no-watch`);
     expect(run3).toContain('All specs passed!');
 
-    expect(await killPorts(4200)).toBeTruthy();
+    expect(await killPort(4200)).toBeTruthy();
   }, 1000000);
 
-  it('should run e2e in parallel', () => {
+  it('should run e2e in parallel', async () => {
+    // ensure ports are free before running tests
+    await killPort(4200);
+
     const ngAppName = uniq('ng-app');
     runCLI(
       `generate @nx/angular:app ${ngAppName} --e2eTestRunner=cypress --linter=eslint --no-interactive`
