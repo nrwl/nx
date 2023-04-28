@@ -254,12 +254,15 @@ describe('Migration', () => {
       });
     });
 
-    it('should skip the versions <= currently installed', async () => {
+    it('should skip the versions < currently installed', async () => {
+      const packageJson = {
+        dependencies: { parent: '1.0.0', child: '2.0.0', grandchild: '3.0.0' },
+      };
       const migrator = new Migrator({
-        packageJson: createPackageJson({
-          dependencies: { child: '1.0.0', grandchild: '2.0.0' },
-        }),
-        getInstalledPackageVersion: () => '1.0.0',
+        packageJson: createPackageJson(packageJson),
+        getInstalledPackageVersion: (name) => {
+          return packageJson.dependencies[name];
+        },
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
