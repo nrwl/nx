@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-export { resolveModuleByImport } from 'nx/src/plugins/js/utils/typescript';
+export { resolveModuleByImport } from './utils/typescript/ast-utils';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export {
   registerTsProject,
