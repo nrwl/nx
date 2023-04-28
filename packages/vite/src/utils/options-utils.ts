@@ -28,9 +28,16 @@ export function normalizeViteConfigFilePath(
   projectRoot: string,
   configFile?: string
 ): string | undefined {
-  return configFile && existsSync(joinPathFragments(configFile))
-    ? configFile
-    : existsSync(joinPathFragments(`${projectRoot}/vite.config.ts`))
+  if (configFile) {
+    const normalized = joinPathFragments(configFile);
+    if (!existsSync(normalized)) {
+      throw new Error(
+        `Could not find vite config at provided path "${normalized}".`
+      );
+    }
+    return normalized;
+  }
+  return existsSync(joinPathFragments(`${projectRoot}/vite.config.ts`))
     ? joinPathFragments(`${projectRoot}/vite.config.ts`)
     : existsSync(joinPathFragments(`${projectRoot}/vite.config.js`))
     ? joinPathFragments(`${projectRoot}/vite.config.js`)
