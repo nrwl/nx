@@ -384,6 +384,15 @@ describe('lib', () => {
     });
   });
 
+  describe('--globalCss', () => {
+    it('should not generate .module styles', async () => {
+      await libraryGenerator(tree, { ...defaultSchema, globalCss: true });
+
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.css'));
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.css')).toBeFalsy();
+    });
+  });
+
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
       await libraryGenerator(tree, {
