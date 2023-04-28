@@ -95,7 +95,7 @@ export interface ProjectConfiguration {
   namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
 
   /**
-   * List of tags used by nx-enforce-module-boundaries / project graph
+   * List of tags used by enforce-module-boundaries / project graph
    */
   tags?: string[];
 }
