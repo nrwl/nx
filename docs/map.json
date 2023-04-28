@@ -752,6 +752,7 @@
             {
               "name": "Getting Started with Plugins",
               "id": "getting-started",
+              "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
               "file": "shared/plugins/intro"
             },
             {

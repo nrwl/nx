@@ -8,7 +8,7 @@
       {
         "id": "getting-started",
         "name": "Getting Started with Plugins",
-        "description": "",
+        "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
         "file": "shared/plugins/intro",
         "itemList": [],
         "isExternal": false,
@@ -33,7 +33,7 @@
   "/plugins/intro/getting-started": {
     "id": "getting-started",
     "name": "Getting Started with Plugins",
-    "description": "",
+    "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
     "file": "shared/plugins/intro",
     "itemList": [],
     "isExternal": false,
