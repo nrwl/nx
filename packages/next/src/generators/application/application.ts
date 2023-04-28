@@ -18,9 +18,12 @@ import { addStyleDependencies } from '../../utils/styles';
 import { addLinting } from './lib/add-linting';
 import { customServerGenerator } from '../custom-server/custom-server';
 import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
+import { showPossibleWarnings } from './lib/show-possible-warnings';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
+
+  showPossibleWarnings(host, options);
 
   const nextTask = await nextInitGenerator(host, {
     ...options,
