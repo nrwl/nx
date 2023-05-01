@@ -1,4 +1,5 @@
 import {
+  getProjects,
   joinPathFragments,
   readJson,
   readProjectConfiguration,
@@ -61,7 +62,7 @@ describe('NxPlugin Create Package Generator', () => {
       dependsOn: [
         'build',
         {
-          projects: '@proj/my-plugin',
+          projects: 'my-plugin',
           target: 'build',
         },
       ],
@@ -74,7 +75,7 @@ describe('NxPlugin Create Package Generator', () => {
           },
           {
             command:
-              'NX_E2E_PRESET_VERSION=file:../../dist/@proj/my-plugin ts-node ../dist/libs/create-a-workspace/bin/index.js',
+              'NX_E2E_PRESET_VERSION=file:../../dist/libs/my-plugin ts-node ../dist/libs/create-a-workspace/bin/index.js',
             forwardAllArgs: true,
           },
         ],

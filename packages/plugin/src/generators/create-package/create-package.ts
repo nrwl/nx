@@ -120,14 +120,17 @@ async function createCliPackage(
   projectConfiguration.targets.build.options.updateBuildableProjectDepsInPackageJson =
     false;
 
-  // const pluginProjectConfiguration = readProjectConfiguration(
-  //   host,
-  //   pluginPackageName
-  // );
+  const pluginPackageProjectName = pluginPackageName.includes('/')
+    ? pluginPackageName.substring(pluginPackageName.indexOf('/') + 1)
+    : pluginPackageName;
+  const pluginProjectConfiguration = readProjectConfiguration(
+    host,
+    pluginPackageProjectName
+  );
   const projectOutputPath =
     projectConfiguration.targets.build.options.outputPath;
-  const pluginOutputPath = `dist/${pluginPackageName}`;
-  // pluginProjectConfiguration.targets.build.options.outputPath;
+  const pluginOutputPath =
+    pluginProjectConfiguration.targets.build.options.outputPath;
   projectConfiguration.targets.execute = {
     executor: 'nx:run-commands',
     options: {
@@ -143,7 +146,10 @@ async function createCliPackage(
         },
       ],
     },
-    dependsOn: ['build', { projects: pluginPackageName, target: 'build' }],
+    dependsOn: [
+      'build',
+      { projects: pluginPackageProjectName, target: 'build' },
+    ],
   };
   projectConfiguration.implicitDependencies = [options.project];
   updateProjectConfiguration(host, options.projectName, projectConfiguration);
