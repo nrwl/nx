@@ -7,6 +7,8 @@ import {
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencies } from '../config/nx-json';
 import { TargetDependencyConfig } from '../devkit-exports';
+import { findMatchingProjects } from '../utils/find-matching-projects';
+import { output } from '../utils/output';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
@@ -168,20 +170,33 @@ export class ProcessTasks {
         // Since we need to maintain support for dependencies, it is more coherent
         // that we also support self.
         // TODO(@agentender): Remove this part in v17
-        const projectName =
+        const matchingProjects =
+          /** LERNA SUPPORT START - Remove in v17 */
           projectSpecifier === 'self' &&
           !this.projectGraph.nodes[projectSpecifier]
-            ? task.target.project
-            : projectSpecifier;
+            ? [task.target.project]
+            : /** LERNA SUPPORT END */
+              findMatchingProjects([projectSpecifier], this.projectGraph.nodes);
 
-        this.processTasksForSingleProject(
-          task,
-          projectName,
-          dependencyConfig,
-          configuration,
-          taskOverrides,
-          overrides
-        );
+        if (matchingProjects.length === 0) {
+          output.warn({
+            title: `\`dependsOn\` is misconfigured for ${task.target.project}:${task.target.target}`,
+            bodyLines: [
+              `Project pattern "${projectSpecifier}" does not match any projects.`,
+            ],
+          });
+        }
+
+        for (const projectName of matchingProjects) {
+          this.processTasksForSingleProject(
+            task,
+            projectName,
+            dependencyConfig,
+            configuration,
+            taskOverrides,
+            overrides
+          );
+        }
       }
     }
   }

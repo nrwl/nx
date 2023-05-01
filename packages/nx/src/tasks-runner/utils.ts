@@ -32,25 +32,6 @@ export function getDependencyConfigs(
       []
   );
   for (const dependencyConfig of dependencyConfigs) {
-    const specifiers =
-      typeof dependencyConfig.projects === 'string'
-        ? [dependencyConfig.projects]
-        : dependencyConfig.projects;
-    for (const specifier of specifiers ?? []) {
-      if (
-        !(specifier in projectGraph.nodes) &&
-        // Todo(@agentender): Remove the check for self / dependencies in v17
-        !['self', 'dependencies'].includes(specifier)
-      ) {
-        output.error({
-          title: `dependsOn is improperly configured for ${project}:${target}`,
-          bodyLines: [
-            `${specifier} in dependsOn.projects is invalid. It should be "self", "dependencies", or a project name.`,
-          ],
-        });
-        process.exit(1);
-      }
-    }
     if (dependencyConfig.projects && dependencyConfig.dependencies) {
       output.error({
         title: `dependsOn is improperly configured for ${project}:${target}`,
