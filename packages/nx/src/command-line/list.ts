@@ -1,10 +1,8 @@
 import { workspaceRoot } from '../utils/workspace-root';
 import { output } from '../utils/output';
 import {
-  fetchCommunityPlugins,
   fetchCorePlugins,
   getInstalledPluginsAndCapabilities,
-  listCommunityPlugins,
   listCorePlugins,
   listInstalledPlugins,
   listPluginCapabilities,
@@ -36,14 +34,6 @@ export async function listHandler(args: ListArgs): Promise<void> {
     await listPluginCapabilities(args.plugin);
   } else {
     const corePlugins = fetchCorePlugins();
-    const communityPlugins = await fetchCommunityPlugins().catch(() => {
-      output.warn({
-        title: `Community plugins:`,
-        bodyLines: [`Error fetching plugins.`],
-      });
-
-      return [];
-    });
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
 
     const localPlugins = await getLocalWorkspacePlugins(
@@ -58,7 +48,15 @@ export async function listHandler(args: ListArgs): Promise<void> {
     }
     listInstalledPlugins(installedPlugins);
     listCorePlugins(installedPlugins, corePlugins);
-    listCommunityPlugins(installedPlugins, communityPlugins);
+
+    output.note({
+      title: 'Community Plugins',
+      bodyLines: [
+        'Looking for a technology / framework not listed above?',
+        'There are many excellent plugins matintained by the Nx community.',
+        'Search for the one you need here: https://nx.dev/community.',
+      ],
+    });
 
     output.note({
       title: `Use "nx list [plugin]" to find out more`,
