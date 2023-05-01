@@ -52,6 +52,7 @@ export interface CypressExecutorOptions extends Json {
   testingType?: 'component' | 'e2e';
   tag?: string;
   port?: number | 'cypress-auto';
+  quiet?: boolean;
 }
 
 interface NormalizedCypressExecutorOptions extends CypressExecutorOptions {
@@ -290,6 +291,9 @@ async function runCypress(
 
   if (opts.reporterOptions) {
     options.reporterOptions = opts.reporterOptions;
+  }
+  if (opts.quiet) {
+    options.quiet = opts.quiet;
   }
 
   options.testingType = opts.testingType;

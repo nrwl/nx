@@ -138,6 +138,12 @@
           { "type": "number" }
         ],
         "description": "Pass a specified port value to the devServerTarget, if the value is 'cypress-auto' a free port will automatically be picked for the devServerTarget."
+      },
+      "quiet": {
+        "aliases": ["q"],
+        "type": "boolean",
+        "description": "If passed, Cypress output will not be printed to stdout. Only output from the configured Mocha reporter will print.",
+        "default": false
       }
     },
     "additionalProperties": true,
