@@ -5,8 +5,11 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "command": "node ./scripts/copy-readme.js linter-legacy"
+    },
+    "build-base": {
       "executor": "@nx/js:tsc",
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build-base"],
       "options": {
         "main": "packages-legacy/linter/index.ts",
         "tsConfig": "packages-legacy/linter/tsconfig.json",

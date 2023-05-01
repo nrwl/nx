@@ -5,8 +5,11 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "command": "node ./scripts/copy-readme.js vite-legacy"
+    },
+    "build-base": {
       "executor": "@nx/js:tsc",
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build-base"],
       "options": {
         "main": "packages-legacy/vite/index.ts",
         "tsConfig": "packages-legacy/vite/tsconfig.json",

@@ -5,8 +5,11 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "command": "node ./scripts/copy-readme.js workspace-legacy"
+    },
+    "build-base": {
       "executor": "@nx/js:tsc",
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build-base"],
       "options": {
         "main": "packages-legacy/workspace/index.ts",
         "tsConfig": "packages-legacy/workspace/tsconfig.json",

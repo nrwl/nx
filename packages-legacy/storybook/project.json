@@ -5,8 +5,11 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "command": "node ./scripts/copy-readme.js storybook-legacy"
+    },
+    "build-base": {
       "executor": "@nx/js:tsc",
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build-base"],
       "options": {
         "main": "packages-legacy/storybook/index.ts",
         "tsConfig": "packages-legacy/storybook/tsconfig.json",

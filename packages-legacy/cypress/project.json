@@ -5,8 +5,11 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "command": "node ./scripts/copy-readme.js cypress-legacy"
+    },
+    "build-base": {
       "executor": "@nx/js:tsc",
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build-base"],
       "options": {
         "main": "packages-legacy/cypress/index.ts",
         "tsConfig": "packages-legacy/cypress/tsconfig.json",
