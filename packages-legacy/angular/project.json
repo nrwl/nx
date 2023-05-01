@@ -45,7 +45,14 @@
       "dependsOn": ["build-ng", "build-base", "^build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'Built angular-legacy'"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js angular-legacy"
+          },
+          {
+            "command": "echo 'Built angular-legacy'"
+          }
+        ]
       }
     }
   },
