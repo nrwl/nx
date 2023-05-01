@@ -138,7 +138,7 @@ export function copyPackageManagerConfigurationFiles(
     // f is an absolute path, including the {workspaceRoot}.
     const f = findFileInPackageJsonDirectory(packageManagerConfigFile, root);
     if (f) {
-      // Destination should be the same relative path from the {workspaceRoot}, 
+      // Destination should be the same relative path from the {workspaceRoot},
       // but now relative to the destination. `relative` makes `{workspaceRoot}/some/path`
       // look like `./some/path`, and joining that gets us `{destination}/some/path
       const destinationPath = join(destination, relative(root, f));
