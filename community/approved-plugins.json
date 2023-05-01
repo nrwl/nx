@@ -438,5 +438,10 @@
     "name": "@jnxplus/nx-quarkus-gradle",
     "description": "Nx plugin to add Quarkus and Gradle multi-project builds support to Nx workspace",
     "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-quarkus-gradle"
+  },
+  {
+    "name": "@jnxplus/nx-quarkus-maven",
+    "description": "Nx plugin to add Quarkus and Maven multi-module project support to Nx workspace",
+    "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-quarkus-maven"
   }
 ]
