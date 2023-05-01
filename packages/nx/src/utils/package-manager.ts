@@ -1,12 +1,13 @@
 import { exec, execSync } from 'child_process';
 import { copyFileSync, existsSync } from 'fs';
 import { remove } from 'fs-extra';
-import { dirname, join } from 'path';
+import { dirname, join, relative } from 'path';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import { writeJsonFile } from './fileutils';
 import { readModulePackageJson } from './package-json';
 import { gte, lt } from 'semver';
+import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
 
@@ -118,14 +119,33 @@ export function getPackageManagerVersion(
  * Checks for a project level npmrc file by crawling up the file tree until
  * hitting a package.json file, as this is how npm finds them as well.
  */
-export function checkForNPMRC(
+export function findFileInPackageJsonDirectory(
+  file: string,
   directory: string = process.cwd()
 ): string | null {
   while (!existsSync(join(directory, 'package.json'))) {
     directory = dirname(directory);
   }
-  const path = join(directory, '.npmrc');
+  const path = join(directory, file);
   return existsSync(path) ? path : null;
+}
+
+export function copyPackageManagerConfigurationFiles(
+  root: string,
+  destination: string
+) {
+  for (const packageManagerConfigFile of ['.npmrc', '.yarnrc', '.yarnrc.yml']) {
+    // f is an absolute path, including the {workspaceRoot}.
+    const f = findFileInPackageJsonDirectory(packageManagerConfigFile, root);
+    if (f) {
+      // Destination should be the same relative path from the {workspaceRoot},
+      // but now relative to the destination. `relative` makes `{workspaceRoot}/some/path`
+      // look like `./some/path`, and joining that gets us `{destination}/some/path
+      const destinationPath = join(destination, relative(root, f));
+      // Copy config file if it exists, so that the package manager still follows it.
+      copyFileSync(f, destinationPath);
+    }
+  }
 }
 
 /**
@@ -140,11 +160,7 @@ export function createTempNpmDirectory() {
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
-  const npmrc = checkForNPMRC();
-  if (npmrc) {
-    // Copy npmrc if it exists, so that npm still follows it.
-    copyFileSync(npmrc, `${dir}/.npmrc`);
-  }
+  copyPackageManagerConfigurationFiles(workspaceRoot, dir);
 
   const cleanup = async () => {
     try {
