@@ -57,6 +57,30 @@ describe('NxPlugin Create Package Generator', () => {
         updateBuildableProjectDepsInPackageJson: false,
       },
     });
+    expect(project.targets.execute).toEqual({
+      dependsOn: [
+        'build',
+        {
+          projects: '@proj/my-plugin',
+          target: 'build',
+        },
+      ],
+      executor: 'nx:run-commands',
+      options: {
+        commands: [
+          {
+            command: 'rm -rf',
+            forwardAllArgs: true,
+          },
+          {
+            command:
+              'NX_E2E_PRESET_VERSION=file:../../dist/@proj/my-plugin ts-node ../dist/libs/create-a-workspace/bin/index.js',
+            forwardAllArgs: true,
+          },
+        ],
+        cwd: 'tmp',
+      },
+    });
   });
 
   it('should place the create-package plugin in a directory', async () => {

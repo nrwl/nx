@@ -19,6 +19,7 @@ import { CreatePackageSchema } from './schema';
 import { NormalizedSchema, normalizeSchema } from './utils/normalize-schema';
 import e2eProjectGenerator from '../e2e-project/e2e';
 import { hasGenerator } from '../../utils/has-generator';
+import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 
 export async function createPackageGenerator(
   host: Tree,
@@ -118,6 +119,32 @@ async function createCliPackage(
   );
   projectConfiguration.targets.build.options.updateBuildableProjectDepsInPackageJson =
     false;
+
+  // const pluginProjectConfiguration = readProjectConfiguration(
+  //   host,
+  //   pluginPackageName
+  // );
+  const projectOutputPath =
+    projectConfiguration.targets.build.options.outputPath;
+  const pluginOutputPath = `dist/${pluginPackageName}`;
+  // pluginProjectConfiguration.targets.build.options.outputPath;
+  projectConfiguration.targets.execute = {
+    executor: 'nx:run-commands',
+    options: {
+      cwd: 'tmp',
+      commands: [
+        {
+          command: 'rm -rf',
+          forwardAllArgs: true,
+        },
+        {
+          command: `NX_E2E_PRESET_VERSION=file:../../${pluginOutputPath} ts-node ../${projectOutputPath}/bin/index.js`,
+          forwardAllArgs: true,
+        },
+      ],
+    },
+    dependsOn: ['build', { projects: pluginPackageName, target: 'build' }],
+  };
   projectConfiguration.implicitDependencies = [options.project];
   updateProjectConfiguration(host, options.projectName, projectConfiguration);
 
