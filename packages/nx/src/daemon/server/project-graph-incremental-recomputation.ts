@@ -112,7 +112,9 @@ function computeWorkspaceConfigHash(projectsConfigurations: any) {
 function filterUpdatedFiles(files: string[]) {
   try {
     const quoted = files.map((f) => '"' + f + '"');
-    const ignored = execSync(`git check-ignore ${quoted.join(' ')}`)
+    const ignored = execSync(`git check-ignore ${quoted.join(' ')}`, {
+      windowsHide: true,
+    })
       .toString()
       .split('\n');
     return files.filter((f) => ignored.indexOf(f) === -1);
