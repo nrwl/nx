@@ -5,5 +5,5 @@
   "description": "Create a custom generator.",
   "type": "object",
   "properties": {},
-  "required": ["name"]
+  "required": []
 }
