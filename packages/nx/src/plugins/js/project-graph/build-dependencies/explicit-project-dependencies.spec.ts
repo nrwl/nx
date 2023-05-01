@@ -112,6 +112,48 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
+    it('should build explicit dependencies for static exports in .mts files', async () => {
+      const sourceProjectName = 'proj';
+      const { ctx, builder } = await createVirtualWorkspace({
+        sourceProjectName,
+        sourceProjectFiles: [
+          {
+            path: 'libs/proj/index.mts',
+            content: `
+              export {a} from '@proj/my-second-proj';
+              export * as project3 from '@proj/project-3';
+              export * from '@proj/proj4ab';
+            `,
+          },
+        ],
+      });
+
+      const res = buildExplicitTypeScriptDependencies(
+        builder.graph,
+        ctx.filesToProcess
+      );
+      expect(res).toEqual([
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/index.mts',
+          targetProjectName: 'proj2',
+          type: 'static',
+        },
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/index.mts',
+          targetProjectName: 'proj3a',
+          type: 'static',
+        },
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/index.mts',
+          targetProjectName: 'proj4ab',
+          type: 'static',
+        },
+      ]);
+    });
+
     it(`should build explicit dependencies for TypeScript's import/export require syntax, and side-effectful import`, async () => {
       const sourceProjectName = 'proj';
       const { ctx, builder } = await createVirtualWorkspace({
