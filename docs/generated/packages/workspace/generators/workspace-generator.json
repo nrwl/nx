@@ -8,7 +8,7 @@
     "description": "Create a custom generator.",
     "type": "object",
     "properties": {},
-    "required": ["name"],
+    "required": [],
     "presets": []
   },
   "aliases": ["workspace-schematic"],
