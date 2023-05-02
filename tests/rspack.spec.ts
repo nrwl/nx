@@ -5,7 +5,7 @@ import {
   runNxCommandAsync,
   uniq,
   updateFile,
-} from '@nrwl/nx-plugin/testing';
+} from '@nx/plugin/testing';
 
 describe('rspack e2e', () => {
   // Setting up individual workspaces per
@@ -15,7 +15,7 @@ describe('rspack e2e', () => {
   // on a unique project in the workspace, such that they
   // are not dependant on one another.
   beforeAll(() => {
-    ensureNxProject('@nrwl/rspack', 'dist/packages/rspack');
+    ensureNxProject('@nx/rspack', 'dist/packages/rspack');
   });
 
   afterAll(() => {
@@ -27,7 +27,7 @@ describe('rspack e2e', () => {
   it('should create rspack root project and additional apps', async () => {
     const project = uniq('myapp');
     await runNxCommandAsync(
-      `generate @nrwl/rspack:preset ${project} --framework=react --unitTestRunner=jest --e2eTestRunner=cypress`
+      `generate @nx/rspack:preset ${project} --framework=react --unitTestRunner=jest --e2eTestRunner=cypress`
     );
     let result = await runNxCommandAsync(`build ${project}`, {
       env: { NODE_ENV: 'production' },
@@ -56,7 +56,7 @@ describe('rspack e2e', () => {
     // Generate a new app and check that the files are correct
     const app2 = uniq('app2');
     await runNxCommandAsync(
-      `generate @nrwl/rspack:app ${app2} --framework=react --unitTestRunner=jest --e2eTestRunner=cypress --style=css`
+      `generate @nx/rspack:app ${app2} --framework=react --unitTestRunner=jest --e2eTestRunner=cypress --style=css`
     );
     checkFilesExist(`${app2}/project.json`, `${app2}-e2e/project.json`);
     result = await runNxCommandAsync(`build ${app2}`, {
