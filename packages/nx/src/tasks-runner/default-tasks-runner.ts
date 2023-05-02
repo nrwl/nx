@@ -50,7 +50,8 @@ export const defaultTasksRunner: TasksRunner<
   } else if (
     (options as any)['parallel'] === 'true' ||
     (options as any)['parallel'] === true ||
-    (options as any)['parallel'] === undefined
+    (options as any)['parallel'] === undefined ||
+    (options as any)['parallel'] === ''
   ) {
     (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
   }
