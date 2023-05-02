@@ -191,6 +191,15 @@
       "version": "16.0.0-beta.6",
       "description": "Remove karma as default unitTestRunner from nxJson and project configurations",
       "implementation": "./src/migrations/update-16-0-0/remove-karma-defaults"
+    },
+    "remove-render-module-platform-server-exports": {
+      "cli": "nx",
+      "version": "16.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
+      "description": "Remove exported `@angular/platform-server` `renderModule` method. The `renderModule` method is now exported by the Angular CLI.",
+      "factory": "./src/migrations/update-16-1-0/remove-render-module-platform-server-exports"
     }
   },
   "packageJsonUpdates": {
