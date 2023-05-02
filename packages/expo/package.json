@@ -43,7 +43,7 @@
     "@nx/webpack": "file:../webpack"
   },
   "peerDependencies": {
-    "expo": "^48.0.11"
+    "expo": "^48.0.15"
   },
   "builders": "./executors.json",
   "ng-update": {
