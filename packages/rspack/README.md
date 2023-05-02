@@ -10,12 +10,12 @@ This package is a Rspack plugin for Nx.
 
 ## Getting Started
 
-Use `--preset=@nrwl/rspack` when creating new workspace.
+Use `--preset=@nx/rspack` when creating new workspace.
 
 e.g.
 
 ```bash
-npx create-nx-workspace@latest rspack-demo --preset=@nrwl/rspack
+npx create-nx-workspace@latest rspack-demo --preset=@nx/rspack
 ```
 
 Now, you can go into the `rspack-demo` folder and start development.
@@ -40,20 +40,20 @@ You can add Rspack to any existing Nx workspace.
 First, install the plugin:
 
 ```bash
-npm install --save-dev @nrwl/rspack
+npm install --save-dev @nx/rspack
 ```
 
 Then, run the `rspack-project` generator:
 
 ```bash
-npx nx g @nrwl/rspack:rspack-project --skipValidation
+npx nx g @nx/rspack:rspack-project --skipValidation
 ```
 
 **Note:** The `--skipValidation` option allows you to overwrite existing build targets.
 
 ## Workspace libraries
 
-The `@nrwl/rspack` executor support importing workspace libs into the app.
+The `@nx/rspack` executor support importing workspace libs into the app.
 
 ```bash
 npx nx g @nx/react:lib mylib
