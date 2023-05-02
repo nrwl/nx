@@ -188,8 +188,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   } else if (
     args['parallel'] === 'true' ||
     args['parallel'] === true ||
-    args['parallel'] === '' ||
-    args['parallel'] === undefined
+    args['parallel'] === ''
   ) {
     nxArgs['parallel'] = Number(
       nxArgs['maxParallel'] || nxArgs['max-parallel'] || 3
