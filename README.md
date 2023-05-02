@@ -56,7 +56,7 @@ npx nx g @nrwl/rspack:rspack-project --skipValidation
 The `@nrwl/rspack` executor support importing workspace libs into the app.
 
 ```bash
-npx nx g @nrwl/react:lib mylib
+npx nx g @nx/react:lib mylib
 ```
 
 Import the new library in your app.

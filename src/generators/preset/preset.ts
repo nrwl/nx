@@ -1,4 +1,4 @@
-import { Tree, updateJson } from '@nrwl/devkit';
+import { Tree, updateJson } from '@nx/devkit';
 
 import applicationGenerator from '../application/application';
 import { PresetGeneratorSchema } from './schema';

@@ -1,9 +1,4 @@
-import {
-  ensurePackage,
-  formatFiles,
-  runTasksInSerial,
-  Tree,
-} from '@nrwl/devkit';
+import { ensurePackage, formatFiles, runTasksInSerial, Tree } from '@nx/devkit';
 import { version as nxVersion } from 'nx/package.json';
 import configurationGenerator from '../configuration/configuration';
 import rspackInitGenerator from '../init/init';
@@ -24,7 +19,7 @@ export default async function (
 
   if (options.framework === 'nest') {
     const { applicationGenerator: nestAppGenerator } = ensurePackage(
-      '@nrwl/nest',
+      '@nx/nest',
       nxVersion
     );
     const createAppTask = await nestAppGenerator(tree, {
@@ -70,7 +65,7 @@ export default async function (
   } else {
     // default to react
     const { applicationGenerator: reactAppGenerator } = ensurePackage(
-      '@nrwl/react',
+      '@nx/react',
       nxVersion
     );
     const createAppTask = await reactAppGenerator(tree, {

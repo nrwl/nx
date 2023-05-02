@@ -1,5 +1,5 @@
-import { ExecutorContext, logger } from '@nrwl/devkit';
-import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
+import { ExecutorContext, logger } from '@nx/devkit';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { Stats } from '@rspack/core';
 import Watching from '@rspack/core/dist/watching';
 import { rmSync } from 'fs';

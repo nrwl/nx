@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { Compiler, createCompiler as _createCompiler } from '@rspack/core';
 import * as path from 'path';
 import { RspackExecutorSchema } from '../executors/rspack/schema';

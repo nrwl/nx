@@ -5,8 +5,8 @@ import {
   TargetConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+} from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { RspackExecutorSchema } from '../executors/rspack/schema';
 import { ConfigurationSchema } from '../generators/configuration/schema';
 import { Framework } from '../generators/init/schema';
@@ -41,24 +41,40 @@ export function findExistingTargetsInProject(
       '@nrwl/rollup:rollup',
       '@nrwl/web:rollup',
       '@nrwl/vite:build',
+      '@nx/webpack:webpack',
+      '@nx/rollup:rollup',
+      '@nx/web:rollup',
+      '@nx/vite:build',
     ],
     serve: [
       '@nxext/vite:dev',
       '@nrwl/webpack:dev-server',
       '@nrwl/vite:dev-server',
+      '@nx/webpack:dev-server',
+      '@nx/vite:dev-server',
     ],
   };
 
   const unsupportedExecutors = [
+    '@nx/js:babel',
+    '@nx/js:node',
+    '@nx/js:swc',
+    '@nx/react-native:run-ios',
+    '@nx/react-native:start',
+    '@nx/react-native:run-android',
+    '@nx/react-native:bundle',
+    '@nx/react-native:build-android',
+    '@nx/react-native:bundle',
+    '@nx/next:build',
+    '@nx/next:server',
+    '@nx/js:tsc',
+    '@nx/angular:ng-packagr-lite',
+    '@nx/angular:package',
+    '@nx/angular:webpack-browser',
+    '@nx/esbuild:esbuild',
     '@nrwl/js:babel',
     '@nrwl/js:node',
     '@nrwl/js:swc',
-    '@nrwl/js:tsc',
-    '@nrwl/angular:ng-packagr-lite',
-    '@nrwl/angular:package',
-    '@nrwl/angular:webpack-browser',
-    '@angular-devkit/build-angular:browser',
-    '@angular-devkit/build-angular:dev-server',
     '@nrwl/react-native:run-ios',
     '@nrwl/react-native:start',
     '@nrwl/react-native:run-android',
@@ -67,7 +83,13 @@ export function findExistingTargetsInProject(
     '@nrwl/react-native:bundle',
     '@nrwl/next:build',
     '@nrwl/next:server',
+    '@nrwl/js:tsc',
+    '@nrwl/angular:ng-packagr-lite',
+    '@nrwl/angular:package',
+    '@nrwl/angular:webpack-browser',
     '@nrwl/esbuild:esbuild',
+    '@angular-devkit/build-angular:browser',
+    '@angular-devkit/build-angular:dev-server',
   ];
 
   // First, we check if the user has provided a target
@@ -102,8 +124,8 @@ export function findExistingTargetsInProject(
     const executorName = targets[target].executor;
 
     const hasRspackTargets = output.alreadyHasNxRspackTargets;
-    hasRspackTargets.build ||= executorName === '@nrwl/rspack:rspack';
-    hasRspackTargets.serve ||= executorName === '@nrwl/rspack:dev-server';
+    hasRspackTargets.build ||= executorName === '@nx/rspack:rspack';
+    hasRspackTargets.serve ||= executorName === '@nx/rspack:dev-server';
 
     const foundTargets = output.validFoundTargetName;
     if (
@@ -159,7 +181,7 @@ export function addOrChangeBuildTarget(
   project.targets ??= {};
 
   project.targets[target] = {
-    executor: '@nrwl/rspack:rspack',
+    executor: '@nx/rspack:rspack',
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: buildOptions,
@@ -188,7 +210,7 @@ export function addOrChangeServeTarget(
   project.targets ??= {};
 
   project.targets[target] = {
-    executor: '@nrwl/rspack:dev-server',
+    executor: '@nx/rspack:dev-server',
     options: {
       buildTarget: `${options.project}:build:development`,
     },
@@ -222,7 +244,7 @@ function createConfig(
 ) {
   if (options.framework === 'react') {
     return `
-      const { composePlugins, withNx, withReact } = require('@nrwl/rspack');
+      const { composePlugins, withNx, withReact } = require('@nx/rspack');
 
       module.exports = composePlugins(withNx(), withReact(${
         stylePreprocessorOptions
@@ -238,7 +260,7 @@ function createConfig(
     `;
   } else if (options.framework === 'web' || options.target === 'web') {
     return `
-      const { composePlugins, withNx, withWeb } = require('@nrwl/rspack');
+      const { composePlugins, withNx, withWeb } = require('@nx/rspack');
 
       module.exports = composePlugins(withNx(), withWeb(${
         stylePreprocessorOptions
@@ -254,7 +276,7 @@ function createConfig(
     `;
   } else if (options.framework === 'nest') {
     return `
-    const { composePlugins, withNx } = require('@nrwl/rspack');
+    const { composePlugins, withNx } = require('@nx/rspack');
 
     module.exports = composePlugins(withNx(), (config) => {
       return config;
@@ -264,7 +286,7 @@ function createConfig(
     return `
       const { composePlugins, withNx${
         stylePreprocessorOptions ? ', withWeb' : ''
-      } } = require('@nrwl/rspack');
+      } } = require('@nx/rspack');
 
       module.exports = composePlugins(withNx()${
         stylePreprocessorOptions
@@ -392,7 +414,7 @@ export function getViteConfigPathForProject(
     viteConfigPath = targets?.[target]?.options?.configFile;
   } else {
     const config = Object.values(targets).find(
-      (config) => config.executor === '@nrwl/rspack:build'
+      (config) => config.executor === '@nx/rspack:build'
     );
     viteConfigPath = config?.options?.configFile;
   }
@@ -436,7 +458,7 @@ async function handleUnsupportedUserProvidedTargetsErrors(
   executor: 'rspack' | 'dev-server'
 ) {
   logger.warn(
-    `The custom ${target} target you provided (${userProvidedTargetName}) cannot be converted to use the @nrwl/rspack:${executor} executor.
+    `The custom ${target} target you provided (${userProvidedTargetName}) cannot be converted to use the @nx/rspack:${executor} executor.
      However, we found the following ${target} target in your project that can be converted: ${validFoundTargetName}
 
      Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
@@ -447,13 +469,13 @@ async function handleUnsupportedUserProvidedTargetsErrors(
   const { Confirm } = require('enquirer');
   const prompt = new Confirm({
     name: 'question',
-    message: `Should we convert the ${validFoundTargetName} target to use the @nrwl/rspack:${executor} executor?`,
+    message: `Should we convert the ${validFoundTargetName} target to use the @nx/rspack:${executor} executor?`,
     initial: true,
   });
   const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(
-      `The ${target} target ${userProvidedTargetName} cannot be converted to use the @nrwl/rspack:${executor} executor.
+      `The ${target} target ${userProvidedTargetName} cannot be converted to use the @nx/rspack:${executor} executor.
       Please try again, either by providing a different ${target} target or by not providing a target at all (Nx will
         convert the first one it finds, most probably this one: ${validFoundTargetName})
 
@@ -467,14 +489,14 @@ async function handleUnsupportedUserProvidedTargetsErrors(
 export async function handleUnknownExecutors(projectName: string) {
   logger.warn(
     `
-      We could not find any targets in project ${projectName} that use executors which 
-      can be converted to the @nrwl/rspack executors.
+      We could not find any targets in project ${projectName} that use executors which
+      can be converted to the @nx/rspack executors.
 
-      This either means that your project may not have a target 
-      for building, serving, or testing at all, or that your targets are 
+      This either means that your project may not have a target
+      for building, serving, or testing at all, or that your targets are
       using executors that are not known to Nx.
-      
-      If you still want to convert your project to use the @nrwl/rspack executors,
+
+      If you still want to convert your project to use the @nx/rspack executors,
       please make sure to commit your changes before running this generator.
       `
   );
@@ -483,13 +505,13 @@ export async function handleUnknownExecutors(projectName: string) {
   const { Confirm } = require('enquirer');
   const prompt = new Confirm({
     name: 'question',
-    message: `Should Nx convert your project to use the @nrwl/rspack executors?`,
+    message: `Should Nx convert your project to use the @nx/rspack executors?`,
     initial: true,
   });
   const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(`
-      Nx could not verify that the executors you are using can be converted to the @nrwl/rspack executors.
+      Nx could not verify that the executors you are using can be converted to the @nx/rspack executors.
       Please try again with a different project.
     `);
   }
@@ -512,7 +534,7 @@ export function determineFrameworkAndTarget(
     // Try to infer from jest config if the env is node
     let jestConfigPath: string;
     if (
-      targets?.test?.executor !== '@nrwl/jest:jest' &&
+      targets?.test?.executor !== '@nx/jest:jest' &&
       targets?.test?.options?.jestConfig
     ) {
       jestConfigPath = targets?.test?.options?.jestConfig;
