@@ -10,7 +10,7 @@ export interface Schema {
   standaloneConfig?: boolean;
   framework?: string;
   packageManager?: PackageManager;
-  bundler?: 'vite' | 'webpack' | 'rspack';
+  bundler?: 'vite' | 'webpack' | 'rspack' | 'esbuild';
   docker?: boolean;
   nextAppDir?: boolean;
   routing?: boolean;
