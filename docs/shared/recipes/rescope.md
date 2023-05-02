@@ -2,7 +2,7 @@
 
 As of version 16, all the official Nx plugins are moving from the `@nrwl` npm scope to `@nx`. The goal is for anyone looking through a list of dependencies to easily make the connection between the `nx` package and the `@nx` plugins that are associated with it.
 
-`@nrwl/*` packages are still provided and reexport the `@nx/*` packages so any third-party plugins should continue to work.
+`@nrwl/*` packages are still provided and reexport the `@nx/*` packages so any third-party plugins should continue to work. Any generators (e.g. `@nrwl/react:library`) and executors (e.g. `@nrwl/webpack:webpack`) will continue to work in the interim as well.
 
 ## What Do You Need To Do?
 
@@ -56,4 +56,4 @@ All other packages keep the same name, but change scope from `@nrwl` to `@nx`.
 
 ## @nrwl Scope End of Life
 
-Starting in version 18, the `@nrwl` scoped packages will no longer be published to npm. Only the `@nx` scoped packages will be available on the npm registry.
+Starting in version 17, the `@nrwl` scoped packages will no longer be published to npm. Only the `@nx` scoped packages will be available on the npm registry.
