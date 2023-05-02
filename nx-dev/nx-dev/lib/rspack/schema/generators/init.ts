@@ -26,7 +26,7 @@ export const schema = {
     },
     required: [],
   },
-  description: 'Initialize the `@nrwl/rspack` plugin.',
+  description: 'Initialize the `@nx/rspack` plugin.',
   aliases: [],
   hidden: false,
   implementation:

@@ -15,7 +15,7 @@ The \`withNx\` plugin provides common configuration for the build, including Typ
 ### Example
 
 \`\`\`js
-const { composePlugins, withNx } = require('@nrwl/rspack');
+const { composePlugins, withNx } = require('@nx/rspack');
 
 module.exports = composePlugins(withNx(), (config) => {
   // Further customize Rspack config
@@ -38,7 +38,7 @@ Options to pass to style preprocessors. \`includePaths\` is a list of paths that
 ### Example
 
 \`\`\`js
-const { composePlugins, withNx, withWeb } = require('@nrwl/rspack');
+const { composePlugins, withNx, withWeb } = require('@nx/rspack');
 
 module.exports = composePlugins(
   // always pass withNx() first
@@ -60,7 +60,7 @@ The \`withReact\` plugin adds support for React JSX and [Fast Refresh](https://g
 ### Example
 
 \`\`\`js
-const { composePlugins, withNx, withReact } = require('@nrwl/rspack');
+const { composePlugins, withNx, withReact } = require('@nx/rspack');
 
 module.exports = composePlugins(
   withNx(), // always pass withNx() first
