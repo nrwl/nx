@@ -44,7 +44,17 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
   ) {
     args = '--quiet ' + args;
   }
-  const command = `g ${preset}:preset ${args}`;
+
+  // Index of last @ sign in `preset`. If it is 0 or -1, then there is no version.
+  const lastAt = preset.lastIndexOf('@');
+
+  let collection =
+    lastAt === 0 || lastAt === -1
+      ? // preset does not contain a version
+        preset
+      : // preset contains a version, so we need to remove it
+        preset.slice(0, lastAt);
+  const command = `g ${collection}:preset ${args}`;
 
   try {
     const [exec, ...args] = pmc.exec.split(' ');
