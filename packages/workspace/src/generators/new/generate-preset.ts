@@ -150,7 +150,13 @@ function getPresetDependencies({
       };
 
     case Preset.NodeStandalone:
-      return { dependencies: {}, dev: { '@nx/node': nxVersion } };
+      return {
+        dependencies: {},
+        dev: {
+          '@nx/node': nxVersion,
+          '@nx/webpack': bundler === 'webpack' ? nxVersion : undefined,
+        },
+      };
 
     default: {
       return {

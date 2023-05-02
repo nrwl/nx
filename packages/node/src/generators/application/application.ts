@@ -306,11 +306,9 @@ function addProjectDependencies(
   const frameworkDependencies = {
     express: {
       express: expressVersion,
-      '@types/express': expressTypingsVersion,
     },
     koa: {
       koa: koaVersion,
-      '@types/koa': koaTypingsVersion,
     },
     fastify: {
       fastify: fastifyVersion,

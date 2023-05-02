@@ -76,7 +76,7 @@
     "bundler": {
       "description": "The bundler to use for building the application.",
       "type": "string",
-      "enum": ["webpack", "vite", "rspack"],
+      "enum": ["webpack", "vite", "rspack", "esbuild"],
       "default": "vite"
     },
     "docker": {
