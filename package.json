@@ -1,0 +1,27 @@
+{
+  "name": "@nrwl/rspack",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx-labs.git",
+    "directory": "packages-legacy/rspack"
+  },
+  "keywords": [
+    "Monorepo",
+    "Next",
+    "Vercel"
+  ],
+  "author": "Jack Hsu",
+  "license": "MIT",
+  "homepage": "https://nx.dev",
+  "main": "src/index.js",
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "dependencies": {
+    "@nx/rspack": "file:../../packages/rspack"
+  },
+  "nx-migrations": {
+    "migrations": "@nx/rspack/migrations.json"
+  }
+}
