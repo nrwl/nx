@@ -30,17 +30,7 @@ describe('setupSSR', () => {
     expect(tree.read('apps/app1/server.ts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('apps/app1/src/main.server.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "/***************************************************************************************************
-       * Initialize the server environment - for example, adding DOM built-in types to the global scope.
-       *
-       * NOTE:
-       * This import must come before any imports (direct or transitive) that rely on DOM built-ins being
-       * available, such as \`@angular/elements\`.
-       */
-      import '@angular/platform-server/init';
-
-      export { AppServerModule } from './app/app.server.module';
-      export { renderModule } from '@angular/platform-server';
+      "export { AppServerModule } from './app/app.server.module';
       "
     `);
     expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -167,30 +157,68 @@ describe('setupSSR', () => {
     ).toMatchSnapshot();
   });
 
-  it('should install the correct versions when using older versions of Angular', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  describe('compat', () => {
+    it('should install the correct versions when using older versions of Angular', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await generateTestApplication(tree, {
-      name: 'app1',
+      await generateTestApplication(tree, {
+        name: 'app1',
+      });
+
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          '@angular/core': '14.2.0',
+        },
+      }));
+
+      // ACT
+      await setupSsr(tree, { project: 'app1' });
+
+      // ASSERT
+      const pkgJson = readJson(tree, 'package.json');
+      expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
+        '~14.2.0'
+      );
+      expect(pkgJson.dependencies['@nguniversal/express-engine']).toEqual(
+        '~14.2.0'
+      );
+      expect(pkgJson.devDependencies['@nguniversal/builders']).toEqual(
+        '~14.2.0'
+      );
     });
 
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      dependencies: {
-        '@angular/core': '14.2.0',
-      },
-    }));
+    it('should create the main.server.ts file correctly for Angular v14', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, {
+        name: 'app1',
+      });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '14.2.0' },
+      }));
 
-    // ACT
-    await setupSsr(tree, { project: 'app1' });
+      // ACT
+      await setupSsr(tree, { project: 'app1' });
 
-    // ASSERT
-    const pkgJson = readJson(tree, 'package.json');
-    expect(pkgJson.dependencies['@angular/platform-server']).toEqual('~14.2.0');
-    expect(pkgJson.dependencies['@nguniversal/express-engine']).toEqual(
-      '~14.2.0'
-    );
-    expect(pkgJson.devDependencies['@nguniversal/builders']).toEqual('~14.2.0');
+      // ASSERT
+      expect(tree.read('apps/app1/src/main.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/***************************************************************************************************
+         * Initialize the server environment - for example, adding DOM built-in types to the global scope.
+         *
+         * NOTE:
+         * This import must come before any imports (direct or transitive) that rely on DOM built-ins being
+         * available, such as \`@angular/elements\`.
+         */
+        import '@angular/platform-server/init';
+
+        export { AppServerModule } from './app/app.server.module';
+        export { renderModule } from '@angular/platform-server';
+        "
+      `);
+    });
   });
 });
