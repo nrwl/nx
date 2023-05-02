@@ -1,6 +1,5 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "cli": "nx",
   "$id": "Application",
   "title": "Application generator for React + rspack",
   "type": "object",

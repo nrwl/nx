@@ -4,7 +4,7 @@ import {
   offsetFromRoot,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   addOrChangeBuildTarget,
   addOrChangeServeTarget,
@@ -72,8 +72,8 @@ export async function configurationGenerator(
         options.framework === 'nest')
     ) {
       throw new Error(
-        `The project ${options.project} is already configured to use the @nrwl/rspack executors.
-        Please try a different project, or remove the existing targets 
+        `The project ${options.project} is already configured to use the @nx/rspack executors.
+        Please try a different project, or remove the existing targets
         and re-run this generator to reset the existing Rspack Configuration.
         `
       );
@@ -81,7 +81,7 @@ export async function configurationGenerator(
 
     if (!validFoundTargetName.build && projectContainsUnsupportedExecutor) {
       throw new Error(
-        `The project ${options.project} cannot be converted to use the @nrwl/rspack executors.`
+        `The project ${options.project} cannot be converted to use the @nx/rspack executors.`
       );
     }
 

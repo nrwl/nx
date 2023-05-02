@@ -1,4 +1,4 @@
-import { normalizePath } from '@nrwl/devkit';
+import { normalizePath } from '@nx/devkit';
 import { statSync } from 'fs';
 import { basename, dirname, relative, resolve } from 'path';
 

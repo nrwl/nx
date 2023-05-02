@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/rspack",
+  "name": "@nx/rspack",
   "version": "0.0.1",
   "type": "commonjs",
   "repository": {
@@ -19,9 +19,9 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
-    "@nrwl/js": "^15.8.1",
-    "@nrwl/linter": "^15.8.1",
-    "@nrwl/devkit": "^15.8.1",
+    "@nx/js": "^16.0.0",
+    "@nx/linter": "^16.0.0",
+    "@nx/devkit": "^16.0.0",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "ajv": "^8.12.0",
     "ajv-keywords": "5.1.0",

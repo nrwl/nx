@@ -1,12 +1,11 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
-  ensurePackage,
   GeneratorCallback,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { version as nxVersion } from 'nx/package.json';
+} from '@nx/devkit';
+import { initGenerator } from '@nx/js';
 import {
   rspackCoreVersion,
   rspackDevServerVersion,
@@ -20,10 +19,6 @@ export async function rspackInitGenerator(
   schema: InitGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
-  const { initGenerator } = ensurePackage<typeof import('@nrwl/js')>(
-    '@nrwl/js',
-    nxVersion
-  );
   const jsInitTask = await initGenerator(tree, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
@@ -41,7 +36,7 @@ export async function rspackInitGenerator(
   const version = require('../../../package.json').version;
   if (version !== '0.0.1') {
     // Ignored for local dev / e2e tests.
-    devDependencies['@nrwl/rspack'] = version;
+    devDependencies['@nx/rspack'] = version;
   }
 
   if (schema.style === 'less') {

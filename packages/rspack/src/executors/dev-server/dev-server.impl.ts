@@ -2,8 +2,8 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
-} from '@nrwl/devkit';
-import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
+} from '@nx/devkit';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { DevServer } from '@rspack/core/dist/config';
 import { RspackDevServer } from '@rspack/dev-server';
 import { createCompiler } from '../../utils/create-compiler';

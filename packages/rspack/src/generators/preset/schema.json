@@ -1,6 +1,5 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "cli": "nx",
   "$id": "Preset",
   "title": "Standalone React and rspack preset",
   "type": "object",

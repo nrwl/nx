@@ -1,7 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
   "version": 2,
-  "cli": "nx",
   "title": "Rspack dev-server executor",
   "description": "",
   "type": "object",
