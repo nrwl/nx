@@ -29,13 +29,9 @@
           },
           {
             "input": "./packages/rspack",
-            "glob": "generators.json",
-            "output": "."
-          },
-          {
-            "input": "./packages/rspack",
-            "glob": "executors.json",
-            "output": "."
+            "glob": "**.json",
+            "output": ".",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
           },
 
           "LICENSE"
