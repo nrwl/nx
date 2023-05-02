@@ -1,8 +1,8 @@
-## @nx/esbuild has been deprecated!
+## @nrwl/esbuild has been deprecated!
 
-@nx/esbuild has been deprecated in favor of [@nx/esbuild](https://www.npmjs.com/package/@nx/esbuild). Please use that instead.
+@nrwl/esbuild has been deprecated in favor of [@nx/esbuild](https://www.npmjs.com/package/@nx/esbuild). Please use that instead.
 
-@nx/esbuild will no longer be published in Nx v17.
+@nrwl/esbuild will no longer be published in Nx v17.
 
 <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600" alt="Nx - Smart, Fast and Extensible Build System"></p>
 

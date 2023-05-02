@@ -1,4 +1,4 @@
-## @nx/eslint-plugin-nx has been deprecated!
+## @nrwl/eslint-plugin-nx has been deprecated!
 
 @nrwl/eslint-plugin-nx has been deprecated in favor of [@nx/eslint-plugin](https://www.npmjs.com/package/@nx/eslint-plugin). Please use that instead.
 
