@@ -14,7 +14,6 @@
         "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           "packages-legacy/rspack/*.md",
-
           {
             "input": "packages-legacy/rspack",
             "glob": "**/*.json",
@@ -29,6 +28,9 @@
           "LICENSE"
         ]
       }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs rspack-legacy {args.ver} {args.tag}"
     }
   },
   "tags": []
