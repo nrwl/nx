@@ -353,7 +353,10 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
   }
 
   read(path: Path): Observable<FileBuffer> {
-    if (path === 'angular.json' || path === '/angular.json') {
+    if (
+      (path === 'angular.json' || path === '/angular.json') &&
+      isAngularPluginInstalled()
+    ) {
       return this.readMergedWorkspaceConfiguration().pipe(
         map((r) => Buffer.from(JSON.stringify(toOldFormat(r))))
       );
@@ -566,7 +569,10 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
   }
 
   read(path: Path): Observable<FileBuffer> {
-    if (path == 'angular.json' || path == '/angular.json') {
+    if (
+      (path === 'angular.json' || path === '/angular.json') &&
+      isAngularPluginInstalled()
+    ) {
       const projectJsonConfig = toOldFormat({
         projects: Object.fromEntries(getProjects(this.host)),
       });
