@@ -55,19 +55,19 @@
     "url": "https://github.com/Phillip9587/nx-stylelint"
   },
   {
-    "name": "@nxtend/ionic-react",
+    "name": "@nxext/ionic-react",
     "description": "An Nx plugin for developing Ionic React applications and libraries",
-    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/ionic-react"
+    "url": "https://github.com/nxext/nx-extensions/tree/main/packages/ionic-react"
   },
   {
-    "name": "@nxtend/ionic-angular",
+    "name": "@nxext/ionic-angular",
     "description": "An Nx plugin for developing Ionic Angular applications and libraries",
-    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/ionic-angular"
+    "url": "https://github.com/nxext/nx-extensions/tree/main/packages/ionic-angular"
   },
   {
-    "name": "@nxtend/capacitor",
+    "name": "@nxext/capacitor",
     "description": "An Nx plugin for developing cross-platform applications using Capacitor",
-    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/capacitor"
+    "url": "https://github.com/nxext/nx-extensions/tree/main/packages/capacitor"
   },
   {
     "name": "@nxtend/firebase",
