@@ -37,7 +37,7 @@ function groupJointSegments(segments: string[], validTargetNames: Set<string>) {
   return segments;
 }
 
-function splitByColons(s: string) {
+export function splitByColons(s: string) {
   const parts = [] as string[];
   let currentPart = '';
   for (let i = 0; i < s.length; ++i) {

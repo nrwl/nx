@@ -15,6 +15,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { joinPathFragments } from '../utils/path';
 import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
+import { splitByColons, splitTarget } from '../utils/split-target';
 
 export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
@@ -26,10 +27,14 @@ export function getDependencyConfigs(
   defaultDependencyConfigs: Record<string, (TargetDependencyConfig | string)[]>,
   projectGraph: ProjectGraph
 ): TargetDependencyConfig[] | undefined {
-  const dependencyConfigs = expandDependencyConfigSyntaxSugar(
+  const dependencyConfigs = (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
-      defaultDependencyConfigs[target] ??
-      []
+    defaultDependencyConfigs[target] ??
+    []
+  ).map((config) =>
+    typeof config === 'string'
+      ? expandDependencyConfigSyntaxSugar(config, projectGraph)
+      : config
   );
   for (const dependencyConfig of dependencyConfigs) {
     const specifiers =
@@ -64,20 +69,32 @@ export function getDependencyConfigs(
   return dependencyConfigs;
 }
 
-function expandDependencyConfigSyntaxSugar(
-  deps: (TargetDependencyConfig | string)[]
-): TargetDependencyConfig[] {
-  return deps.map((d) => {
-    if (typeof d === 'string') {
-      if (d.startsWith('^')) {
-        return { dependencies: true, target: d.substring(1) };
-      } else {
-        return { target: d };
-      }
-    } else {
-      return d;
-    }
-  });
+export function expandDependencyConfigSyntaxSugar(
+  dependencyConfigString: string,
+  graph: ProjectGraph
+): TargetDependencyConfig {
+  const [dependencies, targetString] = dependencyConfigString.startsWith('^')
+    ? [true, dependencyConfigString.substring(1)]
+    : [false, dependencyConfigString];
+
+  // Support for `project:target` syntax doesn't make sense for
+  // dependencies, so we only support `target` syntax for dependencies.
+  if (dependencies) {
+    return {
+      target: targetString,
+      dependencies: true,
+    };
+  }
+
+  // Support for both `project:target` and `target:with:colons` syntax
+  const [maybeProject, ...segments] = splitByColons(targetString);
+  return {
+    // Only the first segment could be a project. If it is, the rest is a target.
+    // If its not, then the whole targetString was a target with colons in its name.
+    target: maybeProject in graph.nodes ? segments.join(':') : targetString,
+    // If the first segment is a project, then we have a specific project. Otherwise, we don't.
+    projects: maybeProject in graph.nodes ? [maybeProject] : undefined,
+  };
 }
 
 export function getOutputs(
