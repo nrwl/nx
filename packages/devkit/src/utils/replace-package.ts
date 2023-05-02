@@ -1,7 +1,6 @@
 import type { Tree } from 'nx/src/generators/tree';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { requireNx } from '../../nx';
-import { NX_VERSION } from './package-json';
 import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files';
 import { basename } from 'path';
 import { isBinaryPath } from './binary-extensions';
@@ -46,7 +45,7 @@ function replacePackageInDependencies(
         packageJson.optionalDependencies ?? {},
       ]) {
         if (oldPackageName in deps) {
-          deps[newPackageName] = NX_VERSION;
+          deps[newPackageName] = deps[oldPackageName];
           delete deps[oldPackageName];
         }
       }
