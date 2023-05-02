@@ -67,7 +67,6 @@
       "options": {
         "parallel": false,
         "commands": [
-          "nx build rspack",
           "node tools/scripts/publish.mjs rspack {args.ver} {args.tag}"
         ]
       }
