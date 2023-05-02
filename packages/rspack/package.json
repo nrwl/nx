@@ -19,9 +19,9 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
-    "@nx/js": "^16.0.0",
-    "@nx/linter": "^16.0.0",
-    "@nx/devkit": "^16.0.0",
+    "@nx/js": "^16.0.3",
+    "@nx/linter": "^16.0.3",
+    "@nx/devkit": "^16.0.3",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "ajv": "^8.12.0",
     "ajv-keywords": "5.1.0",
