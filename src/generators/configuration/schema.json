@@ -57,11 +57,11 @@
     },
     "buildTarget": {
       "type": "string",
-      "description": "The build target of the project to be transformed to use the @nrwl/vite:build executor."
+      "description": "The build target of the project to be transformed to use the @nx/vite:build executor."
     },
     "serveTarget": {
       "type": "string",
-      "description": "The serve target of the project to be transformed to use the @nrwl/vite:dev-server and @nrwl/vite:preview-server executors."
+      "description": "The serve target of the project to be transformed to use the @nx/vite:dev-server and @nx/vite:preview-server executors."
     },
     "rootProject": {
       "type": "boolean",

@@ -39,7 +39,7 @@ export default async function (
     tasks.push(createAppTask, convertAppTask);
   } else if (options.framework === 'web') {
     const { applicationGenerator: webAppGenerator } = ensurePackage(
-      '@nrwl/web',
+      '@nx/web',
       nxVersion
     );
     const createAppTask = await webAppGenerator(tree, {
