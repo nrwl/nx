@@ -28,5 +28,8 @@
     "less-loader": "11.1.0",
     "sass-loader": "^12.2.0",
     "stylus-loader": "^7.1.0"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
   }
 }
