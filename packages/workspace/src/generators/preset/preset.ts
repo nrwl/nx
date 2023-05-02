@@ -150,8 +150,9 @@ async function createPreset(tree: Tree, options: Schema) {
   } else if (options.preset === Preset.NodeStandalone) {
     const { applicationGenerator: nodeApplicationGenerator } = require('@nx' +
       '/node');
+    const bundler = options.bundler === 'webpack' ? 'webpack' : 'esbuild';
     return nodeApplicationGenerator(tree, {
-      bundler: options.bundler,
+      bundler,
       name: options.name,
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
