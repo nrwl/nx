@@ -104,7 +104,8 @@ nx g @nx/angular:host host --remotes=shop,cart,about
 ```
 
 {% callout type="note" title="More details" %}
-You can leave off the `--remotes` option and add them later with `nx g @nx/react:remote shop --host=host` or `nx g @nx/angular:remote shop --host=host`.
+You can leave off the `--remotes` option and add them later with `nx g @nx/react:remote shop --host=host`
+or `nx g @nx/angular:remote shop --host=host`.
 {% /callout %}
 
 Now, serve `host` to view it in your browser.
@@ -119,7 +120,7 @@ changes to `host` will update its bundle, but changes to remotes will not update
 To run one or more remotes in development mode, use the `--devRemotes` option.
 
 ```shell
-nx serve host --open --devRemotes=shop,cart
+nx serve host --open --devRemotes="shop,cart"
 ```
 
 The above command starts the `shop` and `cart` remotes in development mode, but `about` will remain static.
@@ -136,7 +137,9 @@ To understand how Module Federation works with Nx, let's take a look at three fi
 
 ### `apps/host/project.json`
 
-The `build` target uses `@nx/webpack:webpack` for React, and `@nx/angular:webpack-browser` for Angular. This is the same as a normal SPA that uses custom webpack configuration (`webpackConfig`), but difference is in the webpack configuration file.
+The `build` target uses `@nx/webpack:webpack` for React, and `@nx/angular:webpack-browser` for Angular. This is the same
+as a normal SPA that uses custom webpack configuration (`webpackConfig`), but difference is in the webpack configuration
+file.
 
 If you use Module Federation to speed up your CI and improve your local development, and not to deploy different remotes
 independently, you need to create implicit dependencies from the host to all the remotes. Semantically, the host and the
