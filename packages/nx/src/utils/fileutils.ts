@@ -1,4 +1,4 @@
-import { parseJson, serializeJson } from './json';
+import { JsonWriteOptions, parseJson, serializeJson } from './json';
 import type { JsonParseOptions, JsonSerializeOptions } from './json';
 import {
   createReadStream,
@@ -20,14 +20,6 @@ export interface JsonReadOptions extends JsonParseOptions {
    * @default false
    */
   endsWithNewline?: boolean;
-}
-
-export interface JsonWriteOptions extends JsonSerializeOptions {
-  /**
-   * whether to append new line at the end of JSON file
-   * @default false
-   */
-  appendNewLine?: boolean;
 }
 
 /**
@@ -65,6 +57,9 @@ export function writeJsonFile<T extends object = object>(
   data: T,
   options?: JsonWriteOptions
 ): void {
+  options ??= {};
+  options.appendNewLine ??= true;
+
   mkdirSync(dirname(path), { recursive: true });
   const serializedJson = serializeJson(data, options);
   const content = options?.appendNewLine

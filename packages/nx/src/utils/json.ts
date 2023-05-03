@@ -31,6 +31,14 @@ export interface JsonSerializeOptions {
   spaces?: number;
 }
 
+export interface JsonWriteOptions extends JsonSerializeOptions {
+  /**
+   * whether to append new line at the end of JSON file
+   * @default false
+   */
+  appendNewLine?: boolean;
+}
+
 /**
  * Parses the given JSON string and returns the object the JSON content represents.
  * By default javascript-style comments and trailing commas are allowed.

@@ -1,6 +1,6 @@
 import type { Tree } from '../tree';
 import { parseJson, serializeJson } from '../../utils/json';
-import type { JsonParseOptions, JsonSerializeOptions } from '../../utils/json';
+import type { JsonParseOptions, JsonWriteOptions } from '../../utils/json';
 
 /**
  * Reads a json file, removes all comments and parses JSON.
@@ -36,9 +36,12 @@ export function writeJson<T extends object = object>(
   tree: Tree,
   path: string,
   value: T,
-  options?: JsonSerializeOptions
+  options?: JsonWriteOptions
 ): void {
-  tree.write(path, serializeJson(value, options));
+  options ??= {};
+  options.appendNewLine ??= true;
+  const contents = serializeJson(value, options);
+  tree.write(path, options.appendNewLine ? `${contents}\n` : contents);
 }
 
 /**
@@ -53,8 +56,13 @@ export function updateJson<T extends object = any, U extends object = T>(
   tree: Tree,
   path: string,
   updater: (value: T) => U,
-  options?: JsonParseOptions & JsonSerializeOptions
+  options?: JsonParseOptions & JsonWriteOptions
 ): void {
+  options ??= {};
+
+  const endsWithNewline = tree.read(path, 'utf-8').endsWith('\n');
   const updatedValue = updater(readJson(tree, path, options));
+
+  options.appendNewLine ??= endsWithNewline;
   writeJson(tree, path, updatedValue, options);
 }

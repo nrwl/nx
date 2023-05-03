@@ -56,7 +56,7 @@ export function updateJson<T extends object = any, U extends object = T>(
 ) {
   updateFile(f, (s) => {
     const json = JSON.parse(s);
-    return JSON.stringify(updater(json), null, 2);
+    return JSON.stringify(updater(json), null, 2) + '\n';
   });
 }
 

@@ -2284,12 +2284,12 @@ Updates a JSON value to the file system tree
 
 #### Parameters
 
-| Name       | Type                                                                                                                                                      | Description                                                                                          |
-| :--------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
-| `tree`     | [`Tree`](../../devkit/documents/nx_devkit#tree)                                                                                                           | File system tree                                                                                     |
-| `path`     | `string`                                                                                                                                                  | Path of JSON file in the Tree                                                                        |
-| `updater`  | (`value`: `T`) => `U`                                                                                                                                     | Function that maps the current value of a JSON document to a new value to be written to the document |
-| `options?` | [`JsonParseOptions`](../../devkit/documents/nx_devkit#jsonparseoptions) & [`JsonSerializeOptions`](../../devkit/documents/nx_devkit#jsonserializeoptions) | Optional JSON Parse and Serialize Options                                                            |
+| Name       | Type                                                                                         | Description                                                                                          |
+| :--------- | :------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
+| `tree`     | [`Tree`](../../devkit/documents/nx_devkit#tree)                                              | File system tree                                                                                     |
+| `path`     | `string`                                                                                     | Path of JSON file in the Tree                                                                        |
+| `updater`  | (`value`: `T`) => `U`                                                                        | Function that maps the current value of a JSON document to a new value to be written to the document |
+| `options?` | [`JsonParseOptions`](../../devkit/documents/nx_devkit#jsonparseoptions) & `JsonWriteOptions` | Optional JSON Parse and Serialize Options                                                            |
 
 #### Returns
 
@@ -2430,12 +2430,12 @@ Writes a JSON value to the file system tree
 
 #### Parameters
 
-| Name       | Type                                                                            | Description                     |
-| :--------- | :------------------------------------------------------------------------------ | :------------------------------ |
-| `tree`     | [`Tree`](../../devkit/documents/nx_devkit#tree)                                 | File system tree                |
-| `path`     | `string`                                                                        | Path of JSON file in the Tree   |
-| `value`    | `T`                                                                             | Serializable value to write     |
-| `options?` | [`JsonSerializeOptions`](../../devkit/documents/nx_devkit#jsonserializeoptions) | Optional JSON Serialize Options |
+| Name       | Type                                            | Description                     |
+| :--------- | :---------------------------------------------- | :------------------------------ |
+| `tree`     | [`Tree`](../../devkit/documents/nx_devkit#tree) | File system tree                |
+| `path`     | `string`                                        | Path of JSON file in the Tree   |
+| `value`    | `T`                                             | Serializable value to write     |
+| `options?` | `JsonWriteOptions`                              | Optional JSON Serialize Options |
 
 #### Returns
 
