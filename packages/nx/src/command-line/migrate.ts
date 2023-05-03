@@ -1328,6 +1328,11 @@ function showConnectToCloudMessage() {
 
 function runInstall() {
   const pmCommands = getPackageManagerCommand();
+
+  // TODO: remove this
+  if (detectPackageManager() === 'npm') {
+    process.env.npm_config_legacy_peer_deps ??= 'true';
+  }
   output.log({
     title: `Running '${pmCommands.install}' to make sure necessary packages are installed`,
   });
