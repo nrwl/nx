@@ -150,9 +150,13 @@ describe('rollupExecutor', () => {
       });
     });
 
-    it(`should treat npm dependencies as external`, () => {
+    it(`should treat npm dependencies as external if external is all`, () => {
       const options = createRollupOptions(
-        normalizeRollupExecutorOptions(testOptions, '/root', '/root/src'),
+        normalizeRollupExecutorOptions(
+          { ...testOptions, external: 'all' },
+          '/root',
+          '/root/src'
+        ),
         [],
         context,
         { name: 'example' },
@@ -165,6 +169,48 @@ describe('rollupExecutor', () => {
       expect(external('lodash', '', false)).toBe(true);
       expect(external('lodash/fp', '', false)).toBe(true);
       expect(external('rxjs', '', false)).toBe(false);
+    });
+
+    it(`should not treat npm dependencies as external if external is none`, () => {
+      const options = createRollupOptions(
+        normalizeRollupExecutorOptions(
+          { ...testOptions, external: 'none' },
+          '/root',
+          '/root/src'
+        ),
+        [],
+        context,
+        { name: 'example' },
+        '/root/src',
+        ['lodash']
+      );
+
+      const external = options[0].external as rollup.IsExternal;
+
+      expect(external('lodash', '', false)).toBe(false);
+      expect(external('lodash/fp', '', false)).toBe(false);
+      expect(external('rxjs', '', false)).toBe(false);
+    });
+
+    it(`should set external based on options`, () => {
+      const options = createRollupOptions(
+        normalizeRollupExecutorOptions(
+          { ...testOptions, external: ['rxjs'] },
+          '/root',
+          '/root/src'
+        ),
+        [],
+        context,
+        { name: 'example' },
+        '/root/src',
+        ['lodash']
+      );
+
+      const external = options[0].external as rollup.IsExternal;
+
+      expect(external('lodash', '', false)).toBe(false);
+      expect(external('lodash/fp', '', false)).toBe(false);
+      expect(external('rxjs', '', false)).toBe(true);
     });
   });
 });

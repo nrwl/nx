@@ -271,10 +271,18 @@ export function createRollupOptions(
       analyze(),
     ];
 
-    const externalPackages = dependencies
-      .map((d) => d.name)
-      .concat(options.external || [])
-      .concat(Object.keys(packageJson.dependencies || {}));
+    let externalPackages = [
+      ...Object.keys(packageJson.dependencies || {}),
+      ...Object.keys(packageJson.peerDependencies || {}),
+    ]; // If external is set to none, include all dependencies and peerDependencies in externalPackages
+    if (options.external === 'all') {
+      externalPackages = externalPackages
+        .concat(dependencies.map((d) => d.name))
+        .concat(npmDeps);
+    } else if (Array.isArray(options.external) && options.external.length > 0) {
+      externalPackages = externalPackages.concat(options.external);
+    }
+    externalPackages = [...new Set(externalPackages)];
 
     const rollupConfig = {
       input: options.outputFileName
@@ -289,10 +297,11 @@ export function createRollupOptions(
         entryFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
         chunkFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
       },
-      external: (id) =>
-        externalPackages.some(
+      external: (id: string) => {
+        return externalPackages.some(
           (name) => id === name || id.startsWith(`${name}/`)
-        ) || npmDeps.some((name) => id === name || id.startsWith(`${name}/`)), // Could be a deep import
+        ); // Could be a deep import
+      },
       plugins,
     };
 

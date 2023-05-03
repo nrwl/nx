@@ -505,7 +505,7 @@ describe('lib', () => {
         executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         options: {
-          external: ['react/jsx-runtime'],
+          external: ['react', 'react-dom', 'react/jsx-runtime'],
           entryFile: 'libs/my-lib/src/index.ts',
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',
@@ -544,7 +544,7 @@ describe('lib', () => {
 
       expect(config.targets.build).toMatchObject({
         options: {
-          external: ['react/jsx-runtime'],
+          external: ['react', 'react-dom', 'react/jsx-runtime'],
         },
       });
       expect(babelrc.plugins).toEqual([
@@ -566,7 +566,7 @@ describe('lib', () => {
 
       expect(config.targets.build).toMatchObject({
         options: {
-          external: ['@emotion/react/jsx-runtime'],
+          external: ['react', 'react-dom', '@emotion/react/jsx-runtime'],
         },
       });
       expect(babelrc.plugins).toEqual(['@emotion/babel-plugin']);
@@ -588,7 +588,7 @@ describe('lib', () => {
 
       expect(config.targets.build).toMatchObject({
         options: {
-          external: ['react/jsx-runtime'],
+          external: ['react', 'react-dom', 'react/jsx-runtime'],
         },
       });
       expect(babelrc.plugins).toEqual(['styled-jsx/babel']);
@@ -606,7 +606,7 @@ describe('lib', () => {
 
       expect(config.targets.build).toMatchObject({
         options: {
-          external: ['react/jsx-runtime'],
+          external: ['react', 'react-dom', 'react/jsx-runtime'],
         },
       });
     });
