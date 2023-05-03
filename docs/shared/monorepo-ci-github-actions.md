@@ -139,11 +139,17 @@ jobs:
           # list of commands to be run on main has env flag NX_CLOUD_DISTRIBUTED_EXECUTION set to false
           NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx-cloud record -- npx nx format:check & pids+=($!)
 
-          # add other parallel commands here
-          npx nx affected -t lint --parallel=3 & pids+=($!)
-          npx nx affected -t test --parallel=3 --configuration=ci & pids+=($!)
-          npx nx affected -t build --parallel=3 & pids+=($!)
+          # list of commands to be run on agents
+          npx nx affected -t lint --parallel=3 & 
+          pids+=($!)
 
+          npx nx affected -t test --parallel=3 --configuration=ci & 
+          pids+=($!)
+
+          npx nx affected -t build --parallel=3 & 
+          pids+=($!)
+
+          # run all commands in parallel and bail if one of them fails
           for pid in \${pids[*]}; do
             if ! wait $pid; then
               exit 1
