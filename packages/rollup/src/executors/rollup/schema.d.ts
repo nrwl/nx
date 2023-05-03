@@ -19,7 +19,7 @@ export interface RollupExecutorOptions {
   main: string;
   outputFileName?: string;
   extractCss?: boolean | string;
-  external?: string[];
+  external?: string[] | 'all' | 'none';
   rollupConfig?: string | string[];
   watch?: boolean;
   assets?: any[];

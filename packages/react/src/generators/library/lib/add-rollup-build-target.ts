@@ -38,7 +38,7 @@ export async function addRollupBuildTarget(
   const { targets } = readProjectConfiguration(host, options.name);
 
   const { libsDir } = getWorkspaceLayout(host);
-  const external: string[] = [];
+  const external: string[] = ['react', 'react-dom'];
 
   if (options.style === '@emotion/styled') {
     external.push('@emotion/react/jsx-runtime');
