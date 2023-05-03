@@ -83,6 +83,12 @@
       "version": "16.0.0-beta.1",
       "description": "Replace @nrwl/react-native with @nx/react-native",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-1-0-upgrade-storybook-6-5": {
+      "cli": "nx",
+      "version": "16.1.0-beta.0",
+      "description": "Upgrade @storybook/react-native to 6.5",
+      "implementation": "./src/migrations/update-16-1-0/upgrade-storybook-6-5"
     }
   },
   "packageJsonUpdates": {
@@ -1288,6 +1294,19 @@
         },
         "react-native-svg": {
           "version": "13.9.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.0.2": {
+      "version": "16.0.2-beta.0",
+      "packages": {
+        "@react-native-async-storage/async-storage": {
+          "version": "1.18.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-safe-area-context": {
+          "version": "4.5.1",
           "alwaysAddToPackageJson": false
         }
       }

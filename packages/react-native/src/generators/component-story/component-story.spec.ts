@@ -56,12 +56,14 @@ describe('react-native:component-story', () => {
         expect(
           formatFile`${appTree.read(storyFilePath, 'utf-8').replace('·', '')}`
         ).toContain(formatFile`
-          import { storiesOf } from '@storybook/react-native';
-          import React from 'react';
-          import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-          const props: TestUiLibProps = {};
-          storiesOf('TestUiLib', module)            
-            .add('Primary', () => <TestUiLib {...props} />);
+        import type { Meta } from '@storybook/react-native';
+        import { TestUiLib } from './test-ui-lib';
+        const Story: Meta<typeof TestUiLib> = {
+          component: TestUiLib,
+          title: 'TestUiLib',
+        };
+        export default Story;
+        export const Primary = { args: {} };
           `);
       });
     });
@@ -102,14 +104,9 @@ describe('react-native:component-story', () => {
       it('should properly set up the story', () => {
         expect(formatFile`${appTree.read(storyFilePathPlain, 'utf-8')}`)
           .toContain(formatFile`
-    import { storiesOf } from '@storybook/react-native';
-    import React from 'react';
-    import { Test } from './test-ui-libplain';
-
-    const props = {};
-
-    storiesOf('Test', module)
-      .add('Primary', () => <Test {...props} />);
+          import Test from './test-ui-libplain';
+          export default { component: Test, title: 'Test' };
+          export const Primary = { args: {} };
           `);
       });
     });
@@ -142,12 +139,11 @@ describe('react-native:component-story', () => {
       it('should create a story without controls', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-          import { storiesOf } from '@storybook/react-native';
-          import React from 'react';
+          import type { Meta } from '@storybook/react-native';
           import { Test } from './test-ui-lib';
-          const props = {};
-          storiesOf('Test', module)
-            .add('Primary', () => <Test {...props} />);
+          const Story: Meta<typeof Test> = { component: Test, title: 'Test' };
+          export default Story;
+          export const Primary = { args: {} };
           `);
       });
     });
@@ -164,12 +160,14 @@ describe('react-native:component-story', () => {
         expect(
           formatFile`${appTree.read(storyFilePath, 'utf-8').replace('·', '')}`
         ).toContain(formatFile`
-          import { storiesOf } from '@storybook/react-native';
-          import React from 'react';
-          import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-          const props: TestUiLibProps = {};
-          storiesOf('TestUiLib', module)
-            .add('Primary', () => <TestUiLib {...props} />);
+        import type { Meta } from '@storybook/react-native';
+        import { TestUiLib } from './test-ui-lib';
+        const Story: Meta<typeof TestUiLib> = {
+          component: TestUiLib,
+          title: 'TestUiLib',
+        };
+        export default Story;
+        export const Primary = { args: {} };
           `);
       });
     });
@@ -212,14 +210,15 @@ describe('react-native:component-story', () => {
         expect(
           formatFile`${appTree.read(storyFilePath, 'utf-8').replace('·', '')}`
         ).toContain(formatFile`
-        import { action } from '@storybook/addon-actions';
-        import { storiesOf } from '@storybook/react-native';
-        import React from 'react';
-        import { Test, TestProps } from './test-ui-lib';
-        const actions = { someAction: action('someAction executed!') };
-        const props: TestProps = { name: '', displayAge: false };
-        storiesOf('Test', module)
-          .add('Primary', () => <Test {...props} {...actions} />);
+        import type { Meta } from '@storybook/react-native';
+        import { Test } from './test-ui-lib';
+        const Story: Meta<typeof Test> = {
+          component: Test,
+          title: 'Test',
+          argTypes: { someAction: { action: 'someAction executed!' } },
+        };
+        export default Story;
+        export const Primary = { args: { name: '', displayAge: false } };
           `);
       });
     });
@@ -359,15 +358,11 @@ describe('react-native:component-story', () => {
           expect(
             formatFile`${appTree.read(storyFilePath, 'utf-8').replace('·', '')}`
           ).toContain(formatFile`
-    import { storiesOf } from '@storybook/react-native';
-    import React from 'react';
-    import { Test, TestProps } from './test-ui-lib';
-    const props: TestProps = {
-      name: '',
-      displayAge: false,
-    };
-    storiesOf('Test', module)
-      .add('Primary', () => <Test {...props} />);
+    import type { Meta } from '@storybook/react-native';
+    import { Test } from './test-ui-lib';
+    const Story: Meta<typeof Test> = { component: Test, title: 'Test' };
+    export default Story;
+    export const Primary = { args: { name: '', displayAge: false } };
           `);
         });
       });
@@ -391,14 +386,14 @@ describe('react-native:component-story', () => {
     it('should properly set up the story', () => {
       expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
         .toContain(formatFile`
-        import { storiesOf } from '@storybook/react-native';
-        import React from 'react';
-        import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-
-        const props: TestUiLibProps = {};
-
-        storiesOf('TestUiLib', module)
-          .add('Primary', () => <TestUiLib {...props} />);
+    import type { Meta } from '@storybook/react-native';
+    import { TestUiLib } from './test-ui-lib';
+    const Story: Meta<typeof TestUiLib> = {
+      component: TestUiLib,
+      title: 'TestUiLib',
+    };
+    export default Story;
+    export const Primary = { args: {} };
         `);
     });
   });

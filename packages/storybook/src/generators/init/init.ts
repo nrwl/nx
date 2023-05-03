@@ -117,8 +117,6 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
         storybookReactNativeVersion;
       devDependencies['@storybook/addon-ondevice-notes'] =
         storybookReactNativeVersion;
-      devDependencies['react-native-storybook-loader'] =
-        reactNativeStorybookLoader;
     }
   } else {
     // TODO(katerina): Remove when Storybook v7
@@ -176,8 +174,6 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
         storybookReactNativeVersion;
       devDependencies['@storybook/addon-ondevice-notes'] =
         storybookReactNativeVersion;
-      devDependencies['react-native-storybook-loader'] =
-        reactNativeStorybookLoader;
     }
   }
 
