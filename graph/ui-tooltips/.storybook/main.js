@@ -1,4 +1,3 @@
-/* eslint-disable storybook/no-uninstalled-addons */
 module.exports = {
   stories: ['../src/lib/**/*.stories.@(mdx|js|jsx|ts|tsx)'],
   addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],

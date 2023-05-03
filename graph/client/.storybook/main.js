@@ -1,4 +1,3 @@
-/* eslint-disable storybook/no-uninstalled-addons */
 module.exports = {
   stories: ['../src/app/**/*.stories.@(mdx|js|jsx|ts|tsx)'],
   addons: [
