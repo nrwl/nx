@@ -4,40 +4,53 @@ import {
   joinPathFragments,
   readProjectConfiguration,
 } from '@nx/devkit';
-import {
-  getInstalledAngularMajorVersion,
-  getInstalledAngularVersionInfo,
-} from '../../utils/version-utils';
-import type { Schema } from '../schema';
 import { lt } from 'semver';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import type { Schema } from '../schema';
 
 export function generateSSRFiles(tree: Tree, schema: Schema) {
   const projectRoot = readProjectConfiguration(tree, schema.project).root;
 
-  generateFiles(
-    tree,
-    joinPathFragments(__dirname, '..', 'files', 'base'),
-    projectRoot,
-    { ...schema, tpl: '' }
-  );
+  const pathToFiles = joinPathFragments(__dirname, '..', 'files');
 
-  const { major: angularMajorVersion, version: angularVersion } =
-    getInstalledAngularVersionInfo(tree);
-  if (angularMajorVersion < 15) {
+  generateFiles(tree, joinPathFragments(pathToFiles, 'base'), projectRoot, {
+    ...schema,
+    tpl: '',
+  });
+
+  if (schema.standalone) {
     generateFiles(
       tree,
-      joinPathFragments(__dirname, '..', 'files', 'v14'),
+      joinPathFragments(pathToFiles, 'standalone'),
       projectRoot,
       { ...schema, tpl: '' }
     );
-  }
-
-  if (lt(angularVersion, '15.2.0')) {
+  } else {
     generateFiles(
       tree,
-      joinPathFragments(__dirname, '..', 'files', 'pre-v15-2'),
+      joinPathFragments(pathToFiles, 'ngmodule', 'base'),
       projectRoot,
       { ...schema, tpl: '' }
     );
+
+    const { major: angularMajorVersion, version: angularVersion } =
+      getInstalledAngularVersionInfo(tree);
+
+    if (angularMajorVersion < 15) {
+      generateFiles(
+        tree,
+        joinPathFragments(pathToFiles, 'ngmodule', 'v14'),
+        projectRoot,
+        { ...schema, tpl: '' }
+      );
+    }
+    if (lt(angularVersion, '15.2.0')) {
+      generateFiles(
+        tree,
+        joinPathFragments(pathToFiles, 'ngmodule', 'pre-v15-2'),
+        projectRoot,
+        { ...schema, tpl: '' }
+      );
+    }
   }
 }

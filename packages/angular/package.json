@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@phenomnomnominal/tsquery": "~5.0.1",
+    "@typescript-eslint/type-utils": "^5.36.1",
     "chalk": "^4.1.0",
     "chokidar": "^3.5.1",
     "http-server": "^14.1.0",
@@ -55,7 +56,7 @@
     "semver": "7.3.4",
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.1.2",
-    "webpack": "^5.75.0",
+    "webpack": "^5.80.0",
     "webpack-merge": "5.7.3",
     "enquirer": "^2.3.6",
     "@nx/cypress": "file:../cypress",
@@ -67,11 +68,11 @@
     "@nx/workspace": "file:../workspace"
   },
   "peerDependencies": {
-    "@angular-devkit/build-angular": ">= 14.0.0 < 16.0.0",
-    "@angular-devkit/schematics": ">= 14.0.0 < 16.0.0",
-    "@schematics/angular": ">= 14.0.0 < 16.0.0",
-    "@angular-devkit/core": ">= 14.0.0 < 16.0.0",
-    "@nguniversal/builders": ">= 14.0.0 < 16.0.0",
+    "@angular-devkit/build-angular": "^16.0.0-rc.4",
+    "@angular-devkit/schematics": "^16.0.0-rc.4",
+    "@schematics/angular": "^16.0.0-rc.4",
+    "@angular-devkit/core": "^16.0.0-rc.4",
+    "@nguniversal/builders": "^16.0.0-rc.2",
     "rxjs": "^6.5.3 || ^7.5.0"
   },
   "peerDependenciesMeta": {

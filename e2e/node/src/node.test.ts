@@ -493,7 +493,7 @@ describe('nest libraries', function () {
     const nestlib = uniq('nestlib');
     runCLI(`generate @nx/nest:lib ${nestlib} --buildable`);
 
-    packageInstall('@nestjs/swagger', undefined, '~6.0.0');
+    packageInstall('@nestjs/swagger', undefined, '~6.3.0');
 
     updateProjectConfig(nestlib, (config) => {
       config.targets.build.options.transformers = [

@@ -1654,6 +1654,31 @@ describe('lib', () => {
       });
     });
 
+    it('should create a local package.json', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        publishable: true,
+        importPath: '@myorg/lib',
+      });
+
+      // ASSERT
+      const tsconfigJson = readJson(tree, 'libs/my-lib/package.json');
+      expect(tsconfigJson).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "tslib": "^2.3.0",
+          },
+          "name": "@myorg/lib",
+          "peerDependencies": {
+            "@angular/common": "^14.1.0",
+            "@angular/core": "^14.1.0",
+          },
+          "sideEffects": false,
+          "version": "0.0.1",
+        }
+      `);
+    });
+
     it('should generate a library with a standalone component as entry point with angular 14.1.0', async () => {
       await runLibraryGeneratorWithOpts({ standalone: true });
 

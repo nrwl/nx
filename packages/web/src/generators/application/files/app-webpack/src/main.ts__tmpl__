@@ -1,1 +1,1 @@
-import './app/app.element.ts';
+import './app/app.element';

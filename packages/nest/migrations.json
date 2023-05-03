@@ -42,6 +42,35 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.1.0": {
+      "version": "16.1.0-beta.0",
+      "packages": {
+        "@nestjs/common": {
+          "version": "^9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/core": {
+          "version": "^9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/platform-express": {
+          "version": "^9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/schematics": {
+          "version": "^9.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/swagger": {
+          "version": "^6.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/testing": {
+          "version": "^9.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

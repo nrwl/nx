@@ -61,8 +61,13 @@ function getTailwindConfigPath(
   projectRoot: string,
   workspaceRoot: string
 ): string | undefined {
-  // valid tailwind config files https://github.com/tailwindlabs/tailwindcss/blob/master/src/util/resolveConfigPath.js#L46
-  const tailwindConfigFiles = ['tailwind.config.js', 'tailwind.config.cjs'];
+  // valid tailwind config files https://github.com/tailwindlabs/tailwindcss/blob/master/src/util/resolveConfigPath.js#L4
+  const tailwindConfigFiles = [
+    'tailwind.config.js',
+    'tailwind.config.cjs',
+    'tailwind.config.mjs',
+    'tailwind.config.ts',
+  ];
 
   for (const basePath of [projectRoot, workspaceRoot]) {
     for (const configFile of tailwindConfigFiles) {

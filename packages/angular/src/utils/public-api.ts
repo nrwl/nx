@@ -5,6 +5,7 @@ export {
   addImportToPipe,
   addImportToModule,
   addProviderToBootstrapApplication,
+  addProviderToAppConfig,
   addProviderToComponent,
   addProviderToModule,
 } from './nx-devkit/ast-utils';

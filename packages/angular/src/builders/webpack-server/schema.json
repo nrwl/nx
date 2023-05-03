@@ -191,6 +191,11 @@
       "description": "Extract all licenses in a separate file, in the case of production builds only.",
       "default": true
     },
+    "buildOptimizer": {
+      "type": "boolean",
+      "description": "Enables advanced build optimizations. _Note: only supported in Angular versions >= 16.0.0_.",
+      "default": true
+    },
     "namedChunks": {
       "type": "boolean",
       "description": "Use file name for lazy loaded chunks.",

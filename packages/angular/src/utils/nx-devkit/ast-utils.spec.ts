@@ -3,6 +3,7 @@ import {
   addImportToDirective,
   addImportToModule,
   addImportToPipe,
+  addProviderToAppConfig,
   addProviderToBootstrapApplication,
   isStandalone,
 } from './ast-utils';
@@ -300,6 +301,37 @@ bootstrapApplication(AppComponent, {
           provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
         ],
       }).catch((err) => console.error(err));"
+    `);
+  });
+
+  it('should add a provider to the appConfig', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree.write(
+      'app.config.ts',
+      `import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(routes) ]
+};`
+    );
+
+    // ACT
+    addProviderToAppConfig(tree, 'app.config.ts', 'provideStore()');
+
+    // ASSERT
+    expect(tree.read('app.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+      "import { ApplicationConfig } from '@angular/core';
+      import { provideRouter } from '@angular/router';
+
+      import { routes } from './app.routes';
+
+      export const appConfig: ApplicationConfig = {
+        providers: [provideStore(),provideRouter(routes) ]
+      };"
     `);
   });
 });

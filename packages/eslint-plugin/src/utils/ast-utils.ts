@@ -1,13 +1,15 @@
 import {
   joinPathFragments,
+  logger,
   ProjectGraphProjectNode,
   readJsonFile,
+  workspaceRoot,
 } from '@nx/devkit';
 import { findNodes } from '@nx/js';
+import { getModifiers } from '@typescript-eslint/type-utils';
 import { existsSync, readFileSync } from 'fs';
 import { dirname } from 'path';
 import ts = require('typescript');
-import { logger, workspaceRoot } from '@nx/devkit';
 
 function tryReadBaseJson() {
   try {
@@ -126,8 +128,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
           }
 
           if (
-            parent.modifiers &&
-            parent.modifiers.find(
+            getModifiers(parent)?.find(
               (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
             )
           ) {

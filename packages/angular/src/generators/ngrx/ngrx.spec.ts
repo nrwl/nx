@@ -30,7 +30,7 @@ describe('ngrx', () => {
   const defaultStandaloneOptions: NgRxGeneratorOptions = {
     directory: '+state',
     minimal: true,
-    parent: 'apps/my-app/src/main.ts',
+    parent: 'apps/my-app/src/app/app.config.ts',
     name: 'users',
   };
 
@@ -534,6 +534,9 @@ describe('ngrx', () => {
       });
 
       expect(tree.read('/apps/my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('/apps/my-app/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
       expect(tree.exists('/apps/my-app/src/app/+state/users.actions.ts')).toBe(
         false
       );
@@ -562,6 +565,9 @@ describe('ngrx', () => {
       });
 
       expect(tree.read('/apps/my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('/apps/my-app/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should add a feature module when route is undefined', async () => {
@@ -619,6 +625,9 @@ describe('ngrx', () => {
       });
 
       expect(tree.read('/apps/my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('/apps/my-app/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should add facade provider when facade is true and --root is false', async () => {

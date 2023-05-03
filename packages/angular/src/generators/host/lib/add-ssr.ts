@@ -22,6 +22,7 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
 
   await setupSsr(tree, {
     project: appName,
+    standalone: options.standalone,
   });
 
   tree.rename(
@@ -33,17 +34,9 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
     "import('./src/main.server');"
   );
 
-  tree.rename(
-    joinPathFragments(project.sourceRoot, 'main.ts'),
-    joinPathFragments(project.sourceRoot, 'bootstrap.ts')
-  );
-  tree.write(
-    joinPathFragments(project.sourceRoot, 'main.ts'),
-    `import("./bootstrap")`
-  );
-
   generateFiles(tree, joinPathFragments(__dirname, '../files'), project.root, {
     appName,
+    standalone: options.standalone,
     tmpl: '',
   });
 

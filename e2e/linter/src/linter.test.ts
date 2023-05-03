@@ -601,9 +601,10 @@ function updateGeneratedRuleImplementation(
     true
   );
 
-  const transformer =
-    <T extends ts.SourceFile>(context: ts.TransformationContext) =>
-    (rootNode: T) => {
+  const transformer = <T extends ts.SourceFile>(
+    context: ts.TransformationContext
+  ) =>
+    ((rootNode: T) => {
       function visit(node: ts.Node): ts.Node {
         /**
          * Add an ESLint messageId which will show the knownLintErrorMessage
@@ -752,7 +753,7 @@ function updateGeneratedRuleImplementation(
         ...rootNode.statements,
       ]);
       return ts.visitNode(importAdded, visit);
-    };
+    }) as ts.Transformer<T>;
 
   const result: ts.TransformationResult<ts.SourceFile> =
     ts.transform<ts.SourceFile>(newRuleSourceFile, [transformer]);

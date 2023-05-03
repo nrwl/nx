@@ -200,6 +200,42 @@
       },
       "description": "Remove exported `@angular/platform-server` `renderModule` method. The `renderModule` method is now exported by the Angular CLI.",
       "factory": "./src/migrations/update-16-1-0/remove-render-module-platform-server-exports"
+    },
+    "update-angular-cli-version-16-0-0-rc-4": {
+      "cli": "nx",
+      "version": "16.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=16.0.0-rc.4"
+      },
+      "description": "Update the @angular/cli package version to ~16.0.0-rc.4.",
+      "factory": "./src/migrations/update-16-1-0/update-angular-cli"
+    },
+    "remove-ngcc-invocation": {
+      "cli": "nx",
+      "version": "16.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=16.0.0-rc.4"
+      },
+      "description": "Remove 'ngcc' invocation if exists from the 'postinstall' script in package.json.",
+      "factory": "./src/migrations/update-16-1-0/remove-ngcc-invocation"
+    },
+    "extract-app-config-for-standalone": {
+      "cli": "nx",
+      "version": "16.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=16.0.0-rc.4"
+      },
+      "description": "Extract the app config for standalone apps",
+      "factory": "./src/migrations/update-16-1-0/extract-standalone-config-from-bootstrap"
+    },
+    "update-server-executor-config": {
+      "cli": "nx",
+      "version": "16.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=16.0.0-rc.4"
+      },
+      "description": "Update server executors' configuration to disable 'buildOptimizer' for non optimized builds.",
+      "factory": "./src/migrations/update-16-1-0/update-server-executor-config"
     }
   },
   "packageJsonUpdates": {
@@ -981,6 +1017,96 @@
       "packages": {
         "rxjs": {
           "version": "~7.8.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.1.0": {
+      "version": "16.1.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v16?",
+      "requires": {
+        "@angular/core": "^15.2.0",
+        "typescript": ">=4.9.3 <5.1"
+      },
+      "packages": {
+        "@angular/core": {
+          "version": "~16.0.0-rc.4",
+          "alwaysAddToPackageJson": true
+        },
+        "zone.js": {
+          "version": "~0.13.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1600.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~16.0.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1600.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~16.0.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~16.0.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~16.0.0-rc.4",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~16.0.0-rc.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/build-angular": {
+          "version": "~16.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/builders": {
+          "version": "~16.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/common": {
+          "version": "~16.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
+          "version": "~16.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/material": {
+          "version": "~16.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~16.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.1.0-angular-eslint": {
+      "version": "16.1.0-beta.0",
+      "requires": {
+        "eslint": "^7.20.0 || ^8.0.0"
+      },
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "~16.0.0-alpha.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~16.0.0-alpha.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~16.0.0-alpha.1",
           "alwaysAddToPackageJson": false
         }
       }

@@ -142,7 +142,7 @@ export async function* rollupExecutor(
             })
           )
         ),
-        scan<RollupExecutorEvent>(
+        scan<RollupExecutorEvent, RollupExecutorEvent>(
           (acc, result) => {
             if (!acc.success) return acc;
             return result;
