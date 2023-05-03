@@ -992,9 +992,9 @@ Use this to expose a compatible Angular Builder
 
 #### Parameters
 
-| Name       | Type                                                    |
-| :--------- | :------------------------------------------------------ |
-| `executor` | [`Executor`](../../devkit/documents/nx_devkit#executor) |
+| Name       | Type                                                            |
+| :--------- | :-------------------------------------------------------------- |
+| `executor` | [`Executor`](../../devkit/documents/nx_devkit#executor)<`any`\> |
 
 #### Returns
 
