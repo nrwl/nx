@@ -21,7 +21,7 @@ export function findInstalledPlugins(): PackageJson[] {
       result.push(pluginPackageJson);
     }
   }
-  return result;
+  return result.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function getNxPluginPackageJsonOrNull(pkg: string): PackageJson | null {
