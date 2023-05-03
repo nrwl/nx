@@ -56,7 +56,7 @@ function findModule(
   tree: Tree,
   generateDir: string,
   projectRoot: string
-): string | null {
+): string {
   let dir = generateDir;
   const projectRootParent = dirname(projectRoot);
 
@@ -80,5 +80,7 @@ function findModule(
     dir = dirname(dir);
   }
 
-  return null;
+  throw new Error(
+    "Could not find a candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option."
+  );
 }
