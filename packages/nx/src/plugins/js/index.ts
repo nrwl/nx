@@ -58,13 +58,18 @@ function writeLastProcessedLockfileHash(hash: string) {
   writeFileSync(lockFileHashFile, hash);
 }
 
-function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
-  if (nxJson?.pluginsConfig?.['@nx/js']) {
-    return nxJson?.pluginsConfig?.['@nx/js'];
-  }
+function jsPluginConfig(
+  nxJson: NxJsonConfiguration
+): Required<NrwlJsPluginConfig> {
+  const nxJsonConfig: NrwlJsPluginConfig =
+    nxJson?.pluginsConfig?.['@nx/js'] ?? nxJson?.pluginsConfig?.['@nrwl/js'];
 
-  if (nxJson?.pluginsConfig?.['@nrwl/js']) {
-    return nxJson?.pluginsConfig?.['@nrwl/js'];
+  if (nxJsonConfig) {
+    return {
+      analyzePackageJson: true,
+      analyzeSourceFiles: true,
+      ...nxJsonConfig,
+    };
   }
 
   if (!fileExists(join(workspaceRoot, 'package.json'))) {
