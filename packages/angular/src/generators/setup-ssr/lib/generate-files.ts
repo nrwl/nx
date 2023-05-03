@@ -4,8 +4,12 @@ import {
   joinPathFragments,
   readProjectConfiguration,
 } from '@nx/devkit';
-import { getInstalledAngularMajorVersion } from '../../utils/version-utils';
+import {
+  getInstalledAngularMajorVersion,
+  getInstalledAngularVersionInfo,
+} from '../../utils/version-utils';
 import type { Schema } from '../schema';
+import { lt } from 'semver';
 
 export function generateSSRFiles(tree: Tree, schema: Schema) {
   const projectRoot = readProjectConfiguration(tree, schema.project).root;
@@ -17,11 +21,21 @@ export function generateSSRFiles(tree: Tree, schema: Schema) {
     { ...schema, tpl: '' }
   );
 
-  const angularMajorVersion = getInstalledAngularMajorVersion(tree);
+  const { major: angularMajorVersion, version: angularVersion } =
+    getInstalledAngularVersionInfo(tree);
   if (angularMajorVersion < 15) {
     generateFiles(
       tree,
       joinPathFragments(__dirname, '..', 'files', 'v14'),
+      projectRoot,
+      { ...schema, tpl: '' }
+    );
+  }
+
+  if (lt(angularVersion, '15.2.0')) {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, '..', 'files', 'pre-v15-2'),
       projectRoot,
       { ...schema, tpl: '' }
     );
