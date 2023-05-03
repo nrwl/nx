@@ -14,6 +14,17 @@ describe('update-16-0-1-set-thirdparty-true', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
+  it('should skip migration targets are not set on the project', async () => {
+    addProjectConfiguration(tree, 'myapp', {
+      root: 'myapp',
+    });
+    await update(tree);
+
+    const config = readProjectConfiguration(tree, 'myapp');
+
+    expect(config.targets).toBeUndefined();
+  });
+
   it('should add thirdParty property if bundling is enabled implicitly', async () => {
     addProjectConfiguration(tree, 'myapp', {
       root: 'myapp',
@@ -31,6 +42,7 @@ describe('update-16-0-1-set-thirdparty-true', () => {
       thirdParty: true,
     });
   });
+
   it('should add thirdParty property if bundling is enabled explicitly', async () => {
     addProjectConfiguration(tree, 'myapp', {
       root: 'myapp',
@@ -52,6 +64,7 @@ describe('update-16-0-1-set-thirdparty-true', () => {
       thirdParty: true,
     });
   });
+
   it('should not add thirdParty property if bundling is disabled', async () => {
     addProjectConfiguration(tree, 'myapp', {
       root: 'myapp',
@@ -72,6 +85,7 @@ describe('update-16-0-1-set-thirdparty-true', () => {
       bundle: false,
     });
   });
+
   it('should not set thirdParty property if it was already set', async () => {
     addProjectConfiguration(tree, 'myapp', {
       root: 'myapp',
