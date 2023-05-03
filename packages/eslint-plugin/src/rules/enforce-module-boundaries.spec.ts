@@ -52,6 +52,7 @@ const tsconfig = {
       '@mycompany/domain1': ['libs/domain1/src/index.ts'],
       '@mycompany/domain2': ['libs/domain2/src/index.ts'],
       '@mycompany/buildableLib': ['libs/buildableLib/src/main.ts'],
+      '@mycompany/buildableLib2': ['libs/buildableLib2/src/main.ts'],
       '@nonBuildableScope/nonBuildableLib': [
         'libs/nonBuildableLib/src/main.ts',
       ],
@@ -91,6 +92,7 @@ const fileSys = {
   './libs/domain1/src/index.ts': '',
   './libs/domain2/src/index.ts': '',
   './libs/buildableLib/src/main.ts': '',
+  './libs/buildableLib2/src/main.ts': '',
   './libs/nonBuildableLib/src/main.ts': '',
   './libs/public/src/index.ts': '',
   './libs/dependsOnPrivate/src/index.ts': '',
@@ -1726,10 +1728,63 @@ Circular file chain:
       expect(failures[1].message).toEqual(message);
     });
 
+    it('should error when buildable libraries with custom target import non-buildable libraries', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: true,
+          buildTargets: ['my-build'],
+        },
+        `${process.cwd()}/proj/libs/buildableLib2/src/main.ts`,
+        `
+          import '@nonBuildableScope/nonBuildableLib';
+          import('@nonBuildableScope/nonBuildableLib');
+        `,
+        {
+          nodes: {
+            buildableLib2: {
+              name: 'buildableLib2',
+              type: 'lib',
+              data: {
+                root: 'libs/buildableLib2',
+                tags: [],
+                implicitDependencies: [],
+                targets: {
+                  'my-build': {
+                    // defines a buildable lib
+                    executor: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/buildableLib2/src/main.ts`)],
+              },
+            },
+            nonBuildableLib: {
+              name: 'nonBuildableLib',
+              type: 'lib',
+              data: {
+                root: 'libs/nonBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
+              },
+            },
+          },
+          dependencies: {},
+        }
+      );
+
+      const message =
+        'Buildable libraries cannot import or export from non-buildable libraries';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
     it('should not error when buildable libraries import another buildable libraries', () => {
       const failures = runRule(
         {
           enforceBuildableLibDependency: true,
+          buildTargets: ['my-build', 'build'],
         },
         `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
         `
@@ -1762,7 +1817,7 @@ Circular file chain:
                 tags: [],
                 implicitDependencies: [],
                 targets: {
-                  build: {
+                  'my-build': {
                     // defines a buildable lib
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },

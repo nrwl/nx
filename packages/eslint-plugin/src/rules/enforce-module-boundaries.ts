@@ -33,7 +33,6 @@ import {
   isComboDepConstraint,
 } from '../utils/runtime-lint-utils';
 import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
-import { TargetProjectLocator } from '@nx/js/src/internal';
 import { basename, dirname, relative } from 'path';
 import {
   getBarrelEntryPointByImportScope,
@@ -46,6 +45,7 @@ import { readProjectGraph } from '../utils/project-graph-utils';
 type Options = [
   {
     allow: string[];
+    buildTargets: string[];
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
@@ -90,6 +90,7 @@ export default createESLintRule<Options, MessageIds>({
           banTransitiveDependencies: { type: 'boolean' },
           checkNestedExternalImports: { type: 'boolean' },
           allow: [{ type: 'string' }],
+          buildTargets: [{ type: 'string' }],
           depConstraints: [
             {
               type: 'object',
@@ -138,6 +139,7 @@ export default createESLintRule<Options, MessageIds>({
   defaultOptions: [
     {
       allow: [],
+      buildTargets: ['build'],
       depConstraints: [],
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
@@ -151,6 +153,7 @@ export default createESLintRule<Options, MessageIds>({
     [
       {
         allow,
+        buildTargets,
         depConstraints,
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
@@ -479,8 +482,8 @@ export default createESLintRule<Options, MessageIds>({
         targetProject.type === 'lib'
       ) {
         if (
-          hasBuildExecutor(sourceProject) &&
-          !hasBuildExecutor(targetProject)
+          hasBuildExecutor(sourceProject, buildTargets) &&
+          !hasBuildExecutor(targetProject, buildTargets)
         ) {
           context.report({
             node,
