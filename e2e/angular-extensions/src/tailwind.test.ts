@@ -177,7 +177,7 @@ describe('Tailwind support', () => {
       libSpacing: typeof spacing['root']
     ) => {
       const builtComponentContent = readFile(
-        `dist/libs/${lib}/esm2020/lib/foo.component.mjs`
+        `dist/libs/${lib}/esm2022/lib/foo.component.mjs`
       );
       let expectedStylesRegex = new RegExp(
         `styles: \\[\\"\\.custom\\-btn(\\[_ngcontent\\-%COMP%\\])?{margin:${libSpacing.md};padding:${libSpacing.sm}}(\\\\n)?\\"\\]`

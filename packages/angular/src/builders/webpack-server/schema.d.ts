@@ -1,4 +1,4 @@
-import { ServerBuilderOptions } from '@angular-devkit/build-angular';
+import type { ServerBuilderOptions } from '@angular-devkit/build-angular';
 
 export interface Schema extends ServerBuilderOptions {
   customWebpackConfig?: {

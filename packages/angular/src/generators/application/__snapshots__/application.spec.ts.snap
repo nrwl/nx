@@ -208,27 +208,37 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 
 exports[`app --standalone should generate a standalone app correctly with routing 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
-import { appRoutes } from './app/app.routes';
+import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
 
-bootstrapApplication(AppComponent, {
-  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
-}).catch((err) => console.error(err));
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+  console.error(err)
+);
 "
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
+"import { ApplicationConfig } from '@angular/core';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
+import { appRoutes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+};
+"
+`;
+
+exports[`app --standalone should generate a standalone app correctly with routing 3`] = `
 "import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [];
 "
 `;
 
-exports[`app --standalone should generate a standalone app correctly with routing 3`] = `
+exports[`app --standalone should generate a standalone app correctly with routing 4`] = `
 "import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
@@ -246,7 +256,7 @@ export class AppComponent {
 "
 `;
 
-exports[`app --standalone should generate a standalone app correctly with routing 4`] = `
+exports[`app --standalone should generate a standalone app correctly with routing 5`] = `
 "import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { NxWelcomeComponent } from './nx-welcome.component';
@@ -279,15 +289,25 @@ describe('AppComponent', () => {
 
 exports[`app --standalone should generate a standalone app correctly without routing 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
 
-bootstrapApplication(AppComponent, {
-  providers: [],
-}).catch((err) => console.error(err));
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+  console.error(err)
+);
 "
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 2`] = `
+"import { ApplicationConfig } from '@angular/core';
+
+export const appConfig: ApplicationConfig = {
+  providers: [],
+};
+"
+`;
+
+exports[`app --standalone should generate a standalone app correctly without routing 3`] = `
 "import { Component } from '@angular/core';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
@@ -304,7 +324,7 @@ export class AppComponent {
 "
 `;
 
-exports[`app --standalone should generate a standalone app correctly without routing 3`] = `
+exports[`app --standalone should generate a standalone app correctly without routing 4`] = `
 "import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { NxWelcomeComponent } from './nx-welcome.component';

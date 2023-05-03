@@ -748,6 +748,9 @@ describe('app', () => {
         appTree.read('apps/standalone/src/main.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
+        appTree.read('apps/standalone/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
         appTree.read('apps/standalone/src/app/app.routes.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
@@ -774,6 +777,9 @@ describe('app', () => {
       // ASSERT
       expect(
         appTree.read('apps/standalone/src/main.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/standalone/src/app/app.config.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
         appTree.read('apps/standalone/src/app/app.component.ts', 'utf-8')

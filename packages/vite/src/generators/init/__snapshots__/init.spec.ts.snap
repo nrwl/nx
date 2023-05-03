@@ -13,7 +13,7 @@ exports[`@nx/vite:init dependencies for package.json should add vite packages an
     "existing": "1.0.0",
     "jsdom": "~20.0.3",
     "prettier": "^2.6.2",
-    "typescript": "~4.9.5",
+    "typescript": "~5.0.2",
     "vite": "^4.0.1",
     "vite-plugin-eslint": "^1.8.1",
     "vite-tsconfig-paths": "^4.0.2",

@@ -229,6 +229,49 @@ describe('Host App Generator', () => {
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();
     });
+
+    it('should generate the correct files for standalone', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+      // ACT
+      await generateTestHostApplication(tree, {
+        name: 'test',
+        standalone: true,
+        ssr: true,
+      });
+
+      // ASSERT
+      const project = readProjectConfiguration(tree, 'test');
+      expect(tree.exists(`apps/test/src/app/app.module.ts`)).toBeFalsy();
+      expect(
+        tree.read(`apps/test/src/bootstrap.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/bootstrap.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/main.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(tree.read(`apps/test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/module-federation.config.js`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/webpack.server.config.js`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/app.routes.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/app.config.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/app.config.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(project.targets.server).toMatchSnapshot();
+      expect(project.targets['serve-ssr']).toMatchSnapshot();
+    });
   });
 
   it('should error correctly when Angular version does not support standalone', async () => {

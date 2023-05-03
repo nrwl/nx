@@ -5,7 +5,7 @@ import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript'
 import type { SourceFile } from 'typescript';
 import {
   addImportToModule,
-  addProviderToBootstrapApplication,
+  addProviderToAppConfig,
   addProviderToModule,
 } from '../../../utils/nx-devkit/ast-utils';
 import type { NormalizedNgRxGeneratorOptions } from './normalize-options';
@@ -23,8 +23,8 @@ function addRootStoreImport(
   storeForRoot: string
 ) {
   if (isParentStandalone) {
-    if (tree.read(parentPath, 'utf-8').includes('bootstrapApplication')) {
-      addProviderToBootstrapApplication(tree, parentPath, provideRootStore);
+    if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
+      addProviderToAppConfig(tree, parentPath, provideRootStore);
     } else {
       addProviderToRoute(tree, parentPath, route, provideRootStore);
     }
@@ -44,8 +44,8 @@ function addRootEffectsImport(
   effectsForEmptyRoot: string
 ) {
   if (isParentStandalone) {
-    if (tree.read(parentPath, 'utf-8').includes('bootstrapApplication')) {
-      addProviderToBootstrapApplication(tree, parentPath, provideRootEffects);
+    if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
+      addProviderToAppConfig(tree, parentPath, provideRootEffects);
     } else {
       addProviderToRoute(tree, parentPath, route, provideRootEffects);
     }
@@ -91,12 +91,8 @@ function addStoreForFeatureImport(
   storeForFeature: string
 ) {
   if (isParentStandalone) {
-    if (tree.read(parentPath, 'utf-8').includes('bootstrapApplication')) {
-      addProviderToBootstrapApplication(
-        tree,
-        parentPath,
-        provideStoreForFeature
-      );
+    if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
+      addProviderToAppConfig(tree, parentPath, provideStoreForFeature);
     } else {
       addProviderToRoute(tree, parentPath, route, provideStoreForFeature);
     }
@@ -121,12 +117,8 @@ function addEffectsForFeatureImport(
   effectsForFeature: string
 ) {
   if (isParentStandalone) {
-    if (tree.read(parentPath, 'utf-8').includes('bootstrapApplication')) {
-      addProviderToBootstrapApplication(
-        tree,
-        parentPath,
-        provideEffectsForFeature
-      );
+    if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
+      addProviderToAppConfig(tree, parentPath, provideEffectsForFeature);
     } else {
       addProviderToRoute(tree, parentPath, route, provideEffectsForFeature);
     }
@@ -257,8 +249,8 @@ export function addImportsToModule(
       if (options.facade) {
         sourceFile = addImport(sourceFile, facadeName, facadePath);
         if (isParentStandalone) {
-          if (tree.read(parentPath, 'utf-8').includes('bootstrapApplication')) {
-            addProviderToBootstrapApplication(tree, parentPath, facadeName);
+          if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
+            addProviderToAppConfig(tree, parentPath, facadeName);
           } else {
             addProviderToRoute(tree, parentPath, options.route, facadeName);
           }

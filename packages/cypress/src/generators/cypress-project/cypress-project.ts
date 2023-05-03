@@ -32,6 +32,8 @@ import { cypressInitGenerator } from '../init/init';
 // app
 import { Schema } from './schema';
 import { addLinterToCyProject } from '../../utils/add-linter';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
+import { major } from 'semver';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
@@ -84,7 +86,9 @@ function createFiles(tree: Tree, options: CypressProjectSchema) {
 function addProject(tree: Tree, options: CypressProjectSchema) {
   let e2eProjectConfig: ProjectConfiguration;
 
-  const detectedCypressVersion = installedCypressVersion() ?? cypressVersion;
+  const detectedCypressVersion =
+    installedCypressVersion() ??
+    major(checkAndCleanWithSemver('cypress', cypressVersion));
 
   const cypressConfig =
     detectedCypressVersion < 10 ? 'cypress.json' : 'cypress.config.ts';

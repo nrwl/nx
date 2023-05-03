@@ -172,6 +172,18 @@
           "version": "~4.9.5"
         }
       }
+    },
+    "16.1.0": {
+      "version": "16.1.0-beta.0",
+      "x-prompt": "Do you want to update to TypeScript v5.0?",
+      "requires": {
+        "typescript": ">=4.9.5 <5.0.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.0.2"
+        }
+      }
     }
   }
 }

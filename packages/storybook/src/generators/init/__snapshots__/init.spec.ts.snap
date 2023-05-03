@@ -17,7 +17,7 @@ exports[`@nx/storybook:init dependencies for package.json should add angular rel
     "existing": "1.0.0",
     "html-webpack-plugin": "^5.5.0",
     "prettier": "^2.6.2",
-    "typescript": "~4.9.5",
+    "typescript": "~5.0.2",
     "webpack": "^5.64.0",
   },
   "name": "test-name",

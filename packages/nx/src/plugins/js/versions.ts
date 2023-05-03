@@ -1,1 +1,1 @@
-export const typescriptVersion = '~4.9.5';
+export const typescriptVersion = '~5.0.2';

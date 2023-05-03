@@ -7,8 +7,10 @@ import {
   offsetFromRoot,
 } from '@nx/devkit';
 import { getRootTsConfigFileName } from '@nx/js';
+import { parse } from 'semver';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import type { AngularProjectConfiguration } from '../../../utils/types';
+import { getInstalledAngularVersion } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function createFiles(
@@ -26,6 +28,9 @@ export function createFiles(
         options.libraryOptions.fileName
       );
 
+  const version = getInstalledAngularVersion(tree);
+  const { major, minor } = parse(version);
+
   const substitutions = {
     libName: options.libraryOptions.name,
     libFileName: options.libraryOptions.fileName,
@@ -39,6 +44,7 @@ export function createFiles(
     pathToComponent,
     npmScope,
     rootOffset,
+    angularPeerDepVersion: `^${major}.${minor}.0`,
     tpl: '',
   };
 

@@ -5,18 +5,6 @@ import * as latestVersions from '../../utils/versions';
 import { angularVersion } from '../../utils/versions';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 
-export function getGeneratorDirectoryForInstalledAngularVersion(
-  tree: Tree
-): string | null {
-  const majorAngularVersion = getInstalledAngularMajorVersion(tree);
-
-  const directoryDictionary = {
-    14: 'angular-v14',
-  };
-
-  return directoryDictionary[majorAngularVersion] ?? null;
-}
-
 export function getInstalledAngularVersion(tree: Tree): string {
   const pkgJson = readJson(tree, 'package.json');
   const installedAngularVersion =
@@ -99,6 +87,8 @@ export function versions(tree: Tree) {
   switch (majorAngularVersion) {
     case 14:
       return backwardCompatibleVersions.angularV14;
+    case 15:
+      return backwardCompatibleVersions.angularV15;
     default:
       return latestVersions;
   }

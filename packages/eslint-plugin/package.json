@@ -35,6 +35,7 @@
   "dependencies": {
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
+    "@typescript-eslint/type-utils": "^5.58.0",
     "@typescript-eslint/utils": "^5.58.0",
     "chalk": "^4.1.0",
     "confusing-browser-globals": "^1.0.9",

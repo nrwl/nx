@@ -219,10 +219,10 @@ export async function h() { return 'c'; }
         const json = JSON.parse(content);
 
         /**
-         * Set target as es3!!
+         * Set target as es5!!
          */
 
-        json.compilerOptions.target = 'es3';
+        json.compilerOptions.target = 'es5';
         return JSON.stringify(json, null, 2);
       });
       // What we're testing

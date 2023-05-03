@@ -1,3 +1,7 @@
+import type {
+  BrowserBuilderOptions,
+  ServerBuilderOptions,
+} from '@angular-devkit/build-angular';
 import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
@@ -10,11 +14,17 @@ import type { Schema } from '../schema';
 
 export function updateProjectConfig(tree: Tree, schema: Schema) {
   let projectConfig = readProjectConfiguration(tree, schema.project);
+  const buildTarget = projectConfig.targets.build;
 
-  projectConfig.targets.build.options.outputPath = `dist/apps/${schema.project}/browser`;
+  buildTarget.options.outputPath = `dist/apps/${schema.project}/browser`;
 
-  const buildTargetFileReplacements =
-    projectConfig.targets.build.configurations?.production?.fileReplacements;
+  const buildConfigurations = projectConfig.targets.build.configurations;
+  const configurations: Record<string, {}> = {};
+  if (buildConfigurations) {
+    for (const [key, options] of Object.entries(buildConfigurations)) {
+      configurations[key] = getServerOptions(options);
+    }
+  }
 
   projectConfig.targets.server = {
     dependsOn: ['build'],
@@ -23,20 +33,9 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
       outputPath: `dist/${projectConfig.root}/server`,
       main: joinPathFragments(projectConfig.root, schema.serverFileName),
       tsConfig: joinPathFragments(projectConfig.root, 'tsconfig.server.json'),
+      ...(buildTarget.options ? getServerOptions(buildTarget.options) : {}),
     },
-    configurations: {
-      production: {
-        outputHashing: 'media',
-        ...(buildTargetFileReplacements
-          ? { fileReplacements: buildTargetFileReplacements }
-          : {}),
-      },
-      development: {
-        optimization: false,
-        sourceMap: true,
-        extractLicenses: false,
-      },
-    },
+    configurations,
     defaultConfiguration: 'production',
   };
 
@@ -88,4 +87,28 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
     ];
     updateNxJson(tree, nxJson);
   }
+}
+
+function getServerOptions(
+  options: Partial<BrowserBuilderOptions> = {}
+): Partial<ServerBuilderOptions> {
+  return {
+    buildOptimizer: options?.buildOptimizer,
+    outputHashing:
+      options?.outputHashing === 'all'
+        ? ('media' as any)
+        : options?.outputHashing,
+    fileReplacements: options?.fileReplacements,
+    optimization:
+      options?.optimization === undefined ? undefined : !!options?.optimization,
+    sourceMap: options?.sourceMap,
+    stylePreprocessorOptions: options?.stylePreprocessorOptions,
+    resourcesOutputPath: options?.resourcesOutputPath,
+    deployUrl: options?.deployUrl,
+    i18nMissingTranslation: options?.i18nMissingTranslation,
+    preserveSymlinks: options?.preserveSymlinks,
+    extractLicenses: options?.extractLicenses,
+    inlineStyleLanguage: options?.inlineStyleLanguage,
+    vendorChunk: options?.vendorChunk,
+  };
 }

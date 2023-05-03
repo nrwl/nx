@@ -173,6 +173,8 @@ async function addUnitTestRunner(
   switch (options.unitTestRunner) {
     case UnitTestRunner.Jest:
       if (!options.skipPackageJson) {
+        process.env.npm_config_legacy_peer_deps ??= 'true';
+
         addDependenciesToPackageJsonIfDontExist(
           tree,
           {},

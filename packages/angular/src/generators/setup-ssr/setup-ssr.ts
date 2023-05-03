@@ -10,14 +10,20 @@ import {
   normalizeOptions,
   updateAppModule,
   updateProjectConfig,
+  validateOptions,
 } from './lib';
 import type { Schema } from './schema';
 
 export async function setupSsr(tree: Tree, schema: Schema) {
+  validateOptions(tree, schema);
   const options = normalizeOptions(tree, schema);
 
   generateSSRFiles(tree, options);
-  updateAppModule(tree, options);
+
+  if (!options.standalone) {
+    updateAppModule(tree, options);
+  }
+
   updateProjectConfig(tree, options);
 
   const pkgVersions = versions(tree);

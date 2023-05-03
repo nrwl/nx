@@ -21,6 +21,10 @@ export class FileChangeRecorder {
     this.tree.write(this.filePath, this.mutableContent.toString());
   }
 
+  hasChanged(): boolean {
+    return this.mutableContent.hasChanged();
+  }
+
   insertLeft(index: number, content: string): void {
     this.mutableContent.appendLeft(index, content);
   }

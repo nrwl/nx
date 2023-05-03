@@ -9,7 +9,7 @@ import { AppComponent } from './app.component';
 @NgModule({
   declarations: [AppComponent],
   imports: [
-    BrowserModule.withServerTransition({ appId: 'serverApp' }),
+    BrowserModule,
     RouterModule.forRoot(
       [
         {
@@ -181,9 +181,11 @@ exports[`MF Remote App Generator --ssr should generate the correct files 11`] = 
 {
   "configurations": {
     "development": {
+      "buildOptimizer": false,
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
+      "vendorChunk": true,
     },
     "production": {
       "outputHashing": "media",
