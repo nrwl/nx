@@ -266,5 +266,5 @@ const binaryExtensions = new Set([
 ]);
 
 export function isBinaryPath(path: string): boolean {
-  return binaryExtensions.has(extname(path));
+  return binaryExtensions.has(extname(path).toLowerCase());
 }
