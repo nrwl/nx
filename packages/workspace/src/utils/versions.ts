@@ -7,5 +7,5 @@ export const eslintConfigPrettierVersion = '8.1.0';
 
 // TODO: remove when preset generation is reworked and
 // deps are not installed from workspace
-export const angularCliVersion = '~16.0.0-rc.4';
+export const angularCliVersion = '~16.0.0';
 export const prettierVersion = '^2.6.2';
