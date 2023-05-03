@@ -10,6 +10,8 @@ export default async function update(host: Tree) {
   const projects = getProjects(host);
 
   projects.forEach((projectConfig, projectName) => {
+    if (!projectConfig.targets) return;
+
     let shouldUpdate = false;
 
     Object.entries(projectConfig.targets).forEach(
