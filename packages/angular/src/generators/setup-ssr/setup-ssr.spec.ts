@@ -35,20 +35,11 @@ describe('setupSSR', () => {
     `);
     expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-
       import { AppModule } from './app/app.module';
 
-      function bootstrap() {
-        platformBrowserDynamic()
-          .bootstrapModule(AppModule)
-          .catch((err) => console.error(err));
-      }
-
-      if (document.readyState !== 'loading') {
-        bootstrap();
-      } else {
-        document.addEventListener('DOMContentLoaded', bootstrap);
-      }
+      platformBrowserDynamic()
+        .bootstrapModule(AppModule)
+        .catch((err) => console.error(err));
       "
     `);
     expect(tree.read('apps/app1/tsconfig.server.json', 'utf-8'))
@@ -217,6 +208,41 @@ describe('setupSSR', () => {
 
         export { AppServerModule } from './app/app.server.module';
         export { renderModule } from '@angular/platform-server';
+        "
+      `);
+    });
+
+    it('should wrap bootstrap call for Angular versions lower than 15.2', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, {
+        name: 'app1',
+      });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '15.1.0' },
+      }));
+
+      // ACT
+      await setupSsr(tree, { project: 'app1' });
+
+      // ASSERT
+      expect(tree.read('apps/app1/src/main.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+        import { AppModule } from './app/app.module';
+
+        function bootstrap() {
+          platformBrowserDynamic()
+            .bootstrapModule(AppModule)
+            .catch((err) => console.error(err));
+        }
+
+        if (document.readyState !== 'loading') {
+          bootstrap();
+        } else {
+          document.addEventListener('DOMContentLoaded', bootstrap);
+        }
         "
       `);
     });

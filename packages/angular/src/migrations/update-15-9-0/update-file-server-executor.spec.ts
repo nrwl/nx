@@ -78,8 +78,6 @@ describe('updateFileServerExecutor', () => {
     addProjectConfiguration(tree, 'test', project);
 
     // ACT
-    expect(async () => {
-      await updateFileServerExecutor(tree);
-    }).not.toThrow();
+    await expect(updateFileServerExecutor(tree)).resolves.not.toThrow();
   });
 });
