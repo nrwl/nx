@@ -5,10 +5,9 @@ import { execAndWait } from '../child-process-utils';
 import { mapErrorToBodyLines } from '../error-utils';
 import { output } from '../output';
 import { getPackageManagerCommand, PackageManager } from '../package-manager';
-import { getFileName } from '../string-utils';
 
 export async function setupCI(
-  name: string,
+  directory: string,
   ci: string,
   packageManager: PackageManager,
   nxCloudSuccessfullyInstalled: boolean
@@ -27,7 +26,7 @@ export async function setupCI(
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
       `${pmc.exec} nx g @nx/workspace:ci-workflow --ci=${ci}`,
-      join(process.cwd(), getFileName(name))
+      directory
     );
     ciSpinner.succeed('CI workflow has been generated successfully');
     return res;

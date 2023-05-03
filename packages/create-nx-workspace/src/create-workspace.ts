@@ -48,11 +48,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   let nxCloudInstallRes;
   if (nxCloud) {
-    nxCloudInstallRes = await setupNxCloud(name, packageManager);
+    nxCloudInstallRes = await setupNxCloud(directory, packageManager);
   }
   if (ci) {
     await setupCI(
-      name,
+      directory,
       ci,
       packageManager,
       nxCloud && nxCloudInstallRes?.code === 0

@@ -3,11 +3,10 @@ import { join } from 'path';
 import { execAndWait } from '../child-process-utils';
 import { output } from '../output';
 import { getPackageManagerCommand, PackageManager } from '../package-manager';
-import { getFileName } from '../string-utils';
 import { mapErrorToBodyLines } from '../error-utils';
 
 export async function setupNxCloud(
-  name: string,
+  directory: string,
   packageManager: PackageManager
 ) {
   const nxCloudSpinner = ora(`Setting up NxCloud`).start();
@@ -15,7 +14,7 @@ export async function setupNxCloud(
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
       `${pmc.exec} nx g nx-cloud:init --no-analytics --installationSource=create-nx-workspace`,
-      join(process.cwd(), getFileName(name))
+      directory
     );
     nxCloudSpinner.succeed('NxCloud has been set up successfully');
     return res;
