@@ -6,18 +6,21 @@ export async function addJest(
   unitTestRunner: 'jest' | 'none',
   projectName: string,
   appProjectRoot: string,
-  js: boolean
+  js: boolean,
+  skipPackageJson: boolean
 ) {
   if (unitTestRunner !== 'jest') {
     return () => {};
   }
 
   const jestTask = await jestProjectGenerator(host, {
+    js,
     project: projectName,
     supportTsx: true,
     skipSerializers: true,
     setupFile: 'none',
-    babelJest: true,
+    compiler: 'babel',
+    skipPackageJson,
     skipFormat: true,
   });
 
