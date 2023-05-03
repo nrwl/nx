@@ -46,9 +46,7 @@ To run testing in watch mode, you can create a new configuration within your tes
                 "config": "apps/my-app/vite.config.ts"
             },
             "configurations": {
-                "watch": {
-                    "watch": true
-                }
+                "watch": true
             }
         }
     }
