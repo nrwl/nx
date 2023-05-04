@@ -1,16 +1,16 @@
 import {
   createProjectGraphAsync,
+  ExecutorContext,
   logger,
   parseTargetString,
   ProjectGraph,
   ProjectGraphDependency,
   readProjectConfiguration,
+  readTargetOptions,
+  reverse,
   stripIndents,
   TargetConfiguration,
   Tree,
-  reverse,
-  readTargetOptions,
-  ExecutorContext,
   workspaceRoot,
 } from '@nx/devkit';
 import { readNxJson } from 'nx/src/project-graph/file-utils';
@@ -204,9 +204,5 @@ function createExecutorContext(
     projectName,
     projectsConfigurations,
     nxJsonConfiguration,
-    workspace: {
-      ...projectsConfigurations,
-      ...nxJsonConfiguration,
-    },
   };
 }

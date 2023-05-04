@@ -35,7 +35,6 @@ export function convertNxExecutor(executor: Executor) {
         configurationName: builderContext.target.configuration,
         projectsConfigurations,
         nxJsonConfiguration,
-        workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
         cwd: process.cwd(),
         projectGraph,
         isVerbose: false,

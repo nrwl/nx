@@ -22,7 +22,7 @@ export const processProjectGraph: ProjectGraphProcessor = async (
   graph,
   context
 ) => {
-  const builder = new ProjectGraphBuilder(graph);
+  const builder = new ProjectGraphBuilder(graph, context.fileMap);
   const pluginConfig = jsPluginConfig(readNxJson());
 
   if (pluginConfig.analyzePackageJson) {
@@ -35,8 +35,6 @@ export const processProjectGraph: ProjectGraphProcessor = async (
       }
       writeLastProcessedLockfileHash(lockHash);
     }
-
-    buildNpmPackageNodes(builder);
   }
 
   await buildExplicitDependencies(pluginConfig, context, builder);

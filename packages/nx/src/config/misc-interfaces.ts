@@ -1,4 +1,4 @@
-import { Hash, Hasher } from '../hasher/hasher';
+import { Hash, TaskHasher } from '../hasher/task-hasher';
 import { ProjectGraph } from './project-graph';
 import { Task, TaskGraph } from './task-graph';
 import {
@@ -118,7 +118,7 @@ export type Executor<T = any> = (
   | AsyncIterableIterator<{ success: boolean }>;
 
 export interface HasherContext {
-  hasher: Hasher;
+  hasher: TaskHasher;
   projectGraph: ProjectGraph;
   taskGraph: TaskGraph;
   projectsConfigurations: ProjectsConfigurations;
@@ -179,13 +179,6 @@ export interface ExecutorContext {
   target?: TargetConfiguration;
 
   /**
-   * Deprecated. Use projectsConfigurations or nxJsonConfiguration
-   * The full workspace configuration
-   * @todo(vsavkin): remove after v17
-   */
-  workspace?: ProjectsConfigurations & NxJsonConfiguration;
-
-  /**
    * Projects config
    *
    * @todo(vsavkin): mark this as required for v17
@@ -216,4 +209,11 @@ export interface ExecutorContext {
    * @todo(vsavkin) mark this required for v17
    */
   projectGraph?: ProjectGraph;
+
+  /**
+   * Deprecated. Use projectsConfigurations or nxJsonConfiguration
+   * The full workspace configuration
+   * @todo(vsavkin): remove after v17
+   */
+  workspace?: ProjectsConfigurations & NxJsonConfiguration;
 }

@@ -8,7 +8,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
-import { defaultHashing } from '../../../hasher/hashing-impl';
+import { fileHasher, hashArray } from '../../../hasher/impl';
 import { sortObjectByKeys } from '../../../utils/object-sort';
 
 /**
@@ -86,7 +86,7 @@ function addNodes(
           hash:
             snapshot.integrity ||
             snapshot.checksum ||
-            defaultHashing.hashArray([packageName, version]),
+            hashArray([packageName, version]),
         },
       };
 

@@ -19,20 +19,20 @@ export function buildExplicitTypescriptAndPackageJsonDependencies(
 ) {
   let res: ExplicitDependency[] = [];
 
-  let typescriptExists = false;
-
-  try {
-    require.resolve('typescript');
-    typescriptExists = true;
-  } catch {}
   if (
-    typescriptExists &&
-    (jsPluginConfig.analyzeSourceFiles === undefined ||
-      jsPluginConfig.analyzeSourceFiles === true)
+    jsPluginConfig.analyzeSourceFiles === undefined ||
+    jsPluginConfig.analyzeSourceFiles === true
   ) {
-    res = res.concat(
-      buildExplicitTypeScriptDependencies(projectGraph, filesToProcess)
-    );
+    let tsExists = false;
+    try {
+      require.resolve('typescript');
+      tsExists = true;
+    } catch {}
+    if (tsExists) {
+      res = res.concat(
+        buildExplicitTypeScriptDependencies(projectGraph, filesToProcess)
+      );
+    }
   }
   if (
     jsPluginConfig.analyzePackageJson === undefined ||

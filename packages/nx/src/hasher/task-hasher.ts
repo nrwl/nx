@@ -1,8 +1,8 @@
 import { exec } from 'child_process';
 import * as minimatch from 'minimatch';
-import { defaultHashing, HashingImpl } from './hashing-impl';
 import {
   FileData,
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
@@ -11,6 +11,9 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { hashTsConfig } from '../plugins/js/hasher/hasher';
+import { DaemonClient } from '../daemon/client/client';
+import { FileHasher } from './impl/file-hasher-base';
+import { hashArray } from './impl';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 
 type ExpandedSelfInput =
@@ -42,27 +45,40 @@ export interface Hash {
   };
 }
 
-/**
- * The default hasher used by executors.
- */
-export class Hasher {
+export interface TaskHasher {
+  hashTask(task: Task): Promise<Hash>;
+  hashTasks(tasks: Task[]): Promise<Hash[]>;
+}
+
+export type Hasher = TaskHasher;
+
+export class DaemonBasedTaskHasher implements TaskHasher {
+  constructor(
+    private readonly daemonClient: DaemonClient,
+    private readonly runnerOptions: any
+  ) {}
+
+  async hashTasks(tasks: Task[]): Promise<Hash[]> {
+    return this.daemonClient.hashTasks(this.runnerOptions, tasks);
+  }
+
+  async hashTask(task: Task): Promise<Hash> {
+    return (await this.daemonClient.hashTasks(this.runnerOptions, [task]))[0];
+  }
+}
+
+export class InProcessTaskHasher implements TaskHasher {
   static version = '3.0';
-  private taskHasher: TaskHasher;
-  private hashing: HashingImpl;
+  private taskHasher: TaskHasherImpl;
 
   constructor(
+    private readonly projectFileMap: ProjectFileMap,
+    private readonly allWorkspaceFiles: FileData[],
     private readonly projectGraph: ProjectGraph,
     private readonly nxJson: NxJsonConfiguration,
     private readonly options: any,
-    hashing: HashingImpl = undefined
+    private readonly fileHasher: FileHasher
   ) {
-    if (!hashing) {
-      this.hashing = defaultHashing;
-    } else {
-      // this is only used for testing
-      this.hashing = hashing;
-    }
-
     const legacyRuntimeInputs = (
       this.options && this.options.runtimeCacheInputs
         ? this.options.runtimeCacheInputs
@@ -81,21 +97,27 @@ export class Hasher {
       '.nxignore',
     ].map((d) => ({ fileset: `{workspaceRoot}/${d}` }));
 
-    this.taskHasher = new TaskHasher(
+    this.taskHasher = new TaskHasherImpl(
       nxJson,
       legacyRuntimeInputs,
       legacyFilesetInputs,
+      this.projectFileMap,
+      this.allWorkspaceFiles,
       this.projectGraph,
-      this.hashing,
+      this.fileHasher,
       { selectivelyHashTsConfig: this.options.selectivelyHashTsConfig ?? false }
     );
+  }
+
+  async hashTasks(tasks: Task[]): Promise<Hash[]> {
+    return await Promise.all(tasks.map((t) => this.hashTask(t)));
   }
 
   async hashTask(task: Task): Promise<Hash> {
     const res = await this.taskHasher.hashTask(task, [task.target.project]);
     const command = this.hashCommand(task);
     return {
-      value: this.hashArray([res.value, command]),
+      value: hashArray([res.value, command]),
       details: {
         command,
         nodes: res.details,
@@ -105,28 +127,7 @@ export class Hasher {
     };
   }
 
-  hashDependsOnOtherTasks(task: Task) {
-    return false;
-  }
-
-  /**
-   * @deprecated use hashTask instead
-   */
-  async hashTaskWithDepsAndContext(task: Task): Promise<Hash> {
-    return this.hashTask(task);
-  }
-
-  /**
-   * @deprecated hashTask will hash runtime inputs and global files
-   */
-  async hashContext(): Promise<any> {
-    return {
-      implicitDeps: '',
-      runtime: '',
-    };
-  }
-
-  hashCommand(task: Task): string {
+  private hashCommand(task: Task): string {
     const overrides = { ...task.overrides };
     delete overrides['__overrides_unparsed__'];
     const sortedOverrides = {};
@@ -134,33 +135,12 @@ export class Hasher {
       sortedOverrides[k] = overrides[k];
     }
 
-    return this.hashing.hashArray([
+    return hashArray([
       task.target.project ?? '',
       task.target.target ?? '',
       task.target.configuration ?? '',
       JSON.stringify(sortedOverrides),
     ]);
-  }
-
-  /**
-   * @deprecated use hashTask
-   */
-  async hashSource(task: Task): Promise<string> {
-    const hash = await this.taskHasher.hashTask(task, [task.target.project]);
-    for (let n of Object.keys(hash.details)) {
-      if (n.startsWith(`${task.target.project}:`)) {
-        return hash.details[n];
-      }
-    }
-    return '';
-  }
-
-  hashArray(values: string[]): string {
-    return this.hashing.hashArray(values);
-  }
-
-  hashFile(path: string): string {
-    return this.hashing.hashFile(path);
   }
 }
 
@@ -174,7 +154,7 @@ const DEFAULT_INPUTS: ReadonlyArray<InputDefinition> = [
   },
 ];
 
-class TaskHasher {
+class TaskHasherImpl {
   private filesetHashes: {
     [taskId: string]: Promise<PartialHash>;
   } = {};
@@ -190,8 +170,10 @@ class TaskHasher {
     private readonly nxJson: NxJsonConfiguration,
     private readonly legacyRuntimeInputs: { runtime: string }[],
     private readonly legacyFilesetInputs: { fileset: string }[],
+    private readonly projectFileMap: ProjectFileMap,
+    private readonly allWorkspaceFiles: FileData[],
     private readonly projectGraph: ProjectGraph,
-    private readonly hashing: HashingImpl,
+    private readonly fileHasher: FileHasher,
     private readonly options: { selectivelyHashTsConfig: boolean }
   ) {}
 
@@ -229,7 +211,7 @@ class TaskHasher {
       );
       if (target) {
         return {
-          value: this.hashing.hashArray([selfAndInputs.value, target.value]),
+          value: hashArray([selfAndInputs.value, target.value]),
           details: { ...selfAndInputs.details, ...target.details },
         };
       }
@@ -293,7 +275,7 @@ class TaskHasher {
       details = { ...details, ...s.details };
     }
 
-    const value = this.hashing.hashArray([
+    const value = hashArray([
       ...self.map((d) => d.value),
       ...deps.map((d) => d.value),
       ...projects.map((d) => d.value),
@@ -361,10 +343,7 @@ class TaskHasher {
         });
       }
       partialHash = {
-        value: this.hashing.hashArray([
-          hash,
-          ...partialHashes.map((p) => p.value),
-        ]),
+        value: hashArray([hash, ...partialHashes.map((p) => p.value)]),
         details: {
           [projectName]: hash,
           ...partialHashes.reduce((m, c) => ({ ...m, ...c.details }), {}),
@@ -426,7 +405,7 @@ class TaskHasher {
     }
     if (hasCommandExternalDependencies) {
       return {
-        value: this.hashing.hashArray(partialHashes.map((h) => h.value)),
+        value: hashArray(partialHashes.map((h) => h.value)),
         details: partialHashes.reduce(
           (acc, c) => ({ ...acc, ...c.details }),
           {}
@@ -434,9 +413,7 @@ class TaskHasher {
       };
     }
 
-    const hash = this.hashing.hashArray([
-      JSON.stringify(this.projectGraph.externalNodes),
-    ]);
+    const hash = hashArray([JSON.stringify(this.projectGraph.externalNodes)]);
     return {
       value: hash,
       details: {
@@ -546,19 +523,19 @@ class TaskHasher {
     if (!this.filesetHashes[mapKey]) {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
         const parts = [];
-        const matchingFile = this.projectGraph.allWorkspaceFiles.find(
+        const matchingFile = this.allWorkspaceFiles.find(
           (t) => t.file === withoutWorkspaceRoot
         );
         if (matchingFile) {
           parts.push(matchingFile.hash);
         } else {
-          this.projectGraph.allWorkspaceFiles
+          this.allWorkspaceFiles
             .filter((f) => minimatch(f.file, withoutWorkspaceRoot))
             .forEach((f) => {
               parts.push(f.hash);
             });
         }
-        const value = this.hashing.hashArray(parts);
+        const value = hashArray(parts);
         res({
           value,
           details: { [mapKey]: value },
@@ -578,13 +555,13 @@ class TaskHasher {
         const p = this.projectGraph.nodes[projectName];
         const filteredFiles = filterUsingGlobPatterns(
           p.data.root,
-          p.data.files,
+          this.projectFileMap[projectName] || [],
           filesetPatterns
         );
         const fileNames = filteredFiles.map((f) => f.file);
         const values = filteredFiles.map((f) => f.hash);
 
-        const value = this.hashing.hashArray([
+        const value = hashArray([
           ...fileNames,
           ...values,
           JSON.stringify({ ...p.data, files: undefined }),
@@ -622,7 +599,7 @@ class TaskHasher {
   }
 
   private async hashEnv(envVarName: string): Promise<PartialHash> {
-    const value = this.hashing.hashArray([process.env[envVarName] ?? '']);
+    const value = hashArray([process.env[envVarName] ?? '']);
     return {
       details: { [`env:${envVarName}`]: value },
       value,

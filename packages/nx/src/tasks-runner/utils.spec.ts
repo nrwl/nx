@@ -16,7 +16,6 @@ describe('utils', () => {
         targets: {
           build: { ...build, executor: '' },
         },
-        files: [],
       },
     };
   }
@@ -299,7 +298,6 @@ describe('utils', () => {
                   executor: '',
                 },
               },
-              files: [],
             },
           })
         ).toEqual([
@@ -419,7 +417,6 @@ describe('utils', () => {
             type: 'lib',
             data: {
               root: 'libs/build',
-              files: [],
             },
           },
         },
@@ -449,7 +446,6 @@ describe('utils', () => {
             type: 'app',
             data: {
               root: 'libs/project',
-              files: [],
             },
           },
         },

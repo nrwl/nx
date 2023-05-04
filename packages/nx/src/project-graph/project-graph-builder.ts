@@ -3,26 +3,33 @@
  */
 import {
   DependencyType,
+  fileDataDepTarget,
+  fileDataDepType,
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
+import { getProjectFileMap } from './build-project-graph';
 
 export class ProjectGraphBuilder {
   // TODO(FrozenPandaz): make this private
   readonly graph: ProjectGraph;
+  private readonly fileMap: ProjectFileMap;
   readonly removedEdges: { [source: string]: Set<string> } = {};
 
-  constructor(g?: ProjectGraph) {
+  constructor(g?: ProjectGraph, fileMap?: ProjectFileMap) {
     if (g) {
       this.graph = g;
+      this.fileMap = fileMap || getProjectFileMap(g).projectFileMap;
     } else {
       this.graph = {
         nodes: {},
         externalNodes: {},
         dependencies: {},
       };
+      this.fileMap = fileMap || {};
     }
   }
 
@@ -263,12 +270,6 @@ export class ProjectGraphBuilder {
       (d) => d.target === targetProjectName && d.type === type
     );
 
-    const dependency = {
-      source: sourceProjectName,
-      target: targetProjectName,
-      type,
-    };
-
     if (sourceProjectFile) {
       const source = this.graph.nodes[sourceProjectName];
       if (!source) {
@@ -276,7 +277,7 @@ export class ProjectGraphBuilder {
           `Source project is not a project node: ${sourceProjectName}`
         );
       }
-      const fileData = source.data.files.find(
+      const fileData = (this.fileMap[sourceProjectName] || []).find(
         (f) => f.file === sourceProjectFile
       );
       if (!fileData) {
@@ -285,20 +286,28 @@ export class ProjectGraphBuilder {
         );
       }
 
-      if (!fileData.dependencies) {
-        fileData.dependencies = [];
+      if (!fileData.deps) {
+        fileData.deps = [];
       }
       if (
-        !fileData.dependencies.find(
-          (t) => t.target === targetProjectName && t.type === type
+        !fileData.deps.find(
+          (t) =>
+            fileDataDepTarget(t) === targetProjectName &&
+            fileDataDepType(t) === type
         )
       ) {
-        fileData.dependencies.push(dependency);
+        const dep: string | [string, string] =
+          type === 'static' ? targetProjectName : [targetProjectName, type];
+        fileData.deps.push(dep);
       }
     } else if (!isDuplicate) {
       // only add to dependencies section if the source file is not specified
       // and not already added
-      this.graph.dependencies[sourceProjectName].push(dependency);
+      this.graph.dependencies[sourceProjectName].push({
+        source: sourceProjectName,
+        target: targetProjectName,
+        type,
+      });
     }
   }
 
@@ -327,17 +336,18 @@ export class ProjectGraphBuilder {
     sourceProject: string
   ): Map<string, Set<DependencyType | string>> {
     const fileDeps = new Map<string, Set<DependencyType | string>>();
-    const files = this.graph.nodes[sourceProject].data.files;
+    const files = this.fileMap[sourceProject] || [];
     if (!files) {
       return fileDeps;
     }
     for (let f of files) {
-      if (f.dependencies) {
-        for (let d of f.dependencies) {
-          if (!fileDeps.has(d.target)) {
-            fileDeps.set(d.target, new Set([d.type]));
+      if (f.deps) {
+        for (let d of f.deps) {
+          const target = fileDataDepTarget(d);
+          if (!fileDeps.has(target)) {
+            fileDeps.set(target, new Set([fileDataDepType(d)]));
           } else {
-            fileDeps.get(d.target).add(d.type);
+            fileDeps.get(target).add(fileDataDepType(d));
           }
         }
       }

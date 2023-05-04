@@ -1,8 +1,10 @@
 import type {
   FileData,
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '@nx/devkit';
+import { fileDataDepTarget } from 'nx/src/config/project-graph';
 
 interface Reach {
   graph: ProjectGraph;
@@ -136,21 +138,21 @@ export function checkCircularPath(
 }
 
 export function findFilesInCircularPath(
+  projectFileMap: ProjectFileMap,
   circularPath: ProjectGraphProjectNode[]
 ): Array<string[]> {
   const filePathChain = [];
 
   for (let i = 0; i < circularPath.length - 1; i++) {
     const next = circularPath[i + 1].name;
-    const files: FileData[] = circularPath[i].data.files;
+    const files: FileData[] = projectFileMap[circularPath[i].name] || [];
     filePathChain.push(
-      Object.keys(files)
+      files
         .filter(
-          (key) =>
-            files[key].dependencies &&
-            files[key].dependencies.find((d) => d.target === next)
+          (file) =>
+            file.deps && file.deps.find((d) => fileDataDepTarget(d) === next)
         )
-        .map((key) => files[key].file)
+        .map((file) => file.file)
     );
   }
 

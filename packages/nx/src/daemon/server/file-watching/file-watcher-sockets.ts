@@ -3,7 +3,7 @@ import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { ProjectGraph } from '../../../config/project-graph';
 import { findAllProjectNodeDependencies } from '../../../utils/project-graph-utils';
 import { PromisedBasedQueue } from '../../../utils/promised-based-queue';
-import { currentProjectGraphCache } from '../project-graph-incremental-recomputation';
+import { currentProjectGraph } from '../project-graph-incremental-recomputation';
 import { handleResult } from '../server';
 import { getProjectsAndGlobalChanges } from './changed-projects';
 
@@ -59,7 +59,7 @@ export function notifyFileWatcherSockets(
           const watchedProjects = new Set<string>(
             findMatchingProjects(
               config.watchProjects,
-              currentProjectGraphCache.nodes
+              currentProjectGraph.nodes
             )
           );
 
@@ -67,7 +67,7 @@ export function notifyFileWatcherSockets(
             for (const project of watchedProjects) {
               for (const dep of findAllProjectNodeDependencies(
                 project,
-                currentProjectGraphCache as ProjectGraph
+                currentProjectGraph
               )) {
                 watchedProjects.add(dep);
               }

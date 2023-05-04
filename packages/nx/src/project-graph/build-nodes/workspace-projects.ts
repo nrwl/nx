@@ -38,7 +38,6 @@ export async function buildWorkspaceProjectNodes(
       type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
       data: {
         ...projectConfiguration,
-        files: [], // missing files
       },
     };
     return graph;
@@ -101,7 +100,6 @@ export async function buildWorkspaceProjectNodes(
       data: {
         ...p,
         tags,
-        files: ctx.fileMap[key],
       },
     });
   }

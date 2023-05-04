@@ -1,26 +1,50 @@
-import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
-import { defaultHashing } from './hashing-impl';
-import { FileData } from '../config/project-graph';
-import { joinPathFragments, normalizePath } from '../utils/path';
+import { FileData } from '../../config/project-graph';
+
+export interface FileHasher {
+  init(): Promise<void>;
+
+  hashFile(path: string): string;
+
+  clear(): void;
+
+  ensureInitialized();
+
+  hashFiles(files: string[]): Promise<Map<string, string>>;
+
+  allFileData(): FileData[];
+
+  incrementalUpdate(
+    updatedFiles: Map<string, string>,
+    deletedFiles: string[]
+  ): void;
+}
 
 export abstract class FileHasherBase {
   protected fileHashes: Map<string, string>;
   protected isInitialized = false;
+
+  abstract init(): Promise<void>;
+
+  abstract hashFile(path: string): string;
 
   clear(): void {
     this.fileHashes = new Map<string, string>();
     this.isInitialized = false;
   }
 
-  abstract init(): Promise<void>;
-
-  abstract hashFiles(files: string[]): Promise<Map<string, string>>;
-
   async ensureInitialized() {
     if (!this.isInitialized) {
       await this.init();
     }
+  }
+
+  async hashFiles(files: string[]): Promise<Map<string, string>> {
+    const r = new Map<string, string>();
+    for (let f of files) {
+      r.set(f, this.hashFile(f));
+    }
+    return r;
   }
 
   allFileData(): FileData[] {
@@ -55,24 +79,5 @@ export abstract class FileHasherBase {
       'incremental hashing:start',
       'incremental hashing:end'
     );
-  }
-
-  hashFile(path: string): string {
-    if (!this.fileHashes) {
-      throw new Error('FileHasher is invoked before being initialized');
-    }
-    const relativePath = normalizePath(
-      path.startsWith(workspaceRoot)
-        ? path.slice(workspaceRoot.length + 1)
-        : path
-    );
-    try {
-      // this has to be absolute to avoid issues with cwd
-      return defaultHashing.hashFile(
-        joinPathFragments(workspaceRoot, relativePath)
-      );
-    } catch {
-      return '';
-    }
   }
 }

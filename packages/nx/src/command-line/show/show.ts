@@ -12,6 +12,7 @@ import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
+import { fileHasher } from '../../hasher/impl';
 
 export type ShowProjectOptions = {
   exclude: string;
@@ -66,7 +67,7 @@ function getAffectedGraph(
     graph,
     calculateFileChanges(
       parseFiles(nxArgs).files,
-      graph.allWorkspaceFiles,
+      fileHasher.allFileData(),
       nxArgs
     ),
     nxJson

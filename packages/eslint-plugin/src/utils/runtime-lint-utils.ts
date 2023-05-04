@@ -87,6 +87,7 @@ export function findDependenciesWithTags(
 }
 
 const regexMap = new Map<string, RegExp>();
+
 function hasTag(proj: ProjectGraphProjectNode, tag: string): boolean {
   if (tag === '*') return true;
 
@@ -402,12 +403,14 @@ export function hasBuildExecutor(
 const ESLINT_REGEX = /node_modules.*[\/\\]eslint$/;
 const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
 const NRWL_CLI_REGEX = /nx[\/\\]bin[\/\\]run-executor\.js$/;
+
 export function isTerminalRun(): boolean {
   return (
     process.argv.length > 1 &&
     (!!process.argv[1].match(NRWL_CLI_REGEX) ||
       !!process.argv[1].match(JEST_REGEX) ||
-      !!process.argv[1].match(ESLINT_REGEX))
+      !!process.argv[1].match(ESLINT_REGEX) ||
+      !!process.argv[1].endsWith('/bin/jest.js'))
   );
 }
 

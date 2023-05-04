@@ -1,11 +1,11 @@
-import { FileHasherBase } from './file-hasher-base';
+import { FileHasher, FileHasherBase } from './file-hasher-base';
 import { performance } from 'perf_hooks';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../../utils/workspace-root';
 
-export class NativeFileHasher extends FileHasherBase {
+export class NativeFileHasher extends FileHasherBase implements FileHasher {
   static available() {
     try {
-      require('../native');
+      require('../../native');
       return true;
     } catch {
       return false;
@@ -15,7 +15,7 @@ export class NativeFileHasher extends FileHasherBase {
   async init(): Promise<void> {
     performance.mark('init hashing:start');
     // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
-    const { hashFiles } = require('../native');
+    const { hashFiles } = require('../../native');
     this.clear();
     const filesObject = hashFiles(workspaceRoot);
     this.fileHashes = new Map(Object.entries(filesObject));
@@ -28,19 +28,15 @@ export class NativeFileHasher extends FileHasherBase {
     );
   }
 
-  async hashFiles(files: string[]): Promise<Map<string, string>> {
-    const r = new Map<string, string>();
-
-    for (let f of files) {
-      r.set(f, this.hashFile(f));
-    }
-
-    return r;
-  }
-
   hashFile(path: string): string {
     // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
-    const { hashFile } = require('../native');
+    const { hashFile } = require('../../native');
     return hashFile(path).hash;
   }
+}
+
+export function nativeHashArray(input: string[]): string {
+  // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
+  const { hashArray } = require('../../native');
+  return hashArray(input);
 }

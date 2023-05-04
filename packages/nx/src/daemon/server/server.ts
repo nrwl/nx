@@ -29,8 +29,6 @@ import {
 } from './watcher';
 import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
 import { existsSync, statSync } from 'fs';
-import { HashingImpl } from '../../hasher/hashing-impl';
-import { defaultFileHasher } from '../../hasher/file-hasher';
 import { handleRequestProjectGraph } from './handle-request-project-graph';
 import { handleProcessInBackground } from './handle-process-in-background';
 import {
@@ -51,6 +49,8 @@ import { nxVersion } from '../../utils/versions';
 import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
+import { handleHashTasks } from './handle-hash-tasks';
+import { fileHasher, hashArray } from '../../hasher/impl';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -139,6 +139,8 @@ async function handleMessage(socket, data: string) {
     });
   } else if (payload.type === 'REQUEST_PROJECT_GRAPH') {
     await handleResult(socket, await handleRequestProjectGraph());
+  } else if (payload.type === 'HASH_TASKS') {
+    await handleResult(socket, await handleHashTasks(payload));
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
     await handleResult(socket, await handleProcessInBackground(payload));
   } else if (payload.type === 'RECORD_OUTPUTS_HASH') {
@@ -219,7 +221,6 @@ async function registerProcessServerJsonTracking() {
 }
 
 let existingLockHash: string | undefined;
-const hasher = new HashingImpl();
 
 function daemonIsOutdated(): boolean {
   return nxVersionChanged() || lockFileHashChanged();
@@ -242,8 +243,8 @@ function lockFileHashChanged(): boolean {
     join(workspaceRoot, 'pnpm-lock.yaml'),
   ]
     .filter((file) => existsSync(file))
-    .map((file) => hasher.hashFile(file));
-  const newHash = hasher.hashArray(lockHashes);
+    .map((file) => fileHasher.hashFile(file));
+  const newHash = hashArray(lockHashes);
   if (existingLockHash && newHash != existingLockHash) {
     existingLockHash = newHash;
     return true;
@@ -358,7 +359,7 @@ export async function startServer(): Promise<Server> {
   if (!isWindows) {
     killSocketOrPath();
   }
-  await defaultFileHasher.ensureInitialized();
+  await fileHasher.ensureInitialized();
   return new Promise((resolve, reject) => {
     try {
       server.listen(FULL_OS_SOCKET_PATH, async () => {

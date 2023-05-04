@@ -12,6 +12,7 @@ import { cypressE2EConfigurationGenerator } from './cypress-e2e-configuration';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
 jest.mock('../../utils/cypress-version');
+
 describe('Cypress e2e configuration', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<

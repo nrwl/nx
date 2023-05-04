@@ -190,9 +190,9 @@ async function runExecutorInternal<T extends { success: boolean }>(
     const r = implementation(combinedOptions, {
       root,
       target: targetConfig,
-      workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
       projectsConfigurations,
       nxJsonConfiguration,
+      workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
       projectName: project,
       targetName: target,
       configurationName: configuration,

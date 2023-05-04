@@ -18,7 +18,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
-import { defaultHashing } from '../../../hasher/hashing-impl';
+import { fileHasher, hashArray } from '../../../hasher/impl';
 
 export function parsePnpmLockfile(
   lockFileContent: string,
@@ -61,7 +61,7 @@ function addNodes(
         packageName,
         hash:
           snapshot.resolution?.['integrity'] ||
-          defaultHashing.hashArray(
+          hashArray(
             snapshot.resolution?.['tarball']
               ? [snapshot.resolution['tarball']]
               : [packageName, version]
