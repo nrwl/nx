@@ -26,7 +26,7 @@ import {
   TsConfig,
 } from '../../../utils/utilities';
 import { StorybookConfigureSchema } from '../schema';
-import { UiFramework, UiFramework7 } from '../../../utils/models';
+import { UiFramework7 } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
 
 const DEFAULT_PORT = 4400;
@@ -35,8 +35,7 @@ export function addStorybookTask(
   tree: Tree,
   projectName: string,
   uiFramework: string,
-  configureTestRunner: boolean,
-  usesV7?: boolean
+  configureTestRunner: boolean
 ) {
   if (uiFramework === '@storybook/react-native') {
     return;
@@ -68,11 +67,6 @@ export function addStorybookTask(
       },
     },
   };
-
-  if (!usesV7) {
-    projectConfig.targets['storybook'].options.uiFramework = uiFramework;
-    projectConfig.targets['build-storybook'].options.uiFramework = uiFramework;
-  }
 
   if (configureTestRunner === true) {
     projectConfig.targets['test-storybook'] = {
@@ -192,9 +186,8 @@ export function configureTsProjectConfig(
       ...(tsConfigContent.exclude || []),
       '**/*.stories.ts',
       '**/*.stories.js',
-      ...(schema.uiFramework === '@storybook/react' ||
-      schema.uiFramework === '@storybook/react-native' ||
-      schema.storybook7UiFramework?.startsWith('@storybook/react')
+      ...(schema.uiFramework === '@storybook/react-native' ||
+      schema.uiFramework?.startsWith('@storybook/react')
         ? ['**/*.stories.jsx', '**/*.stories.tsx']
         : []),
     ];
@@ -345,7 +338,7 @@ export function addStorybookToNamedInputs(tree: Tree) {
 export function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
-  uiFramework: UiFramework | UiFramework7,
+  uiFramework: UiFramework7,
   js: boolean,
   tsConfiguration: boolean,
   root: string,
@@ -354,7 +347,6 @@ export function createProjectStorybookDir(
   isNextJs?: boolean,
   usesSwc?: boolean,
   usesVite?: boolean,
-  usesV7?: boolean,
   viteConfigFilePath?: string
 ) {
   const projectDirectory =
@@ -380,7 +372,7 @@ export function createProjectStorybookDir(
 
   const templatePath = join(
     __dirname,
-    `../project-files${usesV7 ? '-7' : ''}${tsConfiguration ? '-ts' : ''}`
+    `../project-files${tsConfiguration ? '-ts' : ''}`
   );
 
   generateFiles(tree, templatePath, root, {

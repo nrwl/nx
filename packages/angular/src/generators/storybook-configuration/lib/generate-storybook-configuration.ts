@@ -15,7 +15,6 @@ export async function generateStorybookConfiguration(
     cypressDirectory: options.cypressDirectory,
     tsConfiguration: options.tsConfiguration,
     configureTestRunner: options.configureTestRunner,
-    storybook7Configuration: options.storybook7Configuration,
     configureStaticServe: options.configureStaticServe,
     skipFormat: true,
   });

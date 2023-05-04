@@ -4,7 +4,6 @@ import {
   convertNxGenerator,
   ensurePackage,
   formatFiles,
-  logger,
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
@@ -40,26 +39,19 @@ export async function storybookConfigurationGenerator(
     typeof import('@nx/storybook')
   >('@nx/storybook', nxVersion);
 
-  let bundler = schema.bundler ?? 'webpack';
+  let bundler = 'vite';
   const projectConfig = readProjectConfiguration(host, schema.name);
 
   if (
     projectConfig.projectType === 'application' &&
-    (projectConfig.targets['build']?.executor === '@nx/vite:build' ||
-      projectConfig.targets['build']?.executor === '@nrwl/vite:build')
+    (projectConfig.targets['build']?.executor === '@nx/webpack:webpack' ||
+      projectConfig.targets['build']?.executor === '@nrwl/webpack:webpack')
   ) {
-    bundler = 'vite';
-    if (schema.bundler !== 'vite') {
-      logger.info(
-        `The project ${schema.name} is set up to use Vite. So
-      Storybook will be configured to use Vite as well.`
-      );
-    }
+    bundler = 'webpack';
   }
 
   const installTask = await configurationGenerator(host, {
     name: schema.name,
-    uiFramework: '@storybook/react',
     configureCypress: schema.configureCypress,
     js: schema.js,
     linter: schema.linter,
@@ -67,9 +59,7 @@ export async function storybookConfigurationGenerator(
     tsConfiguration: schema.tsConfiguration,
     configureTestRunner: schema.configureTestRunner,
     configureStaticServe: schema.configureStaticServe,
-    bundler,
-    storybook7Configuration: schema.storybook7Configuration,
-    storybook7UiFramework:
+    uiFramework:
       bundler === 'vite'
         ? '@storybook/react-vite'
         : '@storybook/react-webpack5',

@@ -1,6 +1,7 @@
 import { ExecutorContext } from '@nx/devkit';
 
 jest.mock('@storybook/core-server', () => ({
+  // TODO(katerina): Fix when Nx17
   buildDev: jest.fn().mockImplementation(() => Promise.resolve()),
   build: jest.fn().mockImplementation(() =>
     Promise.resolve({

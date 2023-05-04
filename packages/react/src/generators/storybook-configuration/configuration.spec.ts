@@ -27,9 +27,6 @@ describe('react:storybook-configuration', () => {
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
     jest.resetModules();
-    jest.doMock('@storybook/angular/package.json', () => ({
-      version: '7.0.2',
-    }));
   });
 
   afterEach(() => {

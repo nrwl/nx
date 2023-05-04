@@ -1,4 +1,4 @@
-This generator will set up Storybook for your **React** project. You can also use this generator to generate Storybook configuration for your **Next.js** project.
+This generator will set up Storybook for your **React** project. You can also use this generator to generate Storybook configuration for your **Next.js** project. By default, starting Nx 16, Storybook v7 is used.
 
 ```bash
 nx g @nx/react:storybook-configuration project-name
@@ -20,13 +20,21 @@ There are a number of other options available. Let's take a look at some example
 
 ## Examples
 
+### Generate Storybook configuration
+
+```bash
+nx g @nx/react:storybook-configuration ui
+```
+
+This will generate Storybook configuration for the `ui` project.
+
 ### Generate Storybook configuration using TypeScript
 
 ```bash
 nx g @nx/react:storybook-configuration ui --tsConfiguration=true
 ```
 
-This will generate a Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory).
+This will generate Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory, eg. `.storybook/main.ts`).
 
 ### Ignore certain paths when generating stories
 
@@ -45,15 +53,3 @@ nx g @nx/react:storybook-configuration ui --generateStories=true --js=true
 ```
 
 This will generate stories for all the components in the `ui` project using JavaScript instead of TypeScript. So, you will have `.stories.js` files next to your components.
-
-### Generate Storybook configuration for Storybook version 7
-
-```bash
-nx g @nx/react:storybook-configuration ui --storybook7Configuration=true
-```
-
-{% callout type="info" title="For Nx versions <15.9" %}
-The flag is called `storybook7betaConfiguration` for Nx versions <15.9.
-{% /callout %}
-
-This will generate a Storybook configuration for the `ui` project using Storybook version 7. It will install the Storybook version 7 dependencies and configure the Storybook configuration files (the files inside the `.storybook` directory) to use Storybook version 7. You can read more about Storybook 7 Nx support in the [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup).

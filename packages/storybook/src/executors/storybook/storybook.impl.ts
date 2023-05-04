@@ -1,16 +1,13 @@
-import { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, logger } from '@nx/devkit';
 import * as build from '@storybook/core-server';
 import 'dotenv/config';
 import {
+  pleaseUpgrade,
   storybookConfigExistsCheck,
   storybookMajorVersion,
 } from '../../utils/utilities';
-import {
-  getStorybookFrameworkPath,
-  pleaseUpgrade,
-  runStorybookSetupCheck,
-} from '../utils';
-import { CLIOptions } from '@storybook/types'; // TODO(katerina): Remove when Storybook 7
+import { getStorybookFrameworkPath, runStorybookSetupCheck } from '../utils';
+import { CLIOptions } from '@storybook/types'; // TODO(katerina): Remove Nx17
 import { CommonNxStorybookConfig } from '../../utils/models';
 
 export default async function* storybookExecutor(
@@ -36,10 +33,10 @@ export default async function* storybookExecutor(
     };
     await new Promise<{ success: boolean }>(() => {});
   } else {
-    // TODO(katerina): Remove when Storybook 7
+    // TODO(katerina): Remove Nx17
     // print warnings
     runStorybookSetupCheck(options);
-    pleaseUpgrade();
+    logger.error(pleaseUpgrade());
 
     let frameworkPath = getStorybookFrameworkPath(options.uiFramework);
     const frameworkOptions = (await import(frameworkPath)).default;
@@ -71,7 +68,7 @@ function runInstance(
       mode: 'dev',
     });
   } else {
-    // TODO(katerina): Remove when Storybook 7
+    // TODO(katerina): Remove Nx17
     return build['buildDev']({
       ...options,
       configType: env.toUpperCase(),
