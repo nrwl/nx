@@ -15,8 +15,8 @@ import type { Schema } from '../schema';
 export function updateProjectConfig(tree: Tree, schema: Schema) {
   let projectConfig = readProjectConfiguration(tree, schema.project);
   const buildTarget = projectConfig.targets.build;
-
-  buildTarget.options.outputPath = `dist/apps/${schema.project}/browser`;
+  const baseOutputPath = buildTarget.options.outputPath;
+  buildTarget.options.outputPath = joinPathFragments(baseOutputPath, 'browser');
 
   const buildConfigurations = projectConfig.targets.build.configurations;
   const configurations: Record<string, {}> = {};
@@ -30,7 +30,7 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
     dependsOn: ['build'],
     executor: '@angular-devkit/build-angular:server',
     options: {
-      outputPath: `dist/${projectConfig.root}/server`,
+      outputPath: joinPathFragments(baseOutputPath, 'server'),
       main: joinPathFragments(projectConfig.root, schema.serverFileName),
       tsConfig: joinPathFragments(projectConfig.root, 'tsconfig.server.json'),
       ...(buildTarget.options ? getServerOptions(buildTarget.options) : {}),

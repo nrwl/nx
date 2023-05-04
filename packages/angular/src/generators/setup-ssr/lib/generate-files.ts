@@ -9,7 +9,10 @@ import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 
 export function generateSSRFiles(tree: Tree, schema: Schema) {
-  const projectRoot = readProjectConfiguration(tree, schema.project).root;
+  const projectConfig = readProjectConfiguration(tree, schema.project);
+  const projectRoot = projectConfig.root;
+  const browserBundleOutputPath =
+    projectConfig.targets.build.options.outputPath;
 
   const pathToFiles = joinPathFragments(__dirname, '..', 'files');
 
@@ -23,14 +26,16 @@ export function generateSSRFiles(tree: Tree, schema: Schema) {
       tree,
       joinPathFragments(pathToFiles, 'standalone'),
       projectRoot,
-      { ...schema, tpl: '' }
+
+      { ...schema, browserBundleOutputPath, tpl: '' }
     );
   } else {
     generateFiles(
       tree,
       joinPathFragments(pathToFiles, 'ngmodule', 'base'),
       projectRoot,
-      { ...schema, tpl: '' }
+
+      { ...schema, browserBundleOutputPath, tpl: '' }
     );
 
     const { major: angularMajorVersion, version: angularVersion } =
@@ -41,7 +46,8 @@ export function generateSSRFiles(tree: Tree, schema: Schema) {
         tree,
         joinPathFragments(pathToFiles, 'ngmodule', 'v14'),
         projectRoot,
-        { ...schema, tpl: '' }
+
+        { ...schema, browserBundleOutputPath, tpl: '' }
       );
     }
     if (lt(angularVersion, '15.2.0')) {
@@ -49,7 +55,8 @@ export function generateSSRFiles(tree: Tree, schema: Schema) {
         tree,
         joinPathFragments(pathToFiles, 'ngmodule', 'pre-v15-2'),
         projectRoot,
-        { ...schema, tpl: '' }
+
+        { ...schema, browserBundleOutputPath, tpl: '' }
       );
     }
   }
