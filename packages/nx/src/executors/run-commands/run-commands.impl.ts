@@ -45,7 +45,6 @@ export interface RunCommandsOptions extends Json {
   cwd?: string;
   args?: string;
   envFile?: string;
-  outputPath?: string;
   __unparsed__: string[];
 }
 
@@ -58,7 +57,6 @@ const propKeys = [
   'cwd',
   'args',
   'envFile',
-  'outputPath',
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
