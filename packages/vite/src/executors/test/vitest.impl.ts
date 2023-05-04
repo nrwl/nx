@@ -117,7 +117,7 @@ async function getSettings(
 
   if (!viteConfigPath || !resolved?.config?.test) {
     logger.warn(stripIndents`Unable to load test config from config file ${
-      resolved.path ?? viteConfigPath
+      resolved?.path ?? viteConfigPath
     }
 Some settings may not be applied as expected.
 You can manually set the config in the project, ${
