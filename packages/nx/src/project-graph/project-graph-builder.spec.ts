@@ -235,39 +235,39 @@ describe('ProjectGraphBuilder', () => {
     const graph = builder.getUpdatedProjectGraph();
 
     expect(graph.dependencies).toMatchInlineSnapshot(`
-      {
-        "npm:external": [
-          {
+      Object {
+        "npm:external": Array [
+          Object {
             "source": "npm:external",
             "target": "npm:external2",
             "type": "static",
           },
         ],
-        "source": [
-          {
+        "source": Array [
+          Object {
             "source": "source",
             "target": "target",
             "type": "implicit",
           },
-          {
+          Object {
             "source": "source",
             "target": "npm:external",
             "type": "static",
           },
-          {
+          Object {
             "source": "source",
             "target": "npm:external2",
             "type": "dynamic",
           },
         ],
-        "target": [],
+        "target": Array [],
       }
     `);
     expect(graph.nodes['source'].data.files).toMatchInlineSnapshot(`
-      [
-        {
-          "dependencies": [
-            {
+      Array [
+        Object {
+          "dependencies": Array [
+            Object {
               "source": "source",
               "target": "npm:external",
               "type": "static",
@@ -275,9 +275,9 @@ describe('ProjectGraphBuilder', () => {
           ],
           "file": "source/index.ts",
         },
-        {
-          "dependencies": [
-            {
+        Object {
+          "dependencies": Array [
+            Object {
               "source": "source",
               "target": "npm:external2",
               "type": "dynamic",
@@ -295,27 +295,27 @@ describe('ProjectGraphBuilder', () => {
     const updatedGraph = newBuilder.getUpdatedProjectGraph();
 
     expect(updatedGraph.dependencies).toMatchInlineSnapshot(`
-      {
-        "npm:external": [
-          {
+      Object {
+        "npm:external": Array [
+          Object {
             "source": "npm:external",
             "target": "npm:external2",
             "type": "static",
           },
         ],
-        "source": [
-          {
+        "source": Array [
+          Object {
             "source": "source",
             "target": "target",
             "type": "implicit",
           },
-          {
+          Object {
             "source": "source",
             "target": "npm:external2",
             "type": "dynamic",
           },
         ],
-        "target": [],
+        "target": Array [],
       }
     `);
   });
