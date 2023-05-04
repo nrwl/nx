@@ -107,3 +107,12 @@ function isTsRule(r: RuleSetRule): boolean {
 
   return r.test.test('a.ts');
 }
+
+// Runs a function if the Next.js version satisfies the range.
+export function forNextVersion(range: string, fn: () => void) {
+  const semver = require('semver');
+  const nextJsVersion = require('next/package.json').version;
+  if (semver.satisfies(nextJsVersion, range)) {
+    fn();
+  }
+}

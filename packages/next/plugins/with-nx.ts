@@ -5,9 +5,12 @@
 import * as path from 'path';
 import type { NextConfig } from 'next';
 import type { NextConfigFn } from '../src/utils/config';
+import { forNextVersion } from '../src/utils/config';
 import type { NextBuildBuilderOptions } from '../src/utils/types';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import type { ProjectGraph, ProjectGraphProjectNode, Target } from '@nx/devkit';
+import { readTsConfigPaths } from '@nx/js';
+import { findAllProjectNodeDependencies } from 'nx/src/utils/project-graph-utils';
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
@@ -206,6 +209,22 @@ function withNx(
 
       // Get next config
       const nextConfig = getNextConfig(_nextConfig, context);
+
+      // For Next.js 13.1 and greater, make sure workspace libs are transpiled.
+      forNextVersion('>=13.1.0', () => {
+        if (!graph.dependencies[project]) return;
+
+        const paths = readTsConfigPaths();
+        const deps = findAllProjectNodeDependencies(project);
+        nextConfig.transpilePackages ??= [];
+
+        for (const dep of deps) {
+          const alias = getAliasForProject(graph.nodes[dep], paths);
+          if (alias) {
+            nextConfig.transpilePackages.push(alias);
+          }
+        }
+      });
 
       const outputDir = `${offsetFromRoot(projectDirectory)}${
         options.outputPath
@@ -418,10 +437,30 @@ function addNxEnvVariables(config: any) {
   }
 }
 
+export function getAliasForProject(
+  node: ProjectGraphProjectNode,
+  paths: Record<string, string[]>
+): null | string {
+  // Match workspace libs to their alias in tsconfig paths.
+  for (const [alias, lookup] of Object.entries(paths)) {
+    const lookupContainsDepNode = lookup.some(
+      (lookupPath) =>
+        lookupPath.startsWith(node?.data?.root) ||
+        lookupPath.startsWith('./' + node?.data?.root)
+    );
+    if (lookupContainsDepNode) {
+      return alias;
+    }
+  }
+
+  return null;
+}
+
 // Support for older generated code: `const withNx = require('@nx/next/plugins/with-nx');`
 module.exports = withNx;
 // Support for newer generated code: `const { withNx } = require(...);`
 module.exports.withNx = withNx;
 module.exports.getNextConfig = getNextConfig;
+module.exports.getAliasForProject = getAliasForProject;
 
 export { withNx };

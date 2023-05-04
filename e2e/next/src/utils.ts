@@ -14,13 +14,15 @@ export async function checkApp(
     checkLint: boolean;
     checkE2E: boolean;
     checkExport: boolean;
+    appsDir?: string;
   }
 ) {
+  const appsDir = opts.appsDir ?? 'apps';
   const buildResult = runCLI(`build ${appName}`);
   expect(buildResult).toContain(`Compiled successfully`);
-  checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
+  checkFilesExist(`dist/${appsDir}/${appName}/.next/build-manifest.json`);
 
-  const packageJson = readJson(`dist/apps/${appName}/package.json`);
+  const packageJson = readJson(`dist/${appsDir}/${appName}/package.json`);
   expect(packageJson.dependencies.react).toBeDefined();
   expect(packageJson.dependencies['react-dom']).toBeDefined();
   expect(packageJson.dependencies.next).toBeDefined();
@@ -45,6 +47,6 @@ export async function checkApp(
 
   if (opts.checkExport) {
     runCLI(`export ${appName}`);
-    checkFilesExist(`dist/apps/${appName}/exported/index.html`);
+    checkFilesExist(`dist/${appsDir}/${appName}/exported/index.html`);
   }
 }

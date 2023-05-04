@@ -1,7 +1,7 @@
 import { NextConfigComplete } from 'next/dist/server/config-shared';
-import { getNextConfig } from './with-nx';
+import { getAliasForProject, getNextConfig } from './with-nx';
 
-describe('withNx', () => {
+describe('getNextConfig', () => {
   describe('svgr', () => {
     it('should be used by default', () => {
       const config = getNextConfig();
@@ -62,5 +62,57 @@ describe('withNx', () => {
         result.module.rules.some((rule) => rule.test?.test('cat.svg'))
       ).toBe(false);
     });
+  });
+});
+
+describe('getAliasForProject', () => {
+  it('should return the matching alias for a project', () => {
+    const paths = {
+      '@x/proj1': ['packages/proj1'],
+      // customized lookup paths with relative path syntax
+      '@x/proj2': ['./something-else', './packages/proj2'],
+    };
+
+    expect(
+      getAliasForProject(
+        {
+          name: 'proj1',
+          type: 'lib',
+          data: {
+            root: 'packages/proj1',
+            files: [],
+          },
+        },
+        paths
+      )
+    ).toEqual('@x/proj1');
+
+    expect(
+      getAliasForProject(
+        {
+          name: 'proj2',
+          type: 'lib',
+          data: {
+            root: 'packages/proj2', // relative path
+            files: [],
+          },
+        },
+        paths
+      )
+    ).toEqual('@x/proj2');
+
+    expect(
+      getAliasForProject(
+        {
+          name: 'no-alias',
+          type: 'lib',
+          data: {
+            root: 'packages/no-alias',
+            files: [],
+          },
+        },
+        paths
+      )
+    ).toEqual(null);
   });
 });
