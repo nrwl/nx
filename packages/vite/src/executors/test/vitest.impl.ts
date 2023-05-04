@@ -94,14 +94,15 @@ async function getSettings(
 ) {
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
   const offset = relative(workspaceRoot, context.cwd);
-  // if reportsDirectory is not provides vitest will remove all files in the project root
+  // if reportsDirectory is not provided vitest will remove all files in the project root
   // when coverage is enabled in the vite.config.ts
   const coverage: CoverageOptions = options.reportsDirectory
     ? {
         enabled: options.coverage,
         reportsDirectory: options.reportsDirectory,
+        provider: 'c8',
       }
-    : {};
+    : ({} as CoverageOptions);
 
   const viteConfigPath = options.config
     ? join(context.root, options.config)
@@ -115,7 +116,7 @@ async function getSettings(
     viteConfigPath
   );
 
-  if (!viteConfigPath || !resolved?.config?.test) {
+  if (!viteConfigPath || !resolved?.config?.['test']) {
     logger.warn(stripIndents`Unable to load test config from config file ${
       resolved?.path ?? viteConfigPath
     }
@@ -134,10 +135,10 @@ You can manually set the config in the project, ${
     root: offset === '' ? projectRoot : '',
     reporters: [
       ...(options.reporters ?? []),
-      ...((resolved?.config?.test?.reporters as string[]) ?? []),
+      ...((resolved?.config?.['test']?.reporters as string[]) ?? []),
       'default',
     ] as (string | Reporter)[],
-    coverage: { ...resolved?.config?.test?.coverage, ...coverage },
+    coverage: { ...coverage, ...resolved?.config?.['test']?.coverage },
   };
 
   return settings;
