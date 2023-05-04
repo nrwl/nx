@@ -313,13 +313,13 @@ export function createRollupOptions(
 
 function createTsCompilerOptions(
   config: ts.ParsedCommandLine,
-  dependencies,
-  options
+  dependencies: DependentBuildableProjectNode[],
+  options: NormalizedRollupExecutorOptions
 ) {
   const compilerOptionPaths = computeCompilerOptionsPaths(config, dependencies);
   const compilerOptions = {
     rootDir: options.projectRoot,
-    allowJs: false,
+    allowJs: options.allowJs,
     declaration: true,
     paths: compilerOptionPaths,
   };
