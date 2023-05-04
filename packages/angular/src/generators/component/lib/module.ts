@@ -81,6 +81,6 @@ function findModule(
   }
 
   throw new Error(
-    "Could not find a candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option."
+    "Could not find a candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option, or pass '--standalone' to generate a standalone component."
   );
 }
