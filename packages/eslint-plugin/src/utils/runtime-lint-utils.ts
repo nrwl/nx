@@ -381,17 +381,21 @@ function parseImportWildcards(importDefinition: string): RegExp {
 }
 
 /**
- * Verifies whether the given node has an architect builder attached
+ * Verifies whether the given node has a builder target
  * @param projectGraph the node to verify
+ * @param buildTargets the list of targets to check for
  */
 export function hasBuildExecutor(
-  projectGraph: ProjectGraphProjectNode
+  projectGraph: ProjectGraphProjectNode,
+  buildTargets = ['build']
 ): boolean {
   return (
-    // can the architect not be defined? real use case?
     projectGraph.data.targets &&
-    projectGraph.data.targets.build &&
-    projectGraph.data.targets.build.executor !== ''
+    buildTargets.some(
+      (target) =>
+        projectGraph.data.targets[target] &&
+        projectGraph.data.targets[target].executor !== ''
+    )
   );
 }
 
