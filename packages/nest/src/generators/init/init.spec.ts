@@ -1,7 +1,11 @@
 import type { Tree } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { nestJsVersion, nxVersion } from '../../utils/versions';
+import {
+  nestJsSchematicsVersion,
+  nestJsVersion,
+  nxVersion,
+} from '../../utils/versions';
 import { initGenerator } from './init';
 
 describe('init generator', () => {
@@ -26,7 +30,7 @@ describe('init generator', () => {
     expect(packageJson.dependencies['tslib']).toBeDefined();
     expect(packageJson.dependencies['@nx/nest']).toBeUndefined();
     expect(packageJson.devDependencies['@nestjs/schematics']).toBe(
-      nestJsVersion
+      nestJsSchematicsVersion
     );
     expect(packageJson.devDependencies['@nestjs/testing']).toBe(nestJsVersion);
     expect(packageJson.devDependencies['@nx/nest']).toBe(nxVersion);

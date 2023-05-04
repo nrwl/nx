@@ -1,6 +1,7 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { addDependenciesToPackageJson } from '@nx/devkit';
 import {
+  nestJsSchematicsVersion,
   nestJsVersion,
   nxVersion,
   reflectMetadataVersion,
@@ -20,7 +21,7 @@ export function addDependencies(tree: Tree): GeneratorCallback {
       tslib: tsLibVersion,
     },
     {
-      '@nestjs/schematics': nestJsVersion,
+      '@nestjs/schematics': nestJsSchematicsVersion,
       '@nestjs/testing': nestJsVersion,
       '@nx/nest': nxVersion,
     }
