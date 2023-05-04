@@ -7,6 +7,12 @@ jest.mock('../utils/workspace-root', () => {
   };
 });
 
+jest.mock('./impl', () => {
+  return {
+    hashArray: (values: string[]) => values.join('|'),
+  };
+});
+
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('../plugins/js/utils/typescript', () => ({
   getRootTsConfigFileName: jest
@@ -19,10 +25,11 @@ import {
   expandNamedInput,
   filterUsingGlobPatterns,
   Hash,
-  Hasher,
-} from './hasher';
+  InProcessTaskHasher,
+} from './task-hasher';
+import { fileHasher } from './impl';
 
-describe('Hasher', () => {
+describe('TaskHasher', () => {
   const packageJson = {
     name: 'nrwl',
   };
@@ -47,9 +54,9 @@ describe('Hasher', () => {
     { file: 'global2', hash: 'global2.hash' },
   ];
 
-  function createHashing(): any {
+  function createFileHasher(): any {
     return {
-      hashArray: (values: string[]) => values.join('|'),
+      allFileData: () => allWorkspaceFiles,
     };
   }
 
@@ -71,7 +78,12 @@ describe('Hasher', () => {
 
   it('should create task hash', async () => {
     process.env.TESTENV = 'env123';
-    const hasher = new Hasher(
+    const hasher = new InProcessTaskHasher(
+      {
+        parent: [{ file: '/file', hash: 'file.hash' }],
+        unrelated: [{ file: 'libs/unrelated/filec.ts', hash: 'filec.hash' }],
+      },
+      allWorkspaceFiles,
       {
         nodes: {
           parent: {
@@ -92,7 +104,6 @@ describe('Hasher', () => {
                   ],
                 },
               },
-              files: [{ file: '/file', hash: 'file.hash' }],
             },
           },
           unrelated: {
@@ -101,7 +112,6 @@ describe('Hasher', () => {
             data: {
               root: 'libs/unrelated',
               targets: { build: {} },
-              files: [{ file: 'libs/unrelated/filec.ts', hash: 'filec.hash' }],
             },
           },
         },
@@ -109,13 +119,12 @@ describe('Hasher', () => {
           parent: [],
         },
         externalNodes: {},
-        allWorkspaceFiles,
       },
       {} as any,
       {
         runtimeCacheInputs: ['echo runtime456'],
       },
-      createHashing()
+      createFileHasher()
     );
 
     const hash = await hasher.hashTask({
@@ -151,7 +160,18 @@ describe('Hasher', () => {
   });
 
   it('should hash task where the project has dependencies', async () => {
-    const hasher = new Hasher(
+    const hasher = new InProcessTaskHasher(
+      {
+        parent: [
+          { file: '/filea.ts', hash: 'a.hash' },
+          { file: '/filea.spec.ts', hash: 'a.spec.hash' },
+        ],
+        child: [
+          { file: '/fileb.ts', hash: 'b.hash' },
+          { file: '/fileb.spec.ts', hash: 'b.spec.hash' },
+        ],
+      },
+      allWorkspaceFiles,
       {
         nodes: {
           parent: {
@@ -159,11 +179,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: 'nx:run-commands' } },
-              files: [
-                { file: '/filea.ts', hash: 'a.hash' },
-                { file: '/filea.spec.ts', hash: 'a.spec.hash' },
-              ],
+              targets: { build: { executor: 'unknown' } },
             },
           },
           child: {
@@ -172,21 +188,16 @@ describe('Hasher', () => {
             data: {
               root: 'libs/child',
               targets: { build: {} },
-              files: [
-                { file: '/fileb.ts', hash: 'b.hash' },
-                { file: '/fileb.spec.ts', hash: 'b.spec.hash' },
-              ],
             },
           },
         },
         dependencies: {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
         },
-        allWorkspaceFiles,
       },
       {} as any,
       {},
-      createHashing()
+      createFileHasher()
     );
 
     const hash = await hasher.hashTask({
@@ -208,7 +219,18 @@ describe('Hasher', () => {
   });
 
   it('should hash non-default filesets', async () => {
-    const hasher = new Hasher(
+    const hasher = new InProcessTaskHasher(
+      {
+        parent: [
+          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+        ],
+        child: [
+          { file: 'libs/child/fileb.ts', hash: 'b.hash' },
+          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+        ],
+      },
+      allWorkspaceFiles,
       {
         nodes: {
           parent: {
@@ -222,10 +244,6 @@ describe('Hasher', () => {
                   executor: 'nx:run-commands',
                 },
               },
-              files: [
-                { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-                { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
-              ],
             },
           },
           child: {
@@ -236,18 +254,13 @@ describe('Hasher', () => {
               namedInputs: {
                 prod: ['default'],
               },
-              targets: { build: { executor: 'nx:run-commands' } },
-              files: [
-                { file: 'libs/child/fileb.ts', hash: 'b.hash' },
-                { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
-              ],
+              targets: { build: { executor: 'unknown' } },
             },
           },
         },
         dependencies: {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
         },
-        allWorkspaceFiles,
       },
       {
         namedInputs: {
@@ -255,7 +268,7 @@ describe('Hasher', () => {
         },
       } as any,
       {},
-      createHashing()
+      createFileHasher()
     );
 
     const hash = await hasher.hashTask({
@@ -277,7 +290,14 @@ describe('Hasher', () => {
   });
 
   it('should hash multiple filesets of a project', async () => {
-    const hasher = new Hasher(
+    const hasher = new InProcessTaskHasher(
+      {
+        parent: [
+          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+        ],
+      },
+      allWorkspaceFiles,
       {
         nodes: {
           parent: {
@@ -296,17 +316,12 @@ describe('Hasher', () => {
                   executor: 'nx:run-commands',
                 },
               },
-              files: [
-                { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-                { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
-              ],
             },
           },
         },
         dependencies: {
           parent: [],
         },
-        allWorkspaceFiles,
       },
       {
         namedInputs: {
@@ -314,7 +329,7 @@ describe('Hasher', () => {
         },
       } as any,
       {},
-      createHashing()
+      createFileHasher()
     );
 
     const test = await hasher.hashTask({
@@ -345,7 +360,18 @@ describe('Hasher', () => {
 
   it('should be able to handle multiple filesets per project', async () => {
     process.env.MY_TEST_HASH_ENV = 'MY_TEST_HASH_ENV_VALUE';
-    const hasher = new Hasher(
+    const hasher = new InProcessTaskHasher(
+      {
+        parent: [
+          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+        ],
+        child: [
+          { file: 'libs/child/fileb.ts', hash: 'b.hash' },
+          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+        ],
+      },
+      allWorkspaceFiles,
       {
         nodes: {
           parent: {
@@ -359,10 +385,6 @@ describe('Hasher', () => {
                   executor: 'nx:run-commands',
                 },
               },
-              files: [
-                { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-                { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
-              ],
             },
           },
           child: {
@@ -383,17 +405,12 @@ describe('Hasher', () => {
                   executor: 'nx:run-commands',
                 },
               },
-              files: [
-                { file: 'libs/child/fileb.ts', hash: 'b.hash' },
-                { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
-              ],
             },
           },
         },
         dependencies: {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
         },
-        allWorkspaceFiles,
       },
       {
         namedInputs: {
@@ -402,7 +419,7 @@ describe('Hasher', () => {
         },
       } as any,
       {},
-      createHashing()
+      createFileHasher()
     );
 
     const parentHash = await hasher.hashTask({
@@ -449,8 +466,19 @@ describe('Hasher', () => {
     expect(childHash.details.nodes['env:MY_TEST_HASH_ENV']).toBeUndefined();
   });
 
-  it('should use targetdefaults from nx.json', async () => {
-    const hasher = new Hasher(
+  it('should use targetDefaults from nx.json', async () => {
+    const hasher = new InProcessTaskHasher(
+      {
+        parent: [
+          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+        ],
+        child: [
+          { file: 'libs/child/fileb.ts', hash: 'b.hash' },
+          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+        ],
+      },
+      allWorkspaceFiles,
       {
         nodes: {
           parent: {
@@ -459,12 +487,8 @@ describe('Hasher', () => {
             data: {
               root: 'libs/parent',
               targets: {
-                build: { executor: 'nx:run-commands' },
+                build: { executor: '@nx/workspace:run-commands' },
               },
-              files: [
-                { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-                { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
-              ],
             },
           },
           child: {
@@ -472,18 +496,14 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/child',
-              targets: { build: { executor: 'nx:run-commands' } },
-              files: [
-                { file: 'libs/child/fileb.ts', hash: 'b.hash' },
-                { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
-              ],
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
             },
           },
         },
         dependencies: {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
         },
-        allWorkspaceFiles,
+        externalNodes: {},
       },
       {
         namedInputs: {
@@ -496,7 +516,7 @@ describe('Hasher', () => {
         },
       } as any,
       {},
-      createHashing()
+      createFileHasher()
     );
 
     const hash = await hasher.hashTask({
@@ -518,7 +538,11 @@ describe('Hasher', () => {
   });
 
   it('should be able to include only a part of the base tsconfig', async () => {
-    const hasher = new Hasher(
+    const hasher = new InProcessTaskHasher(
+      {
+        parent: [{ file: '/file', hash: 'file.hash' }],
+      },
+      allWorkspaceFiles,
       {
         nodes: {
           parent: {
@@ -526,22 +550,21 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: 'nx:run-commands' } },
-              files: [{ file: '/file', hash: 'file.hash' }],
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
             },
           },
         },
         dependencies: {
           parent: [],
         },
-        allWorkspaceFiles,
+        externalNodes: {},
       },
       { npmScope: 'nrwl' } as any,
       {
         runtimeCacheInputs: ['echo runtime123', 'echo runtime456'],
         selectivelyHashTsConfig: true,
       },
-      createHashing()
+      createFileHasher()
     );
 
     const hash = await hasher.hashTask({
@@ -567,7 +590,12 @@ describe('Hasher', () => {
   });
 
   it('should hash tasks where the project graph has circular dependencies', async () => {
-    const hasher = new Hasher(
+    const hasher = new InProcessTaskHasher(
+      {
+        parent: [{ file: '/filea.ts', hash: 'a.hash' }],
+        child: [{ file: '/fileb.ts', hash: 'b.hash' }],
+      },
+      allWorkspaceFiles,
       {
         nodes: {
           parent: {
@@ -575,8 +603,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: 'nx:run-commands' } },
-              files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
             },
           },
           child: {
@@ -584,8 +611,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/child',
-              targets: { build: { executor: 'nx:run-commands' } },
-              files: [{ file: '/fileb.ts', hash: 'b.hash' }],
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
             },
           },
         },
@@ -593,11 +619,11 @@ describe('Hasher', () => {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
           child: [{ source: 'child', target: 'parent', type: 'static' }],
         },
-        allWorkspaceFiles,
+        externalNodes: {},
       },
       {} as any,
       {},
-      createHashing()
+      createFileHasher()
     );
 
     const tasksHash = await hasher.hashTask({
@@ -648,7 +674,11 @@ describe('Hasher', () => {
   });
 
   it('should throw an error when failed to execute runtimeCacheInputs', async () => {
-    const hasher = new Hasher(
+    const hasher = new InProcessTaskHasher(
+      {
+        parent: [{ file: '/file', hash: 'some-hash' }],
+      },
+      allWorkspaceFiles,
       {
         nodes: {
           parent: {
@@ -656,21 +686,19 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: 'nx:run-commands' } },
-              files: [{ file: '/file', hash: 'some-hash' }],
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
             },
           },
         },
         dependencies: {
           parent: [],
         },
-        allWorkspaceFiles,
       },
       {} as any,
       {
         runtimeCacheInputs: ['boom'],
       },
-      createHashing()
+      createFileHasher()
     );
 
     try {
@@ -690,7 +718,11 @@ describe('Hasher', () => {
   });
 
   it('should hash npm project versions', async () => {
-    const hasher = new Hasher(
+    const hasher = new InProcessTaskHasher(
+      {
+        app: [{ file: '/filea.ts', hash: 'a.hash' }],
+      },
+      allWorkspaceFiles,
       {
         nodes: {
           app: {
@@ -698,8 +730,7 @@ describe('Hasher', () => {
             type: 'app',
             data: {
               root: 'apps/app',
-              targets: { build: { executor: 'nx:run-commands' } },
-              files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
             },
           },
         },
@@ -719,11 +750,10 @@ describe('Hasher', () => {
             { source: 'app', target: 'npm:react', type: DependencyType.static },
           ],
         },
-        allWorkspaceFiles,
       },
       {} as any,
       {},
-      createHashing()
+      createFileHasher()
     );
 
     const hash = await hasher.hashTask({
@@ -739,7 +769,11 @@ describe('Hasher', () => {
   });
 
   it('should hash missing dependent npm project versions', async () => {
-    const hasher = new Hasher(
+    const hasher = new InProcessTaskHasher(
+      {
+        app: [{ file: '/filea.ts', hash: 'a.hash' }],
+      },
+      allWorkspaceFiles,
       {
         nodes: {
           app: {
@@ -747,8 +781,7 @@ describe('Hasher', () => {
             type: 'app',
             data: {
               root: 'apps/app',
-              targets: { build: { executor: 'nx:run-commands' } },
-              files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              targets: { build: { executor: '@nx/workspace:run-commands' } },
             },
           },
         },
@@ -763,11 +796,10 @@ describe('Hasher', () => {
             },
           ],
         },
-        allWorkspaceFiles,
       },
       {} as any,
       {},
-      createHashing()
+      createFileHasher()
     );
 
     const hash = await hasher.hashTask({
@@ -784,7 +816,9 @@ describe('Hasher', () => {
 
   describe('hashTarget', () => {
     it('should hash executor dependencies of @nx packages', async () => {
-      const hasher = new Hasher(
+      const hasher = new InProcessTaskHasher(
+        {},
+        allWorkspaceFiles,
         {
           nodes: {
             app: {
@@ -793,7 +827,6 @@ describe('Hasher', () => {
               data: {
                 root: 'apps/app',
                 targets: { build: { executor: '@nx/webpack:webpack' } },
-                files: [{ file: '/filea.ts', hash: 'a.hash' }],
               },
             },
           },
@@ -808,11 +841,10 @@ describe('Hasher', () => {
             },
           },
           dependencies: {},
-          allWorkspaceFiles,
         },
         {} as any,
         {},
-        createHashing()
+        fileHasher
       );
 
       const hash = await hasher.hashTask({
@@ -827,7 +859,9 @@ describe('Hasher', () => {
     });
 
     it('should hash entire subtree of dependencies', async () => {
-      const hasher = new Hasher(
+      const hasher = new InProcessTaskHasher(
+        {},
+        allWorkspaceFiles,
         {
           nodes: {
             app: {
@@ -836,7 +870,6 @@ describe('Hasher', () => {
               data: {
                 root: 'apps/app',
                 targets: { build: { executor: '@nx/webpack:webpack' } },
-                files: [{ file: '/filea.ts', hash: 'a.hash' }],
               },
             },
           },
@@ -903,11 +936,10 @@ describe('Hasher', () => {
               },
             ],
           },
-          allWorkspaceFiles,
         },
         {} as any,
         {},
-        createHashing()
+        fileHasher
       );
 
       const hash = await hasher.hashTask({
@@ -925,7 +957,9 @@ describe('Hasher', () => {
     });
 
     it('should not hash when nx:run-commands executor', async () => {
-      const hasher = new Hasher(
+      const hasher = new InProcessTaskHasher(
+        {},
+        [],
         {
           nodes: {
             app: {
@@ -934,7 +968,6 @@ describe('Hasher', () => {
               data: {
                 root: 'apps/app',
                 targets: { build: { executor: 'nx:run-commands' } },
-                files: [{ file: '/filea.ts', hash: 'a.hash' }],
               },
             },
           },
@@ -949,11 +982,10 @@ describe('Hasher', () => {
             },
           },
           dependencies: {},
-          allWorkspaceFiles,
         },
         {} as any,
         {},
-        createHashing()
+        fileHasher
       );
 
       const hash = await hasher.hashTask({
@@ -967,7 +999,9 @@ describe('Hasher', () => {
     });
 
     it('should use externalDependencies to override nx:run-commands', async () => {
-      const hasher = new Hasher(
+      const hasher = new InProcessTaskHasher(
+        {},
+        allWorkspaceFiles,
         {
           nodes: {
             app: {
@@ -984,7 +1018,6 @@ describe('Hasher', () => {
                     ],
                   },
                 },
-                files: [{ file: '/filea.ts', hash: 'a.hash' }],
               },
             },
           },
@@ -1015,11 +1048,10 @@ describe('Hasher', () => {
             },
           },
           dependencies: {},
-          allWorkspaceFiles,
         },
         {} as any,
         {},
-        createHashing()
+        fileHasher
       );
 
       const hash = await hasher.hashTask({
@@ -1035,7 +1067,9 @@ describe('Hasher', () => {
     });
 
     it('should use externalDependencies with empty array to ignore all deps', async () => {
-      const hasher = new Hasher(
+      const hasher = new InProcessTaskHasher(
+        {},
+        allWorkspaceFiles,
         {
           nodes: {
             app: {
@@ -1052,7 +1086,6 @@ describe('Hasher', () => {
                     ],
                   },
                 },
-                files: [{ file: '/filea.ts', hash: 'a.hash' }],
               },
             },
           },
@@ -1083,11 +1116,10 @@ describe('Hasher', () => {
             },
           },
           dependencies: {},
-          allWorkspaceFiles,
         },
         {} as any,
         {},
-        createHashing()
+        fileHasher
       );
 
       const hash = await hasher.hashTask({

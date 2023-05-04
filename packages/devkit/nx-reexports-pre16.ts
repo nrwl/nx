@@ -219,7 +219,7 @@ export {
 /**
  * @category Utils
  */
-export { Hash, Hasher } from 'nx/src/hasher/hasher';
+export { Hash, TaskHasher, Hasher } from 'nx/src/hasher/task-hasher';
 
 /**
  * @category Utils

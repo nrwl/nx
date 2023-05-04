@@ -8,10 +8,11 @@ import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { readNxJson, workspaceLayout } from '../../config/configuration';
-import { defaultFileHasher } from '../../hasher/file-hasher';
+import { fileHasher } from '../../hasher/impl';
 import { output } from '../../utils/output';
 import { writeJsonFile } from '../../utils/fileutils';
 import {
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
@@ -23,11 +24,13 @@ import { TargetDefaults, TargetDependencies } from '../../config/nx-json';
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
 import { Server } from 'net';
+import { readProjectFileMapCache } from '../../project-graph/nx-deps-cache';
 
 export interface ProjectGraphClientResponse {
   hash: string;
   projects: ProjectGraphProjectNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
+  fileMap: ProjectFileMap;
   layout: { appsDir: string; libsDir: string };
   affected: string[];
   focus: string;
@@ -491,6 +494,7 @@ let currentDepGraphClientResponse: ProjectGraphClientResponse = {
   hash: null,
   projects: [],
   dependencies: {},
+  fileMap: {},
   layout: {
     appsDir: '',
     libsDir: '',
@@ -545,29 +549,17 @@ async function createDepGraphClientResponse(
   affected: string[] = []
 ): Promise<ProjectGraphClientResponse> {
   performance.mark('project graph watch calculation:start');
-  await defaultFileHasher.init();
+  await fileHasher.init();
 
   let graph = pruneExternalNodes(
     await createProjectGraphAsync({ exitOnError: true })
   );
+  let fileMap = readProjectFileMapCache().projectFileMap;
   performance.mark('project graph watch calculation:end');
   performance.mark('project graph response generation:start');
 
   const layout = workspaceLayout();
-  const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes).map(
-    (project: any) =>
-      ({
-        name: project.name,
-        type: project.type,
-        data: {
-          tags: project.data.tags,
-          root: project.data.root,
-          files: project.data.files,
-          targets: project.data.targets,
-        },
-      } as ProjectGraphProjectNode)
-  );
-
+  const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes);
   const dependencies = graph.dependencies;
 
   const hasher = createHash('sha256');
@@ -596,6 +588,7 @@ async function createDepGraphClientResponse(
     projects,
     dependencies,
     affected,
+    fileMap,
   };
 }
 

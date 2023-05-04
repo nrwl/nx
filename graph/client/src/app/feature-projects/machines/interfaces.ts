@@ -2,6 +2,7 @@ import { GraphPerfReport } from '../../interfaces';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import {
+  ProjectFileMap,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from 'nx/src/config/project-graph';
@@ -58,6 +59,7 @@ export type ProjectGraphMachineEvents =
       projects: ProjectGraphProjectNode[];
       dependencies: Record<string, ProjectGraphDependency[]>;
       affectedProjects: string[];
+      fileMap: ProjectFileMap;
       workspaceLayout: {
         libsDir: string;
         appsDir: string;
@@ -67,6 +69,7 @@ export type ProjectGraphMachineEvents =
       type: 'updateGraph';
       projects: ProjectGraphProjectNode[];
       dependencies: Record<string, ProjectGraphDependency[]>;
+      fileMap: ProjectFileMap;
     };
 
 // The context (extended state) of the machine
@@ -88,6 +91,7 @@ export interface ProjectGraphContext {
   };
   graphActor: ActorRef<GraphRenderEvents>;
   lastPerfReport: GraphPerfReport;
+  fileMap: ProjectFileMap;
   tracing: {
     start: string;
     end: string;

@@ -1,10 +1,6 @@
 import minimatch = require('minimatch');
 import type { ProjectGraphProjectNode } from '../config/project-graph';
 
-type ProjectNodeMap =
-  | Record<string, ProjectGraphProjectNode>
-  | Map<string, ProjectGraphProjectNode>;
-
 const validPatternTypes = [
   'name', // Pattern is based on the project's name
   'tag', // Pattern is based on the project's tags
@@ -33,13 +29,13 @@ const globCharacters = ['*', '|', '{', '}', '(', ')'];
  */
 export function findMatchingProjects(
   patterns: string[] = [],
-  projects: ProjectNodeMap
+  projects: Record<string, ProjectGraphProjectNode>
 ): string[] {
   if (!patterns.length || patterns.filter((p) => p.length).length === 0) {
     return []; // Short circuit if called with no patterns
   }
 
-  const projectNames = keys(projects);
+  const projectNames = Object.keys(projects);
 
   const selectedProjects: Set<string> = new Set();
   const excludedProjects: Set<string> = new Set();
@@ -139,13 +135,13 @@ export function findMatchingProjects(
 
 function addMatchingProjectsByDirectory(
   projectNames: string[],
-  projects: ProjectNodeMap,
+  projects: Record<string, ProjectGraphProjectNode>,
   pattern: ProjectPattern,
   excludedProjects: Set<string>,
   selectedProjects: Set<string>
 ) {
   for (const projectName of projectNames) {
-    const root = getItemInMapOrRecord(projects, projectName).data.root;
+    const root = projects[projectName].data.root;
     if (getMatchingStringsWithCache(pattern.value, [root]).length > 0) {
       (pattern.exclude ? excludedProjects : selectedProjects).add(projectName);
     }
@@ -154,12 +150,12 @@ function addMatchingProjectsByDirectory(
 
 function addMatchingProjectsByName(
   projectNames: string[],
-  projects: ProjectNodeMap,
+  projects: Record<string, ProjectGraphProjectNode>,
   pattern: ProjectPattern,
   excludedProjects: Set<string>,
   selectedProjects: Set<string>
 ) {
-  if (hasKey(projects, pattern.value)) {
+  if (projects[pattern.value]) {
     (pattern.exclude ? excludedProjects : selectedProjects).add(pattern.value);
     return;
   }
@@ -183,13 +179,13 @@ function addMatchingProjectsByName(
 
 function addMatchingProjectsByTag(
   projectNames: string[],
-  projects: ProjectNodeMap,
+  projects: Record<string, ProjectGraphProjectNode>,
   pattern: ProjectPattern,
   excludedProjects: Set<string>,
   selectedProjects: Set<string>
 ) {
   for (const projectName of projectNames) {
-    const tags = getItemInMapOrRecord(projects, projectName).data.tags || [];
+    const tags = projects[projectName].data.tags || [];
 
     if (tags.includes(pattern.value)) {
       (pattern.exclude ? excludedProjects : selectedProjects).add(projectName);
@@ -206,29 +202,9 @@ function addMatchingProjectsByTag(
   }
 }
 
-function keys(
-  object: Record<string, unknown> | Map<string, unknown>
-): string[] {
-  return object instanceof Map ? [...object.keys()] : Object.keys(object);
-}
-
-function hasKey(
-  object: Record<string, unknown> | Map<string, unknown>,
-  key: string
-) {
-  return object instanceof Map ? object.has(key) : key in object;
-}
-
-function getItemInMapOrRecord<T>(
-  object: Record<string, T> | Map<string, T>,
-  key: string
-): T {
-  return object instanceof Map ? object.get(key) : object[key];
-}
-
 function parseStringPattern(
   pattern: string,
-  projects: ProjectNodeMap
+  projects: Record<string, ProjectGraphProjectNode>
 ): ProjectPattern {
   const isExclude = pattern.startsWith('!');
 
@@ -239,7 +215,7 @@ function parseStringPattern(
 
   const indexOfFirstPotentialSeparator = pattern.indexOf(':');
   // There is a project that matches directly
-  if (hasKey(projects, pattern)) {
+  if (projects[pattern]) {
     return { type: 'name', value: pattern, exclude: isExclude };
     // The pattern does not contain a label
   } else if (indexOfFirstPotentialSeparator === -1) {

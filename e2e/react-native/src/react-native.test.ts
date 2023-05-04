@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   expectTestsPass,
+  getPackageManagerCommand,
   isOSX,
   killPorts,
   newProject,
@@ -9,6 +10,7 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
+  runCommand,
   runCommandUntil,
   uniq,
   updateFile,
@@ -168,30 +170,26 @@ describe('react native', () => {
     // Add npm package with native modules
     updateFile(join('package.json'), (content) => {
       const json = JSON.parse(content);
-      json.dependencies['react-native-image-picker'] = '1.0.0';
-      json.dependencies['react-native-gesture-handler'] = '1.0.0';
-      json.dependencies['react-native-safe-area-contex'] = '1.0.0';
-      json.dependencies['react-native-config'] = '1.0.0';
-      json.dependencies['@react-native-async-storage/async-storage'] = '1.0.0';
+      json.dependencies['react-native-image-picker'] = '5.3.1';
+      json.dependencies['@react-native-async-storage/async-storage'] = '1.18.1';
       return JSON.stringify(json, null, 2);
     });
+    runCommand(`${getPackageManagerCommand().install}`);
+
     // Add import for Nx to pick up
     updateFile(join('apps', appName, 'src/app/App.tsx'), (content) => {
-      return `import AsyncStorage from '@react-native-async-storage/async-storage';import Config from 'react-native-config';\n${content}`;
+      return `import AsyncStorage from '@react-native-async-storage/async-storage';${content}`;
     });
 
     await runCLIAsync(
-      `sync-deps ${appName} --include=react-native-gesture-handler,react-native-safe-area-context,react-native-image-picker`
+      `sync-deps ${appName} --include=react-native-image-picker`
     );
 
     const result = readJson(join('apps', appName, 'package.json'));
     expect(result).toMatchObject({
       dependencies: {
         'react-native-image-picker': '*',
-        'react-native-gesture-handler': '*',
-        'react-native-safe-area-context': '*',
         'react-native': '*',
-        'react-native-config': '*',
         '@react-native-async-storage/async-storage': '*',
       },
     });

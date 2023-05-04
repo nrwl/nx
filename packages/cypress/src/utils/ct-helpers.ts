@@ -124,9 +124,5 @@ export function createExecutorContext(
     projectName,
     projectsConfigurations,
     nxJsonConfiguration,
-    workspace: {
-      ...nxJsonConfiguration,
-      ...projectsConfigurations,
-    },
   };
 }

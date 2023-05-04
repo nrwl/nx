@@ -18,7 +18,6 @@ It only uses language primitives and immutable objects
 
 ### Classes
 
-- [Hasher](../../devkit/documents/nx_devkit#hasher)
 - [ProjectGraphBuilder](../../devkit/documents/nx_devkit#projectgraphbuilder)
 - [Workspaces](../../devkit/documents/nx_devkit#workspaces)
 
@@ -57,6 +56,7 @@ It only uses language primitives and immutable objects
 - [TargetDependencyConfig](../../devkit/documents/nx_devkit#targetdependencyconfig)
 - [Task](../../devkit/documents/nx_devkit#task)
 - [TaskGraph](../../devkit/documents/nx_devkit#taskgraph)
+- [TaskHasher](../../devkit/documents/nx_devkit#taskhasher)
 - [Tree](../../devkit/documents/nx_devkit#tree)
 - [Workspace](../../devkit/documents/nx_devkit#workspace)
 
@@ -67,6 +67,7 @@ It only uses language primitives and immutable objects
 - [Executor](../../devkit/documents/nx_devkit#executor)
 - [Generator](../../devkit/documents/nx_devkit#generator)
 - [GeneratorCallback](../../devkit/documents/nx_devkit#generatorcallback)
+- [Hasher](../../devkit/documents/nx_devkit#hasher)
 - [ImplicitDependencyEntry](../../devkit/documents/nx_devkit#implicitdependencyentry)
 - [ModuleFederationLibrary](../../devkit/documents/nx_devkit#modulefederationlibrary)
 - [PackageManager](../../devkit/documents/nx_devkit#packagemanager)
@@ -116,6 +117,7 @@ It only uses language primitives and immutable objects
 - [getProjects](../../devkit/documents/nx_devkit#getprojects)
 - [getWorkspaceLayout](../../devkit/documents/nx_devkit#getworkspacelayout)
 - [getWorkspacePath](../../devkit/documents/nx_devkit#getworkspacepath)
+- [hashArray](../../devkit/documents/nx_devkit#hasharray)
 - [installPackagesTask](../../devkit/documents/nx_devkit#installpackagestask)
 - [isStandaloneProject](../../devkit/documents/nx_devkit#isstandaloneproject)
 - [joinPathFragments](../../devkit/documents/nx_devkit#joinpathfragments)
@@ -173,14 +175,6 @@ It only uses language primitives and immutable objects
 Type of dependency between projects
 
 ## Classes
-
-### Hasher
-
-• **Hasher**: `Object`
-
-The default hasher used by executors.
-
----
 
 ### ProjectGraphBuilder
 
@@ -456,6 +450,12 @@ Graph of Tasks to be executed
 
 ---
 
+### TaskHasher
+
+• **TaskHasher**: `Object`
+
+---
+
 ### Tree
 
 • **Tree**: `Object`
@@ -572,6 +572,12 @@ A callback function that is executed after changes are made to the file system
 ##### Returns
 
 `void` \| `Promise`<`void`\>
+
+---
+
+### Hasher
+
+Ƭ **Hasher**: [`TaskHasher`](../../devkit/documents/nx_devkit#taskhasher)
 
 ---
 
@@ -1105,7 +1111,7 @@ will change to Promise<{ [id: string]: TaskStatus }> after Nx 15 is released.
 | `options`                    | [`DefaultTasksRunnerOptions`](../../devkit/documents/nx_devkit#defaulttasksrunneroptions)           |
 | `context?`                   | `Object`                                                                                            |
 | `context.daemon?`            | `DaemonClient`                                                                                      |
-| `context.hasher?`            | [`Hasher`](../../devkit/documents/nx_devkit#hasher)                                                 |
+| `context.hasher?`            | [`TaskHasher`](../../devkit/documents/nx_devkit#taskhasher)                                         |
 | `context.initiatingProject?` | `string`                                                                                            |
 | `context.nxArgs`             | `NxArgs`                                                                                            |
 | `context.nxJson`             | [`NxJsonConfiguration`](../../devkit/documents/nx_devkit#nxjsonconfiguration)<`string`[] \| `"*"`\> |
@@ -1458,6 +1464,22 @@ all projects are configured using project.json
 #### Returns
 
 `"angular.json"` \| `"workspace.json"`
+
+---
+
+### hashArray
+
+▸ **hashArray**(`content`): `string`
+
+#### Parameters
+
+| Name      | Type       |
+| :-------- | :--------- |
+| `content` | `string`[] |
+
+#### Returns
+
+`string`
 
 ---
 

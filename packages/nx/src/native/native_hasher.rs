@@ -16,6 +16,13 @@ pub struct FileData {
 }
 
 #[napi]
+fn hash_array(input: Vec<String>) -> String {
+    let joined = input.join(",");
+    let content = joined.as_bytes();
+    return xxh3::xxh3_64(content).to_string();
+}
+
+#[napi]
 fn hash_file(file: String) -> Option<FileData> {
     let Ok(content) = std::fs::read(&file) else {
         return None;
@@ -60,8 +67,8 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
             use ignore::WalkState::*;
 
             #[rustfmt::skip]
-            let Ok(dir_entry) = entry else {
-              return Continue;
+                let Ok(dir_entry) = entry else {
+                return Continue;
             };
 
             let Ok(content) = std::fs::read(dir_entry.path()) else {
@@ -78,7 +85,7 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
 
             // convert back-slashes in Windows paths, since the js expects only forward-slash path separators
             #[cfg(target_os = "windows")]
-            let file_path = file_path.replace('\\', "/");
+                let file_path = file_path.replace('\\', "/");
 
             tx.send((file_path.to_string(), content)).ok();
 

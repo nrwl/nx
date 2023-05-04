@@ -1,8 +1,7 @@
 import { defaultMaxListeners } from 'events';
 import { performance } from 'perf_hooks';
-
 import { Workspaces } from '../config/workspaces';
-import { Hasher } from '../hasher/hasher';
+import { TaskHasher } from '../hasher/task-hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { workspaceRoot } from '../utils/workspace-root';
 import { Cache } from './cache';
@@ -51,7 +50,7 @@ export class TaskOrchestrator {
   // endregion internal state
 
   constructor(
-    private readonly hasher: Hasher,
+    private readonly hasher: TaskHasher,
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,

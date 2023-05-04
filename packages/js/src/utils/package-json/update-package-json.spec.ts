@@ -286,6 +286,16 @@ describe('updatePackageJson', () => {
     dependencies: { external1: '~1.0.0', external2: '^4.0.0' },
     devDependencies: { jest: '27' },
   };
+
+  const fileMap = {
+    '@org/lib1': [
+      {
+        file: 'test.ts',
+        hash: '',
+        deps: ['npm:external1', 'npm:external2'],
+      },
+    ],
+  };
   const projectGraph: ProjectGraph = {
     nodes: {
       '@org/lib1': {
@@ -298,24 +308,6 @@ describe('updatePackageJson', () => {
               outputs: ['{workspaceRoot}/dist/libs/lib1'],
             },
           },
-          files: [
-            {
-              file: 'test.ts',
-              hash: '',
-              dependencies: [
-                {
-                  type: DependencyType.static,
-                  target: 'npm:external1',
-                  source: '@org/lib1',
-                },
-                {
-                  type: DependencyType.static,
-                  target: 'npm:external2',
-                  source: '@org/lib1',
-                },
-              ],
-            },
-          ],
         },
       },
     },
@@ -378,7 +370,7 @@ describe('updatePackageJson', () => {
       main: 'libs/lib1/main.ts',
     };
     const dependencies: DependentBuildableProjectNode[] = [];
-    updatePackageJson(options, context, undefined, dependencies);
+    updatePackageJson(options, context, undefined, dependencies, fileMap);
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(
@@ -431,7 +423,7 @@ describe('updatePackageJson', () => {
       updateBuildableProjectDepsInPackageJson: true,
     };
     const dependencies: DependentBuildableProjectNode[] = [];
-    updatePackageJson(options, context, undefined, dependencies);
+    updatePackageJson(options, context, undefined, dependencies, fileMap);
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(

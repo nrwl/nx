@@ -1,15 +1,12 @@
 import { calculateFileChanges } from '../../project-graph/file-utils';
 import { runCommand } from '../../tasks-runner/run-command';
 import { output } from '../../utils/output';
-import { generateGraph } from '../graph/graph';
 import { printAffected } from './print-affected';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
-import {
-  NxArgs,
-  readGraphFileFromGraphArg,
-} from '../../utils/command-line-utils';
+import type { NxArgs } from '../../utils/command-line-utils';
 import {
   parseFiles,
+  readGraphFileFromGraphArg,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
 import { performance } from 'perf_hooks';
@@ -24,6 +21,8 @@ import { TargetDependencyConfig } from '../../config/workspace-json-project-json
 import { readNxJson } from '../../config/configuration';
 import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
+import { fileHasher } from '../../hasher/impl';
+import { generateGraph } from '../graph/graph';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -132,7 +131,7 @@ async function projectsToRun(
         projectGraph,
         calculateFileChanges(
           parseFiles(nxArgs).files,
-          projectGraph.allWorkspaceFiles,
+          fileHasher.allFileData(),
           nxArgs
         )
       );

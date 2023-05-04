@@ -21,7 +21,11 @@ export function buildExplicitDependencies(
   // files we need to process is >= 100 and there are more than 2 CPUs
   // to be able to use at least 2 workers (1 worker per CPU and
   // 1 CPU for the main thread)
-  if (totalNumOfFilesToProcess < 100 || getNumberOfWorkers() <= 2) {
+  if (
+    jsPluginConfig.analyzeSourceFiles === false ||
+    totalNumOfFilesToProcess < 100 ||
+    getNumberOfWorkers() <= 2
+  ) {
     return buildExplicitDependenciesWithoutWorkers(
       jsPluginConfig,
       ctx,

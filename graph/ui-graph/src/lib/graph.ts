@@ -82,6 +82,7 @@ export class GraphService {
         this.renderGraph.collapseEdges = event.collapseEdges;
         this.broadcast({ type: 'GraphRegenerated' });
         this.projectTraversalGraph.initGraph(
+          event.fileMap,
           event.projects,
           event.groupByFolder,
           event.workspaceLayout,
@@ -95,6 +96,7 @@ export class GraphService {
         this.renderGraph.collapseEdges = event.collapseEdges;
         this.broadcast({ type: 'GraphRegenerated' });
         this.projectTraversalGraph.initGraph(
+          event.fileMap,
           event.projects,
           event.groupByFolder,
           event.workspaceLayout,

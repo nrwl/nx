@@ -14,7 +14,6 @@ describe('getTouchedProjectsFromLockFile', () => {
           type: 'app',
           data: {
             root: 'libs/proj1',
-            files: [],
           },
         },
         proj2: {
@@ -22,7 +21,6 @@ describe('getTouchedProjectsFromLockFile', () => {
           type: 'lib',
           data: {
             root: 'packages/proj2',
-            files: [],
           },
         },
         app1: {
@@ -30,7 +28,6 @@ describe('getTouchedProjectsFromLockFile', () => {
           type: 'app',
           data: {
             root: 'apps/app1',
-            files: [],
           },
         },
       },

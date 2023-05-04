@@ -7,7 +7,7 @@ import {
   removeTasksFromTaskGraph,
 } from './utils';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { Hasher } from '../hasher/hasher';
+import { TaskHasher } from '../hasher/task-hasher';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -31,7 +31,7 @@ export class TasksSchedule {
   private completedTasks = new Set<string>();
 
   constructor(
-    private readonly hasher: Hasher,
+    private readonly hasher: TaskHasher,
     private readonly nxJson: NxJsonConfiguration,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,

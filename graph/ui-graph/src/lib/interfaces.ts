@@ -1,6 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
+  ProjectFileMap,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
   TaskGraph,
@@ -27,6 +28,7 @@ export type ProjectGraphRenderEvents =
   | {
       type: 'notifyGraphInitGraph';
       projects: ProjectGraphProjectNode[];
+      fileMap: ProjectFileMap;
       dependencies: Record<string, ProjectGraphDependency[]>;
       affectedProjects: string[];
       workspaceLayout: {
@@ -39,6 +41,7 @@ export type ProjectGraphRenderEvents =
   | {
       type: 'notifyGraphUpdateGraph';
       projects: ProjectGraphProjectNode[];
+      fileMap: ProjectFileMap;
       dependencies: Record<string, ProjectGraphDependency[]>;
       affectedProjects: string[];
       workspaceLayout: {

@@ -113,7 +113,6 @@ describe('TasksSchedule', () => {
             },
           ],
         },
-        allWorkspaceFiles: [],
         externalNodes: {},
         version: '5',
       };
@@ -340,7 +339,6 @@ describe('TasksSchedule', () => {
             },
           ],
         },
-        allWorkspaceFiles: [],
         externalNodes: {},
         version: '5',
       };

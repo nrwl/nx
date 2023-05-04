@@ -12,7 +12,6 @@ describe('findMatchingProjects', () => {
       type: 'lib',
       data: {
         root: 'lib/test-project',
-        files: [],
         tags: ['api', 'theme1'],
       },
     },
@@ -21,7 +20,6 @@ describe('findMatchingProjects', () => {
       type: 'lib',
       data: {
         root: 'lib/a',
-        files: [],
         tags: ['api', 'theme2'],
       },
     },
@@ -30,7 +28,6 @@ describe('findMatchingProjects', () => {
       type: 'lib',
       data: {
         root: 'lib/b',
-        files: [],
         tags: ['ui'],
       },
     },
@@ -39,7 +36,6 @@ describe('findMatchingProjects', () => {
       type: 'app',
       data: {
         root: 'apps/c',
-        files: [],
         tags: ['api'],
       },
     },
@@ -48,7 +44,6 @@ describe('findMatchingProjects', () => {
       type: 'lib',
       data: {
         root: 'lib/shared/nested',
-        files: [],
         tags: [],
       },
     },
@@ -94,7 +89,6 @@ describe('findMatchingProjects', () => {
         type: 'lib',
         data: {
           root: 'lib/b-1',
-          files: [],
           tags: [],
         },
       },
@@ -103,7 +97,6 @@ describe('findMatchingProjects', () => {
         type: 'lib',
         data: {
           root: 'lib/b-2',
-          files: [],
           tags: [],
         },
       },
