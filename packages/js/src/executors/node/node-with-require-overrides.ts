@@ -1,6 +1,8 @@
 const Module = require('module');
 const originalLoader = Module._load;
 
+const dynamicImport = new Function('specifier', 'return import(specifier)');
+
 const mappings = JSON.parse(process.env.NX_MAPPINGS);
 const keys = Object.keys(mappings);
 const fileToRun = process.env.NX_FILE_TO_RUN;
@@ -17,4 +19,4 @@ Module._load = function (request, parent) {
   }
 };
 
-require(fileToRun);
+dynamicImport(fileToRun);

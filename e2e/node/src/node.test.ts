@@ -21,6 +21,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
+  updateJson,
   updateProjectConfig,
 } from '@nx/e2e/utils';
 import { exec, execSync } from 'child_process';
@@ -230,6 +231,48 @@ describe('Node Applications', () => {
       expect(err).toBeFalsy();
     }
   }, 120000);
+
+  it('should be able to run ESM applications', async () => {
+    const esmapp = uniq('esmapp');
+
+    runCLI(
+      `generate @nrwl/node:app ${esmapp} --linter=eslint --framework=none --bundler=webpack`
+    );
+    updateJson(`apps/${esmapp}/tsconfig.app.json`, (config) => {
+      config.module = 'esnext';
+      config.target = 'es2020';
+      return config;
+    });
+    updateProjectConfig(esmapp, (config) => {
+      config.targets.build.options.outputFileName = 'main.mjs';
+      config.targets.build.options.assets = [];
+      return config;
+    });
+    updateFile(
+      `apps/${esmapp}/webpack.config.js`,
+      `
+        const { composePlugins, withNx } = require('@nx/webpack');
+        module.exports = composePlugins(withNx(), (config) => {
+          config.experiments = {
+            ...config.experiments,
+            outputModule: true,
+            topLevelAwait: true,
+          };
+          config.output = {
+            path: config.output.path,
+            chunkFormat: 'module',
+            library: { type: 'module' }
+          }
+          return config;
+        });
+      `
+    );
+    await runCLIAsync(`build ${esmapp}`);
+    const p = await runCommandUntil(`serve ${esmapp}`, (output) => {
+      return output.includes('Hello World');
+    });
+    p.kill();
+  }, 300000);
 });
 
 describe('Build Node apps', () => {
