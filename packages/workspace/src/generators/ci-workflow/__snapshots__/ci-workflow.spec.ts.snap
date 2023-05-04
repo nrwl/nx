@@ -189,7 +189,7 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.0
     with:
       main-branch-name: main
       number-of-agents: 3
@@ -204,7 +204,7 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.0
     with:
       number-of-agents: 3
 "
@@ -222,7 +222,7 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.0
     with:
       main-branch-name: main
       number-of-agents: 3
@@ -237,7 +237,7 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.0
     with:
       number-of-agents: 3
 "
@@ -483,7 +483,7 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.0
     with:
       main-branch-name: main
       number-of-agents: 3
@@ -498,7 +498,7 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.0
     with:
       number-of-agents: 3
 "
@@ -516,7 +516,7 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.0
     with:
       main-branch-name: main
       number-of-agents: 3
@@ -531,7 +531,7 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.0
     with:
       number-of-agents: 3
 "
@@ -777,7 +777,7 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.0
     with:
       main-branch-name: main
       number-of-agents: 3
@@ -792,7 +792,7 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.0
     with:
       number-of-agents: 3
 "
@@ -810,7 +810,7 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.0
     with:
       main-branch-name: main
       number-of-agents: 3
@@ -825,7 +825,7 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.11.3
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.0
     with:
       number-of-agents: 3
 "
