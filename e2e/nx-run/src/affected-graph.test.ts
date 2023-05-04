@@ -286,112 +286,6 @@ describe('Nx Affected and Graph Tests', () => {
     });
   });
 
-  describe('print-affected', () => {
-    it('should print information about affected projects', async () => {
-      const myapp = uniq('myapp-a');
-      const myapp2 = uniq('myapp-b');
-      const mylib = uniq('mylib');
-      const mylib2 = uniq('mylib2');
-      const mypublishablelib = uniq('mypublishablelib');
-
-      runCLI(`generate @nx/web:app ${myapp}`);
-      runCLI(`generate @nx/web:app ${myapp2}`);
-      runCLI(`generate @nx/js:lib ${mylib}`);
-      runCLI(`generate @nx/js:lib ${mylib2}`);
-      runCLI(`generate @nx/js:lib ${mypublishablelib}`);
-
-      const app1ElementSpec = readFile(
-        `apps/${myapp}/src/app/app.element.spec.ts`
-      );
-
-      updateFile(
-        `apps/${myapp}/src/app/app.element.spec.ts`,
-        `
-          import "@${proj}/${mylib}";
-          import "@${proj}/${mypublishablelib}";
-          ${app1ElementSpec}
-          `
-      );
-
-      const app2ElementSpec = readFile(
-        `apps/${myapp2}/src/app/app.element.spec.ts`
-      );
-
-      updateFile(
-        `apps/${myapp2}/src/app/app.element.spec.ts`,
-        `
-          import "@${proj}/${mylib}";
-          import "@${proj}/${mypublishablelib}";
-          ${app2ElementSpec}
-          `
-      );
-
-      const resWithoutTarget = JSON.parse(
-        (
-          await runCLIAsync(
-            `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts`,
-            {
-              silent: true,
-            }
-          )
-        ).stdout
-      );
-      expect(resWithoutTarget.tasks).toEqual([]);
-      compareTwoArrays(resWithoutTarget.projects, [`${myapp}-e2e`, myapp]);
-
-      const resWithTarget = JSON.parse(
-        (
-          await runCLIAsync(
-            `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test`,
-            { silent: true }
-          )
-        ).stdout.trim()
-      );
-
-      const { runNx } = getPackageManagerCommand();
-      expect(resWithTarget.tasks[0]).toMatchObject({
-        id: `${myapp}:test`,
-        overrides: {},
-        target: {
-          project: myapp,
-          target: 'test',
-        },
-        command: `${runNx} run ${myapp}:test`,
-        outputs: [`coverage/apps/${myapp}`],
-      });
-      compareTwoArrays(resWithTarget.projects, [myapp]);
-
-      const resWithTargetWithSelect1 = (
-        await runCLIAsync(
-          `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test --select=projects`,
-          { silent: true }
-        )
-      ).stdout.trim();
-      compareTwoSerializedArrays(resWithTargetWithSelect1, myapp);
-
-      const resWithTargetWithSelect2 = (
-        await runCLIAsync(
-          `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test --select="tasks.target.project"`,
-          { silent: true }
-        )
-      ).stdout.trim();
-      compareTwoSerializedArrays(resWithTargetWithSelect2, myapp);
-    }, 120000);
-
-    function compareTwoSerializedArrays(a: string, b: string) {
-      compareTwoArrays(
-        a.split(',').map((_) => _.trim()),
-        b.split(',').map((_) => _.trim())
-      );
-    }
-
-    function compareTwoArrays(a: string[], b: string[]) {
-      expect(a.sort((x, y) => x.localeCompare(y))).toEqual(
-        b.sort((x, y) => x.localeCompare(y))
-      );
-    }
-  });
-
   describe('graph', () => {
     let myapp: string;
     let myapp2: string;
@@ -624,4 +518,115 @@ describe('Nx Affected and Graph Tests', () => {
       expect(affectedProjects).toContain(`"${mylib}"`);
     });
   });
+});
+
+describe('Print-affected', () => {
+  let proj: string;
+
+  beforeAll(() => (proj = newProject()));
+  afterAll(() => cleanupProject());
+
+  it('should print information about affected projects', async () => {
+    const myapp = uniq('myapp-a');
+    const myapp2 = uniq('myapp-b');
+    const mylib = uniq('mylib');
+    const mylib2 = uniq('mylib2');
+    const mypublishablelib = uniq('mypublishablelib');
+
+    runCLI(`generate @nx/web:app ${myapp}`);
+    runCLI(`generate @nx/web:app ${myapp2}`);
+    runCLI(`generate @nx/js:lib ${mylib}`);
+    runCLI(`generate @nx/js:lib ${mylib2}`);
+    runCLI(`generate @nx/js:lib ${mypublishablelib}`);
+
+    const app1ElementSpec = readFile(
+      `apps/${myapp}/src/app/app.element.spec.ts`
+    );
+
+    updateFile(
+      `apps/${myapp}/src/app/app.element.spec.ts`,
+      `
+        import "@${proj}/${mylib}";
+        import "@${proj}/${mypublishablelib}";
+        ${app1ElementSpec}
+        `
+    );
+
+    const app2ElementSpec = readFile(
+      `apps/${myapp2}/src/app/app.element.spec.ts`
+    );
+
+    updateFile(
+      `apps/${myapp2}/src/app/app.element.spec.ts`,
+      `
+        import "@${proj}/${mylib}";
+        import "@${proj}/${mypublishablelib}";
+        ${app2ElementSpec}
+        `
+    );
+
+    const resWithoutTarget = JSON.parse(
+      (
+        await runCLIAsync(
+          `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts`,
+          {
+            silent: true,
+          }
+        )
+      ).stdout
+    );
+    expect(resWithoutTarget.tasks).toEqual([]);
+    compareTwoArrays(resWithoutTarget.projects, [`${myapp}-e2e`, myapp]);
+
+    const resWithTarget = JSON.parse(
+      (
+        await runCLIAsync(
+          `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test`,
+          { silent: true }
+        )
+      ).stdout.trim()
+    );
+
+    const { runNx } = getPackageManagerCommand();
+    expect(resWithTarget.tasks[0]).toMatchObject({
+      id: `${myapp}:test`,
+      overrides: {},
+      target: {
+        project: myapp,
+        target: 'test',
+      },
+      command: `${runNx} run ${myapp}:test`,
+      outputs: [`coverage/apps/${myapp}`],
+    });
+    compareTwoArrays(resWithTarget.projects, [myapp]);
+
+    const resWithTargetWithSelect1 = (
+      await runCLIAsync(
+        `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test --select=projects`,
+        { silent: true }
+      )
+    ).stdout.trim();
+    compareTwoSerializedArrays(resWithTargetWithSelect1, myapp);
+
+    const resWithTargetWithSelect2 = (
+      await runCLIAsync(
+        `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test --select="tasks.target.project"`,
+        { silent: true }
+      )
+    ).stdout.trim();
+    compareTwoSerializedArrays(resWithTargetWithSelect2, myapp);
+  }, 120000);
+
+  function compareTwoSerializedArrays(a: string, b: string) {
+    compareTwoArrays(
+      a.split(',').map((_) => _.trim()),
+      b.split(',').map((_) => _.trim())
+    );
+  }
+
+  function compareTwoArrays(a: string[], b: string[]) {
+    expect(a.sort((x, y) => x.localeCompare(y))).toEqual(
+      b.sort((x, y) => x.localeCompare(y))
+    );
+  }
 });
