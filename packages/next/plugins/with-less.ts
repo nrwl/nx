@@ -1,6 +1,7 @@
 // Adapted from https://raw.githubusercontent.com/elado/next-with-less/main/src/index.js
 import { merge } from 'webpack-merge';
 import { NextConfigFn } from '../src/utils/config';
+import { WithNxOptions } from './with-nx';
 
 const addLessToRegExp = (rx) =>
   new RegExp(rx.source.replace('|sass', '|sass|less'), rx.flags);
@@ -13,9 +14,13 @@ function patchNextCSSWithLess(
 
 patchNextCSSWithLess();
 
-export function withLess(configFn: NextConfigFn): NextConfigFn {
+export function withLess(
+  configOrFn: NextConfigFn | WithNxOptions
+): NextConfigFn {
   return async (phase: string) => {
-    const { lessLoaderOptions = {}, ...nextConfig } = await configFn(phase);
+    const baseConfig =
+      typeof configOrFn === 'function' ? await configOrFn(phase) : configOrFn;
+    const { lessLoaderOptions = {}, ...nextConfig } = baseConfig;
 
     return Object.assign({}, nextConfig, {
       webpack(config, opts) {
