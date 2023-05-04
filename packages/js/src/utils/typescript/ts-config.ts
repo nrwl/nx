@@ -1,6 +1,8 @@
 import { offsetFromRoot, Tree, updateJson, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
+import * as ts from 'typescript';
+import { ensureTypescript } from './ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -75,4 +77,36 @@ export function addTsConfigPath(
 
     return json;
   });
+}
+
+export function readTsConfigPaths(tsConfig?: string | ts.ParsedCommandLine) {
+  tsConfig ??= getRootTsConfigPath();
+  try {
+    if (!tsModule) {
+      tsModule = ensureTypescript();
+    }
+
+    let config: ts.ParsedCommandLine;
+
+    if (typeof tsConfig === 'string') {
+      const configFile = tsModule.readConfigFile(
+        tsConfig,
+        tsModule.sys.readFile
+      );
+      config = tsModule.parseJsonConfigFileContent(
+        configFile.config,
+        tsModule.sys,
+        dirname(tsConfig)
+      );
+    } else {
+      config = tsConfig;
+    }
+    if (config.options?.paths) {
+      return config.options.paths;
+    } else {
+      return null;
+    }
+  } catch (e) {
+    return null;
+  }
 }

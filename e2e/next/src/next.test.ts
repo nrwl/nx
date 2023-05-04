@@ -21,6 +21,7 @@ import {
 } from '@nx/e2e/utils';
 import * as http from 'http';
 import { checkApp } from './utils';
+import { removeSync, mkdirSync } from 'fs-extra';
 
 describe('Next.js Applications', () => {
   let proj: string;
@@ -39,6 +40,13 @@ describe('Next.js Applications', () => {
   });
 
   it('should generate app + libs', async () => {
+    // Remove apps/libs folder and use packages.
+    // Allows us to test other integrated monorepo setup that had a regression.
+    // See: https://github.com/nrwl/nx/issues/16658
+    removeSync(`${tmpProjPath()}/libs`);
+    removeSync(`${tmpProjPath()}/apps`);
+    mkdirSync(`${tmpProjPath()}/packages`);
+
     const appName = uniq('app');
     const nextLib = uniq('nextlib');
     const jsLib = uniq('tslib');
@@ -52,7 +60,7 @@ describe('Next.js Applications', () => {
     );
 
     // Create file in public that should be copied to dist
-    updateFile(`apps/${appName}/public/a/b.txt`, `Hello World!`);
+    updateFile(`packages/${appName}/public/a/b.txt`, `Hello World!`);
 
     // Additional assets that should be copied to dist
     const sharedLib = uniq('sharedLib');
@@ -60,13 +68,13 @@ describe('Next.js Applications', () => {
       json.targets.build.options.assets = [
         {
           glob: '**/*',
-          input: `libs/${sharedLib}/src/assets`,
+          input: `packages/${sharedLib}/src/assets`,
           output: 'shared/ui',
         },
       ];
       return json;
     });
-    updateFile(`libs/${sharedLib}/src/assets/hello.txt`, 'Hello World!');
+    updateFile(`packages/${sharedLib}/src/assets/hello.txt`, 'Hello World!');
 
     // create a css file in node_modules so that it can be imported in a lib
     // to test that it works as expected
@@ -76,7 +84,7 @@ describe('Next.js Applications', () => {
     );
 
     updateFile(
-      `libs/${jsLib}/src/lib/${jsLib}.ts`,
+      `packages/${jsLib}/src/lib/${jsLib}.ts`,
       `
           export function jsLib(): string {
             return 'Hello Nx';
@@ -90,7 +98,7 @@ describe('Next.js Applications', () => {
     );
 
     updateFile(
-      `libs/${buildableLib}/src/lib/${buildableLib}.ts`,
+      `packages/${buildableLib}/src/lib/${buildableLib}.ts`,
       `
           export function buildableLib(): string {
             return 'Hello Buildable';
@@ -98,11 +106,11 @@ describe('Next.js Applications', () => {
           `
     );
 
-    const mainPath = `apps/${appName}/pages/index.tsx`;
+    const mainPath = `packages/${appName}/pages/index.tsx`;
     const content = readFile(mainPath);
 
     updateFile(
-      `apps/${appName}/pages/api/hello.ts`,
+      `packages/${appName}/pages/api/hello.ts`,
       `
           import { jsLibAsync } from '@${proj}/${jsLib}';
 
@@ -139,7 +147,7 @@ describe('Next.js Applications', () => {
           )}`
     );
 
-    const e2eTestPath = `apps/${appName}-e2e/src/e2e/app.cy.ts`;
+    const e2eTestPath = `packages/${appName}-e2e/src/e2e/app.cy.ts`;
     const e2eContent = readFile(e2eTestPath);
     updateFile(
       e2eTestPath,
@@ -160,12 +168,13 @@ describe('Next.js Applications', () => {
       checkLint: true,
       checkE2E: isNotWindows(),
       checkExport: false,
+      appsDir: 'packages',
     });
 
     // public and shared assets should both be copied to dist
     checkFilesExist(
-      `dist/apps/${appName}/public/a/b.txt`,
-      `dist/apps/${appName}/public/shared/ui/hello.txt`
+      `dist/packages/${appName}/public/a/b.txt`,
+      `dist/packages/${appName}/public/shared/ui/hello.txt`
     );
 
     // Check that `nx serve <app> --prod` works with previous production build (e.g. `nx build <app>`).
@@ -178,14 +187,9 @@ describe('Next.js Applications', () => {
     );
 
     // Check that the output is self-contained (i.e. can run with its own package.json + node_modules)
-    const distPath = joinPathFragments(tmpProjPath(), 'dist/apps', appName);
     const selfContainedPort = 3000;
-    const pmc = getPackageManagerCommand();
-    runCommand(`${pmc.install}`, {
-      cwd: distPath,
-    });
     runCLI(
-      `generate @nx/workspace:run-commands serve-prod --project ${appName} --cwd=dist/apps/${appName} --command="npx next start --port=${selfContainedPort}"`
+      `generate @nx/workspace:run-commands serve-prod --project ${appName} --cwd=dist/packages/${appName} --command="npx next start --port=${selfContainedPort}"`
     );
     const selfContainedProcess = await runCommandUntil(
       `run ${appName}:serve-prod`,
