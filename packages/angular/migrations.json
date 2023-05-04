@@ -194,7 +194,7 @@
     },
     "remove-render-module-platform-server-exports": {
       "cli": "nx",
-      "version": "16.1.0-beta.0",
+      "version": "16.1.0-beta.1",
       "requires": {
         "@angular/core": ">=15.0.0"
       },
@@ -203,7 +203,7 @@
     },
     "remove-ngcc-invocation": {
       "cli": "nx",
-      "version": "16.1.0-beta.0",
+      "version": "16.1.0-beta.1",
       "requires": {
         "@angular/core": ">=16.0.0-rc.4"
       },
@@ -212,7 +212,7 @@
     },
     "extract-app-config-for-standalone": {
       "cli": "nx",
-      "version": "16.1.0-beta.0",
+      "version": "16.1.0-beta.1",
       "requires": {
         "@angular/core": ">=16.0.0-rc.4"
       },
@@ -221,7 +221,7 @@
     },
     "update-server-executor-config": {
       "cli": "nx",
-      "version": "16.1.0-beta.0",
+      "version": "16.1.0-beta.1",
       "requires": {
         "@angular/core": ">=16.0.0-rc.4"
       },
