@@ -18,13 +18,12 @@ export async function setupSsr(tree: Tree, schema: Schema) {
   validateOptions(tree, schema);
   const options = normalizeOptions(tree, schema);
 
+  updateProjectConfig(tree, options);
   generateSSRFiles(tree, options);
 
   if (!options.standalone) {
     updateAppModule(tree, options);
   }
-
-  updateProjectConfig(tree, options);
 
   const pkgVersions = versions(tree);
 
