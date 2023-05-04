@@ -37,8 +37,8 @@
     "@nx/js": "file:../js"
   },
   "peerDependencies": {
-    "vite": "^4.0.1",
-    "vitest": ">=0.25.8 <1.0.0"
+    "vite": "^4.3.4",
+    "vitest": ">=0.31.0 <1.0.0"
   },
   "publishConfig": {
     "access": "public"

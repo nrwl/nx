@@ -220,44 +220,43 @@ describe('Vite Plugin', () => {
       updateFile(`libs/${lib}/vite.config.ts`, () => {
         return `/// <reference types="vitest" />
         import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+        import react from '@vitejs/plugin-react';
+        import viteTsConfigPaths from 'vite-tsconfig-paths';
 
-export default defineConfig({
-  server: {
-    port: 4200,
-    host: 'localhost',
-  },
-  plugins: [
-    react(),
-    viteTsConfigPaths({
-      root: './',
-    }),
-  ],
-  test: {
-    globals: true,
-    cache: {
-      dir: './node_modules/.vitest',
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    coverage: {
-      provider: "c8",
-      enabled: true,
-      lines: 100,
-      statements: 100,
-      functions: 100,
-      branches: 1000,
-    }
-  },
-});
-`;
+        export default defineConfig({
+          server: {
+            port: 4200,
+            host: 'localhost',
+          },
+          plugins: [
+            react(),
+            viteTsConfigPaths({
+              root: './',
+            }),
+          ],
+          test: {
+            globals: true,
+            cache: {
+              dir: './node_modules/.vitest',
+            },
+            environment: 'jsdom',
+            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            coverage: {
+              provider: "c8",
+              enabled: true,
+              lines: 100,
+              statements: 100,
+              functions: 100,
+              branches: 1000,
+            }
+          },
+        });
+        `;
       });
 
       const coverageDir = `${tmpProjPath()}/coverage/libs/${lib}`;
 
       const results = runCLI(`test ${lib} --coverage`, { silenceError: true });
-
       expect(results).toContain(
         `Running target test for project ${lib} failed`
       );
