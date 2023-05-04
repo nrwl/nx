@@ -53,6 +53,12 @@
       "version": "16.0.0-beta.1",
       "description": "Update workspace to use Storybook v7",
       "implementation": "./src/migrations/update-16-0-0/update-sb-7"
+    },
+    "update-16-1-0": {
+      "cli": "nx",
+      "version": "16.1.0-beta.0",
+      "description": "Ignore @nx/react/plugins/storybook in Storybook eslint rules.",
+      "factory": "./src/migrations/update-16-1-0/eslint-ignore-react-plugin"
     }
   },
   "packageJsonUpdates": {
@@ -62,6 +68,10 @@
         "@storybook/core-server": ">=7.0.0 <7.0.8"
       },
       "packages": {
+        "eslint-plugin-storybook": {
+          "version": "^0.6.12",
+          "alwaysAddToPackageJson": false
+        },
         "@storybook/core-server": {
           "version": "^7.0.8",
           "alwaysAddToPackageJson": false
