@@ -187,7 +187,7 @@ async function createNewPlugin(tree: Tree) {
     e2eTestRunner: 'none',
     publishable: false,
   });
-  getCreateGeneratorsJson()(
+  await getCreateGeneratorsJson()(
     tree,
     readProjectConfiguration(tree, PROJECT_NAME).root,
     PROJECT_NAME
@@ -209,6 +209,7 @@ function moveGeneratedPlugin(
       updateImportPath: true,
       destinationRelativeToRoot: true,
       importPath: importPath,
+      skipFormat: true,
     });
   }
 }
