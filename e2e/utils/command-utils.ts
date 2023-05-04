@@ -247,15 +247,13 @@ export function runCommandUntil(
     p.stderr?.on('data', checkCriteria);
     p.on('exit', (code) => {
       if (!complete) {
-        if (isVerboseE2ERun()) {
-          logError(
-            `Original output:`,
-            output
-              .split('\n')
-              .map((l) => `    ${l}`)
-              .join('\n')
-          );
-        }
+        logError(
+          `Original output:`,
+          output
+            .split('\n')
+            .map((l) => `    ${l}`)
+            .join('\n')
+        );
         rej(`Exited with ${code}`);
       } else {
         res(p);
