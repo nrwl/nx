@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import * as yargs from 'yargs';
 import { execSync } from 'child_process';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { URL } from 'url';
 import { join } from 'path';
 
@@ -26,7 +26,10 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
   const options = parseArgs();
 
   if (options.clearLocalRegistry) {
-    execSync('pnpm local-registry clear');
+    rmSync(join(__dirname, '../build/local-registry/storage'), {
+      recursive: true,
+      force: true,
+    });
   }
 
   const currentLatestVersion = execSync('npm view nx version')
