@@ -13,7 +13,7 @@ describe('Update detoxrc for detox 20', () => {
       sourceRoot: 'apps/products/src',
       targets: {
         'test-ios': {
-          executor: '@nrwl/detox:test',
+          executor: '@nx/detox:test',
         },
       },
     });
@@ -31,6 +31,10 @@ describe('Update detoxrc for detox 20', () => {
         '<rootDir>/src/**/*.test.ts?(x)',
         '<rootDir>/src/**/*.spec.ts?(x)',
       ],
+      globalSetup: 'detox/runners/jest/globalSetup',
+      globalTeardown: 'detox/runners/jest/globalTeardown',
+      reporter: ['detox/runners/jest/reporter'],
+      verbose: true,
     });
   });
 

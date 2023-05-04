@@ -32,7 +32,7 @@
     "@nx/react": "file:../react"
   },
   "peerDependencies": {
-    "detox": "~20.7.0"
+    "detox": "~20.8.0"
   },
   "builders": "./executors.json",
   "ng-update": {
