@@ -21,17 +21,7 @@
           },
           {
             "input": "packages/storybook",
-            "glob": "**/project-files-7/.storybook/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/storybook",
             "glob": "**/project-files-ts/.storybook/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/storybook",
-            "glob": "**/project-files-7-ts/.storybook/**",
             "output": "/"
           },
           {

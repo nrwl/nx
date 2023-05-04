@@ -42,7 +42,7 @@ You can generate Storybook configuration for an individual project with this com
 nx g @nx/storybook:configuration project-name
 ```
 
-If you are NOT using a framework-specific generator, in the field `storybook7UiFramework` you must choose one of the following Storybook frameworks:
+If you are NOT using a framework-specific generator, in the field `uiFramework` you must choose one of the following Storybook frameworks:
 
 - `@storybook/angular`
 - `@storybook/html-webpack5`
@@ -74,7 +74,7 @@ Choosing one of these frameworks will have the following effects on your workspa
 Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js or React Native: [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nrwl/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration), for example:
 
 ```shell
-nx g @nrwl/angular:storybook-configuration my-angular-project --storybook7Configuration
+nx g @nrwl/angular:storybook-configuration my-angular-project
 ```
 
 These framework-specific generators will also **generate stories** for you.

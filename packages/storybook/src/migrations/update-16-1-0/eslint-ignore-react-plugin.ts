@@ -23,7 +23,6 @@ export default async function (tree: Tree) {
     }
 
     const sbConfig = tree.read(sbConfigPath, 'utf-8');
-    console.log('sbConfig', sbConfig);
     if (sbConfig.includes(reactPlugin)) {
       shouldIgnoreReactPlugin = true;
       break;

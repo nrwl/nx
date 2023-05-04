@@ -3,6 +3,7 @@ import { join } from 'path';
 import storybookBuilder from './build-storybook.impl';
 import * as executorContext from '../../utils/test-configs/executor-context.json';
 jest.mock('@storybook/core-server', () => {
+  // TODO(katerina): Fix when Nx17
   const buildStaticStandalone = jest
     .fn()
     .mockImplementation(() => Promise.resolve());
@@ -16,7 +17,6 @@ import * as build from '@storybook/core-server';
 import { CLIOptions } from '@storybook/types';
 import { CommonNxStorybookConfig } from '../../utils/models';
 
-// TODO(katerina): Update when Storybook 7
 describe('Build storybook', () => {
   let context: ExecutorContext;
   let options: CLIOptions & CommonNxStorybookConfig;

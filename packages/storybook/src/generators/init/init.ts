@@ -13,22 +13,12 @@ import {
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
-  babelCoreVersion,
-  babelLoaderVersion,
-  babelPresetTypescriptVersion,
-  htmlWebpackPluginVersion,
-  litHtmlVersion,
   litVersion,
   nxVersion,
   reactNativeStorybookLoader,
   reactVersion,
-  storybook7Version,
-  storybookReactNativeVersion,
   storybookVersion,
-  svgrVersion,
-  urlLoaderVersion,
-  viteBuilderVersion,
-  webpack5Version,
+  storybookReactNativeVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 import {
@@ -48,31 +38,34 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   // base deps
   devDependencies['@nx/storybook'] = nxVersion;
 
-  if (schema.storybook7Configuration) {
-    let storybook7VersionToInstall = storybook7Version;
-    if (
-      storybookMajorVersion() === 7 &&
-      getInstalledStorybookVersion() &&
-      gte(getInstalledStorybookVersion(), '7.0.0')
-    ) {
-      storybook7VersionToInstall = getInstalledStorybookVersion();
-    }
+  let storybook7VersionToInstall = storybookVersion;
+  if (
+    storybookMajorVersion() === 7 &&
+    getInstalledStorybookVersion() &&
+    gte(getInstalledStorybookVersion(), '7.0.0')
+  ) {
+    storybook7VersionToInstall = getInstalledStorybookVersion();
+  }
 
-    // Needed for Storybook 7
-    // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
-    if (
-      !packageJson.dependencies['react'] &&
-      !packageJson.devDependencies['react']
-    ) {
-      dependencies['react'] = reactVersion;
-    }
-    if (
-      !packageJson.dependencies['react-dom'] &&
-      !packageJson.devDependencies['react-dom']
-    ) {
-      dependencies['react-dom'] = reactVersion;
-    }
+  // Needed for Storybook 7
+  // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
+  if (
+    !packageJson.dependencies['react'] &&
+    !packageJson.devDependencies['react']
+  ) {
+    dependencies['react'] = reactVersion;
+  }
+  if (
+    !packageJson.dependencies['react-dom'] &&
+    !packageJson.devDependencies['react-dom']
+  ) {
+    dependencies['react-dom'] = reactVersion;
+  }
 
+  devDependencies['@storybook/core-server'] = storybook7VersionToInstall;
+  devDependencies['@storybook/addon-essentials'] = storybook7VersionToInstall;
+
+  if (schema.uiFramework) {
     if (schema.uiFramework === '@storybook/react-native') {
       devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
     } else {
@@ -89,8 +82,6 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
         }
       }
     }
-    devDependencies['@storybook/core-server'] = storybook7VersionToInstall;
-    devDependencies['@storybook/addon-essentials'] = storybook7VersionToInstall;
 
     if (schema.uiFramework === '@storybook/angular') {
       if (
@@ -106,63 +97,6 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       schema.uiFramework === '@storybook/web-components-webpack5'
     ) {
       devDependencies['lit'] = litVersion;
-    }
-
-    if (schema.uiFramework === '@storybook/react-native') {
-      devDependencies['@storybook/addon-ondevice-actions'] =
-        storybookReactNativeVersion;
-      devDependencies['@storybook/addon-ondevice-backgrounds'] =
-        storybookReactNativeVersion;
-      devDependencies['@storybook/addon-ondevice-controls'] =
-        storybookReactNativeVersion;
-      devDependencies['@storybook/addon-ondevice-notes'] =
-        storybookReactNativeVersion;
-    }
-  } else {
-    // TODO(katerina): Remove when Storybook v7
-    if (schema.uiFramework === '@storybook/react-native') {
-      devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
-    } else if (schema.uiFramework !== undefined) {
-      devDependencies[schema.uiFramework] = storybookVersion;
-    }
-
-    devDependencies['@storybook/core-server'] = storybookVersion;
-    devDependencies['@storybook/addon-essentials'] = storybookVersion;
-
-    if (schema.bundler === 'vite') {
-      devDependencies['@storybook/builder-vite'] = viteBuilderVersion;
-    } else {
-      devDependencies['@storybook/builder-webpack5'] = storybookVersion;
-      devDependencies['@storybook/manager-webpack5'] = storybookVersion;
-    }
-
-    devDependencies['html-webpack-plugin'] = htmlWebpackPluginVersion;
-
-    if (schema.uiFramework === '@storybook/angular') {
-      devDependencies['webpack'] = webpack5Version;
-
-      if (
-        !packageJson.dependencies['@angular/forms'] &&
-        !packageJson.devDependencies['@angular/forms']
-      ) {
-        devDependencies['@angular/forms'] = '*';
-      }
-    }
-
-    if (schema.uiFramework === '@storybook/react') {
-      devDependencies['@svgr/webpack'] = svgrVersion;
-      devDependencies['url-loader'] = urlLoaderVersion;
-      devDependencies['babel-loader'] = babelLoaderVersion;
-      devDependencies['@babel/core'] = babelCoreVersion;
-      devDependencies['@babel/preset-typescript'] =
-        babelPresetTypescriptVersion;
-      if (schema.bundler === 'webpack') {
-        devDependencies['@nx/webpack'] = nxVersion;
-      }
-    }
-
-    if (schema.uiFramework === '@storybook/web-components') {
-      devDependencies['lit-html'] = litHtmlVersion;
     }
 
     if (schema.uiFramework === '@storybook/react-native') {

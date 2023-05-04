@@ -53,20 +53,16 @@ npm install -D @nx/storybook
 You can generate Storybook configuration for an individual project with this command:
 
 ```shell
-nx g @nx/storybook:configuration project-name --storybook7Configuration --storybook7UiFramework=@storybook/react-webpack5
+nx g @nx/storybook:configuration project-name --uiFramework=@storybook/react-webpack5
 ```
 
 Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js or React Native: [`@nx/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nx/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nx/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration), for example:
 
 ```shell
-nx g @nx/angular:storybook-configuration my-angular-project --storybook7Configuration
+nx g @nx/angular:storybook-configuration my-angular-project
 ```
 
-{% callout type="info" title="For Nx versions <15.9" %}
-The flag is called `storybook7betaConfiguration` for Nx versions <15.9.
-{% /callout %}
-
-If you are NOT using a framework-specific generator, in the field `storybook7UiFramework` you must choose one of the following Storybook frameworks:
+If you are NOT using a framework-specific generator, in the field `uiFramework` you must choose one of the following Storybook frameworks:
 
 - `@storybook/angular`
 - `@storybook/html-webpack5`

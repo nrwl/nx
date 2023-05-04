@@ -1,17 +1,14 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import * as build from '@storybook/core-server';
-import { CLIOptions } from '@storybook/types'; // TODO(katerina): Remove when Storybook 7
+import { CLIOptions } from '@storybook/types';
 import 'dotenv/config';
 import {
+  pleaseUpgrade,
   storybookConfigExistsCheck,
   storybookMajorVersion,
 } from '../../utils/utilities';
 import { CommonNxStorybookConfig } from '../../utils/models';
-import {
-  getStorybookFrameworkPath,
-  pleaseUpgrade,
-  runStorybookSetupCheck,
-} from '../utils';
+import { getStorybookFrameworkPath, runStorybookSetupCheck } from '../utils';
 
 export default async function buildStorybookExecutor(
   options: CLIOptions & CommonNxStorybookConfig,
@@ -27,12 +24,10 @@ export default async function buildStorybookExecutor(
     logger.info(`NX Storybook files available in ${buildOptions.outputDir}`);
     return { success: true };
   } else {
-    // TODO(katerina): Remove when Storybook 7
+    // TODO(katerina): Remove Nx17
     // print warnings
     runStorybookSetupCheck(options);
-    pleaseUpgrade();
-
-    logger.info(`NX ui framework: ${options.uiFramework}`);
+    logger.error(pleaseUpgrade());
 
     const frameworkPath = getStorybookFrameworkPath(options.uiFramework);
     const { default: frameworkOptions } = await import(frameworkPath);
@@ -68,6 +63,7 @@ function runInstance(
       mode: 'static',
     });
   } else {
+    // TODO(katerina): Remove Nx17
     const nodeVersion = process.version.slice(1).split('.');
     if (+nodeVersion[0] === 18) {
       logger.warn(`
@@ -78,6 +74,6 @@ function runInstance(
     return build.buildStaticStandalone({
       ...options,
       ci: true,
-    } as any); // TODO(katerina): Remove when Storybook 7
+    } as any);
   }
 }

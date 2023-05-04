@@ -78,7 +78,6 @@
     "@rollup/plugin-url": "^7.0.0",
     "@schematics/angular": "~16.0.0",
     "@storybook/addon-essentials": "^7.0.8",
-    "@storybook/angular": "^7.0.8",
     "@storybook/core-server": "^7.0.8",
     "@storybook/react": "^7.0.8",
     "@storybook/react-webpack5": "^7.0.8",

@@ -10,8 +10,6 @@ export interface StorybookConfigureSchema {
   linter?: Linter;
   cypressDirectory?: string;
   ignorePaths?: string[];
-  bundler?: 'webpack' | 'vite';
   configureTestRunner?: boolean;
   configureStaticServe?: boolean;
-  storybook7Configuration?: boolean;
 }

@@ -12,5 +12,4 @@ export interface StorybookConfigurationOptions {
   skipFormat?: boolean;
   ignorePaths?: string[];
   configureTestRunner?: boolean;
-  storybook7Configuration?: boolean;
 }

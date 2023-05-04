@@ -1,6 +1,5 @@
-import { readJson, readJsonFile, TargetConfiguration, Tree } from '@nx/devkit';
+import { TargetConfiguration, Tree } from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
-import { storybookVersion } from './versions';
 import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
 import ts = require('typescript');
@@ -15,16 +14,6 @@ export const Constants = {
   },
   jsonIndentLevel: 2,
   coreAddonPrefix: '@storybook/addon-',
-  uiFrameworks: {
-    angular: '@storybook/angular',
-    react: '@storybook/react',
-    html: '@storybook/html',
-    'web-components': '@storybook/web-components',
-    vue: '@storybook/vue',
-    vue3: '@storybook/vue3',
-    svelte: '@storybook/svelte',
-    'react-native': '@storybook/react-native',
-  } as const,
   uiFrameworks7: [
     '@storybook/angular',
     '@storybook/html-webpack5',
@@ -45,11 +34,6 @@ export const Constants = {
   ],
 };
 type Constants = typeof Constants;
-
-type Framework = {
-  type: keyof Constants['uiFrameworks'];
-  uiFramework: Constants['uiFrameworks'][keyof Constants['uiFrameworks']];
-};
 
 export function storybookMajorVersion(): number | undefined {
   try {
@@ -82,62 +66,6 @@ export function safeFileDelete(tree: Tree, path: string): boolean {
   } else {
     return false;
   }
-}
-
-export function readCurrentWorkspaceStorybookVersionFromGenerator(
-  tree: Tree
-): string {
-  const packageJsonContents = readJson(tree, 'package.json');
-  return determineStorybookWorkspaceVersion(packageJsonContents);
-}
-
-export function readCurrentWorkspaceStorybookVersionFromExecutor() {
-  const packageJsonContents = readJsonFile('package.json');
-  return determineStorybookWorkspaceVersion(packageJsonContents);
-}
-
-function determineStorybookWorkspaceVersion(packageJsonContents) {
-  let workspaceStorybookVersion = storybookVersion;
-
-  if (packageJsonContents && packageJsonContents['devDependencies']) {
-    if (packageJsonContents['devDependencies']['@storybook/angular']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/angular'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/react']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/react'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/core']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/core'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/react-native']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/react-native'];
-    }
-  }
-
-  if (packageJsonContents && packageJsonContents['dependencies']) {
-    if (packageJsonContents['dependencies']['@storybook/angular']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/angular'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/react']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/react'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/core']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/core'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/react-native']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/react-native'];
-    }
-  }
-
-  return workspaceStorybookVersion;
 }
 
 export type TsConfig = {
@@ -329,4 +257,13 @@ export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
   );
 
   return source;
+}
+
+export function pleaseUpgrade(): string {
+  return `
+    Storybook 6 is no longer maintained. Please upgrade to Storybook 7.
+
+    Here is a guide on how to upgrade:
+    https://nx.dev/packages/storybook/generators/migrate-7
+    `;
 }
