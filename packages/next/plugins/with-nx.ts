@@ -156,6 +156,15 @@ function withNx(
   _nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
 ): NextConfigFn {
+  // If this is not set user will see compile errors in Next.js 13.4.
+  // See: https://github.com/nrwl/nx/issues/16692, https://github.com/vercel/next.js/issues/49169
+  // TODO(jack): Remove this once Nx is refactored to invoke CLI directly.
+  forNextVersion('>=13.4.0', () => {
+    process.env['__NEXT_PRIVATE_PREBUNDLED_REACT'] =
+      // Not in Next 13.3 or earlier, so need to access config via string
+      _nextConfig.experimental['serverActions'] ? 'experimental' : 'next';
+  });
+
   return async (phase: string) => {
     const { PHASE_PRODUCTION_SERVER } = await import('next/constants');
     if (phase === PHASE_PRODUCTION_SERVER) {
