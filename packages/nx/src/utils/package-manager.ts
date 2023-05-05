@@ -8,6 +8,7 @@ import { writeJsonFile } from './fileutils';
 import { readModulePackageJson } from './package-json';
 import { gte, lt } from 'semver';
 import { workspaceRoot } from './workspace-root';
+import { readNxJson } from '../config/configuration';
 
 const execAsync = promisify(exec);
 
@@ -28,7 +29,8 @@ export interface PackageManagerCommands {
  * Detects which package manager is used in the workspace based on the lock file.
  */
 export function detectPackageManager(dir: string = ''): PackageManager {
-  return existsSync(join(dir, 'yarn.lock'))
+  const nxJson = readNxJson();
+  return nxJson.cli?.packageManager ?? existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'pnpm-lock.yaml'))
     ? 'pnpm'
