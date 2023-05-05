@@ -1,18 +1,5 @@
-import {
-  BeakerIcon,
-  BookOpenIcon,
-  ChatBubbleLeftEllipsisIcon,
-  ClipboardIcon,
-  MicrophoneIcon,
-  TrophyIcon,
-  VideoCameraIcon,
-} from '@heroicons/react/24/solid';
-import { Footer, Header, SectionHeading } from '@nx/nx-dev/ui-common';
-import {
-  ConnectWithUs,
-  CreateNxPlugin,
-  PluginDirectory,
-} from '@nx/nx-dev/ui-community';
+import { Footer, Header } from '@nx/nx-dev/ui-common';
+import { ConnectWithUs } from '@nx/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { nxPackagesApi } from '../lib/packages.api';
@@ -66,11 +53,11 @@ export default function Community(props: CommunityProps): JSX.Element {
   return (
     <>
       <NextSeo
-        title="Nx Community and Plugin Listing"
+        title="Nx Community"
         description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx Community and Plugin Listing',
+          title: 'Nx Community',
           description:
             'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter',
           images: [

@@ -16,6 +16,13 @@ export function ConnectWithUs(): JSX.Element {
             There are many ways you can connect with the open-source Nx
             community. Let's connect together!
           </p>
+          <p className="py-4">
+            Looking for community plugins? Find them listed in the{' '}
+            <a href="/plugins/registry" className="underline font-semibold">
+              plugin registry
+            </a>
+            .
+          </p>
         </div>
       </header>
 
