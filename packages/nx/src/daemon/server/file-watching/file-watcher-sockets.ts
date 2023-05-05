@@ -1,4 +1,5 @@
 import { Socket } from 'net';
+import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { ProjectGraph } from '../../../config/project-graph';
 import { findAllProjectNodeDependencies } from '../../../utils/project-graph-utils';
 import { PromisedBasedQueue } from '../../../utils/promised-based-queue';
@@ -55,10 +56,15 @@ export function notifyFileWatcherSockets(
             changedFiles.push(...projectFiles);
           }
         } else {
-          const watchedProjects = new Set<string>(config.watchProjects);
+          const watchedProjects = new Set<string>(
+            findMatchingProjects(
+              config.watchProjects,
+              currentProjectGraphCache.nodes
+            )
+          );
 
           if (config.includeDependentProjects) {
-            for (const project of config.watchProjects) {
+            for (const project of watchedProjects) {
               for (const dep of findAllProjectNodeDependencies(
                 project,
                 currentProjectGraphCache as ProjectGraph
