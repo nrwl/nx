@@ -180,7 +180,7 @@ below. This example shows how you could use it to add the `LicenseWebpackPlugin`
 any webpack plugins you need.
 
 ```js
-const { withModuleFederation } = require('@nrwl/angular/module-federation');
+const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 const LicenseWebpackPlugin =
   require('license-webpack-plugin').LicenseWebpackPlugin;

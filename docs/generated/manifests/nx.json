@@ -1083,16 +1083,6 @@
         "isExternal": false,
         "path": "/plugin-features/use-code-generators",
         "tags": ["use-code-generators"]
-      },
-      {
-        "id": "create-your-own-plugin",
-        "name": "Create Your Own Plugin",
-        "description": "",
-        "file": "shared/plugin-features/create-your-own-plugin",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/plugin-features/create-your-own-plugin",
-        "tags": ["create-your-own-plugin"]
       }
     ],
     "isExternal": false,
@@ -1118,16 +1108,6 @@
     "isExternal": false,
     "path": "/plugin-features/use-code-generators",
     "tags": ["use-code-generators"]
-  },
-  "/plugin-features/create-your-own-plugin": {
-    "id": "create-your-own-plugin",
-    "name": "Create Your Own Plugin",
-    "description": "",
-    "file": "shared/plugin-features/create-your-own-plugin",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/plugin-features/create-your-own-plugin",
-    "tags": ["create-your-own-plugin"]
   },
   "/concepts": {
     "id": "concepts",

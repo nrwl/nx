@@ -71,7 +71,7 @@ Choosing one of these frameworks will have the following effects on your workspa
 
 4. Nx will generate a new Cypress e2e app for your project (if there isn't one already) to run against the Storybook instance.
 
-Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js or React Native: [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nrwl/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration):
+Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js or React Native: [`@nx/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nx/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nx/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration):
 
 {% tabs %}
 {% tab label="Angular" %}

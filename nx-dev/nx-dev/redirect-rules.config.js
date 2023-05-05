@@ -201,7 +201,7 @@ const diataxis = {
   '/using-nx/updating-nx': '/core-features/automate-updating-dependencies',
   '/using-nx/nx-nodejs-typescript-version-matrix':
     '/workspace/nx-nodejs-typescript-version-matrix',
-  '/extending-nx/nx-devkit': '/plugin-features/create-your-own-plugin',
+  '/extending-nx/nx-devkit': '/plugins/intro/getting-started',
   '/extending-nx/project-inference-plugins':
     '/recipes/advanced-plugins/project-inference-plugins',
   '/extending-nx/project-graph-plugins':
@@ -568,6 +568,30 @@ const conceptUrls = {
     '/tutorials/angular-standalone-tutorial',
 };
 
+const pluginUrls = {
+  '/plugin-features/create-your-own-plugin': '/plugins/tutorials/create-plugin',
+  '/recipes/advanced-plugins': '/plugins/recipes',
+  '/recipes/advanced-plugins/create-preset': '/plugins/recipes/create-preset',
+  '/recipes/advanced-plugins/migration-generators':
+    '/plugins/recipes/migration-generators',
+  '/recipes/advanced-plugins/project-graph-plugins':
+    '/plugins/recipes/project-graph-plugins',
+  '/recipes/advanced-plugins/project-inference-plugins':
+    '/plugins/recipes/project-inference-plugins',
+  '/recipes/advanced-plugins/share-your-plugin':
+    '/plugins/tutorials/maintain-published-plugin',
+  '/recipes/executors/compose-executors': '/plugins/recipes/compose-executors',
+  '/recipes/executors/creating-custom-executors':
+    '/plugins/recipes/local-executors',
+  '/recipes/generators': '/plugins/recipes',
+  '/recipes/generators/composing-generators':
+    '/plugins/recipes/composing-generators',
+  '/recipes/generators/creating-files': '/plugins/recipes/creating-files',
+  '/recipes/generators/generator-options': '/plugins/recipes/generator-options',
+  '/recipes/generators/local-generators': '/plugins/recipes/local-generators',
+  '/recipes/generators/modifying-files': '/plugins/recipes/modifying-files',
+};
+
 /**
  * Public export API
  */
@@ -583,4 +607,5 @@ module.exports = {
   packagesIndexes,
   packagesDocuments,
   conceptUrls,
+  pluginUrls,
 };

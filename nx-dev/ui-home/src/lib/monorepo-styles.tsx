@@ -38,7 +38,7 @@ export function MonorepoStyles(): JSX.Element {
               <span className="font-medium">let Nx do the heavy lifting</span>{' '}
               with its set of{' '}
               <Link
-                href="/community#plugin-directory"
+                href="/plugins"
                 title="Install VSCode's native extension for Nx"
                 className="font-medium text-blue-500 dark:text-sky-500"
               >

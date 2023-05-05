@@ -13,7 +13,7 @@ width="100%" /%}
 
 At its core a preset is a generator, which we can create inside of a plugin.
 
-All first-party Nx presets are built into nx itself, but you can [create your own plugin](/plugin-features/create-your-own-plugin) and create a generator with the magic name: `preset`. Once you've [published your plugin](/recipes/advanced-plugins/share-your-plugin) on npm, you can now run. the create-nx-workspace command with the preset option set to the name of your published package.
+All first-party Nx presets are built into nx itself, but you can [create your own plugin](/plugins/intro/getting-started) and create a generator with the magic name: `preset`. Once you've [published your plugin](/plugins/tutorials/publish-plugin) on npm, you can now run. the create-nx-workspace command with the preset option set to the name of your published package.
 
 For example, take
 
@@ -88,7 +88,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 }
 ```
 
-To get an in-depth guide on customizing/running or debugging your generator see [local generators](/recipes/generators/local-generators).
+To get an in-depth guide on customizing/running or debugging your generator see [local generators](/plugins/recipes/local-generators).
 
 #### Usage
 

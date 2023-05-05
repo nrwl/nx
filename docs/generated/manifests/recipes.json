@@ -639,26 +639,6 @@
         "isExternal": false,
         "path": "/recipes/executors/run-commands-executor",
         "tags": ["use-task-executors"]
-      },
-      {
-        "id": "creating-custom-executors",
-        "name": "Local Executors",
-        "description": "",
-        "file": "shared/recipes/plugins/local-executors",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/executors/creating-custom-executors",
-        "tags": ["use-task-executors", "create-your-own-plugin"]
-      },
-      {
-        "id": "compose-executors",
-        "name": "Compose Executors",
-        "description": "",
-        "file": "shared/recipes/plugins/compose-executors",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/executors/compose-executors",
-        "tags": ["use-task-executors"]
       }
     ],
     "isExternal": false,
@@ -684,248 +664,6 @@
     "isExternal": false,
     "path": "/recipes/executors/run-commands-executor",
     "tags": ["use-task-executors"]
-  },
-  "/recipes/executors/creating-custom-executors": {
-    "id": "creating-custom-executors",
-    "name": "Local Executors",
-    "description": "",
-    "file": "shared/recipes/plugins/local-executors",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/executors/creating-custom-executors",
-    "tags": ["use-task-executors", "create-your-own-plugin"]
-  },
-  "/recipes/executors/compose-executors": {
-    "id": "compose-executors",
-    "name": "Compose Executors",
-    "description": "",
-    "file": "shared/recipes/plugins/compose-executors",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/executors/compose-executors",
-    "tags": ["use-task-executors"]
-  },
-  "/recipes/generators": {
-    "id": "generators",
-    "name": "Generators",
-    "description": "Use, extend and compose generators.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "local-generators",
-        "name": "Local Generators",
-        "description": "",
-        "file": "shared/recipes/generators/local-generators",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/generators/local-generators",
-        "tags": ["use-code-generators", "create-your-own-plugin"]
-      },
-      {
-        "id": "composing-generators",
-        "name": "Composing Generators",
-        "description": "",
-        "file": "shared/recipes/generators/composing-generators",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/generators/composing-generators",
-        "tags": ["use-code-generators"]
-      },
-      {
-        "id": "generator-options",
-        "name": "Generator Options",
-        "description": "",
-        "file": "shared/recipes/generators/generator-options",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/generators/generator-options",
-        "tags": ["use-code-generators"]
-      },
-      {
-        "id": "creating-files",
-        "name": "Creating Files",
-        "description": "",
-        "file": "shared/recipes/generators/creating-files",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/generators/creating-files",
-        "tags": ["use-code-generators"]
-      },
-      {
-        "id": "modifying-files",
-        "name": "Modifying Files",
-        "description": "",
-        "file": "shared/recipes/generators/modifying-files",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/generators/modifying-files",
-        "tags": ["use-code-generators"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/generators",
-    "tags": []
-  },
-  "/recipes/generators/local-generators": {
-    "id": "local-generators",
-    "name": "Local Generators",
-    "description": "",
-    "file": "shared/recipes/generators/local-generators",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/generators/local-generators",
-    "tags": ["use-code-generators", "create-your-own-plugin"]
-  },
-  "/recipes/generators/composing-generators": {
-    "id": "composing-generators",
-    "name": "Composing Generators",
-    "description": "",
-    "file": "shared/recipes/generators/composing-generators",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/generators/composing-generators",
-    "tags": ["use-code-generators"]
-  },
-  "/recipes/generators/generator-options": {
-    "id": "generator-options",
-    "name": "Generator Options",
-    "description": "",
-    "file": "shared/recipes/generators/generator-options",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/generators/generator-options",
-    "tags": ["use-code-generators"]
-  },
-  "/recipes/generators/creating-files": {
-    "id": "creating-files",
-    "name": "Creating Files",
-    "description": "",
-    "file": "shared/recipes/generators/creating-files",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/generators/creating-files",
-    "tags": ["use-code-generators"]
-  },
-  "/recipes/generators/modifying-files": {
-    "id": "modifying-files",
-    "name": "Modifying Files",
-    "description": "",
-    "file": "shared/recipes/generators/modifying-files",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/generators/modifying-files",
-    "tags": ["use-code-generators"]
-  },
-  "/recipes/advanced-plugins": {
-    "id": "advanced-plugins",
-    "name": "Advanced Plugins",
-    "description": "Learn more about creating your own plugin, extending Nx.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "share-your-plugin",
-        "name": "Share Your Plugin",
-        "description": "",
-        "file": "shared/recipes/plugins/share-your-plugin",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/advanced-plugins/share-your-plugin",
-        "tags": ["create-your-own-plugin"]
-      },
-      {
-        "id": "create-preset",
-        "name": "Create a Preset",
-        "description": "",
-        "file": "shared/recipes/plugins/create-preset",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/advanced-plugins/create-preset",
-        "tags": ["create-your-own-plugin"]
-      },
-      {
-        "id": "migration-generators",
-        "name": "Migration Generators",
-        "description": "",
-        "file": "shared/recipes/plugins/migration-generators",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/advanced-plugins/migration-generators",
-        "tags": ["create-your-own-plugin"]
-      },
-      {
-        "id": "project-graph-plugins",
-        "name": "Project Graph Plugins",
-        "description": "",
-        "file": "shared/recipes/plugins/project-graph-plugins",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/advanced-plugins/project-graph-plugins",
-        "tags": ["create-your-own-plugin", "explore-graph"]
-      },
-      {
-        "id": "project-inference-plugins",
-        "name": "Project Inference Plugins",
-        "description": "",
-        "file": "shared/recipes/plugins/project-inference-plugins",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/advanced-plugins/project-inference-plugins",
-        "tags": ["create-your-own-plugin"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins",
-    "tags": []
-  },
-  "/recipes/advanced-plugins/share-your-plugin": {
-    "id": "share-your-plugin",
-    "name": "Share Your Plugin",
-    "description": "",
-    "file": "shared/recipes/plugins/share-your-plugin",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins/share-your-plugin",
-    "tags": ["create-your-own-plugin"]
-  },
-  "/recipes/advanced-plugins/create-preset": {
-    "id": "create-preset",
-    "name": "Create a Preset",
-    "description": "",
-    "file": "shared/recipes/plugins/create-preset",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins/create-preset",
-    "tags": ["create-your-own-plugin"]
-  },
-  "/recipes/advanced-plugins/migration-generators": {
-    "id": "migration-generators",
-    "name": "Migration Generators",
-    "description": "",
-    "file": "shared/recipes/plugins/migration-generators",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins/migration-generators",
-    "tags": ["create-your-own-plugin"]
-  },
-  "/recipes/advanced-plugins/project-graph-plugins": {
-    "id": "project-graph-plugins",
-    "name": "Project Graph Plugins",
-    "description": "",
-    "file": "shared/recipes/plugins/project-graph-plugins",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins/project-graph-plugins",
-    "tags": ["create-your-own-plugin", "explore-graph"]
-  },
-  "/recipes/advanced-plugins/project-inference-plugins": {
-    "id": "project-inference-plugins",
-    "name": "Project Inference Plugins",
-    "description": "",
-    "file": "shared/recipes/plugins/project-inference-plugins",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins/project-inference-plugins",
-    "tags": ["create-your-own-plugin"]
   },
   "/recipes/environment-variables": {
     "id": "environment-variables",
@@ -1578,6 +1316,16 @@
         "tags": []
       },
       {
+        "id": "include-assets-in-build",
+        "name": "Include Assets in Build",
+        "description": "",
+        "file": "shared/recipes/include-assets-in-build",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/include-assets-in-build",
+        "tags": []
+      },
+      {
         "id": "identify-dependencies-between-folders",
         "name": "Identify Dependencies Between Folders",
         "description": "",
@@ -1910,6 +1658,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/include-all-packagejson",
+    "tags": []
+  },
+  "/recipes/other/include-assets-in-build": {
+    "id": "include-assets-in-build",
+    "name": "Include Assets in Build",
+    "description": "",
+    "file": "shared/recipes/include-assets-in-build",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/include-assets-in-build",
     "tags": []
   },
   "/recipes/other/identify-dependencies-between-folders": {
