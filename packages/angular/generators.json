@@ -259,6 +259,11 @@
       "schema": "./src/generators/ngrx-feature-store/schema.json",
       "description": "Adds an NgRx Feature Store to an application or library."
     },
+    "ngrx-root-store": {
+      "factory": "./src/generators/ngrx-root-store/ngrx-root-store",
+      "schema": "./src/generators/ngrx-root-store/schema.json",
+      "description": "Adds an NgRx Root Store to an application."
+    },
     "pipe": {
       "factory": "./src/generators/pipe/pipe",
       "schema": "./src/generators/pipe/schema.json",
