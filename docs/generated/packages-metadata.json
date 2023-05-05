@@ -2309,17 +2309,6 @@
         "originalFilePath": "shared/packages/storybook/plugin-angular"
       },
       {
-        "id": "storybook-7-setup",
-        "name": "Storybook 7 setup guide",
-        "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
-        "file": "generated/packages/storybook/documents/storybook-7-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/storybook-7-setup",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/storybook-7-setup"
-      },
-      {
         "id": "best-practices",
         "name": "Storybook best practices for making the most out of Nx",
         "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
@@ -2329,6 +2318,17 @@
         "path": "storybook/documents/best-practices",
         "tags": [],
         "originalFilePath": "shared/packages/storybook/best-practices"
+      },
+      {
+        "id": "storybook-7-setup",
+        "name": "Storybook 7 overview",
+        "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+        "file": "generated/packages/storybook/documents/storybook-7-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "storybook/documents/storybook-7-setup",
+        "tags": [],
+        "originalFilePath": "shared/packages/storybook/storybook-7-setup"
       },
       {
         "id": "configuring-storybook",
@@ -2384,72 +2384,6 @@
         "path": "storybook/documents/angular-configuring-styles",
         "tags": [],
         "originalFilePath": "shared/packages/storybook/angular-configuring-styles"
-      },
-      {
-        "id": "angular-storybook-targets",
-        "name": "Angular: Information about the Storybook targets",
-        "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-        "file": "generated/packages/storybook/documents/angular-storybook-targets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/angular-storybook-targets",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/angular-storybook-targets"
-      },
-      {
-        "id": "angular-browser-target",
-        "name": "Angular: The browserTarget",
-        "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-        "file": "generated/packages/storybook/documents/angular-browser-target",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/angular-browser-target",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/angular-browser-target"
-      },
-      {
-        "id": "migrate-webpack-final-angular",
-        "name": "Angular: Storybook Migration to webpackFinal",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-        "file": "generated/packages/storybook/documents/migrate-webpack-final-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/migrate-webpack-final-angular",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/migrate-webpack-final-angular"
-      },
-      {
-        "id": "upgrade-storybook-v6-angular",
-        "name": "Angular: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-        "file": "generated/packages/storybook/documents/upgrade-storybook-v6-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/upgrade-storybook-v6-angular",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/storybook-v6-angular"
-      },
-      {
-        "id": "migrate-webpack-final-react",
-        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-        "file": "generated/packages/storybook/documents/migrate-webpack-final-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/migrate-webpack-final-react",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/migrate-webpack-final-react"
-      },
-      {
-        "id": "upgrade-storybook-v6-react",
-        "name": "React: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-        "file": "generated/packages/storybook/documents/upgrade-storybook-v6-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/upgrade-storybook-v6-react",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/storybook-v6-react"
       }
     ],
     "executors": [

@@ -8,7 +8,7 @@ description: This is an overview page for the Storybook plugin in Nx. It explain
 This guide will briefly walk you through using Storybook within an Nx workspace.
 
 {% callout type="info" title="Storybook 7 by default" %}
-Starting with Nx 16, Storybook 7 is going to be used by default to configure your projects.
+Starting with Nx 16, Storybook 7 is used by default to configure your projects.
 {% /callout %}
 
 ## Setting Up Storybook
@@ -42,7 +42,7 @@ You can generate Storybook configuration for an individual project with this com
 nx g @nx/storybook:configuration project-name
 ```
 
-If you are NOT using a framework-specific generator, in the field `uiFramework` you must choose one of the following Storybook frameworks:
+If you are NOT using a framework-specific generator (for [Angular](/packages/angular/generators/storybook-configuration), [React](/packages/react/generators/storybook-configuration), [React Native](/packages/react-native/generators/storybook-configuration)), in the field `uiFramework` you must choose one of the following Storybook frameworks:
 
 - `@storybook/angular`
 - `@storybook/html-webpack5`
@@ -71,11 +71,31 @@ Choosing one of these frameworks will have the following effects on your workspa
 
 4. Nx will generate a new Cypress e2e app for your project (if there isn't one already) to run against the Storybook instance.
 
-Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js or React Native: [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nrwl/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration), for example:
+Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js or React Native: [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration), [`@nrwl/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration):
+
+{% tabs %}
+{% tab label="Angular" %}
 
 ```shell
-nx g @nrwl/angular:storybook-configuration my-angular-project
+nx g @nx/angular:storybook-configuration my-angular-project
 ```
+
+{% /tab %}
+{% tab label="React" %}
+
+```shell
+nx g @nx/react:storybook-configuration my-react-project
+```
+
+{% /tab %}
+{% tab label="React Native" %}
+
+```shell
+nx g @nx/react-native:storybook-configuration my-react-native-project
+```
+
+{% /tab %}
+{% /tabs %}
 
 These framework-specific generators will also **generate stories** for you.
 
@@ -87,7 +107,7 @@ You can choose to configure your project using TypeScript instead of JavaScript.
 nx g @nx/storybook:configuration project-name --tsConfiguration=true
 ```
 
-[Here is the Storybook documentation](https://storybook.js.org/docs/react/configure/overview#configure-your-project-with-typescript) if you want to learn more.
+[Here is the Storybook documentation](https://storybook.js.org/docs/react/configure/overview#configure-your-project-with-typescript) if you want to learn more about configuring your project with TypeScript.
 
 ### Running Storybook
 
@@ -121,7 +141,7 @@ nx build-storybook project-name
 
 When running the Nx Storybook generator, it'll configure the Nx workspace to be able to run Storybook seamlessly. It'll create a project specific Storybook configuration.
 
-The project-specific Storybook configuration is pretty much similar what you would have for a non-Nx setup of Storybook. There's a `.storybook` folder within the project root folder.
+The project-specific Storybook configuration is pretty much similar to what you would have for a non-Nx setup of Storybook. There's a `.storybook` folder within the project root folder.
 
 ```text
 <project root>/
@@ -137,7 +157,7 @@ The project-specific Storybook configuration is pretty much similar what you wou
 
 ### Using Addons
 
-To register a [Storybook addon](https://storybook.js.org/addons/) for all storybook instances in your workspace:
+To register a [Storybook addon](https://storybook.js.org/addons/) for all Storybook instances in your workspace:
 
 1. In your project's `.storybook/main.js` file, in the `addons` array of the `module.exports` object, add the new addon:
 
@@ -162,16 +182,20 @@ You can find dedicated information for React and Angular:
 
 - [Set up Storybook for Angular Projects](/packages/storybook/documents/overview-angular)
 - [Set up Storybook for React Projects](/packages/storybook/documents/overview-react)
+
+### Migration Scenarios
+
+Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
+
+- [Upgrading to Storybook 6](/deprecated/storybook/upgrade-storybook-v6-react)
+- [Migrate to the Nx React Storybook Addon](/deprecated/storybook/migrate-webpack-final-react)
+- [Storybook 7 migration generator](/packages/storybook/generators/migrate-7)
 - [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup)
 
 You can find all Storybook-related Nx documentation [here](/packages#storybook).
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
-### Migration Scenarios
+## Older documentation
 
-Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
-
-- [Upgrading to Storybook 6](/packages/storybook/documents/upgrade-storybook-v6-react)
-- [Migrate to the Nx React Storybook Addon](/packages/storybook/documents/migrate-webpack-final-react)
-- [Storybook 7 migration generator](/packages/storybook/generators/migrate-7)
+You can find older documentation for the `@nx/storybook` package in our [deprecated section](/deprecated/storybook).

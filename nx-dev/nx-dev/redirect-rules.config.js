@@ -509,19 +509,31 @@ const packagesDocuments = {
   '/storybook/angular-storybook-compodoc':
     '/packages/storybook/documents/angular-storybook-compodoc',
   '/storybook/angular-storybook-targets':
-    '/packages/storybook/documents/angular-storybook-targets',
+    '/deprecated/storybook/angular-storybook-targets',
+  '/packages/storybook/documents/angular-storybook-targets':
+    '/deprecated/storybook/angular-storybook-targets',
   '/storybook/angular-configuring-styles':
     '/packages/storybook/documents/angular-configuring-styles',
   '/storybook/angular-browser-target':
-    '/packages/storybook/documents/angular-browser-target',
+    '/deprecated/storybook/angular-browser-target',
   '/storybook/migrate-webpack-final-angular':
-    '/packages/storybook/documents/migrate-webpack-final-angular',
+    '/deprecated/storybook/migrate-webpack-final-angular',
   '/storybook/upgrade-storybook-v6-angular':
-    '/packages/storybook/documents/upgrade-storybook-v6-angular',
+    '/deprecated/storybook/upgrade-storybook-v6-angular',
   '/storybook/migrate-webpack-final-react':
-    '/packages/storybook/documents/migrate-webpack-final-react',
+    '/deprecated/storybook/migrate-webpack-final-react',
   '/storybook/upgrade-storybook-v6-react':
-    '/packages/storybook/documents/upgrade-storybook-v6-react',
+    '/deprecated/storybook/upgrade-storybook-v6-react',
+  '/packages/storybook/documents/angular-browser-target':
+    '/deprecated/storybook/angular-browser-target',
+  '/packages/storybook/documents/migrate-webpack-final-angular':
+    '/deprecated/storybook/migrate-webpack-final-angular',
+  '/packages/storybook/documents/upgrade-storybook-v6-angular':
+    '/deprecated/storybook/upgrade-storybook-v6-angular',
+  '/packages/storybook/documents/migrate-webpack-final-react':
+    '/deprecated/storybook/migrate-webpack-final-react',
+  '/packages/storybook/documents/upgrade-storybook-v6-react':
+    '/deprecated/storybook/upgrade-storybook-v6-react',
   '/packages/storybook/documents/migrate-storybook-7':
     '/packages/storybook/generators/migrate-7',
   '/linter/eslint-plugin-nx': '/packages/linter/documents/eslint-plugin-nx',
