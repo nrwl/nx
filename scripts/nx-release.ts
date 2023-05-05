@@ -7,8 +7,8 @@ import { join } from 'path';
 
 import { parse } from 'semver';
 
-import * as version from '@lerna/version';
-import * as publish from '@lerna/publish';
+const version = require('lerna/commands/version');
+const publish = require('lerna/commands/publish');
 
 const lernaJsonPath = join(__dirname, '../lerna.json');
 const originalLernaJson = readFileSync(lernaJsonPath);
