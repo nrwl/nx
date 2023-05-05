@@ -142,19 +142,19 @@ nx test jest
 To make sure your changes do not break any E2E tests, run:
 
 ```bash
-nx e2e e2e-cli # or any other project here
+nx e2e e2e-vite # or any other project here
 ```
 
 Running E2E tests can take some time, so it is often useful to run a single test. To run a single suite of tests, run:
 
 ```bash
-nx e2e e2e-cli -t versions # I often add qqqq to my test name so I can use -t qqqq
+nx e2e e2e-vite -t versions # I often add qqqq to my test name so I can use -t qqqq
 ```
 
 Sometimes tests pass locally but they fail on the CI. To reproduce the CI environment and be able to debug the issue, run:
 
 ```bash
-NX_VERBOSE_LOGGING=true CI=true SELECTED_PM=pnpm pnpm nx e2e e2e-cli --t="should do something is this test"
+NX_VERBOSE_LOGGING=true CI=true SELECTED_PM=pnpm pnpm nx e2e e2e-vite --t="should do something is this test"
 ```
 
 The above command sets verbose logging (this exposes stack traces and underlying errors), sets the defaults to be CI-like and sets Pnpm as the selected package manager.
