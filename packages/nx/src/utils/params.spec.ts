@@ -982,6 +982,27 @@ describe('params', () => {
         ).not.toThrow();
       });
 
+      it('should handle const value', () => {
+        const schema = {
+          properties: {
+            a: {
+              const: 3,
+            },
+          },
+        };
+        expect(() => validateOptsAgainstSchema({ a: 3 }, schema)).not.toThrow();
+        expect(() =>
+          validateOptsAgainstSchema({ a: true }, schema)
+        ).toThrowErrorMatchingInlineSnapshot(
+          `"Property 'a' does not match the schema. 'true' should be '3'."`
+        );
+        expect(() =>
+          validateOptsAgainstSchema({ a: 123 }, schema)
+        ).toThrowErrorMatchingInlineSnapshot(
+          `"Property 'a' does not match the schema. '123' should be '3'."`
+        );
+      });
+
       describe('array', () => {
         it('should handle validating patterns', () => {
           const schema = {
