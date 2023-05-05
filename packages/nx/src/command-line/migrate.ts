@@ -1558,7 +1558,7 @@ async function runNxMigration(
     name
   );
   const fn = require(implPath)[fnSymbol];
-  const host = new FsTree(root, false);
+  const host = new FsTree(root, process.env.NX_VERBOSE_LOGGING === 'true');
   await fn(host, {});
   host.lock();
   const changes = host.listChanges();
