@@ -18,6 +18,7 @@ export function visitNotIgnoredFiles(
     ig.add(tree.read('.gitignore', 'utf-8'));
   }
   if (tree.exists('.nxignore')) {
+    ig ??= ignore();
     ig.add(tree.read('.nxignore', 'utf-8'));
   }
   dirPath = normalizePathRelativeToRoot(dirPath, tree.root);
