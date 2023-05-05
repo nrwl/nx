@@ -1,8 +1,8 @@
 import { Tree, readJson, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
-import removePackages from './update-16-1-0-remove-packages';
+import removePackages from './update-16-2-0-remove-packages';
 
-describe('update-16-1-0-remove-packages', () => {
+describe('update-16-2-0-remove-packages', () => {
   let tree: Tree;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
