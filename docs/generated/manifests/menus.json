@@ -4015,6 +4015,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "ngrx-feature-store",
+                "path": "/packages/angular/generators/ngrx-feature-store",
+                "name": "ngrx-feature-store",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "pipe",
                 "path": "/packages/angular/generators/pipe",
                 "name": "pipe",

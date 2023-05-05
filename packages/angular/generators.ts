@@ -11,6 +11,7 @@ export * from './src/generators/library-secondary-entry-point/library-secondary-
 export * from './src/generators/library/library';
 export * from './src/generators/move/move';
 export * from './src/generators/ngrx/ngrx';
+export * from './src/generators/ngrx-feature-store/ngrx-feature-store';
 export * from './src/generators/pipe/pipe';
 export * from './src/generators/remote/remote';
 export * from './src/generators/scam-directive/scam-directive';
