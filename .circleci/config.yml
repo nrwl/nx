@@ -10,31 +10,12 @@ orbs:
   browser-tools: circleci/browser-tools@1.4.0
 
 # -------------------------
-#        DEFAULTS
+#        EXECUTORS
 # -------------------------
-machine:
-  pre:
-    - mkdir ~/.pnpm-store
-    - mkdir ~/.cache/Cypress
-    - mkdir ~/Library/Caches/Homebrew
-    - mkdir /usr/local/Homebrew
-
-dependencies:
-  cache_directories:
-    - ~/.pnpm-store
-    - ~/.cache/Cypress
-    - /usr/local/Homebrew
-    - ~/Library/Caches/Homebrew
-  override:
-    - pnpm install
-    - brew install
 
 defaults: &defaults
   working_directory: ~/repo
 
-# -------------------------
-#        EXECUTORS
-# -------------------------
 executors:
   linux:
     <<: *defaults
