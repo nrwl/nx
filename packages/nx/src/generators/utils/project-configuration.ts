@@ -218,10 +218,12 @@ function findCreatedProjectFiles(tree: Tree) {
       if (fileName === 'project.json') {
         createdProjectFiles.push(change.path);
       } else if (fileName === 'package.json') {
-        const contents: PackageJson = JSON.parse(change.content.toString());
-        if (contents.nx) {
-          createdProjectFiles.push(change.path);
-        }
+        try {
+          const contents: PackageJson = JSON.parse(change.content.toString());
+          if (contents.nx) {
+            createdProjectFiles.push(change.path);
+          }
+        } catch {}
       }
     }
   }

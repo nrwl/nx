@@ -38,20 +38,26 @@ function replacePackageInDependencies(
       return;
     }
 
-    updateJson<PackageJson>(tree, path, (packageJson) => {
-      for (const deps of [
-        packageJson.dependencies ?? {},
-        packageJson.devDependencies ?? {},
-        packageJson.peerDependencies ?? {},
-        packageJson.optionalDependencies ?? {},
-      ]) {
-        if (oldPackageName in deps) {
-          deps[newPackageName] = deps[oldPackageName];
-          delete deps[oldPackageName];
+    try {
+      updateJson<PackageJson>(tree, path, (packageJson) => {
+        for (const deps of [
+          packageJson.dependencies ?? {},
+          packageJson.devDependencies ?? {},
+          packageJson.peerDependencies ?? {},
+          packageJson.optionalDependencies ?? {},
+        ]) {
+          if (oldPackageName in deps) {
+            deps[newPackageName] = deps[oldPackageName];
+            delete deps[oldPackageName];
+          }
         }
-      }
-      return packageJson;
-    });
+        return packageJson;
+      });
+    } catch (e) {
+      console.warn(
+        `Could not replace ${oldPackageName} with ${newPackageName} in ${path}.`
+      );
+    }
   });
 }
 
