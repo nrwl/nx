@@ -11,7 +11,7 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /docs @bcabanes @isaacplmann @juristr
 /docs/nx-cloud @StalkAltan @rarmatei @isaacplmann @juristr @bcabanes
 /graph/** @philipjfulcher @FrozenPandaz @bcabanes
-/images/shared @bcabanes @isaacplmann @juristr
+/images @bcabanes @isaacplmann @juristr
 /nx-dev/** @bcabanes @isaacplmann @juristr
 /typedoc-theme @bcabanes @isaacplmann
 
@@ -76,7 +76,6 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /docs/shared/packages/web/** @jaysoo @mandarini @ndcunningham
 /docs/shared/packages/webpack/** @jaysoo @mandarini @ndcunningham
 /docs/shared/packages/esbuild/** @nartc @jaysoo @ndcunningham
-/docs/shared/packages/rollup/** @jaysoo @mandarini @ndcunningham
 /docs/shared/packages/vite/** @jaysoo @mandarini @ndcunningham
 /packages/js/** @nartc @jaysoo @ndcunningham
 /e2e/js/** @nartc @jaysoo @ndcunningham
@@ -121,14 +120,17 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /docs/generated/devkit/** @FrozenPandaz @AgentEnder
 /docs/generated/packages/devkit/** @FrozenPandaz @AgentEnder
 /packages/devkit/** @FrozenPandaz @AgentEnder
-/packages/devkit/index.ts @FrozenPandaz @vsavkin
+/packages/devkit/index.js @FrozenPandaz @vsavkin
+/packages/devkit/index.d.ts @FrozenPandaz @vsavkin
+/packages/devkit/public-api.ts @FrozenPandaz @vsavkin
+/packages/devkit/nx.ts @FrozenPandaz @vsavkin
 /packages/devkit/src/utils/module-federation @jaysoo @Coly010
 
 # Nx-Plugin
 /docs/generated/packages/plugin/** @AgentEnder @FrozenPandaz
 /docs/shared/packages/plugin/** @AgentEnder @FrozenPandaz @isaacplmann @juristr
 /packages/plugin/** @AgentEnder @FrozenPandaz
-/e2e/nx-plugin/** @AgentEnder @FrozenPandaz
+/e2e/plugin/** @AgentEnder @FrozenPandaz
 
 ## Core
 /docs/generated/packages/nx/** @vsavkin @FrozenPandaz @AgentEnder
@@ -136,7 +138,7 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /packages/nx/** @vsavkin @FrozenPandaz @AgentEnder
 /packages/nx/src/adapter @AgentEnder @leosvelperez
 /packages/nx/src/native @vsavkin @FrozenPandaz @Cammisuli
-/packages/nx/src/lock-file @meeroslav @FrozenPandaz
+/packages/nx/src/plugins/js/lock-file @meeroslav @FrozenPandaz
 /packages/nx/src/nx-init/angular/** @Coly010 @leosvelperez @FrozenPandaz
 /e2e/nx-init/src/nx-init-angular.test.ts @Coly010 @leosvelperez
 /packages/nx/src/nx-init/react/** @jaysoo @xiongemi @mandarini
@@ -170,7 +172,7 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 # Global Files
 project.json @FrozenPandaz @vsavkin
 jest.config.ts @barbados-clemens @FrozenPandaz
-jest.preset.ts @barbados-clemens @FrozenPandaz
+jest.preset.js @barbados-clemens @FrozenPandaz
 
 # Overrides - These are applied last, so override any matches above.
 docs/generated/manifests/* @bcabanes @FrozenPandaz @jaysoo @AgentEnder @isaacplmann @juristr
