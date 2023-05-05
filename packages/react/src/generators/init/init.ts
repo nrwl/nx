@@ -16,7 +16,6 @@ import {
   babelPresetReactVersion,
   nxVersion,
   reactDomVersion,
-  reactTestRendererVersion,
   reactVersion,
   testingLibraryReactVersion,
   tsLibVersion,
@@ -63,7 +62,6 @@ function updateDependencies(host: Tree, schema: InitSchema) {
     '@types/react': typesReactVersion,
     '@types/react-dom': typesReactDomVersion,
     '@testing-library/react': testingLibraryReactVersion,
-    'react-test-renderer': reactTestRendererVersion,
   });
 }
 
