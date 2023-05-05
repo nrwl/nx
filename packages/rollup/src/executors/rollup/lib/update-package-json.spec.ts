@@ -265,30 +265,4 @@ describe('updatePackageJson', () => {
       spy.mockRestore();
     });
   });
-
-  describe('skipTypeField', () => {
-    it('should not add "type" field in package.json', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
-
-      updatePackageJson(
-        {
-          ...commonOptions,
-          format: ['esm'],
-          skipTypeField: true,
-        },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
-        {} as unknown as PackageJson
-      );
-
-      expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
-        main: './index.js',
-        module: './index.js',
-        types: './index.d.ts',
-      });
-
-      spy.mockRestore();
-    });
-  });
 });

@@ -54,6 +54,11 @@
       "x-completion-glob": "tsconfig.*.json",
       "x-priority": "important"
     },
+    "allowJs": {
+      "type": "boolean",
+      "description": "Allow JavaScript files to be compiled.",
+      "default": false
+    },
     "format": {
       "type": "array",
       "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
@@ -140,11 +145,6 @@
     "generateExportsField": {
       "type": "boolean",
       "description": "Generate package.json with 'exports' field. This field defines entry points in the package and is used by Node and the TypeScript compiler.",
-      "default": false
-    },
-    "skipTypeField": {
-      "type": "boolean",
-      "description": "Prevents 'type' field from being added to compiled package.json file. Only use this if you are having an issue with this field.",
       "default": false
     }
   },
