@@ -165,6 +165,14 @@ describe('replaceNrwlPackageWithNxPackage', () => {
     });
   });
 
+  it('should handle broken package.json files', () => {
+    tree.write('package.json', '{ broken: "json ');
+
+    expect(() =>
+      replaceNrwlPackageWithNxPackage(tree, 'old-package', 'new-package')
+    ).not.toThrow();
+  });
+
   it('should replace any mentions in files', () => {
     expect(tree.read('README.txt').toString()).toContain('new-package');
     expect(tree.read('README.txt').toString()).not.toContain('old-package');
