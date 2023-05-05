@@ -145,9 +145,9 @@ Depending on your Cypress version, the file will end with `.spec.ts` or `.cy.ts`
 ## More Documentation
 
 - [Set up Compodoc for Storybook on Nx](/packages/storybook/documents/angular-storybook-compodoc)
-- [Information about the `storybook` targets](/packages/storybook/documents/angular-storybook-targets)
+- [Information about the `storybook` targets](/deprecated/storybook/angular-storybook-targets)
 - [Configuring styles and preprocessor options](/packages/storybook/documents/angular-configuring-styles)
-- [The `browserTarget`](/packages/storybook/documents/angular-browser-target)
+- [The `browserTarget`](/deprecated/storybook/angular-browser-target)
 
 You can find all Storybook-related Nx topics [here](/packages#storybook).
 
@@ -162,5 +162,5 @@ Here's more information on common migration scenarios for Storybook with Nx. For
 
 #### Older migration scenarios
 
-- [Upgrading to Storybook 6](/packages/storybook/documents/upgrade-storybook-v6-angular)
-- [Migrate to the new Storybook `webpackFinal` config](/packages/storybook/documents/migrate-webpack-final-angular)
+- [Upgrading to Storybook 6](/deprecated/storybook/upgrade-storybook-v6-angular)
+- [Migrate to the new Storybook `webpackFinal` config](/deprecated/storybook/migrate-webpack-final-angular)
