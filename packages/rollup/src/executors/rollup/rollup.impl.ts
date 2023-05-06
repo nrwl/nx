@@ -214,7 +214,7 @@ export function createRollupOptions(
       json(),
       (useTsc || useBabel) &&
         require('rollup-plugin-typescript2')({
-          check: true,
+          check: !options.skipTypeCheck,
           tsconfig: options.tsConfig,
           tsconfigOverride: {
             compilerOptions: createTsCompilerOptions(
