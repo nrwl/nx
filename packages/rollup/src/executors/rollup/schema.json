@@ -146,6 +146,11 @@
       "type": "boolean",
       "description": "Generate package.json with 'exports' field. This field defines entry points in the package and is used by Node and the TypeScript compiler.",
       "default": false
+    },
+    "skipTypeCheck": {
+      "type": "boolean",
+      "description": "Whether to skip TypeScript type checking.",
+      "default": false
     }
   },
   "required": ["tsConfig", "main", "outputPath"],
