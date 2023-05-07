@@ -162,7 +162,9 @@ function withNx(
   forNextVersion('>=13.4.0', () => {
     process.env['__NEXT_PRIVATE_PREBUNDLED_REACT'] =
       // Not in Next 13.3 or earlier, so need to access config via string
-      _nextConfig.experimental['serverActions'] ? 'experimental' : 'next';
+      _nextConfig.experimental && _nextConfig.experimental['serverActions']
+        ? 'experimental'
+        : 'next';
   });
 
   return async (phase: string) => {
