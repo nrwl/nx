@@ -15,23 +15,28 @@ const mockOutputFixes = jest.fn();
 
 const VALID_ESLINT_VERSION = '7.6';
 
+let mockReports: any[] = [{ results: [], usedDeprecatedRules: [] }];
+const mockLintFiles = jest.fn().mockImplementation(() => mockReports);
+
 class MockESLint {
   static version = VALID_ESLINT_VERSION;
   static outputFixes = mockOutputFixes;
+  static getErrorResults = jest.requireActual('ESLint').ESLint.getErrorResults;
   loadFormatter = mockLoadFormatter;
   isPathIgnored = mockIsPathIgnored;
+  lintFiles = mockLintFiles;
 }
 
-let mockReports: any[] = [{ results: [], usedDeprecatedRules: [] }];
-let mockLint = jest.fn().mockImplementation(() => mockReports);
+const mockResolveAndInstantiateESLint = jest.fn().mockReturnValue(
+  Promise.resolve({
+    ESLint: MockESLint,
+    eslint: new MockESLint(),
+  })
+);
+
 jest.mock('./utility/eslint-utils', () => {
   return {
-    lint: mockLint,
-    loadESLint: jest.fn().mockReturnValue(
-      Promise.resolve({
-        ESLint: MockESLint,
-      })
-    ),
+    resolveAndInstantiateESLint: mockResolveAndInstantiateESLint,
   };
 });
 import lintExecutor from './lint.impl';
@@ -98,7 +103,7 @@ describe('Linter Builder', () => {
       },
       isVerbose: false,
     };
-    mockLint.mockImplementation(() => mockReports);
+    mockLintFiles.mockImplementation(() => mockReports);
   });
 
   afterAll(() => {
@@ -140,25 +145,29 @@ describe('Linter Builder', () => {
       }),
       mockContext
     );
-    expect(mockLint).toHaveBeenCalledWith('/root/.eslintrc.json', {
-      lintFilePatterns: [],
-      eslintConfig: './.eslintrc.json',
-      fix: true,
-      cache: true,
-      cacheLocation: 'cacheLocation1/proj',
-      cacheStrategy: 'content',
-      format: 'stylish',
-      force: false,
-      silent: false,
-      ignorePath: null,
-      maxWarnings: null,
-      outputFile: null,
-      quiet: false,
-      noEslintrc: false,
-      rulesdir: [],
-      resolvePluginsRelativeTo: null,
-      reportUnusedDisableDirectives: null,
-    });
+    expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
+      '/root/.eslintrc.json',
+      {
+        lintFilePatterns: [],
+        eslintConfig: './.eslintrc.json',
+        fix: true,
+        cache: true,
+        cacheLocation: 'cacheLocation1/proj',
+        cacheStrategy: 'content',
+        format: 'stylish',
+        force: false,
+        silent: false,
+        ignorePath: null,
+        maxWarnings: null,
+        outputFile: null,
+        quiet: false,
+        noEslintrc: false,
+        rulesdir: [],
+        resolvePluginsRelativeTo: null,
+        reportUnusedDisableDirectives: null,
+      },
+      false
+    );
   });
 
   it('should execute correctly from another working directory than root', async () => {
@@ -286,7 +295,7 @@ describe('Linter Builder', () => {
     it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message', async () => {
       setupMocks();
 
-      mockLint.mockImplementation(() => {
+      mockLintFiles.mockImplementation(() => {
         throw new Error(
           `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.`
         );
