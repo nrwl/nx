@@ -1,5 +1,4 @@
 import {
-  getProjects,
   ProjectConfiguration,
   readJson,
   readProjectConfiguration,
@@ -7,7 +6,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { libraryGenerator } from '@nx/js';
+import { libraryGenerator } from '../../generators/library/library';
 import { defaultExclude } from '../../utils/swc/add-swc-config';
 import update from './update-swcrc';
 

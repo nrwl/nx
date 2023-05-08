@@ -1,6 +1,6 @@
 import { NxJsonConfiguration, readJson, Tree, writeJson } from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
-import removeOldTaskRunnerOptions from '@nx/workspace/src/migrations/update-13-6-0/remove-old-task-runner-options';
+import removeOldTaskRunnerOptions from './remove-old-task-runner-options';
 
 describe('removeOldTaskRunnerOptions', () => {
   let tree: Tree;

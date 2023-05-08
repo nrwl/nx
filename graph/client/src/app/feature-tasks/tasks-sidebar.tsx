@@ -5,11 +5,13 @@ import {
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/dep-graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { getGraphService } from '../machines/graph.service';
 import { useEffect, useMemo } from 'react';
 import { CheckboxPanel } from '../ui-components/checkbox-panel';

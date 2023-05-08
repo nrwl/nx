@@ -1,9 +1,11 @@
 import { GraphPerfReport } from '../../interfaces';
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from 'nx/src/config/project-graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { ActionObject, ActorRef, State, StateNodeConfig } from 'xstate';
 import { GraphRenderEvents } from '../../machines/interfaces';
 

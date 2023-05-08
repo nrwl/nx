@@ -1,4 +1,4 @@
-import { E2eTestRunner } from '@nx/angular/src/utils/test-runners';
+import { E2eTestRunner } from '../../utils/test-runners';
 import {
   getProjects,
   readNxJson,
