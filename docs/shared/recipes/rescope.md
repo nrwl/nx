@@ -33,21 +33,27 @@ All other packages keep the same name, but change scope from `@nrwl` to `@nx`.
 | Nx 15 and lower    | Nx 16 and higher |
 | ------------------ | ---------------- |
 | @nrwl/angular      | @nx/angular      |
+| @nrwl/aws-lambda   | @nx/aws-lambda   |
 | @nrwl/cypress      | @nx/cypress      |
+| @nrwl/deno         | @nx/deno         |
 | @nrwl/detox        | @nx/detox        |
 | @nrwl/devkit       | @nx/devkit       |
 | @nrwl/esbuild      | @nx/esbuild      |
 | @nrwl/expo         | @nx/expo         |
 | @nrwl/express      | @nx/express      |
+| @nrwl/gatsby       | @nx/gatsby       |
 | @nrwl/jest         | @nx/jest         |
 | @nrwl/js           | @nx/js           |
 | @nrwl/linter       | @nx/linter       |
 | @nrwl/nest         | @nx/nest         |
+| @nrwl/netlify      | @nx/netlify      |
 | @nrwl/next         | @nx/next         |
 | @nrwl/node         | @nx/node         |
 | @nrwl/react        | @nx/react        |
 | @nrwl/react-native | @nx/react-native |
+| @nrwl/remix        | @nx/remix        |
 | @nrwl/rollup       | @nx/rollup       |
+| @nrwl/rspack       | @nx/rspack       |
 | @nrwl/storybook    | @nx/storybook    |
 | @nrwl/vite         | @nx/vite         |
 | @nrwl/web          | @nx/web          |
