@@ -4,7 +4,6 @@ import {
   readProjectConfiguration,
   readJson,
   getProjects,
-  joinPathFragments,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { e2eProjectGenerator } from './e2e';
@@ -88,7 +87,7 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(project.root).toBe('apps/namespace/my-plugin-e2e');
   });
 
-  it('should update the tags and implicit dependencies', async () => {
+  it('should update the implicit dependencies', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
@@ -97,7 +96,6 @@ describe('NxPlugin e2e-project Generator', () => {
     const projects = Object.fromEntries(getProjects(tree));
     expect(projects).toMatchObject({
       'my-plugin-e2e': {
-        tags: [],
         implicitDependencies: ['my-plugin'],
       },
     });
@@ -115,10 +113,28 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(project).toBeTruthy();
     expect(project.root).toEqual('apps/my-plugin-e2e');
     expect(project.targets.e2e).toBeTruthy();
-    expect(project.targets.e2e).toMatchObject({
-      executor: '@nx/plugin:e2e',
-      options: expect.objectContaining({ target: 'my-plugin:build' }),
-    });
+    expect(project.targets.e2e).toMatchInlineSnapshot(`
+      {
+        "configurations": {
+          "ci": {
+            "ci": true,
+            "codeCoverage": true,
+          },
+        },
+        "dependsOn": [
+          "^build",
+        ],
+        "executor": "@nx/jest:jest",
+        "options": {
+          "jestConfig": "apps/my-plugin-e2e/jest.config.ts",
+          "passWithNoTests": true,
+          "runInBand": true,
+        },
+        "outputs": [
+          "{workspaceRoot}/coverage/{projectRoot}",
+        ],
+      }
+    `);
   });
 
   it('should add jest support', async () => {
