@@ -1,13 +1,18 @@
 import 'dotenv/config';
-import { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, writeJsonFile } from '@nx/devkit';
 import { build, InlineConfig, mergeConfig } from 'vite';
 import {
   getViteBuildOptions,
   getViteSharedConfig,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
-import { copyAssets } from '@nx/js';
-import { existsSync } from 'fs';
+import {
+  copyAssets,
+  createLockFile,
+  createPackageJson,
+  getLockFileName,
+} from '@nx/js';
+import { existsSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 
@@ -37,8 +42,29 @@ export async function* viteBuildExecutor(
   const rootPackageJson = resolve(context.root, 'package.json');
   const distPackageJson = resolve(normalizedOptions.outputPath, 'package.json');
 
+  // Generate a package.json if option has been set.
+  if (options.generatePackageJson) {
+    const builtPackageJson = createPackageJson(
+      context.projectName,
+      context.projectGraph,
+      {
+        target: context.targetName,
+        root: context.root,
+        isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
+      }
+    );
+
+    builtPackageJson.type = 'module';
+
+    writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
+
+    const lockFile = createLockFile(builtPackageJson);
+    writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
+      encoding: 'utf-8',
+    });
+  }
   // For buildable libs, copy package.json if it exists.
-  if (
+  else if (
     !existsSync(distPackageJson) &&
     existsSync(libraryPackageJson) &&
     rootPackageJson !== libraryPackageJson
