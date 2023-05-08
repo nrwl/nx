@@ -229,20 +229,26 @@ export class ProjectGraphBuilder {
 
       const fileDeps = this.calculateTargetDepsFromFiles(sourceProject);
       for (const [targetProject, types] of fileDeps.entries()) {
-        for (const type of types.values()) {
-          if (
-            !alreadySetTargetProjects.has(targetProject) ||
-            !alreadySetTargetProjects.get(targetProject).has(type)
-          ) {
+        // only add known nodes
+        if (
+          this.graph.nodes[targetProject] ||
+          this.graph.externalNodes[targetProject]
+        ) {
+          for (const type of types.values()) {
             if (
-              !this.removedEdges[sourceProject] ||
-              !this.removedEdges[sourceProject].has(targetProject)
+              !alreadySetTargetProjects.has(targetProject) ||
+              !alreadySetTargetProjects.get(targetProject).has(type)
             ) {
-              this.graph.dependencies[sourceProject].push({
-                source: sourceProject,
-                target: targetProject,
-                type,
-              });
+              if (
+                !this.removedEdges[sourceProject] ||
+                !this.removedEdges[sourceProject].has(targetProject)
+              ) {
+                this.graph.dependencies[sourceProject].push({
+                  source: sourceProject,
+                  target: targetProject,
+                  type,
+                });
+              }
             }
           }
         }
