@@ -120,7 +120,7 @@ function normalizeOptions(options: Schema): NormalizedSchema {
 
   normalized.name = names(options.name).fileName;
   if (!options.directory) {
-    normalized.directory = options.name;
+    normalized.directory = normalized.name;
   }
 
   const parsed = parsePresetName(options.preset);
