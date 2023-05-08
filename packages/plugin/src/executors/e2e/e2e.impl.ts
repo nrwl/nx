@@ -3,7 +3,9 @@ import 'dotenv/config';
 import type { ExecutorContext } from '@nx/devkit';
 
 import {
+  createProjectGraphAsync,
   logger,
+  output,
   parseTargetString,
   readTargetOptions,
   runExecutor,
@@ -12,12 +14,20 @@ import { JestExecutorOptions } from '@nx/jest/src/executors/jest/schema';
 import { jestExecutor } from '@nx/jest/src/executors/jest/jest.impl';
 import type { NxPluginE2EExecutorOptions } from './schema';
 
-// TODO(Caleb & Craigory): can we get rid of this and just use @nx/jest directly?
+// TODO(v18): remove this
 export async function* nxPluginE2EExecutor(
   options: NxPluginE2EExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean }> {
   const { target, ...jestOptions } = options;
+
+  output.warn({
+    title: `"@nx/plugin:e2e" is deprecated and will be removed in Nx 18`,
+    bodyLines: [
+      'Use the "@nx/jest:jest" executor instead and set the following:',
+      `"dependsOn": ["${target}"]`,
+    ],
+  });
 
   let success: boolean;
   for await (const _ of runBuildTarget(target, context)) {
@@ -36,7 +46,11 @@ async function* runBuildTarget(
   buildTarget: string,
   context: ExecutorContext
 ): AsyncGenerator<boolean> {
-  const { project, target, configuration } = parseTargetString(buildTarget);
+  const graph = await createProjectGraphAsync();
+  const { project, target, configuration } = parseTargetString(
+    buildTarget,
+    graph
+  );
   const buildTargetOptions = readTargetOptions(
     { project, target, configuration },
     context
