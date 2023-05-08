@@ -231,24 +231,25 @@ export class ProjectGraphBuilder {
       for (const [targetProject, types] of fileDeps.entries()) {
         // only add known nodes
         if (
-          this.graph.nodes[targetProject] ||
-          this.graph.externalNodes[targetProject]
+          !this.graph.nodes[targetProject] &&
+          !this.graph.externalNodes[targetProject]
         ) {
-          for (const type of types.values()) {
+          continue;
+        }
+        for (const type of types.values()) {
+          if (
+            !alreadySetTargetProjects.has(targetProject) ||
+            !alreadySetTargetProjects.get(targetProject).has(type)
+          ) {
             if (
-              !alreadySetTargetProjects.has(targetProject) ||
-              !alreadySetTargetProjects.get(targetProject).has(type)
+              !this.removedEdges[sourceProject] ||
+              !this.removedEdges[sourceProject].has(targetProject)
             ) {
-              if (
-                !this.removedEdges[sourceProject] ||
-                !this.removedEdges[sourceProject].has(targetProject)
-              ) {
-                this.graph.dependencies[sourceProject].push({
-                  source: sourceProject,
-                  target: targetProject,
-                  type,
-                });
-              }
+              this.graph.dependencies[sourceProject].push({
+                source: sourceProject,
+                target: targetProject,
+                type,
+              });
             }
           }
         }
@@ -275,7 +276,7 @@ export class ProjectGraphBuilder {
     if (
       !this.graph.nodes[targetProjectName] &&
       !this.graph.externalNodes[targetProjectName] &&
-      !targetProjectName.startsWith('npm:')
+      !sourceProjectFile
     ) {
       throw new Error(`Target project does not exist: ${targetProjectName}`);
     }
