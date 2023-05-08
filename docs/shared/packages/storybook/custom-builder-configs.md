@@ -103,11 +103,7 @@ module.exports = {
   ...
   async viteFinal(config, { configType }) {
     return mergeConfig(config, {
-      plugins: [
-        viteTsConfigPaths({
-          root: '../../../',
-        }),
-      ],
+      ... <your config here>
     });
   },
 };
@@ -117,51 +113,32 @@ If you are using a global, root-level, `vite` configuration in your workspace, y
 
 ```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
 const { mergeConfig } = require('vite');
-const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 const rootMain = require('../../../.storybook/main');
 
 module.exports = {
   ...
   async viteFinal(config, { configType }) {
     return mergeConfig(config, {
-      ...((await rootMain.viteFinal(config, { configType })) ?? {}),
-      plugins: [
-        viteTsConfigPaths({
-          root: '../../../',
-        }),
-      ],
+      ...((await rootMain.viteFinal(config, { configType })) ?? {})
     });
   },
 };
 ```
 
-{% callout type="check" title="Don't forget the vite-tsconfig-paths plugin" %}
-For Vite.js to work on monorepos, and specifically on Nx workspaces, you need to use the `'vite-tsconfig-paths'` plugin! Starting Storybook version 7, however, Storybook will automatically read your project's `vite.config.ts` file, so you don't need to add the plugin to your Storybook Vite configuration anymore. You will only have to specify the path to your project's `vite.config.ts` file in your project's Storybook configuration.
-{% /callout %}
-
-It's important to note here that for Vite.js to work on monorepos, and specifically on Nx workspaces, you need to use the `'vite-tsconfig-paths'` plugin, just like you must already do in your project's `vite.config.ts` file. Storybook does not read your project's Vite configuration automatically, so you have to manually add the plugin to your project's Storybook Vite configuration.
-
 So, a full project-level `.storybook/main.js|ts` file for a Vite.js project would look like this:
 
 ```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
 const { mergeConfig } = require('vite');
-const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 
 module.exports = {
-  core: { builder: '@storybook/builder-vite' },
-  stories: [
-    '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
-  ],
+  stories: ['../src/app/**/*.stories.@(mdx|js|jsx|ts|tsx)'],
   addons: ['@storybook/addon-essentials'],
+  framework: {
+    name: '@storybook/react-vite',
+    options: {},
+  },
   async viteFinal(config, { configType }) {
-    return mergeConfig(config, {
-      plugins: [
-        viteTsConfigPaths({
-          root: '../../../',
-        }),
-      ],
-    });
+    return mergeConfig(config, {});
   },
 };
 ```

@@ -4,6 +4,7 @@ import { requireNx } from '../../nx';
 import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files';
 import { basename } from 'path';
 import { isBinaryPath } from './binary-extensions';
+const { logger } = requireNx();
 
 const {
   getProjects,
@@ -37,20 +38,26 @@ function replacePackageInDependencies(
       return;
     }
 
-    updateJson<PackageJson>(tree, path, (packageJson) => {
-      for (const deps of [
-        packageJson.dependencies ?? {},
-        packageJson.devDependencies ?? {},
-        packageJson.peerDependencies ?? {},
-        packageJson.optionalDependencies ?? {},
-      ]) {
-        if (oldPackageName in deps) {
-          deps[newPackageName] = deps[oldPackageName];
-          delete deps[oldPackageName];
+    try {
+      updateJson<PackageJson>(tree, path, (packageJson) => {
+        for (const deps of [
+          packageJson.dependencies ?? {},
+          packageJson.devDependencies ?? {},
+          packageJson.peerDependencies ?? {},
+          packageJson.optionalDependencies ?? {},
+        ]) {
+          if (oldPackageName in deps) {
+            deps[newPackageName] = deps[oldPackageName];
+            delete deps[oldPackageName];
+          }
         }
-      }
-      return packageJson;
-    });
+        return packageJson;
+      });
+    } catch (e) {
+      console.warn(
+        `Could not replace ${oldPackageName} with ${newPackageName} in ${path}.`
+      );
+    }
   });
 }
 
@@ -162,15 +169,23 @@ function replaceMentions(
       return;
     }
 
-    const contents = tree.read(path).toString();
+    try {
+      const contents = tree.read(path).toString();
 
-    if (!contents.includes(oldPackageName)) {
-      return;
+      if (!contents.includes(oldPackageName)) {
+        return;
+      }
+
+      tree.write(
+        path,
+        contents.replace(new RegExp(oldPackageName, 'g'), newPackageName)
+      );
+    } catch {
+      // Its **probably** ok, contents can be null if the file is too large or
+      // there was an access exception.
+      logger.warn(
+        `An error was thrown when trying to update ${path}. If you believe the migration should have updated it, be sure to review the file and open an issue.`
+      );
     }
-
-    tree.write(
-      path,
-      contents.replace(new RegExp(oldPackageName, 'g'), newPackageName)
-    );
   });
 }

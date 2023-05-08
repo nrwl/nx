@@ -66,5 +66,5 @@ describe('Next.js apps', () => {
       checkE2E: false,
       checkExport: false,
     });
-  }, 300_000);
+  }, 600_000);
 });

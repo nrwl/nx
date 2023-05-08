@@ -1,6 +1,6 @@
 # Running Custom Commands
 
-You can easily run any command with the Nx toolchain. The main benefit is to make the [operation cacheable](/concepts/how-caching-works), [distributeable](/core-features/distribute-task-execution) as well as being able to use it [with Nx's affected commands](/concepts/affected).
+You can easily run any command with the Nx toolchain. The main benefit is to make the [operation cacheable](/concepts/how-caching-works), [distributable](/core-features/distribute-task-execution) as well as being able to use it [with Nx's affected commands](/concepts/affected).
 
 ## 1. Define the terminal command to be run
 

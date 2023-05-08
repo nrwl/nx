@@ -1,4 +1,4 @@
-import type { Target } from 'nx/src/command-line/run';
+import type { Target } from 'nx/src/command-line/run/run';
 import type { ExecutorContext } from 'nx/src/config/misc-interfaces';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { combineOptionsForExecutor } from 'nx/src/utils/params';

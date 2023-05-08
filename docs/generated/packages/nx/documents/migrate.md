@@ -107,7 +107,7 @@ Exclude migrations that should have been applied on previous updates. To be used
 
 Type: `string`
 
-Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nx/react@12.0.0,@nx/js@12.0.0")
+Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nx/react@16.0.0,@nx/js@16.0.0")
 
 ### help
 
@@ -135,7 +135,7 @@ Enable prompts to confirm whether to collect optional package updates and migrat
 
 Type: `string`
 
-The target package and version (e.g, @nx/workspace@13.0.0)
+The target package and version (e.g, @nx/workspace@16.0.0)
 
 ### runMigrations
 
@@ -147,7 +147,7 @@ Execute migrations from a file (when the file isn't provided, execute migrations
 
 Type: `string`
 
-Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nx/react@12.0.0,@nx/js@12.0.0")
+Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nx/react@16.0.0,@nx/js@16.0.0")
 
 ### version
 

@@ -139,6 +139,14 @@
         }
       ],
       "default": false
+    },
+    "generatePackageJson": {
+      "description": "Generate a package.json for the build output.",
+      "type": "boolean"
+    },
+    "includeDevDependenciesInPackageJson": {
+      "description": "Include devDependencies in the generated package.json.",
+      "type": "boolean"
     }
   },
   "definitions": {},

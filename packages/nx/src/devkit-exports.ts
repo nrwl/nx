@@ -92,11 +92,11 @@ export {
 /**
  * @category Commands
  */
-export type { Target } from './command-line/run';
+export type { Target } from './command-line/run/run';
 /**
  * @category Commands
  */
-export { runExecutor } from './command-line/run';
+export { runExecutor } from './command-line/run/run';
 
 /**
  * @category Generators

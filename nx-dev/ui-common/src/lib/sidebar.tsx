@@ -194,7 +194,7 @@ export function SidebarMobile({
     },
     {
       name: 'Plugins',
-      href: '/community#plugin-directory',
+      href: '/plugins/intro/getting-started',
       current: isPlugins,
     },
     {

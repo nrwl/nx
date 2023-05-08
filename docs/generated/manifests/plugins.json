@@ -1,0 +1,335 @@
+{
+  "/plugins/intro": {
+    "id": "intro",
+    "name": "Intro",
+    "description": "Learn about plugins.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "getting-started",
+        "name": "Getting Started with Plugins",
+        "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
+        "file": "shared/plugins/intro",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/intro/getting-started",
+        "tags": []
+      },
+      {
+        "id": "registry",
+        "name": "Plugin Registry",
+        "description": "Browse official and community plugins",
+        "file": "",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/registry",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/plugins/intro",
+    "tags": []
+  },
+  "/plugins/intro/getting-started": {
+    "id": "getting-started",
+    "name": "Getting Started with Plugins",
+    "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
+    "file": "shared/plugins/intro",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/intro/getting-started",
+    "tags": []
+  },
+  "/plugins/registry": {
+    "id": "registry",
+    "name": "Plugin Registry",
+    "description": "Browse official and community plugins",
+    "file": "",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/registry",
+    "tags": []
+  },
+  "/plugins/tutorials": {
+    "id": "tutorials",
+    "name": "5 Min Tutorials",
+    "description": "Get started with plugins",
+    "file": "",
+    "itemList": [
+      {
+        "id": "create-plugin",
+        "name": "Create a Local Plugin",
+        "description": "",
+        "file": "shared/plugins/create-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/tutorials/create-plugin",
+        "tags": []
+      },
+      {
+        "id": "publish-plugin",
+        "name": "Maintain a Published Plugin",
+        "description": "",
+        "file": "shared/plugins/maintain-published-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/tutorials/publish-plugin",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/plugins/tutorials",
+    "tags": []
+  },
+  "/plugins/tutorials/create-plugin": {
+    "id": "create-plugin",
+    "name": "Create a Local Plugin",
+    "description": "",
+    "file": "shared/plugins/create-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/tutorials/create-plugin",
+    "tags": []
+  },
+  "/plugins/tutorials/publish-plugin": {
+    "id": "publish-plugin",
+    "name": "Maintain a Published Plugin",
+    "description": "",
+    "file": "shared/plugins/maintain-published-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/tutorials/publish-plugin",
+    "tags": []
+  },
+  "/plugins/recipes": {
+    "id": "recipes",
+    "name": "Recipes",
+    "description": "Focused instructions to complete a specific task",
+    "file": "",
+    "itemList": [
+      {
+        "id": "local-executors",
+        "name": "Write a Simple Executor",
+        "description": "",
+        "file": "shared/recipes/plugins/local-executors",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/recipes/local-executors",
+        "tags": ["use-task-executors"]
+      },
+      {
+        "id": "compose-executors",
+        "name": "Compose Executors",
+        "description": "",
+        "file": "shared/recipes/plugins/compose-executors",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/recipes/compose-executors",
+        "tags": ["use-task-executors"]
+      },
+      {
+        "id": "local-generators",
+        "name": "Write a Simple Generator",
+        "description": "",
+        "file": "shared/recipes/generators/local-generators",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/recipes/local-generators",
+        "tags": ["use-code-generators"]
+      },
+      {
+        "id": "composing-generators",
+        "name": "Compose Generators",
+        "description": "",
+        "file": "shared/recipes/generators/composing-generators",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/recipes/composing-generators",
+        "tags": ["use-code-generators"]
+      },
+      {
+        "id": "generator-options",
+        "name": "Provide Options for Generators",
+        "description": "",
+        "file": "shared/recipes/generators/generator-options",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/recipes/generator-options",
+        "tags": ["use-code-generators"]
+      },
+      {
+        "id": "creating-files",
+        "name": "Create Files",
+        "description": "",
+        "file": "shared/recipes/generators/creating-files",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/recipes/creating-files",
+        "tags": ["use-code-generators"]
+      },
+      {
+        "id": "modifying-files",
+        "name": "Modify Files",
+        "description": "",
+        "file": "shared/recipes/generators/modifying-files",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/recipes/modifying-files",
+        "tags": ["use-code-generators"]
+      },
+      {
+        "id": "migration-generators",
+        "name": "Write a Migration",
+        "description": "",
+        "file": "shared/recipes/plugins/migration-generators",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/recipes/migration-generators",
+        "tags": ["create-your-own-plugin"]
+      },
+      {
+        "id": "create-preset",
+        "name": "Create a Preset",
+        "description": "",
+        "file": "shared/recipes/plugins/create-preset",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/recipes/create-preset",
+        "tags": ["create-your-own-plugin"]
+      },
+      {
+        "id": "project-graph-plugins",
+        "name": "Modify the Project Graph",
+        "description": "",
+        "file": "shared/recipes/plugins/project-graph-plugins",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/recipes/project-graph-plugins",
+        "tags": ["create-your-own-plugin", "explore-graph"]
+      },
+      {
+        "id": "project-inference-plugins",
+        "name": "Identify Custom Projects",
+        "description": "",
+        "file": "shared/recipes/plugins/project-inference-plugins",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugins/recipes/project-inference-plugins",
+        "tags": ["create-your-own-plugin"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/plugins/recipes",
+    "tags": []
+  },
+  "/plugins/recipes/local-executors": {
+    "id": "local-executors",
+    "name": "Write a Simple Executor",
+    "description": "",
+    "file": "shared/recipes/plugins/local-executors",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/recipes/local-executors",
+    "tags": ["use-task-executors"]
+  },
+  "/plugins/recipes/compose-executors": {
+    "id": "compose-executors",
+    "name": "Compose Executors",
+    "description": "",
+    "file": "shared/recipes/plugins/compose-executors",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/recipes/compose-executors",
+    "tags": ["use-task-executors"]
+  },
+  "/plugins/recipes/local-generators": {
+    "id": "local-generators",
+    "name": "Write a Simple Generator",
+    "description": "",
+    "file": "shared/recipes/generators/local-generators",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/recipes/local-generators",
+    "tags": ["use-code-generators"]
+  },
+  "/plugins/recipes/composing-generators": {
+    "id": "composing-generators",
+    "name": "Compose Generators",
+    "description": "",
+    "file": "shared/recipes/generators/composing-generators",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/recipes/composing-generators",
+    "tags": ["use-code-generators"]
+  },
+  "/plugins/recipes/generator-options": {
+    "id": "generator-options",
+    "name": "Provide Options for Generators",
+    "description": "",
+    "file": "shared/recipes/generators/generator-options",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/recipes/generator-options",
+    "tags": ["use-code-generators"]
+  },
+  "/plugins/recipes/creating-files": {
+    "id": "creating-files",
+    "name": "Create Files",
+    "description": "",
+    "file": "shared/recipes/generators/creating-files",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/recipes/creating-files",
+    "tags": ["use-code-generators"]
+  },
+  "/plugins/recipes/modifying-files": {
+    "id": "modifying-files",
+    "name": "Modify Files",
+    "description": "",
+    "file": "shared/recipes/generators/modifying-files",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/recipes/modifying-files",
+    "tags": ["use-code-generators"]
+  },
+  "/plugins/recipes/migration-generators": {
+    "id": "migration-generators",
+    "name": "Write a Migration",
+    "description": "",
+    "file": "shared/recipes/plugins/migration-generators",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/recipes/migration-generators",
+    "tags": ["create-your-own-plugin"]
+  },
+  "/plugins/recipes/create-preset": {
+    "id": "create-preset",
+    "name": "Create a Preset",
+    "description": "",
+    "file": "shared/recipes/plugins/create-preset",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/recipes/create-preset",
+    "tags": ["create-your-own-plugin"]
+  },
+  "/plugins/recipes/project-graph-plugins": {
+    "id": "project-graph-plugins",
+    "name": "Modify the Project Graph",
+    "description": "",
+    "file": "shared/recipes/plugins/project-graph-plugins",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/recipes/project-graph-plugins",
+    "tags": ["create-your-own-plugin", "explore-graph"]
+  },
+  "/plugins/recipes/project-inference-plugins": {
+    "id": "project-inference-plugins",
+    "name": "Identify Custom Projects",
+    "description": "",
+    "file": "shared/recipes/plugins/project-inference-plugins",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugins/recipes/project-inference-plugins",
+    "tags": ["create-your-own-plugin"]
+  }
+}

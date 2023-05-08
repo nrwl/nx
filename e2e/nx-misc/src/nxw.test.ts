@@ -145,7 +145,7 @@ describe('nx wrapper / .nx installation', () => {
      * Patches migration fetcher to load in migrations that we are using to test.
      */
     updateFile(
-      '.nx/installation/node_modules/nx/src/command-line/migrate.js',
+      '.nx/installation/node_modules/nx/src/command-line/migrate/migrate.js',
       (content) => {
         const start = content.indexOf('// testing-fetch-start');
         const end = content.indexOf('// testing-fetch-end');

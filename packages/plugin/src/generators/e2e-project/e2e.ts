@@ -70,24 +70,16 @@ function addFiles(host: Tree, options: NormalizedSchema) {
   });
 }
 
-function updateWorkspaceConfiguration(host: Tree, options: NormalizedSchema) {
+async function addJest(host: Tree, options: NormalizedSchema) {
   addProjectConfiguration(host, options.projectName, {
     root: options.projectRoot,
     projectType: 'application',
     sourceRoot: `${options.projectRoot}/tests`,
-    targets: {
-      e2e: {
-        executor: '@nx/plugin:e2e',
-        options: { target: `${options.pluginName}:build` },
-      },
-    },
-    tags: [],
+    targets: {},
     implicitDependencies: [options.pluginName],
   });
-}
 
-async function addJest(host: Tree, options: NormalizedSchema) {
-  await jestProjectGenerator(host, {
+  const jestTask = await jestProjectGenerator(host, {
     project: options.projectName,
     setupFile: 'none',
     supportTsx: false,
@@ -96,17 +88,24 @@ async function addJest(host: Tree, options: NormalizedSchema) {
   });
 
   const project = readProjectConfiguration(host, options.projectName);
-  const testOptions = project.targets.test.options;
-  const e2eOptions = project.targets.e2e.options;
-  project.targets.e2e.options = {
-    ...e2eOptions,
-    jestConfig: testOptions.jestConfig,
+  const testTarget = project.targets.test;
+
+  project.targets.e2e = {
+    ...testTarget,
+    dependsOn: [`^build`],
+    options: {
+      ...testTarget.options,
+      runInBand: true,
+    },
+    configurations: testTarget.configurations,
   };
 
   // remove the jest build target
   delete project.targets.test;
 
   updateProjectConfiguration(host, options.projectName, project);
+
+  return jestTask;
 }
 
 async function addLintingToApplication(
@@ -134,14 +133,14 @@ export async function e2eProjectGenerator(host: Tree, schema: Schema) {
   validatePlugin(host, schema.pluginName);
   const options = normalizeOptions(host, schema);
   addFiles(host, options);
-  updateWorkspaceConfiguration(host, options);
-  await addJest(host, options);
+  tasks.push(await addJest(host, options));
 
   if (options.linter !== Linter.None) {
-    const lintTask = await addLintingToApplication(host, {
-      ...options,
-    });
-    tasks.push(lintTask);
+    tasks.push(
+      await addLintingToApplication(host, {
+        ...options,
+      })
+    );
   }
 
   if (!options.skipFormat) {

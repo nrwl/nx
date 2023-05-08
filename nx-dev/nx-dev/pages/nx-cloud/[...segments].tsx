@@ -14,7 +14,7 @@ import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { tagsApi } from '../../lib/tags.api';
 
-export default function Recipes({
+export default function Pages({
   document,
   menu,
   relatedDocuments,

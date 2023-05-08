@@ -93,8 +93,8 @@ export function createPackageJson(
   }
 
   const getVersion = (
-    packageName,
-    version,
+    packageName: string,
+    version: string,
     section: 'devDependencies' | 'dependencies'
   ) => {
     return (

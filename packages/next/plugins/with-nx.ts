@@ -5,7 +5,6 @@
 import * as path from 'path';
 import type { NextConfig } from 'next';
 import type { NextConfigFn } from '../src/utils/config';
-import { forNextVersion } from '../src/utils/config';
 import type { NextBuildBuilderOptions } from '../src/utils/types';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import type { ProjectGraph, ProjectGraphProjectNode, Target } from '@nx/devkit';
@@ -156,6 +155,15 @@ function withNx(
   _nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
 ): NextConfigFn {
+  // If this is not set user will see compile errors in Next.js 13.4.
+  // See: https://github.com/nrwl/nx/issues/16692, https://github.com/vercel/next.js/issues/49169
+  // TODO(jack): Remove this once Nx is refactored to invoke CLI directly.
+  forNextVersion('>=13.4.0', () => {
+    process.env['__NEXT_PRIVATE_PREBUNDLED_REACT'] =
+      // Not in Next 13.3 or earlier, so need to access config via string
+      _nextConfig.experimental['serverActions'] ? 'experimental' : 'next';
+  });
+
   return async (phase: string) => {
     const { PHASE_PRODUCTION_SERVER } = await import('next/constants');
     if (phase === PHASE_PRODUCTION_SERVER) {
@@ -454,6 +462,15 @@ export function getAliasForProject(
   }
 
   return null;
+}
+
+// Runs a function if the Next.js version satisfies the range.
+export function forNextVersion(range: string, fn: () => void) {
+  const semver = require('semver');
+  const nextJsVersion = require('next/package.json').version;
+  if (semver.satisfies(nextJsVersion, range)) {
+    fn();
+  }
 }
 
 // Support for older generated code: `const withNx = require('@nx/next/plugins/with-nx');`

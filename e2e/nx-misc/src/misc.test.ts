@@ -336,13 +336,15 @@ describe('migrate', () => {
       })
     );
 
-    updateFile('./node_modules/nx/src/command-line/migrate.js', (content) => {
-      const start = content.indexOf('// testing-fetch-start');
-      const end = content.indexOf('// testing-fetch-end');
+    updateFile(
+      './node_modules/nx/src/command-line/migrate/migrate.js',
+      (content) => {
+        const start = content.indexOf('// testing-fetch-start');
+        const end = content.indexOf('// testing-fetch-end');
 
-      const before = content.substring(0, start);
-      const after = content.substring(end);
-      const newFetch = `
+        const before = content.substring(0, start);
+        const after = content.substring(end);
+        const newFetch = `
              function createFetcher(logger) {
               return function fetch(packageName) {
                 if (packageName === 'migrate-parent-package') {
@@ -374,8 +376,9 @@ describe('migrate', () => {
             }
             `;
 
-      return `${before}${newFetch}${after}`;
-    });
+        return `${before}${newFetch}${after}`;
+      }
+    );
   });
 
   it('should run migrations', () => {

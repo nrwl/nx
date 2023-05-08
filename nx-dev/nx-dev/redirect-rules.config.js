@@ -201,7 +201,7 @@ const diataxis = {
   '/using-nx/updating-nx': '/core-features/automate-updating-dependencies',
   '/using-nx/nx-nodejs-typescript-version-matrix':
     '/workspace/nx-nodejs-typescript-version-matrix',
-  '/extending-nx/nx-devkit': '/plugin-features/create-your-own-plugin',
+  '/extending-nx/nx-devkit': '/plugins/intro/getting-started',
   '/extending-nx/project-inference-plugins':
     '/recipes/advanced-plugins/project-inference-plugins',
   '/extending-nx/project-graph-plugins':
@@ -509,19 +509,31 @@ const packagesDocuments = {
   '/storybook/angular-storybook-compodoc':
     '/packages/storybook/documents/angular-storybook-compodoc',
   '/storybook/angular-storybook-targets':
-    '/packages/storybook/documents/angular-storybook-targets',
+    '/deprecated/storybook/angular-storybook-targets',
+  '/packages/storybook/documents/angular-storybook-targets':
+    '/deprecated/storybook/angular-storybook-targets',
   '/storybook/angular-configuring-styles':
     '/packages/storybook/documents/angular-configuring-styles',
   '/storybook/angular-browser-target':
-    '/packages/storybook/documents/angular-browser-target',
+    '/deprecated/storybook/angular-browser-target',
   '/storybook/migrate-webpack-final-angular':
-    '/packages/storybook/documents/migrate-webpack-final-angular',
+    '/deprecated/storybook/migrate-webpack-final-angular',
   '/storybook/upgrade-storybook-v6-angular':
-    '/packages/storybook/documents/upgrade-storybook-v6-angular',
+    '/deprecated/storybook/upgrade-storybook-v6-angular',
   '/storybook/migrate-webpack-final-react':
-    '/packages/storybook/documents/migrate-webpack-final-react',
+    '/deprecated/storybook/migrate-webpack-final-react',
   '/storybook/upgrade-storybook-v6-react':
-    '/packages/storybook/documents/upgrade-storybook-v6-react',
+    '/deprecated/storybook/upgrade-storybook-v6-react',
+  '/packages/storybook/documents/angular-browser-target':
+    '/deprecated/storybook/angular-browser-target',
+  '/packages/storybook/documents/migrate-webpack-final-angular':
+    '/deprecated/storybook/migrate-webpack-final-angular',
+  '/packages/storybook/documents/upgrade-storybook-v6-angular':
+    '/deprecated/storybook/upgrade-storybook-v6-angular',
+  '/packages/storybook/documents/migrate-webpack-final-react':
+    '/deprecated/storybook/migrate-webpack-final-react',
+  '/packages/storybook/documents/upgrade-storybook-v6-react':
+    '/deprecated/storybook/upgrade-storybook-v6-react',
   '/packages/storybook/documents/migrate-storybook-7':
     '/packages/storybook/generators/migrate-7',
   '/linter/eslint-plugin-nx': '/packages/linter/documents/eslint-plugin-nx',
@@ -556,6 +568,30 @@ const conceptUrls = {
     '/tutorials/angular-standalone-tutorial',
 };
 
+const pluginUrls = {
+  '/plugin-features/create-your-own-plugin': '/plugins/tutorials/create-plugin',
+  '/recipes/advanced-plugins': '/plugins/recipes',
+  '/recipes/advanced-plugins/create-preset': '/plugins/recipes/create-preset',
+  '/recipes/advanced-plugins/migration-generators':
+    '/plugins/recipes/migration-generators',
+  '/recipes/advanced-plugins/project-graph-plugins':
+    '/plugins/recipes/project-graph-plugins',
+  '/recipes/advanced-plugins/project-inference-plugins':
+    '/plugins/recipes/project-inference-plugins',
+  '/recipes/advanced-plugins/share-your-plugin':
+    '/plugins/tutorials/maintain-published-plugin',
+  '/recipes/executors/compose-executors': '/plugins/recipes/compose-executors',
+  '/recipes/executors/creating-custom-executors':
+    '/plugins/recipes/local-executors',
+  '/recipes/generators': '/plugins/recipes',
+  '/recipes/generators/composing-generators':
+    '/plugins/recipes/composing-generators',
+  '/recipes/generators/creating-files': '/plugins/recipes/creating-files',
+  '/recipes/generators/generator-options': '/plugins/recipes/generator-options',
+  '/recipes/generators/local-generators': '/plugins/recipes/local-generators',
+  '/recipes/generators/modifying-files': '/plugins/recipes/modifying-files',
+};
+
 /**
  * Public export API
  */
@@ -571,4 +607,5 @@ module.exports = {
   packagesIndexes,
   packagesDocuments,
   conceptUrls,
+  pluginUrls,
 };

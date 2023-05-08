@@ -24,7 +24,7 @@ import { dirname, extname, join, resolve } from 'path';
 import { concat, from, Observable, of, zip } from 'rxjs';
 import { catchError, concatMap, map, tap } from 'rxjs/operators';
 
-import { GenerateOptions } from '../command-line/generate';
+import type { GenerateOptions } from '../command-line/generate/generate';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { FsTree, Tree } from '../generators/tree';

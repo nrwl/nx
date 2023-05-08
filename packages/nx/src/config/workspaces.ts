@@ -958,8 +958,8 @@ function resolvePathTokensInOptions<T extends Object | Array<unknown>>(
           `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`
         );
       }
-      value = value.replace('{projectRoot}', project.root);
-      result[opt] = value.replace('{projectName}', project.name);
+      value = value.replace(/\{projectRoot\}/g, project.root);
+      result[opt] = value.replace(/\{projectName\}/g, project.name);
     } else if (typeof value === 'object' && value) {
       result[opt] = resolvePathTokensInOptions(
         value,

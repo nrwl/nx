@@ -88,7 +88,7 @@ This is the default configuration for Angular projects using Storybook. You can 
 {% /tab %}
 {% tab label="Changing the browserTarget" %}
 
-You can set the [`browserTarget`](/packages/storybook/documents/angular-browser-target) to use `build-storybook` as the builder. This is most useful in the cases where your project does not have a `build` target.
+You can set the [`browserTarget`](/deprecated/storybook/angular-browser-target) to use `build-storybook` as the builder. This is most useful in the cases where your project does not have a `build` target.
 
 ```json
 "storybook": {

@@ -33,6 +33,7 @@ type PropertyDescription = {
     | { $source: 'projectName' }
     | { $source: 'unparsed' };
   additionalProperties?: boolean;
+  const?: any;
   'x-prompt'?:
     | string
     | { message: string; type: string; items?: any[]; multiselect?: boolean };
@@ -359,6 +360,12 @@ function validateProperty(
 
   const isPrimitive = typeof value !== 'object';
   if (isPrimitive) {
+    if (schema.const !== undefined && value !== schema.const) {
+      throw new SchemaError(
+        `Property '${propName}' does not match the schema. '${value}' should be '${schema.const}'.`
+      );
+    }
+
     if (Array.isArray(schema.type)) {
       const passes = schema.type.some((t) => {
         try {

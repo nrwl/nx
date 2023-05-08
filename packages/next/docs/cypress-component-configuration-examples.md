@@ -11,14 +11,14 @@ If you want to test components via Storybook with Cypress, then check out the [s
 This generator is designed to get your Next project up and running with Cypress Component Testing.
 
 ```shell
-nx g @nrwl/next:cypress-component-configuration --project=my-cool-next-project
+nx g @nx/next:cypress-component-configuration --project=my-cool-next-project
 ```
 
 Running this generator, adds the required files to the specified project with a preconfigured `cypress.config.ts` designed for Nx workspaces.
 
 ```ts {% fileName="cypress.config.ts" %}
 import { defineConfig } from 'cypress';
-import { nxComponentTestingPreset } from '@nrwl/next/plugins/component-testing';
+import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
 
 export default defineConfig({
   component: nxComponentTestingPreset(__filename),
@@ -29,7 +29,7 @@ Here is an example on how to add custom options to the configuration
 
 ```ts {% fileName="cypress.config.ts" %}
 import { defineConfig } from 'cypress';
-import { nxComponentTestingPreset } from '@nrwl/next/plugins/component-testing';
+import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
 
 export default defineConfig({
   component: {
@@ -40,7 +40,7 @@ export default defineConfig({
 ```
 
 ```shell
-nx g @nrwl/next:cypress-component-project --project=my-cool-next-project
+nx g @nx/next:cypress-component-project --project=my-cool-next-project
 ```
 
 ## Auto Generating Tests
@@ -48,7 +48,7 @@ nx g @nrwl/next:cypress-component-project --project=my-cool-next-project
 You can optionally use the `--generate-tests` flag to generate a test file for each component in your project.
 
 ```shell
-nx g @nrwl/next:cypress-component-configuration --project=my-cool-next-project --generate-tests
+nx g @nx/next:cypress-component-configuration --project=my-cool-next-project --generate-tests
 ```
 
 ## Running Component Tests
@@ -65,7 +65,7 @@ Here is an example of the project configuration that is generated.
 {
   "targets" {
     "component-test": {
-      "executor": "@nrwl/cypress:cypress",
+      "executor": "@nx/cypress:cypress",
       "options": {
         "cypressConfig": "<path-to-project-root>/cypress.config.ts",
         "testingType": "component",

@@ -29,8 +29,6 @@ function updateDependencies(tree: Tree, schema: Schema) {
   return addDependenciesToPackageJson(
     tree,
     {
-      'core-js': '^3.6.5',
-      'regenerator-runtime': '0.13.7',
       tslib: tsLibVersion,
     },
     devDependencies

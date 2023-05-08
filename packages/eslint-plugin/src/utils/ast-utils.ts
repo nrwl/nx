@@ -7,7 +7,7 @@ import {
 } from '@nx/devkit';
 import { findNodes } from '@nx/js';
 import { getModifiers } from '@typescript-eslint/type-utils';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import { dirname } from 'path';
 import ts = require('typescript');
 
@@ -81,6 +81,16 @@ function hasMemberExport(exportedMember, filePath) {
 }
 
 export function getRelativeImportPath(exportedMember, filePath, basePath) {
+  if (lstatSync(filePath).isDirectory()) {
+    const file = readdirSync(filePath).find((file) =>
+      /^index\.[jt]sx?$/.exec(file)
+    );
+    if (file) {
+      filePath = joinPathFragments(filePath, file);
+    } else {
+      return;
+    }
+  }
   const fileContent = readFileSync(filePath, 'utf8');
 
   // use the TypeScript AST to find the path to the file where exportedMember is defined

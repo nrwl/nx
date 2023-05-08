@@ -1,7 +1,7 @@
 import {
   getNxWrapperContents,
   nxWrapperPath,
-} from '../../nx-init/dot-nx/add-nx-scripts';
+} from '../../command-line/init/implementation/dot-nx/add-nx-scripts';
 import { normalizePath } from '../../utils/path';
 import { Tree } from '../../generators/tree';
 

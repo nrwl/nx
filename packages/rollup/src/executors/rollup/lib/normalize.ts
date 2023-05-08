@@ -44,6 +44,7 @@ export function normalizeRollupExecutorOptions(
     project,
     projectRoot,
     outputPath,
+    skipTypeCheck: options.skipTypeCheck || false,
   };
 }
 

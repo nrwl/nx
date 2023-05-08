@@ -58,7 +58,7 @@ export function DocumentationHeader({
     },
     {
       name: 'Plugins',
-      href: '/community#plugin-directory',
+      href: '/plugins/intro/getting-started',
       current: isPlugins,
     },
     {

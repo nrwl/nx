@@ -26,7 +26,7 @@ export class TaskProfilingLifeCycle implements LifeCycle {
       this.registerGroup(groupId);
     }
     for (let t of tasks) {
-      this.timings[`${t.target.project}:${t.target.target}`] = {
+      this.timings[t.id] = {
         perfStart: performance.now(),
       };
     }
