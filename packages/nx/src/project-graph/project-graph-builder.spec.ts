@@ -96,13 +96,6 @@ describe('ProjectGraphBuilder', () => {
     expect(() =>
       builder.addExplicitDependency(
         'source',
-        'source/index.ts',
-        'invalid-target'
-      )
-    ).toThrowError();
-    expect(() =>
-      builder.addExplicitDependency(
-        'source',
         'source/invalid-index.ts',
         'target'
       )

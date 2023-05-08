@@ -175,41 +175,11 @@ export class ProjectGraphBuilder {
     sourceProjectFile: string,
     targetProjectName: string
   ): void {
-    if (sourceProjectName === targetProjectName) {
-      return;
-    }
-    const source = this.graph.nodes[sourceProjectName];
-    if (!source) {
-      throw new Error(`Source project does not exist: ${sourceProjectName}`);
-    }
-
-    if (
-      !this.graph.nodes[targetProjectName] &&
-      !this.graph.externalNodes[targetProjectName]
-    ) {
-      throw new Error(`Target project does not exist: ${targetProjectName}`);
-    }
-
-    const fileData = source.data.files.find(
-      (f) => f.file === sourceProjectFile
+    this.addStaticDependency(
+      sourceProjectName,
+      targetProjectName,
+      sourceProjectFile
     );
-    if (!fileData) {
-      throw new Error(
-        `Source project ${sourceProjectName} does not have a file: ${sourceProjectFile}`
-      );
-    }
-
-    if (!fileData.dependencies) {
-      fileData.dependencies = [];
-    }
-
-    if (!fileData.dependencies.find((t) => t.target === targetProjectName)) {
-      fileData.dependencies.push({
-        target: targetProjectName,
-        source: sourceProjectName,
-        type: DependencyType.static,
-      });
-    }
   }
 
   /**
