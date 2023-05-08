@@ -10,11 +10,11 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g @nrwl/react:cypress-component-configuration --project=my-react-project",
+        "command": "nx g @nx/react:cypress-component-configuration --project=my-react-project",
         "description": "Add component testing to your react project"
       },
       {
-        "command": "nx g @nrwl/react:cypress-component-configuration --project=my-react-project --generate-tests",
+        "command": "nx g @nx/react:cypress-component-configuration --project=my-react-project --generate-tests",
         "description": "Add component testing to your react project and generate component tests for your existing components"
       }
     ],
