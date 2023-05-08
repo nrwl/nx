@@ -10,7 +10,7 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g @nrwl/angular:host appName --remotes=remote1",
+        "command": "nx g @nx/angular:host appName --remotes=remote1",
         "description": "Create an Angular application with configuration in place for Module Federation. If the `remotes` option is provided, attach the remote application to this application's configuration"
       }
     ],

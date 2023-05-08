@@ -6,7 +6,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nrwl/angular:scam-pipe --project=my-lib --flat=false my-transformation",
+      "command": "nx g @nx/angular:scam-pipe --project=my-lib --flat=false my-transformation",
       "description": "Generates a `MyTransformationPipe` in a `my-transformation` folder in the `my-lib` project"
     }
   ],
