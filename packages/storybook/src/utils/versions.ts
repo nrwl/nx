@@ -5,5 +5,5 @@ export const storybookTestRunnerVersion = '^0.7.2';
 export const litVersion = '^2.6.1';
 export const tsNodeVersion = '10.9.1';
 
-export const storybookVersion = '^7.0.8';
+export const storybookVersion = '^7.0.9';
 export const reactVersion = '^18.2.0';
