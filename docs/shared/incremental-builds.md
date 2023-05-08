@@ -35,9 +35,9 @@ In an incremental build scenario, when building the app, all it's dependencies n
 
 It is costly to rebuild all the buildable libraries from scratch every time you want to serve the app. That's why the Nx computation caching is so important. The caching allows us to only rebuild a small subset of the libraries, which results in much better performance.
 
-If we can share the cache with our teammates, we can get a much better dev experience. For instance, [this repo](https://github.com/nx/nx-incremental-large-repo) has a large application, where `nx serve` takes just a few seconds.
+If we can share the cache with our teammates, we can get a much better dev experience. For instance, [this repo](https://github.com/nrwl/nx-incremental-large-repo) has a large application, where `nx serve` takes just a few seconds.
 
-{% github-repository url="https://github.com/nx/nx-incremental-large-repo" /%}
+{% github-repository url="https://github.com/nrwl/nx-incremental-large-repo" /%}
 
 ![comparison: webpack vs incremental build](/shared/incremental-build-webpack-vs-incremental.png)
 
