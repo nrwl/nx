@@ -43,9 +43,11 @@ When you run Compodoc, it will generate a `documentation.json` file. Storybook w
 
 The main things that you need to do are:
 
-1. Include the component files in the TypeScript compilation for Compodoc (or any other files that contain your Compodoc documentation).
-2. Use `compodoc` to generate a `documentation.json` file.
-3. Tell Storybook to use the `documentation.json` file to display the documentation.
+1. Install the necessary packages for `compodoc`.
+2. Include the component files in the TypeScript compilation for Compodoc (or any other files that contain your Compodoc documentation).
+3. Use `compodoc` to generate a `documentation.json` file.
+4. Tell Storybook to use the `documentation.json` file to display the documentation.
+5. Do not forget to enable [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs) in your Storybook configuration.
 
 Let's see how you can do that.
 
@@ -152,6 +154,27 @@ In your project's `.storybook/preview.js` file (for example for your `web` app t
 import { setCompodocJson } from '@storybook/addon-docs/angular';
 import docJson from '../documentation.json';
 setCompodocJson(docJson);
+```
+
+### 5. Set up Autodocs
+
+In your project's `.storybook/main.js` file you have to enable autodocs:
+
+```js {% fileName="apps/web/.storybook/main.js" %}
+const config = {
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
+  framework: {
+    name: '@storybook/angular',
+    options: {},
+  },
+  docs: {
+    autodocs: true,
+    defaultName: 'Docs',
+  },
+};
+
+export default config;
 ```
 
 ### Now run Storybook and see the results!

@@ -176,6 +176,12 @@ To register a [Storybook addon](https://storybook.js.org/addons/) for all Storyb
    export const decorators = [someDecorator];
    ```
 
+### Setting up documentation
+
+To set up documentation, you can use [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs). For Angular, [you can use `compodoc`](/packages/storybook/documents/angular-storybook-compodoc) to infer `argTypes`. You can read more about `argTypes` in the [official Storybook `argTypes` documentation](https://storybook.js.org/docs/angular/api/argtypes#automatic-argtype-inference).
+
+You can read more about how to best set up documentation using Storybook for your project in the [official Storybook documentation](https://storybook.js.org/docs/react/writing-docs/introduction).
+
 ## More Documentation
 
 You can find dedicated information for React and Angular:
