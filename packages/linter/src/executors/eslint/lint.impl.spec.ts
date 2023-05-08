@@ -21,7 +21,7 @@ const mockLintFiles = jest.fn().mockImplementation(() => mockReports);
 class MockESLint {
   static version = VALID_ESLINT_VERSION;
   static outputFixes = mockOutputFixes;
-  static getErrorResults = jest.requireActual('ESLint').ESLint.getErrorResults;
+  static getErrorResults = jest.requireActual('eslint').ESLint.getErrorResults;
   loadFormatter = mockLoadFormatter;
   isPathIgnored = mockIsPathIgnored;
   lintFiles = mockLintFiles;
