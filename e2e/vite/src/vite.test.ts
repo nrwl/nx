@@ -9,6 +9,7 @@ import {
   newProject,
   promisifiedTreeKill,
   readFile,
+  readJson,
   rmDist,
   runCLI,
   runCLIAsync,
@@ -142,6 +143,55 @@ describe('Vite Plugin', () => {
           readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
         ).toBeDefined();
         expect(fileExists(`dist/apps/${myApp}/package.json`)).toBeFalsy();
+        rmDist();
+      }, 200_000);
+
+      it('should build application with new package json generation', async () => {
+        runCLI(`build ${myApp} --generatePackageJson`);
+        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+        const mainBundle = fileArray.find((file) => file.endsWith('.js'));
+        expect(
+          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
+        ).toBeDefined();
+
+        const packageJson = readJson(`dist/apps/${myApp}/package.json`);
+        expect(packageJson).toEqual({
+          name: myApp,
+          version: '0.0.1',
+          type: 'module',
+        });
+        rmDist();
+      }, 200_000);
+
+      it('should build application with existing package json generation', async () => {
+        createFile(
+          `apps/${myApp}/package.json`,
+          JSON.stringify({
+            name: 'my-existing-app',
+            version: '1.0.1',
+            scripts: {
+              start: 'node server.js',
+            },
+          })
+        );
+        runCLI(`build ${myApp} --generatePackageJson`);
+        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+        const mainBundle = fileArray.find((file) => file.endsWith('.js'));
+        expect(
+          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
+        ).toBeDefined();
+
+        const packageJson = readJson(`dist/apps/${myApp}/package.json`);
+        expect(packageJson).toEqual({
+          name: 'my-existing-app',
+          version: '1.0.1',
+          type: 'module',
+          scripts: {
+            start: 'node server.js',
+          },
+        });
         rmDist();
       }, 200_000);
     });
