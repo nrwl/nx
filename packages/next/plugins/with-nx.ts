@@ -5,7 +5,6 @@
 import * as path from 'path';
 import type { NextConfig } from 'next';
 import type { NextConfigFn } from '../src/utils/config';
-import { forNextVersion } from '../src/utils/config';
 import type { NextBuildBuilderOptions } from '../src/utils/types';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import type { ProjectGraph, ProjectGraphProjectNode, Target } from '@nx/devkit';
@@ -463,6 +462,15 @@ export function getAliasForProject(
   }
 
   return null;
+}
+
+// Runs a function if the Next.js version satisfies the range.
+export function forNextVersion(range: string, fn: () => void) {
+  const semver = require('semver');
+  const nextJsVersion = require('next/package.json').version;
+  if (semver.satisfies(nextJsVersion, range)) {
+    fn();
+  }
 }
 
 // Support for older generated code: `const withNx = require('@nx/next/plugins/with-nx');`
