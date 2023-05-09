@@ -68,8 +68,15 @@
       },
       "debug": {
         "type": "boolean",
-        "description": "Enable Next.js debug build logging",
-        "default": false
+        "description": "Enable Next.js debug build logging"
+      },
+      "profile": {
+        "type": "boolean",
+        "description": "Used to enable React Production Profiling"
+      },
+      "experimentalAppOnly": {
+        "type": "boolean",
+        "description": "Only build 'app' routes"
       }
     },
     "required": ["root", "outputPath"],

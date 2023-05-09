@@ -41,7 +41,7 @@ export function createWebpackConfig(
   ): Configuration {
     const mainFields = ['es2015', 'module', 'main'];
     const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
-    let tsConfigPath = join(projectRoot, 'tsconfig.json');
+    let tsConfigPath = join(workspaceRoot, projectRoot, 'tsconfig.json');
     if (dependencies.length > 0) {
       tsConfigPath = createTmpTsConfig(
         join(workspaceRoot, tsConfigPath),

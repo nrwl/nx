@@ -1,27 +1,26 @@
 import 'dotenv/config';
 import {
   ExecutorContext,
-  logger,
   parseTargetString,
   readTargetOptions,
-  runExecutor,
 } from '@nx/devkit';
-import * as chalk from 'chalk';
-import { existsSync } from 'fs';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 
 import {
   NextBuildBuilderOptions,
   NextServeBuilderOptions,
-  NextServerOptions,
-  ProxyConfig,
 } from '../../utils/types';
-import { defaultServer } from './lib/default-server';
+import { spawn } from 'child_process';
+import customServer from './custom-server.impl';
+import { formatObjectToCli } from './formatObjectToCli';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,
   context: ExecutorContext
 ) {
+  if (options.customServerTarget) {
+    return yield* customServer(options, context);
+  }
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV = process.env.NODE_ENV
     ? process.env.NODE_ENV
@@ -38,96 +37,24 @@ export default async function* serveExecutor(
   );
   const root = resolve(context.root, buildOptions.root);
 
-  if (options.customServerTarget) {
-    yield* runCustomServer(root, options, buildOptions, context);
-  } else {
-    yield* runNextDevServer(root, options, context);
-  }
-}
+  const { port, keepAliveTimeout, hostname } = options;
 
-async function* runNextDevServer(
-  root: string,
-  options: NextServeBuilderOptions,
-  context: ExecutorContext
-) {
-  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
-  const settings: NextServerOptions = {
-    dev: options.dev,
-    dir: root,
-    staticMarkup: options.staticMarkup,
-    quiet: options.quiet,
-    port: options.port,
-    customServer: !!options.customServerTarget,
-    hostname: options.hostname || 'localhost',
-  };
+  const args = formatObjectToCli({ port, keepAliveTimeout, hostname });
+  const nextDir = resolve(context.root, buildOptions.outputPath);
 
-  // look for the proxy.conf.json
-  let proxyConfig: ProxyConfig;
-  const proxyConfigPath = options.proxyConfig
-    ? join(context.root, options.proxyConfig)
-    : join(root, 'proxy.conf.json');
+  const command = `next ${
+    options.dev ? `dev ${args}` : `start ${nextDir} ${args}`
+  }`;
 
-  // TODO(v16): Remove proxy support.
-  if (existsSync(proxyConfigPath)) {
-    logger.warn(
-      `The "proxyConfig" option will be removed in Nx 16. Use the "rewrites" feature from Next.js instead. See: https://nextjs.org/docs/api-reference/next.config.js/rewrites`
-    );
-    proxyConfig = require(proxyConfigPath);
-  }
+  return yield new Promise<{ success: boolean }>((res, rej) => {
+    const server = spawn(command, {
+      cwd: options.dev ? root : nextDir,
+      stdio: 'inherit',
+      shell: true,
+    });
 
-  try {
-    await defaultServer(settings, proxyConfig);
-    logger.info(`[ ${chalk.green('ready')} ] on ${baseUrl}`);
-
-    yield {
-      baseUrl,
-      success: true,
-    };
-
-    // This Promise intentionally never resolves, leaving the process running
-    await new Promise<{ success: boolean }>(() => {});
-  } catch (e) {
-    if (options.dev) {
-      throw e;
-    } else {
-      if (process.env.NX_VERBOSE_LOGGING) {
-        console.error(e);
-      }
-      throw new Error(
-        `Could not start production server. Try building your app with \`nx build ${context.projectName}\`.`
-      );
-    }
-  }
-}
-
-async function* runCustomServer(
-  root: string,
-  options: NextServeBuilderOptions,
-  buildOptions: NextBuildBuilderOptions,
-  context: ExecutorContext
-) {
-  process.env.NX_NEXT_DIR = root;
-  process.env.NX_NEXT_PUBLIC_DIR = join(root, 'public');
-
-  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
-
-  const customServerBuild = await runExecutor(
-    parseTargetString(options.customServerTarget, context.projectGraph),
-    {
-      watch: options.dev ? true : false,
-    },
-    context
-  );
-
-  for await (const result of customServerBuild) {
-    if (!result.success) {
-      return result;
-    }
-    yield {
-      success: true,
-      baseUrl,
-    };
-  }
-
-  return { success: true };
+    server.on('exit', (code) => {
+      code != 0 ? rej({ success: false }) : res({ success: true });
+    });
+  });
 }
