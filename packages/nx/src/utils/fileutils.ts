@@ -13,6 +13,10 @@ import {
 import { dirname } from 'path';
 import * as tar from 'tar-stream';
 import { createGunzip } from 'zlib';
+import {
+  formatFileContentsWithPrettierIfAvailable,
+  formatFileContentsWithPrettierIfAvailableSync,
+} from './prettier';
 
 export interface JsonReadOptions extends JsonParseOptions {
   /**
@@ -67,9 +71,10 @@ export function writeJsonFile<T extends object = object>(
 ): void {
   mkdirSync(dirname(path), { recursive: true });
   const serializedJson = serializeJson(data, options);
-  const content = options?.appendNewLine
-    ? `${serializedJson}\n`
-    : serializedJson;
+  const content = formatFileContentsWithPrettierIfAvailableSync(
+    path,
+    options?.appendNewLine ? `${serializedJson}\n` : serializedJson
+  );
   writeFileSync(path, content, { encoding: 'utf-8' });
 }
 

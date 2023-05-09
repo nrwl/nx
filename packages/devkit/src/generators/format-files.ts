@@ -12,12 +12,64 @@ const { updateJson, readJson } = requireNx();
  * @param tree - the file system tree
  */
 export async function formatFiles(tree: Tree): Promise<void> {
+  sortTsConfig(tree);
+
+  return (
+    requireNx().formatChangedFilesWithPrettierIfAvailable?.(tree) ??
+    formatChangedFilesLegacy(tree)
+  );
+}
+
+function sortTsConfig(tree: Tree) {
+  try {
+    const tsConfigPath = getRootTsConfigPath(tree);
+    if (!tsConfigPath) {
+      return;
+    }
+    updateJson(tree, tsConfigPath, (tsconfig) => ({
+      ...tsconfig,
+      compilerOptions: {
+        ...tsconfig.compilerOptions,
+        paths: sortObjectByKeys(tsconfig.compilerOptions.paths),
+      },
+    }));
+  } catch (e) {
+    // catch noop
+  }
+}
+
+function getRootTsConfigPath(tree: Tree): string | null {
+  for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
+    if (tree.exists(path)) {
+      return path;
+    }
+  }
+
+  return null;
+}
+
+function getChangedPrettierConfigInTree(tree: Tree): Prettier.Options | null {
+  if (tree.listChanges().find((file) => file.path === '.prettierrc')) {
+    try {
+      return readJson(tree, '.prettierrc');
+    } catch {
+      return null;
+    }
+  } else {
+    return null;
+  }
+}
+
+/**
+ * @deprecated Use formatChangedFilesWithPrettierIfAvailable from nx/devkit-internals instead.
+ * @todo Remove this implementation in Nx v18, since the method in nx/devkit-internals will have
+ * been available for more than 1 major version.
+ */
+async function formatChangedFilesLegacy(tree: Tree) {
   let prettier: typeof Prettier;
   try {
     prettier = await import('prettier');
   } catch {}
-
-  sortTsConfig(tree);
 
   if (!prettier) return;
 
@@ -60,44 +112,4 @@ export async function formatFiles(tree: Tree): Promise<void> {
       }
     })
   );
-}
-
-function sortTsConfig(tree: Tree) {
-  try {
-    const tsConfigPath = getRootTsConfigPath(tree);
-    if (!tsConfigPath) {
-      return;
-    }
-    updateJson(tree, tsConfigPath, (tsconfig) => ({
-      ...tsconfig,
-      compilerOptions: {
-        ...tsconfig.compilerOptions,
-        paths: sortObjectByKeys(tsconfig.compilerOptions.paths),
-      },
-    }));
-  } catch (e) {
-    // catch noop
-  }
-}
-
-function getRootTsConfigPath(tree: Tree): string | null {
-  for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
-    if (tree.exists(path)) {
-      return path;
-    }
-  }
-
-  return null;
-}
-
-function getChangedPrettierConfigInTree(tree: Tree): Prettier.Options | null {
-  if (tree.listChanges().find((file) => file.path === '.prettierrc')) {
-    try {
-      return readJson(tree, '.prettierrc');
-    } catch {
-      return null;
-    }
-  } else {
-    return null;
-  }
 }
