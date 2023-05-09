@@ -18,7 +18,7 @@ And configure the rule in your root `.eslintrc.json` file:
 
 ```jsonc {% fileName=".eslintrc.json" %}
 {
-  "plugins": ["@nx/nx"],
+  "plugins": ["@nx"],
   // ...
   "rules": {
     "@nx/enforce-module-boundaries": [
