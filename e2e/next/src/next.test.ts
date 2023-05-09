@@ -177,6 +177,12 @@ describe('Next.js Applications', () => {
       `dist/packages/${appName}/public/shared/ui/hello.txt`
     );
 
+    // Check that compiled next config does not contain bad imports
+    const nextConfigPath = `dist/packages/${appName}/next.config.js`;
+    expect(nextConfigPath).not.toContain(`require("../`); // missing relative paths
+    expect(nextConfigPath).not.toContain(`require("nx/`); // dev-only packages
+    expect(nextConfigPath).not.toContain(`require("@nx/`); // dev-only packages
+
     // Check that `nx serve <app> --prod` works with previous production build (e.g. `nx build <app>`).
     const prodServePort = 4000;
     const prodServeProcess = await runCommandUntil(
