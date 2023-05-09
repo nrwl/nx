@@ -234,8 +234,6 @@ function findAllNpmDeps(
           seen,
           dependencyPatterns
         );
-      } else {
-        throw new Error(`Could not find ${dep} in the project graph.`);
       }
     }
   }
