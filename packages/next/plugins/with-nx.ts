@@ -8,8 +8,6 @@ import type { NextConfigFn } from '../src/utils/config';
 import type { NextBuildBuilderOptions } from '../src/utils/types';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import type { ProjectGraph, ProjectGraphProjectNode, Target } from '@nx/devkit';
-import { readTsConfigPaths } from '@nx/js';
-import { findAllProjectNodeDependencies } from 'nx/src/utils/project-graph-utils';
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
@@ -222,6 +220,10 @@ function withNx(
       forNextVersion('>=13.1.0', () => {
         if (!graph.dependencies[project]) return;
 
+        const { readTsConfigPaths } = require('@nx/js');
+        const {
+          findAllProjectNodeDependencies,
+        } = require('nx/src/utils/project-graph-utils');
         const paths = readTsConfigPaths();
         const deps = findAllProjectNodeDependencies(project);
         nextConfig.transpilePackages ??= [];
