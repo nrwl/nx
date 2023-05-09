@@ -1,10 +1,12 @@
 import { ExecutorContext, names } from '@nx/devkit';
-import { join } from 'path';
+import { join, normalize, sep } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
+import { copyBuildFile, unzipBuild } from '../download/download.impl';
 
 import { ExpoEasBuildOptions } from './schema';
+import { removeSync } from 'fs-extra';
 
 export interface ReactNativeBuildOutput {
   success: boolean;
@@ -21,7 +23,20 @@ export default async function* buildExecutor(
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
+    // remove the output app if it already existed
+    if (options.local && options.output) {
+      removeSync(options.output);
+    }
+
     await runCliBuild(context.root, projectRoot, options);
+
+    // unzip the build if it's a tar.gz
+    if (options.local && options.output && options.output.endsWith('.tar.gz')) {
+      const directoryPath = normalize(options.output).split(sep);
+      directoryPath.pop();
+      const outputDirectory = directoryPath.join(sep);
+      await unzipBuild(options.output, outputDirectory);
+    }
     yield { success: true };
   } finally {
     if (childProcess) {
@@ -39,7 +54,10 @@ function runCliBuild(
     childProcess = fork(
       join(workspaceRoot, './node_modules/eas-cli/bin/run'),
       ['build', ...createBuildOptions(options)],
-      { cwd: join(workspaceRoot, projectRoot), env: process.env }
+      {
+        cwd: join(workspaceRoot, projectRoot),
+        env: process.env,
+      }
     );
 
     // Ensure the child process is killed when the parent exits

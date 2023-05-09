@@ -54,11 +54,17 @@
       "description": "Replace @nrwl/expo with @nx/expo",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     },
-    "update-eas-scripts": {
+    "update-eas-scripts-16-1-4": {
       "cli": "nx",
       "version": "16.1.4-beta.0",
       "description": "Update package.json eas build lifecycle scripts",
       "implementation": "./src/migrations/update-16-1-4/update-eas-scripts"
+    },
+    "add-detox-app-json-16-1-4": {
+      "version": "16.1.4-beta.0",
+      "cli": "nx",
+      "description": "Add app.json for detox",
+      "factory": "./src/migrations/update-16-1-4/add-detox-app-json"
     }
   },
   "packageJsonUpdates": {
