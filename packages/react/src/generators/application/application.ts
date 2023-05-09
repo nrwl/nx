@@ -145,7 +145,7 @@ export async function applicationGenerator(
     tasks.push(webpackInitTask);
   } else if (options.bundler === 'rspack') {
     const { configurationGenerator } = ensurePackage(
-      '@nrwl/rspack',
+      '@nx/rspack',
       nxRspackVersion
     );
     const rspackTask = await configurationGenerator(host, {
@@ -231,7 +231,7 @@ export async function applicationGenerator(
     host.write(
       joinPathFragments(options.appProjectRoot, 'rspack.config.js'),
       stripIndents`
-        const { composePlugins, withNx, withWeb } = require('@nrwl/rspack');
+        const { composePlugins, withNx, withWeb } = require('@nx/rspack');
         module.exports = composePlugins(withNx(), withWeb(), (config) => {
           config.module.rules.push({
             test: /\\.[jt]sx$/i,
