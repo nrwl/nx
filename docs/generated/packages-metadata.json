@@ -254,6 +254,15 @@
         "type": "generator"
       },
       {
+        "description": "Adds an NgRx Feature Store to an application or library.",
+        "file": "generated/packages/angular/generators/ngrx-feature-store.json",
+        "hidden": false,
+        "name": "ngrx-feature-store",
+        "originalFilePath": "/packages/angular/src/generators/ngrx-feature-store/schema.json",
+        "path": "angular/generators/ngrx-feature-store",
+        "type": "generator"
+      },
+      {
         "description": "Generate an Angular Pipe",
         "file": "generated/packages/angular/generators/pipe.json",
         "hidden": false,
