@@ -1,5 +1,3 @@
-import { join } from 'path';
-
 import {
   convertNxGenerator,
   formatFiles,
@@ -51,11 +49,11 @@ export async function reactNativeApplicationGenerator(
   const detoxTask = await addDetox(host, options);
   const symlinkTask = runSymlink(host.root, options.appProjectRoot);
   const podInstallTask = runPodInstall(
-    join(host.root, options.iosProjectRoot),
+    joinPathFragments(host.root, options.iosProjectRoot),
     options.install
   );
   const chmodTaskGradlew = chmodAndroidGradlewFilesTask(
-    join(host.root, options.androidProjectRoot)
+    joinPathFragments(host.root, options.androidProjectRoot)
   );
 
   if (!options.skipFormat) {
