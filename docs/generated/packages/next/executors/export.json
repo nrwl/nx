@@ -33,6 +33,7 @@
     "presets": []
   },
   "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
+  "x-deprecated": "Use static exports in next.config.js instead. See: https://nextjs.org/docs/pages/building-your-application/deploying/static-exports.",
   "aliases": [],
   "hidden": false,
   "path": "/packages/next/src/executors/export/schema.json",

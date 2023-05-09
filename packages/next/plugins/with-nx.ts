@@ -113,55 +113,10 @@ function getNxContext(
 /**
  * Try to read output dir from project, and default to '.next' if executing outside of Nx (e.g. dist is added to a docker image).
  */
-async function determineDistDirForProdServer(
-  nextConfig: NextConfig
-): Promise<string> {
-  const project = process.env.NX_TASK_TARGET_PROJECT;
-  const target = process.env.NX_TASK_TARGET_TARGET;
-  const configuration = process.env.NX_TASK_TARGET_CONFIGURATION;
-
-  try {
-    if (project && target) {
-      // If NX env vars are set, then devkit must be available.
-      const {
-        createProjectGraphAsync,
-        joinPathFragments,
-        offsetFromRoot,
-      } = require('@nx/devkit');
-      const originalTarget = { project, target, configuration };
-      const graph = await createProjectGraphAsync();
-
-      const { options, node: projectNode } = getNxContext(
-        graph,
-        originalTarget
-      );
-      const outputDir = `${offsetFromRoot(projectNode.data.root)}${
-        options.outputPath
-      }`;
-      return nextConfig.distDir && nextConfig.distDir !== '.next'
-        ? joinPathFragments(outputDir, nextConfig.distDir)
-        : joinPathFragments(outputDir, '.next');
-    }
-  } catch {
-    // ignored -- fallback to Next.js default of '.next'
-  }
-
-  return nextConfig.distDir || '.next';
-}
-
 function withNx(
   _nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
 ): NextConfigFn {
-  // If this is not set user will see compile errors in Next.js 13.4.
-  // See: https://github.com/nrwl/nx/issues/16692, https://github.com/vercel/next.js/issues/49169
-  // TODO(jack): Remove this once Nx is refactored to invoke CLI directly.
-  forNextVersion('>=13.4.0', () => {
-    process.env['__NEXT_PRIVATE_PREBUNDLED_REACT'] =
-      // Not in Next 13.3 or earlier, so need to access config via string
-      _nextConfig.experimental?.['serverActions'] ? 'experimental' : 'next';
-  });
-
   return async (phase: string) => {
     const { PHASE_PRODUCTION_SERVER } = await import('next/constants');
     if (phase === PHASE_PRODUCTION_SERVER) {
@@ -169,8 +124,8 @@ function withNx(
       // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
       const { nx, ...validNextConfig } = _nextConfig;
       return {
+        distDir: '.next',
         ...validNextConfig,
-        distDir: await determineDistDirForProdServer(_nextConfig),
       };
     } else {
       const {
