@@ -73,8 +73,8 @@ function main() {
 
     if (process.argv[2] === '--version') {
       console.log(stripIndents`Nx Version:
-      - Local: v${LOCAL_NX_VERSION ?? 'Not found'}
-      - Global: v${GLOBAL_NX_VERSION ?? 'Not found'}`);
+      - Local: ${LOCAL_NX_VERSION ? 'v' + LOCAL_NX_VERSION : 'Not found'}
+      - Global: ${GLOBAL_NX_VERSION ? 'v' + GLOBAL_NX_VERSION : 'Not found'}`);
       process.exit(0);
     }
 
