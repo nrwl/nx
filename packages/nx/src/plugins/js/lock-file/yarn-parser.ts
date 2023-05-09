@@ -285,7 +285,13 @@ function mapSnapshots(
 
   // collect snapshots and their matching keys
   Object.values(nodes).forEach((node) => {
-    const [matchedKeys, snapshot] = findOriginalKeys(groupedDependencies, node);
+    const foundOriginalKeys = findOriginalKeys(groupedDependencies, node);
+    if (!foundOriginalKeys) {
+      throw new Error(
+        `Original key(s) not found for "${node.data.packageName}@${node.data.version}" while pruning yarn.lock.`
+      );
+    }
+    const [matchedKeys, snapshot] = foundOriginalKeys;
     snapshotMap.set(snapshot, new Set(matchedKeys));
 
     // separately save keys that still exist
