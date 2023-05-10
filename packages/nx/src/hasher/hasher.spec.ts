@@ -783,6 +783,7 @@ describe('Hasher', () => {
   });
 
   describe('hashTarget', () => {
+
     it('should hash executor dependencies of @nx packages', async () => {
       const hasher = new Hasher(
         {
@@ -921,6 +922,49 @@ describe('Hasher', () => {
         'npm:@nx/devkit': { contains: '$nx/devkit16$' },
         'npm:nx': { contains: '$nx16$' },
         'npm:webpack': { contains: '5.0.0' },
+      });
+    });
+
+    it('should hash executor dependencies of third party executors', async () => {
+      const hasher = new Hasher(
+        {
+          nodes: {
+            app: {
+              name: 'app',
+              type: 'app',
+              data: {
+                root: 'apps/app',
+                targets: { build: { executor: '@monodon/rust:napi' } },
+                files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              },
+            },
+          },
+          externalNodes: {
+            'npm:@monodon/rust': {
+              name: 'npm:@monodon/rust',
+              type: 'npm',
+              data: {
+                packageName: '@monodon/rust',
+                version: '1.0.0',
+              }
+            },
+          },
+          dependencies: {},
+          allWorkspaceFiles,
+        },
+        {} as any,
+        {},
+        createHashing()
+      );
+
+      const hash = await hasher.hashTask({
+        target: { project: 'app', target: 'build' },
+        id: 'app-build',
+        overrides: { prop: 'prop-value' },
+      });
+
+      assertFilesets(hash, {
+        'npm:@monodon/rust': { contains: '1.0.0' },
       });
     });
 

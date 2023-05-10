@@ -15,7 +15,8 @@ import { hashTsConfig } from '../plugins/js/hasher/hasher';
 type ExpandedSelfInput =
   | { fileset: string }
   | { runtime: string }
-  | { env: string };
+  | { env: string }
+  | { commandExternalDependencies: string[] };
 
 /**
  * A data structure returned by the default hasher.
@@ -188,7 +189,7 @@ class TaskHasher {
     private readonly projectGraph: ProjectGraph,
     private readonly hashing: HashingImpl,
     private readonly options: { selectivelyHashTsConfig: boolean }
-  ) {}
+  ) { }
 
   async hashTask(task: Task, visited: string[]): Promise<PartialHash> {
     return Promise.resolve().then(async () => {
@@ -204,8 +205,8 @@ class TaskHasher {
       const { selfInputs, depsInputs, projectInputs } =
         splitInputsIntoSelfAndDependencies(
           targetData.inputs ||
-            targetDefaults?.inputs ||
-            (DEFAULT_INPUTS as any),
+          targetDefaults?.inputs ||
+          (DEFAULT_INPUTS as any),
           namedInputs
         );
 
@@ -217,7 +218,7 @@ class TaskHasher {
         visited
       );
 
-      const target = this.hashTarget(task.target.project, task.target.target);
+      const target = this.hashTarget(task.target.project, task.target.target, selfInputs);
       if (target) {
         return {
           value: this.hashing.hashArray([selfAndInputs.value, target.value]),
@@ -377,7 +378,7 @@ class TaskHasher {
     return partialHash;
   }
 
-  private hashTarget(projectName: string, targetName: string): PartialHash {
+  private hashTarget(projectName: string, targetName: string, selfInputs: ExpandedSelfInput[]): PartialHash {
     const projectNode = this.projectGraph.nodes[projectName];
     const target = projectNode.data.targets[targetName];
 
