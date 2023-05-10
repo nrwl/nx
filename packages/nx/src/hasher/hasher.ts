@@ -189,7 +189,7 @@ class TaskHasher {
     private readonly projectGraph: ProjectGraph,
     private readonly hashing: HashingImpl,
     private readonly options: { selectivelyHashTsConfig: boolean }
-  ) { }
+  ) {}
 
   async hashTask(task: Task, visited: string[]): Promise<PartialHash> {
     return Promise.resolve().then(async () => {
@@ -205,8 +205,8 @@ class TaskHasher {
       const { selfInputs, depsInputs, projectInputs } =
         splitInputsIntoSelfAndDependencies(
           targetData.inputs ||
-          targetDefaults?.inputs ||
-          (DEFAULT_INPUTS as any),
+            targetDefaults?.inputs ||
+            (DEFAULT_INPUTS as any),
           namedInputs
         );
 
@@ -218,7 +218,11 @@ class TaskHasher {
         visited
       );
 
-      const target = this.hashTarget(task.target.project, task.target.target, selfInputs);
+      const target = this.hashTarget(
+        task.target.project,
+        task.target.target,
+        selfInputs
+      );
       if (target) {
         return {
           value: this.hashing.hashArray([selfAndInputs.value, target.value]),
@@ -378,7 +382,11 @@ class TaskHasher {
     return partialHash;
   }
 
-  private hashTarget(projectName: string, targetName: string, selfInputs: ExpandedSelfInput[]): PartialHash {
+  private hashTarget(
+    projectName: string,
+    targetName: string,
+    selfInputs: ExpandedSelfInput[]
+  ): PartialHash {
     const projectNode = this.projectGraph.nodes[projectName];
     const target = projectNode.data.targets[targetName];
 
@@ -386,9 +394,8 @@ class TaskHasher {
       return;
     }
 
-    // we can only vouch for @nrwl packages's executors
-    // if it's "run commands" we skip traversing since we have no info what this command depends on
-    // for everything else we take the hash of the @nrwl package dependency tree
+    // we can only vouch for @nx packages's executor dependencies
+    // if it's "run commands" or third-party we skip traversing since we have no info what this command depends on
     if (
       target.executor.startsWith(`@nrwl/`) ||
       target.executor.startsWith(`@nx/`)
@@ -398,6 +405,27 @@ class TaskHasher {
       if (this.projectGraph.externalNodes?.[executorNode]) {
         return this.hashExternalDependency(executorNode);
       }
+    }
+
+    // use command external dependencies if available to construct the hash
+    const partialHashes: PartialHash[] = [];
+    for (const input of selfInputs) {
+      if (input['commandExternalDependencies']) {
+        const commandExternalDependencies =
+          input['commandExternalDependencies'];
+        for (const dep of commandExternalDependencies) {
+          partialHashes.push(this.hashExternalDependency(dep));
+        }
+      }
+    }
+    if (partialHashes.length) {
+      return {
+        value: this.hashing.hashArray(partialHashes.map((h) => h.value)),
+        details: partialHashes.reduce(
+          (acc, c) => ({ ...acc, ...c.details }),
+          {}
+        ),
+      };
     }
 
     const hash = this.hashing.hashArray([
@@ -696,7 +724,12 @@ function expandSingleProjectInputs(
           `namedInputs definitions can only refer to other namedInputs definitions within the same project.`
         );
       }
-      if ((d as any).fileset || (d as any).env || (d as any).runtime) {
+      if (
+        (d as any).fileset ||
+        (d as any).env ||
+        (d as any).runtime ||
+        (d as any).commandExternalDependencies
+      ) {
         expanded.push(d);
       } else {
         expanded.push(...expandNamedInput((d as any).input, namedInputs));

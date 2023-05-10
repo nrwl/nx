@@ -783,7 +783,6 @@ describe('Hasher', () => {
   });
 
   describe('hashTarget', () => {
-
     it('should hash executor dependencies of @nx packages', async () => {
       const hasher = new Hasher(
         {
@@ -925,49 +924,6 @@ describe('Hasher', () => {
       });
     });
 
-    it('should hash executor dependencies of third party executors', async () => {
-      const hasher = new Hasher(
-        {
-          nodes: {
-            app: {
-              name: 'app',
-              type: 'app',
-              data: {
-                root: 'apps/app',
-                targets: { build: { executor: '@monodon/rust:napi' } },
-                files: [{ file: '/filea.ts', hash: 'a.hash' }],
-              },
-            },
-          },
-          externalNodes: {
-            'npm:@monodon/rust': {
-              name: 'npm:@monodon/rust',
-              type: 'npm',
-              data: {
-                packageName: '@monodon/rust',
-                version: '1.0.0',
-              }
-            },
-          },
-          dependencies: {},
-          allWorkspaceFiles,
-        },
-        {} as any,
-        {},
-        createHashing()
-      );
-
-      const hash = await hasher.hashTask({
-        target: { project: 'app', target: 'build' },
-        id: 'app-build',
-        overrides: { prop: 'prop-value' },
-      });
-
-      assertFilesets(hash, {
-        'npm:@monodon/rust': { contains: '1.0.0' },
-      });
-    });
-
     it('should not hash when nx:run-commands executor', async () => {
       const hasher = new Hasher(
         {
@@ -1008,6 +964,74 @@ describe('Hasher', () => {
 
       expect(hash.details.nodes['npm:nx']).not.toBeDefined();
       expect(hash.details.nodes['app']).toEqual('nx:run-commands');
+    });
+
+    it('should use commandExternalDependencies to override nx:run-commands', async () => {
+      const hasher = new Hasher(
+        {
+          nodes: {
+            app: {
+              name: 'app',
+              type: 'app',
+              data: {
+                root: 'apps/app',
+                targets: {
+                  build: {
+                    executor: 'nx:run-commands',
+                    inputs: [
+                      { fileset: '{projectRoot}/**/*' },
+                      { commandExternalDependencies: ['webpack', 'react'] },
+                    ],
+                  },
+                },
+                files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              },
+            },
+          },
+          externalNodes: {
+            'npm:nx': {
+              name: 'npm:nx',
+              type: 'npm',
+              data: {
+                packageName: 'nx',
+                version: '16.0.0',
+              },
+            },
+            'npm:webpack': {
+              name: 'npm:webpack',
+              type: 'npm',
+              data: {
+                packageName: 'webpack',
+                version: '5.0.0',
+              },
+            },
+            'npm:react': {
+              name: 'npm:react',
+              type: 'npm',
+              data: {
+                packageName: 'react',
+                version: '17.0.0',
+              },
+            },
+          },
+          dependencies: {},
+          allWorkspaceFiles,
+        },
+        {} as any,
+        {},
+        createHashing()
+      );
+
+      const hash = await hasher.hashTask({
+        target: { project: 'app', target: 'build' },
+        id: 'app-build',
+        overrides: { prop: 'prop-value' },
+      });
+
+      console.log(hash);
+
+      expect(hash.details.nodes['npm:nx']).not.toBeDefined();
+      expect(hash.details.nodes['app']).not.toBeDefined();
     });
   });
 
