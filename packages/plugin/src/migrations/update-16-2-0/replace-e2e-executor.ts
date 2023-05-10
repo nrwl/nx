@@ -5,7 +5,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import type { NxPluginE2EExecutorOptions } from '@nx/plugin/src/executors/e2e/schema';
+import { NxPluginE2EExecutorOptions } from '../../executors/e2e/schema';
 
 export default async function replaceE2EExecutor(tree: Tree): Promise<void> {
   const projects = getProjects(tree);
