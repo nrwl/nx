@@ -1,10 +1,13 @@
 use ignore::WalkBuilder;
 use ignore_files::{IgnoreFile, IgnoreFilter};
 use itertools::Itertools;
+use napi::threadsafe_function::{
+    ErrorStrategy, ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
+};
+use napi::{Env, JsFunction, JsObject, JsString, Ref};
 use std::convert::Infallible;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::Duration;
 use watchexec::action::{Action, Outcome};
 use watchexec::config::{InitConfig, RuntimeConfig};
 use watchexec::error::RuntimeError;
@@ -17,73 +20,119 @@ use watchexec_filterer_ignore::IgnoreFilterer;
 use watchexec_signals::Signal;
 
 #[napi]
-async fn watcher(origin: String) -> napi::Result<()> {
-    let config = InitConfig::default();
+pub struct Watcher {
+    pub origin: String,
+    callback: Ref<()>,
+}
 
-    let ignore_files = get_ignore_files(&origin);
-    let mut filter = IgnoreFilter::new(&origin, &ignore_files)
-        .await
-        .map_err(anyhow::Error::from)?;
-
-    filter
-        .add_globs(&[".git"], Some(&origin.clone().into()))
-        .map_err(anyhow::Error::from)?;
-
-    let mut runtime = RuntimeConfig::default();
-    runtime.filterer(Arc::new(WatchFilterer {
-        inner: IgnoreFilterer(filter),
-    }));
-    runtime.pathset([&origin]);
-
-    runtime.on_action(move |action: Action| async {
-        let signals: Vec<Signal> = action.events.iter().flat_map(Event::signals).collect();
-
-        if signals.contains(&Signal::Terminate) {
-            action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
-            return Ok(());
+#[napi]
+impl Watcher {
+    #[napi(constructor)]
+    pub fn new(env: Env, origin: String, callback: JsFunction) -> Watcher {
+        let callback_ref = env.create_reference(callback).unwrap();
+        Watcher {
+            origin,
+            callback: callback_ref,
         }
+    }
 
-        if signals.contains(&Signal::Interrupt) {
-            action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
-            return Ok(());
-        }
+    #[napi]
+    pub fn start(&self, env: Env) -> napi::Result<JsObject> {
+        let callback_tsfn = env.create_threadsafe_function(
+            &env.get_reference_value(&self.callback)?,
+            0,
+            |ctx: ThreadSafeCallContext<Vec<String>>| {
+                ctx.value
+                    .iter()
+                    .map(|v| ctx.env.create_string_from_std(v.clone()))
+                    .collect()
+            },
+        )?;
 
-        let is_keyboard_eof = action
-            .events
-            .iter()
-            .any(|e| e.tags.contains(&Tag::Keyboard(Keyboard::Eof)));
+        let callback_tsfn = callback_tsfn.clone();
+        let origin = self.origin.clone();
+        let start = async move {
+            let config = InitConfig::default();
 
-        if is_keyboard_eof {
-            action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
-            return Ok(());
-        }
+            let ignore_files = get_ignore_files(&origin);
 
-        let paths: Vec<&Path> = action
-            .events
-            .iter()
-            .flat_map(Event::paths)
-            .map(|(path, _)| path)
-            .unique()
-            .collect();
+            let mut filter = IgnoreFilter::new(&origin, &ignore_files)
+                .await
+                .map_err(anyhow::Error::from)?;
 
-        println!("event paths: {:?}", paths);
+            filter
+                .add_globs(&[".git"], Some(&origin.clone().into()))
+                .map_err(anyhow::Error::from)?;
 
-        action.outcome(Outcome::wait(Outcome::Start));
-        Ok::<(), Infallible>(())
-    });
+            let mut runtime = RuntimeConfig::default();
+            runtime.filterer(Arc::new(WatchFilterer {
+                inner: IgnoreFilterer(filter),
+            }));
+            runtime.pathset([&origin]);
 
-    let watch_exec = Watchexec::new(config, runtime).map_err(anyhow::Error::from)?;
-    watch_exec.main().await.map_err(anyhow::Error::from)?.ok();
+            runtime.on_action(move |action: Action| {
+                let future = async { Ok::<(), Infallible>(()) };
+                let signals: Vec<Signal> = action.events.iter().flat_map(Event::signals).collect();
 
-    Ok(())
+                if signals.contains(&Signal::Terminate) {
+                    action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
+                    return future;
+                }
+
+                if signals.contains(&Signal::Interrupt) {
+                    action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
+                    return future;
+                }
+
+                let is_keyboard_eof = action
+                    .events
+                    .iter()
+                    .any(|e| e.tags.contains(&Tag::Keyboard(Keyboard::Eof)));
+
+                if is_keyboard_eof {
+                    action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
+                    return future;
+                }
+
+                let paths: Vec<String> = action
+                    .events
+                    .iter()
+                    .flat_map(Event::paths)
+                    .map(|(path, _)| path.display().to_string())
+                    .unique()
+                    .collect();
+
+                callback_tsfn.call(Ok(paths), ThreadsafeFunctionCallMode::Blocking);
+
+                action.outcome(Outcome::wait(Outcome::Start));
+                return future;
+            });
+
+            let watch_exec = Watchexec::new(config, runtime).map_err(anyhow::Error::from)?;
+            watch_exec.main().await.map_err(anyhow::Error::from)?.ok();
+
+            Ok(())
+        };
+
+        env.execute_tokio_future(start, |env, _| env.get_null())
+    }
 }
 
 #[derive(Debug)]
 struct WatchFilterer {
     inner: IgnoreFilterer,
 }
+/// Used to filter out events that that come from watchexec
 impl Filterer for WatchFilterer {
     fn check_event(&self, event: &Event, priority: Priority) -> Result<bool, RuntimeError> {
+        //
+        // Tags will be a Vec that contains multiple types of information for a given event
+        // We are only interested if:
+        // 1) A `FileEventKind` is modified, created, removed, or renamed
+        // 2) A Path that is a FileType::File
+        // 3) Deleted files do not have a FileType::File (because they're deleted..), check if a path is valid
+        // 4) Only FileSystem sources are valid
+        // If there's a tag that doesnt confine to this criteria, we `return` early, otherwise we `continue`.
         for tag in &event.tags {
             match tag {
                 Tag::FileEventKind(file_event) => match file_event {
@@ -128,7 +177,7 @@ fn get_ignore_files<T: AsRef<str>>(root: T) -> Vec<IgnoreFile> {
         })
         .map(|result| {
             let path: PathBuf = result.path().into();
-            let parent: PathBuf = path.parent().unwrap_or_else(|| &path).into();
+            let parent: PathBuf = path.parent().unwrap_or(&path).into();
             IgnoreFile {
                 path,
                 applies_in: Some(parent),
