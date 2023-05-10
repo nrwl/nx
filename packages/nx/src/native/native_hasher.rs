@@ -15,6 +15,8 @@ pub struct FileData {
     pub hash: String,
 }
 
+///
+
 #[napi]
 fn hash_array(input: Vec<String>) -> String {
     let joined = input.join(",");
@@ -40,7 +42,7 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
     let git_folder = workspace_root.join(".git");
     let node_folder = workspace_root.join("node_modules");
 
-    let mut walker = WalkBuilder::new(&workspace_root);
+    let mut walker = WalkBuilder::new(workspace_root);
     walker.hidden(false);
     walker.add_custom_ignore_filename(&nx_ignore);
 

@@ -5,10 +5,19 @@ edition = '2021'
 
 [dependencies]
 xxhash-rust = { version = '0.8.5', features = ['xxh3', 'xxh64'] }
-napi = { version = '2.10.2', default-features = false, features = ['napi4'] }
+napi = { version = '2.10.2', default-features = false, features = ['anyhow', 'napi4', 'tokio_rt'] }
 napi-derive = '2.9.3'
 ignore = '0.4'
 crossbeam-channel = '0.5'
+watchexec-cli = '1.22.2'
+watchexec = '2.3.0'
+watchexec-filterer-ignore = "1.2.0"
+watchexec-events = "1.0.0"
+watchexec-signals = "1.0.0"
+ignore-files = "1.2.0"
+anyhow = "1.0.71"
+thiserror = "1.0.40"
+itertools = "0.10.5"
 
 [lib]
 crate-type = ['cdylib']
