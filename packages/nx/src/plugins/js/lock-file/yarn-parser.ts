@@ -398,7 +398,7 @@ function findOriginalKeys(
   for (const keyExpr of Object.keys(dependencies)) {
     const snapshot = dependencies[keyExpr];
     const keys = keyExpr.split(', ');
-    if (!keys[0].startsWith(`${node.data.packageName}@`)) {
+    if (!keys.some((k) => k.startsWith(`${node.data.packageName}@`))) {
       continue;
     }
     // standard package
@@ -415,7 +415,7 @@ function findOriginalKeys(
     // classic alias
     if (
       node.data.version.startsWith('npm:') &&
-      keys.every((k) => k === `${node.data.packageName}@${node.data.version}`)
+      keys.some((k) => k === `${node.data.packageName}@${node.data.version}`)
     ) {
       return [keys, snapshot];
     }
