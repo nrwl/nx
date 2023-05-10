@@ -11,7 +11,7 @@ import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { Linter } from '@nx/linter';
 import {
   normalizeDirectory,
-  normalizePrefix,
+  normalizeNewProjectPrefix,
   normalizeProjectName,
 } from '../../utils/project';
 
@@ -45,7 +45,7 @@ export function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const prefix = normalizePrefix(options.prefix, npmScope);
+  const prefix = normalizeNewProjectPrefix(options.prefix, npmScope, 'app');
 
   options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
