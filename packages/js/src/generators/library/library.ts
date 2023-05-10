@@ -36,6 +36,7 @@ import {
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
 import { PackageJson } from 'nx/src/utils/package-json';
+import setupVerdaccio from '../setup-verdaccio/generator';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -71,6 +72,10 @@ export async function projectGenerator(
   addProject(tree, options, destinationDir);
 
   tasks.push(addProjectDependencies(tree, options));
+
+  if (options.publishable) {
+    tasks.push(await setupVerdaccio(tree, { ...options, skipFormat: true }));
+  }
 
   if (options.bundler === 'vite') {
     const { viteConfigurationGenerator } = ensurePackage('@nx/vite', nxVersion);

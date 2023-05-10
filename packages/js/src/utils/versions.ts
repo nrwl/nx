@@ -9,3 +9,4 @@ export const swcNodeVersion = '~1.4.2';
 export const tsLibVersion = '^2.3.0';
 export const typesNodeVersion = '18.7.1';
 export const typescriptVersion = '~5.0.2';
+export const verdaccioVersion = '^5.0.4';
