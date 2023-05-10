@@ -35,47 +35,27 @@ function main() {
     if (!(Symbol as any).observable)
       (Symbol as any).observable = Symbol('observable polyfill');
 
-    if (!workspace) {
-      output.log({
-        title: `The current directory isn't part of an Nx workspace.`,
-        bodyLines: [
-          `To create a workspace run:`,
-          chalk.bold.white(`npx create-nx-workspace@latest <workspace name>`),
-          '',
-          `To add Nx to an existing workspace with a workspace-specific nx.json, run:`,
-          chalk.bold.white(`npx nx@latest init`),
-        ],
-      });
-
-      output.note({
-        title: `For more information please visit https://nx.dev/`,
-      });
-      process.exit(1);
-    }
-
     // Make sure that a local copy of Nx exists in workspace
     let localNx: string;
     try {
-      localNx = resolveNx(workspace);
+      localNx = workspace && resolveNx(workspace);
     } catch {
       localNx = null;
     }
 
     const isLocalInstall = localNx === resolveNx(null);
-    const LOCAL_NX_VERSION: string | null = localNx
-      ? getLocalNxVersion(workspace)
-      : null;
-    const GLOBAL_NX_VERSION: string | null = isLocalInstall
-      ? null
-      : require('../package.json').version;
-
-    globalThis.GLOBAL_NX_VERSION ??= GLOBAL_NX_VERSION;
+    const { LOCAL_NX_VERSION, GLOBAL_NX_VERSION } = determineNxVersions(
+      localNx,
+      workspace,
+      isLocalInstall
+    );
 
     if (process.argv[2] === '--version') {
-      console.log(stripIndents`Nx Version:
-      - Local: ${LOCAL_NX_VERSION ? 'v' + LOCAL_NX_VERSION : 'Not found'}
-      - Global: ${GLOBAL_NX_VERSION ? 'v' + GLOBAL_NX_VERSION : 'Not found'}`);
-      process.exit(0);
+      handleNxVersionCommand(LOCAL_NX_VERSION, GLOBAL_NX_VERSION);
+    }
+
+    if (!workspace) {
+      handleNoWorkspace();
     }
 
     if (!localNx) {
@@ -96,6 +76,50 @@ function main() {
       }
     }
   }
+}
+
+function handleNoWorkspace() {
+  output.log({
+    title: `The current directory isn't part of an Nx workspace.`,
+    bodyLines: [
+      `To create a workspace run:`,
+      chalk.bold.white(`npx create-nx-workspace@latest <workspace name>`),
+      '',
+      `To add Nx to an existing workspace with a workspace-specific nx.json, run:`,
+      chalk.bold.white(`npx nx@latest init`),
+    ],
+  });
+
+  output.note({
+    title: `For more information please visit https://nx.dev/`,
+  });
+  process.exit(1);
+}
+
+function handleNxVersionCommand(
+  LOCAL_NX_VERSION: string,
+  GLOBAL_NX_VERSION: string
+) {
+  console.log(stripIndents`Nx Version:
+      - Local: ${LOCAL_NX_VERSION ? 'v' + LOCAL_NX_VERSION : 'Not found'}
+      - Global: ${GLOBAL_NX_VERSION ? 'v' + GLOBAL_NX_VERSION : 'Not found'}`);
+  process.exit(0);
+}
+
+function determineNxVersions(
+  localNx: string,
+  workspace: WorkspaceTypeAndRoot,
+  isLocalInstall: boolean
+) {
+  const LOCAL_NX_VERSION: string | null = localNx
+    ? getLocalNxVersion(workspace)
+    : null;
+  const GLOBAL_NX_VERSION: string | null = isLocalInstall
+    ? null
+    : require('../package.json').version;
+
+  globalThis.GLOBAL_NX_VERSION ??= GLOBAL_NX_VERSION;
+  return { LOCAL_NX_VERSION, GLOBAL_NX_VERSION };
 }
 
 function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
@@ -167,17 +191,13 @@ function warnIfUsingOutdatedGlobalInstall(
 }
 
 function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
-  // TODO(v17): Remove @nrwl/cli from this list
-  const localNxPackages = ['nx', '@nrwl/tao', '@nrwl/cli'];
-  for (const pkg of localNxPackages) {
-    try {
-      const { packageJson } = readModulePackageJson(
-        'nx',
-        getNxRequirePaths(workspace.dir)
-      );
-      return packageJson.version;
-    } catch {}
-  }
+  try {
+    const { packageJson } = readModulePackageJson(
+      'nx',
+      getNxRequirePaths(workspace.dir)
+    );
+    return packageJson.version;
+  } catch {}
 }
 
 function _getLatestVersionOfNx(): string {
