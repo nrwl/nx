@@ -5,7 +5,7 @@ import {
 } from '@nx/devkit';
 import { joinPathFragments, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { storybookVersion } from '@nx/storybook';
+import { storybookVersion } from '../../../utils/versions';
 import { findNodes } from '@nx/js';
 import * as ts from 'typescript';
 import { SyntaxKind } from 'typescript';
@@ -15,7 +15,7 @@ import {
   overrideCollectionResolutionForTesting,
   wrapAngularDevkitSchematic,
 } from '@nx/devkit/ngcli-adapter';
-import { getTsSourceFile } from '@nx/storybook/src/utils/utilities';
+import { getTsSourceFile } from '../../../utils/utilities';
 
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({

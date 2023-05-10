@@ -27,7 +27,7 @@ interface BrowseProps {
   // segments: string[];
 }
 
-export async function getStaticProps({}): Promise<{ props: BrowseProps }> {
+export async function getStaticProps(): Promise<{ props: BrowseProps }> {
   const res = await fetch(
     'https://raw.githubusercontent.com/nrwl/nx/master/community/approved-plugins.json'
   );

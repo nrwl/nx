@@ -1,7 +1,7 @@
 jest.mock('fs');
 import * as fs from 'fs';
-import * as configModule from 'nx/src/config/configuration';
-import { detectPackageManager } from 'nx/src/utils/package-manager';
+import * as configModule from '../config/configuration';
+import { detectPackageManager } from './package-manager';
 
 describe('package-manager', () => {
   it('should detect package manager in nxJson', () => {

@@ -1,5 +1,5 @@
 import { Menu } from '@nx/nx-dev/models-menu';
-import { Sidebar, SidebarMobile } from '@nx/nx-dev/ui-common';
+import { Sidebar, SidebarMobile } from './sidebar';
 import { useMemo } from 'react';
 
 // TODO(jack): Remove this rspack modification once we move rspack into main repo (when stable).
