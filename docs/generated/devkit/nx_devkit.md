@@ -104,13 +104,11 @@ It only uses language primitives and immutable objects
 - [createProjectGraphAsync](../../devkit/documents/nx_devkit#createprojectgraphasync)
 - [defaultTasksRunner](../../devkit/documents/nx_devkit#defaulttasksrunner)
 - [detectPackageManager](../../devkit/documents/nx_devkit#detectpackagemanager)
-- [detectWorkspaceScope](../../devkit/documents/nx_devkit#detectworkspacescope)
 - [ensurePackage](../../devkit/documents/nx_devkit#ensurepackage)
 - [extractLayoutDirectory](../../devkit/documents/nx_devkit#extractlayoutdirectory)
 - [formatFiles](../../devkit/documents/nx_devkit#formatfiles)
 - [generateFiles](../../devkit/documents/nx_devkit#generatefiles)
 - [getDependentPackagesForProject](../../devkit/documents/nx_devkit#getdependentpackagesforproject)
-- [getImportPath](../../devkit/documents/nx_devkit#getimportpath)
 - [getNpmPackageSharedConfig](../../devkit/documents/nx_devkit#getnpmpackagesharedconfig)
 - [getOutputsForTargetAndConfiguration](../../devkit/documents/nx_devkit#getoutputsfortargetandconfiguration)
 - [getPackageManagerCommand](../../devkit/documents/nx_devkit#getpackagemanagercommand)
@@ -1139,24 +1137,6 @@ Detects which package manager is used in the workspace based on the lock file.
 
 ---
 
-### detectWorkspaceScope
-
-▸ **detectWorkspaceScope**(`packageName`): `string`
-
-Detect workspace scope from the package.json name
-
-#### Parameters
-
-| Name          | Type     |
-| :------------ | :------- |
-| `packageName` | `string` |
-
-#### Returns
-
-`string`
-
----
-
 ### ensurePackage
 
 ▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `void`
@@ -1324,25 +1304,6 @@ doesn't get confused about incorrect TypeScript files.
 
 ---
 
-### getImportPath
-
-▸ **getImportPath**(`npmScope`, `projectDirectory`): `string`
-
-Prefixes project name with npm scope
-
-#### Parameters
-
-| Name               | Type     |
-| :----------------- | :------- |
-| `npmScope`         | `string` |
-| `projectDirectory` | `string` |
-
-#### Returns
-
-`string`
-
----
-
 ### getNpmPackageSharedConfig
 
 ▸ **getNpmPackageSharedConfig**(`pkgName`, `version`): [`SharedLibraryConfig`](../../devkit/documents/nx_devkit#sharedlibraryconfig) \| `undefined`
@@ -1471,12 +1432,12 @@ Example:
 
 `Object`
 
-| Name                  | Type      |
-| :-------------------- | :-------- |
-| `appsDir`             | `string`  |
-| `libsDir`             | `string`  |
-| `npmScope`            | `string`  |
-| `standaloneAsDefault` | `boolean` |
+| Name                  | Type      | Description                                                              |
+| :-------------------- | :-------- | :----------------------------------------------------------------------- |
+| `appsDir`             | `string`  | -                                                                        |
+| `libsDir`             | `string`  | -                                                                        |
+| `npmScope`            | `string`  | **`Deprecated`** This will be removed in Nx 17. Use getNpmScope instead. |
+| `standaloneAsDefault` | `boolean` | -                                                                        |
 
 ---
 

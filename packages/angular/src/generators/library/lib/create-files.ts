@@ -1,7 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import {
   generateFiles,
-  getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -18,7 +17,6 @@ export function createFiles(
   options: NormalizedSchema,
   project: AngularProjectConfiguration
 ) {
-  const { npmScope } = getWorkspaceLayout(tree);
   const rootOffset = offsetFromRoot(options.libraryOptions.projectRoot);
   const libNames = names(options.libraryOptions.fileName);
   const pathToComponent = options.componentOptions.flat
@@ -42,7 +40,7 @@ export function createFiles(
     projectRoot: options.libraryOptions.projectRoot,
     routing: options.libraryOptions.routing,
     pathToComponent,
-    npmScope,
+    importPath: options.libraryOptions.importPath,
     rootOffset,
     angularPeerDepVersion: `^${major}.${minor}.0`,
     tpl: '',

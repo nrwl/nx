@@ -14,7 +14,6 @@ import {
   formatFilesTask,
   getAllProjects,
   getWorkspaceRootFileTypesInfo,
-  normalizeOptions,
   updatePackageJson,
   updateRootEsLintConfig,
   updateRootTsConfig,
@@ -24,11 +23,10 @@ import {
 
 export async function migrateFromAngularCli(
   tree: Tree,
-  rawOptions: GeneratorOptions
+  options: GeneratorOptions
 ): Promise<GeneratorCallback> {
   validateWorkspace(tree);
   const projects = getAllProjects(tree);
-  const options = normalizeOptions(tree, rawOptions, projects);
 
   const angularJson = readJson(tree, 'angular.json') as any;
   ensureAngularDevKitPeerDependenciesAreInstalled(tree);

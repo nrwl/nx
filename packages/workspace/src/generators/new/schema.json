@@ -25,10 +25,6 @@
       "type": "boolean",
       "default": true
     },
-    "npmScope": {
-      "type": "string",
-      "description": "Npm scope for importing libs."
-    },
     "standaloneApi": {
       "description": "Use Standalone Components if generating an Angular application.",
       "type": "boolean",

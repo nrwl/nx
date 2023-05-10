@@ -1,10 +1,5 @@
-import {
-  getImportPath,
-  getWorkspaceLayout,
-  joinPathFragments,
-  names,
-  Tree,
-} from '@nx/devkit';
+import { getWorkspaceLayout, joinPathFragments, names, Tree } from '@nx/devkit';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
@@ -23,10 +18,9 @@ export function normalizeOptions(
 
   const { libsDir } = getWorkspaceLayout(host);
   const projectRoot = joinPathFragments(libsDir, projectDirectory);
-  const { npmScope } = getWorkspaceLayout(host);
   return {
     ...options,
-    importPath: options.importPath ?? getImportPath(npmScope, projectDirectory),
+    importPath: options.importPath ?? getImportPath(host, projectDirectory),
     projectRoot,
   };
 }
