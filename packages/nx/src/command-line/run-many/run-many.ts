@@ -1,5 +1,8 @@
 import { runCommand } from '../../tasks-runner/run-command';
-import type { NxArgs } from '../../utils/command-line-utils';
+import {
+  NxArgs,
+  readGraphFileFromGraphArg,
+} from '../../utils/command-line-utils';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
@@ -46,11 +49,7 @@ export async function runMany(
   const projects = projectsToRun(nxArgs, projectGraph);
 
   if (nxArgs.graph) {
-    const file =
-      typeof nxArgs.graph === 'string' &&
-      (nxArgs.graph.endsWith('.json') || nxArgs.graph.endsWith('html'))
-        ? nxArgs.graph
-        : undefined;
+    const file = readGraphFileFromGraphArg(nxArgs);
     const projectNames = projects.map((t) => t.name);
     return await generateGraph(
       {

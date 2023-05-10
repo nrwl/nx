@@ -81,15 +81,6 @@ export function splitArgsIntoNxArgsAndOverrides(
   delete (nxArgs as any).$0;
   delete (nxArgs as any).__overrides_unparsed__;
 
-  if (!(nxArgs.graph === null || nxArgs.graph === undefined)) {
-    nxArgs.graph =
-      nxArgs.graph === 'true' || nxArgs.graph === true
-        ? true
-        : nxArgs.graph === 'false' || nxArgs.graph === false
-        ? false
-        : nxArgs.graph;
-  }
-
   if (mode === 'run-many') {
     const args = nxArgs as any;
     if (!args.projects) {
@@ -297,8 +288,6 @@ function getUncommittedFiles(): string[] {
   return parseGitOutput(`git diff --name-only --no-renames --relative HEAD .`);
 }
 
-``;
-
 function getUntrackedFiles(): string[] {
   return parseGitOutput(`git ls-files --others --exclude-standard`);
 }
@@ -346,4 +335,10 @@ export function getProjectRoots(
   { nodes }: ProjectGraph
 ): string[] {
   return projectNames.map((name) => nodes[name].data.root);
+}
+
+export function readGraphFileFromGraphArg({ graph }: NxArgs) {
+  return typeof graph === 'string' && graph !== 'true' && graph !== ''
+    ? graph
+    : undefined;
 }

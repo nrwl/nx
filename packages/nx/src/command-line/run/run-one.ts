@@ -1,5 +1,8 @@
 import { runCommand } from '../../tasks-runner/run-command';
-import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
+import {
+  readGraphFileFromGraphArg,
+  splitArgsIntoNxArgsAndOverrides,
+} from '../../utils/command-line-utils';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import {
@@ -66,11 +69,7 @@ export async function runOne(
 
   if (nxArgs.graph) {
     const projectNames = projects.map((t) => t.name);
-    const file =
-      typeof nxArgs.graph === 'string' &&
-      (nxArgs.graph.endsWith('.json') || nxArgs.graph.endsWith('html'))
-        ? nxArgs.graph
-        : undefined;
+    const file = readGraphFileFromGraphArg(nxArgs);
 
     return await generateGraph(
       {

@@ -4,7 +4,10 @@ import { output } from '../../utils/output';
 import { generateGraph } from '../graph/graph';
 import { printAffected } from './print-affected';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
-import type { NxArgs } from '../../utils/command-line-utils';
+import {
+  NxArgs,
+  readGraphFileFromGraphArg,
+} from '../../utils/command-line-utils';
 import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
@@ -83,11 +86,8 @@ export async function affected(
         const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
         if (nxArgs.graph) {
           const projectNames = projectsWithTarget.map((t) => t.name);
-          const file =
-            typeof nxArgs.graph === 'string' &&
-            (nxArgs.graph.endsWith('.json') || nxArgs.graph.endsWith('html'))
-              ? nxArgs.graph
-              : undefined;
+          const file = readGraphFileFromGraphArg(nxArgs);
+
           return await generateGraph(
             {
               watch: false,
