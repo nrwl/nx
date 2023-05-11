@@ -95,7 +95,8 @@
     "ngrx": {
       "factory": "./src/generators/ngrx/compat",
       "schema": "./src/generators/ngrx/schema.json",
-      "description": "Adds NgRx support to an application or library."
+      "description": "Adds NgRx support to an application or library.",
+      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead."
     },
     "scam-to-standalone": {
       "factory": "./src/generators/scam-to-standalone/compat",
@@ -252,7 +253,8 @@
     "ngrx": {
       "factory": "./src/generators/ngrx/ngrx",
       "schema": "./src/generators/ngrx/schema.json",
-      "description": "Adds NgRx support to an application or library."
+      "description": "Adds NgRx support to an application or library.",
+      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead."
     },
     "ngrx-feature-store": {
       "factory": "./src/generators/ngrx-feature-store/ngrx-feature-store",
