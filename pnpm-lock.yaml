@@ -193,6 +193,9 @@ devDependencies:
   '@babel/preset-typescript':
     specifier: ^7.15.0
     version: 7.18.6(@babel/core@7.19.0)
+  '@babel/runtime':
+    specifier: ^7.14.8
+    version: 7.21.0
   '@floating-ui/react':
     specifier: 0.19.2
     version: 0.19.2(@types/react@18.0.25)(react-dom@18.2.0)(react@18.2.0)
