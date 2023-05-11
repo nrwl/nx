@@ -25,7 +25,7 @@ import { getProjectGraphService } from '../machines/get-services';
 import { useIntervalWhen } from '../hooks/use-interval-when';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphClientResponse } from 'nx/src/command-line/dep-graph';
+import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import {
   useNavigate,
