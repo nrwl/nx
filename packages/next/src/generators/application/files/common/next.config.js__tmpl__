@@ -17,11 +17,6 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
-  <% if(appDir) { %>
-  experimental: {
-    appDir: true
-  },
-  <% } %>
 };
 
 const plugins = [
@@ -43,11 +38,6 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
-  <% if(appDir) { %>
-  experimental: {
-    appDir: true
-  },
-  <% } %>
 };
 
 const plugins = [
@@ -72,11 +62,6 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
-  <% if(appDir) { %>
-  experimental: {
-    appDir: true
-  },
-  <% } %>
 };
 
 const plugins = [
@@ -96,11 +81,6 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
-  <% if(appDir) { %>
-  experimental: {
-    appDir: true
-  },
-  <% } %>
 };
 
 const plugins = [

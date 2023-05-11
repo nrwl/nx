@@ -50,10 +50,21 @@ describe('app', () => {
       });
     });
 
-    it('should generate files', async () => {
+    it('should generate files for app router layout', async () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'css',
+      });
+      expect(tree.exists('apps/my-app/tsconfig.json')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/page.tsx')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/page.module.css')).toBeTruthy();
+    });
+
+    it('should generate files for pages layout', async () => {
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'css',
+        appDir: false,
       });
       expect(tree.exists('apps/my-app/tsconfig.json')).toBeTruthy();
       expect(tree.exists('apps/my-app/pages/index.tsx')).toBeTruthy();
@@ -91,13 +102,11 @@ describe('app', () => {
         style: 'scss',
       });
 
-      expect(tree.exists('apps/my-app/pages/index.module.scss')).toBeTruthy();
-      expect(tree.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/page.module.scss')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/global.css')).toBeTruthy();
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
-      expect(indexContent).toContain(
-        `import styles from './index.module.scss'`
-      );
+      const indexContent = tree.read('apps/my-app/app/page.tsx', 'utf-8');
+      expect(indexContent).toContain(`import styles from './page.module.scss'`);
     });
   });
 
@@ -108,13 +117,11 @@ describe('app', () => {
         style: 'less',
       });
 
-      expect(tree.exists('apps/my-app/pages/index.module.less')).toBeTruthy();
-      expect(tree.exists('apps/my-app/pages/styles.less')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/page.module.less')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/global.less')).toBeTruthy();
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
-      expect(indexContent).toContain(
-        `import styles from './index.module.less'`
-      );
+      const indexContent = tree.read('apps/my-app/app/page.tsx', 'utf-8');
+      expect(indexContent).toContain(`import styles from './page.module.less'`);
     });
   });
 
@@ -125,13 +132,11 @@ describe('app', () => {
         style: 'styl',
       });
 
-      expect(tree.exists('apps/my-app/pages/index.module.styl')).toBeTruthy();
-      expect(tree.exists('apps/my-app/pages/styles.styl')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/page.module.styl')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/global.styl')).toBeTruthy();
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
-      expect(indexContent).toContain(
-        `import styles from './index.module.styl'`
-      );
+      const indexContent = tree.read('apps/my-app/app/page.tsx', 'utf-8');
+      expect(indexContent).toContain(`import styles from './page.module.styl'`);
     });
   });
 
@@ -143,12 +148,12 @@ describe('app', () => {
       });
 
       expect(
-        tree.exists('apps/my-app/pages/index.module.styled-components')
+        tree.exists('apps/my-app/app/page.module.styled-components')
       ).toBeFalsy();
-      expect(tree.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/global.css')).toBeTruthy();
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
-      expect(indexContent).not.toContain(`import styles from './index.module`);
+      const indexContent = tree.read('apps/my-app/app/page.tsx', 'utf-8');
+      expect(indexContent).not.toContain(`import styles from './page.module`);
       expect(indexContent).toContain(`import styled from 'styled-components'`);
     });
   });
@@ -161,12 +166,12 @@ describe('app', () => {
       });
 
       expect(
-        tree.exists('apps/my-app/pages/index.module.styled-components')
+        tree.exists('apps/my-app/app/page.module.styled-components')
       ).toBeFalsy();
-      expect(tree.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/global.css')).toBeTruthy();
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
-      expect(indexContent).not.toContain(`import styles from './index.module`);
+      const indexContent = tree.read('apps/my-app/app/page.tsx', 'utf-8');
+      expect(indexContent).not.toContain(`import styles from './page.module`);
       expect(indexContent).toContain(`import styled from '@emotion/styled'`);
     });
 
@@ -191,15 +196,13 @@ describe('app', () => {
         style: 'styled-jsx',
       });
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
+      const indexContent = tree.read('apps/my-app/app/page.tsx', 'utf-8');
 
       expect(indexContent).toMatchSnapshot();
-      expect(
-        tree.exists('apps/my-app/pages/index.module.styled-jsx')
-      ).toBeFalsy();
-      expect(tree.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/page.module.styled-jsx')).toBeFalsy();
+      expect(tree.exists('apps/my-app/app/global.css')).toBeTruthy();
 
-      expect(indexContent).not.toContain(`import styles from './index.module`);
+      expect(indexContent).not.toContain(`import styles from './page.module`);
       expect(indexContent).not.toContain(
         `import styled from 'styled-components'`
       );
@@ -311,7 +314,7 @@ describe('app', () => {
       style: 'css',
     });
 
-    const appContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
+    const appContent = tree.read('apps/my-app/app/page.tsx', 'utf-8');
 
     expect(appContent).not.toMatch(/extends Component/);
   });
@@ -419,7 +422,7 @@ describe('app', () => {
         js: true,
       });
 
-      expect(tree.exists('apps/my-app/pages/index.js')).toBeTruthy();
+      expect(tree.exists('apps/my-app/app/page.js')).toBeTruthy();
       expect(tree.exists('apps/my-app/specs/index.spec.js')).toBeTruthy();
       expect(tree.exists('apps/my-app/index.d.js')).toBeFalsy();
       expect(tree.exists('apps/my-app/index.d.ts')).toBeFalsy();
@@ -450,14 +453,43 @@ describe('app', () => {
         appDir: true,
       });
 
-      expect(tree.exists('apps/testApp/pages/styles.css')).toBeFalsy();
-
+      const tsConfig = readJson(tree, 'apps/test-app/tsconfig.json');
+      expect(tsConfig.include).toEqual([
+        '**/*.ts',
+        '**/*.tsx',
+        '**/*.js',
+        '**/*.jsx',
+        '../../apps/test-app/.next/types/**/*.ts',
+        '../../dist/apps/test-app/.next/types/**/*.ts',
+        'next-env.d.ts',
+      ]);
+      expect(tree.exists('apps/test-app/pages/styles.css')).toBeFalsy();
       expect(tree.exists('apps/test-app/app/global.css')).toBeTruthy();
       expect(tree.exists('apps/test-app/app/page.tsx')).toBeTruthy();
       expect(tree.exists('apps/test-app/app/layout.tsx')).toBeTruthy();
       expect(tree.exists('apps/test-app/app/api/hello/route.ts')).toBeTruthy();
       expect(tree.exists('apps/test-app/app/page.module.css')).toBeTruthy();
       expect(tree.exists('apps/test-app/public/favicon.ico')).toBeTruthy();
+    });
+
+    it('should add layout types correctly for standalone apps', async () => {
+      await applicationGenerator(tree, {
+        name: 'testApp',
+        style: 'css',
+        appDir: true,
+        rootProject: true,
+      });
+
+      const tsConfig = readJson(tree, 'tsconfig.json');
+      expect(tsConfig.include).toEqual([
+        '**/*.ts',
+        '**/*.tsx',
+        '**/*.js',
+        '**/*.jsx',
+        '.next/types/**/*.ts',
+        'dist/test-app/.next/types/**/*.ts',
+        'next-env.d.ts',
+      ]);
     });
   });
 });

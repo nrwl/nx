@@ -3,6 +3,7 @@ import {
   generateFiles,
   joinPathFragments,
   names,
+  offsetFromRoot as _offsetFromRoot,
   readJson,
   toJS,
   Tree,
@@ -17,11 +18,25 @@ import {
 } from './create-application-files.helpers';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
+  const offsetFromRoot = _offsetFromRoot(options.appProjectRoot);
+  const layoutTypeSrcPath = joinPathFragments(
+    offsetFromRoot,
+    options.appProjectRoot,
+    '.next/types/**/*.ts'
+  );
+  const layoutTypeDistPath = joinPathFragments(
+    offsetFromRoot,
+    options.outputPath,
+    '.next/types/**/*.ts'
+  );
   const templateVariables = {
     ...names(options.name),
     ...options,
     dot: '.',
     tmpl: '',
+    offsetFromRoot,
+    layoutTypeSrcPath,
+    layoutTypeDistPath,
     rootTsConfigPath: getRelativePathToRootTsConfig(
       host,
       options.appProjectRoot
@@ -29,6 +44,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     appContent: createAppJsx(options.name),
     styleContent: createStyleRules(),
     pageStyleContent: `.page {}`,
+
     stylesExt:
       options.style === 'less' || options.style === 'styl'
         ? options.style

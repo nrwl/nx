@@ -48,7 +48,7 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
     });
-    expect(tree.exists('/apps/proj/pages/index.tsx')).toBe(true);
+    expect(tree.exists('/apps/proj/app/page.tsx')).toBe(true);
   });
 
   it(`should create files (preset = ${Preset.Express})`, async () => {
