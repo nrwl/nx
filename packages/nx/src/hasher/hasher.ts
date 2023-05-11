@@ -179,6 +179,7 @@ class TaskHasher {
   private runtimeHashes: {
     [runtime: string]: Promise<PartialHash>;
   } = {};
+  private externalDepsHashCache: { [packageName: string]: PartialHash } = {};
 
   constructor(
     private readonly nxJson: NxJsonConfiguration,
@@ -321,26 +322,59 @@ class TaskHasher {
       .filter((r) => !!r);
   }
 
-  private hashExternalDependency(projectName: string) {
-    const n = this.projectGraph.externalNodes[projectName];
-    const version = n?.data?.version;
-    let hash: string;
-    if (n?.data?.hash) {
-      // we already know the hash of this dependency
-      hash = n.data.hash;
+  private hashExternalDependency(
+    projectName: string,
+    visited = new Set<string>()
+  ): PartialHash {
+    // try to retrieve the hash from cache
+    if (this.externalDepsHashCache[projectName]) {
+      return this.externalDepsHashCache[projectName];
+    }
+    visited.add(projectName);
+    const node = this.projectGraph.externalNodes[projectName];
+    let partialHash;
+    if (node) {
+      let hash;
+      if (node.data.hash) {
+        // we already know the hash of this dependency
+        hash = node.data.hash;
+      } else {
+        // we take version as a hash
+        hash = node.data.version;
+      }
+      // we want to calculate the hash of the entire dependency tree
+      const partialHashes: PartialHash[] = [];
+      if (this.projectGraph.dependencies[projectName]) {
+        this.projectGraph.dependencies[projectName].forEach((d) => {
+          if (!visited.has(d.target)) {
+            partialHashes.push(this.hashExternalDependency(d.target, visited));
+          }
+        });
+      }
+      partialHash = {
+        value: this.hashing.hashArray([
+          hash,
+          ...partialHashes.map((p) => p.value),
+        ]),
+        details: {
+          [projectName]: hash,
+          ...partialHashes.reduce((m, c) => ({ ...m, ...c.details }), {}),
+        },
+      };
     } else {
       // unknown dependency
       // this may occur if dependency is not an npm package
       // but rather symlinked in node_modules or it's pointing to a remote git repo
       // in this case we have no information about the versioning of the given package
-      hash = version ? `__${projectName}@${version}__` : `__${projectName}__`;
+      partialHash = {
+        value: `__${projectName}__`,
+        details: {
+          [projectName]: `__${projectName}__`,
+        },
+      };
     }
-    return {
-      value: hash,
-      details: {
-        [projectName]: version || hash,
-      },
-    };
+    this.externalDepsHashCache[projectName] = partialHash;
+    return partialHash;
   }
 
   private hashTarget(projectName: string, targetName: string): PartialHash {
@@ -351,13 +385,9 @@ class TaskHasher {
       return;
     }
 
-    // we can only vouch for @nrwl packages's executors
     // if it's "run commands" we skip traversing since we have no info what this command depends on
-    // for everything else we take the hash of the @nrwl package dependency tree
-    if (
-      target.executor.startsWith(`@nrwl/`) ||
-      target.executor.startsWith(`@nx/`)
-    ) {
+    // for everything else we take the hash of the executor package's dependency tree
+    if (!target.executor.startsWith(`nx:run-commands`)) {
       const executorPackage = target.executor.split(':')[0];
       const executorNode = `npm:${executorPackage}`;
       if (this.projectGraph.externalNodes?.[executorNode]) {

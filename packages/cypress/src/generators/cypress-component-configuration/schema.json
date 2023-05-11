@@ -26,6 +26,11 @@
       "enum": ["vite", "webpack"],
       "x-prompt": "Which Cypress bundler do you want to use for the dev-server?",
       "default": "webpack"
+    },
+    "directory": {
+      "type": "string",
+      "description": "A directory where the project is placed relative from the project root",
+      "default": "cypress"
     }
   },
   "required": ["project"],

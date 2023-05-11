@@ -39,13 +39,11 @@ describe('Cypress e2e configuration', () => {
       });
       expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { defineConfig } from 'cypress';
-        import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        import { defineConfig } from 'cypress';
 
         export default defineConfig({
-          e2e: nxE2EPreset(__dirname, {
-            cypressDir: 'src',
-          }),
+          e2e: nxE2EPreset(__filename, { cypressDir: 'src' }),
         });
         "
       `);
@@ -71,6 +69,7 @@ describe('Cypress e2e configuration', () => {
         {
           "compilerOptions": {
             "allowJs": true,
+            "module": "commonjs",
             "outDir": "../../dist/out-tsc",
             "sourceMap": false,
             "types": [
@@ -80,9 +79,14 @@ describe('Cypress e2e configuration', () => {
           },
           "extends": "../../tsconfig.base.json",
           "include": [
-            "src/**/*.ts",
-            "src/**/*.js",
+            "**/*.ts",
+            "**/*.js",
             "cypress.config.ts",
+            "**/*.cy.ts",
+            "**/*.cy.tsx",
+            "**/*.cy.js",
+            "**/*.cy.jsx",
+            "**/*.d.ts",
           ],
         }
       `);
@@ -99,13 +103,11 @@ describe('Cypress e2e configuration', () => {
       });
       expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { defineConfig } from 'cypress';
-        import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        import { defineConfig } from 'cypress';
 
         export default defineConfig({
-          e2e: nxE2EPreset(__dirname, {
-            cypressDir: 'cypress',
-          }),
+          e2e: nxE2EPreset(__filename, { cypressDir: 'cypress' }),
         });
         "
       `);
@@ -185,11 +187,12 @@ describe('Cypress e2e configuration', () => {
         directory: 'e2e/something',
       });
       assertCypressFiles(tree, 'apps/my-app/e2e/something');
-      expect(readJson(tree, 'apps/my-app/tsconfig.cy.json'))
+      expect(readJson(tree, 'apps/my-app/e2e/something/tsconfig.json'))
         .toMatchInlineSnapshot(`
         {
           "compilerOptions": {
             "allowJs": true,
+            "module": "commonjs",
             "outDir": "../../dist/out-tsc",
             "sourceMap": false,
             "types": [
@@ -197,16 +200,21 @@ describe('Cypress e2e configuration', () => {
               "node",
             ],
           },
-          "extends": "./tsconfig.json",
+          "extends": "../../tsconfig.json",
           "include": [
-            "e2e/something/**/*.ts",
-            "e2e/something/**/*.js",
-            "cypress.config.ts",
+            "**/*.ts",
+            "**/*.js",
+            "../../cypress.config.ts",
+            "../../**/*.cy.ts",
+            "../../**/*.cy.tsx",
+            "../../**/*.cy.js",
+            "../../**/*.cy.jsx",
+            "../../**/*.d.ts",
           ],
         }
       `);
       expect(readJson(tree, 'apps/my-app/tsconfig.json').references).toEqual(
-        expect.arrayContaining([{ path: './tsconfig.cy.json' }])
+        expect.arrayContaining([{ path: './e2e/something/tsconfig.json' }])
       );
     });
 
@@ -315,34 +323,70 @@ describe('Cypress e2e configuration', () => {
       `);
     });
 
-    it('should throw if cypress config already exists', async () => {
+    it('should add e2e to an existing config', async () => {
       addProject(tree, { name: 'my-lib', type: 'libs' });
-      tree.write('libs/my-lib/cypress.config.ts', 'some content');
-      await expect(async () => {
-        await cypressE2EConfigurationGenerator(tree, {
-          project: 'my-lib',
-          baseUrl: 'http://localhost:4200',
+
+      tree.write(
+        'libs/my-lib/cypress.config.ts',
+        `import { defineConfig } from 'cypress';
+import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename),
+});
+`
+      );
+      await cypressE2EConfigurationGenerator(tree, {
+        project: 'my-lib',
+        baseUrl: 'http://localhost:4200',
+      });
+
+      expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        import { defineConfig } from 'cypress';
+        import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
+
+        export default defineConfig({
+          component: nxComponentTestingPreset(__filename),
+          e2e: nxE2EPreset(__filename, { cypressDir: 'src' }),
         });
-      }).rejects.toThrowErrorMatchingInlineSnapshot(`
-        "The project, my-lib, already has a 'cypress.config.ts' file.
-        This means that Cypress is already setup in this project.
-        If you want to re-add Cypress to this project, remove the 'libs/my-lib/cypress.config.ts' file and try again."
+        "
       `);
+      // these files are only added when there isn't already a cypress config
+      expect(
+        tree.exists('libs/my-lib/cypress/fixtures/example.json')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/cypress/support/commands.ts')
+      ).toBeFalsy();
     });
-    it('should not overwrite --directory', async () => {
+
+    it('should not throw if e2e is already defined', async () => {
       addProject(tree, { name: 'my-lib', type: 'libs' });
-      tree.write('libs/my-lib/cypress.config.ts', 'some content');
-      tree.write('libs/my-lib/cypress/e2e/app.cy.ts', 'some content');
-      await expect(async () => {
-        await cypressE2EConfigurationGenerator(tree, {
-          project: 'my-lib',
-          baseUrl: 'http://localhost:4200',
-          directory: 'cypress',
+
+      tree.write(
+        'libs/my-lib/cypress.config.ts',
+        `import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {exists: true},
+});
+`
+      );
+      await cypressE2EConfigurationGenerator(tree, {
+        project: 'my-lib',
+        baseUrl: 'http://localhost:4200',
+      });
+
+      expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: { exists: true },
         });
-      }).rejects.toThrowErrorMatchingInlineSnapshot(`
-        "The project, my-lib, already has a 'cypress' directory.
-        This most likely means you already have Cypress setup in this project.
-        Make sure Cypress is not already setup in this project and try again."
+        "
       `);
     });
   });

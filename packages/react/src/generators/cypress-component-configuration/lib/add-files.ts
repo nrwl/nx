@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  generateFiles,
   joinPathFragments,
   logger,
   ProjectConfiguration,
@@ -22,14 +21,11 @@ export async function addFiles(
   options: CypressComponentConfigurationSchema,
   found: FoundTarget
 ) {
-  const cypressConfigPath = joinPathFragments(
-    projectConfig.root,
-    'cypress.config.ts'
+  // must dyanmicaly import to prevent packages not using cypress from erroring out
+  // when importing react
+  const { addMountDefinition, addDefaultCTConfig } = await import(
+    '@nx/cypress/src/utils/config'
   );
-  if (tree.exists(cypressConfigPath)) {
-    tree.delete(cypressConfigPath);
-  }
-
   const actualBundler = await getBundlerFromTarget(found, tree);
 
   if (options.bundler && options.bundler !== actualBundler) {
@@ -39,14 +35,31 @@ export async function addFiles(
     );
   }
 
-  generateFiles(
-    tree,
-    joinPathFragments(__dirname, '..', 'files'),
+  const bundlerToUse = options.bundler ?? actualBundler;
+
+  const commandFile = joinPathFragments(
     projectConfig.root,
-    {
-      tpl: '',
-      bundler: options.bundler ?? actualBundler,
-    }
+    'cypress',
+    'support',
+    'component.ts'
+  );
+
+  const updatedCommandFile = await addMountDefinition(
+    tree.read(commandFile, 'utf-8')
+  );
+  tree.write(
+    commandFile,
+    `import { mount } from 'cypress/react18';\n${updatedCommandFile}`
+  );
+  const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
+  const updatedCyConfig = await addDefaultCTConfig(
+    tree.read(cyFile, 'utf-8'),
+
+    { bundler: bundlerToUse }
+  );
+  tree.write(
+    cyFile,
+    `import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';\n${updatedCyConfig}`
   );
 
   if (

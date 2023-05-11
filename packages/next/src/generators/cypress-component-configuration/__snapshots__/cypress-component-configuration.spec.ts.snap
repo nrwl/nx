@@ -3,8 +3,10 @@
 exports[`cypress-component-configuration generator should setup nextjs app 1`] = `
 {
   "compilerOptions": {
+    "allowJs": true,
     "module": "commonjs",
     "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
     "types": [
       "cypress",
       "node",
@@ -12,7 +14,8 @@ exports[`cypress-component-configuration generator should setup nextjs app 1`] =
   },
   "extends": "../tsconfig.json",
   "include": [
-    "support/**/*.ts",
+    "**/*.ts",
+    "**/*.js",
     "../cypress.config.ts",
     "../**/*.cy.ts",
     "../**/*.cy.tsx",
@@ -26,8 +29,10 @@ exports[`cypress-component-configuration generator should setup nextjs app 1`] =
 exports[`cypress-component-configuration generator should setup nextjs lib 1`] = `
 {
   "compilerOptions": {
+    "allowJs": true,
     "module": "commonjs",
     "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
     "types": [
       "cypress",
       "node",
@@ -35,7 +40,8 @@ exports[`cypress-component-configuration generator should setup nextjs lib 1`] =
   },
   "extends": "../tsconfig.json",
   "include": [
-    "support/**/*.ts",
+    "**/*.ts",
+    "**/*.js",
     "../cypress.config.ts",
     "../**/*.cy.ts",
     "../**/*.cy.tsx",
