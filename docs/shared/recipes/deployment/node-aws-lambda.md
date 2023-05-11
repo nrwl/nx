@@ -44,7 +44,7 @@ pnpm add -D @nx/aws-lambda
 - Add AWS lambda configuration by running the following command:
 
 ```shell
-nx generate @nx/aws-lambda:setup-serverless
+nx generate @nx/aws-lambda:setup-functions
 ```
 
 - Create a new aws-lambda project with:
