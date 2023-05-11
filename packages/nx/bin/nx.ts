@@ -14,6 +14,7 @@ import { major } from 'semver';
 import { stripIndents } from '../src/utils/strip-indents';
 import { readModulePackageJson } from '../src/utils/package-json';
 import { execSync } from 'child_process';
+import { join } from 'path';
 
 function main() {
   const workspace = findWorkspaceRoot(process.cwd());
@@ -123,28 +124,26 @@ function determineNxVersions(
 }
 
 function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
-  // root relative to node_modules/nx/bin/nx,
-  const workingDirectory = process.cwd();
+  // root relative to location of the nx bin
+  const globalsRoot = join(__dirname, '../../../');
 
   // prefer Nx installed in .nx/installation
   try {
     return require.resolve('nx/bin/nx.js', {
-      paths: [
-        getNxInstallationPath(workspace ? workspace.dir : workingDirectory),
-      ],
+      paths: [getNxInstallationPath(workspace ? workspace.dir : globalsRoot)],
     });
   } catch {}
 
   // check for root install
   try {
     return require.resolve('nx/bin/nx.js', {
-      paths: [workspace ? workspace.dir : workingDirectory],
+      paths: [workspace ? workspace.dir : globalsRoot],
     });
   } catch {
     // TODO(v17): Remove this
     // fallback for old CLI install setup
     return require.resolve('@nrwl/cli/bin/nx.js', {
-      paths: [workspace ? workspace.dir : workingDirectory],
+      paths: [workspace ? workspace.dir : globalsRoot],
     });
   }
 }
