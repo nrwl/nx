@@ -1,6 +1,6 @@
 import { Argv } from 'yargs';
 
-export function withExcludeOption(yargs: Argv): Argv {
+export function withExcludeOption(yargs: Argv) {
   return yargs.option('exclude', {
     describe: 'Exclude certain projects from being processed',
     type: 'string',
@@ -8,7 +8,7 @@ export function withExcludeOption(yargs: Argv): Argv {
   });
 }
 
-export function withRunOptions(yargs: Argv): Argv {
+export function withRunOptions(yargs: Argv) {
   return withExcludeOption(yargs)
     .option('parallel', {
       describe: 'Max number of parallel processes [default is 3]',
@@ -67,7 +67,7 @@ export function withRunOptions(yargs: Argv): Argv {
 export function withTargetAndConfigurationOption(
   yargs: Argv,
   demandOption = true
-): Argv {
+) {
   return withConfiguration(yargs).option('targets', {
     describe: 'Tasks to run for affected projects',
     type: 'string',
@@ -88,7 +88,7 @@ export function withConfiguration(yargs: Argv) {
   });
 }
 
-export function withAffectedOptions(yargs: Argv): Argv {
+export function withAffectedOptions(yargs: Argv) {
   return withExcludeOption(yargs)
     .parserConfiguration({
       'strip-dashed': true,
@@ -109,11 +109,6 @@ export function withAffectedOptions(yargs: Argv): Argv {
     })
     .option('untracked', {
       describe: 'Untracked changes',
-      type: 'boolean',
-      default: undefined,
-    })
-    .option('all', {
-      describe: 'All projects',
       type: 'boolean',
       default: undefined,
     })
@@ -138,14 +133,13 @@ export function withAffectedOptions(yargs: Argv): Argv {
     .group(['files', 'uncommitted', 'untracked'], 'or using:')
     .implies('head', 'base')
     .conflicts({
-      files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
-      untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
-      uncommitted: ['files', 'untracked', 'base', 'head', 'all'],
-      all: ['files', 'untracked', 'uncommitted', 'base', 'head'],
+      files: ['uncommitted', 'untracked', 'base', 'head'],
+      untracked: ['uncommitted', 'files', 'base', 'head'],
+      uncommitted: ['files', 'untracked', 'base', 'head'],
     });
 }
 
-export function withRunManyOptions(yargs: Argv): Argv {
+export function withRunManyOptions(yargs: Argv) {
   return withRunOptions(yargs)
     .parserConfiguration({
       'strip-dashed': true,
@@ -178,7 +172,7 @@ export function withOverrides(args: any): any {
 export function withOutputStyleOption(
   yargs: Argv,
   choices = ['dynamic', 'static', 'stream', 'stream-without-prefixes']
-): Argv {
+) {
   return yargs.option('output-style', {
     describe: 'Defines how Nx emits outputs tasks logs',
     type: 'string',
@@ -186,7 +180,7 @@ export function withOutputStyleOption(
   });
 }
 
-export function withDepGraphOptions(yargs: Argv): Argv {
+export function withDepGraphOptions(yargs: Argv) {
   return yargs
     .option('file', {
       describe:
