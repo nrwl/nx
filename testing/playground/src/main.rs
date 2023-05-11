@@ -58,16 +58,11 @@ async fn main() -> anyhow::Result<()> {
             action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
             return Ok(());
         }
+        let t = action.events.clone();
+        dbg!(t);
+        let watch_events: Vec<WatchEvent> = action.events.iter().map(WatchEvent::from).collect();
 
-        let paths: Vec<&Path> = action
-            .events
-            .iter()
-            .flat_map(Event::paths)
-            .map(|(path, _)| path)
-            .unique()
-            .collect();
-
-        println!("event paths: {:?}", paths);
+        println!("event paths: {:?}", watch_events);
 
         action.outcome(Outcome::wait(Outcome::Start));
         Ok::<(), Infallible>(())
@@ -138,3 +133,45 @@ fn get_ignore_files<T: AsRef<str>>(root: T) -> Vec<IgnoreFile> {
         })
         .collect()
 }
+
+#[derive(Debug)]
+pub struct WatchEvent {
+    pub path: String,
+    pub event_type: String,
+}
+impl From<&Event> for WatchEvent {
+    fn from(value: &Event) -> Self {
+        let path = value
+            .paths()
+            .next()
+            .expect("there should always be a path")
+            .0
+            .display()
+            .to_string();
+
+        let event_kind = value
+            .tags
+            .iter()
+            .filter_map(|t| match t {
+                Tag::FileEventKind(event_kind) => Some(event_kind),
+                _ => None,
+            })
+            .next()
+            .expect("there should always be a file event kind");
+
+        let event_type = match &event_kind {
+            FileEventKind::Modify(ModifyKind::Name(_)) => "update",
+            FileEventKind::Modify(ModifyKind::Data(_)) => "update",
+            FileEventKind::Create(_) => "create",
+            FileEventKind::Remove(_) => "delete",
+            _ => "",
+        };
+
+        WatchEvent {
+            path,
+            event_type: event_type.into(),
+        }
+    }
+}
+
+//

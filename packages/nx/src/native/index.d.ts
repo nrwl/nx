@@ -10,8 +10,12 @@ export interface FileData {
 export function hashArray(input: Array<string>): string
 export function hashFile(file: string): FileData | null
 export function hashFiles(workspaceRoot: string): Record<string, string>
+export interface WatchEvent {
+  path: string
+  eventType: 'create' | 'delete' | 'update' | ''
+}
 export class Watcher {
   origin: string
-  constructor(origin: string, callback: (err: string | null, paths: string[]) => void)
+  constructor(origin: string, callback: (err: string | null, paths: WatchEvent[]) => void)
   start(): object
 }
