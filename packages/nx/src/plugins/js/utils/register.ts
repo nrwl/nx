@@ -35,6 +35,41 @@ export const registerTsProject = (
   };
 };
 
+export function getTranspiler(compilerOptions: CompilerOptions) {
+  const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
+
+  if (swcNodeInstalled && !preferTsNode) {
+    // These are requires to prevent it from registering when it shouldn't
+    const { register } =
+      require('@swc-node/register/register') as typeof import('@swc-node/register/register');
+
+    return () => {
+      const cleanupFn = register(compilerOptions);
+      const isFunction = typeof cleanupFn === 'function';
+
+      if (!isFunction) return () => {};
+      return cleanupFn;
+    };
+  }
+
+  // We can fall back on ts-node if it's available
+  if (tsNodeInstalled) {
+    const { register } = require('ts-node') as typeof import('ts-node');
+    // ts-node doesn't provide a cleanup method
+    return () => {
+      const service = register({
+        transpileOnly: true,
+        compilerOptions: getTsNodeCompilerOptions(compilerOptions),
+      });
+      // Don't warn if a faster transpiler is enabled
+      if (!service.options.transpiler && !service.options.swc) {
+        warnTsNodeUsage();
+      }
+      return () => {};
+    };
+  }
+}
+
 /**
  * Register ts-node or swc-node given a set of compiler options.
  *
@@ -47,42 +82,14 @@ export function registerTranspiler(
   compilerOptions: CompilerOptions
 ): () => void {
   // Function to register transpiler that returns cleanup function
-  let registerTranspiler: () => () => void;
+  const transpiler = getTranspiler(compilerOptions);
 
-  const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
-
-  if (swcNodeInstalled && !preferTsNode) {
-    // These are requires to prevent it from registering when it shouldn't
-    const { register } =
-      require('@swc-node/register/register') as typeof import('@swc-node/register/register');
-
-    registerTranspiler = () => register(compilerOptions);
-  } else {
-    // We can fall back on ts-node if it's available
-
-    if (tsNodeInstalled) {
-      const { register } = require('ts-node') as typeof import('ts-node');
-      // ts-node doesn't provide a cleanup method
-      registerTranspiler = () => {
-        const service = register({
-          transpileOnly: true,
-          compilerOptions: getTsNodeCompilerOptions(compilerOptions),
-        });
-        // Don't warn if a faster transpiler is enabled
-        if (!service.options.transpiler && !service.options.swc) {
-          warnTsNodeUsage();
-        }
-        return () => {};
-      };
-    }
-  }
-
-  if (registerTranspiler) {
-    return registerTranspiler();
-  } else {
+  if (!transpiler) {
     warnNoTranspiler();
     return () => {};
   }
+
+  return transpiler();
 }
 
 /**
