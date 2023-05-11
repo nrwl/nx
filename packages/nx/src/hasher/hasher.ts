@@ -322,11 +322,15 @@ class TaskHasher {
       .filter((r) => !!r);
   }
 
-  private hashExternalDependency(projectName: string): PartialHash {
+  private hashExternalDependency(
+    projectName: string,
+    visited = new Set<string>()
+  ): PartialHash {
     // try to retrieve the hash from cache
     if (this.externalDepsHashCache[projectName]) {
       return this.externalDepsHashCache[projectName];
     }
+    visited.add(projectName);
     const node = this.projectGraph.externalNodes[projectName];
     let partialHash;
     if (node) {
@@ -342,7 +346,9 @@ class TaskHasher {
       const partialHashes: PartialHash[] = [];
       if (this.projectGraph.dependencies[projectName]) {
         this.projectGraph.dependencies[projectName].forEach((d) => {
-          partialHashes.push(this.hashExternalDependency(d.target));
+          if (!visited.has(d.target)) {
+            partialHashes.push(this.hashExternalDependency(d.target, visited));
+          }
         });
       }
       partialHash = {
