@@ -1,11 +1,13 @@
+import axios from 'axios';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
+import { gt, major, minor, parse } from 'semver';
 import {
   getAngularCliMigrationGenerator,
   getAngularCliMigrationGeneratorSpec,
 } from './files/angular-cli-upgrade-migration';
-import { join } from 'path';
 
-function addMigrationPackageGroup(
+async function addMigrationPackageGroup(
   angularPackageMigrations: Record<string, any>,
   targetNxVersion: string,
   targetNxMigrationVersion: string,
@@ -15,6 +17,24 @@ function addMigrationPackageGroup(
     version: `${targetNxMigrationVersion}`,
     packages: {},
   };
+
+  const promptAndRequirements = await getPromptAndRequiredVersions(
+    packageVersionMap
+  );
+  if (!promptAndRequirements) {
+    console.warn(
+      '❗️ - The `@angular/core` latest version is greater than the next version. Skipping generating migration prompt and requirements.\n' +
+        '     Please review the migrations and manually add the prompt and requirements if needed.'
+    );
+  } else {
+    angularPackageMigrations.packageJsonUpdates[targetNxVersion][
+      'x-prompt'
+    ] = `Do you want to update the Angular version to v${promptAndRequirements.promptVersion}?`;
+    angularPackageMigrations.packageJsonUpdates[targetNxVersion].requires = {
+      '@angular/core': promptAndRequirements.angularCoreRequirement,
+      typescript: promptAndRequirements.typescriptRequirement,
+    };
+  }
 
   for (const [pkgName, version] of packageVersionMap.entries()) {
     if (
@@ -33,7 +53,47 @@ function addMigrationPackageGroup(
   }
 }
 
-export function buildMigrations(
+async function getPromptAndRequiredVersions(
+  packageVersionMap: Map<string, string>
+): Promise<{
+  angularCoreRequirement: string;
+  promptVersion: string;
+  typescriptRequirement: string;
+} | null> {
+  // @angular/core
+  const angularCoreMetadata = await axios.get(
+    'https://registry.npmjs.org/@angular/core'
+  );
+  const { latest, next } = angularCoreMetadata.data['dist-tags'];
+  if (gt(latest, next)) {
+    return null;
+  }
+  const angularCoreRequirement = `>=${major(latest)}.${minor(
+    latest
+  )}.0 <${next}`;
+
+  // prompt version (e.g. v16 or v16.1)
+  const angularCoreVersion = packageVersionMap.get('@angular/core');
+  const { major: majorVersion, minor: minorVersion } =
+    parse(angularCoreVersion)!;
+  const promptVersion = `v${majorVersion}${
+    minorVersion !== 0 ? `.${minorVersion}` : ''
+  }`;
+
+  // typescript
+  const angularCompilerCliVersion = packageVersionMap.get(
+    '@angular/compiler-cli'
+  );
+  const angularCompilerCliMetadata = await axios.get(
+    `https://registry.npmjs.org/@angular/compiler-cli/${angularCompilerCliVersion}`
+  );
+  const typescriptRequirement =
+    angularCompilerCliMetadata.data.peerDependencies.typescript;
+
+  return { angularCoreRequirement, promptVersion, typescriptRequirement };
+}
+
+export async function buildMigrations(
   packageVersionMap: Map<string, string>,
   targetNxVersion: string,
   targetNxMigrationVersion: string
@@ -44,7 +104,7 @@ export function buildMigrations(
     readFileSync(pathToMigrationsJsonFile, { encoding: 'utf-8' })
   );
 
-  addMigrationPackageGroup(
+  await addMigrationPackageGroup(
     angularPackageMigrations,
     targetNxVersion,
     targetNxMigrationVersion,
@@ -55,7 +115,7 @@ export function buildMigrations(
   const angularCliMigrationGeneratorContents =
     getAngularCliMigrationGenerator(angularCLIVersion);
   const angularCliMigrationGeneratorSpecContents =
-    getAngularCliMigrationGeneratorSpec(angularCLIVersion);
+    getAngularCliMigrationGeneratorSpec();
 
   // Create the directory update-targetNxVersion.dasherize()
   // Write the generator
@@ -69,9 +129,13 @@ export function buildMigrations(
     '-'
   )}`;
 
-  angularPackageMigrations.schematics[generatorName] = {
+  const angularCoreVersion = packageVersionMap.get('@angular/core');
+  angularPackageMigrations.generators[generatorName] = {
     cli: 'nx',
     version: targetNxMigrationVersion,
+    requires: {
+      '@angular/core': `>=${angularCoreVersion}`,
+    },
     description: `Update the @angular/cli package version to ~${angularCLIVersion}.`,
     factory: `./src/migrations/${migrationGeneratorFolderName}/${migrationFileName}`,
   };

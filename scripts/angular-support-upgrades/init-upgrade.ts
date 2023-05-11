@@ -9,9 +9,10 @@
  * npx ts-node scripts/angular-support-upgrades/init-upgrade.ts --angularVersion=next --targetNxVersion=15.5.0 --targetNxMigrationVersion=15.5.0-beta.0
  *
  */
+import { execSync } from 'child_process';
+import { buildMigrations } from './build-migrations';
 import { fetchVersionsFromRegistry } from './fetch-versions-from-registry';
 import { updatePackageJsonForAngular } from './update-package-jsons';
-import { buildMigrations } from './build-migrations';
 import { updateVersionUtils } from './update-version-utils';
 
 const yargs = require('yargs/yargs');
@@ -33,12 +34,20 @@ async function run() {
     argv.angularVersion
   );
   await updatePackageJsonForAngular(packageVersionMap);
-  buildMigrations(
+  await buildMigrations(
     packageVersionMap,
     argv.targetNxVersion,
     argv.targetNxMigrationVersion
   );
   updateVersionUtils(packageVersionMap);
+
+  console.log('⏳ - Formatting files...');
+  execSync('pnpm nx format', { stdio: 'inherit', encoding: 'utf8' });
+  console.log('✅ - Finished formatting files');
+
+  console.log('⏳ - Installing packages...');
+  execSync('pnpm install', { stdio: 'inherit', encoding: 'utf8' });
+  console.log('✅ - Finished creating migrations!');
 }
 
 run();
