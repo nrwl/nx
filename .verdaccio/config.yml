@@ -9,10 +9,10 @@ auth:
 uplinks:
   npmjs:
     url: https://registry.npmjs.org/
-    cache: true
+    maxage: 60m
   yarn:
     url: https://registry.yarnpkg.com
-    cache: true
+    maxage: 60m
 
 packages:
   '@*/*':
