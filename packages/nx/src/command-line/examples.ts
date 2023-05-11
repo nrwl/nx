@@ -339,6 +339,23 @@ export const examples: Record<string, Example[]> = {
         'Create a dedicated commit for each successfully completed migration. You can customize the prefix used for each commit by additionally setting --commit-prefix="PREFIX_HERE "',
     },
   ],
+  show: [
+    {
+      command: 'show projects',
+      description: 'Show all projects in the workspace',
+    },
+
+    {
+      command: 'show projects --affected',
+      description: 'Show affected projects in the workspace',
+    },
+
+    {
+      command: 'show projects --affected --exclude *-e2e',
+      description:
+        'Show affected projects in the workspace, excluding end-to-end projects',
+    },
+  ],
   watch: [
     {
       command:

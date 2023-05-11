@@ -41,7 +41,7 @@ export async function showProjectsHandler(
     graph = await getAffectedGraph(nxArgs, nxJson, graph);
   }
 
-  const selectedProjects = new Set(Object.keys(graph.nodes))
+  const selectedProjects = new Set(Object.keys(graph.nodes));
 
   if (args.exclude) {
     const excludedProjects = findMatchingProjects(nxArgs.exclude, graph.nodes);
@@ -54,6 +54,7 @@ export async function showProjectsHandler(
   if (projects.length) {
     console.log(projects);
   }
+  process.exit(0);
 }
 
 function getAffectedGraph(

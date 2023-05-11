@@ -105,12 +105,10 @@ export function withAffectedOptions(yargs: Argv) {
     .option('uncommitted', {
       describe: 'Uncommitted changes',
       type: 'boolean',
-      default: undefined,
     })
     .option('untracked', {
       describe: 'Untracked changes',
       type: 'boolean',
-      default: undefined,
     })
     .option('base', {
       describe: 'Base of the current branch (usually main)',

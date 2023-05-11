@@ -1,13 +1,10 @@
 import * as chalk from 'chalk';
 import { readFileSync } from 'fs';
 import { readJsonSync } from 'fs-extra';
-import { lines } from 'markdown-factory';
-import { codeBlock } from 'markdown-factory';
-import { h3 } from 'markdown-factory';
-import { h2 } from 'markdown-factory';
-import { h1 } from 'markdown-factory';
+import { codeBlock, h1, h2, h3, lines } from 'markdown-factory';
 import { join } from 'path';
 import { register as registerTsConfigPaths } from 'tsconfig-paths';
+
 import { examples } from '../../../packages/nx/src/command-line/examples';
 import {
   formatDescription,
@@ -68,6 +65,21 @@ description: "${command.description}"
     }
 
     templateLines.push(generateOptionsMarkdown(command));
+
+    if (command.subcommands?.length) {
+      templateLines.push(h2('Subcommands'));
+      for (const subcommand of command.subcommands) {
+        templateLines.push(
+          h3(subcommand.name),
+          formatDescription(subcommand.description, subcommand.deprecated),
+          codeBlock(
+            `nx ${command.commandString} ${subcommand.commandString}`,
+            'shell'
+          ),
+          generateOptionsMarkdown(subcommand, 2)
+        );
+      }
+    }
 
     return {
       name: command.name

@@ -21,8 +21,6 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Type: `boolean`
 
-Default: `false`
-
 Format all projects
 
 ### base

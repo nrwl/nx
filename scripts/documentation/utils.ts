@@ -1,6 +1,5 @@
 import { outputFileSync } from 'fs-extra';
-import { h3 } from 'markdown-factory';
-import { bold, h2, lines as mdLines, strikethrough } from 'markdown-factory';
+import { bold, h, lines as mdLines, strikethrough } from 'markdown-factory';
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
 
@@ -99,6 +98,7 @@ export interface ParsedCommand {
   description: string;
   deprecated: string;
   options?: Array<ParsedCommandOption>;
+  subcommands?: Array<ParsedCommand>;
 }
 
 const YargsTypes = ['array', 'count', 'string', 'boolean', 'number'];
@@ -143,6 +143,12 @@ export async function parseCommand(
     );
     return acc;
   }, {});
+  const subcommands = await Promise.all(
+    Object.entries(getCommands(builder)).map(
+      ([subCommandName, subCommandConfig]) =>
+        parseCommand(subCommandName, subCommandConfig)
+    )
+  );
 
   return {
     name,
@@ -161,20 +167,27 @@ export async function parseCommand(
         deprecated: builderDeprecatedOptions[key],
         hidden: builderOptions.hiddenOptions.includes(key),
       })) || null,
+    subcommands,
   };
 }
 
-export function generateOptionsMarkdown(command: ParsedCommand): string {
+export function generateOptionsMarkdown(
+  command: ParsedCommand,
+  extraHeadingLevels = 0
+): string {
   const lines: string[] = [];
   if (Array.isArray(command.options) && !!command.options.length) {
-    lines.push(h2('Options'));
+    lines.push(h(2 + extraHeadingLevels, 'Options'));
 
     command.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
       .filter(({ hidden }) => !hidden)
       .forEach((option) => {
         lines.push(
-          h3(option.deprecated ? strikethrough(option.name) : option.name)
+          h(
+            3 + extraHeadingLevels,
+            option.deprecated ? strikethrough(option.name) : option.name
+          )
         );
         if (option.type !== undefined && option.type !== '') {
           lines.push(`Type: \`${option.type}\``);

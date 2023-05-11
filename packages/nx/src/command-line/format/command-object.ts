@@ -42,7 +42,6 @@ function withFormatOptions(yargs: Argv): Argv {
     .option('all', {
       describe: 'Format all projects',
       type: 'boolean',
-      default: false,
     })
     .conflicts({
       all: 'projects',
