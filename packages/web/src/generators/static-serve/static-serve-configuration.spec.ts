@@ -13,12 +13,12 @@ describe('Static serve configuration generator', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should add a `serve-static` target to the project', () => {
+  it('should add a `serve-static` target to the project', async () => {
     addReactConfig(tree, 'react-app');
     addAngularConfig(tree, 'angular-app');
     addStorybookConfig(tree, 'storybook');
 
-    webStaticServeGenerator(tree, {
+    await webStaticServeGenerator(tree, {
       buildTarget: 'react-app:build',
     });
 
@@ -31,7 +31,7 @@ describe('Static serve configuration generator', () => {
         },
       }
     `);
-    webStaticServeGenerator(tree, {
+    await webStaticServeGenerator(tree, {
       buildTarget: 'angular-app:build',
     });
 
@@ -80,7 +80,7 @@ describe('Static serve configuration generator', () => {
     `);
   });
 
-  it('should infer outputPath via the buildTarget#outputs', () => {
+  it('should infer outputPath via the buildTarget#outputs', async () => {
     addAngularConfig(tree, 'angular-app');
     const projectConfig = readProjectConfiguration(tree, 'angular-app');
     delete projectConfig.targets.build.options.outputPath;
@@ -89,7 +89,7 @@ describe('Static serve configuration generator', () => {
 
     updateProjectConfiguration(tree, 'angular-app', projectConfig);
 
-    webStaticServeGenerator(tree, {
+    await webStaticServeGenerator(tree, {
       buildTarget: 'angular-app:build',
     });
 
@@ -116,8 +116,8 @@ describe('Static serve configuration generator', () => {
 
     updateProjectConfiguration(tree, 'storybook', pc);
 
-    expect(() => {
-      webStaticServeGenerator(tree, {
+    expect(async () => {
+      await webStaticServeGenerator(tree, {
         buildTarget: 'storybook:build-storybook',
       });
     }).toThrowErrorMatchingInlineSnapshot(`

@@ -73,7 +73,8 @@ function findInTarget(
   options: FindTargetOptions
 ): TargetConfiguration {
   const { project, target, configuration } = parseTargetString(
-    options.buildTarget
+    options.buildTarget,
+    graph
   );
   const projectConfig = readProjectConfiguration(tree, project);
   const executorName = projectConfig?.targets?.[target]?.executor;

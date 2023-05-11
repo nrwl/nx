@@ -1,12 +1,14 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  createProjectGraphAsync,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
   parseTargetString,
+  ProjectGraph,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -45,6 +47,7 @@ export async function cypressE2EConfigurationGenerator(
 ) {
   const opts = normalizeOptions(tree, options);
 
+  const projectGraph = await createProjectGraphAsync();
   const tasks: GeneratorCallback[] = [];
 
   if (!installedCypressVersion()) {
@@ -54,7 +57,7 @@ export async function cypressE2EConfigurationGenerator(
     tasks.push(addDependenciesToPackageJson(tree, {}, { vite: viteVersion }));
   }
   await addFiles(tree, opts);
-  addTarget(tree, opts);
+  addTarget(tree, opts, projectGraph);
   addLinterToCyProject(tree, {
     ...opts,
     cypressDir: opts.directory,
@@ -170,7 +173,11 @@ async function addFiles(tree: Tree, options: NormalizedSchema) {
   }
 }
 
-function addTarget(tree: Tree, opts: NormalizedSchema) {
+function addTarget(
+  tree: Tree,
+  opts: NormalizedSchema,
+  projectGraph: ProjectGraph
+) {
   const projectConfig = readProjectConfiguration(tree, opts.project);
   const cyVersion = installedCypressVersion();
   projectConfig.targets.e2e = {
@@ -189,7 +196,7 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
       baseUrl: opts.baseUrl,
     };
   } else if (opts.devServerTarget) {
-    const parsedTarget = parseTargetString(opts.devServerTarget);
+    const parsedTarget = parseTargetString(opts.devServerTarget, projectGraph);
 
     projectConfig.targets.e2e.options = {
       ...projectConfig.targets.e2e.options,

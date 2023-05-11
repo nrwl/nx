@@ -1,7 +1,9 @@
 import {
   convertNxGenerator,
+  createProjectGraphAsync,
   logger,
   parseTargetString,
+  ProjectGraph,
   readProjectConfiguration,
   stripIndents,
   TargetConfiguration,
@@ -20,19 +22,21 @@ interface NormalizedWebStaticServeSchema extends WebStaticServeSchema {
   targetName: string;
 }
 
-export function webStaticServeGenerator(
+export async function webStaticServeGenerator(
   tree: Tree,
   options: WebStaticServeSchema
 ) {
-  const opts = normalizeOptions(tree, options);
+  const projectGraph = await createProjectGraphAsync();
+  const opts = normalizeOptions(tree, options, projectGraph);
   addStaticConfig(tree, opts);
 }
 
 function normalizeOptions(
   tree: Tree,
-  options: WebStaticServeSchema
+  options: WebStaticServeSchema,
+  projectGraph: ProjectGraph
 ): NormalizedWebStaticServeSchema {
-  const target = parseTargetString(options.buildTarget);
+  const target = parseTargetString(options.buildTarget, projectGraph);
   const opts: NormalizedWebStaticServeSchema = {
     ...options,
     targetName: options.targetName || 'serve-static',
