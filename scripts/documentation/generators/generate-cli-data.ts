@@ -1,11 +1,16 @@
 import * as chalk from 'chalk';
 import { readFileSync } from 'fs';
 import { readJsonSync } from 'fs-extra';
+import { lines } from 'markdown-factory';
+import { codeBlock } from 'markdown-factory';
+import { h3 } from 'markdown-factory';
+import { h2 } from 'markdown-factory';
+import { h1 } from 'markdown-factory';
 import { join } from 'path';
 import { register as registerTsConfigPaths } from 'tsconfig-paths';
 import { examples } from '../../../packages/nx/src/command-line/examples';
 import {
-  formatDeprecated,
+  formatDescription,
   generateMarkdownFile,
   generateOptionsMarkdown,
   getCommands,
@@ -39,39 +44,37 @@ export async function generateCliDocumentation(
   );
 
   function generateMarkdown(command: ParsedCommand) {
-    let template = `
+    let templateLines = [
+      `
 ---
 title: "${command.name} - CLI command"
 description: "${command.description}"
----
-
-# ${command.name}
-
-${formatDeprecated(command.description, command.deprecated)}
-
-## Usage
-
-\`\`\`shell
-nx ${command.commandString}
-\`\`\`
-
-Install \`nx\` globally to invoke the command directly using \`nx\`, or use \`npx nx\`, \`yarn nx\`, or \`pnpm nx\`.\n`;
+---`,
+      h1(command.name),
+      formatDescription(command.description, command.deprecated),
+      h2('Usage'),
+      codeBlock(`nx ${command.commandString}`, 'shell'),
+      'Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.',
+    ];
 
     if (examples[command.name] && examples[command.name].length > 0) {
-      template += `\n### Examples\n`;
+      templateLines.push(h3('Examples'));
       examples[command.name].forEach((example) => {
-        template += `${example.description}:\n\`\`\`shell\n nx ${example.command}\n\`\`\`\n`;
+        templateLines.push(
+          example.description + ':',
+          codeBlock(` nx ${example.command}`, 'shell')
+        );
       });
     }
 
-    template += generateOptionsMarkdown(command);
+    templateLines.push(generateOptionsMarkdown(command));
 
     return {
       name: command.name
         .replace(':', '-')
         .replace(' ', '-')
         .replace(/[\]\[.]+/gm, ''),
-      template,
+      template: lines(templateLines),
     };
   }
 

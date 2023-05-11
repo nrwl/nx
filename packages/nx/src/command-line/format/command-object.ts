@@ -39,6 +39,11 @@ function withFormatOptions(yargs: Argv): Argv {
       type: 'string',
       coerce: parseCSV,
     })
+    .option('all', {
+      describe: 'Format all projects',
+      type: 'boolean',
+      default: false,
+    })
     .conflicts({
       all: 'projects',
     });
