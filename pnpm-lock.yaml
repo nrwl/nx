@@ -475,6 +475,9 @@ devDependencies:
   conventional-changelog-cli:
     specifier: ^2.0.23
     version: 2.2.2
+  convert-source-map:
+    specifier: ^2.0.0
+    version: 2.0.0
   copy-webpack-plugin:
     specifier: ^10.2.4
     version: 10.2.4(webpack@5.80.0)
