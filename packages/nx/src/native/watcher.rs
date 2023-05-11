@@ -1,12 +1,10 @@
 use ignore::WalkBuilder;
 use ignore_files::{IgnoreFile, IgnoreFilter};
 use itertools::Itertools;
-use napi::threadsafe_function::{
-    ErrorStrategy, ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
-};
+use napi::threadsafe_function::{ThreadSafeCallContext, ThreadsafeFunctionCallMode};
 use napi::{Env, JsFunction, JsObject, JsString, Ref};
 use std::convert::Infallible;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 use watchexec::action::{Action, Outcome};
 use watchexec::config::{InitConfig, RuntimeConfig};
@@ -28,7 +26,11 @@ pub struct Watcher {
 #[napi]
 impl Watcher {
     #[napi(constructor)]
-    pub fn new(env: Env, origin: String, callback: JsFunction) -> Watcher {
+    pub fn new(
+        env: Env,
+        origin: String,
+        #[napi(ts_arg_type = "(err: string | null, paths: string[]) => void")] callback: JsFunction,
+    ) -> Watcher {
         let callback_ref = env.create_reference(callback).unwrap();
         Watcher {
             origin,
@@ -38,18 +40,20 @@ impl Watcher {
 
     #[napi]
     pub fn start(&self, env: Env) -> napi::Result<JsObject> {
+        tracing_subscriber::fmt::init();
+
         let callback_tsfn = env.create_threadsafe_function(
             &env.get_reference_value(&self.callback)?,
             0,
             |ctx: ThreadSafeCallContext<Vec<String>>| {
                 ctx.value
                     .iter()
-                    .map(|v| ctx.env.create_string_from_std(v.clone()))
-                    .collect()
+                    .map(|v| ctx.env.create_string(v))
+                    .collect::<Result<Vec<JsString>, napi::Error>>()
+                    .map(|v| vec![v])
             },
         )?;
 
-        let callback_tsfn = callback_tsfn.clone();
         let origin = self.origin.clone();
         let start = async move {
             let config = InitConfig::default();
@@ -71,17 +75,17 @@ impl Watcher {
             runtime.pathset([&origin]);
 
             runtime.on_action(move |action: Action| {
-                let future = async { Ok::<(), Infallible>(()) };
+                let ok_future = async { Ok::<(), Infallible>(()) };
                 let signals: Vec<Signal> = action.events.iter().flat_map(Event::signals).collect();
 
                 if signals.contains(&Signal::Terminate) {
                     action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
-                    return future;
+                    return ok_future;
                 }
 
                 if signals.contains(&Signal::Interrupt) {
                     action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
-                    return future;
+                    return ok_future;
                 }
 
                 let is_keyboard_eof = action
@@ -91,7 +95,7 @@ impl Watcher {
 
                 if is_keyboard_eof {
                     action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
-                    return future;
+                    return ok_future;
                 }
 
                 let paths: Vec<String> = action
@@ -105,7 +109,7 @@ impl Watcher {
                 callback_tsfn.call(Ok(paths), ThreadsafeFunctionCallMode::Blocking);
 
                 action.outcome(Outcome::wait(Outcome::Start));
-                return future;
+                ok_future
             });
 
             let watch_exec = Watchexec::new(config, runtime).map_err(anyhow::Error::from)?;
@@ -114,7 +118,15 @@ impl Watcher {
             Ok(())
         };
 
-        env.execute_tokio_future(start, |env, _| env.get_null())
+        env.execute_tokio_future(start, |env, _| env.get_undefined())
+    }
+
+    pub fn stop(&mut self, env: Env) -> napi::Result<()> {
+        self.callback.unref(env)?;
+
+        // TODO send terminate signal
+
+        Ok(())
     }
 }
 

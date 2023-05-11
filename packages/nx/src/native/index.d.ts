@@ -12,6 +12,6 @@ export function hashFile(file: string): FileData | null
 export function hashFiles(workspaceRoot: string): Record<string, string>
 export class Watcher {
   origin: string
-  constructor(origin: string, callback: (...args: any[]) => any)
-  create(): object
+  constructor(origin: string, callback: (err: string | null, paths: string[]) => void)
+  start(): object
 }

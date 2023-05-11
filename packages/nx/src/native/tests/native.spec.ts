@@ -1,4 +1,4 @@
-import { hashFile, hashArray } from '../index';
+import { hashFile, hashArray, Watcher } from '../index';
 
 import { tmpdir } from 'os';
 import { mkdtemp, writeFile } from 'fs-extra';
@@ -26,3 +26,15 @@ describe('native', () => {
     // expect(nativeHasher instanceof NativeFileHasher).toBe(true);
   });
 });
+
+describe('watcher', () => {
+  it('should watch files', (done) => {
+    let watcher = new Watcher('/Users/jon/Dev/nx', (error, paths) => {
+      console.log(paths);
+    });
+
+    watcher.start();
+  }, 10_000_000);
+});
+
+///..

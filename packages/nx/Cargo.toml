@@ -9,14 +9,15 @@ napi = { version = '2.10.2', default-features = false, features = ['anyhow', 'na
 napi-derive = '2.9.3'
 ignore = '0.4'
 crossbeam-channel = '0.5'
-watchexec-cli = '1.22.2'
-watchexec = '2.3.0'
-watchexec-filterer-ignore = "1.2.0"
-watchexec-events = "1.0.0"
-watchexec-signals = "1.0.0"
-ignore-files = "1.2.0"
+
+ignore-files = {path = "/Users/jon/Dev/watchexec/crates/ignore-files", version = "1.2.0"}
+watchexec = { path = "/Users/jon/Dev/watchexec/crates/lib", version = "2.3.0" }
+watchexec-filterer-ignore = {path = "/Users/jon/Dev/watchexec/crates/filterer/ignore", version = "1.2.0"}
+watchexec-events = { path = "/Users/jon/Dev/watchexec/crates/events", version = "1.0.0"}
+watchexec-signals = { path = "/Users/jon/Dev/watchexec/crates/signals", version = "1.0.0"}
+
+tracing-subscriber = "0.3.17"
 anyhow = "1.0.71"
-thiserror = "1.0.40"
 itertools = "0.10.5"
 
 [lib]
