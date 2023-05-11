@@ -10,7 +10,7 @@ Show information about the workspace (e.g., list of projects)
 ## Usage
 
 ```shell
-nx show <object>
+nx show
 ```
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
@@ -22,12 +22,6 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 Type: `boolean`
 
 Show help
-
-### object
-
-Choices: [projects]
-
-What to show (e.g., projects)
 
 ### version
 
