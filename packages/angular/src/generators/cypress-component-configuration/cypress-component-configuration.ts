@@ -1,8 +1,11 @@
 import { cypressComponentConfiguration as baseCyCTConfig } from '@nx/cypress';
+import {
+  addMountDefinition,
+  addDefaultCTConfig,
+} from '@nx/cypress/src/utils/config';
 import { findBuildConfig } from '@nx/cypress/src/utils/find-target-options';
 import {
   formatFiles,
-  generateFiles,
   joinPathFragments,
   ProjectConfiguration,
   readProjectConfiguration,
@@ -34,34 +37,43 @@ export async function cypressComponentConfiguration(
   });
 
   await updateProjectConfig(tree, options);
-  addFiles(tree, projectConfig, options);
-  if (options.skipFormat) {
+  await addFiles(tree, projectConfig, options);
+  if (!options.skipFormat) {
     await formatFiles(tree);
   }
   return () => {
     installTask();
   };
 }
-function addFiles(
+async function addFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
   options: CypressComponentConfigSchema
 ) {
-  const cypressConfigPath = joinPathFragments(
+  const cyConfigFile = joinPathFragments(
     projectConfig.root,
     'cypress.config.ts'
   );
+  const updatedCyConfig = await addDefaultCTConfig(
+    tree.read(cyConfigFile, 'utf-8')
+  );
+  tree.write(
+    cyConfigFile,
+    `import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';\n${updatedCyConfig}`
+  );
 
-  if (tree.exists(cypressConfigPath)) {
-    tree.delete(cypressConfigPath);
-  }
-  generateFiles(
-    tree,
-    joinPathFragments(__dirname, 'files'),
+  const componentFile = joinPathFragments(
     projectConfig.root,
-    {
-      tpl: '',
-    }
+    'cypress',
+    'support',
+    'component.ts'
+  );
+  const updatedCmpContents = await addMountDefinition(
+    tree.read(componentFile, 'utf-8')
+  );
+  tree.write(
+    componentFile,
+    `import { mount } from 'cypress/angular';\n${updatedCmpContents}`
   );
 
   if (options.generateTests) {

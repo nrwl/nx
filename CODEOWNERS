@@ -133,6 +133,7 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/plugin/** @AgentEnder @FrozenPandaz
 
 ## Core
+/docs/generated/cli/** @vsavkin @FrozenPandaz @AgentEnder
 /docs/generated/packages/nx/** @vsavkin @FrozenPandaz @AgentEnder
 /docs/generated/packages/workspace/** @vsavkin @FrozenPandaz @AgentEnder
 /packages/nx/** @vsavkin @FrozenPandaz @AgentEnder

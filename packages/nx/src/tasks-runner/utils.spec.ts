@@ -410,6 +410,25 @@ describe('utils', () => {
       });
     });
 
+    it('should assume target of self if simple target also matches project name', () => {
+      const result = expandDependencyConfigSyntaxSugar('build', {
+        dependencies: {},
+        nodes: {
+          build: {
+            name: 'build',
+            type: 'lib',
+            data: {
+              root: 'libs/build',
+              files: [],
+            },
+          },
+        },
+      });
+      expect(result).toEqual({
+        target: 'build',
+      });
+    });
+
     it('should expand syntax for simple target names targetting dependencies', () => {
       const result = expandDependencyConfigSyntaxSugar('^build', {
         dependencies: {},

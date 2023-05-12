@@ -20,7 +20,7 @@ import {
   getProjectConfigByPath,
 } from '@nx/cypress/src/utils/ct-helpers';
 
-import { existsSync, lstatSync } from 'fs';
+import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 type ViteDevServer = {
   framework: 'react';
@@ -62,6 +62,12 @@ export function nxComponentTestingPreset(
   video: boolean;
   chromeWebSecurity: boolean;
 } {
+  const normalizedProjectRootPath = ['.ts', '.js'].some((ext) =>
+    pathToConfig.endsWith(ext)
+  )
+    ? pathToConfig
+    : dirname(pathToConfig);
+
   if (options?.bundler === 'vite') {
     return {
       ...nxBaseCypressPreset(pathToConfig),
@@ -69,12 +75,7 @@ export function nxComponentTestingPreset(
       devServer: {
         ...({ framework: 'react', bundler: 'vite' } as const),
         viteConfig: async () => {
-          const normalizedPath = ['.ts', '.js'].some((ext) =>
-            pathToConfig.endsWith(ext)
-          )
-            ? pathToConfig
-            : dirname(pathToConfig);
-          const viteConfigPath = findViteConfig(normalizedPath);
+          const viteConfigPath = findViteConfig(normalizedProjectRootPath);
 
           const { mergeConfig, loadConfigFromFile, searchForWorkspaceRoot } =
             (await import('vite')) as typeof import('vite');
@@ -90,7 +91,7 @@ export function nxComponentTestingPreset(
             server: {
               fs: {
                 allow: [
-                  searchForWorkspaceRoot(normalizedPath),
+                  searchForWorkspaceRoot(normalizedProjectRootPath),
                   workspaceRoot,
                   joinPathFragments(workspaceRoot, 'node_modules/vite'),
                 ],
@@ -147,7 +148,7 @@ export function nxComponentTestingPreset(
 
     const { buildBaseWebpackConfig } = require('./webpack-fallback');
     webpackConfig = buildBaseWebpackConfig({
-      tsConfigPath: 'cypress/tsconfig.cy.json',
+      tsConfigPath: findTsConfig(normalizedProjectRootPath),
       compiler: 'babel',
     });
   }
@@ -270,6 +271,20 @@ function findViteConfig(projectRootFullPath: string): string {
   for (const ext of allowsExt) {
     if (existsSync(join(projectRootFullPath, `vite.config.${ext}`))) {
       return join(projectRootFullPath, `vite.config.${ext}`);
+    }
+  }
+}
+
+function findTsConfig(projectRoot: string) {
+  const potentialConfigs = [
+    'cypress/tsconfig.json',
+    'cypress/tsconfig.cy.json',
+    'tsconfig.cy.json',
+  ];
+
+  for (const config of potentialConfigs) {
+    if (existsSync(join(projectRoot, config))) {
+      return config;
     }
   }
 }
