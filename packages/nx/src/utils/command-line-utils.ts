@@ -29,7 +29,7 @@ export interface NxArgs {
   plain?: boolean;
   projects?: string[];
   select?: string;
-  graph?: boolean;
+  graph?: string | boolean;
   skipNxCache?: boolean;
   outputStyle?: string;
   nxBail?: boolean;
@@ -288,8 +288,6 @@ function getUncommittedFiles(): string[] {
   return parseGitOutput(`git diff --name-only --no-renames --relative HEAD .`);
 }
 
-``;
-
 function getUntrackedFiles(): string[] {
   return parseGitOutput(`git ls-files --others --exclude-standard`);
 }
@@ -337,4 +335,10 @@ export function getProjectRoots(
   { nodes }: ProjectGraph
 ): string[] {
   return projectNames.map((name) => nodes[name].data.root);
+}
+
+export function readGraphFileFromGraphArg({ graph }: NxArgs) {
+  return typeof graph === 'string' && graph !== 'true' && graph !== ''
+    ? graph
+    : undefined;
 }

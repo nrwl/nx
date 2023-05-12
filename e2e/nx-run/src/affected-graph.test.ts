@@ -503,6 +503,14 @@ describe('Nx Affected and Graph Tests', () => {
       expect(environmentJs).toContain('"affected":[]');
     });
 
+    it('graph should output valid json when stdout is specified', () => {
+      const result = runCLI(`affected -t build --graph stdout`);
+      let model;
+      expect(() => (model = JSON.parse(result))).not.toThrow();
+      expect(model).toHaveProperty('graph');
+      expect(model).toHaveProperty('tasks');
+    });
+
     it('affected:graph should include affected projects in environment file', () => {
       runCLI(`affected:graph --file=project-graph.html`);
 

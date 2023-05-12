@@ -1,5 +1,8 @@
 import { runCommand } from '../../tasks-runner/run-command';
-import type { NxArgs } from '../../utils/command-line-utils';
+import {
+  NxArgs,
+  readGraphFileFromGraphArg,
+} from '../../utils/command-line-utils';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
@@ -33,7 +36,7 @@ export async function runMany(
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
     'run-many',
-    { printWarnings: true },
+    { printWarnings: args.graph !== 'stdout' },
     nxJson
   );
   if (nxArgs.verbose) {
@@ -46,6 +49,7 @@ export async function runMany(
   const projects = projectsToRun(nxArgs, projectGraph);
 
   if (nxArgs.graph) {
+    const file = readGraphFileFromGraphArg(nxArgs);
     const projectNames = projects.map((t) => t.name);
     return await generateGraph(
       {
@@ -55,6 +59,7 @@ export async function runMany(
         all: nxArgs.all,
         targets: nxArgs.targets,
         projects: projectNames,
+        file,
       },
       projectNames
     );
