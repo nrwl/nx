@@ -2,7 +2,7 @@
 
 exports[`ensureViteConfigIsCorrect should add build and test options if defineConfig is empty 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 
     /// <reference types="vitest" />
     import { defineConfig } from 'vite';
@@ -30,7 +30,7 @@ import { join } from 'path';
     },plugins: [
       dts({
       entryRoot: 'src',
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
       react(),
@@ -51,7 +51,7 @@ import { join } from 'path';
 
 exports[`ensureViteConfigIsCorrect should add build option but not update test option if test already setup 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -83,7 +83,7 @@ import { defineConfig } from 'vite';
       ],
                     dts({
       entryRoot: 'src',
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
                 ],
@@ -103,7 +103,7 @@ import { defineConfig } from 'vite';
 
 exports[`ensureViteConfigIsCorrect should add build options if build options don't exist 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -135,7 +135,7 @@ import { defineConfig } from 'vite';
       ],
                     dts({
       entryRoot: 'src',
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
                 ],
@@ -155,7 +155,7 @@ import { defineConfig } from 'vite';
 
 exports[`ensureViteConfigIsCorrect should add build options if defineConfig is not used 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -194,7 +194,7 @@ import { defineConfig } from 'vite';
       ],
                     dts({
       entryRoot: 'src',
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
                 ],
@@ -227,7 +227,7 @@ exports[`ensureViteConfigIsCorrect should add build options if it is using condi
 
 exports[`ensureViteConfigIsCorrect should add new build options if some build options already exist 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -242,7 +242,7 @@ import { defineConfig } from 'vite';
       ],
                     dts({
       entryRoot: 'src',
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
                 ],
@@ -276,13 +276,13 @@ exports[`ensureViteConfigIsCorrect should not do anything if project has everyth
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
     import dts from 'vite-plugin-dts';
-    import { join } from 'path';
+    import { joinPathFragments } from '@nx/devkit';
 
     export default defineConfig({
       plugins: [
         dts({
           entryRoot: 'src',
-          tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+          tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
           skipDiagnostics: true,
         }),
         react(),
@@ -323,7 +323,7 @@ exports[`ensureViteConfigIsCorrect should not do anything if project has everyth
 
 exports[`ensureViteConfigIsCorrect should update both test and build options - keep existing settings 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -338,7 +338,7 @@ import { defineConfig } from 'vite';
       ],
                     dts({
       entryRoot: 'src',
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
                 ],
