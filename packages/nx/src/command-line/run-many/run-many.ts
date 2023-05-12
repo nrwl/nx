@@ -36,7 +36,7 @@ export async function runMany(
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
     'run-many',
-    { printWarnings: true },
+    { printWarnings: args.graph !== 'stdout' },
     nxJson
   );
   if (nxArgs.verbose) {

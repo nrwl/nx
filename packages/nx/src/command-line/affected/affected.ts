@@ -41,7 +41,8 @@ export async function affected(
     args,
     'affected',
     {
-      printWarnings: command !== 'print-affected' && !args.plain,
+      printWarnings:
+        command !== 'print-affected' && !args.plain && args.graph !== 'stdout',
     },
     nxJson
   );

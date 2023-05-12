@@ -187,7 +187,12 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
-  if (Array.isArray(args.targets) && args.targets.length > 1) {
+  if (
+    Array.isArray(args.targets) &&
+    args.targets.length > 1 &&
+    args.file &&
+    !(args.file === 'stdout' || args.file.endsWith('.json'))
+  ) {
     output.warn({
       title: 'Showing Multiple Targets is not supported yet',
       bodyLines: [
@@ -248,7 +253,13 @@ export async function generateGraph(
   if (args.file) {
     // stdout is a magical constant that doesn't actually write a file
     if (args.file === 'stdout') {
-      console.log(JSON.stringify(graph, null, 2));
+      console.log(
+        JSON.stringify(
+          createJsonOutput(graph, args.projects, args.targets),
+          null,
+          2
+        )
+      );
       process.exit(0);
     }
 
@@ -300,10 +311,20 @@ export async function generateGraph(
     } else if (ext === '.json') {
       ensureDirSync(dirname(fullFilePath));
 
-      writeJsonFile(fullFilePath, {
-        graph,
-        affectedProjects,
-        criticalPath: affectedProjects,
+      const json = createJsonOutput(graph, args.projects, args.targets);
+      json.affectedProjects = affectedProjects;
+      json.criticalPath = affectedProjects;
+
+      writeJsonFile(fullFilePath, json);
+
+      output.warn({
+        title: 'JSON output contains deprecated fields:',
+        bodyLines: [
+          '- affectedProjects',
+          '- criticalPath',
+          '',
+          'These fields will be removed in Nx 18. If you need to see which projects were affected, use `nx show projects --affected`.',
+        ],
       });
 
       output.success({
@@ -690,4 +711,48 @@ function createTaskId(
   } else {
     return `${projectId}:${targetId}`;
   }
+}
+
+interface GraphJsonResponse {
+  tasks?: TaskGraph;
+  graph: ProjectGraph;
+
+  /**
+   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 18.
+   */
+  affectedProjects?: string[];
+
+  /**
+   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 18.
+   */
+  criticalPath?: string[];
+}
+
+function createJsonOutput(
+  graph: ProjectGraph,
+  projects: string[],
+  targets?: string[]
+): GraphJsonResponse {
+  const response: GraphJsonResponse = {
+    graph,
+  };
+
+  if (targets?.length) {
+    const nxJson = readNxJson();
+
+    const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
+      nxJson.targetDefaults
+    );
+
+    response.tasks = createTaskGraph(
+      graph,
+      defaultDependencyConfigs,
+      projects,
+      targets,
+      undefined,
+      {}
+    );
+  }
+
+  return response;
 }

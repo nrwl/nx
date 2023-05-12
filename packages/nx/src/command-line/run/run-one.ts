@@ -50,7 +50,7 @@ export async function runOne(
       targets: [opts.target],
     },
     'run-one',
-    { printWarnings: true },
+    { printWarnings: args.graph !== 'stdout' },
     nxJson
   );
   if (nxArgs.verbose) {
