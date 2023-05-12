@@ -52,7 +52,9 @@ describe('Next.js Applications', () => {
     const jsLib = uniq('tslib');
     const buildableLib = uniq('buildablelib');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+    );
     runCLI(`generate @nx/next:lib ${nextLib} --no-interactive`);
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
     runCLI(
@@ -231,7 +233,7 @@ describe('Next.js Applications', () => {
 
     const port = 4200;
 
-    runCLI(`generate @nx/next:app ${appName}`);
+    runCLI(`generate @nx/next:app ${appName} --appDir=false`);
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
 
     const proxyConf = {
@@ -297,7 +299,9 @@ describe('Next.js Applications', () => {
   it('should support custom next.config.js and output it in dist', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+    );
 
     updateFile(
       `apps/${appName}/next.config.js`,
@@ -354,7 +358,9 @@ describe('Next.js Applications', () => {
   it('should support --js flag', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --js`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --js --appDir=false`
+    );
 
     checkFilesExist(`apps/${appName}/pages/index.js`);
 

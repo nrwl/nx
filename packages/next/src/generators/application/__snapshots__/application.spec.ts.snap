@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`app --style styled-jsx should use <style jsx> in index page 1`] = `
-"export function Index() {
+"'use client';
+
+export default async function Index() {
   /*
    * Replace the elements below with your own.
    *
@@ -420,7 +422,5 @@ exports[`app --style styled-jsx should use <style jsx> in index page 1`] = `
     </div>
   );
 }
-
-export default Index;
 "
 `;

@@ -113,7 +113,7 @@ Workspace name (e.g. org name)
 
 Type: `boolean`
 
-Add Experimental app/ layout for next.js
+Enable the App Router for Next.js
 
 ### nxCloud
 

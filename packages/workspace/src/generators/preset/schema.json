@@ -85,9 +85,9 @@
       "default": false
     },
     "nextAppDir": {
-      "description": "Enable experimental app/ for the project",
+      "description": "Enable the App Router for this project.",
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "e2eTestRunner": {
       "description": "The tool to use for running e2e tests.",
