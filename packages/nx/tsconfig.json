@@ -11,9 +11,6 @@
     },
     {
       "path": "./tsconfig.spec.json"
-    },
-    {
-      "path": "./tsconfig.plugins.json"
     }
   ]
 }

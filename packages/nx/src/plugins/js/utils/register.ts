@@ -38,21 +38,15 @@ export const registerTsProject = (
 export function getSwcTranspiler(
   compilerOptions: CompilerOptions
 ): (...args: unknown[]) => unknown {
-  // Some versions of @swc-node/register do not return a cleanup function, so we explicitly check for it here
   type ISwcRegister = typeof import('@swc-node/register/register')['register'];
-  type ISwcRegisterVoid = (...args: Parameters<ISwcRegister>) => void;
 
   // These are requires to prevent it from registering when it shouldn't
-  const register = require('@swc-node/register/register').register as
-    | ISwcRegister
-    | ISwcRegisterVoid;
+  const register = require('@swc-node/register/register')
+    .register as ISwcRegister;
 
   const cleanupFn = register(compilerOptions);
-  const isFunction = typeof cleanupFn === 'function';
 
-  if (!isFunction) return () => {};
-
-  return cleanupFn;
+  return typeof cleanupFn === 'function' ? cleanupFn : () => {};
 }
 
 export function getTsNodeTranspiler(

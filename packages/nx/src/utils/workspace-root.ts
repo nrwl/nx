@@ -16,7 +16,6 @@ export function workspaceRootInner(
 ): string {
   if (process.env.NX_WORKSPACE_ROOT_PATH)
     return process.env.NX_WORKSPACE_ROOT_PATH;
-  // @ts-ignore strictNullChecks
   if (path.dirname(dir) === dir) return candidateRoot;
 
   const matches = [
