@@ -966,7 +966,7 @@ describe('Hasher', () => {
       expect(hash.details.nodes['app']).toEqual('nx:run-commands');
     });
 
-    it('should use commandExternalDependencies to override nx:run-commands', async () => {
+    it('should use externalDependencies to override nx:run-commands', async () => {
       const hasher = new Hasher(
         {
           nodes: {
@@ -980,7 +980,7 @@ describe('Hasher', () => {
                     executor: 'nx:run-commands',
                     inputs: [
                       { fileset: '{projectRoot}/**/*' },
-                      { commandExternalDependencies: ['webpack', 'react'] },
+                      { externalDependencies: ['webpack', 'react'] },
                     ],
                   },
                 },
@@ -1034,7 +1034,7 @@ describe('Hasher', () => {
       expect(hash.details.nodes['npm:react']).toEqual('17.0.0');
     });
 
-    it('should use commandExternalDependencies with empty array to ignore all deps', async () => {
+    it('should use externalDependencies with empty array to ignore all deps', async () => {
       const hasher = new Hasher(
         {
           nodes: {
@@ -1048,7 +1048,7 @@ describe('Hasher', () => {
                     executor: 'nx:run-commands',
                     inputs: [
                       { fileset: '{projectRoot}/**/*' },
-                      { commandExternalDependencies: [] }, // intentionally empty
+                      { externalDependencies: [] }, // intentionally empty
                     ],
                   },
                 },

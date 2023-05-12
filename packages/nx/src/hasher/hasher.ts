@@ -16,7 +16,7 @@ type ExpandedSelfInput =
   | { fileset: string }
   | { runtime: string }
   | { env: string }
-  | { commandExternalDependencies: string[] };
+  | { externalDependencies: string[] };
 
 /**
  * A data structure returned by the default hasher.
@@ -411,12 +411,11 @@ class TaskHasher {
     const partialHashes: PartialHash[] = [];
     let hasCommandExternalDependencies = false;
     for (const input of selfInputs) {
-      if (input['commandExternalDependencies']) {
-        // if we have commandExternalDependencies with empty array we still want to override the default hash
+      if (input['externalDependencies']) {
+        // if we have externalDependencies with empty array we still want to override the default hash
         hasCommandExternalDependencies = true;
-        const commandExternalDependencies =
-          input['commandExternalDependencies'];
-        for (let dep of commandExternalDependencies) {
+        const externalDependencies = input['externalDependencies'];
+        for (let dep of externalDependencies) {
           if (!dep.startsWith('npm:')) {
             dep = `npm:${dep}`;
           }
@@ -734,7 +733,7 @@ function expandSingleProjectInputs(
         (d as any).fileset ||
         (d as any).env ||
         (d as any).runtime ||
-        (d as any).commandExternalDependencies
+        (d as any).externalDependencies
       ) {
         expanded.push(d);
       } else {
