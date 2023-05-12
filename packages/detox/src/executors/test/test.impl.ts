@@ -26,7 +26,7 @@ export default async function* detoxTestExecutor(
     context.projectsConfigurations.projects[context.projectName].root;
 
   try {
-    if (options.buildTarget) {
+    if (!options.reuse && options.buildTarget) {
       const buildTarget = parseTargetString(
         options.buildTarget,
         context.projectGraph
@@ -93,10 +93,15 @@ function createDetoxTestOptions(options: DetoxTestOptions): string[] {
       return acc;
     } else if (k === 'detoxConfiguration') {
       acc.push('--configuration', propertyValue);
-    } else if (k === 'deviceLaunchArgs') {
-      acc.push(`--device-launch-args="${propertyValue}"`); // the value must be specified after an equal sign (=) and inside quotes.
+    } else if (k === 'deviceBootArgs') {
+      acc.push(`--device-boot-args="${propertyValue}"`); // the value must be specified after an equal sign (=) and inside quotes: https://wix.github.io/Detox/docs/cli/test
     } else if (k === 'appLaunchArgs') {
-      acc.push(`--app-launch-argss="${propertyValue}"`); // the value must be specified after an equal sign (=) and inside quotes.
+      acc.push(`--app-launch-args="${propertyValue}"`); // the value must be specified after an equal sign (=) and inside quotes: https://wix.github.io/Detox/docs/cli/test
+    } else if (k === 'color') {
+      // detox only accepts --no-color, not --color
+      if (!propertyValue) {
+        acc.push('--no-color');
+      }
     } else {
       const propertyName = names(k).fileName; // convert camelCase to kebab-case
       acc.push(`--${propertyName}`, propertyValue);

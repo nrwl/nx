@@ -241,6 +241,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.1.5": {
+      "version": "16.1.5-beta.0",
+      "packages": {
+        "detox": {
+          "version": "^20.9.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
