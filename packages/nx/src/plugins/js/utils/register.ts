@@ -38,7 +38,7 @@ export const registerTsProject = (
 export function getSwcTranspiler(
   compilerOptions: CompilerOptions
 ): (...args: unknown[]) => unknown {
-  // Some versions of @swc-node/register do not return a cleanup function, so we explicitly check for it heregit 
+  // Some versions of @swc-node/register do not return a cleanup function, so we explicitly check for it heregit
   type ISwcRegister = typeof import('@swc-node/register/register')['register'];
   type ISwcRegisterVoid = (...args: Parameters<ISwcRegister>) => void;
 
