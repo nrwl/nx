@@ -401,10 +401,9 @@ class TaskHasher {
       target.executor.startsWith(`@nx/`)
     ) {
       const executorPackage = target.executor.split(':')[0];
-      const executorNodeName = `npm:${executorPackage}`;
-      if (this.projectGraph.externalNodes?.[executorNodeName]) {
-        return this.hashExternalDependency(executorNodeName);
-      }
+      const executorNodeName =
+        this.findExternalDependencyNodeName(executorPackage);
+      return this.hashExternalDependency(executorNodeName);
     }
 
     // use command external dependencies if available to construct the hash
@@ -416,9 +415,7 @@ class TaskHasher {
         hasCommandExternalDependencies = true;
         const externalDependencies = input['externalDependencies'];
         for (let dep of externalDependencies) {
-          if (!dep.startsWith('npm:')) {
-            dep = `npm:${dep}`;
-          }
+          dep = this.findExternalDependencyNodeName(dep);
           partialHashes.push(this.hashExternalDependency(dep));
         }
       }
@@ -442,6 +439,22 @@ class TaskHasher {
         [projectNode.name]: target.executor,
       },
     };
+  }
+
+  private findExternalDependencyNodeName(packageName: string): string {
+    if (this.projectGraph.externalNodes[packageName]) {
+      return packageName;
+    }
+    if (this.projectGraph.externalNodes[`npm:${packageName}`]) {
+      return `npm:${packageName}`;
+    }
+    for (const node of Object.values(this.projectGraph.externalNodes)) {
+      if (node.data.packageName === packageName) {
+        return node.name;
+      }
+    }
+    // not found, just return the package name
+    return packageName;
   }
 
   private async hashSingleProjectInputs(

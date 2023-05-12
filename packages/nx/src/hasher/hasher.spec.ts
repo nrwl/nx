@@ -81,7 +81,7 @@ describe('Hasher', () => {
               root: 'libs/parent',
               targets: {
                 build: {
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                   inputs: [
                     'default',
                     '^default',
@@ -136,8 +136,8 @@ describe('Hasher', () => {
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
       'parent:{projectRoot}/**/*':
-        '/file|file.hash|{"root":"libs/parent","targets":{"build":{"executor":"unknown","inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"},{"input":"default","projects":["unrelated"]}]}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
-      parent: 'unknown',
+        '/file|file.hash|{"root":"libs/parent","targets":{"build":{"executor":"nx:run-commands","inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"},{"input":"default","projects":["unrelated"]}]}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
+      parent: 'nx:run-commands',
       'unrelated:{projectRoot}/**/*':
         'libs/unrelated/filec.ts|filec.hash|{"root":"libs/unrelated","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
       '{workspaceRoot}/nx.json': 'nx.json.hash',
@@ -159,7 +159,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: 'unknown' } },
+              targets: { build: { executor: 'nx:run-commands' } },
               files: [
                 { file: '/filea.ts', hash: 'a.hash' },
                 { file: '/filea.spec.ts', hash: 'a.spec.hash' },
@@ -219,7 +219,7 @@ describe('Hasher', () => {
               targets: {
                 build: {
                   inputs: ['prod', '^prod'],
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                 },
               },
               files: [
@@ -236,7 +236,7 @@ describe('Hasher', () => {
               namedInputs: {
                 prod: ['default'],
               },
-              targets: { build: { executor: 'unknown' } },
+              targets: { build: { executor: 'nx:run-commands' } },
               files: [
                 { file: 'libs/child/fileb.ts', hash: 'b.hash' },
                 { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
@@ -288,12 +288,12 @@ describe('Hasher', () => {
               targets: {
                 build: {
                   inputs: ['prod'],
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                 },
                 test: {
                   inputs: ['default'],
                   dependsOn: ['build'],
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                 },
               },
               files: [
@@ -356,7 +356,7 @@ describe('Hasher', () => {
               targets: {
                 test: {
                   inputs: ['default', '^prod'],
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                 },
               },
               files: [
@@ -380,7 +380,7 @@ describe('Hasher', () => {
               targets: {
                 test: {
                   inputs: ['default'],
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                 },
               },
               files: [

@@ -158,6 +158,17 @@ Examples:
 
 Note the result value is hashed, so it is never displayed.
 
+_External Dependencies_
+
+Examples:
+
+- `{externalDependencies: []}`
+  Specify that a target executor is not affected by any changes in installed packages
+- `{externalDependencies: ["lerna"]}`
+  Specify exact packages that affect a target executor
+
+Note the result value is hashed, so it is never displayed. This override is ignored by `@nx/*` executors.
+
 _Named Inputs_
 
 Examples:
