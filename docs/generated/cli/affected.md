@@ -59,6 +59,12 @@ Run tests for all the projects affected by the last commit on main:
  nx affected -t test --base=main~1 --head=main
 ```
 
+Run build for only projects with the tag `dotnet`:
+
+```shell
+ nx affected -t build --exclude '*,!tag:dotnet'
+```
+
 Use the currently executing project name in your command.:
 
 ```shell
