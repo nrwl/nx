@@ -1028,7 +1028,73 @@ describe('Hasher', () => {
         overrides: { prop: 'prop-value' },
       });
 
-      console.log(hash);
+      expect(hash.details.nodes['npm:nx']).not.toBeDefined();
+      expect(hash.details.nodes['app']).not.toBeDefined();
+      expect(hash.details.nodes['npm:webpack']).toEqual('5.0.0');
+      expect(hash.details.nodes['npm:react']).toEqual('17.0.0');
+    });
+
+    it('should use commandExternalDependencies with empty array to ignore all deps', async () => {
+      const hasher = new Hasher(
+        {
+          nodes: {
+            app: {
+              name: 'app',
+              type: 'app',
+              data: {
+                root: 'apps/app',
+                targets: {
+                  build: {
+                    executor: 'nx:run-commands',
+                    inputs: [
+                      { fileset: '{projectRoot}/**/*' },
+                      { commandExternalDependencies: [] }, // intentionally empty
+                    ],
+                  },
+                },
+                files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              },
+            },
+          },
+          externalNodes: {
+            'npm:nx': {
+              name: 'npm:nx',
+              type: 'npm',
+              data: {
+                packageName: 'nx',
+                version: '16.0.0',
+              },
+            },
+            'npm:webpack': {
+              name: 'npm:webpack',
+              type: 'npm',
+              data: {
+                packageName: 'webpack',
+                version: '5.0.0',
+              },
+            },
+            'npm:react': {
+              name: 'npm:react',
+              type: 'npm',
+              data: {
+                packageName: 'react',
+                version: '17.0.0',
+              },
+            },
+          },
+          dependencies: {},
+          allWorkspaceFiles,
+        },
+        {} as any,
+        {},
+        createHashing()
+      );
+
+      const hash = await hasher.hashTask({
+        target: { project: 'app', target: 'build' },
+        id: 'app-build',
+        overrides: { prop: 'prop-value' },
+      });
 
       expect(hash.details.nodes['npm:nx']).not.toBeDefined();
       expect(hash.details.nodes['app']).not.toBeDefined();

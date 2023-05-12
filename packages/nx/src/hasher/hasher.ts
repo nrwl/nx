@@ -401,24 +401,30 @@ class TaskHasher {
       target.executor.startsWith(`@nx/`)
     ) {
       const executorPackage = target.executor.split(':')[0];
-      const executorNode = `npm:${executorPackage}`;
-      if (this.projectGraph.externalNodes?.[executorNode]) {
-        return this.hashExternalDependency(executorNode);
+      const executorNodeName = `npm:${executorPackage}`;
+      if (this.projectGraph.externalNodes?.[executorNodeName]) {
+        return this.hashExternalDependency(executorNodeName);
       }
     }
 
     // use command external dependencies if available to construct the hash
     const partialHashes: PartialHash[] = [];
+    let hasCommandExternalDependencies = false;
     for (const input of selfInputs) {
       if (input['commandExternalDependencies']) {
+        // if we have commandExternalDependencies with empty array we still want to override the default hash
+        hasCommandExternalDependencies = true;
         const commandExternalDependencies =
           input['commandExternalDependencies'];
-        for (const dep of commandExternalDependencies) {
+        for (let dep of commandExternalDependencies) {
+          if (!dep.startsWith('npm:')) {
+            dep = `npm:${dep}`;
+          }
           partialHashes.push(this.hashExternalDependency(dep));
         }
       }
     }
-    if (partialHashes.length) {
+    if (hasCommandExternalDependencies) {
       return {
         value: this.hashing.hashArray(partialHashes.map((h) => h.value)),
         details: partialHashes.reduce(
