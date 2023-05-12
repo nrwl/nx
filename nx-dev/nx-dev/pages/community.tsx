@@ -26,6 +26,10 @@ export default function Community(props: CommunityProps): JSX.Element {
           label: '@trumbitta',
           link: 'https://twitter.com/trumbitta',
         },
+        {
+          label: '@williamghelfi.com',
+          link: 'https://bsky.app/profile/williamghelfi.com',
+        },
       ],
       location: 'Italy',
     },
@@ -106,6 +110,19 @@ export default function Community(props: CommunityProps): JSX.Element {
         },
       ],
       location: 'France',
+    },
+    {
+      name: 'Manfred Steyer',
+      expertise:
+        'Angular, Blogs, Talks, Conferences, Plugins, Repository Structure',
+      imageUrl: '/images/champions/manfred-steyer.webp',
+      contact: [
+        {
+          label: 'manfred.steyer@angulararchitects.io',
+          link: 'mailto:manfred.steyer@angulararchitects.io',
+        },
+      ],
+      location: 'Austria',
     },
   ];
   const champions3: Champion[] = [
