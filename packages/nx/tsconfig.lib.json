@@ -4,7 +4,8 @@
     "module": "commonjs",
     "outDir": "../../dist/out-tsc",
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "strictNullChecks": true
   },
   "exclude": [
     "**/*.spec.ts",
