@@ -294,7 +294,7 @@ function getUntrackedFiles(): string[] {
   return parseGitOutput(`git ls-files --others --exclude-standard`);
 }
 
-function getMergeBase(base: string, head: string = 'HEAD') {
+export function getMergeBase(base: string, head: string = 'HEAD') {
   try {
     return execSync(`git merge-base "${base}" "${head}"`, {
       maxBuffer: TEN_MEGABYTES,

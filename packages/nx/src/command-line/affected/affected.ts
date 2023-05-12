@@ -6,6 +6,7 @@ import { printAffected } from './print-affected';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
 import type { NxArgs } from '../../utils/command-line-utils';
 import {
+  getMergeBase,
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
@@ -34,6 +35,7 @@ export async function affected(
   workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
+  const isBaseOriginallySet = Boolean(args.base || process.env.NX_BASE);
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
     'affected',
@@ -55,8 +57,13 @@ export async function affected(
   try {
     switch (command) {
       case 'graph':
-        const projectNames = projects.map((p) => p.name);
-        await generateGraph(args as any, projectNames);
+        await generateGraph(
+          { ...(args as any), isBaseOriginallySet },
+          async (projectGraph, args) => {
+            recalculateBaseAndHead(args);
+            return (await projectsToRun(args, projectGraph)).map((p) => p.name);
+          }
+        );
         break;
 
       case 'print-affected':
@@ -80,21 +87,21 @@ export async function affected(
         break;
 
       case 'affected': {
-        const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
         if (nxArgs.graph) {
-          const projectNames = projectsWithTarget.map((t) => t.name);
-
           return await generateGraph(
             {
               watch: false,
               open: true,
               view: 'tasks',
               targets: nxArgs.targets,
-              projects: projectNames,
             },
-            projectNames
+            async (projectGraph, args) => {
+              const projects = await projectsToRun(args, projectGraph);
+              return allProjectsWithTarget(projects, args).map((t) => t.name);
+            }
           );
         } else {
+          const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
           await runCommand(
             projectsWithTarget,
             projectGraph,
@@ -163,4 +170,27 @@ function printError(e: any, verbose?: boolean) {
     title: 'There was a critical error when running your command',
     bodyLines,
   });
+}
+
+function recalculateBaseAndHead(options: {
+  base?: string;
+  head?: string;
+  isBaseOriginallySet?: boolean;
+}) {
+  options.base = options.isBaseOriginallySet ? options.base : undefined;
+  if (!options.base && process.env.NX_BASE) {
+    options.base = process.env.NX_BASE;
+  }
+  if (!options.head && process.env.NX_HEAD) {
+    options.head = process.env.NX_HEAD;
+  }
+
+  if (!options.base) {
+    const nxJson = readNxJson();
+    options.base = nxJson.affected?.defaultBase || 'main';
+  }
+
+  if (options.base) {
+    options.base = getMergeBase(options.base, options.head);
+  }
 }
