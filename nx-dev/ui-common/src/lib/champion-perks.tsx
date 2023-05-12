@@ -22,7 +22,7 @@ import {
   VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 import { CogIcon } from '@heroicons/react/24/solid';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from './typography';
 
 export function ChampionPerks(): JSX.Element {
   return (

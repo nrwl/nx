@@ -20,7 +20,7 @@ export default function Community(props: CommunityProps): JSX.Element {
     {
       name: 'William Ghelfi',
       expertise: 'React, Repository Structure, Patting New Devs On Their Backs',
-      imageUrl: '/images/champions/william-ghelfi.jpeg',
+      imageUrl: '/images/champions/william-ghelfi.webp',
       contact: [
         {
           label: '@trumbitta',
@@ -33,7 +33,7 @@ export default function Community(props: CommunityProps): JSX.Element {
       name: 'Santosh Yadav',
       expertise:
         'Onboarding new devs, Repository Structure, Dev Advocacy, Dev Rel, knowledge sharing',
-      imageUrl: '/images/champions/santosh-yadav.jpg',
+      imageUrl: '/images/champions/santosh-yadav.webp',
       contact: [
         {
           label: 'santosh.yadav198613@gmail.com',
@@ -50,7 +50,7 @@ export default function Community(props: CommunityProps): JSX.Element {
       name: 'Lars Gyrup Brink Nielsen',
       expertise:
         'Angular, GitHub, .NET, enterprise workspaces, open source, testing, architecture, repository structure, published libraries, documentation',
-      imageUrl: '/images/champions/lars-gyrup-brink-nielsen.png',
+      imageUrl: '/images/champions/lars-gyrup-brink-nielsen.webp',
       contact: [
         {
           label: 'larsbrinknielsen@gmail.com',
@@ -65,7 +65,7 @@ export default function Community(props: CommunityProps): JSX.Element {
       name: 'Dominik Pieper',
       expertise:
         'Defining repository structures, creating application architecture with Nx, writing  Plugins',
-      imageUrl: '/images/champions/dominik-pieper.png',
+      imageUrl: '/images/champions/dominik-pieper.webp',
       contact: [
         {
           label: 'dominik@pieper.io',
@@ -77,7 +77,7 @@ export default function Community(props: CommunityProps): JSX.Element {
     {
       name: 'Brandon Roberts',
       expertise: 'Onboarding New Devs, Angular, Vite, Plugins',
-      imageUrl: '/images/champions/brandon-roberts.jpg',
+      imageUrl: '/images/champions/brandon-roberts.webp',
       contact: [
         {
           label: '@brandontroberts',
@@ -94,7 +94,7 @@ export default function Community(props: CommunityProps): JSX.Element {
       name: 'Younes Jaaidi',
       expertise:
         'Testing, Repository Structure, Angular/React/NestJS Architecture',
-      imageUrl: '/images/champions/younes-jaaidi.jpeg',
+      imageUrl: '/images/champions/younes-jaaidi.webp',
       contact: [
         {
           label: 'younes@marmicode.io',
@@ -113,7 +113,7 @@ export default function Community(props: CommunityProps): JSX.Element {
       name: 'Lara Newsom',
       expertise:
         'I work every day on a large enterprise scale Angular application, so I care a lot about plugins and developer experience',
-      imageUrl: '/images/champions/lara-newsom.png',
+      imageUrl: '/images/champions/lara-newsom.webp',
       contact: [
         {
           label: 'laramnewsom@gmail.com',
@@ -126,7 +126,7 @@ export default function Community(props: CommunityProps): JSX.Element {
       name: 'Kate Sky',
       expertise:
         'Nx + Angular best practices in Enterprise multi-team environment and micro-frontend architecture',
-      imageUrl: '/images/champions/kate-sky.jpeg',
+      imageUrl: '/images/champions/kate-sky.webp',
       contact: [
         {
           label: '@KateSky8',
@@ -138,7 +138,7 @@ export default function Community(props: CommunityProps): JSX.Element {
     {
       name: 'Shai Reznik',
       expertise: 'Writing plugins, Qwik, testing',
-      imageUrl: '/images/champions/shai-reznik.jpeg',
+      imageUrl: '/images/champions/shai-reznik.webp',
       contact: [
         {
           label: '@shai_reznik',
@@ -150,7 +150,7 @@ export default function Community(props: CommunityProps): JSX.Element {
     {
       name: 'Issam GUISSOUMA',
       expertise: 'IDE support',
-      imageUrl: '/images/champions/issam-guissouma.jpg',
+      imageUrl: '/images/champions/issam-guissouma.webp',
       contact: [
         {
           label: '@iguissouma',
@@ -163,7 +163,7 @@ export default function Community(props: CommunityProps): JSX.Element {
       name: 'Devin Shoemaker',
       expertise:
         'Writing plugins and being the resident Nx enthusiast at Ionic',
-      imageUrl: '/images/champions/devin-shoemaker.jpg',
+      imageUrl: '/images/champions/devin-shoemaker.webp',
       contact: [
         {
           label: '@ParanoidCoder',
@@ -186,7 +186,7 @@ export default function Community(props: CommunityProps): JSX.Element {
             'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.jpg',
+              url: 'https://nx.dev/images/nx-media.webp',
               width: 800,
               height: 421,
               alt: 'Nx: Smart, Fast and Extensible Build System',
