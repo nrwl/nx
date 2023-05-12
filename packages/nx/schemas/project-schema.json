@@ -212,7 +212,7 @@
             "properties": {
               "externalDependencies": {
                 "type": "string",
-                "description": "The list of external dependencies that our target depends on. The `@nx/*` executors will ignore this input."
+                "description": "The list of external dependencies that our target depends on (for ambiguous executors like `nx:run-commands`)."
               }
             },
             "additionalProperties": false

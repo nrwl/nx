@@ -160,14 +160,16 @@ Note the result value is hashed, so it is never displayed.
 
 _External Dependencies_
 
+This input is useful for ambiguous executors like `nx:run-commands`.
+
 Examples:
 
+- Specify that a target executor is not affected by any changes in installed packages
 - `{externalDependencies: []}`
-  Specify that a target executor is not affected by any changes in installed packages
+- Specify exact packages that affect a target executor
 - `{externalDependencies: ["lerna"]}`
-  Specify exact packages that affect a target executor
 
-Note the result value is hashed, so it is never displayed. This override is ignored by `@nx/*` executors.
+Note the result value is hashed, so it is never displayed.
 
 _Named Inputs_
 
