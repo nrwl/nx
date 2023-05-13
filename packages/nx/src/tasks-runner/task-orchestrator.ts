@@ -1,5 +1,7 @@
-import { Workspaces } from '../config/workspaces';
+import { defaultMaxListeners } from 'events';
 import { performance } from 'perf_hooks';
+
+import { Workspaces } from '../config/workspaces';
 import { Hasher } from '../hasher/hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -64,6 +66,9 @@ export class TaskOrchestrator {
     performance.mark('task-execution-begins');
 
     const threads = [];
+
+    process.stdout.setMaxListeners(this.options.parallel + defaultMaxListeners);
+    process.stderr.setMaxListeners(this.options.parallel + defaultMaxListeners);
 
     // initial seeding of the queue
     for (let i = 0; i < this.options.parallel; ++i) {
