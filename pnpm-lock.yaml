@@ -665,8 +665,8 @@ devDependencies:
     specifier: ~0.26.2
     version: 0.26.2
   markdown-factory:
-    specifier: ^0.0.3
-    version: 0.0.3
+    specifier: ^0.0.5
+    version: 0.0.5
   memfs:
     specifier: ^3.0.1
     version: 3.4.7
@@ -17673,8 +17673,8 @@ packages:
     resolution: {integrity: sha512-0aF7ZmVon1igznGI4VS30yugpduQW3y3GkcgGJOp7d8x8QrizhigUxjI/m2UojsXXto+jLAH3KSz+xOJTiORjg==}
     dev: true
 
-  /markdown-factory@0.0.3:
-    resolution: {integrity: sha512-y7XffnQ61exHdRdFmvp9MeJBGOpUIYJEdiNgj25VCCivA/oXs615ppGqH01lnG8zcZ9cEEPW1jIi1y/Xu4URPA==}
+  /markdown-factory@0.0.5:
+    resolution: {integrity: sha512-76bovWfQkv0Pd4qrq3h5sTiimoBUIi3sKac6CUKGPLgEhghrPGBgdXRhVH9sjDpbbyCspRPg940WVrcA9h+XPg==}
     dev: true
 
   /markdown-to-jsx@7.2.0(react@18.2.0):

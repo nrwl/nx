@@ -73,11 +73,11 @@ Use the currently executing project name in your command.:
 
 ## Options
 
-### all
+### ~~all~~
 
 Type: `boolean`
 
-All projects
+**Deprecated:** Use `nx run-many` instead
 
 ### base
 
