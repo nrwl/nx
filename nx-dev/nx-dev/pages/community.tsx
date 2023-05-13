@@ -40,8 +40,8 @@ export default function Community(props: CommunityProps): JSX.Element {
       imageUrl: '/images/champions/santosh-yadav.webp',
       contact: [
         {
-          label: 'santosh.yadav198613@gmail.com',
-          link: 'mailto:santosh.yadav198613@gmail.com',
+          label: '@SantoshYadavDev',
+          link: 'https://twitter.com/SantoshYadavDev',
         },
         {
           label: 'github.com/santoshyadavdev',
