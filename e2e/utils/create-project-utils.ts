@@ -509,11 +509,13 @@ export function cleanupProject({
 }: RunCmdOpts & { skipReset?: boolean } = {}) {
   if (isCI) {
     // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    if (!skipReset) {
-      runCLI('reset', opts);
-    }
+    try {
+      if (!skipReset) {
+        runCLI('reset', opts);
+      }
+    } catch {} // ignore crashed daemon
     try {
       removeSync(tmpProjPath());
-    } catch (e) {}
+    } catch {}
   }
 }

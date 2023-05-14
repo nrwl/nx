@@ -71,6 +71,12 @@
       "version": "16.0.0-beta.0",
       "description": "Replace @nrwl/nx-cloud with nx-cloud",
       "implementation": "./src/migrations/update-16-0-0/update-nx-cloud-runner"
+    },
+    "16.2.0-remove-output-path-from-run-commands": {
+      "cli": "nx",
+      "version": "16.2.0-beta.0",
+      "description": "Remove outputPath from run commands",
+      "implementation": "./src/migrations/update-16-2-0/remove-run-commands-output-path"
     }
   }
 }

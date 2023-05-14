@@ -65,6 +65,10 @@ export const examples: Record<string, Example[]> = {
         'Run tests for all the projects affected by the last commit on main',
     },
     {
+      command: "affected -t build --exclude '*,!tag:dotnet'",
+      description: 'Run build for only projects with the tag `dotnet`',
+    },
+    {
       command: 'affected -t build --tag=$NX_TASK_TARGET_PROJECT:latest',
       description: 'Use the currently executing project name in your command.',
     },
@@ -333,6 +337,23 @@ export const examples: Record<string, Example[]> = {
       command: 'migrate --run-migrations --create-commits',
       description:
         'Create a dedicated commit for each successfully completed migration. You can customize the prefix used for each commit by additionally setting --commit-prefix="PREFIX_HERE "',
+    },
+  ],
+  show: [
+    {
+      command: 'show projects',
+      description: 'Show all projects in the workspace',
+    },
+
+    {
+      command: 'show projects --affected',
+      description: 'Show affected projects in the workspace',
+    },
+
+    {
+      command: 'show projects --affected --exclude *-e2e',
+      description:
+        'Show affected projects in the workspace, excluding end-to-end projects',
     },
   ],
   watch: [

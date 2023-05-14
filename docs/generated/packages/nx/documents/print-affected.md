@@ -49,12 +49,6 @@ Prints the tasks.target.project property from the print-affected output:
 
 ## Options
 
-### all
-
-Type: `boolean`
-
-All projects
-
 ### base
 
 Type: `string`

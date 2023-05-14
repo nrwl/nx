@@ -5,9 +5,9 @@ description: 'Runs a workspace generator from the tools/generators directory'
 
 # workspace-generator
 
-    **Deprecated:** Use a local plugin instead. See: https://nx.dev/deprecated/workspace-generators
+**Deprecated:** Use a local plugin instead. See: https://nx.dev/deprecated/workspace-generators
 
-    Runs a workspace generator from the tools/generators directory
+Runs a workspace generator from the tools/generators directory
 
 ## Usage
 

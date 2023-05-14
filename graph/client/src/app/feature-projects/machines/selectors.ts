@@ -1,5 +1,7 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { ProjectGraphSelector } from '../hooks/use-project-graph-selector';
 import { GraphPerfReport, WorkspaceLayout } from '../../interfaces';
 import { TracingAlgorithmType } from './interfaces';

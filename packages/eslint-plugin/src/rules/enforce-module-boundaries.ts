@@ -365,7 +365,8 @@ export default createESLintRule<Options, MessageIds>({
 
                       importsToRemap.push({
                         member: importMember,
-                        importPath: importPathResolved.replace('.ts', ''),
+                        // remove .ts or .tsx from the end of the file path
+                        importPath: importPathResolved.replace(/.tsx?$/, ''),
                       });
                     }
                   }

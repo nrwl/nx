@@ -6,12 +6,13 @@ import cytoscape, {
   NodeSingular,
 } from 'cytoscape';
 
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from 'nx/src/config/project-graph';
-import { edgeStyles, nodeStyles } from '../styles-graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { ProjectNode } from './project-node';
 import { ProjectEdge } from './project-edge';
 import { ParentNode } from './parent-node';

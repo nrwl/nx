@@ -55,12 +55,6 @@ Open the project graph of the workspace in the browser, highlight the projects a
 
 ## Options
 
-### all
-
-Type: `boolean`
-
-All projects
-
 ### base
 
 Type: `string`

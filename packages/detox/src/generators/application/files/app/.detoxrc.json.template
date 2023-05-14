@@ -22,12 +22,12 @@
 <% if (framework === 'expo') { %>
     "ios.eas": {
       "type": "ios.app",
-      "build": "<%= exec %> nx run <%= appFileName %>:download --platform ios --distribution simulator --output=<%= appRoot %>/dist/",
+      "build": "<%= exec %> nx run <%= appFileName %>:download --platform ios --distribution simulator --output=<%= offsetFromRoot %><%= appRoot %>/dist/",
       "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.app"
     },
     "ios.local": {
       "type": "ios.app",
-      "build": "<%= exec %> nx run <%= appFileName %>:build --platform ios --profile preview --wait --local --no-interactive --output=<%= appRoot %>/dist/",
+      "build": "<%= exec %> nx run <%= appFileName %>:build --platform ios --profile preview --wait --local --no-interactive --output=<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.tar.gz",
       "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.app"
     },
 <% } %>
@@ -43,13 +43,13 @@
     },
 <% if (framework === 'expo') { %>
     "android.eas": {
-      "type": "ios.app",
-      "build": "<%= exec %> nx run <%= appFileName %>:download --platform android --output=<%= appRoot %>/dist/",
+      "type": "android.apk",
+      "build": "<%= exec %> nx run <%= appFileName %>:download --platform android --output=<%= offsetFromRoot %><%= appRoot %>/dist/",
       "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.apk"
     },
     "android.local": {
-      "type": "ios.app",
-      "build": "<%= exec %> nx run <%= appFileName %>:build --platform android --profile preview --wait --local --no-interactive --output=<%= appRoot %>/dist/",
+      "type": "android.apk",
+      "build": "<%= exec %> nx run <%= appFileName %>:build --platform android --profile preview --wait --local --no-interactive --output=<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.apk",
       "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.apk"
     },
 <% } %>
@@ -97,11 +97,11 @@
     },
 <% if (framework === 'expo') { %>
     "android.emu.eas": {
-      "device": "simulator",
+      "device": "emulator",
       "app": "android.eas"
     },
     "android.emu.local": {
-      "device": "simulator",
+      "device": "emulator",
       "app": "android.local"
     },
 <% } %>

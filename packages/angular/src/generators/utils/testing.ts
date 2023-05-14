@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { updateJson } from '@nx/devkit';
+import { names, readProjectConfiguration, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/linter';
 import { UnitTestRunner } from '../../utils/test-runners';
@@ -57,12 +57,6 @@ export async function createStorybookTestWorkspaceForLib(
   addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
 
-  const { wrapAngularDevkitSchematic } = require('@nx/devkit/ngcli-adapter');
-  const moduleGenerator = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'module'
-  );
-
   await libraryGenerator(tree, {
     name: libName,
     buildable: false,
@@ -110,7 +104,7 @@ export class TestButtonComponent {
   );
 
   // create a module with component that gets exported in a barrel file
-  await moduleGenerator(tree, {
+  generateModule(tree, {
     name: 'barrel',
     project: libName,
   });
@@ -141,7 +135,7 @@ export class BarrelModule {}`
   );
 
   // create a module with components that get Angular exported and declared by variable
-  await moduleGenerator(tree, {
+  generateModule(tree, {
     name: 'variable-declare',
     project: libName,
   });
@@ -181,7 +175,7 @@ export class VariableDeclareModule {}`
   );
 
   // create a module with components that get Angular exported and declared by variable
-  await moduleGenerator(tree, {
+  generateModule(tree, {
     name: 'variable-spread-declare',
     project: libName,
   });
@@ -228,7 +222,7 @@ export class VariableSpreadDeclareModule {}`
   );
 
   // create a module where declared components are pulled from a static member of the module
-  await moduleGenerator(tree, {
+  generateModule(tree, {
     name: 'static-member-declarations',
     project: libName,
   });
@@ -265,7 +259,7 @@ export class StaticMemberDeclarationsModule {
   );
 
   // create another button in a nested subpath
-  await moduleGenerator(tree, {
+  generateModule(tree, {
     name: 'nested',
     project: libName,
     path: `libs/${libName}/src/lib`,
@@ -296,4 +290,33 @@ function addAngularPluginPeerDeps(tree: Tree): void {
       '@schematics/angular': angularDevkitVersion,
     },
   }));
+}
+
+function generateModule(
+  tree: Tree,
+  options: { name: string; project: string; path?: string }
+): void {
+  const project = readProjectConfiguration(tree, options.project);
+
+  if (options.path === undefined) {
+    const sourceRoot = project.sourceRoot ?? `${project.root}/src`;
+    const projectDirName =
+      project.projectType === 'application' ? 'app' : 'lib';
+    options.path = `${sourceRoot}/${projectDirName}`;
+  }
+
+  const moduleNames = names(options.name);
+  const moduleFilePath = `${options.path}/${moduleNames.fileName}/${moduleNames.fileName}.module.ts`;
+
+  tree.write(
+    moduleFilePath,
+    `import { NgModule } from '@angular/core';
+  import { CommonModule } from '@angular/common';
+  
+  @NgModule({
+    declarations: [],
+    imports: [CommonModule],
+  })
+  export class ${moduleNames.className}Module {}`
+  );
 }

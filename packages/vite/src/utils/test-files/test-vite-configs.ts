@@ -154,13 +154,13 @@ export const hasEverything = `
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
     import dts from 'vite-plugin-dts';
-    import { join } from 'path';
+    import { joinPathFragments } from '@nx/devkit';
 
     export default defineConfig({
       plugins: [
         dts({
           entryRoot: 'src',
-          tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+          tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
           skipDiagnostics: true,
         }),
         react(),
@@ -248,10 +248,10 @@ export const testOptionObject = {
 
 export const dtsPlugin = `dts({
       entryRoot: 'src',
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),`;
-export const dtsImportLine = `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`;
+export const dtsImportLine = `import dts from 'vite-plugin-dts';\nimport { joinPathFragments } from '@nx/devkit';`;
 
 export const pluginOption = `
     plugins: [

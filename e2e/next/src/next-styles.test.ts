@@ -21,7 +21,9 @@ describe('Next.js apps', () => {
   it('should support different --style options', async () => {
     const lessApp = uniq('app');
 
-    runCLI(`generate @nx/next:app ${lessApp} --no-interactive --style=less`);
+    runCLI(
+      `generate @nx/next:app ${lessApp} --no-interactive --style=less --appDir=false`
+    );
 
     await checkApp(lessApp, {
       checkUnitTest: false,
@@ -32,7 +34,9 @@ describe('Next.js apps', () => {
 
     const stylusApp = uniq('app');
 
-    runCLI(`generate @nx/next:app ${stylusApp} --no-interactive --style=styl`);
+    runCLI(
+      `generate @nx/next:app ${stylusApp} --no-interactive --style=styl --appDir=false`
+    );
 
     await checkApp(stylusApp, {
       checkUnitTest: false,
@@ -44,7 +48,7 @@ describe('Next.js apps', () => {
     const scApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${scApp} --no-interactive --style=styled-components`
+      `generate @nx/next:app ${scApp} --no-interactive --style=styled-components --appDir=false`
     );
 
     await checkApp(scApp, {
@@ -57,7 +61,7 @@ describe('Next.js apps', () => {
     const emotionApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${emotionApp} --no-interactive --style=@emotion/styled`
+      `generate @nx/next:app ${emotionApp} --no-interactive --style=@emotion/styled --appDir=false`
     );
 
     await checkApp(emotionApp, {
@@ -66,5 +70,5 @@ describe('Next.js apps', () => {
       checkE2E: false,
       checkExport: false,
     });
-  }, 300_000);
+  }, 600_000);
 });

@@ -32,7 +32,8 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     options.packageManager = packageManager;
   }
 
-  const directory = getFileName(name);
+  options.name = getFileName(name);
+  const directory = options.name;
 
   const args = unparse({
     ...options,
@@ -40,7 +41,7 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
 
   const pmc = getPackageManagerCommand(packageManager);
 
-  const command = `new ${directory} ${args}`;
+  const command = `new ${args}`;
 
   const workingDir = process.cwd().replace(/\\/g, '/');
   let nxWorkspaceRoot = `"${workingDir}"`;

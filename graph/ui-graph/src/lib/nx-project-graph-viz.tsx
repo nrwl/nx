@@ -1,11 +1,12 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 /* nx-ignore-next-line */
 import type {
   ProjectGraphProjectNode,
   ProjectGraphDependency,
 } from 'nx/src/config/project-graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { useEffect, useRef, useState } from 'react';
 import { GraphService } from './graph';
-import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import {
   ProjectEdgeNodeTooltip,
   ProjectNodeToolTip,

@@ -11,6 +11,7 @@ import { jestVersion, typesNodeVersion } from '@nx/jest/src/utils/versions';
 
 import { Schema } from './schema';
 import {
+  configPluginsDetoxVersion,
   detoxVersion,
   nxVersion,
   testingLibraryJestDom,
@@ -21,7 +22,7 @@ export async function detoxInitGenerator(host: Tree, schema: Schema) {
 
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
-    tasks.push(updateDependencies(host));
+    tasks.push(updateDependencies(host, schema));
   }
 
   if (!schema.skipFormat) {
@@ -31,7 +32,7 @@ export async function detoxInitGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function updateDependencies(host: Tree) {
+export function updateDependencies(host: Tree, schema: Schema) {
   return addDependenciesToPackageJson(
     host,
     {},
@@ -41,6 +42,9 @@ export function updateDependencies(host: Tree) {
       '@testing-library/jest-dom': testingLibraryJestDom,
       '@types/node': typesNodeVersion,
       'jest-circus': jestVersion,
+      ...(schema.framework === 'expo'
+        ? { '@config-plugins/detox': configPluginsDetoxVersion }
+        : {}),
     }
   );
 }

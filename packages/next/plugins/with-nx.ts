@@ -5,12 +5,9 @@
 import * as path from 'path';
 import type { NextConfig } from 'next';
 import type { NextConfigFn } from '../src/utils/config';
-import { forNextVersion } from '../src/utils/config';
 import type { NextBuildBuilderOptions } from '../src/utils/types';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import type { ProjectGraph, ProjectGraphProjectNode, Target } from '@nx/devkit';
-import { readTsConfigPaths } from '@nx/js';
-import { findAllProjectNodeDependencies } from 'nx/src/utils/project-graph-utils';
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
@@ -162,13 +159,14 @@ function withNx(
   forNextVersion('>=13.4.0', () => {
     process.env['__NEXT_PRIVATE_PREBUNDLED_REACT'] =
       // Not in Next 13.3 or earlier, so need to access config via string
-      _nextConfig.experimental['serverActions'] ? 'experimental' : 'next';
+      _nextConfig.experimental?.['serverActions'] ? 'experimental' : 'next';
   });
 
   return async (phase: string) => {
     const { PHASE_PRODUCTION_SERVER } = await import('next/constants');
     if (phase === PHASE_PRODUCTION_SERVER) {
       // If we are running an already built production server, just return the configuration.
+      // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
       const { nx, ...validNextConfig } = _nextConfig;
       return {
         ...validNextConfig,
@@ -223,6 +221,10 @@ function withNx(
       forNextVersion('>=13.1.0', () => {
         if (!graph.dependencies[project]) return;
 
+        const { readTsConfigPaths } = require('@nx/js');
+        const {
+          findAllProjectNodeDependencies,
+        } = require('nx/src/utils/project-graph-utils');
         const paths = readTsConfigPaths();
         const deps = findAllProjectNodeDependencies(project);
         nextConfig.transpilePackages ??= [];
@@ -463,6 +465,15 @@ export function getAliasForProject(
   }
 
   return null;
+}
+
+// Runs a function if the Next.js version satisfies the range.
+export function forNextVersion(range: string, fn: () => void) {
+  const semver = require('semver');
+  const nextJsVersion = require('next/package.json').version;
+  if (semver.satisfies(nextJsVersion, range)) {
+    fn();
+  }
 }
 
 // Support for older generated code: `const withNx = require('@nx/next/plugins/with-nx');`

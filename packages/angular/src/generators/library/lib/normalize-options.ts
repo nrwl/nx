@@ -10,7 +10,7 @@ import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 import { Linter } from '@nx/linter';
 import { UnitTestRunner } from '../../../utils/test-runners';
-import { normalizePrefix } from '../../utils/project';
+import { normalizeNewProjectPrefix } from '../../utils/project';
 
 export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
   // Create a schema with populated default values
@@ -55,7 +55,7 @@ export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
     ? options.tags.split(',').map((s) => s.trim())
     : [];
   const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
-  const prefix = normalizePrefix(options.prefix, npmScope);
+  const prefix = normalizeNewProjectPrefix(options.prefix, npmScope, 'lib');
 
   options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 

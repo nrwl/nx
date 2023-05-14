@@ -1,7 +1,6 @@
 import {
   ensurePackage,
   formatFiles,
-  generateFiles,
   GeneratorCallback,
   joinPathFragments,
   ProjectConfiguration,
@@ -15,7 +14,7 @@ import { isComponent } from '@nx/react/src/utils/ct-utils';
 import { CypressComponentConfigurationGeneratorSchema } from './schema';
 import { nxVersion } from '../../utils/versions';
 import { componentTestGenerator } from '@nx/react';
-import { normalize, relative } from 'path';
+import { relative } from 'path';
 
 export async function cypressComponentConfiguration(
   tree: Tree,
@@ -23,24 +22,15 @@ export async function cypressComponentConfiguration(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { cypressComponentConfiguration } = ensurePackage<
+  const { cypressComponentConfiguration: baseCyCtConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
   tasks.push(
-    await cypressComponentConfiguration(tree, {
+    await baseCyCtConfig(tree, {
       project: options.project,
       skipFormat: true,
     })
   );
-  const projectConfig = readProjectConfiguration(tree, options.project);
-
-  projectConfig.targets['component-test'].options = {
-    ...projectConfig.targets['component-test'].options,
-    skipServe: true,
-  };
-  updateProjectConfiguration(tree, options.project, projectConfig);
-
-  await addFiles(tree, projectConfig, options);
 
   const { webpackInitGenerator } = ensurePackage<typeof import('@nx/webpack')>(
     '@nx/webpack',
@@ -54,6 +44,16 @@ export async function cypressComponentConfiguration(
     })
   );
 
+  const projectConfig = readProjectConfiguration(tree, options.project);
+
+  projectConfig.targets['component-test'].options = {
+    ...projectConfig.targets['component-test'].options,
+    skipServe: true,
+  };
+  updateProjectConfiguration(tree, options.project, projectConfig);
+
+  await addFiles(tree, projectConfig, options);
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
@@ -66,26 +66,8 @@ async function addFiles(
   projectConfig: ProjectConfiguration,
   opts: CypressComponentConfigurationGeneratorSchema
 ) {
-  const cypressConfigPath = joinPathFragments(
-    projectConfig.root,
-    'cypress.config.ts'
-  );
-  if (tree.exists(cypressConfigPath)) {
-    tree.delete(cypressConfigPath);
-  }
-
-  generateFiles(
-    tree,
-    joinPathFragments(__dirname, 'files'),
-    projectConfig.root,
-    {
-      tailwind: ['js', 'cjs'].some((ext) =>
-        tree.exists(
-          joinPathFragments(projectConfig.root, `tailwind.config.${ext}`)
-        )
-      ),
-      tpl: '',
-    }
+  const { addMountDefinition, addDefaultCTConfig } = await import(
+    '@nx/cypress/src/utils/config'
   );
 
   const ctFile = joinPathFragments(
@@ -95,13 +77,47 @@ async function addFiles(
     'component.ts'
   );
 
-  tree.write(ctFile, `${tree.read(ctFile, 'utf-8')}import './styles.ct.css';`);
+  const updatedCommandFile = await addMountDefinition(
+    tree.read(ctFile, 'utf-8')
+  );
+  tree.write(
+    ctFile,
+    `import { mount } from 'cypress/react18';\nimport './styles.ct.css';\n${updatedCommandFile}`
+  );
+
+  const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
+  const updatedCyConfig = await addDefaultCTConfig(tree.read(cyFile, 'utf-8'));
+  tree.write(
+    cyFile,
+    `import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';\n${updatedCyConfig}`
+  );
+
+  const isUsingTailwind = ['js', 'cjs'].some((ext) =>
+    tree.exists(joinPathFragments(projectConfig.root, `tailwind.config.${ext}`))
+  );
+
+  tree.write(
+    joinPathFragments(
+      projectConfig.root,
+      'cypress',
+      'support',
+      'styles.ct.css'
+    ),
+    `/* This is where you can load global styles to apply to all components. */
+${
+  isUsingTailwind
+    ? `@tailwind base;
+@tailwind components;
+@tailwind utilities;`
+    : ''
+}
+`
+  );
 
   if (opts.generateTests) {
     const filePaths = [];
     visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (filePath) => {
       const fromProjectRootPath = relative(projectConfig.root, filePath);
-      console.log({ fromProjectRootPath, filePath });
       // we don't generate tests for pages/server-side/appDir components
       if (
         fromProjectRootPath.includes('pages') ||

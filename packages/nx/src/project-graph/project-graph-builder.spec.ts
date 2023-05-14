@@ -33,6 +33,8 @@ describe('ProjectGraphBuilder', () => {
     expect(() =>
       builder.addImplicitDependency('source', 'invalid-target')
     ).toThrowError();
+    // this should not break, but should not exist in resulting dependencies either
+    builder.addStaticDependency('source', 'invalid-target', 'source/index.ts');
 
     // ignore the self deps
     builder.addDynamicDependency('source', 'source', 'source/index.ts');
@@ -89,13 +91,6 @@ describe('ProjectGraphBuilder', () => {
         'invalid-source',
         'source/index.ts',
         'target'
-      )
-    ).toThrowError();
-    expect(() =>
-      builder.addExplicitDependency(
-        'source',
-        'source/index.ts',
-        'invalid-target'
       )
     ).toThrowError();
     expect(() =>

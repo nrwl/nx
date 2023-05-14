@@ -1,45 +1,47 @@
-import { Argv, CommandModule } from 'yargs';
+import { CommandModule } from 'yargs';
+import { withAffectedOptions } from '../yargs-utils/shared-options';
+import { ShowProjectOptions } from './show';
 
-const validObjectTypes = ['projects'] as const;
-type NxObject = typeof validObjectTypes[number];
-
-interface ShowCommandArguments {
-  object: NxObject;
-}
-
-export const yargsShowCommand: CommandModule<
-  ShowCommandArguments,
-  ShowCommandArguments
-> = {
-  command: 'show <object>',
+export const yargsShowCommand: CommandModule = {
+  command: 'show',
   describe: 'Show information about the workspace (e.g., list of projects)',
-  builder: (yargs) => withShowOptions(yargs),
+  builder: (yargs) =>
+    yargs
+      .command(showProjectsCommand)
+      .demandCommand()
+      .example(
+        '$0 show projects',
+        'Show a list of all projects in the workspace'
+      )
+      .example(
+        '$0 show projects --affected',
+        'Show affected projects in the workspace'
+      )
+      .example(
+        '$0 show projects --affected --exclude *-e2e',
+        'Show affected projects in the workspace, excluding end-to-end projects'
+      ),
   handler: async (args) => {
-    if (!validObjectTypes.includes(args.object)) {
-    }
-    await import('./show').then((m) => m.show(args));
-    process.exit(0);
+    // Noop, yargs will error if not in a subcommand.
   },
 };
 
-function withShowOptions(yargs: Argv) {
-  return yargs
-    .positional('object', {
-      describe: 'What to show (e.g., projects)',
-      choices: ['projects'],
-      required: true,
-    })
-    .coerce({
-      object: (arg) => {
-        if (validObjectTypes.includes(arg)) {
-          return arg;
-        } else {
-          throw new Error(
-            `Invalid object type: ${arg}. Valid object types are: ${validObjectTypes.join(
-              ', '
-            )}`
-          );
-        }
-      },
-    });
-}
+const showProjectsCommand: CommandModule<
+  Record<string, unknown>,
+  ShowProjectOptions
+> = {
+  command: 'projects',
+  describe: 'Show a list of projects in the workspace',
+  builder: (yargs) =>
+    withAffectedOptions(yargs)
+      .option('affected', {
+        type: 'boolean',
+        description: 'Show only affected projects',
+      })
+      .implies('untracked', 'affected')
+      .implies('uncommitted', 'affected')
+      .implies('files', 'affected')
+      .implies('base', 'affected')
+      .implies('head', 'affected'),
+  handler: (args) => import('./show').then((m) => m.showProjectsHandler(args)),
+};

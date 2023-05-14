@@ -10,6 +10,7 @@ import {
 import { findFreePort } from './find-free-port';
 
 export function normalizeDirectory(options: Schema) {
+  options.directory = options.directory?.replace(/\\{1,2}/g, '/');
   const { projectDirectory } = extractLayoutDirectory(options.directory);
   return projectDirectory
     ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`

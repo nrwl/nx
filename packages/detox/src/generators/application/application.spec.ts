@@ -345,14 +345,14 @@ describe('detox application generator', () => {
         'android.eas': {
           binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.apk',
           build:
-            'npx nx run my-dir-my-app:download --platform android --output=my-dir/my-app/dist/',
-          type: 'ios.app',
+            'npx nx run my-dir-my-app:download --platform android --output=../../../my-dir/my-app/dist/',
+          type: 'android.apk',
         },
         'android.local': {
           binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.apk',
           build:
-            'npx nx run my-dir-my-app:build --platform android --profile preview --wait --local --no-interactive --output=my-dir/my-app/dist/',
-          type: 'ios.app',
+            'npx nx run my-dir-my-app:build --platform android --profile preview --wait --local --no-interactive --output=../../../my-dir/my-app/dist/MyDirMyApp.apk',
+          type: 'android.apk',
         },
         'android.release': {
           binaryPath:
@@ -371,13 +371,13 @@ describe('detox application generator', () => {
         'ios.eas': {
           binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.app',
           build:
-            'npx nx run my-dir-my-app:download --platform ios --distribution simulator --output=my-dir/my-app/dist/',
+            'npx nx run my-dir-my-app:download --platform ios --distribution simulator --output=../../../my-dir/my-app/dist/',
           type: 'ios.app',
         },
         'ios.local': {
           binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.app',
           build:
-            'npx nx run my-dir-my-app:build --platform ios --profile preview --wait --local --no-interactive --output=my-dir/my-app/dist/',
+            'npx nx run my-dir-my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../../../my-dir/my-app/dist/MyDirMyApp.tar.gz',
           type: 'ios.app',
         },
         'ios.release': {

@@ -6,7 +6,7 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { join, relative } from 'path';
+import { relative } from 'path';
 import {
   BuildOptions,
   InlineConfig,
@@ -19,7 +19,6 @@ import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import replaceFiles from '../../plugins/rollup-replace-files.plugin';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
-import * as path from 'path';
 
 /**
  * Returns the path to the vite config file or undefined when not found.
@@ -56,8 +55,8 @@ export function getViteServerProxyConfigPath(
       context.projectsConfigurations.projects[context.projectName].root;
 
     const proxyConfigPath = nxProxyConfig
-      ? join(context.root, nxProxyConfig)
-      : join(projectRoot, 'proxy.conf.json');
+      ? joinPathFragments(context.root, nxProxyConfig)
+      : joinPathFragments(projectRoot, 'proxy.conf.json');
 
     if (existsSync(proxyConfigPath)) {
       return proxyConfigPath;
@@ -78,7 +77,7 @@ export function getViteSharedConfig(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  const root = path.relative(
+  const root = relative(
     context.cwd,
     joinPathFragments(context.root, projectRoot)
   );

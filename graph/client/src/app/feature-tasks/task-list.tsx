@@ -1,5 +1,7 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 import {
   createTaskName,
   getProjectsByType,
@@ -10,7 +12,6 @@ import { ExclamationCircleIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { ReactNode } from 'react';
 import { Tooltip } from '@nx/graph/ui-tooltips';
 import { TaskGraphErrorTooltip } from './task-graph-error-tooltip';
-import { ExperimentalFeature } from '../ui-components/experimental-feature';
 
 interface SidebarProject {
   projectGraphNode: ProjectGraphProjectNode;

@@ -9,7 +9,7 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g @nrwl/angular:scam-directive --project=my-lib --flat=false my-sample",
+        "command": "nx g @nx/angular:scam-directive --project=my-lib --flat=false my-sample",
         "description": "Generate a `MySampleDirective` directive in a `my-sample` folder in the `my-lib` library"
       }
     ],

@@ -1,6 +1,7 @@
 import type { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
+  createNonNxProjectDirectory,
   e2eCwd,
   getPackageManagerCommand,
   getPublishedVersion,
@@ -588,8 +589,6 @@ describe('global installation', () => {
   let oldPath: string;
 
   beforeAll(() => {
-    newProject();
-
     ensureDirSync(globalsPath);
     writeFileSync(
       path.join(path.dirname(path.dirname(globalsPath)), 'package.json'),
@@ -618,66 +617,95 @@ describe('global installation', () => {
     process.env.PATH = oldPath;
   });
 
-  it('should invoke Nx commands from local repo', () => {
-    const nxJsContents = readFile('node_modules/nx/bin/nx.js');
-    updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
-    let output: string;
-    expect(() => {
-      output = runCommand(`nx show projects`);
-    }).not.toThrow();
-    expect(output).toContain('local install');
-    updateFile('node_modules/nx/bin/nx.js', nxJsContents);
+  describe('inside nx directory', () => {
+    beforeAll(() => {
+      newProject();
+    });
+
+    it('should invoke Nx commands from local repo', () => {
+      const nxJsContents = readFile('node_modules/nx/bin/nx.js');
+      updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
+      let output: string;
+      expect(() => {
+        output = runCommand(`nx show projects`);
+      }).not.toThrow();
+      expect(output).toContain('local install');
+      updateFile('node_modules/nx/bin/nx.js', nxJsContents);
+    });
+
+    it('should warn if local Nx has higher major version', () => {
+      const packageJsonContents = readFile('node_modules/nx/package.json');
+      updateJson('node_modules/nx/package.json', (json) => {
+        json.version = `${major(getPublishedVersion()) + 2}.0.0`;
+        return json;
+      });
+      let output: string;
+      expect(() => {
+        output = runCommand(`nx show projects`);
+      }).not.toThrow();
+      expect(output).toContain('Its time to update Nx');
+      updateFile('node_modules/nx/package.json', packageJsonContents);
+    });
+
+    it('--version should display global installs version', () => {
+      const packageJsonContents = readFile('node_modules/nx/package.json');
+      const localVersion = `${major(getPublishedVersion()) + 2}.0.0`;
+      updateJson('node_modules/nx/package.json', (json) => {
+        json.version = localVersion;
+        return json;
+      });
+      let output: string;
+      expect(() => {
+        output = runCommand(`nx --version`);
+      }).not.toThrow();
+      expect(output).toContain(`- Local: v${localVersion}`);
+      expect(output).toContain(`- Global: v${getPublishedVersion()}`);
+      updateFile('node_modules/nx/package.json', packageJsonContents);
+    });
+
+    it('report should display global installs version', () => {
+      const packageJsonContents = readFile('node_modules/nx/package.json');
+      const localVersion = `${major(getPublishedVersion()) + 2}.0.0`;
+      updateJson('node_modules/nx/package.json', (json) => {
+        json.version = localVersion;
+        return json;
+      });
+      let output: string;
+      expect(() => {
+        output = runCommand(`nx report`);
+      }).not.toThrow();
+      expect(output).toEqual(
+        expect.stringMatching(new RegExp(`nx.*:.*${localVersion}`))
+      );
+      expect(output).toEqual(
+        expect.stringMatching(
+          new RegExp(`nx \\(global\\).*:.*${getPublishedVersion()}`)
+        )
+      );
+      updateFile('node_modules/nx/package.json', packageJsonContents);
+    });
   });
 
-  it('should warn if local Nx has higher major version', () => {
-    const packageJsonContents = readFile('node_modules/nx/package.json');
-    updateJson('node_modules/nx/package.json', (json) => {
-      json.version = `${major(getPublishedVersion()) + 2}.0.0`;
-      return json;
+  describe('non-nx directory', () => {
+    beforeAll(() => {
+      createNonNxProjectDirectory();
     });
-    let output: string;
-    expect(() => {
-      output = runCommand(`nx show projects`);
-    }).not.toThrow();
-    expect(output).toContain('Its time to update Nx');
-    updateFile('node_modules/nx/package.json', packageJsonContents);
-  });
 
-  it('--version should display global installs version', () => {
-    const packageJsonContents = readFile('node_modules/nx/package.json');
-    const localVersion = `${major(getPublishedVersion()) + 2}.0.0`;
-    updateJson('node_modules/nx/package.json', (json) => {
-      json.version = localVersion;
-      return json;
+    it('--version should report global version and local not found', () => {
+      let output: string;
+      expect(() => {
+        output = runCommand(`nx --version`);
+      }).not.toThrow();
+      expect(output).toContain(`- Local: Not found`);
+      expect(output).toContain(`- Global: v${getPublishedVersion()}`);
     });
-    let output: string;
-    expect(() => {
-      output = runCommand(`nx --version`);
-    }).not.toThrow();
-    expect(output).toContain(`- Local: v${localVersion}`);
-    expect(output).toContain(`- Global: v${getPublishedVersion()}`);
-    updateFile('node_modules/nx/package.json', packageJsonContents);
-  });
 
-  it('report should display global installs version', () => {
-    const packageJsonContents = readFile('node_modules/nx/package.json');
-    const localVersion = `${major(getPublishedVersion()) + 2}.0.0`;
-    updateJson('node_modules/nx/package.json', (json) => {
-      json.version = localVersion;
-      return json;
+    it('graph should work in npm workspaces repo', () => {
+      expect(() => {
+        runCommand(`nx graph --file graph.json`);
+      }).not.toThrow();
+      const { graph } = readJson('graph.json');
+      expect(graph).toHaveProperty('nodes');
     });
-    let output: string;
-    expect(() => {
-      output = runCommand(`nx report`);
-    }).not.toThrow();
-    expect(output).toEqual(
-      expect.stringMatching(new RegExp(`nx.*:.*${localVersion}`))
-    );
-    expect(output).toEqual(
-      expect.stringMatching(
-        new RegExp(`nx \\(global\\).*:.*${getPublishedVersion()}`)
-      )
-    );
-    updateFile('node_modules/nx/package.json', packageJsonContents);
   });
 });
