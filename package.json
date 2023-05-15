@@ -114,7 +114,7 @@
     "@types/jest": "29.4.0",
     "@types/js-yaml": "^4.0.5",
     "@types/marked": "^2.0.0",
-    "@types/node": "18.11.9",
+    "@types/node": "18.16.9",
     "@types/prettier": "^2.6.2",
     "@types/react": "18.0.25",
     "@types/react-dom": "18.0.9",
