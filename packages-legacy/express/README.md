@@ -1,6 +1,8 @@
-## @nrwl/express has been deprecated!
+## @nrwl/express has been renamed to @nx/express!
 
-@nrwl/express has been deprecated in favor of [@nx/express](https://www.npmjs.com/package/@nx/express). Please use that instead.
+@nrwl/express has been renamed to [@nx/express](https://www.npmjs.com/package/@nx/express). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/express will no longer be published in Nx v17.
 

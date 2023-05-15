@@ -1,6 +1,8 @@
-## @nrwl/expo has been deprecated!
+## @nrwl/expo has been renamed to @nx/expo!
 
-@nrwl/expo has been deprecated in favor of [@nx/expo](https://www.npmjs.com/package/@nx/expo). Please use that instead.
+@nrwl/expo has been renamed to [@nx/expo](https://www.npmjs.com/package/@nx/expo). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/expo will no longer be published in Nx v17.
 

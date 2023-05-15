@@ -1,6 +1,8 @@
-## @nrwl/js has been deprecated!
+## @nrwl/js has been renamed to @nx/js!
 
-@nrwl/js has been deprecated in favor of [@nx/js](https://www.npmjs.com/package/@nx/js). Please use that instead.
+@nrwl/js has been renamed to [@nx/js](https://www.npmjs.com/package/@nx/js). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/js will no longer be published in Nx v17.
 

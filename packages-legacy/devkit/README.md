@@ -1,6 +1,8 @@
-## @nrwl/devkit has been deprecated!
+## @nrwl/devkit has been renamed to @nx/devkit!
 
-@nrwl/devkit has been deprecated in favor of [@nx/devkit](https://www.npmjs.com/package/@nx/devkit). Please use that instead.
+@nrwl/devkit has been renamed to [@nx/devkit](https://www.npmjs.com/package/@nx/devkit). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/devkit will no longer be published in Nx v17.
 

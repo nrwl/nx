@@ -1,6 +1,8 @@
-## @nrwl/detox has been deprecated!
+## @nrwl/detox has been renamed to @nx/detox!
 
-@nrwl/detox has been deprecated in favor of [@nx/detox](https://www.npmjs.com/package/@nx/detox). Please use that instead.
+@nrwl/detox has been renamed to [@nx/detox](https://www.npmjs.com/package/@nx/detox). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/detox will no longer be published in Nx v17.
 

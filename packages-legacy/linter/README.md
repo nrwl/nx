@@ -1,6 +1,8 @@
-## @nrwl/linter has been deprecated!
+## @nrwl/linter has been renamed to @nx/linter!
 
-@nrwl/linter has been deprecated in favor of [@nx/linter](https://www.npmjs.com/package/@nx/linter). Please use that instead.
+@nrwl/linter has been renamed to [@nx/linter](https://www.npmjs.com/package/@nx/linter). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/linter will no longer be published in Nx v17.
 
