@@ -18,18 +18,18 @@ import { hasGenerator } from '../../utils/has-generator';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
 
-interface NormalizedSchema extends Schema {
-  fileName: string;
-  className: string;
-  projectRoot: string;
-  projectSourceRoot: string;
-  npmScope: string;
-  npmPackageName: string;
-}
+type NormalizedSchema = Schema &
+  ReturnType<typeof names> & {
+    fileName: string;
+    className: string;
+    projectRoot: string;
+    projectSourceRoot: string;
+    npmScope: string;
+    npmPackageName: string;
+  };
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const { npmScope } = getWorkspaceLayout(host);
-  const { fileName, className } = names(options.name);
 
   const { root: projectRoot, sourceRoot: projectSourceRoot } =
     readProjectConfiguration(host, options.project);
@@ -48,8 +48,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    fileName,
-    className,
+    ...names(options.name),
     description,
     projectRoot,
     projectSourceRoot,
@@ -69,7 +68,11 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     host,
     path.join(__dirname, './files/generator'),
     `${options.projectSourceRoot}/generators`,
-    options
+    {
+      ...options,
+      generatorFnName: `${options.propertyName}Generator`,
+      schemaInterfaceName: `${options.className}GeneratorSchema`,
+    }
   );
 
   if (options.unitTestRunner === 'none') {
