@@ -160,16 +160,47 @@ Note the result value is hashed, so it is never displayed.
 
 _External Dependencies_
 
-This input is useful for ambiguous executors like `nx:run-commands`.
+For official plugins, Nx intelligently finds a set of external dependencies which it hashes for the target. `nx:run-commands` is an exception to this.
+Because you may specify any command to be run, it is not possible to determine which, if any, external dependencies are used by the target.
+To be safe, Nx assumes that updating any external dependency invalidates the cache for the target.
+
+> Note: Community plugins are also treated like `nx:run-commands`
+
+This input type allows for you to override this cautious behavior by specifying a set of external dependencies to hash for the target.
 
 Examples:
 
-- Specify that a target executor is not affected by any changes in installed packages
-- `{externalDependencies: []}`
-- Specify exact packages that affect a target executor
-- `{externalDependencies: ["lerna"]}`
+Targets that only use commands natively available in the terminal will not depend on any external dependencies. Specify an empty array to not hash any external dependencies.
 
-Note the result value is hashed, so it is never displayed.
+```json
+{
+  "copyFiles": {
+    "inputs": [
+      {
+        "externalDependencies": []
+      }
+    ],
+    "executor": "nx:run-commands",
+    "command": "cp src/assets dist"
+  }
+}
+```
+
+If a target uses a command from a npm package, that package should be listed.
+
+```json
+{
+  "copyFiles": {
+    "inputs": [
+      {
+        "externalDependencies": ["lerna"]
+      }
+    ],
+    "executor": "nx:run-commands",
+    "command": "npx lerna publish"
+  }
+}
+```
 
 _Named Inputs_
 
