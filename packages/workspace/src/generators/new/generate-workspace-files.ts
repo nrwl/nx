@@ -206,8 +206,10 @@ function addPropertyWithStableKeys(obj: any, key: string, value: string) {
 
 function normalizeOptions(options: NormalizedSchema) {
   let defaultBase = options.defaultBase || deduceDefaultBase();
+  const name = names(options.name).fileName;
   return {
-    npmScope: options.name,
+    name,
+    npmScope: name,
     ...options,
     defaultBase,
   };
