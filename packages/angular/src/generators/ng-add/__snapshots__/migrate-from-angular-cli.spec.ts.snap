@@ -98,7 +98,6 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
     ],
     "sharedGlobals": [],
   },
-  "npmScope": "my-org",
   "targetDefaults": {
     "build": {
       "dependsOn": [

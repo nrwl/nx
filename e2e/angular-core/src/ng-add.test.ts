@@ -142,7 +142,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       affected: {
         defaultBase: 'main',
       },
-      npmScope: 'projscope',
       tasksRunnerOptions: {
         default: {
           options: {

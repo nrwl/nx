@@ -16,7 +16,6 @@ interface Schema {
   directory: string;
   name: string;
   appName?: string;
-  npmScope?: string;
   skipInstall?: boolean;
   style?: string;
   nxCloud?: boolean;

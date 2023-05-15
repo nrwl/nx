@@ -6,7 +6,7 @@ import {
   ProjectGraph,
 } from '../../../../config/project-graph';
 import { parseJson } from '../../../../utils/json';
-import { getImportPath, joinPathFragments } from '../../../../utils/path';
+import { joinPathFragments } from '../../../../utils/path';
 import { ProjectsConfigurations } from '../../../../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../../../../config/nx-json';
 import { ExplicitDependency } from './explicit-project-dependencies';
@@ -56,9 +56,13 @@ function createPackageNameMap(
           )
         )
       );
+      // TODO(v17): Stop reading nx.json for the npmScope
+      const npmScope = nxJsonConfiguration.npmScope;
       res[
         packageJson.name ??
-          getImportPath(nxJsonConfiguration.npmScope, projectName)
+          (npmScope
+            ? `${npmScope === '@' ? '' : '@'}${npmScope}/${projectName}`
+            : projectName)
       ] = projectName;
     } catch (e) {}
   }

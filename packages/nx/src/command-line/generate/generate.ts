@@ -423,6 +423,7 @@ export async function workspaceGenerators(args: Arguments) {
   });
 
   const nxJson: NxJsonConfiguration = readNxJson();
+
   const collection = nxJson.npmScope
     ? `@${nxJson.npmScope}/workspace-plugin`
     : 'workspace-plugin';

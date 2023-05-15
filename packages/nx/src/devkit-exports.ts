@@ -177,12 +177,7 @@ export { stripIndents } from './utils/strip-indents';
 /**
  * @category Utils
  */
-export {
-  joinPathFragments,
-  normalizePath,
-  getImportPath,
-  detectWorkspaceScope,
-} from './utils/path';
+export { joinPathFragments, normalizePath } from './utils/path';
 
 // TODO(v16): Change this to export from './utils/workspace-root'
 /**

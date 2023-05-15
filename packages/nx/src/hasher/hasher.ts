@@ -11,6 +11,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { hashTsConfig } from '../plugins/js/hasher/hasher';
+import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 
 type ExpandedSelfInput =
   | { fileset: string }
@@ -181,6 +182,9 @@ class TaskHasher {
     [runtime: string]: Promise<PartialHash>;
   } = {};
   private externalDepsHashCache: { [packageName: string]: PartialHash } = {};
+  private projectRootMappings = createProjectRootMappings(
+    this.projectGraph.nodes
+  );
 
   constructor(
     private readonly nxJson: NxJsonConfiguration,
@@ -584,7 +588,7 @@ class TaskHasher {
           ...fileNames,
           ...values,
           JSON.stringify({ ...p.data, files: undefined }),
-          hashTsConfig(p, this.nxJson, this.options),
+          hashTsConfig(p, this.projectRootMappings, this.options),
         ]);
         res({
           value,
