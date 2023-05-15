@@ -1,9 +1,19 @@
-import { workspaceRoot } from '../src/utils/workspace-root';
 import { FsTree, Tree } from '../src/generators/tree';
+import { join } from 'path';
 
-export default async function runMigrationAgainstThisWorkspace(
-  migrateFn: (tree: Tree) => void
+export function assertRunsAgainstNxRepo(
+  migrateFn: (tree: Tree) => void | Promise<void>
 ) {
-  const tree = new FsTree(workspaceRoot, true);
-  expect(() => migrateFn(tree)).not.toThrow();
+  it('should run against the Nx repo', async () => {
+    const tree = new FsTree(join(__dirname, '../../../'), true);
+    let resultOrPromise: void | Promise<void> = migrateFn(tree);
+
+    if (resultOrPromise && 'then' in resultOrPromise) {
+      try {
+        await resultOrPromise;
+      } catch (e) {
+        fail(e);
+      }
+    }
+  });
 }

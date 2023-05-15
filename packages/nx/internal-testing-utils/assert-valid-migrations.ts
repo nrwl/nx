@@ -20,8 +20,9 @@ export function assertValidMigrationPaths(json: MigrationsJson, root: string) {
 
 function validateMigration(m: MigrationsJsonEntry, root: string) {
   const impl = m.factory ?? m.implementation;
-  const implMember = impl.includes('#') ? impl.split('#')[1] : null;
-  const implPath = impl.includes('#') ? impl.split('#')[0] : impl;
+  const [implPath, implMember] = impl.includes('#')
+    ? impl.split('#')
+    : [impl, null];
   let implModule;
   expect(() => {
     implModule = require(path.join(root, `${implPath}.ts`));

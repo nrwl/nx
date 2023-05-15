@@ -11,6 +11,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/linter';
+import { assertRunsAgainstNxRepo } from '@nx/devkit/internal-testing-utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import executorGenerator from '../../generators/executor/executor';
 import generatorGenerator from '../../generators/generator/generator';
@@ -234,6 +235,8 @@ describe('updateCliPropsForPlugins', () => {
     const updated = readJson(tree, schemaPath);
     expect(updated).not.toHaveProperty('cli');
   });
+
+  assertRunsAgainstNxRepo(updateCliPropsForPlugins);
 });
 
 async function createPlugin(tree: Tree) {
