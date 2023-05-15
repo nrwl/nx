@@ -22,7 +22,7 @@
     "npmScope": {
       "type": "string",
       "description": "NPM Scope that the workspace uses.",
-      "x-deprecated": "This is inferred from the package.json in the workspace root instead."
+      "deprecated": "This is inferred from the package.json in the workspace root instead."
     },
     "tasksRunnerOptions": {
       "type": "object",
