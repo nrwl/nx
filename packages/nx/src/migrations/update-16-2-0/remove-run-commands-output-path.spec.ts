@@ -43,6 +43,24 @@ describe('removeRunCommandsOutputPath', () => {
     expect(migratedTargets.other).toEqual(startingTargets.other);
   });
 
+  it('should handle null options correctly', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const startingTargets: Record<string, TargetConfiguration> = {
+      build: {
+        executor: 'nx:run-commands',
+        outputs: ['dist/some/path'],
+      },
+    };
+    addProjectConfiguration(tree, 'my-app', {
+      root: 'apps/my-app',
+      targets: startingTargets,
+    });
+    expect(() => removeRunCommandsOutputPath(tree)).not.toThrow();
+    const migratedTargets = readProjectConfiguration(tree, 'my-app').targets;
+    expect(migratedTargets.build).toEqual(startingTargets.build);
+    expect(migratedTargets.other).toEqual(startingTargets.other);
+  });
+
   it('should migrate target defaults correctly', () => {
     const tree = createTreeWithEmptyWorkspace();
     const startingTargetDefaults: Record<string, TargetConfiguration> = {
