@@ -1,6 +1,8 @@
-## @nrwl/react has been deprecated!
+## @nrwl/react has been renamed to @nx/react!
 
-@nrwl/react has been deprecated in favor of [@nx/react](https://www.npmjs.com/package/@nx/react). Please use that instead.
+@nrwl/react has been renamed to [@nx/react](https://www.npmjs.com/package/@nx/react). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/react will no longer be published in Nx v17.
 

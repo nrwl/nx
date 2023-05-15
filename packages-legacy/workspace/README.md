@@ -1,6 +1,8 @@
-## @nrwl/workspace has been deprecated!
+## @nrwl/workspace has been renamed to @nx/workspace!
 
-@nrwl/workspace has been deprecated in favor of [@nx/workspace](https://www.npmjs.com/package/@nx/workspace). Please use that instead.
+@nrwl/workspace has been renamed to [@nx/workspace](https://www.npmjs.com/package/@nx/workspace). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/workspace will no longer be published in Nx v17.
 

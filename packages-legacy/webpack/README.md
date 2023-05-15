@@ -1,6 +1,8 @@
-## @nrwl/webpack has been deprecated!
+## @nrwl/webpack has been renamed to @nx/webpack!
 
-@nrwl/webpack has been deprecated in favor of [@nx/webpack](https://www.npmjs.com/package/@nx/webpack). Please use that instead.
+@nrwl/webpack has been renamed to [@nx/webpack](https://www.npmjs.com/package/@nx/webpack). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/webpack will no longer be published in Nx v17.
 
