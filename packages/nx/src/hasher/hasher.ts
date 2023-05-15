@@ -15,7 +15,8 @@ import { hashTsConfig } from '../plugins/js/hasher/hasher';
 type ExpandedSelfInput =
   | { fileset: string }
   | { runtime: string }
-  | { env: string };
+  | { env: string }
+  | { externalDependencies: string[] };
 
 /**
  * A data structure returned by the default hasher.
@@ -217,7 +218,11 @@ class TaskHasher {
         visited
       );
 
-      const target = this.hashTarget(task.target.project, task.target.target);
+      const target = this.hashTarget(
+        task.target.project,
+        task.target.target,
+        selfInputs
+      );
       if (target) {
         return {
           value: this.hashing.hashArray([selfAndInputs.value, target.value]),
@@ -377,7 +382,11 @@ class TaskHasher {
     return partialHash;
   }
 
-  private hashTarget(projectName: string, targetName: string): PartialHash {
+  private hashTarget(
+    projectName: string,
+    targetName: string,
+    selfInputs: ExpandedSelfInput[]
+  ): PartialHash {
     const projectNode = this.projectGraph.nodes[projectName];
     const target = projectNode.data.targets[targetName];
 
@@ -385,18 +394,40 @@ class TaskHasher {
       return;
     }
 
-    // we can only vouch for @nrwl packages's executors
-    // if it's "run commands" we skip traversing since we have no info what this command depends on
-    // for everything else we take the hash of the @nrwl package dependency tree
+    // we can only vouch for @nx packages's executor dependencies
+    // if it's "run commands" or third-party we skip traversing since we have no info what this command depends on
     if (
       target.executor.startsWith(`@nrwl/`) ||
       target.executor.startsWith(`@nx/`)
     ) {
       const executorPackage = target.executor.split(':')[0];
-      const executorNode = `npm:${executorPackage}`;
-      if (this.projectGraph.externalNodes?.[executorNode]) {
-        return this.hashExternalDependency(executorNode);
+      const executorNodeName =
+        this.findExternalDependencyNodeName(executorPackage);
+      return this.hashExternalDependency(executorNodeName);
+    }
+
+    // use command external dependencies if available to construct the hash
+    const partialHashes: PartialHash[] = [];
+    let hasCommandExternalDependencies = false;
+    for (const input of selfInputs) {
+      if (input['externalDependencies']) {
+        // if we have externalDependencies with empty array we still want to override the default hash
+        hasCommandExternalDependencies = true;
+        const externalDependencies = input['externalDependencies'];
+        for (let dep of externalDependencies) {
+          dep = this.findExternalDependencyNodeName(dep);
+          partialHashes.push(this.hashExternalDependency(dep));
+        }
       }
+    }
+    if (hasCommandExternalDependencies) {
+      return {
+        value: this.hashing.hashArray(partialHashes.map((h) => h.value)),
+        details: partialHashes.reduce(
+          (acc, c) => ({ ...acc, ...c.details }),
+          {}
+        ),
+      };
     }
 
     const hash = this.hashing.hashArray([
@@ -408,6 +439,22 @@ class TaskHasher {
         [projectNode.name]: target.executor,
       },
     };
+  }
+
+  private findExternalDependencyNodeName(packageName: string): string {
+    if (this.projectGraph.externalNodes[packageName]) {
+      return packageName;
+    }
+    if (this.projectGraph.externalNodes[`npm:${packageName}`]) {
+      return `npm:${packageName}`;
+    }
+    for (const node of Object.values(this.projectGraph.externalNodes)) {
+      if (node.data.packageName === packageName) {
+        return node.name;
+      }
+    }
+    // not found, just return the package name
+    return packageName;
   }
 
   private async hashSingleProjectInputs(
@@ -695,7 +742,12 @@ function expandSingleProjectInputs(
           `namedInputs definitions can only refer to other namedInputs definitions within the same project.`
         );
       }
-      if ((d as any).fileset || (d as any).env || (d as any).runtime) {
+      if (
+        (d as any).fileset ||
+        (d as any).env ||
+        (d as any).runtime ||
+        (d as any).externalDependencies
+      ) {
         expanded.push(d);
       } else {
         expanded.push(...expandNamedInput((d as any).input, namedInputs));

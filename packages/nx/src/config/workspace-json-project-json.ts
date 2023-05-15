@@ -131,6 +131,7 @@ export type InputDefinition =
   | { input: string }
   | { fileset: string }
   | { runtime: string }
+  | { externalDependencies: string[] }
   | { env: string };
 
 /**

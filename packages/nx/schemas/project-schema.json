@@ -206,6 +206,16 @@
               }
             },
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "externalDependencies": {
+                "type": "string",
+                "description": "The list of external dependencies that our target depends on for `nx:run-commands` and community plugins."
+              }
+            },
+            "additionalProperties": false
           }
         ]
       }
