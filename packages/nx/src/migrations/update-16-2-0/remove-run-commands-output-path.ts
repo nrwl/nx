@@ -1,3 +1,4 @@
+import { joinPathFragments } from '../../utils/path';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { TargetConfiguration } from '../../config/workspace-json-project-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
@@ -37,8 +38,10 @@ function updateTargetBlock(target: TargetConfiguration): boolean {
     const outputs = new Set(target.outputs ?? []);
     outputs.delete('{options.outputPath}');
     const newOutputs = Array.isArray(target.options.outputPath)
-      ? target.options.outputPath
-      : [target.options.outputPath];
+      ? target.options.outputPath.map((p) =>
+          joinPathFragments('{workspaceRoot}', p)
+        )
+      : [joinPathFragments('{workspaceRoot}', target.options.outputPath)];
     for (const outputPath of newOutputs) {
       outputs.add(outputPath);
     }
