@@ -40,15 +40,19 @@ export function isAngularPluginInstalled() {
   }
 }
 
-function readAngularJson() {
-  return toNewFormat(readJsonFile(path.join(workspaceRoot, 'angular.json')))
-    .projects;
+function readAngularJson(angularCliWorkspaceRoot: string) {
+  return toNewFormat(
+    readJsonFile(path.join(angularCliWorkspaceRoot, 'angular.json'))
+  ).projects;
 }
 
-export function mergeAngularJsonAndGlobProjects(globProjects: {
-  [name: string]: ProjectConfiguration;
-}): { [name: string]: ProjectConfiguration } {
-  const res = readAngularJson();
+export function mergeAngularJsonAndGlobProjects(
+  globProjects: {
+    [name: string]: ProjectConfiguration;
+  },
+  angularCliWorkspaceRoot: string
+): { [name: string]: ProjectConfiguration } {
+  const res = readAngularJson(angularCliWorkspaceRoot);
   const folders = new Set();
   for (let k of Object.keys(res)) {
     folders.add(res[k].root);
