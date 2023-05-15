@@ -1310,6 +1310,27 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.1.5": {
+      "version": "16.1.5-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.71.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.71.7",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "12.1.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-safe-area-context": {
+          "version": "4.5.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

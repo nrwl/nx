@@ -1,10 +1,4 @@
-import {
-  Tree,
-  formatFiles,
-  getProjects,
-  updateJson,
-  updateProjectConfiguration,
-} from '@nx/devkit';
+import { Tree, formatFiles, getProjects, updateJson } from '@nx/devkit';
 
 /**
  * Add detox plugin to app.json for expo

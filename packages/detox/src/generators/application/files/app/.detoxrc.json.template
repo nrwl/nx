@@ -44,7 +44,7 @@
 <% if (framework === 'expo') { %>
     "android.eas": {
       "type": "android.apk",
-      "build": "<%= exec %> nx run <%= appFileName %>:download --platform android --output=<%= offsetFromRoot %><%= appRoot %>/dist/",
+      "build": "<%= exec %> nx run <%= appFileName %>:download --platform android --distribution simulator --output=<%= offsetFromRoot %><%= appRoot %>/dist/",
       "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.apk"
     },
     "android.local": {
