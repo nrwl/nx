@@ -196,7 +196,12 @@ export class TasksSchedule {
 
     for (const dep of this.reverseTaskDeps[task.id]) {
       const depTask = this.taskGraph.tasks[dep];
-      this.processTaskForBatches(batches, depTask, rootExecutorName, false);
+      await this.processTaskForBatches(
+        batches,
+        depTask,
+        rootExecutorName,
+        false
+      );
     }
   }
 
