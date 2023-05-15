@@ -32,7 +32,7 @@ export default async function removeRunCommandsOutputPath(tree: Tree) {
 
 function updateTargetBlock(target: TargetConfiguration): boolean {
   let changed = false;
-  if (target.executor === 'nx:run-commands' && target.options.outputPath) {
+  if (target.executor === 'nx:run-commands' && target.options?.outputPath) {
     changed = true;
     const outputs = new Set(target.outputs ?? []);
     outputs.delete('{options.outputPath}');
