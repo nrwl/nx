@@ -118,7 +118,8 @@ export class Workspaces {
       )
     ) {
       projectsConfigurations.projects = mergeAngularJsonAndGlobProjects(
-        projectsConfigurations.projects
+        projectsConfigurations.projects,
+        this.root
       );
     }
     this.cachedProjectsConfig = this.mergeTargetDefaultsIntoProjectDescriptions(
