@@ -7,7 +7,7 @@ import {
 import * as path from 'path';
 import { <%= className %>GeneratorSchema } from './schema';
 
-export default async function (tree: Tree, options: <%= className %>GeneratorSchema) {
+export async function <%= generatorFnName %> (tree: Tree, options: <%= schemaInterfaceName %>) {
   const projectRoot = `libs/${options.name}`;
   addProjectConfiguration(
     tree,
@@ -22,3 +22,5 @@ export default async function (tree: Tree, options: <%= className %>GeneratorSch
   generateFiles(tree, path.join(__dirname, 'files'), projectRoot, options);
   await formatFiles(tree);
 }
+
+export default <%= generatorFnName %>;
