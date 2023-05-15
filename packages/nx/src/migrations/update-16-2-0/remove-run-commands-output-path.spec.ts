@@ -35,7 +35,7 @@ describe('removeRunCommandsOutputPath', () => {
     expect(migratedTargets.build).not.toEqual(startingTargets.build);
     expect(migratedTargets.build).toEqual({
       executor: 'nx:run-commands',
-      outputs: ['dist/apps/my-app'],
+      outputs: ['{workspaceRoot}/dist/apps/my-app'],
       options: {
         commands: [],
       },
@@ -89,7 +89,7 @@ describe('removeRunCommandsOutputPath', () => {
     );
     expect(migratedTargetDefaults.build).toEqual({
       executor: 'nx:run-commands',
-      outputs: ['dist/apps/my-app'],
+      outputs: ['{workspaceRoot}/dist/apps/my-app'],
       options: {
         commands: [],
       },
