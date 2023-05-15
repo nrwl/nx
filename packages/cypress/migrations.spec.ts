@@ -1,14 +1,8 @@
 import path = require('path');
 import json = require('./migrations.json');
 
-describe('Cypress migrations', () => {
-  it('should have valid paths', () => {
-    Object.values(json.generators || {}).forEach((m: any) => {
-      expect(() =>
-        require.resolve(
-          path.join(__dirname, `${m.factory ?? m.implementation}.ts`)
-        )
-      ).not.toThrow();
-    });
-  });
+import { assertValidMigrationPaths } from '@nx/devkit/internal-testing-utils';
+
+describe('Angular migrations', () => {
+  assertValidMigrationPaths(json, __dirname);
 });

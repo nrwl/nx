@@ -1,14 +1,8 @@
-import path = require('path');
 import json = require('./migrations.json');
 
-describe('Express migrations', () => {
-  it('should have valid paths', () => {
-    Object.values(json.generators).forEach((m: any) => {
-      expect(() =>
-        require.resolve(
-          path.join(__dirname, `${m.factory ?? m.implementation}.ts`)
-        )
-      ).not.toThrow();
-    });
-  });
+import { assertValidMigrationPaths } from '@nx/devkit/internal-testing-utils';
+import { MigrationsJson } from '@nx/devkit';
+
+describe('express migrations', () => {
+  assertValidMigrationPaths(json as MigrationsJson, __dirname);
 });
