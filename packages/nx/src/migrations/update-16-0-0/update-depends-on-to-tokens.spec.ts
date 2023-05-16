@@ -7,6 +7,7 @@ import {
 import update from './update-depends-on-to-tokens';
 import { updateJson, writeJson } from '../../generators/utils/json';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
+import { assertRunsAgainstNxRepo } from '../../../internal-testing-utils/run-migration-against-this-workspace';
 
 describe('update-depends-on-to-tokens', () => {
   it('should update nx.json', async () => {
@@ -125,4 +126,6 @@ describe('update-depends-on-to-tokens', () => {
     promise = update(tree);
     await expect(promise).resolves.toBeUndefined();
   });
+
+  assertRunsAgainstNxRepo(update);
 });
