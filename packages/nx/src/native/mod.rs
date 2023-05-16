@@ -1,2 +1,2 @@
 pub mod native_hasher;
-pub mod watcher;
+pub mod watch;

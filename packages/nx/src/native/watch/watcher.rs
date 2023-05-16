@@ -1,14 +1,16 @@
-mod get_ignore_files;
-mod watch_filterer;
-
-use crate::native::watcher::get_ignore_files::get_ignore_files;
-use crate::native::watcher::watch_filterer::WatchFilterer;
+use crate::native::watch::get_ignore_files::get_ignore_files;
+use crate::native::watch::watch_filterer::WatchFilterer;
 
 use ignore_files::IgnoreFilter;
+use itertools::Itertools;
 use napi::threadsafe_function::{ThreadSafeCallContext, ThreadsafeFunctionCallMode};
 use napi::{Env, JsFunction, JsObject, Ref};
 use std::convert::Infallible;
 use std::sync::Arc;
+
+use tracing::trace;
+use tracing_subscriber::EnvFilter;
+
 use watchexec::action::{Action, Outcome};
 use watchexec::config::{InitConfig, RuntimeConfig};
 use watchexec::event::Tag;
@@ -42,15 +44,16 @@ impl Watcher {
 
     #[napi]
     pub fn start(&self, env: Env) -> napi::Result<JsObject> {
-        tracing_subscriber::fmt::init();
+        tracing_subscriber::fmt()
+            .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOG"))
+            .init();
 
         let callback_tsfn = env.create_threadsafe_function(
             &env.get_reference_value(&self.callback)?,
             0,
             |ctx: ThreadSafeCallContext<Vec<WatchEvent>>| {
                 let mut watch_events: Vec<JsObject> = vec![];
-
-                dbg!(&ctx.value);
+                trace!(?ctx.value, "Sending values into node");
                 for value in ctx.value {
                     let mut obj = ctx.env.create_object()?;
                     obj.set("path", value.path)?;
@@ -81,6 +84,8 @@ impl Watcher {
             runtime.filterer(Arc::new(WatchFilterer {
                 inner: IgnoreFilterer(filter),
             }));
+
+            // TODO(cammisuli): optimize this so that we only watch root folders that are not ignored (ie, all root paths except node_modules, .git, etc)
             runtime.pathset([&origin]);
 
             runtime.on_action(move |action: Action| {
@@ -107,8 +112,13 @@ impl Watcher {
                     return ok_future;
                 }
 
-                let watch_events: Vec<WatchEvent> =
-                    action.events.iter().map(WatchEvent::from).collect();
+                let watch_events: Vec<WatchEvent> = action
+                    .events
+                    .iter()
+                    .map(WatchEvent::from)
+                    .rev()
+                    .unique_by(|e| e.path.clone())
+                    .collect();
                 callback_tsfn.call(Ok(watch_events), ThreadsafeFunctionCallMode::Blocking);
 
                 action.outcome(Outcome::wait(Outcome::Start));
@@ -134,10 +144,10 @@ impl Watcher {
 }
 
 #[napi(object)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WatchEvent {
     pub path: String,
-    #[napi(ts_type = "'create' | 'delete' | 'update' | ''")]
+    #[napi(ts_type = "'create' | 'delete' | 'update'")]
     pub event_type: String,
 }
 impl From<&Event> for WatchEvent {
@@ -165,7 +175,7 @@ impl From<&Event> for WatchEvent {
             FileEventKind::Modify(ModifyKind::Data(_)) => "update",
             FileEventKind::Create(_) => "create",
             FileEventKind::Remove(_) => "delete",
-            _ => "",
+            _ => "update",
         };
 
         WatchEvent {

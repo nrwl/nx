@@ -12,7 +12,7 @@ export function hashFile(file: string): FileData | null
 export function hashFiles(workspaceRoot: string): Record<string, string>
 export interface WatchEvent {
   path: string
-  eventType: 'create' | 'delete' | 'update' | ''
+  eventType: 'create' | 'delete' | 'update'
 }
 export class Watcher {
   origin: string
