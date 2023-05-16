@@ -1,3 +1,4 @@
+use tracing::trace;
 use watchexec::error::RuntimeError;
 use watchexec::filter::Filterer;
 use watchexec_events::filekind::{FileEventKind, ModifyKind};
@@ -12,6 +13,12 @@ pub struct WatchFilterer {
 /// Used to filter out events that that come from watchexec
 impl Filterer for WatchFilterer {
     fn check_event(&self, event: &Event, priority: Priority) -> Result<bool, RuntimeError> {
+        if !self.inner.check_event(event, priority)? {
+            return Ok(false);
+        }
+
+        trace!(?event, "checking if event is valid");
+
         //
         // Tags will be a Vec that contains multiple types of information for a given event
         // We are only interested if:
@@ -42,9 +49,7 @@ impl Filterer for WatchFilterer {
             }
         }
 
-        if !self.inner.check_event(event, priority)? {
-            return Ok(false);
-        }
+        trace!(?event, "event passed all checks");
 
         Ok(true)
     }
