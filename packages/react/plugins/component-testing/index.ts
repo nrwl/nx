@@ -236,35 +236,36 @@ function buildTargetWebpack(
     buildableProjectConfig.sourceRoot!
   );
 
-  if (options.webpackConfig) {
-    let customWebpack: any;
+  let customWebpack: any;
 
+  if (options.webpackConfig) {
     customWebpack = resolveCustomWebpackConfig(
       options.webpackConfig,
       options.tsConfig
     );
-
-    return async () => {
-      customWebpack = await customWebpack;
-      // TODO(jack): Once webpackConfig is always set in @nx/webpack:webpack, we no longer need this default.
-      const defaultWebpack = getWebpackConfig(context, {
-        ...options,
-        root: workspaceRoot,
-        projectRoot: ctProjectConfig.root,
-        sourceRoot: ctProjectConfig.sourceRoot,
-      });
-
-      if (customWebpack) {
-        return await customWebpack(defaultWebpack, {
-          options,
-          context,
-          configuration: parsed.configuration,
-        });
-      }
-      return defaultWebpack;
-    };
   }
+
+  return async () => {
+    customWebpack = await customWebpack;
+    // TODO(jack): Once webpackConfig is always set in @nx/webpack:webpack, we no longer need this default.
+    const defaultWebpack = getWebpackConfig(context, {
+      ...options,
+      root: workspaceRoot,
+      projectRoot: ctProjectConfig.root,
+      sourceRoot: ctProjectConfig.sourceRoot,
+    });
+
+    if (customWebpack) {
+      return await customWebpack(defaultWebpack, {
+        options,
+        context,
+        configuration: parsed.configuration,
+      });
+    }
+    return defaultWebpack;
+  };
 }
+
 function findViteConfig(projectRootFullPath: string): string {
   const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
 
