@@ -1,8 +1,7 @@
 
 [workspace]
 members = [
-	'packages/nx',
-	'testing/playground',
+	'packages/nx'
 ]
 
 [profile.release]
