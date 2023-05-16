@@ -148,7 +148,7 @@ cleanupRegisteredPaths();
 
 {% callout type="note" title="@swc/jest & global scripts" %}
 When using @swc/jest and a global setup/teardown file,
-You have to set the `noInterop: false` and use dynmamic imports within the setup function
+You have to set the `noInterop: false` and use dynamic imports within the setup function
 
 ```typescript {% fileName="apps/<your-project>/jest.config.ts" %}
 /* eslint-disable */
