@@ -20,7 +20,8 @@
           "test",
           "test-native",
           "sitemap",
-          "build-storybook"
+          "build-storybook",
+          "copy-docs"
         ],
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1,
