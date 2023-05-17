@@ -23,6 +23,7 @@ describe('native', () => {
 
   it('should create an instance of NativeHasher', () => {
     // const nativeHasher = new NativeFileHasher('/root');
+    // // //
     // expect(nativeHasher instanceof NativeFileHasher).toBe(true);
   });
 });
@@ -35,6 +36,8 @@ describe('watcher', () => {
       done();
     });
 
-    watcher.start();
+    watcher.start(() => {
+      console.log('done');
+    });
   }, 10_000_000);
 });

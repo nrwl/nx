@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::path::MAIN_SEPARATOR;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use itertools::Itertools;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{
-    ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
+    ErrorStrategy, ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
 };
 use napi::{Env, JsFunction, JsObject};
 use tracing::trace;
@@ -32,7 +32,6 @@ pub struct Watcher {
 impl Watcher {
     #[napi(constructor)]
     pub fn new(
-        env: Env,
         origin: String,
         #[napi(ts_arg_type = "(err: string | null, paths: WatchEvent[]) => void")]
         callback: JsFunction,
@@ -40,24 +39,20 @@ impl Watcher {
         let watch_exec = Watchexec::new(InitConfig::default(), RuntimeConfig::default())
             .map_err(anyhow::Error::from)?;
 
-        let callback_tsfn = env.create_threadsafe_function(
-            &callback,
+        let callback_tsfn = callback.create_threadsafe_function(
             0,
             |ctx: ThreadSafeCallContext<HashMap<String, Vec<WatchEvent>>>| {
-                let mut watch_events: Vec<JsObject> = vec![];
+                let mut watch_events: Vec<WatchEvent> = vec![];
                 trace!(?ctx.value, "Base collection that will be sent");
                 for (_, value) in ctx.value {
-                    let mut obj = ctx.env.create_object()?;
                     let event = value
                         .last()
                         .expect("should always have at least 1 element")
                         .to_owned();
-                    trace!(?event, "sending to node");
-                    obj.set("path", event.path)?;
-                    obj.set("type", event.r#type)?;
-
-                    watch_events.push(obj);
+                    watch_events.push(event);
                 }
+
+                trace!(?watch_events, "sending to node");
 
                 Ok(vec![watch_events])
             },
@@ -70,8 +65,8 @@ impl Watcher {
         })
     }
 
-    #[napi(ts_return_type = "Promise<void>")]
-    pub fn start(&mut self, env: Env) -> Result<JsObject> {
+    #[napi]
+    pub fn start(&mut self, env: Env) -> Result<()> {
         tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOG"))
             .init();
@@ -150,7 +145,9 @@ impl Watcher {
             Ok(())
         };
 
-        env.spawn_future(start)
+        env.spawn_future(start)?;
+
+        Ok(())
     }
 
     #[napi(ts_return_type = "Promise<void>")]
