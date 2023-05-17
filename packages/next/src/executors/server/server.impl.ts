@@ -1,27 +1,29 @@
 import 'dotenv/config';
+import * as net from 'net';
 import {
   ExecutorContext,
   logger,
   parseTargetString,
   readTargetOptions,
-  runExecutor,
 } from '@nx/devkit';
-import * as chalk from 'chalk';
-import { existsSync } from 'fs';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 
 import {
   NextBuildBuilderOptions,
   NextServeBuilderOptions,
-  NextServerOptions,
-  ProxyConfig,
 } from '../../utils/types';
-import { defaultServer } from './lib/default-server';
+import { spawn } from 'child_process';
+import customServer from './custom-server.impl';
+import { createCliOptions } from '../../utils/create-cli-options';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,
   context: ExecutorContext
 ) {
+  if (options.customServerTarget) {
+    return yield* customServer(options, context);
+  }
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV = process.env.NODE_ENV
     ? process.env.NODE_ENV
@@ -38,96 +40,74 @@ export default async function* serveExecutor(
   );
   const root = resolve(context.root, buildOptions.root);
 
-  if (options.customServerTarget) {
-    yield* runCustomServer(root, options, buildOptions, context);
-  } else {
-    yield* runNextDevServer(root, options, context);
-  }
-}
+  const { port, keepAliveTimeout, hostname } = options;
 
-async function* runNextDevServer(
-  root: string,
-  options: NextServeBuilderOptions,
-  context: ExecutorContext
-) {
-  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
-  const settings: NextServerOptions = {
-    dev: options.dev,
-    dir: root,
-    staticMarkup: options.staticMarkup,
-    quiet: options.quiet,
-    port: options.port,
-    customServer: !!options.customServerTarget,
-    hostname: options.hostname || 'localhost',
-  };
+  const args = createCliOptions({ port, keepAliveTimeout, hostname });
+  const nextDir = resolve(context.root, buildOptions.outputPath);
 
-  // look for the proxy.conf.json
-  let proxyConfig: ProxyConfig;
-  const proxyConfigPath = options.proxyConfig
-    ? join(context.root, options.proxyConfig)
-    : join(root, 'proxy.conf.json');
+  const command = `npx next ${options.dev ? `dev ${args}` : `start ${args}`}`;
 
-  // TODO(v16): Remove proxy support.
-  if (existsSync(proxyConfigPath)) {
-    logger.warn(
-      `The "proxyConfig" option will be removed in Nx 16. Use the "rewrites" feature from Next.js instead. See: https://nextjs.org/docs/api-reference/next.config.js/rewrites`
-    );
-    proxyConfig = require(proxyConfigPath);
-  }
+  yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
+    ({ done, next, error }) => {
+      // Client to check if server is ready.
+      const client = new net.Socket();
+      const cleanupClient = () => {
+        client.removeAllListeners('connect');
+        client.removeAllListeners('error');
+        client.end();
+        client.destroy();
+        client.unref();
+      };
 
-  try {
-    await defaultServer(settings, proxyConfig);
-    logger.info(`[ ${chalk.green('ready')} ] on ${baseUrl}`);
+      const waitForServerReady = (retries = 30) => {
+        const allowedErrorCodes = ['ECONNREFUSED', 'ECONNRESET'];
 
-    yield {
-      baseUrl,
-      success: true,
-    };
+        client.once('connect', () => {
+          cleanupClient();
+          next({
+            success: true,
+            baseUrl: `http://${options.hostname ?? 'localhost'}:${port}`,
+          });
+        });
 
-    // This Promise intentionally never resolves, leaving the process running
-    await new Promise<{ success: boolean }>(() => {});
-  } catch (e) {
-    if (options.dev) {
-      throw e;
-    } else {
-      if (process.env.NX_VERBOSE_LOGGING) {
-        console.error(e);
-      }
-      throw new Error(
-        `Could not start production server. Try building your app with \`nx build ${context.projectName}\`.`
-      );
+        client.on('error', (err) => {
+          if (retries === 0 || !allowedErrorCodes.includes(err['code'])) {
+            cleanupClient();
+            error(err);
+          } else {
+            setTimeout(() => waitForServerReady(retries - 1), 1000);
+          }
+        });
+
+        client.connect({ port, host: '127.0.0.1' });
+      };
+
+      const server = spawn(command, {
+        cwd: options.dev ? root : nextDir,
+        stdio: 'inherit',
+        shell: true,
+      });
+
+      waitForServerReady();
+
+      server.once('exit', (code) => {
+        cleanupClient();
+        if (code === 0) {
+          done();
+        } else {
+          error(new Error(`Next.js app exited with code ${code}`));
+        }
+      });
+
+      process.on('exit', async (code) => {
+        if (code === 128 + 2) {
+          server.kill('SIGINT');
+        } else if (code === 128 + 1) {
+          server.kill('SIGHUP');
+        } else {
+          server.kill('SIGTERM');
+        }
+      });
     }
-  }
-}
-
-async function* runCustomServer(
-  root: string,
-  options: NextServeBuilderOptions,
-  buildOptions: NextBuildBuilderOptions,
-  context: ExecutorContext
-) {
-  process.env.NX_NEXT_DIR = root;
-  process.env.NX_NEXT_PUBLIC_DIR = join(root, 'public');
-
-  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
-
-  const customServerBuild = await runExecutor(
-    parseTargetString(options.customServerTarget, context.projectGraph),
-    {
-      watch: options.dev ? true : false,
-    },
-    context
   );
-
-  for await (const result of customServerBuild) {
-    if (!result.success) {
-      return result;
-    }
-    yield {
-      success: true,
-      baseUrl,
-    };
-  }
-
-  return { success: true };
 }
