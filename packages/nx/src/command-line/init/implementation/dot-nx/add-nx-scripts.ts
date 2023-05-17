@@ -33,7 +33,7 @@ path_to_root=$(dirname $BASH_SOURCE)
 node ${path.posix.join('$path_to_root', nxWrapperPath(path.posix))} $@`;
 
 export function generateDotNxSetup(version?: string) {
-  const host = new FsTree(process.cwd(), false);
+  const host = new FsTree(process.cwd(), false, '.nx setup');
   writeMinimalNxJson(host, version);
   updateGitIgnore(host);
   host.write(nxWrapperPath(), getNxWrapperContents());
