@@ -12,13 +12,13 @@
       ],
       "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/nx-dev/nx-dev",
         "commands": [
           "nx run nx-dev:sitemap",
           "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
         ],
         "parallel": false
-      }
+      },
+      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
     },
     "sitemap": {
       "executor": "nx:run-commands",
