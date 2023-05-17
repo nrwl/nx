@@ -5,11 +5,12 @@
   "sourceRoot": "e2e/rspack-e2e/src",
   "targets": {
     "e2e": {
-      "executor": "@nx/plugin:e2e",
+      "executor": "@nx/jest:jest",
       "options": {
-        "target": "rspack:build",
-        "jestConfig": "e2e/rspack-e2e/jest.config.ts"
-      }
+        "jestConfig": "e2e/rspack-e2e/jest.config.ts",
+        "runInBand": true
+      },
+      "dependsOn": ["rspack:build"]
     }
   },
   "tags": [],
