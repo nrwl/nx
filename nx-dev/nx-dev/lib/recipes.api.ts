@@ -6,6 +6,6 @@ export const nxRecipesApi = new DocumentsApi({
   id: 'recipes',
   manifest: documents,
   prefix: '',
-  publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+  publicDocsRoot: 'public/documentation',
   tagsApi,
 });

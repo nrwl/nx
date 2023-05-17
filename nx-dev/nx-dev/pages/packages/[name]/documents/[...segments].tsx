@@ -111,7 +111,7 @@ export async function getStaticProps({
       id: [params.name, 'documents'].join('-'),
       manifest: nxPackagesApi.getPackageDocuments(params.name),
       prefix: '',
-      publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+      publicDocsRoot: 'public/documentation',
       tagsApi,
     });
     const document = documents.getDocument(segments);

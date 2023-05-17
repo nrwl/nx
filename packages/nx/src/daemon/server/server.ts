@@ -232,8 +232,13 @@ function nxVersionChanged(): boolean {
 
 const nxPackageJsonPath = require.resolve('nx/package.json');
 function getInstalledNxVersion() {
-  const { version } = readJsonFile<PackageJson>(nxPackageJsonPath);
-  return version;
+  try {
+    const { version } = readJsonFile<PackageJson>(nxPackageJsonPath);
+    return version;
+  } catch (e) {
+    // node modules are absent, so we can return null, which would shut down the daemon
+    return null;
+  }
 }
 
 function lockFileHashChanged(): boolean {

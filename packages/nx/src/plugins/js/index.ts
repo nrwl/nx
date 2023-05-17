@@ -28,12 +28,13 @@ export const processProjectGraph: ProjectGraphProcessor = async (
   if (pluginConfig.analyzePackageJson) {
     // during the create-nx-workspace lock file might not exists yet
     if (lockFileExists()) {
-      const lockHash = lockFileHash() ?? 'n/a';
+      const lockHash = lockFileHash();
       if (lockFileNeedsReprocessing(lockHash)) {
         removeNpmNodes(graph, builder);
-        parseLockFile(builder);
+        if (!!parseLockFile(builder)) {
+          writeLastProcessedLockfileHash(lockHash);
+        }
       }
-      writeLastProcessedLockfileHash(lockHash);
     }
   }
 
