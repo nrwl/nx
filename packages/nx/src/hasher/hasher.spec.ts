@@ -81,7 +81,7 @@ describe('Hasher', () => {
               root: 'libs/parent',
               targets: {
                 build: {
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                   inputs: [
                     'default',
                     '^default',
@@ -136,8 +136,8 @@ describe('Hasher', () => {
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
       'parent:{projectRoot}/**/*':
-        '/file|file.hash|{"root":"libs/parent","targets":{"build":{"executor":"unknown","inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"},{"input":"default","projects":["unrelated"]}]}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
-      parent: 'unknown',
+        '/file|file.hash|{"root":"libs/parent","targets":{"build":{"executor":"nx:run-commands","inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"},{"input":"default","projects":["unrelated"]}]}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
+      parent: 'nx:run-commands',
       'unrelated:{projectRoot}/**/*':
         'libs/unrelated/filec.ts|filec.hash|{"root":"libs/unrelated","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
       '{workspaceRoot}/nx.json': 'nx.json.hash',
@@ -159,7 +159,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: 'unknown' } },
+              targets: { build: { executor: 'nx:run-commands' } },
               files: [
                 { file: '/filea.ts', hash: 'a.hash' },
                 { file: '/filea.spec.ts', hash: 'a.spec.hash' },
@@ -219,7 +219,7 @@ describe('Hasher', () => {
               targets: {
                 build: {
                   inputs: ['prod', '^prod'],
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                 },
               },
               files: [
@@ -236,7 +236,7 @@ describe('Hasher', () => {
               namedInputs: {
                 prod: ['default'],
               },
-              targets: { build: { executor: 'unknown' } },
+              targets: { build: { executor: 'nx:run-commands' } },
               files: [
                 { file: 'libs/child/fileb.ts', hash: 'b.hash' },
                 { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
@@ -288,12 +288,12 @@ describe('Hasher', () => {
               targets: {
                 build: {
                   inputs: ['prod'],
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                 },
                 test: {
                   inputs: ['default'],
                   dependsOn: ['build'],
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                 },
               },
               files: [
@@ -356,7 +356,7 @@ describe('Hasher', () => {
               targets: {
                 test: {
                   inputs: ['default', '^prod'],
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                 },
               },
               files: [
@@ -380,7 +380,7 @@ describe('Hasher', () => {
               targets: {
                 test: {
                   inputs: ['default'],
-                  executor: 'unknown',
+                  executor: 'nx:run-commands',
                 },
               },
               files: [
@@ -459,7 +459,7 @@ describe('Hasher', () => {
             data: {
               root: 'libs/parent',
               targets: {
-                build: { executor: '@nx/workspace:run-commands' },
+                build: { executor: 'nx:run-commands' },
               },
               files: [
                 { file: 'libs/parent/filea.ts', hash: 'a.hash' },
@@ -472,7 +472,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/child',
-              targets: { build: { executor: '@nx/workspace:run-commands' } },
+              targets: { build: { executor: 'nx:run-commands' } },
               files: [
                 { file: 'libs/child/fileb.ts', hash: 'b.hash' },
                 { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
@@ -526,7 +526,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: '@nx/workspace:run-commands' } },
+              targets: { build: { executor: 'nx:run-commands' } },
               files: [{ file: '/file', hash: 'file.hash' }],
             },
           },
@@ -575,7 +575,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: '@nx/workspace:run-commands' } },
+              targets: { build: { executor: 'nx:run-commands' } },
               files: [{ file: '/filea.ts', hash: 'a.hash' }],
             },
           },
@@ -584,7 +584,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/child',
-              targets: { build: { executor: '@nx/workspace:run-commands' } },
+              targets: { build: { executor: 'nx:run-commands' } },
               files: [{ file: '/fileb.ts', hash: 'b.hash' }],
             },
           },
@@ -656,7 +656,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: '@nx/workspace:run-commands' } },
+              targets: { build: { executor: 'nx:run-commands' } },
               files: [{ file: '/file', hash: 'some-hash' }],
             },
           },
@@ -698,7 +698,7 @@ describe('Hasher', () => {
             type: 'app',
             data: {
               root: 'apps/app',
-              targets: { build: { executor: '@nx/workspace:run-commands' } },
+              targets: { build: { executor: 'nx:run-commands' } },
               files: [{ file: '/filea.ts', hash: 'a.hash' }],
             },
           },
@@ -747,7 +747,7 @@ describe('Hasher', () => {
             type: 'app',
             data: {
               root: 'apps/app',
-              targets: { build: { executor: '@nx/workspace:run-commands' } },
+              targets: { build: { executor: 'nx:run-commands' } },
               files: [{ file: '/filea.ts', hash: 'a.hash' }],
             },
           },
@@ -779,6 +779,325 @@ describe('Hasher', () => {
     // note that the parent hash is based on parent source files only!
     assertFilesets(hash, {
       'npm:react': { contains: '__npm:react__' },
+    });
+  });
+
+  describe('hashTarget', () => {
+    it('should hash executor dependencies of @nx packages', async () => {
+      const hasher = new Hasher(
+        {
+          nodes: {
+            app: {
+              name: 'app',
+              type: 'app',
+              data: {
+                root: 'apps/app',
+                targets: { build: { executor: '@nx/webpack:webpack' } },
+                files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              },
+            },
+          },
+          externalNodes: {
+            'npm:@nx/webpack': {
+              name: 'npm:@nx/webpack',
+              type: 'npm',
+              data: {
+                packageName: '@nx/webpack',
+                version: '16.0.0',
+              },
+            },
+          },
+          dependencies: {},
+          allWorkspaceFiles,
+        },
+        {} as any,
+        {},
+        createHashing()
+      );
+
+      const hash = await hasher.hashTask({
+        target: { project: 'app', target: 'build' },
+        id: 'app-build',
+        overrides: { prop: 'prop-value' },
+      });
+
+      assertFilesets(hash, {
+        'npm:@nx/webpack': { contains: '16.0.0' },
+      });
+    });
+
+    it('should hash entire subtree of dependencies', async () => {
+      const hasher = new Hasher(
+        {
+          nodes: {
+            app: {
+              name: 'app',
+              type: 'app',
+              data: {
+                root: 'apps/app',
+                targets: { build: { executor: '@nx/webpack:webpack' } },
+                files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              },
+            },
+          },
+          externalNodes: {
+            'npm:@nx/webpack': {
+              name: 'npm:@nx/webpack',
+              type: 'npm',
+              data: {
+                packageName: '@nx/webpack',
+                version: '16.0.0',
+                hash: '$nx/webpack16$',
+              },
+            },
+            'npm:@nx/devkit': {
+              name: 'npm:@nx/devkit',
+              type: 'npm',
+              data: {
+                packageName: '@nx/devkit',
+                version: '16.0.0',
+                hash: '$nx/devkit16$',
+              },
+            },
+            'npm:nx': {
+              name: 'npm:nx',
+              type: 'npm',
+              data: {
+                packageName: 'nx',
+                version: '16.0.0',
+                hash: '$nx16$',
+              },
+            },
+            'npm:webpack': {
+              name: 'npm:webpack',
+              type: 'npm',
+              data: {
+                packageName: 'webpack',
+                version: '5.0.0', // no hash intentionally
+              },
+            },
+          },
+          dependencies: {
+            'npm:@nx/webpack': [
+              {
+                source: 'npm:@nx/webpack',
+                target: 'npm:@nx/devkit',
+                type: DependencyType.static,
+              },
+              {
+                source: 'npm:@nx/webpack',
+                target: 'npm:nx',
+                type: DependencyType.static,
+              },
+              {
+                source: 'npm:@nx/webpack',
+                target: 'npm:webpack',
+                type: DependencyType.static,
+              },
+            ],
+            'npm:@nx/devkit': [
+              {
+                source: 'npm:@nx/devkit',
+                target: 'npm:nx',
+                type: DependencyType.static,
+              },
+            ],
+          },
+          allWorkspaceFiles,
+        },
+        {} as any,
+        {},
+        createHashing()
+      );
+
+      const hash = await hasher.hashTask({
+        target: { project: 'app', target: 'build' },
+        id: 'app-build',
+        overrides: { prop: 'prop-value' },
+      });
+
+      assertFilesets(hash, {
+        'npm:@nx/webpack': { contains: '$nx/webpack16$' },
+        'npm:@nx/devkit': { contains: '$nx/devkit16$' },
+        'npm:nx': { contains: '$nx16$' },
+        'npm:webpack': { contains: '5.0.0' },
+      });
+    });
+
+    it('should not hash when nx:run-commands executor', async () => {
+      const hasher = new Hasher(
+        {
+          nodes: {
+            app: {
+              name: 'app',
+              type: 'app',
+              data: {
+                root: 'apps/app',
+                targets: { build: { executor: 'nx:run-commands' } },
+                files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              },
+            },
+          },
+          externalNodes: {
+            'npm:nx': {
+              name: 'npm:nx',
+              type: 'npm',
+              data: {
+                packageName: 'nx',
+                version: '16.0.0',
+              },
+            },
+          },
+          dependencies: {},
+          allWorkspaceFiles,
+        },
+        {} as any,
+        {},
+        createHashing()
+      );
+
+      const hash = await hasher.hashTask({
+        target: { project: 'app', target: 'build' },
+        id: 'app-build',
+        overrides: { prop: 'prop-value' },
+      });
+
+      expect(hash.details.nodes['npm:nx']).not.toBeDefined();
+      expect(hash.details.nodes['app']).toEqual('nx:run-commands');
+    });
+
+    it('should use externalDependencies to override nx:run-commands', async () => {
+      const hasher = new Hasher(
+        {
+          nodes: {
+            app: {
+              name: 'app',
+              type: 'app',
+              data: {
+                root: 'apps/app',
+                targets: {
+                  build: {
+                    executor: 'nx:run-commands',
+                    inputs: [
+                      { fileset: '{projectRoot}/**/*' },
+                      { externalDependencies: ['webpack', 'react'] },
+                    ],
+                  },
+                },
+                files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              },
+            },
+          },
+          externalNodes: {
+            'npm:nx': {
+              name: 'npm:nx',
+              type: 'npm',
+              data: {
+                packageName: 'nx',
+                version: '16.0.0',
+              },
+            },
+            'npm:webpack': {
+              name: 'npm:webpack',
+              type: 'npm',
+              data: {
+                packageName: 'webpack',
+                version: '5.0.0',
+              },
+            },
+            'npm:react': {
+              name: 'npm:react',
+              type: 'npm',
+              data: {
+                packageName: 'react',
+                version: '17.0.0',
+              },
+            },
+          },
+          dependencies: {},
+          allWorkspaceFiles,
+        },
+        {} as any,
+        {},
+        createHashing()
+      );
+
+      const hash = await hasher.hashTask({
+        target: { project: 'app', target: 'build' },
+        id: 'app-build',
+        overrides: { prop: 'prop-value' },
+      });
+
+      expect(hash.details.nodes['npm:nx']).not.toBeDefined();
+      expect(hash.details.nodes['app']).not.toBeDefined();
+      expect(hash.details.nodes['npm:webpack']).toEqual('5.0.0');
+      expect(hash.details.nodes['npm:react']).toEqual('17.0.0');
+    });
+
+    it('should use externalDependencies with empty array to ignore all deps', async () => {
+      const hasher = new Hasher(
+        {
+          nodes: {
+            app: {
+              name: 'app',
+              type: 'app',
+              data: {
+                root: 'apps/app',
+                targets: {
+                  build: {
+                    executor: 'nx:run-commands',
+                    inputs: [
+                      { fileset: '{projectRoot}/**/*' },
+                      { externalDependencies: [] }, // intentionally empty
+                    ],
+                  },
+                },
+                files: [{ file: '/filea.ts', hash: 'a.hash' }],
+              },
+            },
+          },
+          externalNodes: {
+            'npm:nx': {
+              name: 'npm:nx',
+              type: 'npm',
+              data: {
+                packageName: 'nx',
+                version: '16.0.0',
+              },
+            },
+            'npm:webpack': {
+              name: 'npm:webpack',
+              type: 'npm',
+              data: {
+                packageName: 'webpack',
+                version: '5.0.0',
+              },
+            },
+            'npm:react': {
+              name: 'npm:react',
+              type: 'npm',
+              data: {
+                packageName: 'react',
+                version: '17.0.0',
+              },
+            },
+          },
+          dependencies: {},
+          allWorkspaceFiles,
+        },
+        {} as any,
+        {},
+        createHashing()
+      );
+
+      const hash = await hasher.hashTask({
+        target: { project: 'app', target: 'build' },
+        id: 'app-build',
+        overrides: { prop: 'prop-value' },
+      });
+
+      expect(hash.details.nodes['npm:nx']).not.toBeDefined();
+      expect(hash.details.nodes['app']).not.toBeDefined();
     });
   });
 

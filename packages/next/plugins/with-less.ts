@@ -6,14 +6,6 @@ import { WithNxOptions } from './with-nx';
 const addLessToRegExp = (rx) =>
   new RegExp(rx.source.replace('|sass', '|sass|less'), rx.flags);
 
-function patchNextCSSWithLess(
-  nextCSSModule: any = require('next/dist/build/webpack/config/blocks/css')
-) {
-  nextCSSModule.regexLikeCss = addLessToRegExp(nextCSSModule.regexLikeCss);
-}
-
-patchNextCSSWithLess();
-
 export function withLess(
   configOrFn: NextConfigFn | WithNxOptions
 ): NextConfigFn {
@@ -108,4 +100,3 @@ export function withLess(
 
 module.exports = withLess;
 module.exports.withLess = withLess;
-module.exports.patchNext = patchNextCSSWithLess;

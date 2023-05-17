@@ -1,20 +1,25 @@
-# Deploying Node.js serverless functions to Netlify
+# Add and Deploy Netlify Edge Functions with Node
 
-Deploying Node.js serverless functions to Netlify involes a few steps:
+Deploying Node.js serverless functions to Netlify involves a few steps.
 
-## Creating the project
+## Getting set up
+
+Depending on your current situation, you can either
+
+- create a brand new project with the intention of solely hosting and deploying Netlify functions
+- adding Netlify functions to an existing project
+
+Let's walk through both scenarios.
+
+### Starting a New Project
 
 For new workspaces you can create a Nx workspace with serverless function with one command:
 
 ```shell
-npx create-nx-workspace@latest my-functions \
---preset=@nx/netlify \
---site=my-site \ # Site ID or name to deploy the functions
+npx create-nx-workspace@latest my-functions --preset=@nx/netlify --site=my-site
 ```
 
-## Configuring existing projects
-
-**Skip this step if you are not configuring an existing project.**
+### Configure Existing Projects
 
 You will need to install `@nx/netlify` if you haven't already.
 
@@ -42,52 +47,70 @@ pnpm add -D @nx/netlify
 {% /tab %}
 {% /tabs %}
 
-- Add serverless configuration by running the following command:
+Next add the Netlify serverless configuration by running the following command:
 
 ```shell
-nx generate @nx/netlify:setup-serverless
-```
-
-- Create a new netlify serverless project with:
-
-```shell
-nx generate @nx/netlfiy:serverless
+nx g @nx/netlify:setup-serverless
 ```
 
 This will do a few things:
 
 1. Create a new serverless function in `src/functions`.
 2. Add the `netlify.toml` in the root of the project
-3. Update your `project.json` to have 2 new targets `serve` & `deploy`.
+3. Update your `project.json` to have 2 new targets `serve-functions` & `deploy-functions`.
 
-## Configure your Netlify deploy settings
+## Serve Your Functions Locally
 
-If you **do not** have a _site_ setup within your workspace, go inside the Netlify dashboard, and create/use an existing site where your serverless functions will be deployed.
+To serve your functions locally, run:
 
-In your `project.json` you can update your deploy site by going to the `deploy` target adding `--site=my-site-name-or-id` replace **my-site-name-or-id** to what you have in your Netlify dashboard.
+```shell
+nx serve-functions
+```
 
-It should look similar to:
+## Configure Your Netlify Deploy Settings
 
-```json
-    "deploy": {
+Make sure you have a site configured on Netlify (skip if you have already). You have mostly two options:
+
+- either go to [app.netlify.com](https://app.netlify.com) and create a new site
+- use the Netlify CLI and run `npx netlify deploy` which will walk you through the process
+
+If you run `npx netlify deploy` in the workspace, the site ID will be automatically saved in the `.netlify/state.json` file. Alternatively adjust the `deploy-functions` in your `project.json` to include the `--site` flag:
+
+```json {% fileName="project.json" %}
+{
+  "targets": {
+    ...
+    "deploy-functions": {
       "dependsOn": ["lint"],
-      "command": "npx netlify deploy --prod-if-unlocked --site=my-site"
+      "command": "npx netlify deploy --site=YOUR_SITE_ID",
+      "configurations": {
+        "production": {
+          "command": "npx netlify deploy --site=YOUR_SITE_ID --prod"
+        }
+      }
     }
+  }
+}
 ```
 
 ## Deployment
 
-To view your functions locally you run:
+To deploy them to Netlify, run:
 
 ```shell
-nx serve
+nx deploy-functions
 ```
 
-Inside your `netlify.toml` your functions _path_ should be already configured.
-To deploy them to Netlify you would run:
+This creates a "draft deployment" to a temporary URL. If you want to do a production deployment, pass the `--prod` flag:
 
 ```shell
-nx deploy
+nx deploy-functions --prod
 ```
 
-The netlify CLI will output the link where you functions can be accessed. You can either click that link or open your browser and navigate to it!
+This invokes the "production" configuration of the `deploy-functions` target and passes the `--prod` flag to the Netlify CLI.
+
+{% callout type="info" title="Configure your CI for automated deployments" %}
+
+Note that for a more stable and automated setup you might want to configure your CI to automatically deploy your functions.
+
+{% /callout %}

@@ -1,12 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import {
-  generateFiles,
-  joinPathFragments,
-  readNxJson,
-  readProjectConfiguration,
-} from '@nx/devkit';
+import { generateFiles, joinPathFragments } from '@nx/devkit';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
-import type { AngularProjectConfiguration } from '../../../utils/types';
 import type { Schema } from '../schema';
 
 export function addRemoteEntry(
@@ -14,11 +8,6 @@ export function addRemoteEntry(
   { appName, routing, prefix, standalone }: Schema,
   appRoot: string
 ) {
-  prefix =
-    prefix ??
-    (readProjectConfiguration(tree, appName) as AngularProjectConfiguration)
-      ?.prefix ??
-    readNxJson(tree).npmScope;
   generateFiles(
     tree,
     standalone

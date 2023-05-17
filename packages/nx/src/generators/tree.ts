@@ -223,8 +223,11 @@ export class FsTree implements Tree {
       isDeleted: true,
     };
 
-    // Delete directories when
-    if (this.children(dirname(this.rp(filePath))).length < 1) {
+    // Delete directory when is not root and there are no children
+    if (
+      filePath !== '' &&
+      this.children(dirname(this.rp(filePath))).length < 1
+    ) {
       this.delete(dirname(this.rp(filePath)));
     }
   }
@@ -282,7 +285,7 @@ export class FsTree implements Tree {
 
     res = [...res, ...this.directChildrenOfDir(this.rp(dirPath))];
     res = res.filter((q) => {
-      const r = this.recordedChanges[join(this.rp(dirPath), q)];
+      const r = this.recordedChanges[this.normalize(join(this.rp(dirPath), q))];
       return !r?.isDeleted;
     });
     // Dedupe

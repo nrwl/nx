@@ -285,7 +285,13 @@ function mapSnapshots(
 
   // collect snapshots and their matching keys
   Object.values(nodes).forEach((node) => {
-    const [matchedKeys, snapshot] = findOriginalKeys(groupedDependencies, node);
+    const foundOriginalKeys = findOriginalKeys(groupedDependencies, node);
+    if (!foundOriginalKeys) {
+      throw new Error(
+        `Original key(s) not found for "${node.data.packageName}@${node.data.version}" while pruning yarn.lock.`
+      );
+    }
+    const [matchedKeys, snapshot] = foundOriginalKeys;
     snapshotMap.set(snapshot, new Set(matchedKeys));
 
     // separately save keys that still exist
@@ -398,7 +404,7 @@ function findOriginalKeys(
   for (const keyExpr of Object.keys(dependencies)) {
     const snapshot = dependencies[keyExpr];
     const keys = keyExpr.split(', ');
-    if (!keys[0].startsWith(`${node.data.packageName}@`)) {
+    if (!keys.some((k) => k.startsWith(`${node.data.packageName}@`))) {
       continue;
     }
     // standard package
@@ -415,7 +421,7 @@ function findOriginalKeys(
     // classic alias
     if (
       node.data.version.startsWith('npm:') &&
-      keys.every((k) => k === `${node.data.packageName}@${node.data.version}`)
+      keys.some((k) => k === `${node.data.packageName}@${node.data.version}`)
     ) {
       return [keys, snapshot];
     }

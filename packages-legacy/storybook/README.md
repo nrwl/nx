@@ -1,6 +1,8 @@
-## @nrwl/storybook has been deprecated!
+## @nrwl/storybook has been renamed to @nx/storybook!
 
-@nrwl/storybook has been deprecated in favor of [@nx/storybook](https://www.npmjs.com/package/@nx/storybook). Please use that instead.
+@nrwl/storybook has been renamed to [@nx/storybook](https://www.npmjs.com/package/@nx/storybook). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/storybook will no longer be published in Nx v17.
 

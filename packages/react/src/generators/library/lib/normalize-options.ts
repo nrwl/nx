@@ -1,6 +1,5 @@
 import {
   extractLayoutDirectory,
-  getImportPath,
   getProjects,
   getWorkspaceLayout,
   joinPathFragments,
@@ -9,6 +8,8 @@ import {
   normalizePath,
   Tree,
 } from '@nx/devkit';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
+
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 
@@ -26,7 +27,7 @@ export function normalizeOptions(
 
   const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const { libsDir: defaultLibsDir, npmScope } = getWorkspaceLayout(host);
+  const { libsDir: defaultLibsDir } = getWorkspaceLayout(host);
   const libsDir = layoutDirectory ?? defaultLibsDir;
   const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
@@ -35,7 +36,7 @@ export function normalizeOptions(
     : [];
 
   const importPath =
-    options.importPath || getImportPath(npmScope, fullProjectDirectory);
+    options.importPath || getImportPath(host, fullProjectDirectory);
 
   let bundler = options.bundler ?? 'none';
 

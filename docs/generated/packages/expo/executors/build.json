@@ -38,6 +38,10 @@
         "description": "Run build locally [experimental]",
         "default": false
       },
+      "output": {
+        "type": "string",
+        "description": "Output path for local build"
+      },
       "wait": {
         "type": "boolean",
         "description": "Wait for build(s) to complete",

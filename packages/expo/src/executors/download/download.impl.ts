@@ -5,7 +5,8 @@ import {
   createWriteStream,
   existsSync,
   mkdirSync,
-} from 'fs';
+  removeSync,
+} from 'fs-extra';
 import fetch from 'node-fetch';
 import { promisify } from 'util';
 import { pipeline } from 'stream';
@@ -55,6 +56,10 @@ export default async function* downloadExecutor(
   const appExtension = getAppExtension(build.platform, downloadFileName);
   const appName = `${names(build.project?.name).className}${appExtension}`;
   const outputFilePath = join(options.output, appName);
+
+  if (existsSync(outputFilePath)) {
+    removeSync(outputFilePath);
+  }
 
   if (downloadFileName.endsWith('.tar.gz')) {
     await unzipBuild(downloadFilePath, options.output);

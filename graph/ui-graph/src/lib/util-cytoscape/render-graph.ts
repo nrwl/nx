@@ -5,7 +5,7 @@ import cytoscape, {
   EdgeSingular,
 } from 'cytoscape';
 import { edgeStyles, nodeStyles } from '../styles-graph';
-import { GraphInteractionEvents } from '@nx/graph/ui-graph';
+import { GraphInteractionEvents } from '../graph-interaction-events';
 import { VirtualElement } from '@floating-ui/react';
 import {
   darkModeScratchKey,

@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
   DependencyType,
@@ -8,7 +9,8 @@ import type {
 import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
-} from 'nx/src/command-line/dep-graph';
+} from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { ProjectGraphService } from '../app/interfaces';
 
 export class MockProjectGraphService implements ProjectGraphService {

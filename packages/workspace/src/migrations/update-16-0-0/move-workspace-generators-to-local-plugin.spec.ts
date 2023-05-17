@@ -24,7 +24,6 @@ describe('move-workspace-generators-to-local-plugin', () => {
       name: 'my-generator',
     });
     await generator(tree);
-    console.log(getProjects(tree).keys());
     const config = readProjectConfiguration(tree, 'workspace-plugin');
     expect(config.root).toEqual('tools/workspace-plugin');
 

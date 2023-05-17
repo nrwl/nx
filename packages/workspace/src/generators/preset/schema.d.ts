@@ -3,7 +3,6 @@ import { PackageManager } from '@nx/devkit';
 
 export interface Schema {
   name: string;
-  npmScope?: string;
   style?: string;
   linter?: string;
   preset: Preset;

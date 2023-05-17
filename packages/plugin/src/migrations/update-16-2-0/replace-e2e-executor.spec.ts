@@ -5,6 +5,7 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
 } from '@nx/devkit';
+import { assertRunsAgainstNxRepo } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import replaceE2EExecutor from './replace-e2e-executor';
 
@@ -65,4 +66,6 @@ describe('update-16-0-0-add-nx-packages', () => {
       }
     `);
   });
+
+  assertRunsAgainstNxRepo(replaceE2EExecutor);
 });

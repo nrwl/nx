@@ -14,7 +14,7 @@ export function reactNativeBuildTarget(platform: 'ios.sim' | 'android.emu') {
 export function expoBuildTarget(platform: 'ios.sim' | 'android.emu') {
   return {
     options: {
-      detoxConfiguration: `${platform}.debug`,
+      detoxConfiguration: `${platform}.eas`,
     },
     configurations: {
       local: {

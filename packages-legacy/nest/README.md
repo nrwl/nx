@@ -1,6 +1,8 @@
-## @nrwl/nest has been deprecated!
+## @nrwl/nest has been renamed to @nx/nest!
 
-@nrwl/nest has been deprecated in favor of [@nx/nest](https://www.npmjs.com/package/@nx/nest). Please use that instead.
+@nrwl/nest has been renamed to [@nx/nest](https://www.npmjs.com/package/@nx/nest). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/nest will no longer be published in Nx v17.
 

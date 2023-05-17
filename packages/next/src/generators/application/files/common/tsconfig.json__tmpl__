@@ -14,6 +14,16 @@
     "incremental": true,
     "plugins": [{ "name": "next" }]
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "next-env.d.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    <% if (appDir) { %>
+      "<%= layoutTypeSrcPath %>",
+      "<%= layoutTypeDistPath %>",
+    <% } %>
+    "next-env.d.ts"
+  ],
   "exclude": ["node_modules", "jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }

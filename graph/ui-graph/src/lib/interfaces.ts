@@ -1,9 +1,11 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
   TaskGraph,
 } from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { VirtualElement } from '@floating-ui/react';
 import {
   ProjectEdgeNodeTooltipProps,

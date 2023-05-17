@@ -77,7 +77,7 @@ export function Fence({
       <div className="code-block group relative w-full">
         <div>
           <CopyToClipboard
-            text={children}
+            text={command && command !== '' ? command : children}
             onCopy={() => {
               setCopied(true);
             }}

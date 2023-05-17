@@ -232,7 +232,7 @@ describe('Linter', () => {
         import '@${projScope}/${invalidtaglib}';
         import '@${projScope}/${validtaglib}';
 
-        const s = {loadChildren: '@${projScope}/${lazylib}'};
+        const s = {loadChildren: '@secondScope/${lazylib}'};
       `
         );
 

@@ -1,6 +1,8 @@
-## @nrwl/jest has been deprecated!
+## @nrwl/jest has been renamed to @nx/jest!
 
-@nrwl/jest has been deprecated in favor of [@nx/jest](https://www.npmjs.com/package/@nx/jest). Please use that instead.
+@nrwl/jest has been renamed to [@nx/jest](https://www.npmjs.com/package/@nx/jest). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/jest will no longer be published in Nx v17.
 

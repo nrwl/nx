@@ -3,10 +3,11 @@ import { redirect, RouteObject } from 'react-router-dom';
 import { ProjectsSidebar } from './feature-projects/projects-sidebar';
 import { TasksSidebar } from './feature-tasks/tasks-sidebar';
 import { getEnvironmentConfig } from './hooks/use-environment-config';
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphClientResponse } from 'nx/src/command-line/dep-graph';
+import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { getProjectGraphDataService } from './hooks/get-project-graph-data-service';
-import { getProjectGraphService } from './machines/get-services';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
 
 const { appConfig } = getEnvironmentConfig();

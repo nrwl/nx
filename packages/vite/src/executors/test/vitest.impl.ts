@@ -1,5 +1,6 @@
 import {
   ExecutorContext,
+  joinPathFragments,
   logger,
   stripIndents,
   workspaceRoot,
@@ -7,7 +8,7 @@ import {
 import { CoverageOptions, File, Reporter } from 'vitest';
 import { loadConfigFromFile } from 'vite';
 import { VitestExecutorOptions } from './schema';
-import { join, relative } from 'path';
+import { relative } from 'path';
 import { existsSync } from 'fs';
 
 class NxReporter implements Reporter {
@@ -105,8 +106,8 @@ async function getSettings(
     : ({} as CoverageOptions);
 
   const viteConfigPath = options.config
-    ? join(context.root, options.config)
-    : findViteConfig(join(context.root, projectRoot));
+    ? joinPathFragments(context.root, options.config)
+    : findViteConfig(joinPathFragments(context.root, projectRoot));
 
   const resolved = await loadConfigFromFile(
     {
@@ -148,8 +149,10 @@ function findViteConfig(projectRootFullPath: string): string {
   const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
 
   for (const ext of allowsExt) {
-    if (existsSync(join(projectRootFullPath, `vite.config.${ext}`))) {
-      return join(projectRootFullPath, `vite.config.${ext}`);
+    if (
+      existsSync(joinPathFragments(projectRootFullPath, `vite.config.${ext}`))
+    ) {
+      return joinPathFragments(projectRootFullPath, `vite.config.${ext}`);
     }
   }
 }

@@ -50,7 +50,6 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
       delete json.implicitDependencies;
       delete json.targetDefaults;
       delete json.workspaceLayout;
-      delete json.npmScope;
     }
     return json;
   });
@@ -79,11 +78,10 @@ function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
 
 function createNxJson(
   tree: Tree,
-  { directory, npmScope, packageManager, defaultBase, preset }: NormalizedSchema
+  { directory, defaultBase, preset }: NormalizedSchema
 ) {
   const nxJson: NxJsonConfiguration & { $schema: string } = {
     $schema: './node_modules/nx/schemas/nx-schema.json',
-    npmScope: npmScope,
     affected: {
       defaultBase,
     },
@@ -206,8 +204,9 @@ function addPropertyWithStableKeys(obj: any, key: string, value: string) {
 
 function normalizeOptions(options: NormalizedSchema) {
   let defaultBase = options.defaultBase || deduceDefaultBase();
+  const name = names(options.name).fileName;
   return {
-    npmScope: options.name,
+    name,
     ...options,
     defaultBase,
   };

@@ -1,4 +1,3 @@
-import { PackageSchemaList } from '@nx/nx-dev/feature-package-schema-viewer';
 import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
@@ -7,7 +6,7 @@ import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
-import { PackageSchemaSubList } from '../../../../../feature-package-schema-viewer/src/lib/package-schema-sub-list';
+import { PackageSchemaSubList } from '@nx/nx-dev/feature-package-schema-viewer/src/lib/package-schema-sub-list';
 import { menusApi } from '../../../../lib/menus.api';
 import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../../../../lib/packages.api';

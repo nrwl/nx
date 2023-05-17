@@ -13,6 +13,7 @@ import { Schema } from '../schema';
 export interface NormalizedSchema extends Schema {
   projectName: string;
   appProjectRoot: string;
+  outputPath: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];
@@ -28,6 +29,7 @@ export function normalizeOptions(
   const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
     options.directory
   );
+  const name = names(options.name).fileName;
 
   const appDirectory = projectDirectory
     ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
@@ -46,13 +48,19 @@ export function normalizeOptions(
     ? '.'
     : joinPathFragments(appsDir, `${appDirectory}-e2e`);
 
+  const outputPath = joinPathFragments(
+    'dist',
+    appProjectRoot,
+    ...(options.rootProject ? [name] : [])
+  );
+
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const fileName = 'index';
 
-  const appDir = options.appDir ?? false;
+  const appDir = options.appDir ?? true;
 
   const styledModule = /^(css|scss|less|styl)$/.test(options.style)
     ? null
@@ -63,17 +71,18 @@ export function normalizeOptions(
   return {
     ...options,
     appDir,
-    name: names(options.name).fileName,
-    projectName: appProjectName,
-    linter: options.linter || Linter.EsLint,
-    unitTestRunner: options.unitTestRunner || 'jest',
-    e2eTestRunner: options.e2eTestRunner || 'cypress',
-    style: options.style || 'css',
     appProjectRoot,
-    e2eProjectRoot,
     e2eProjectName,
-    parsedTags,
+    e2eProjectRoot,
+    e2eTestRunner: options.e2eTestRunner || 'cypress',
     fileName,
+    linter: options.linter || Linter.EsLint,
+    name,
+    outputPath,
+    parsedTags,
+    projectName: appProjectName,
+    style: options.style || 'css',
     styledModule,
+    unitTestRunner: options.unitTestRunner || 'jest',
   };
 }

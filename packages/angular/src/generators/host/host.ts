@@ -64,6 +64,7 @@ export async function host(tree: Tree, options: Schema) {
     skipFormat: true,
     skipE2E,
     e2eProjectName: skipE2E ? undefined : `${appName}-e2e`,
+    prefix: options.prefix,
   });
 
   let installTasks = [appInstallTask];

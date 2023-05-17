@@ -14,10 +14,6 @@
       "description": "The name of the application.",
       "type": "string"
     },
-    "npmScope": {
-      "description": "Npm scope for importing libs.",
-      "type": "string"
-    },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
@@ -85,9 +81,9 @@
       "default": false
     },
     "nextAppDir": {
-      "description": "Enable experimental app/ for the project",
+      "description": "Enable the App Router for this project.",
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "e2eTestRunner": {
       "description": "The tool to use for running e2e tests.",

@@ -39,7 +39,6 @@ describe('new', () => {
       ...defaultOptions,
       name: 'my-workspace',
       directory: 'my-workspace',
-      npmScope: 'npmScope',
       appName: 'app',
     });
     expect(readJson(tree, 'my-workspace/nx.json')).toMatchSnapshot();
@@ -51,7 +50,6 @@ describe('new', () => {
         ...defaultOptions,
         name: 'my-workspace',
         directory: 'my-workspace',
-        npmScope: 'npmScope',
         appName: 'app',
         preset: Preset.Empty,
       });
@@ -64,7 +62,6 @@ describe('new', () => {
         ...defaultOptions,
         name: 'my-workspace',
         directory: 'my-workspace',
-        npmScope: 'npmScope',
         appName: 'app',
         preset: Preset.ReactMonorepo,
         bundler: 'vite',
@@ -85,7 +82,6 @@ describe('new', () => {
         ...defaultOptions,
         name: 'my-workspace',
         directory: 'my-workspace',
-        npmScope: 'npmScope',
         appName: 'app',
         preset: Preset.AngularMonorepo,
       });
@@ -140,7 +136,6 @@ describe('new', () => {
             ...defaultOptions,
             name: 'my-workspace',
             directory: 'my-workspace',
-            npmScope: 'npmScope',
             appName: 'app',
             preset,
           });
@@ -177,7 +172,6 @@ describe('new', () => {
       ...defaultOptions,
       name: 'my-workspace',
       directory: 'my-workspace',
-      npmScope: 'npmScope',
       appName: 'app',
     });
 
@@ -193,7 +187,6 @@ describe('new', () => {
         ...defaultOptions,
         name: 'my-workspace',
         directory: 'my-workspace',
-        npmScope: 'npmScope',
         appName: 'app',
       });
       fail('Generating into a non-empty directory should error.');

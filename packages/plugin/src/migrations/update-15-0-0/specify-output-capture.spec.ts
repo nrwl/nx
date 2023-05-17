@@ -1,6 +1,7 @@
 import { readJson, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/linter';
+import { assertRunsAgainstNxRepo } from '@nx/devkit/internal-testing-utils';
 import { ExecutorConfig } from 'nx/src/config/misc-interfaces';
 import executorGenerator from '../../generators/executor/executor';
 import pluginGenerator from '../../generators/plugin/plugin';
@@ -50,6 +51,8 @@ describe('update-15-0-0-specify-output-capture', () => {
       readJson<ExecutorConfig['schema']>(tree, schemaPath).outputCapture
     ).toEqual('direct-nodejs');
   });
+
+  assertRunsAgainstNxRepo(update);
 });
 
 async function createTreeWithBoilerplate() {

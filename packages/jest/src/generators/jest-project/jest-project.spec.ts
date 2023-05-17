@@ -50,7 +50,11 @@ describe('jestProject', () => {
       project: 'lib1',
       setupFile: 'angular',
     } as JestProjectSchema);
-    expect(tree.exists('libs/lib1/src/test-setup.ts')).toBeTruthy();
+    expect(tree.read('libs/lib1/src/test-setup.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import 'jest-preset-angular/setup-jest';
+      "
+    `);
     expect(tree.exists('libs/lib1/jest.config.ts')).toBeTruthy();
     expect(tree.exists('libs/lib1/tsconfig.spec.json')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();

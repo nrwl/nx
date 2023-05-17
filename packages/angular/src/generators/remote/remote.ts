@@ -57,6 +57,7 @@ export async function remote(tree: Tree, options: Schema) {
     skipE2E,
     e2eProjectName: skipE2E ? undefined : `${appName}-e2e`,
     standalone: options.standalone,
+    prefix: options.prefix,
   });
 
   let installTasks = [appInstallTask];

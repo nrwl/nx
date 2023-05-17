@@ -6,7 +6,6 @@ import {
 } from '../config/workspace-json-project-json';
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
-import { workspaceRoot } from './workspace-root';
 
 export type PackageJsonTargetConfiguration = Omit<
   TargetConfiguration,

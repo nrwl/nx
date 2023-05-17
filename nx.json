@@ -175,7 +175,12 @@
       "inputs": ["default", "^production"]
     },
     "run-e2e-tests": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js",
+        "{workspaceRoot}/.verdaccio/config.yml"
+      ],
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",

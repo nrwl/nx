@@ -226,7 +226,7 @@ export function getRegisterFileContent(
       // Path specifies a single entry point e.g. "a/b/src/index.ts".
       // This is the default setup.
       const { dir, name } = path.parse(pattern);
-      exactMatch = path.join(dir, `${name}${outExtension}`);
+      exactMatch = joinPathFragments(dir, `${name}${outExtension}`);
     }
     acc.push({ module: k, exactMatch, pattern });
     return acc;

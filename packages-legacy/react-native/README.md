@@ -1,6 +1,8 @@
-## @nrwl/react-native has been deprecated!
+## @nrwl/react-native has been renamed to @nx/react-native!
 
-@nrwl/react-native has been deprecated in favor of [@nx/react-native](https://www.npmjs.com/package/@nx/react-native). Please use that instead.
+@nrwl/react-native has been renamed to [@nx/react-native](https://www.npmjs.com/package/@nx/react-native). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/react-native will no longer be published in Nx v17.
 

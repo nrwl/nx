@@ -18,7 +18,6 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { getImportPath } from 'nx/src/utils/path';
 
 import {
   addTsConfigPath,
@@ -29,6 +28,7 @@ import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
 import { Bundler, LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import { getImportPath } from '../../utils/get-import-path';
 import {
   esbuildVersion,
   nxVersion,
@@ -491,8 +491,6 @@ function normalizeOptions(
     pascalCaseFiles: options.pascalCaseFiles,
   });
 
-  const { npmScope } = getWorkspaceLayout(tree);
-
   const projectRoot = joinPathFragments(destinationDir, projectDirectory);
 
   const parsedTags = options.tags
@@ -500,7 +498,7 @@ function normalizeOptions(
     : [];
 
   const importPath =
-    options.importPath || getImportPath(npmScope, projectDirectory);
+    options.importPath || getImportPath(tree, projectDirectory);
 
   options.minimal ??= false;
 

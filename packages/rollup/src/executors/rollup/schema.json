@@ -70,7 +70,7 @@
     },
     "external": {
       "type": "array",
-      "description": "A list of external modules that will not be bundled (`react`, `react-dom`, etc.).",
+      "description": "A list of external modules that will not be bundled (`react`, `react-dom`, etc.). Can also be set to `all` (bundle nothing) or `none` (bundle everything).",
       "oneOf": [
         {
           "type": "string",

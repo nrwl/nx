@@ -18,14 +18,6 @@ export async function checkApp(
   }
 ) {
   const appsDir = opts.appsDir ?? 'apps';
-  const buildResult = runCLI(`build ${appName}`);
-  expect(buildResult).toContain(`Compiled successfully`);
-  checkFilesExist(`dist/${appsDir}/${appName}/.next/build-manifest.json`);
-
-  const packageJson = readJson(`dist/${appsDir}/${appName}/package.json`);
-  expect(packageJson.dependencies.react).toBeDefined();
-  expect(packageJson.dependencies['react-dom']).toBeDefined();
-  expect(packageJson.dependencies.next).toBeDefined();
 
   if (opts.checkLint) {
     const lintResults = runCLI(`lint ${appName}`);
@@ -39,8 +31,19 @@ export async function checkApp(
     );
   }
 
+  const buildResult = runCLI(`build ${appName}`);
+  expect(buildResult).toContain(`Successfully ran target build`);
+  checkFilesExist(`dist/${appsDir}/${appName}/.next/build-manifest.json`);
+
+  const packageJson = readJson(`dist/${appsDir}/${appName}/package.json`);
+  expect(packageJson.dependencies.react).toBeDefined();
+  expect(packageJson.dependencies['react-dom']).toBeDefined();
+  expect(packageJson.dependencies.next).toBeDefined();
+
   if (opts.checkE2E && runCypressTests()) {
-    const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
+    const e2eResults = runCLI(
+      `e2e ${appName}-e2e --no-watch --configuration=production`
+    );
     expect(e2eResults).toContain('All specs passed!');
     expect(await killPorts()).toBeTruthy();
   }

@@ -12,13 +12,13 @@ import {
  * - update keys: runnerConfig
  * Update jest.config.json under detox project:
  * - remove key: transform
- * - add key: rootDir, testMatch
+ * - add key: rootDir, testMatch, reporter, globalSetup, globalTeardown, verbose
  */
 export default async function update(tree: Tree) {
   const projects = getProjects(tree);
 
   projects.forEach((project) => {
-    if (project.targets?.['test-ios']?.executor !== '@nrwl/detox:test') return;
+    if (project.targets?.['test-ios']?.executor !== '@nx/detox:test') return;
     updateDetoxrcJson(tree, project);
     updateJestConfigJson(tree, project);
   });
@@ -62,6 +62,10 @@ function updateJestConfigJson(host: Tree, project: ProjectConfiguration) {
         '<rootDir>/src/**/*.spec.ts?(x)',
       ];
     }
+    json.reporter = ['detox/runners/jest/reporter'];
+    json.globalSetup = 'detox/runners/jest/globalSetup';
+    json.globalTeardown = 'detox/runners/jest/globalTeardown';
+    json.verbose = true;
     return json;
   });
 }

@@ -148,17 +148,50 @@ cleanupRegisteredPaths();
 
 {% callout type="note" title="@swc/jest & global scripts" %}
 When using @swc/jest and a global setup/teardown file,
-You'll have to set the global setup/teardown file to be transformed with ts-jest.
-For example, if your files are named `global-setup.ts` and `global-teardown.ts`,
-then you would need to add to your _project level `jest.config.ts`_ a new entry in the transformers object
+You have to set the `noInterop: false` and use dynamic imports within the setup function
 
 ```typescript {% fileName="apps/<your-project>/jest.config.ts" %}
+/* eslint-disable */
+import { readFileSync } from 'fs';
+
+// Reading the SWC compilation config and remove the "exclude"
+// for the test files to be compiled by SWC
+const { exclude: _, ...swcJestConfig } = JSON.parse(
+  readFileSync(`${__dirname}/.swcrc`, 'utf-8')
+);
+
+// disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
+// If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to "exclude"
+if (swcJestConfig.swcrc === undefined) {
+  swcJestConfig.swcrc = false;
+}
+
+// jest needs EsModule Interop to find the default exported function
+swcJestConfig.module.noInterop = false;
+
 export default {
+  globalSetup: '<rootDir>/src/global-setup-swc.ts',
   transform: {
-    'global-(setup|teardown).ts': 'ts-jest',
-    // resest of the transformers
+    '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },
+  // other settings
 };
+```
+
+```typescript {% fileName="global-setup-swc.ts" %}
+import { registerTsProject } from '@nx/js/src/internal';
+const cleanupRegisteredPaths = registerTsProject('.', 'tsconfig.base.json');
+
+export default async function () {
+  // swc will hoist all imports, and we need to make sure the register happens first
+  // so we import all nx project alias within the setup function first.
+  const { yourFancyFunction } = await import('@some-org/my-util-library');
+
+  yourFancyFunction();
+
+  // make sure to run the clean up!
+  cleanupRegisteredPaths();
+}
 ```
 
 {% /callout %}

@@ -1,7 +1,5 @@
 # React Native with Nx
 
-![React Logo](/shared/react-logo.png)
-
 Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Detox](/packages/detox), Storybook, Jest, and more.
 
 In this guide we will show you how to develop [React Native](https://reactnative.dev/) applications with Nx.
@@ -80,6 +78,10 @@ happynrwl/
 
 To run the application in development mode:
 
+```shell
+npx nx start mobile
+```
+
 On Android simulator/device:
 
 ```shell
@@ -96,7 +98,6 @@ Try out other commands as well.
 
 - `nx lint mobile` to lint the application
 - `nx test mobile` to run unit test on the application using Jest
-- `nx serve mobile` to serve the application Javascript bundler that communicates with connected devices. This will start the bundler at http://localhost:8081.
 - `nx sync-deps mobile` to sync app dependencies to its `package.json`.
 
 ### Release build
@@ -109,7 +110,9 @@ npx nx build-android mobile
 
 **iOS:** (Mac only)
 
-No CLI support yet. Run in the Xcode project. See: https://reactnative.dev/docs/running-on-device
+```shell
+npx nx build-ios mobile
+```
 
 ### E2E
 
@@ -125,7 +128,7 @@ npx nx test-android mobile-e2e
 npx nx test-ios mobile-e2e
 ```
 
-When using React Native in Nx, you get the out-of-the-box support for TypeScript, Detox, and Jest. No need to configure anything: watch mode, source maps, and typings just work.
+When using React Native in Nx, you get the out-of-the-box support for TypeScript, Detox, and Jest.
 
 ### Adding React Native to an Existing Workspace
 
@@ -258,40 +261,13 @@ dist/libs/shared-ui-layout/
 ├── lib/
 │   └── layout/
 │       └── layout.d.ts
-├── package.json
-├── shared-ui-layout.esm.css
-├── shared-ui-layout.esm.js
-├── shared-ui-layout.umd.css
-└── shared-ui-layout.umd.js
+└── package.json
 ```
 
 This dist folder is ready to be published to a registry.
-
-## Environment Variables
-
-The workspace should install[react-native-config](https://github.com/luggit/react-native-config) by default. To use environment variable, create a new `.env` file in the `happynrwl/apps/mobile` folder:
-
-```
-NX_BUILD_NUMBER=123
-```
-
-Then access variables defined there from your app:
-
-```javascript
-import Config from 'react-native-config';
-
-Config.NX_BUILD_NUMBER; // '123'
-```
 
 ## Code Sharing
 
 Without Nx, creating a new shared library can take from several hours to even weeks: a new repo needs to be provisioned, CI needs to be set up, etc... In an Nx Workspace, it only takes minutes.
 
 You can share React Native components between multiple React Native applications, share business logic code between React Native mobile applications and plain React web applications. You can even share code between the backend and the frontend. All of these can be done without any unnecessary ceremony.
-
-## Resources
-
-Here are other resources that you may find useful to learn more about React Native and Nx.
-
-- **Blog post:** [Introducing React Native Support for Nx](https://blog.nrwl.io/introducing-react-native-support-for-nx-48d335e90c89) by Jack Hsu
-- **Blog post:** [Step by Step Guide on Creating a Monorepo for React Native Apps using Nx](https://blog.nrwl.io/step-by-step-guide-on-creating-a-monorepo-for-react-native-apps-using-nx-704753b6c70e) by Eimly Xiong
