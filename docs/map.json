@@ -48,7 +48,7 @@
             {
               "name": "React Standalone",
               "id": "react-standalone-tutorial",
-              "file": "shared/react-standalone-tutorial/1-code-generation"
+              "file": "shared/react-standalone-tutorial/react-standalone"
             },
             {
               "name": "Angular Standalone",
