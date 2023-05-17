@@ -1,5 +1,6 @@
+use std::collections::HashMap;
 use std::convert::Infallible;
-use std::path::{PathBuf, MAIN_SEPARATOR};
+use std::path::MAIN_SEPARATOR;
 
 use itertools::Itertools;
 use napi::bindgen_prelude::*;
@@ -49,13 +50,18 @@ impl Watcher {
         let callback_tsfn = env.create_threadsafe_function(
             &env.get_reference_value(&self.callback)?,
             0,
-            |ctx: ThreadSafeCallContext<Vec<WatchEventInternal>>| {
+            |ctx: ThreadSafeCallContext<HashMap<String, Vec<WatchEvent>>>| {
                 let mut watch_events: Vec<JsObject> = vec![];
-                trace!(?ctx.value, "Sending values into node");
-                for value in ctx.value {
+                trace!(?ctx.value, "Base collection that will be sent");
+                for (_, value) in ctx.value {
                     let mut obj = ctx.env.create_object()?;
-                    obj.set("path", value.path.display().to_string())?;
-                    obj.set("type", value.event_type)?;
+                    let event = value
+                        .last()
+                        .expect("should always have at least 1 element")
+                        .to_owned();
+                    trace!(?event, "sending to node");
+                    obj.set("path", event.path)?;
+                    obj.set("type", event.r#type)?;
 
                     watch_events.push(obj);
                 }
@@ -98,11 +104,11 @@ impl Watcher {
                 }
                 trace!(?origin_path);
 
-                let watch_events: Vec<WatchEventInternal> = action
+                let grouped_events = action
                     .events
                     .iter()
                     .map(|ev| {
-                        let mut watch_event: WatchEventInternal = ev.into();
+                        let mut watch_event: WatchEvent = ev.into();
 
                         watch_event.path = watch_event
                             .path
@@ -116,10 +122,9 @@ impl Watcher {
                         }
                         watch_event
                     })
-                    .unique_by(|e| e.path.clone())
-                    .collect();
+                    .into_group_map_by(|g| g.path.clone());
 
-                callback_tsfn.call(Ok(watch_events), ThreadsafeFunctionCallMode::Blocking);
+                callback_tsfn.call(Ok(grouped_events), ThreadsafeFunctionCallMode::NonBlocking);
 
                 action.outcome(Outcome::wait(Outcome::Start));
                 ok_future
@@ -145,12 +150,6 @@ impl Watcher {
     }
 }
 
-#[napi(object)]
-pub struct WatchEvent {
-    pub path: String,
-    pub r#type: EventType,
-}
-
 #[napi(string_enum)]
 #[derive(Debug)]
 pub enum EventType {
@@ -163,41 +162,42 @@ pub enum EventType {
 }
 
 #[derive(Debug, Clone)]
-struct WatchEventInternal {
-    pub path: PathBuf,
-    pub event_type: EventType,
+#[napi(object)]
+pub struct WatchEvent {
+    pub path: String,
+    pub r#type: EventType,
 }
-impl From<&Event> for WatchEventInternal {
+
+impl From<&Event> for WatchEvent {
     fn from(value: &Event) -> Self {
         let path = value.paths().next().expect("there should always be a path");
 
         let event_kind = value
             .tags
             .iter()
-            .filter_map(|t| match t {
+            .find_map(|t| match t {
                 Tag::FileEventKind(event_kind) => Some(event_kind),
                 _ => None,
             })
-            .next()
             .expect("there should always be a file event kind");
 
-        let event_type = match &event_kind {
-            FileEventKind::Modify(ModifyKind::Name(_)) => {
-                if matches!(path.1, Some(_)) {
-                    EventType::create
-                } else {
-                    EventType::delete
-                }
+        let event_type = if matches!(path.1, None) {
+            EventType::delete
+        } else {
+            match &event_kind {
+                FileEventKind::Modify(ModifyKind::Name(_)) => EventType::create,
+                FileEventKind::Modify(ModifyKind::Data(_)) => EventType::update,
+                FileEventKind::Create(_) => EventType::create,
+                FileEventKind::Remove(_) => EventType::delete,
+                _ => EventType::update,
             }
-            FileEventKind::Modify(ModifyKind::Data(_)) => EventType::update,
-            FileEventKind::Create(_) => EventType::create,
-            FileEventKind::Remove(_) => EventType::delete,
-            _ => EventType::update,
         };
 
-        WatchEventInternal {
-            path: path.0.into(),
-            event_type,
+        trace!(?path, ?event_kind, ?event_type, "event kind -> event type");
+
+        WatchEvent {
+            path: path.0.display().to_string(),
+            r#type: event_type,
         }
     }
 }

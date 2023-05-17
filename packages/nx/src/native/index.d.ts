@@ -10,14 +10,14 @@ export interface FileData {
 export function hashArray(input: Array<string>): string
 export function hashFile(file: string): FileData | null
 export function hashFiles(workspaceRoot: string): Record<string, string>
-export interface WatchEvent {
-  path: string
-  type: EventType
-}
 export const enum EventType {
   create = 'create',
   delete = 'delete',
   update = 'update'
+}
+export interface WatchEvent {
+  path: string
+  type: EventType
 }
 export class Watcher {
   origin: string
