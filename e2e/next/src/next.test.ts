@@ -463,6 +463,24 @@ describe('Next.js Applications', () => {
       checkExport: false,
     });
   }, 300_000);
+
+  it('should support --turbo to enable Turbopack', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --style=css --appDir --no-interactive`
+    );
+
+    const port = 4000;
+    const selfContainedProcess = await runCommandUntil(
+      `run ${appName}:serve --port=${port} --turbo`,
+      (output) => {
+        return output.includes(`TURBOPACK`);
+      }
+    );
+    selfContainedProcess.kill();
+    await killPorts();
+  }, 300_000);
 });
 
 function getData(port, path = ''): Promise<any> {

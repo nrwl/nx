@@ -53,6 +53,7 @@ export interface NextServeBuilderOptions {
   proxyConfig?: string;
   buildLibsFromSource?: boolean;
   keepAliveTimeout?: number;
+  turbo?: boolean;
 }
 
 export interface NextExportBuilderOptions {
