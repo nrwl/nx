@@ -22,5 +22,6 @@ export interface WatchEvent {
 export class Watcher {
   origin: string
   constructor(origin: string, callback: (err: string | null, paths: WatchEvent[]) => void)
-  start(): void
+  start(): Promise<void>
+  stop(): Promise<void>
 }

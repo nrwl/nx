@@ -31,10 +31,10 @@ describe('watcher', () => {
   it('should watch files', (done) => {
     let watcher = new Watcher('/Users/jon/Dev/nx', (error, paths) => {
       console.log(paths);
+      watcher.stop();
+      done();
     });
 
     watcher.start();
   }, 10_000_000);
 });
-
-///...
