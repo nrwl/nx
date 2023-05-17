@@ -79,7 +79,7 @@ Default base to use for new projects
 
 Type: `boolean`
 
-Generate a Dockerfile with your node-server
+Generate a Dockerfile with your node-standalone
 
 ### framework
 
@@ -87,7 +87,7 @@ Type: `string`
 
 Choices: [express, fastify, koa, nest]
 
-Framework option to be used when the node-server preset is selected
+Framework option to be used when the node-standalone preset is selected
 
 ### help
 
