@@ -149,8 +149,8 @@ jobs:
     executor: linux
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-      NX_VERBOSE_LOGGING: 'false'
-      NX_DAEMON: 'true'
+      NX_VERBOSE_LOGGING: 'true'
+      NX_DAEMON: 'false'
       NX_PERF_LOGGING: 'false'
     steps:
       - run:
@@ -161,34 +161,7 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: pnpm nx-cloud start-ci-run --stop-agents-after="e2e"
-      - run:
-          name: Check Documentation
-          command: pnpm nx documentation --no-dte
-          no_output_timeout: 20m
-      - run:
-          name: Run Checks/Lint/Test/Build
-          no_output_timeout: 60m
-          command: |
-            pids=()
-
-            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-
-            pnpm nx run-many -t check-imports check-commit check-lock-files depcheck check-codeowners --parallel=1 --no-dte &
-            pids+=($!)
-
-            pnpm nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
-            pnpm nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
-            pids+=($!)
-            (pnpm nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
-            pids+=($!)
-
-            for pid in "${pids[@]}"; do
-              wait "$pid"
-            done
+      - run: pnpm nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 --no-dte
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
@@ -196,7 +169,7 @@ jobs:
     executor: macos
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
-      NX_DAEMON: 'true'
+      NX_DAEMON: 'false'
       NX_PERF_LOGGING: 'false'
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
     steps:

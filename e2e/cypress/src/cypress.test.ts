@@ -13,6 +13,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e/utils';
+
 const TEN_MINS_MS = 600_000;
 describe('Cypress E2E Test runner', () => {
   const myapp = uniq('myapp');
