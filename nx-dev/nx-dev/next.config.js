@@ -1,17 +1,6 @@
 // nx-ignore-next-line
 const { withNx } = require('@nx/next/plugins/with-nx');
-const { copySync } = require('fs-extra');
-const path = require('path');
 const redirectRules = require('./redirect-rules.config');
-
-/**
- * TODO@ben: Use watch method instead.
- */
-copySync(
-  path.resolve(__dirname + '/../../docs'),
-  path.resolve(__dirname + '/public/documentation'),
-  { overwrite: true }
-);
 
 module.exports = withNx({
   // For both client and server
