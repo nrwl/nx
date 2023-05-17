@@ -446,6 +446,32 @@ for (const path of oldAngularTutorialPaths) {
   tutorialRedirects[path] = angularRedirectDestination;
 }
 
+/**
+ * New single-page standalone tutorials
+ */
+const standaloneTutorialRedirects = {
+  '/shared/react-standalone-tutorial/1-code-generation':
+    '/tutorials/react-standalone-tutorial',
+  '/shared/react-standalone-tutorial/2-project-graph':
+    '/tutorials/react-standalone-tutorial',
+  '/shared/react-standalone-tutorial/3-task-running':
+    '/tutorials/react-standalone-tutorial',
+  '/shared/react-standalone-tutorial/4-task-pipelines':
+    '/tutorials/react-standalone-tutorial',
+  '/shared/react-standalone-tutorial/5-summary':
+    '/tutorials/react-standalone-tutorial',
+  'shared/angular-standalone-tutorial/1-code-generation':
+    '/tutorials/angular-standalone-tutorial',
+  'shared/angular-standalone-tutorial/2-project-graph':
+    '/tutorials/angular-standalone-tutorial',
+  'shared/angular-standalone-tutorial/3-task-running':
+    '/tutorials/angular-standalone-tutorial',
+  'shared/angular-standalone-tutorial/4-task-pipelines':
+    '/tutorials/angular-standalone-tutorial',
+  'shared/angular-standalone-tutorial/5-summary':
+    '/tutorials/angular-standalone-tutorial',
+};
+
 const packagesIndexes = {
   '/nx': '/packages/nx',
   '/workspace': '/packages/workspace',
@@ -618,6 +644,7 @@ module.exports = {
   nxCloudUrls,
   schemaUrls,
   tutorialRedirects,
+  standaloneTutorialRedirects,
   packagesIndexes,
   packagesDocuments,
   conceptUrls,
