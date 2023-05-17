@@ -98,12 +98,12 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'string',
           })
           .option('framework', {
-            describe: chalk.dim`Framework option to be used when the node-server preset is selected`,
+            describe: chalk.dim`Framework option to be used when the node-standalone preset is selected`,
             choices: frameworkList,
             type: 'string',
           })
           .option('docker', {
-            describe: chalk.dim`Generate a Dockerfile with your node-server`,
+            describe: chalk.dim`Generate a Dockerfile with your node-standalone`,
             type: 'boolean',
           })
           .option('nextAppDir', {
