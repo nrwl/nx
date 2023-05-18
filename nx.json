@@ -11,9 +11,9 @@
         "cacheableOperations": [
           "build",
           "lint-base",
-          "lint",
           "build-ng",
           "build-base",
+          "lint",
           "build-native",
           "e2e",
           "e2e-macos",
