@@ -95,6 +95,12 @@
       "version": "16.2.0-beta.0",
       "description": "Remove react-test-renderer from package.json",
       "implementation": "./src/migrations/update-16-2-0-remove-package/update-16-2-0-remove-package"
+    },
+    "remove-types-react-router-dom": {
+      "cli": "nx",
+      "version": "16.3.0-beta.2",
+      "description": "Remove @types/react-router-dom from package.json",
+      "implementation": "./src/migrations/update-16-3-0/remove-types-react-router-dom-package"
     }
   },
   "packageJsonUpdates": {
@@ -799,8 +805,8 @@
         }
       }
     },
-    "5.8.0": {
-      "version": "5.8.0-beta.0",
+    "15.8.0": {
+      "version": "15.8.0-beta.0",
       "packages": {
         "@types/react": {
           "version": "18.0.28",
@@ -868,6 +874,15 @@
         },
         "less": {
           "version": "4.1.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.3.0": {
+      "version": "16.3.0-beta.2",
+      "packages": {
+        "react-router-dom": {
+          "version": "6.11.2",
           "alwaysAddToPackageJson": false
         }
       }

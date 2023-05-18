@@ -1,9 +1,6 @@
 import { addInitialRoutes } from '../../../utils/ast-utils';
 import { NormalizedSchema } from '../schema';
-import {
-  reactRouterDomVersion,
-  typesReactRouterDomVersion,
-} from '../../../utils/versions';
+import { reactRouterDomVersion } from '../../../utils/versions';
 import {
   joinPathFragments,
   Tree,
@@ -44,7 +41,7 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
     return addDependenciesToPackageJson(
       host,
       { 'react-router-dom': reactRouterDomVersion },
-      { '@types/react-router-dom': typesReactRouterDomVersion }
+      {}
     );
   }
 
