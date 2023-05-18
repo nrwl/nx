@@ -22,7 +22,7 @@ export class ProjectGraphBuilder {
   constructor(g?: ProjectGraph, fileMap?: ProjectFileMap) {
     if (g) {
       this.graph = g;
-      this.fileMap = fileMap || getProjectFileMap().projectFileMap;
+      this.fileMap = fileMap || getProjectFileMap(g).projectFileMap;
     } else {
       this.graph = {
         nodes: {},

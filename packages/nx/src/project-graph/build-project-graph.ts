@@ -30,14 +30,15 @@ import { readNxJson } from '../config/configuration';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
 
+let storedProjectGraph: ProjectGraph | null = null;
 let storedProjectFileMap: ProjectFileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
 
-export function getProjectFileMap(): {
+export function getProjectFileMap(projectGraph: ProjectGraph): {
   projectFileMap: ProjectFileMap;
   allWorkspaceFiles: FileData[];
 } {
-  if (!!storedProjectFileMap) {
+  if (projectGraph === storedProjectGraph) {
     return {
       projectFileMap: storedProjectFileMap,
       allWorkspaceFiles: storedAllWorkspaceFiles,
@@ -57,9 +58,6 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectGraph: ProjectGraph;
   projectFileMapCache: ProjectFileMapCache;
 }> {
-  storedProjectFileMap = projectFileMap;
-  storedAllWorkspaceFiles = allWorkspaceFiles;
-
   const nxJson = readNxJson();
   const projectGraphVersion = '6.0';
   assertWorkspaceValidity(projectsConfigurations, nxJson);
@@ -108,6 +106,11 @@ export async function buildProjectGraphUsingProjectFileMap(
   if (shouldWriteCache) {
     writeCache(projectFileMapCache, projectGraph);
   }
+
+  storedProjectGraph = projectGraph;
+  storedProjectFileMap = projectFileMap;
+  storedAllWorkspaceFiles = allWorkspaceFiles;
+
   return {
     projectGraph,
     projectFileMapCache,

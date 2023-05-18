@@ -236,7 +236,8 @@ export async function invokeTasksRunner({
   if (daemonClient.enabled()) {
     hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
   } else {
-    const { projectFileMap, allWorkspaceFiles } = getProjectFileMap();
+    const { projectFileMap, allWorkspaceFiles } =
+      getProjectFileMap(projectGraph);
     hasher = new InProcessTaskHasher(
       projectFileMap,
       allWorkspaceFiles,
