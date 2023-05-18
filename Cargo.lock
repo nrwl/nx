@@ -684,22 +684,6 @@ dependencies = [
 
 [[package]]
 name = "ignore-files"
-version = "1.2.0"
-dependencies = [
- "dunce",
- "futures",
- "gix-config",
- "ignore",
- "miette",
- "project-origins 1.2.0",
- "radix_trie",
- "thiserror",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "ignore-files"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ad7ef2262641fef97d2e3230dc14b50d80418a2b7a22497457f23c533e8a75de"
@@ -709,7 +693,7 @@ dependencies = [
  "gix-config",
  "ignore",
  "miette",
- "project-origins 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "project-origins",
  "radix_trie",
  "thiserror",
  "tokio",
@@ -1074,17 +1058,17 @@ dependencies = [
  "assert_fs",
  "crossbeam-channel",
  "ignore",
- "ignore-files 1.3.0",
+ "ignore-files",
  "itertools",
  "napi",
  "napi-build",
  "napi-derive",
  "tracing",
  "tracing-subscriber",
- "watchexec 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "watchexec-events 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "watchexec-filterer-ignore 1.2.1",
- "watchexec-signals 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "watchexec",
+ "watchexec-events",
+ "watchexec-filterer-ignore",
+ "watchexec-signals",
  "xxhash-rust",
 ]
 
@@ -1207,15 +1191,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b63bdb0cd06f1f4dedf69b254734f9b45af66e4a031e42a7480257d9898b435"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "project-origins"
-version = "1.2.0"
-dependencies = [
- "futures",
- "tokio",
- "tokio-stream",
 ]
 
 [[package]]
@@ -1465,24 +1440,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95059e91184749cb66be6dc994f67f182b6d897cb3df74a5bf66b5e709295fd8"
 
 [[package]]
-name = "testing_playground"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "ignore",
- "ignore-files 1.2.0",
- "itertools",
- "thiserror",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "watchexec 2.3.0",
- "watchexec-events 1.0.0",
- "watchexec-filterer-ignore 1.2.0",
- "watchexec-signals 1.0.0",
-]
-
-[[package]]
 name = "thiserror"
 version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1692,30 +1649,6 @@ checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 [[package]]
 name = "watchexec"
 version = "2.3.0"
-dependencies = [
- "async-priority-channel",
- "async-recursion",
- "atomic-take",
- "clearscreen",
- "command-group",
- "futures",
- "ignore-files 1.2.0",
- "miette",
- "nix",
- "normalize-path",
- "notify",
- "once_cell",
- "project-origins 1.2.0",
- "thiserror",
- "tokio",
- "tracing",
- "watchexec-events 1.0.0",
- "watchexec-signals 1.0.0",
-]
-
-[[package]]
-name = "watchexec"
-version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8b97d05a9305a9aa6a7bedef64cd012ebc9b6f1f5ed0368fb48f0fe58f96988"
 dependencies = [
@@ -1725,27 +1658,18 @@ dependencies = [
  "clearscreen",
  "command-group",
  "futures",
- "ignore-files 1.3.0",
+ "ignore-files",
  "miette",
  "nix",
  "normalize-path",
  "notify",
  "once_cell",
- "project-origins 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "project-origins",
  "thiserror",
  "tokio",
  "tracing",
- "watchexec-events 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "watchexec-signals 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "watchexec-events"
-version = "1.0.0"
-dependencies = [
- "nix",
- "notify",
- "watchexec-signals 1.0.0",
+ "watchexec-events",
+ "watchexec-signals",
 ]
 
 [[package]]
@@ -1756,19 +1680,7 @@ checksum = "01603bbe02fd75918f010dadad456d47eda14fb8fdcab276b0b4b8362f142ae3"
 dependencies = [
  "nix",
  "notify",
- "watchexec-signals 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "watchexec-filterer-ignore"
-version = "1.2.0"
-dependencies = [
- "dunce",
- "ignore",
- "ignore-files 1.2.0",
- "tracing",
- "watchexec 2.3.0",
- "watchexec-signals 1.0.0",
+ "watchexec-signals",
 ]
 
 [[package]]
@@ -1779,19 +1691,10 @@ checksum = "f345f020367ccdb7a19fcd59cafe5b8e99acdaf937b19d5847a6a1b81fd44ea3"
 dependencies = [
  "dunce",
  "ignore",
- "ignore-files 1.3.0",
+ "ignore-files",
  "tracing",
- "watchexec 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "watchexec-signals 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "watchexec-signals"
-version = "1.0.0"
-dependencies = [
- "miette",
- "nix",
- "thiserror",
+ "watchexec",
+ "watchexec-signals",
 ]
 
 [[package]]
