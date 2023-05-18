@@ -43,10 +43,12 @@ export default async function* serveExecutor(
   const { port, keepAliveTimeout, hostname } = options;
 
   const args = createCliOptions({ port, keepAliveTimeout, hostname });
+
   const nextDir = resolve(context.root, buildOptions.outputPath);
 
-  const command = `npx next ${options.dev ? `dev ${args}` : `start ${args}`}`;
-
+  const mode = options.dev ? 'dev' : 'start';
+  const turbo = options.turbo && options.dev ? '--turbo' : '';
+  const command = `npx next ${mode} ${args} ${turbo}`;
   yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
     ({ done, next, error }) => {
       // Client to check if server is ready.
