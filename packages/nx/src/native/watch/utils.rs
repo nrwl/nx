@@ -28,17 +28,17 @@ pub(super) fn get_ignore_files<T: AsRef<str>>(root: T) -> Vec<IgnoreFile> {
 
 /// Get only the root level folders to watch.
 /// These will not include git ignored folders
-pub(super) fn get_watch_directories<T: AsRef<str>>(root: T) -> Vec<PathBuf> {
-    let root = root.as_ref();
-
-    let mut walker = WalkBuilder::new(root);
-    walker.hidden(false);
-    walker.max_depth(Some(1));
-    walker.filter_entry(|entry| entry.path().is_dir());
-
-    walker
-        .build()
-        .flatten()
-        .map(|result| result.path().into())
-        .collect()
-}
+// pub(super) fn get_watch_directories<T: AsRef<str>>(root: T) -> Vec<PathBuf> {
+//     let root = root.as_ref();
+//
+//     let mut walker = WalkBuilder::new(root);
+//     walker.hidden(false);
+//     walker.max_depth(Some(1));
+//     walker.filter_entry(|entry| entry.path().is_dir());
+//
+//     walker
+//         .build()
+//         .flatten()
+//         .map(|result| result.path().into())
+//         .collect()
+// }

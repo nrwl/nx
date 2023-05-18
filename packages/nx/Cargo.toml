@@ -20,6 +20,7 @@ tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"]}
 anyhow = "1.0.71"
 itertools = "0.10.5"
+rayon = "1.7.0"
 
 [lib]
 crate-type = ['cdylib']

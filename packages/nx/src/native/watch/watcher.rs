@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::convert::Infallible;
-use std::path::MAIN_SEPARATOR;
+use std::path::{PathBuf, MAIN_SEPARATOR};
 use std::sync::Arc;
 
 use itertools::Itertools;
@@ -9,6 +9,7 @@ use napi::threadsafe_function::{
     ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
 };
 use napi::{Env, JsFunction, JsObject};
+use rayon::prelude::*;
 use tracing::trace;
 use tracing_subscriber::EnvFilter;
 use watchexec::action::{Action, Outcome};
@@ -56,7 +57,7 @@ impl Watcher {
                     trace!(?ctx.value, "Base collection that will be sent");
                     for (_, value) in ctx.value {
                         let event = value
-                            .last()
+                            .first()
                             .expect("should always have at least 1 element")
                             .to_owned();
                         watch_events.push(event);
@@ -108,11 +109,19 @@ impl Watcher {
                 }
                 trace!(?origin_path);
 
-                let grouped_events = action
+                let events = action
                     .events
-                    .iter()
+                    .par_iter()
                     .map(|ev| {
                         let mut watch_event: WatchEvent = ev.into();
+
+                        if matches!(watch_event.r#type, EventType::delete) {
+                            let path = PathBuf::from(&watch_event.path);
+                            if path.exists() {
+                                trace!(?watch_event.path, "incorrectly marked as deleted, changing to update");
+                                watch_event.r#type = EventType::update;
+                            }
+                        }
 
                         watch_event.path = watch_event
                             .path
@@ -124,11 +133,14 @@ impl Watcher {
                         {
                             watch_event.path = watch_event.path.replace('\\', "/");
                         }
+
                         watch_event
                     })
-                    .into_group_map_by(|g| g.path.clone());
+                    .collect::<Vec<WatchEvent>>();
 
-                callback_tsfn.call(Ok(grouped_events), ThreadsafeFunctionCallMode::NonBlocking);
+                let group_events = events.into_iter().into_group_map_by(|g| g.path.clone());
+
+                callback_tsfn.call(Ok(group_events), ThreadsafeFunctionCallMode::NonBlocking);
 
                 action.outcome(Outcome::Start);
                 ok_future
