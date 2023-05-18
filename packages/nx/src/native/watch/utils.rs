@@ -26,8 +26,8 @@ pub(super) fn get_ignore_files<T: AsRef<str>>(root: T) -> Vec<IgnoreFile> {
         .collect()
 }
 
-/// Get only the root level folders to watch.
-/// These will not include git ignored folders
+// /// Get only the root level folders to watch.
+// /// These will not include git ignored folders
 // pub(super) fn get_watch_directories<T: AsRef<str>>(root: T) -> Vec<PathBuf> {
 //     let root = root.as_ref();
 //
