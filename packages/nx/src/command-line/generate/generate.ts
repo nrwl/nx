@@ -390,7 +390,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
       }
     } else {
-      require('../adapter/compat');
+      require('../../adapter/compat');
       return (await import('../../adapter/ngcli-adapter')).generate(
         workspaceRoot,
         {
