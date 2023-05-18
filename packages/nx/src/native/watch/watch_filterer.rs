@@ -1,7 +1,7 @@
 use tracing::trace;
 use watchexec::error::RuntimeError;
 use watchexec::filter::Filterer;
-use watchexec_events::filekind::{FileEventKind, ModifyKind};
+use watchexec_events::filekind::{CreateKind, FileEventKind, ModifyKind, RemoveKind};
 
 use watchexec_events::{Event, FileType, Keyboard, Priority, Source, Tag};
 use watchexec_filterer_ignore::IgnoreFilterer;
@@ -35,8 +35,8 @@ impl Filterer for WatchFilterer {
                 Tag::FileEventKind(file_event) => match file_event {
                     FileEventKind::Modify(ModifyKind::Name(_)) => continue,
                     FileEventKind::Modify(ModifyKind::Data(_)) => continue,
-                    FileEventKind::Create(_) => continue,
-                    FileEventKind::Remove(_) => continue,
+                    FileEventKind::Create(CreateKind::File) => continue,
+                    FileEventKind::Remove(RemoveKind::File) => continue,
                     _ => return Ok(false),
                 },
                 Tag::Path {
