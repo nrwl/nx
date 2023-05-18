@@ -1,8 +1,9 @@
+const { join } = require('path');
 module.exports = {
   plugins: {
     'postcss-import': {},
     tailwindcss: {
-      config: './nx-dev/nx-dev/tailwind.config.js',
+      config: join(__dirname, 'tailwind.config.js'),
     },
     autoprefixer: {},
   },
