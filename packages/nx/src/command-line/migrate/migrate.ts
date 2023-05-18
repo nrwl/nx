@@ -1028,7 +1028,7 @@ async function getPackageMigrationsUsingInstall(
   let result: ResolvedMigrationConfiguration;
 
   try {
-    const pmc = getPackageManagerCommand(detectPackageManager(dir));
+    const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
 
     await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
       cwd: dir,
