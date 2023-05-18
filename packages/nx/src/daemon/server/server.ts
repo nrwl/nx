@@ -132,7 +132,12 @@ async function handleMessage(socket, data: string) {
     );
   }
 
-  if (payload.type === 'PING') {
+  if (payload.version !== nxVersion) {
+    await respondWithErrorAndExit(socket, `Nx version changed`, {
+      name: '',
+      message: 'NX-VERSION-CHANGED',
+    });
+  } else if (payload.type === 'PING') {
     await handleResult(socket, {
       response: JSON.stringify(true),
       description: 'ping',

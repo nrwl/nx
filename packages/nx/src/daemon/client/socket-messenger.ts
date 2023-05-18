@@ -5,6 +5,7 @@ import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-soc
 
 export interface Message extends Record<string, any> {
   type: string;
+  version?: string;
   data?: any;
 }
 

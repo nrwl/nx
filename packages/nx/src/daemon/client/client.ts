@@ -24,6 +24,7 @@ import { Message, SocketMessenger } from './socket-messenger';
 import { safelyCleanUpExistingProcess } from '../cache';
 import { Hash } from '../../hasher/task-hasher';
 import { Task } from '../../config/task-graph';
+import { nxVersion } from '../../utils/versions';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
@@ -238,7 +239,10 @@ export class DaemonClient {
           return this.currentReject(daemonProcessException(err.toString()));
         }
 
-        if (err.message.startsWith('LOCK-FILES-CHANGED')) {
+        if (
+          err.message.startsWith('LOCK-FILES-CHANGED') ||
+          err.message.startsWith('NX-VERSION-CHANGED')
+        ) {
           // retry the current message
           // we cannot send it via the queue because we are in the middle of processing
           // a message from the queue
@@ -284,7 +288,7 @@ export class DaemonClient {
       this.currentResolve = resolve;
       this.currentReject = reject;
 
-      this.socketMessenger.sendMessage(message);
+      this.socketMessenger.sendMessage({ ...message, version: nxVersion });
     });
   }
 
