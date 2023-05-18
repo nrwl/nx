@@ -1,0 +1,21 @@
+[package]
+name = "testing_playground"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+tokio = "1.28.0"
+watchexec = { path = "/Users/jon/Dev/watchexec/crates/lib", version = "2.3.0" }
+watchexec-filterer-ignore = {path = "/Users/jon/Dev/watchexec/crates/filterer/ignore", version = "1.2.0"}
+ignore-files = {path = "/Users/jon/Dev/watchexec/crates/ignore-files", version = "1.2.0"}
+watchexec-events = { path = "/Users/jon/Dev/watchexec/crates/events", version = "1.0.0"}
+watchexec-signals = { path = "/Users/jon/Dev/watchexec/crates/signals", version = "1.0.0"}
+anyhow = "1.0.71"
+thiserror = "1.0.40"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+itertools = "0.10.5"
+ignore = "0.4.20"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
