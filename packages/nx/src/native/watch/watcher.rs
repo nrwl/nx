@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::path::MAIN_SEPARATOR;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use itertools::Itertools;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{
-    ErrorStrategy, ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
+    ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
 };
 use napi::{Env, JsFunction, JsObject};
 use tracing::trace;
@@ -24,57 +24,54 @@ use crate::native::watch::watch_config;
 #[napi]
 pub struct Watcher {
     pub origin: String,
-    callback_tsfn: ThreadsafeFunction<HashMap<String, Vec<WatchEvent>>>,
     watch_exec: Arc<Watchexec>,
 }
 
 #[napi]
 impl Watcher {
     #[napi(constructor)]
-    pub fn new(
-        origin: String,
-        #[napi(ts_arg_type = "(err: string | null, paths: WatchEvent[]) => void")]
-        callback: JsFunction,
-    ) -> Result<Watcher> {
+    pub fn new(origin: String) -> Result<Watcher> {
         let watch_exec = Watchexec::new(InitConfig::default(), RuntimeConfig::default())
             .map_err(anyhow::Error::from)?;
 
-        let callback_tsfn = callback.create_threadsafe_function(
-            0,
-            |ctx: ThreadSafeCallContext<HashMap<String, Vec<WatchEvent>>>| {
-                let mut watch_events: Vec<WatchEvent> = vec![];
-                trace!(?ctx.value, "Base collection that will be sent");
-                for (_, value) in ctx.value {
-                    let event = value
-                        .last()
-                        .expect("should always have at least 1 element")
-                        .to_owned();
-                    watch_events.push(event);
-                }
-
-                trace!(?watch_events, "sending to node");
-
-                Ok(vec![watch_events])
-            },
-        )?;
-
-        Ok(Watcher {
-            origin,
-            watch_exec,
-            callback_tsfn,
-        })
+        Ok(Watcher { origin, watch_exec })
     }
 
     #[napi]
-    pub fn start(&mut self, env: Env) -> Result<()> {
+    pub fn watch(
+        &mut self,
+        env: Env,
+        #[napi(ts_arg_type = "(err: string | null, paths: WatchEvent[]) => void")]
+        callback: JsFunction,
+    ) -> Result<()> {
         tracing_subscriber::fmt()
-            .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOG"))
+            .with_env_filter(EnvFilter::from_env("NX_VERBOSE_LOGGING"))
             .init();
+
+        let mut callback_tsfn: ThreadsafeFunction<HashMap<String, Vec<WatchEvent>>> = callback
+            .create_threadsafe_function(
+                0,
+                |ctx: ThreadSafeCallContext<HashMap<String, Vec<WatchEvent>>>| {
+                    let mut watch_events: Vec<WatchEvent> = vec![];
+                    trace!(?ctx.value, "Base collection that will be sent");
+                    for (_, value) in ctx.value {
+                        let event = value
+                            .last()
+                            .expect("should always have at least 1 element")
+                            .to_owned();
+                        watch_events.push(event);
+                    }
+
+                    trace!(?watch_events, "sending to node");
+
+                    Ok(vec![watch_events])
+                },
+            )?;
+
+        callback_tsfn.unref(&env)?;
 
         let origin = self.origin.clone();
         let watch_exec = self.watch_exec.clone();
-        let callback_tsfn = self.callback_tsfn.clone();
-
         let start = async move {
             let mut runtime = watch_config::create_runtime(&origin).await?;
 
@@ -83,13 +80,13 @@ impl Watcher {
                 let signals: Vec<Signal> = action.events.iter().flat_map(Event::signals).collect();
 
                 if signals.contains(&Signal::Terminate) {
-                    trace!("ending watch");
+                    trace!("terminate - ending watch");
                     action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
                     return ok_future;
                 }
 
                 if signals.contains(&Signal::Interrupt) {
-                    trace!("ending watch");
+                    trace!("interrupt - ending watch");
                     action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
                     return ok_future;
                 }
@@ -131,35 +128,36 @@ impl Watcher {
                     })
                     .into_group_map_by(|g| g.path.clone());
 
-                callback_tsfn.call(Ok(grouped_events), ThreadsafeFunctionCallMode::Blocking);
+                callback_tsfn.call(Ok(grouped_events), ThreadsafeFunctionCallMode::NonBlocking);
 
                 action.outcome(Outcome::Start);
                 ok_future
             });
 
+            trace!("configuring watch exec");
             watch_exec
                 .reconfigure(runtime)
                 .map_err(anyhow::Error::from)?;
 
+            trace!("starting watch exec");
             watch_exec.main().await.map_err(anyhow::Error::from)?.ok();
             Ok(())
         };
 
         env.spawn_future(start)?;
-
+        trace!("started watch exec");
         Ok(())
     }
 
     #[napi(ts_return_type = "Promise<void>")]
     pub fn stop(&mut self, env: Env) -> Result<JsObject> {
-        self.callback_tsfn.unref(&env)?;
-
+        trace!("stopping the watch process");
         let watch_exec = self.watch_exec.clone();
         let send_terminate = async move {
             watch_exec
                 .send_event(
                     Event {
-                        tags: vec![Tag::Signal(Signal::Terminate)],
+                        tags: vec![Tag::Signal(Signal::Interrupt)],
                         metadata: HashMap::new(),
                     },
                     Priority::Urgent,

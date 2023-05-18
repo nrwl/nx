@@ -2,7 +2,8 @@ use tracing::trace;
 use watchexec::error::RuntimeError;
 use watchexec::filter::Filterer;
 use watchexec_events::filekind::{FileEventKind, ModifyKind};
-use watchexec_events::{Event, FileType, Priority, Source, Tag};
+
+use watchexec_events::{Event, FileType, Keyboard, Priority, Source, Tag};
 use watchexec_filterer_ignore::IgnoreFilterer;
 
 #[derive(Debug)]
@@ -29,6 +30,8 @@ impl Filterer for WatchFilterer {
         // If there's a tag that doesnt confine to this criteria, we `return` early, otherwise we `continue`.
         for tag in &event.tags {
             match tag {
+                Tag::Source(Source::Keyboard) => continue,
+                Tag::Keyboard(Keyboard::Eof) => continue,
                 Tag::FileEventKind(file_event) => match file_event {
                     FileEventKind::Modify(ModifyKind::Name(_)) => continue,
                     FileEventKind::Modify(ModifyKind::Data(_)) => continue,

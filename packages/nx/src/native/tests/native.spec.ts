@@ -30,14 +30,17 @@ describe('native', () => {
 
 describe('watcher', () => {
   it('should watch files', (done) => {
-    let watcher = new Watcher('/Users/jon/Dev/nx', (error, paths) => {
+    let watcher = new Watcher('/Users/jon/Dev/nx');
+
+    watcher.watch((error, paths) => {
       console.log(paths);
       watcher.stop();
       done();
     });
 
-    watcher.start(() => {
-      console.log('done');
-    });
+    setTimeout(() => {
+      watcher.stop();
+      done();
+    }, 1000);
   }, 10_000_000);
 });
