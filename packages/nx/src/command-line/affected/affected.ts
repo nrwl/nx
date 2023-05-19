@@ -125,6 +125,7 @@ async function projectsToRun(
   nxArgs: NxArgs,
   projectGraph: ProjectGraph
 ): Promise<ProjectGraphProjectNode[]> {
+  fileHasher.ensureInitialized();
   let affectedGraph = nxArgs.all
     ? projectGraph
     : await filterAffected(
