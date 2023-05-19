@@ -32,6 +32,7 @@
   "dependencies": {
     "chalk": "^4.1.0",
     "chokidar": "^3.5.1",
+    "detect-port": "^1.5.1",
     "http-server": "^14.1.0",
     "ignore": "^5.0.4",
     "tslib": "^2.3.0",
