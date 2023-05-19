@@ -56,10 +56,15 @@ impl Watcher {
                     let mut watch_events: Vec<WatchEvent> = vec![];
                     trace!(?ctx.value, "Base collection that will be sent");
                     for (_, value) in ctx.value {
-                        let event = value
-                            .first()
+                        #[cfg(not(windows))]
+                        let event_value = value.first();
+                        #[cfg(windows)]
+                        let event_value = value.last();
+
+                        let event = event_value
                             .expect("should always have at least 1 element")
                             .to_owned();
+
                         watch_events.push(event);
                     }
 
