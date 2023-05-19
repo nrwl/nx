@@ -10,11 +10,11 @@
         "accessToken": "NDg1NTA3MTAtOGFmZC00YmIwLTk2Y2MtOTkzNzc4ZTczYTlkfHJlYWQtb25seQ==",
         "cacheableOperations": [
           "build",
-          "lint-base",
           "lint",
           "build-ng",
           "build-base",
           "build-native",
+          "lint-base",
           "e2e",
           "e2e-macos",
           "test",
