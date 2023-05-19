@@ -46,7 +46,7 @@ export async function checkApp(
       `e2e ${appName}-e2e --no-watch --configuration=production --port=9000`
     );
     expect(e2eResults).toContain('All specs passed!');
-    await killPort(9000);
+    expect(await killPort(9000)).toBeTruthy();
   }
 
   if (opts.checkExport) {

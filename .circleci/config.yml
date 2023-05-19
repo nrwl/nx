@@ -90,7 +90,9 @@ commands:
             equal: [<< parameters.os >>, linux]
           steps:
             - run:
-                command: sudo apt-get install -y ca-certificates
+                command: |
+                  sudo apt-get update
+                  sudo apt-get install -y ca-certificates lsof
             - browser-tools/install-chrome
             - browser-tools/install-chromedriver
       - node/install:
