@@ -35,17 +35,16 @@ impl Filterer for WatchFilterer {
                 Tag::FileEventKind(file_event) => match file_event {
                     FileEventKind::Modify(ModifyKind::Name(_)) => continue,
                     FileEventKind::Modify(ModifyKind::Data(_)) => continue,
+                    #[cfg(windows)]
+                    FileEventKind::Modify(ModifyKind::Any) => continue,
                     FileEventKind::Create(CreateKind::File) => continue,
                     FileEventKind::Remove(RemoveKind::File) => continue,
                     _ => return Ok(false),
                 },
-                Tag::Path {
-                    file_type: Some(FileType::File),
-                    ..
-                } => continue,
+                // Deleted files do not have a file_type, and we don't want directory changes
                 Tag::Path {
                     path,
-                    file_type: _file_type,
+                    file_type: Some(FileType::File) | None,
                 } if !path.display().to_string().ends_with('~') => continue,
                 Tag::Source(Source::Filesystem) => continue,
                 _ => return Ok(false),
