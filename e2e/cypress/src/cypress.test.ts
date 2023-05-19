@@ -176,8 +176,7 @@ describe('env vars', () => {
   it(
     'should allow CT and e2e in the same project',
     async () => {
-      // TODO(caleb): figure out why nextjs isn't release the port only in CI
-      //      await testCtAndE2eInProject('next');
+      await testCtAndE2eInProject('next');
       await testCtAndE2eInProject('angular');
       await testCtAndE2eInProject('react');
     },
