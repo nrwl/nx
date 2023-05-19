@@ -15,9 +15,27 @@ import { ProjectGraph } from '../config/project-graph';
 import {
   getSourceDirOfDependentProjects,
   mergeNpmScriptsWithTargets,
+  shard,
 } from './project-graph-utils';
 
 describe('project graph utils', () => {
+  describe('shard', () => {
+    const shardable = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+
+    it('should split array into shards', () => {
+      expect(shard(shardable, '1/3')).toEqual(['a', 'b', 'c']);
+      expect(shard(shardable, '2/3')).toEqual(['d', 'e', 'f']);
+      expect(shard(shardable, '3/3')).toEqual(['g']);
+    });
+
+    it(`should throw on invalid shard argument`, () => {
+      expect(() => shard(shardable, '4/3')).toThrowError();
+      expect(() => shard(shardable, '')).toThrowError();
+      expect(() => shard(shardable, null)).toThrowError();
+      expect(() => shard(shardable, undefined)).toThrowError();
+    });
+  });
+
   describe('getSourceDirOfDependentProjects', () => {
     const projGraph: ProjectGraph = {
       nodes: {

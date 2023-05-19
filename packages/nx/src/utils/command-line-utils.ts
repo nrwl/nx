@@ -16,6 +16,7 @@ export interface NxArgs {
   configuration?: string;
   runner?: string;
   parallel?: number;
+  shard?: string;
   untracked?: boolean;
   uncommitted?: boolean;
   all?: boolean;

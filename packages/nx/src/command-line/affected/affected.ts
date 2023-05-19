@@ -15,7 +15,7 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { projectHasTarget } from '../../utils/project-graph-utils';
+import { projectHasTarget, shard } from '../../utils/project-graph-utils';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
 import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
@@ -53,9 +53,13 @@ export async function affected(
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const projects = await projectsToRun(nxArgs, projectGraph);
+  let projects = await projectsToRun(nxArgs, projectGraph);
 
   try {
+    if (nxArgs.shard) {
+      projects = shard(projects, nxArgs.shard);
+    }
+
     switch (command) {
       case 'graph':
         const projectNames = projects.map((p) => p.name);

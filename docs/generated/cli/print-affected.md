@@ -91,6 +91,12 @@ Type: `string`
 
 Select the subset of the returned json document (e.g., --select=projects)
 
+### shard
+
+type: `string`
+
+Split the projects into shards for parallelization in CI via `index/shardCount` (Example: `2/5` splits the project set into 5 pieces, and only returns shard 2)
+
 ### targets
 
 Type: `string`

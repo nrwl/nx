@@ -159,6 +159,12 @@ Type: `string`
 
 This is the name of the tasks runner configured in nx.json
 
+### shard
+
+type: `string`
+
+Split the projects into shards for parallelization in CI via `index/shardCount` (Example: `2/5` splits the project set into 5 pieces, and only returns shard 2)
+
 ### skip-nx-cache
 
 Type: `boolean`

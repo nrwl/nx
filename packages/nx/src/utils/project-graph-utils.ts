@@ -131,3 +131,17 @@ function collectDependentProjectNodesNames(
     );
   }
 }
+
+export function shard<T>(
+  shardable: T[],
+  shardArg: string
+): T[] {
+  const [indexStr, countStr] = shardArg.split('/');
+  const [index, count] = [Number(indexStr), Number(countStr)];
+  if (isNaN(index) || isNaN(count) || index > count) {
+    throw new Error(`Invalid shard argument format (Usage: {current shard index}/{shard count})`);
+  }
+  const shardSize = Math.ceil(shardable.length / count);
+  const offset = (index - 1) * shardSize;
+  return shardable.slice(offset, offset + shardSize);
+}

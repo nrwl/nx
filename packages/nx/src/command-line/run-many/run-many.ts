@@ -4,7 +4,7 @@ import {
   readGraphFileFromGraphArg,
 } from '../../utils/command-line-utils';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { projectHasTarget } from '../../utils/project-graph-utils';
+import { projectHasTarget, shard } from '../../utils/project-graph-utils';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import {
@@ -122,7 +122,25 @@ export function projectsToRun(
     delete selectedProjects[excludedProject];
   }
 
-  return Object.values(selectedProjects);
+  let selectedProjectValues = Object.values(selectedProjects);
+  
+  if (nxArgs.shard) {
+    try {
+      selectedProjectValues = shard(selectedProjectValues, nxArgs.shard);
+    } catch (err) {
+      const bodyLines = [err.message];
+      if (nxArgs.verbose && err.stack) {
+        bodyLines.push('');
+        bodyLines.push(err.stack);
+      }
+      output.error({
+        title: 'There was a critical error when running your command',
+        bodyLines,
+      });
+    }
+  }
+
+  return selectedProjectValues;
 }
 
 function runnableForTarget(
@@ -137,4 +155,16 @@ function runnableForTarget(
     }
   }
   return runnable;
+}
+
+function printError(e: any, verbose?: boolean) {
+  const bodyLines = [e.message];
+  if (verbose && e.stack) {
+    bodyLines.push('');
+    bodyLines.push(e.stack);
+  }
+  output.error({
+    title: 'There was a critical error when running your command',
+    bodyLines,
+  });
 }

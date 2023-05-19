@@ -123,6 +123,12 @@ Type: `number`
 
 Bind the project graph server to a specific port.
 
+### shard
+
+type: `string`
+
+Split the projects into shards for parallelization in CI via `index/shardCount` (Example: `2/5` splits the project set into 5 pieces, and only returns shard 2)
+
 ### targets
 
 Type: `string`

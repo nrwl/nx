@@ -204,5 +204,18 @@ describe('run-many', () => {
         expect(measure.duration).toBeLessThan(4000);
       });
     });
+
+    it('should select all projects with a target', () => {
+      const projects = projectsToRun(
+        {
+          all: true,
+          targets: ['test'],
+          projects: [],
+        },
+        projectGraph
+      ).map(({ name }) => name);
+      expect(projects).toContain('proj1');
+      expect(projects).toContain('proj2');
+    });
   });
 });
