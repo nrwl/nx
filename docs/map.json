@@ -1198,6 +1198,44 @@
           ]
         },
         {
+          "name": "Database",
+          "id": "database",
+          "description": "Recipes for using various databases in node apps.",
+          "itemList": [
+            {
+              "name": "Using Prisma with NestJS",
+              "id": "nestjs-prisma",
+              "tags": ["database", "node"],
+              "file": "shared/recipes/database/nestjs-prisma"
+            },
+            {
+              "name": "Using Mongo with Fastify",
+              "id": "mongo-fastify",
+              "tags": ["database", "node"],
+              "file": "shared/recipes/database/mongo-fastify"
+            },
+            {
+              "name": "Using Redis with Fastify",
+              "id": "redis-fastify",
+              "tags": ["database", "node"],
+              "file": "shared/recipes/database/redis-fastify"
+            },
+            {
+              "name": "Using Postgres with Fastify",
+              "id": "postgres-fastify",
+              "tags": ["database", "node"],
+              "file": "shared/recipes/database/postgres-fastify"
+            },
+            {
+              "name": "Using PlanetScale with Serverless Fastify",
+              "id": "serverless-fastify-planetscale",
+              "tags": ["database", "node", "serverless"],
+              "file": "shared/recipes/database/serverless-fastify-planetscale"
+            }
+          ]
+        },
+
+        {
           "name": "Enforce Module Boundaries",
           "id": "enforce-module-boundaries",
           "description": "Configuring the enforce module boundaries rule",

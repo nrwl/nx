@@ -1029,6 +1029,117 @@
     "path": "/recipes/deployment/deploy-nextjs-to-vercel",
     "tags": []
   },
+  "/recipes/database": {
+    "id": "database",
+    "name": "Database",
+    "description": "Recipes for using various databases in node apps.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "nestjs-prisma",
+        "name": "Using Prisma with NestJS",
+        "description": "",
+        "file": "shared/recipes/database/nestjs-prisma",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/database/nestjs-prisma",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "mongo-fastify",
+        "name": "Using Mongo with Fastify",
+        "description": "",
+        "file": "shared/recipes/database/mongo-fastify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/database/mongo-fastify",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "redis-fastify",
+        "name": "Using Redis with Fastify",
+        "description": "",
+        "file": "shared/recipes/database/redis-fastify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/database/redis-fastify",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "postgres-fastify",
+        "name": "Using Postgres with Fastify",
+        "description": "",
+        "file": "shared/recipes/database/postgres-fastify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/database/postgres-fastify",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "serverless-fastify-planetscale",
+        "name": "Using PlanetScale with Serverless Fastify",
+        "description": "",
+        "file": "shared/recipes/database/serverless-fastify-planetscale",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/database/serverless-fastify-planetscale",
+        "tags": ["database", "node", "serverless"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/database",
+    "tags": []
+  },
+  "/recipes/database/nestjs-prisma": {
+    "id": "nestjs-prisma",
+    "name": "Using Prisma with NestJS",
+    "description": "",
+    "file": "shared/recipes/database/nestjs-prisma",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/database/nestjs-prisma",
+    "tags": ["database", "node"]
+  },
+  "/recipes/database/mongo-fastify": {
+    "id": "mongo-fastify",
+    "name": "Using Mongo with Fastify",
+    "description": "",
+    "file": "shared/recipes/database/mongo-fastify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/database/mongo-fastify",
+    "tags": ["database", "node"]
+  },
+  "/recipes/database/redis-fastify": {
+    "id": "redis-fastify",
+    "name": "Using Redis with Fastify",
+    "description": "",
+    "file": "shared/recipes/database/redis-fastify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/database/redis-fastify",
+    "tags": ["database", "node"]
+  },
+  "/recipes/database/postgres-fastify": {
+    "id": "postgres-fastify",
+    "name": "Using Postgres with Fastify",
+    "description": "",
+    "file": "shared/recipes/database/postgres-fastify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/database/postgres-fastify",
+    "tags": ["database", "node"]
+  },
+  "/recipes/database/serverless-fastify-planetscale": {
+    "id": "serverless-fastify-planetscale",
+    "name": "Using PlanetScale with Serverless Fastify",
+    "description": "",
+    "file": "shared/recipes/database/serverless-fastify-planetscale",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/database/serverless-fastify-planetscale",
+    "tags": ["database", "node", "serverless"]
+  },
   "/recipes/enforce-module-boundaries": {
     "id": "enforce-module-boundaries",
     "name": "Enforce Module Boundaries",

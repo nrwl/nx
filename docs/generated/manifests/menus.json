@@ -2739,6 +2739,95 @@
         "disableCollapsible": false
       },
       {
+        "name": "Database",
+        "path": "/recipes/database",
+        "id": "database",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Using Prisma with NestJS",
+            "path": "/recipes/database/nestjs-prisma",
+            "id": "nestjs-prisma",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Using Mongo with Fastify",
+            "path": "/recipes/database/mongo-fastify",
+            "id": "mongo-fastify",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Using Redis with Fastify",
+            "path": "/recipes/database/redis-fastify",
+            "id": "redis-fastify",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Using Postgres with Fastify",
+            "path": "/recipes/database/postgres-fastify",
+            "id": "postgres-fastify",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Using PlanetScale with Serverless Fastify",
+            "path": "/recipes/database/serverless-fastify-planetscale",
+            "id": "serverless-fastify-planetscale",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using Prisma with NestJS",
+        "path": "/recipes/database/nestjs-prisma",
+        "id": "nestjs-prisma",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using Mongo with Fastify",
+        "path": "/recipes/database/mongo-fastify",
+        "id": "mongo-fastify",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using Redis with Fastify",
+        "path": "/recipes/database/redis-fastify",
+        "id": "redis-fastify",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using Postgres with Fastify",
+        "path": "/recipes/database/postgres-fastify",
+        "id": "postgres-fastify",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using PlanetScale with Serverless Fastify",
+        "path": "/recipes/database/serverless-fastify-planetscale",
+        "id": "serverless-fastify-planetscale",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Enforce Module Boundaries",
         "path": "/recipes/enforce-module-boundaries",
         "id": "enforce-module-boundaries",
