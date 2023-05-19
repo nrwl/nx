@@ -102,6 +102,7 @@ const binaryExtensions = new Set([
   '.jpm',
   '.jxr',
   '.key',
+  '.keystore',
   '.ktx',
   '.lha',
   '.lib',
