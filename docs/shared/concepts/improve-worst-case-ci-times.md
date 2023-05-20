@@ -60,7 +60,7 @@ To improve the performance of the worst case CI time, you have to implement some
 ```
 
 Here's a visualization of how this approach works:
-![CI using binning](../images/dte/binning.svg)
+![CI using binning](/shared/images/dte/binning.svg)
 
 ### 🎉 Pro: Faster
 
@@ -101,7 +101,7 @@ The setup looks like this:
 ```
 
 The visualization for distributed task execution looks like this:
-![CI using DTE](../images/dte/3agents.svg)
+![CI using DTE](/shared/images/dte/3agents.svg)
 
 ### 🎉 Pro: Fastest
 
