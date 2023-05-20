@@ -228,6 +228,10 @@ function copyFileMap(m: ProjectFileMap) {
   return c;
 }
 
+function copyProjectGraph(p: ProjectGraph): ProjectGraph {
+  return { ...p };
+}
+
 async function createAndSerializeProjectGraph(): Promise<{
   error: string | null;
   projectGraph: ProjectGraph | null;
@@ -251,7 +255,9 @@ async function createAndSerializeProjectGraph(): Promise<{
         allWorkspaceFiles,
         {
           fileMap: currentProjectFileMapCache || readProjectFileMapCache(),
-          projectGraph: currentProjectGraph || readProjectGraphCache(),
+          projectGraph: copyProjectGraph(
+            currentProjectGraph || readProjectGraphCache()
+          ),
         },
         true
       );
