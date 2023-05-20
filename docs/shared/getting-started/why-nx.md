@@ -20,7 +20,7 @@ You can use Nx to
 
 Nx is built in a modular fashion to let you only use the features you need.
 
-![High-level Nx architecture](../images/nx-architecture.svg)
+![High-level Nx architecture](/shared/images/nx-architecture.svg)
 
 - The **Nx** package provides fundamental technology-agnostic capabilities such as: [workspace analysis](/core-features/explore-graph), [task running](/core-features/run-tasks), [caching](/core-features/cache-task-results), [distribution](/core-features/distribute-task-execution), [code generation](/plugin-features/use-code-generators) and [automated code migrations](/core-features/automate-updating-dependencies).
 - **Plugins** are NPM packages that built on top of the fundamental capabilities provided by the Nx package. Nx plugins contain [code generators](/plugin-features/use-code-generators), [executors](/plugin-features/use-task-executors) (to abstract lower-level build tooling) and automated code migrations for keeping your tools up to date. Contrary to the Nx package, which works the same way with any JS or non-JS project, plugins are usually technology specific. For instance, `@nx/react` adds support for building React apps and libs, `@nx/cypress` adds e2e testing capabilities with Cypress. Plugins make developers more productive by removing any friction of integrating different tools with each other and by providing utilities to keep them up to date. The Nx team maintains plugins for React, Next, Remix, Angular, Jest, Cypress, Storybook and more. You can use the `@nx/plugin` package to easily [scaffold a new plugin](/plugins/intro/getting-started) or even just [automate your local workspace](/plugins/recipes/local-generators). There are also more than 80 [community plugins](/plugins/registry).
