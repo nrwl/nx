@@ -11,7 +11,7 @@ have build tasks as prerequisites, but assuming you figure out some way to handl
 the diagram below. Here the test tasks are delayed until all necessary build artifacts are ready, but the build and lint
 tasks can start right away.
 
-![CI using binning](../images/dte/binning.svg)
+![CI using binning](/shared/images/dte/binning.svg)
 
 The problem with the binning approach is you'll end up with some idle time on one or more jobs. Nx's distributed task
 execution reduces that idle time to the minimum possible by assigning each individual task to agent jobs based on the
@@ -20,7 +20,7 @@ make sure that build artifacts from previous tasks are present on every agent jo
 
 When you set up Nx's distributed task execution, your task graph will look more like this:
 
-![CI using DTE](../images/dte/3agents.svg)
+![CI using DTE](/shared/images/dte/3agents.svg)
 
 And not only will CI finish faster, but the debugging experience is the same as if you ran all of your CI on a single
 job. That's because Nx uses distributed caching to recreate all of the logs and build artifacts on the main job.
@@ -59,7 +59,7 @@ create in your CI system.
 1. Main job that controls what is going to be executed
 2. Multiple agent jobs that actually execute the tasks
 
-![Diagram showing Nx Cloud distributing tasks to multiple agents](../images/dte/distributed-caching-and-task-execution.svg)
+![Diagram showing Nx Cloud distributing tasks to multiple agents](/shared/images/dte/distributed-caching-and-task-execution.svg)
 
 The main CI job execution flow looks like this:
 

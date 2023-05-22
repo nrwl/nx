@@ -5,7 +5,6 @@ import {
   joinPathFragments,
   parseTargetString,
   readTargetOptions,
-  workspaceLayout,
 } from '@nx/devkit';
 import ignore from 'ignore';
 import { copyFileSync, readFileSync, unlinkSync } from 'fs';
@@ -103,21 +102,15 @@ function getIgnoredGlobs(root: string) {
 
 function createFileWatcher(
   root: string,
+  projectRoot: string,
   changeHandler: () => void
 ): () => void {
   const ignoredGlobs = getIgnoredGlobs(root);
-  const layout = workspaceLayout();
 
-  const watcher = watch(
-    [
-      joinPathFragments(layout.appsDir, '**'),
-      joinPathFragments(layout.libsDir, '**'),
-    ],
-    {
-      cwd: root,
-      ignoreInitial: true,
-    }
-  );
+  const watcher = watch([joinPathFragments(projectRoot, '**')], {
+    cwd: root,
+    ignoreInitial: true,
+  });
   watcher.on('all', (_event: string, path: string) => {
     if (ignoredGlobs.ignores(path)) return;
     changeHandler();
@@ -151,7 +144,9 @@ export default async function* fileServerExecutor(
 
   let disposeWatch: () => void;
   if (options.watch) {
-    disposeWatch = createFileWatcher(context.root, run);
+    const projectRoot =
+      context.projectsConfigurations.projects[context.projectName].root;
+    disposeWatch = createFileWatcher(context.root, projectRoot, run);
   }
 
   // perform initial run

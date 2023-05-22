@@ -1,4 +1,3 @@
-import { TrophyIcon } from '@heroicons/react/24/solid';
 import {
   Footer,
   Header,
