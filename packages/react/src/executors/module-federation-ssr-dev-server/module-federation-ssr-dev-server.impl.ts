@@ -19,6 +19,7 @@ import { execSync, fork } from 'child_process';
 type ModuleFederationDevServerOptions = WebSsrDevServerOptions & {
   devRemotes?: string | string[];
   skipRemotes?: string[];
+  skipAllRemotes?: boolean;
   host: string;
 };
 
@@ -47,7 +48,7 @@ export default async function* moduleFederationSsrDevServer(
 
   const remotesToSkip = new Set(options.skipRemotes ?? []);
   const knownRemotes = (moduleFederationConfig.remotes ?? []).filter(
-    (r) => !remotesToSkip.has(r)
+    (r) => !options.skipAllRemotes && !remotesToSkip.has(r)
   );
 
   const devServeApps = !options.devRemotes

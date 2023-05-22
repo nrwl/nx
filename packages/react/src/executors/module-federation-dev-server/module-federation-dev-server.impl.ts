@@ -11,6 +11,7 @@ import {
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];
   skipRemotes?: string[];
+  skipAllRemotes?: boolean;
 };
 
 export default async function* moduleFederationDevServer(
@@ -39,7 +40,7 @@ export default async function* moduleFederationDevServer(
   const remotesToSkip = new Set(options.skipRemotes ?? []);
   const knownRemotes = (moduleFederationConfig.remotes ?? []).filter((r) => {
     const validRemote = Array.isArray(r) ? r[0] : r;
-    return !remotesToSkip.has(validRemote);
+    return !options.skipAllRemotes && !remotesToSkip.has(validRemote);
   });
 
   const devServeApps = !options.devRemotes
