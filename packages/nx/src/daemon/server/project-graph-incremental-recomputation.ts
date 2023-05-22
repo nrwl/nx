@@ -228,8 +228,8 @@ function copyFileMap(m: ProjectFileMap) {
   return c;
 }
 
-function copyProjectGraph(p: ProjectGraph): ProjectGraph {
-  return { ...p };
+function copyProjectGraph(p: ProjectGraph | null): ProjectGraph | null {
+  return p ? { ...p } : null;
 }
 
 async function createAndSerializeProjectGraph(): Promise<{
