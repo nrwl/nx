@@ -29,13 +29,6 @@ export const ${constName}: Route[] = [/* {path: '', pathMatch: 'full', component
     tsModule.ScriptTarget.Latest,
     true
   );
-  sourceFile = addImportToModule(
-    tree,
-    sourceFile,
-    options.modulePath,
-    `
-    RouterModule.forChild(${constName}) `
-  );
 
   sourceFile = insertImport(
     tree,
