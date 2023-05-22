@@ -74,6 +74,11 @@
         "items": { "type": "string" },
         "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
       },
+      "skipAllRemotes": {
+        "type": "boolean",
+        "description": "Skip automatically serving all remote applications. This can be useful for multi-repository module federation setups where the host application does not need any of the remote applications for active development.",
+        "default": false
+      },
       "verbose": {
         "type": "boolean",
         "description": "Adds more details to output logging.",

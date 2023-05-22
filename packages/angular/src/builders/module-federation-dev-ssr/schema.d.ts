@@ -12,6 +12,7 @@ export interface Schema {
   proxyConfig?: string;
   devRemotes?: string[];
   skipRemotes?: string[];
+  skipAllRemotes?: boolean;
   verbose: boolean;
   pathToManifestFile?: string;
 }

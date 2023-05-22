@@ -52,14 +52,16 @@ export function executeModuleFederationDevServerBuilder(
     project,
     context,
     workspaceProjects,
-    remotesToSkip
+    remotesToSkip,
+    options.skipAllRemotes,
   );
   const dynamicRemotes = getDynamicRemotes(
     project,
     context,
     workspaceProjects,
     remotesToSkip,
-    pathToManifestFile
+    options.skipAllRemotes,
+    pathToManifestFile,
   );
   const remotes = [...staticRemotes, ...dynamicRemotes];
 

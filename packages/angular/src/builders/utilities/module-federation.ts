@@ -8,6 +8,7 @@ export function getDynamicRemotes(
   context: import('@angular-devkit/architect').BuilderContext,
   workspaceProjects: Record<string, ProjectConfiguration>,
   remotesToSkip: Set<string>,
+  skipAllRemotes: boolean,
   pathToManifestFile = join(
     context.workspaceRoot,
     project.sourceRoot,
@@ -47,7 +48,7 @@ export function getDynamicRemotes(
 
   const dynamicRemotes = Object.entries(parsedManifest)
     .map(([remoteName]) => remoteName)
-    .filter((r) => !remotesToSkip.has(r));
+    .filter((r) => !skipAllRemotes && !remotesToSkip.has(r));
   const invalidDynamicRemotes = dynamicRemotes.filter(
     (remote) => !workspaceProjects[remote]
   );
@@ -68,7 +69,8 @@ export function getStaticRemotes(
   project: ProjectConfiguration,
   context: import('@angular-devkit/architect').BuilderContext,
   workspaceProjects: Record<string, ProjectConfiguration>,
-  remotesToSkip: Set<string>
+  remotesToSkip: Set<string>,
+  skipAllRemotes: boolean,
 ): string[] {
   const mfConfigPath = join(
     context.workspaceRoot,
@@ -93,7 +95,7 @@ export function getStaticRemotes(
     .map((remoteDefinition) =>
       Array.isArray(remoteDefinition) ? remoteDefinition[0] : remoteDefinition
     )
-    .filter((r) => !remotesToSkip.has(r));
+    .filter((r) => !skipAllRemotes && !remotesToSkip.has(r));
 
   const invalidStaticRemotes = staticRemotes.filter(
     (remote) => !workspaceProjects[remote]
