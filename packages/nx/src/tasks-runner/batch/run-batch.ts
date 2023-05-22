@@ -20,14 +20,18 @@ function getBatchExecutor(executorName: string) {
   return workspace.readExecutor(nodeModule, exportName);
 }
 
-async function runTasks(executorName: string, taskGraph: TaskGraph) {
+async function runTasks(
+  executorName: string,
+  batchTaskGraph: TaskGraph,
+  fullTaskGraph: TaskGraph
+) {
   const input: Record<string, any> = {};
   const projectGraph = await createProjectGraphAsync();
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
   const nxJsonConfiguration = readNxJson();
   const batchExecutor = getBatchExecutor(executorName);
-  const tasks = Object.values(taskGraph.tasks);
+  const tasks = Object.values(batchTaskGraph.tasks);
   const context: ExecutorContext = {
     root: workspaceRoot,
     cwd: process.cwd(),
@@ -36,6 +40,7 @@ async function runTasks(executorName: string, taskGraph: TaskGraph) {
     workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
     isVerbose: false,
     projectGraph,
+    taskGraph: fullTaskGraph,
   };
   for (const task of tasks) {
     const projectConfiguration =
@@ -54,7 +59,7 @@ async function runTasks(executorName: string, taskGraph: TaskGraph) {
 
   try {
     const results = await batchExecutor.batchImplementationFactory()(
-      taskGraph,
+      batchTaskGraph,
       input,
       tasks[0].overrides,
       context
@@ -75,7 +80,11 @@ async function runTasks(executorName: string, taskGraph: TaskGraph) {
 process.on('message', async (message: BatchMessage) => {
   switch (message.type) {
     case BatchMessageType.Tasks: {
-      const results = await runTasks(message.executorName, message.taskGraph);
+      const results = await runTasks(
+        message.executorName,
+        message.batchTaskGraph,
+        message.fullTaskGraph
+      );
       process.send({
         type: BatchMessageType.Complete,
         results,

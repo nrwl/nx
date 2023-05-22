@@ -2064,14 +2064,11 @@ Note that the return value is a promise of an iterator, so you need to await bef
 
 #### Parameters
 
-| Name                               | Type                                                                  |
-| :--------------------------------- | :-------------------------------------------------------------------- |
-| `targetDescription`                | `Object`                                                              |
-| `targetDescription.configuration?` | `string`                                                              |
-| `targetDescription.project`        | `string`                                                              |
-| `targetDescription.target`         | `string`                                                              |
-| `overrides`                        | `Object`                                                              |
-| `context`                          | [`ExecutorContext`](../../devkit/documents/nx_devkit#executorcontext) |
+| Name                | Type                                                                  |
+| :------------------ | :-------------------------------------------------------------------- |
+| `targetDescription` | [`Target`](../../devkit/documents/nx_devkit#target)                   |
+| `overrides`         | `Object`                                                              |
+| `context`           | [`ExecutorContext`](../../devkit/documents/nx_devkit#executorcontext) |
 
 #### Returns
 
