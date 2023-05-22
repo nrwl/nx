@@ -181,7 +181,9 @@ Targets that only use commands natively available in the terminal will not depen
       }
     ],
     "executor": "nx:run-commands",
-    "command": "cp src/assets dist"
+    "options": {
+      "command": "cp src/assets dist"
+    }
   }
 }
 ```
@@ -197,7 +199,9 @@ If a target uses a command from a npm package, that package should be listed.
       }
     ],
     "executor": "nx:run-commands",
-    "command": "npx lerna publish"
+    "options": {
+      "command": "npx lerna publish"
+    }
   }
 }
 ```
