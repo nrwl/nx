@@ -21,6 +21,7 @@ export interface JestExecutorOptions {
   changedSince?: string;
   outputFile?: string;
   passWithNoTests?: boolean;
+  randomize?: boolean;
   runInBand?: boolean;
   showConfig?: boolean;
   silent?: boolean;
