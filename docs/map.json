@@ -53,7 +53,7 @@
             {
               "name": "Angular Standalone",
               "id": "angular-standalone-tutorial",
-              "file": "shared/angular-standalone-tutorial/1-code-generation"
+              "file": "shared/angular-standalone-tutorial/angular-standalone"
             },
             {
               "name": "Node Standalone",
