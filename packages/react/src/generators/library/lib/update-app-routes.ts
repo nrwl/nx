@@ -15,10 +15,7 @@ import {
 } from '../../../utils/ast-utils';
 import { addInitialRoutes } from '../../../utils/ast-utils';
 import { maybeJs } from './maybe-js';
-import {
-  reactRouterDomVersion,
-  typesReactRouterDomVersion,
-} from '../../../utils/versions';
+import { reactRouterDomVersion } from '../../../utils/versions';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
@@ -46,8 +43,10 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
   const routerTask = addDependenciesToPackageJson(
     host,
-    { 'react-router-dom': reactRouterDomVersion },
-    { '@types/react-router-dom': typesReactRouterDomVersion }
+    {
+      'react-router-dom': reactRouterDomVersion,
+    },
+    {}
   );
 
   // addBrowserRouterToMain
