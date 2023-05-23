@@ -118,7 +118,8 @@ export class Workspaces {
       )
     ) {
       projectsConfigurations.projects = mergeAngularJsonAndGlobProjects(
-        projectsConfigurations.projects
+        projectsConfigurations.projects,
+        this.root
       );
     }
     this.cachedProjectsConfig = this.mergeTargetDefaultsIntoProjectDescriptions(
@@ -762,6 +763,13 @@ function buildProjectConfigurationFromPackageJson(
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = path.split('\\').join('/');
   const directory = dirname(normalizedPath);
+
+  if (!packageJson.name && directory === '.') {
+    throw new Error(
+      'Nx requires the root package.json to specify a name if it is being used as an Nx project.'
+    );
+  }
+
   let name = packageJson.name ?? toProjectName(normalizedPath);
   if (nxJson?.npmScope) {
     const npmPrefix = `@${nxJson.npmScope}/`;

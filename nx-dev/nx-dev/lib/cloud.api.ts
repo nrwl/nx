@@ -12,6 +12,6 @@ export const nxCloudApi = new DocumentsApi({
   id: 'cloud',
   manifest: documents,
   prefix: '',
-  publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+  publicDocsRoot: 'public/documentation',
   tagsApi: new TagsApi(tags),
 });

@@ -1,7 +1,7 @@
-import { getWorkspaceLayout, ProjectConfiguration, Tree } from '@nx/devkit';
-import { getImportPath } from 'nx/src/utils/path';
+import { ProjectConfiguration, Tree } from '@nx/devkit';
 import type { NormalizedSchema, Schema } from '../schema';
 import { getDestination, getNewProjectName, normalizeSlashes } from './utils';
+import { getImportPath } from '../../../utilities/get-import-path';
 
 export function normalizeSchema(
   tree: Tree,
@@ -13,14 +13,12 @@ export function normalizeSchema(
     : schema.destination;
   const newProjectName =
     schema.newProjectName ?? getNewProjectName(destination);
-  const { npmScope } = getWorkspaceLayout(tree);
 
   return {
     ...schema,
     destination,
     importPath:
-      schema.importPath ??
-      normalizeSlashes(getImportPath(npmScope, destination)),
+      schema.importPath ?? normalizeSlashes(getImportPath(tree, destination)),
     newProjectName,
     relativeToRootDestination: getDestination(
       tree,

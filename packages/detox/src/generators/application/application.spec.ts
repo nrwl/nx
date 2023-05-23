@@ -345,7 +345,7 @@ describe('detox application generator', () => {
         'android.eas': {
           binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.apk',
           build:
-            'npx nx run my-dir-my-app:download --platform android --output=../../../my-dir/my-app/dist/',
+            'npx nx run my-dir-my-app:download --platform android --distribution simulator --output=../../../my-dir/my-app/dist/',
           type: 'android.apk',
         },
         'android.local': {

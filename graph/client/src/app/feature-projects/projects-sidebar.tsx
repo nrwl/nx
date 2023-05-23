@@ -25,7 +25,7 @@ import { getProjectGraphService } from '../machines/get-services';
 import { useIntervalWhen } from '../hooks/use-interval-when';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphClientResponse } from 'nx/src/command-line/dep-graph';
+import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import {
   useNavigate,
@@ -182,6 +182,7 @@ export function ProjectsSidebar(): JSX.Element {
       type: 'setProjects',
       projects: selectedProjectRouteData.projects,
       dependencies: selectedProjectRouteData.dependencies,
+      fileMap: selectedProjectRouteData.fileMap,
       affectedProjects: selectedProjectRouteData.affected,
       workspaceLayout: selectedProjectRouteData.layout,
     });
@@ -300,15 +301,16 @@ export function ProjectsSidebar(): JSX.Element {
       );
 
       const fetchProjectGraph = async () => {
-        const project: ProjectGraphClientResponse =
+        const response: ProjectGraphClientResponse =
           await projectGraphDataService.getProjectGraph(
             projectInfo.projectGraphUrl
           );
 
         projectGraphService.send({
           type: 'updateGraph',
-          projects: project.projects,
-          dependencies: project.dependencies,
+          projects: response.projects,
+          dependencies: response.dependencies,
+          fileMap: response.fileMap,
         });
       };
 

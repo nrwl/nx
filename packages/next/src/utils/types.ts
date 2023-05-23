@@ -38,6 +38,8 @@ export interface NextBuildBuilderOptions {
   generateLockfile?: boolean;
   watch?: boolean;
   debug?: boolean;
+  profile?: boolean;
+  experimentalAppOnly?: boolean;
 }
 
 export interface NextServeBuilderOptions {
@@ -50,6 +52,8 @@ export interface NextServeBuilderOptions {
   hostname?: string;
   proxyConfig?: string;
   buildLibsFromSource?: boolean;
+  keepAliveTimeout?: number;
+  turbo?: boolean;
 }
 
 export interface NextExportBuilderOptions {

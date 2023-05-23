@@ -182,12 +182,7 @@ export { stripIndents } from 'nx/src/utils/strip-indents';
 /**
  * @category Utils
  */
-export {
-  joinPathFragments,
-  normalizePath,
-  getImportPath,
-  detectWorkspaceScope,
-} from 'nx/src/utils/path';
+export { joinPathFragments, normalizePath } from 'nx/src/utils/path';
 
 // TODO(v16): Change this to export from 'nx/src/utils/workspace-root'
 /**
@@ -224,7 +219,7 @@ export {
 /**
  * @category Utils
  */
-export { Hash, Hasher } from 'nx/src/hasher/hasher';
+export { Hash, TaskHasher, Hasher } from 'nx/src/hasher/task-hasher';
 
 /**
  * @category Utils

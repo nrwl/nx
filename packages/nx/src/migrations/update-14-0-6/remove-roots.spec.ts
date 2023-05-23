@@ -3,6 +3,7 @@ import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/cre
 import { addProjectConfiguration } from '../../generators/utils/project-configuration';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import removeRoots from './remove-roots';
+import { assertRunsAgainstNxRepo } from '../../../internal-testing-utils/run-migration-against-this-workspace';
 
 describe('remove-roots >', () => {
   let tree: Tree;
@@ -46,4 +47,6 @@ describe('remove-roots >', () => {
       });
     });
   });
+
+  assertRunsAgainstNxRepo(removeRoots);
 });

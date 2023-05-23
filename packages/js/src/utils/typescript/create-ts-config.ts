@@ -15,6 +15,7 @@ export const tsConfigBaseOptions = {
   skipLibCheck: true,
   skipDefaultLibCheck: true,
   baseUrl: '.',
+  paths: {},
 };
 
 export function extractTsConfigBase(host: Tree) {
@@ -22,6 +23,7 @@ export function extractTsConfigBase(host: Tree) {
 
   const tsconfig = readJson(host, 'tsconfig.json');
   const baseCompilerOptions = {} as any;
+
   for (let compilerOption of Object.keys(tsConfigBaseOptions)) {
     baseCompilerOptions[compilerOption] =
       tsconfig.compilerOptions[compilerOption];

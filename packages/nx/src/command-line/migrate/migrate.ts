@@ -137,6 +137,7 @@ export class Migrator {
   private readonly collectedVersions: Record<string, string> = {};
   private readonly promptAnswers: Record<string, boolean> = {};
   private readonly nxInstallation: NxJsonConfiguration['installation'] | null;
+  private minVersionWithSkippedUpdates: string | undefined;
 
   constructor(opts: MigratorOptions) {
     this.packageJson = opts.packageJson;
@@ -156,7 +157,11 @@ export class Migrator {
     });
 
     const migrations = await this.createMigrateJson();
-    return { packageUpdates: this.packageUpdates, migrations };
+    return {
+      packageUpdates: this.packageUpdates,
+      migrations,
+      minVersionWithSkippedUpdates: this.minVersionWithSkippedUpdates,
+    };
   }
 
   private async createMigrateJson() {
@@ -567,6 +572,15 @@ export class Migrator {
       },
     ]).then(({ shouldApply }: { shouldApply: boolean }) => {
       this.promptAnswers[promptKey] = shouldApply;
+
+      if (
+        !shouldApply &&
+        (!this.minVersionWithSkippedUpdates ||
+          lt(packageUpdate.version, this.minVersionWithSkippedUpdates))
+      ) {
+        this.minVersionWithSkippedUpdates = packageUpdate.version;
+      }
+
       return shouldApply;
     });
   }
@@ -1014,7 +1028,7 @@ async function getPackageMigrationsUsingInstall(
   let result: ResolvedMigrationConfiguration;
 
   try {
-    const pmc = getPackageManagerCommand(detectPackageManager(dir));
+    const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
 
     await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
       cwd: dir,
@@ -1232,10 +1246,8 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       excludeAppliedMigrations: opts.excludeAppliedMigrations,
     });
 
-    const { migrations, packageUpdates } = await migrator.migrate(
-      opts.targetPackage,
-      opts.targetVersion
-    );
+    const { migrations, packageUpdates, minVersionWithSkippedUpdates } =
+      await migrator.migrate(opts.targetPackage, opts.targetVersion);
 
     updatePackageJson(root, packageUpdates);
     await updateInstallationDetails(root, packageUpdates);
@@ -1264,7 +1276,15 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         ...(migrations.length > 0
           ? [`- Run '${pmc.exec} nx migrate --run-migrations'`]
           : []),
-        `- To learn more go to https://nx.dev/core-features/automate-updating-dependencies`,
+        ...(opts.interactive && minVersionWithSkippedUpdates
+          ? [
+              `- You opted out of some migrations for now. Write the following command down somewhere to apply these migrations later:`,
+              `  nx migrate ${opts.targetVersion} --from ${opts.targetPackage}@${minVersionWithSkippedUpdates} --exclude-applied-migrations`,
+              `- To learn more go to https://nx.dev/recipes/other/advanced-update`,
+            ]
+          : [
+              `- To learn more go to https://nx.dev/core-features/automate-updating-dependencies`,
+            ]),
         ...(showConnectToCloudMessage()
           ? [
               `- You may run '${pmc.run(

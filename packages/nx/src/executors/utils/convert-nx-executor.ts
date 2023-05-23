@@ -22,12 +22,6 @@ export function convertNxExecutor(executor: Executor) {
     const projectsConfigurations = workspaces.readProjectsConfigurations();
 
     const promise = async () => {
-      let projectGraph: ProjectGraph;
-      try {
-        projectGraph = readCachedProjectGraph();
-      } catch {
-        projectGraph = await createProjectGraphAsync();
-      }
       const nxJsonConfiguration = workspaces.readNxJson();
       const context: ExecutorContext = {
         root: builderContext.workspaceRoot,
@@ -35,11 +29,11 @@ export function convertNxExecutor(executor: Executor) {
         targetName: builderContext.target.target,
         target: builderContext.target.target,
         configurationName: builderContext.target.configuration,
+        workspace: { ...nxJsonConfiguration, ...projectsConfigurations },
         projectsConfigurations,
         nxJsonConfiguration,
-        workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
         cwd: process.cwd(),
-        projectGraph,
+        projectGraph: null,
         isVerbose: false,
       };
       return executor(options, context);

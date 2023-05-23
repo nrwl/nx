@@ -17,9 +17,9 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/typedoc-theme",
         "command": "echo 'Building TypeDoc custom theme'"
-      }
+      },
+      "outputs": ["{workspaceRoot}/dist/typedoc-theme"]
     },
     "lint": {},
     "test": {}

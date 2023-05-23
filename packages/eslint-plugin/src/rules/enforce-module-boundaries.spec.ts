@@ -2,6 +2,7 @@ import 'nx/src/utils/testing/mock-fs';
 
 import type {
   FileData,
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
 } from '@nx/devkit';
@@ -130,10 +131,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [
-                createFile(`apps/myapp/src/main.ts`),
-                createFile(`apps/myapp/blah.ts`),
-              ],
             },
           },
           mylibName: {
@@ -144,17 +141,22 @@ describe('Enforce Module Boundaries (eslint)', () => {
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [
-                createFile(`libs/mylib/src/index.ts`),
-                createFile(`libs/mylib/src/deep.ts`),
-              ],
             },
           },
         },
         dependencies: {},
+      },
+      {
+        myappName: [
+          createFile(`apps/myapp/src/main.ts`),
+          createFile(`apps/myapp/blah.ts`),
+        ],
+        mylibName: [
+          createFile(`libs/mylib/src/index.ts`),
+          createFile(`libs/mylib/src/deep.ts`),
+        ],
       }
     );
-
     expect(failures.length).toEqual(0);
   });
 
@@ -176,10 +178,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [
-                createFile(`apps/myapp/src/main.ts`),
-                createFile(`apps/myapp/src/blah.ts`),
-              ],
             },
           },
           myapp2Name: {
@@ -190,7 +188,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [],
             },
           },
           'myapp2-mylib': {
@@ -201,11 +198,18 @@ describe('Enforce Module Boundaries (eslint)', () => {
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile('libs/myapp2/mylib/src/index.ts')],
             },
           },
         },
         dependencies: {},
+      },
+      {
+        myappName: [
+          createFile(`apps/myapp/src/main.ts`),
+          createFile(`apps/myapp/src/blah.ts`),
+        ],
+        myapp2Name: [],
+        'myapp2-mylib': [createFile('libs/myapp2/mylib/src/index.ts')],
       }
     );
 
@@ -213,6 +217,28 @@ describe('Enforce Module Boundaries (eslint)', () => {
   });
 
   describe('depConstraints', () => {
+    const fileMap = {
+      apiName: [createFile(`libs/api/src/index.ts`)],
+      'impl-both-domainsName': [
+        createFile(`libs/impl-both-domains/src/index.ts`),
+      ],
+      'impl-domain2Name': [createFile(`libs/impl-domain2/src/index.ts`)],
+      impl2Name: [createFile(`libs/impl2/src/index.ts`)],
+      implName: [createFile(`libs/impl/src/index.ts`)],
+      publicName: [createFile(`libs/public/src/index.ts`)],
+      dependsOnPrivateName: [
+        createFile(`libs/dependsOnPrivate/src/index.ts`, ['privateName']),
+      ],
+      dependsOnPrivateName2: [
+        createFile(`libs/dependsOnPrivate2/src/index.ts`, ['privateName']),
+      ],
+      privateName: [
+        createFile(`libs/private/src/index.ts`, ['untaggedName', 'taggedName']),
+      ],
+      untaggedName: [createFile(`libs/untagged/src/index.ts`)],
+      taggedName: [createFile(`libs/tagged/src/index.ts`)],
+    };
+
     const graph: ProjectGraph = {
       nodes: {
         apiName: {
@@ -223,7 +249,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: ['api', 'domain1'],
             implicitDependencies: [],
             targets: {},
-            files: [createFile(`libs/api/src/index.ts`)],
           },
         },
         'impl-both-domainsName': {
@@ -234,7 +259,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: ['impl', 'domain1', 'domain2'],
             implicitDependencies: [],
             targets: {},
-            files: [createFile(`libs/impl-both-domains/src/index.ts`)],
           },
         },
         'impl-domain2Name': {
@@ -245,7 +269,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: ['impl', 'domain2'],
             implicitDependencies: [],
             targets: {},
-            files: [createFile(`libs/impl-domain2/src/index.ts`)],
           },
         },
         impl2Name: {
@@ -256,7 +279,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: ['impl', 'domain1'],
             implicitDependencies: [],
             targets: {},
-            files: [createFile(`libs/impl2/src/index.ts`)],
           },
         },
         implName: {
@@ -267,7 +289,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: ['impl', 'domain1'],
             implicitDependencies: [],
             targets: {},
-            files: [createFile(`libs/impl/src/index.ts`)],
           },
         },
         publicName: {
@@ -278,7 +299,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: ['public'],
             implicitDependencies: [],
             targets: {},
-            files: [createFile(`libs/public/src/index.ts`)],
           },
         },
         dependsOnPrivateName: {
@@ -289,15 +309,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: [],
             implicitDependencies: [],
             targets: {},
-            files: [
-              createFile(`libs/dependsOnPrivate/src/index.ts`, [
-                {
-                  source: 'dependsOnPrivateName',
-                  type: 'static',
-                  target: 'privateName',
-                },
-              ]),
-            ],
           },
         },
         dependsOnPrivateName2: {
@@ -308,15 +319,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: [],
             implicitDependencies: [],
             targets: {},
-            files: [
-              createFile(`libs/dependsOnPrivate2/src/index.ts`, [
-                {
-                  source: 'dependsOnPrivateName2',
-                  type: 'static',
-                  target: 'privateName',
-                },
-              ]),
-            ],
           },
         },
         privateName: {
@@ -327,16 +329,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: ['private'],
             implicitDependencies: [],
             targets: {},
-            files: [
-              createFile(`libs/private/src/index.ts`, [
-                {
-                  source: 'privateName',
-                  type: 'static',
-                  target: 'untaggedName',
-                },
-                { source: 'privateName', type: 'static', target: 'taggedName' },
-              ]),
-            ],
           },
         },
         untaggedName: {
@@ -347,7 +339,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: [],
             implicitDependencies: [],
             targets: {},
-            files: [createFile(`libs/untagged/src/index.ts`)],
           },
         },
         taggedName: {
@@ -358,7 +349,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
             tags: ['some-tag'],
             implicitDependencies: [],
             targets: {},
-            files: [createFile(`libs/tagged/src/index.ts`)],
           },
         },
       },
@@ -437,7 +427,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import '@mycompany/impl';
           import('@mycompany/impl');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       const message =
@@ -455,7 +446,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import 'npm-package';
           import('npm-package');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -473,7 +465,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import 'npm-package';
           import('npm-package');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       const message =
@@ -495,7 +488,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import 'npm-package';
           import('npm-package');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -513,7 +507,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import 'npm-awesome-package';
           import('npm-awesome-package');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       const message =
@@ -535,7 +530,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import 'npm-awesome-package';
           import('npm-awesome-package');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -553,7 +549,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import 'npm-package';
           import('npm-package');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       const message =
@@ -573,7 +570,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import 'npm-package';
           import('npm-package');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       const message =
@@ -594,7 +592,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import 'npm-package2';
           import('npm-package2');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       const message =
@@ -617,7 +616,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import 'npm-awesome-package';
           import('npm-awesome-package');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -637,7 +637,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import 'npm-package2';
           import '1npm-package';
         `,
-        graph
+        graph,
+        fileMap
       );
 
       const message = (packageName) =>
@@ -655,7 +656,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import '@mycompany/untagged';
           import('@mycompany/untagged');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       const message =
@@ -673,7 +675,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import '@mycompany/untagged';
           import('@mycompany/untagged');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -687,7 +690,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import '@mycompany/tagged';
           import('@mycompany/tagged');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       const message =
@@ -717,7 +721,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
               },
             ],
           },
-        }
+        },
+        fileMap
       );
 
       const message = `A project tagged with "public" can not depend on libs tagged with "private"
@@ -760,7 +765,8 @@ Violation detected in:
               },
             ],
           },
-        }
+        },
+        fileMap
       );
 
       expect(failures.length).toEqual(3);
@@ -784,7 +790,8 @@ Violation detected in:
           import '@mycompany/api';
           import('@mycompany/api');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       const message =
@@ -802,7 +809,8 @@ Violation detected in:
           import '@mycompany/impl-domain2';
           import('@mycompany/impl-domain2');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       const message =
@@ -820,7 +828,8 @@ Violation detected in:
           import '@mycompany/impl-both-domains';
           import('@mycompany/impl-both-domains');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -834,7 +843,8 @@ Violation detected in:
           import '@mycompany/impl';
           import('@mycompany/impl');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -848,7 +858,8 @@ Violation detected in:
           import '@mycompany/impl2';
           import('@mycompany/impl2');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -864,7 +875,8 @@ Violation detected in:
           import '@mycompany/impl';
           import('@mycompany/impl');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -888,7 +900,8 @@ Violation detected in:
           import '@mycompany/api';
           import('@mycompany/api');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       expect(failures.length).toEqual(2);
@@ -917,7 +930,8 @@ Violation detected in:
           import '@mycompany/api';
           import('@mycompany/api');
         `,
-        graph
+        graph,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -943,14 +957,16 @@ Violation detected in:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [
-                  createFile(`libs/mylib/src/main.ts`),
-                  createFile(`libs/mylib/other.ts`),
-                ],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          mylibName: [
+            createFile(`libs/mylib/src/main.ts`),
+            createFile(`libs/mylib/other.ts`),
+          ],
         }
       );
       expect(failures.length).toEqual(0);
@@ -974,14 +990,16 @@ Violation detected in:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [
-                  createFile(`libs/mylib/src/main.ts`),
-                  createFile(`libs/mylib/other/index.ts`),
-                ],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          mylibName: [
+            createFile(`libs/mylib/src/main.ts`),
+            createFile(`libs/mylib/other/index.ts`),
+          ],
         }
       );
       expect(failures.length).toEqual(0);
@@ -1005,7 +1023,6 @@ Violation detected in:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [createFile(`libs/mylib/src/main.ts`)],
               },
             },
             otherName: {
@@ -1016,11 +1033,14 @@ Violation detected in:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [createFile('libs/other/src/index.ts')],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          mylibName: [createFile(`libs/mylib/src/main.ts`)],
+          otherName: [createFile('libs/other/src/index.ts')],
         }
       );
 
@@ -1049,7 +1069,6 @@ Violation detected in:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [createFile(`libs/mylib/src/main.ts`)],
               },
             },
             otherName: {
@@ -1060,11 +1079,14 @@ Violation detected in:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [createFile('libs/other/src/index.ts')],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          mylibName: [createFile(`libs/mylib/src/main.ts`)],
+          otherName: [createFile('libs/other/src/index.ts')],
         }
       );
 
@@ -1094,14 +1116,16 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [
-                createFile(`libs/mylib/src/main.ts`),
-                createFile(`libs/mylib/src/other.ts`),
-              ],
             },
           },
         },
         dependencies: {},
+      },
+      {
+        mylibName: [
+          createFile(`libs/mylib/src/main.ts`),
+          createFile(`libs/mylib/src/other.ts`),
+        ],
       }
     );
 
@@ -1130,7 +1154,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
           utils: {
@@ -1141,11 +1164,14 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`libs/utils/a.ts`)],
             },
           },
         },
         dependencies: {},
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`)],
+        utils: [createFile(`libs/utils/a.ts`)],
       }
     );
 
@@ -1175,7 +1201,6 @@ Violation detected in:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [createFile(`libs/mylib/src/main.ts`)],
               },
             },
             otherName: {
@@ -1186,7 +1211,6 @@ Violation detected in:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [createFile(`libs/other/index.ts`)],
               },
             },
           },
@@ -1199,6 +1223,10 @@ Violation detected in:
               },
             ],
           },
+        },
+        {
+          mylibName: [createFile(`libs/mylib/src/main.ts`)],
+          otherName: [createFile(`libs/other/index.ts`)],
         }
       );
       if (importKind === 'type') {
@@ -1229,7 +1257,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
           myappName: {
@@ -1240,11 +1267,14 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
         },
         dependencies: {},
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`)],
+        myappName: [createFile(`apps/myapp/src/index.ts`)],
       }
     );
 
@@ -1272,7 +1302,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
           myappE2eName: {
@@ -1283,11 +1312,14 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`apps/myapp-e2e/src/index.ts`)],
             },
           },
         },
         dependencies: {},
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`)],
+        myappE2eName: [createFile(`apps/myapp-e2e/src/index.ts`)],
       }
     );
 
@@ -1315,7 +1347,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
           anotherlibName: {
@@ -1326,7 +1357,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`libs/anotherlib/src/main.ts`)],
             },
           },
           myappName: {
@@ -1337,7 +1367,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
         },
@@ -1350,6 +1379,11 @@ Violation detected in:
             },
           ],
         },
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`)],
+        anotherlibName: [createFile(`libs/anotherlib/src/main.ts`)],
+        myappName: [createFile(`apps/myapp/src/index.ts`)],
       }
     );
 
@@ -1380,7 +1414,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
           anotherlibName: {
@@ -1391,7 +1424,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`libs/anotherlib/src/main.ts`)],
             },
           },
           myappName: {
@@ -1402,7 +1434,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
         },
@@ -1415,6 +1446,11 @@ Violation detected in:
             },
           ],
         },
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`)],
+        anotherlibName: [createFile(`libs/anotherlib/src/main.ts`)],
+        myappName: [createFile(`apps/myapp/src/index.ts`)],
       }
     );
 
@@ -1439,15 +1475,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [
-                createFile(`libs/mylib/src/main.ts`, [
-                  {
-                    source: 'mylibName',
-                    type: 'static',
-                    target: 'anotherlibName',
-                  },
-                ]),
-              ],
             },
           },
           anotherlibName: {
@@ -1458,15 +1485,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [
-                createFile(`libs/anotherlib/src/main.ts`, [
-                  {
-                    source: 'anotherlibName',
-                    type: 'static',
-                    target: 'mylibName',
-                  },
-                ]),
-              ],
             },
           },
           myappName: {
@@ -1477,7 +1495,6 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
         },
@@ -1490,6 +1507,13 @@ Violation detected in:
             },
           ],
         },
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`, ['anotherlibName'])],
+        anotherlibName: [
+          createFile(`libs/anotherlib/src/main.ts`, ['mylibName']),
+        ],
+        myappName: [createFile(`apps/myapp/src/index.ts`)],
       }
     );
 
@@ -1521,15 +1545,6 @@ Circular file chain:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [
-                createFile(`libs/mylib/src/main.ts`, [
-                  {
-                    source: 'badcirclelibName',
-                    type: 'static',
-                    target: 'mylibName',
-                  },
-                ]),
-              ],
             },
           },
           anotherlibName: {
@@ -1540,22 +1555,6 @@ Circular file chain:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [
-                createFile(`libs/anotherlib/src/main.ts`, [
-                  {
-                    source: 'anotherlibName',
-                    type: 'static',
-                    target: 'mylibName',
-                  },
-                ]),
-                createFile(`libs/anotherlib/src/index.ts`, [
-                  {
-                    source: 'anotherlibName',
-                    type: 'static',
-                    target: 'mylibName',
-                  },
-                ]),
-              ],
             },
           },
           badcirclelibName: {
@@ -1566,15 +1565,6 @@ Circular file chain:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [
-                createFile(`libs/badcirclelib/src/main.ts`, [
-                  {
-                    source: 'badcirclelibName',
-                    type: 'static',
-                    target: 'anotherlibName',
-                  },
-                ]),
-              ],
             },
           },
           myappName: {
@@ -1585,7 +1575,6 @@ Circular file chain:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`apps/myapp/index.ts`)],
             },
           },
         },
@@ -1612,6 +1601,17 @@ Circular file chain:
             },
           ],
         },
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`, ['mylibName'])],
+        anotherlibName: [
+          createFile(`libs/anotherlib/src/main.ts`, ['mylibName']),
+          createFile(`libs/anotherlib/src/index.ts`, ['mylibName']),
+        ],
+        badcirclelibName: [
+          createFile(`libs/badcirclelib/src/main.ts`, ['anotherlibName']),
+        ],
+        myappName: [createFile(`apps/myapp/index.ts`)],
       }
     );
 
@@ -1655,7 +1655,6 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/buildableLib/src/main.ts`)],
               },
             },
             nonBuildableLib: {
@@ -1666,11 +1665,14 @@ Circular file chain:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
+          nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
         }
       );
 
@@ -1702,7 +1704,6 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/buildableLib/src/main.ts`)],
               },
             },
             nonBuildableLib: {
@@ -1713,11 +1714,14 @@ Circular file chain:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
+          nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
         }
       );
 
@@ -1754,7 +1758,6 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/buildableLib2/src/main.ts`)],
               },
             },
             nonBuildableLib: {
@@ -1765,11 +1768,14 @@ Circular file chain:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          buildableLib2: [createFile(`libs/buildableLib2/src/main.ts`)],
+          nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
         }
       );
 
@@ -1806,7 +1812,6 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/buildableLib/src/main.ts`)],
               },
             },
             anotherBuildableLib: {
@@ -1822,11 +1827,16 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
+          anotherBuildableLib: [
+            createFile(`libs/anotherBuildableLib/src/main.ts`),
+          ],
         }
       );
 
@@ -1852,7 +1862,6 @@ Circular file chain:
                 root: 'libs/buildableLib',
                 tags: [],
                 implicitDependencies: [],
-                files: [createFile(`libs/buildableLib/src/main.ts`)],
               },
             },
             nonBuildableLib: {
@@ -1862,11 +1871,14 @@ Circular file chain:
                 root: 'libs/nonBuildableLib',
                 tags: [],
                 implicitDependencies: [],
-                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
+          nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
         }
       );
 
@@ -1897,7 +1909,6 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/buildableLib/src/main.ts`)],
               },
             },
             nonBuildableLib: {
@@ -1908,11 +1919,14 @@ Circular file chain:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
+          nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
         }
       );
 
@@ -1945,7 +1959,6 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/buildableLib/src/main.ts`)],
               },
             },
             anotherBuildableLib: {
@@ -1961,11 +1974,16 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
+          anotherBuildableLib: [
+            createFile(`libs/anotherBuildableLib/src/main.ts`),
+          ],
         }
       );
 
@@ -1996,7 +2014,6 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/buildableLib/src/main.ts`)],
               },
             },
             nonBuildableLib: {
@@ -2007,11 +2024,14 @@ Circular file chain:
                 tags: [],
                 implicitDependencies: [],
                 targets: {},
-                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
+          nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
         }
       );
 
@@ -2044,7 +2064,6 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/buildableLib/src/main.ts`)],
               },
             },
             anotherBuildableLib: {
@@ -2060,11 +2079,16 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
+          anotherBuildableLib: [
+            createFile(`libs/anotherBuildableLib/src/main.ts`),
+          ],
         }
       );
 
@@ -2095,7 +2119,6 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/buildableLib/src/main.ts`)],
               },
             },
             anotherBuildableLib: {
@@ -2111,11 +2134,16 @@ Circular file chain:
                     executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
               },
             },
           },
           dependencies: {},
+        },
+        {
+          buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
+          anotherBuildableLib: [
+            createFile(`libs/anotherBuildableLib/src/main.ts`),
+          ],
         }
       );
 
@@ -2138,21 +2166,20 @@ const baseConfig = {
 linter.defineParser('@typescript-eslint/parser', parser);
 linter.defineRule(enforceModuleBoundariesRuleName, enforceModuleBoundaries);
 
-function createFile(
-  f: string,
-  dependencies?: ProjectGraphDependency[]
-): FileData {
-  return { file: f, hash: '', ...(dependencies && { dependencies }) };
+function createFile(f: string, deps?: (string | [string, string])[]): FileData {
+  return { file: f, hash: '', deps };
 }
 
 function runRule(
   ruleArguments: any,
   contentPath: string,
   content: string,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  projectFileMap: ProjectFileMap
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
   (global as any).projectGraph = projectGraph;
+  (global as any).projectFileMap = projectFileMap;
   (global as any).projectRootMappings = createProjectRootMappings(
     projectGraph.nodes
   );

@@ -9,6 +9,7 @@ import cytoscape, {
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import {
+  ProjectFileMap,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from 'nx/src/config/project-graph';
@@ -235,6 +236,7 @@ export class ProjectTraversalGraph {
   }
 
   initGraph(
+    fileMap: ProjectFileMap,
     allProjects: ProjectGraphProjectNode[],
     groupByFolder: boolean,
     workspaceLayout,
@@ -243,6 +245,7 @@ export class ProjectTraversalGraph {
     collapseEdges: boolean
   ) {
     this.generateCytoscapeLayout(
+      fileMap,
       allProjects,
       groupByFolder,
       workspaceLayout,
@@ -252,6 +255,7 @@ export class ProjectTraversalGraph {
   }
 
   private generateCytoscapeLayout(
+    fileMap: ProjectFileMap,
     allProjects: ProjectGraphProjectNode[],
     groupByFolder: boolean,
     workspaceLayout,
@@ -259,6 +263,7 @@ export class ProjectTraversalGraph {
     affectedProjectIds: string[]
   ) {
     const elements = this.createElements(
+      fileMap,
       allProjects,
       groupByFolder,
       workspaceLayout,
@@ -274,6 +279,7 @@ export class ProjectTraversalGraph {
   }
 
   private createElements(
+    fileMap: ProjectFileMap,
     projects: ProjectGraphProjectNode[],
     groupByFolder: boolean,
     workspaceLayout: {
@@ -299,7 +305,7 @@ export class ProjectTraversalGraph {
           ? workspaceLayout.appsDir
           : workspaceLayout.libsDir;
 
-      const projectNode = new ProjectNode(project, workspaceRoot);
+      const projectNode = new ProjectNode(fileMap, project, workspaceRoot);
 
       projectNode.affected = affectedProjectIds.includes(project.name);
 

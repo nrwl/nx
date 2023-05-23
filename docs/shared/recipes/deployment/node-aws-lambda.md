@@ -1,21 +1,25 @@
-# Deploying AWS lambda functions in Node.js
+# Deploying AWS Lambda Functions in Node.js
 
-Deploying AWS lambda functions in Node.js takes a few steps:
+This recipe guides you through setting up AWS Lambda functions with Nx.
 
-## Creating the project
+## Getting set up
 
-For new workspaces you can create a Nx workspace with AWS lambda functions with one command:
+Depending on your current situation, you can either
+
+- create a new project with the goal of primarily developing and publishing AWS Lambda functions
+- add AWS Lambda functions to an existing Node.js project in an Nx workspace
+
+### Starting a New Project
+
+To create a new project, run
 
 ```shell
-npx create-nx-workspace@latest my-functions \
---preset=@nx/aws-lambda \
+npx create-nx-workspace@latest my-functions --preset=@nx/aws-lambda
 ```
 
-## Configuring existing projects
+### Configure Existing Projects
 
-**Skip this step if you are not configuring an existing project.**
-
-You will need to install `@nx/aws-lambda` if you haven't already.
+First, make sure you have `@nx/aws-lambda` installed.
 
 {% tabs %}
 {% tab label="npm" %}
@@ -41,25 +45,39 @@ pnpm add -D @nx/aws-lambda
 {% /tab %}
 {% /tabs %}
 
-- Add AWS lambda configuration by running the following command:
+Next, use the corresponding Nx generator to add the AWS Lambda configuration to an existing project:
 
 ```shell
-nx generate @nx/aws-lambda:setup-serverless
+nx g @nx/aws-lambda:setup-serverless
 ```
 
-- Create a new aws-lambda project with:
+This will setup your project to use AWS Lambda functions:
 
-```shell
-nx generate @nx/aws-lambda:serverless
+1. Creates a new AWS lambda function in directory `functions/hello-world`.
+2. Adds `samconfig.toml` and `template.yaml` in the root of the project.
+3. Updates your `project.json` to have 2 new targets `serve-functions` & `deploy-functions`.
+
+## Serve and Develop Your Functions Locally
+
+The `project.json` should have a new target `serve-functions`:
+
+```json {% fileName="project.json" %}
+{
+  "name": "my-functions",
+  ...
+  "targets": {
+    ...
+    "serve-functions": {
+      "command": "sam build && sam local start-api"
+    },
+    ...
+  }
+}
 ```
 
-This will do a few things:
+This allows to just run `nx serve-functions` to start a local server that serves your functions. As you can see it leverages the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-command-reference.html) underneath.
 
-1. Create a new AWS lambda function in directory `src/hello-world`.
-2. Add `samconfig.toml` & `template.yaml` in the root of the project.
-3. Update your `project.json` to have 2 new targets `serve` & `deploy`.
-
-## Configure your AWS lambda deploy settings
+## Configure Your AWS Lambda Deploy Settings
 
 {% callout type="note" title="Prerequiste" %}
 You need to configure your AWS credentials inside AWS before attempting to deploy.
@@ -68,29 +86,32 @@ You need to configure your AWS credentials inside AWS before attempting to deplo
 
 ## Deployment
 
-Before running your deployments you must have these:
+The following requirements need to be met in order to run the AWS Lambda function deployment:
 
 - [SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html#install-sam-cli-instructions) installed on your machine
-- [Esbuild](https://esbuild.github.io/getting-started/) available in your PATH
+- [esbuild](https://esbuild.github.io/getting-started/) available in your PATH (SAM need this). Example: `npm install -g esbuild`.
 
-```shell
-npm install -g esbuild
+Your `samconfig.toml` stores default parameters for the SAM CLI. On the other hand, if you want to configure your lambda function settings such as the AWS region, runtime, and handler function, update your `template.yaml`.
+
+The Nx `project.json` already contains a `deploy-functions` target we can invoke to trigger the deployment:
+
+```json {% fileName="project.json" %}
+{
+  "name": "my-functions",
+  ...
+  "targets": {
+    ...
+    "deploy-functions": {
+      "command": "sam build && sam deploy --guided"
+    }
+  }
+}
 ```
 
-To view your functions locally you run:
+Just run:
 
 ```shell
-nx serve
+nx deploy-functions
 ```
 
-Your `samconfig.toml` stores default parameters for SAM CLI.
-
-If you want configure your lambda function settings such as the AWS region, runtime, and handler function. You can update your `template.yaml` file located at the root of your project.
-
-To deploy them to AWS you would run:
-
-```shell
-nx deploy
-```
-
-That's it! Your AWS Lambda function should now be deployed using Nx. You can test it using the endpoint URL provided by Nx, and monitor its execution using the AWS Lambda console or other monitoring tools. Note that you may need to configure additional settings, such as event sources or permissions, depending on your specific use case.
+That's it! For monitoring or further permission settings, please refer to the AWS Lambda console.

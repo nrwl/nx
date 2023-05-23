@@ -1,10 +1,9 @@
 import {
-  createCache as _createCache,
+  createProjectFileMapCache as _createCache,
   extractCachedFileData,
-  ProjectGraphCache,
+  ProjectFileMapCache,
   shouldRecomputeWholeGraph,
 } from './nx-deps-cache';
-import { ProjectGraph } from '../config/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { nxVersion } from '../utils/versions';
@@ -14,7 +13,7 @@ describe('nx deps utils', () => {
     it('should be false when nothing changes', () => {
       expect(
         shouldRecomputeWholeGraph(
-          createCache({ version: '5.1' }),
+          createCache({ version: '6.0' }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
@@ -53,9 +52,9 @@ describe('nx deps utils', () => {
       expect(
         shouldRecomputeWholeGraph(
           createCache({
-            nodes: {
-              'renamed-mylib': { type: 'lib' } as any,
-            },
+            projectFileMap: {
+              'renamed-mylib': [],
+            } as any,
           }),
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
@@ -118,23 +117,6 @@ describe('nx deps utils', () => {
 
   describe('extractCachedPartOfProjectGraph', () => {
     it('should return the cache project graph when nothing has changed', () => {
-      const cached = {
-        nodes: {
-          mylib: {
-            name: 'mylib',
-            type: 'lib',
-            data: {
-              files: [
-                {
-                  file: 'index.ts',
-                  hash: 'hash1',
-                },
-              ],
-            },
-          },
-        },
-        dependencies: { mylib: [] },
-      } as any;
       const r = extractCachedFileData(
         {
           mylib: [
@@ -145,8 +127,14 @@ describe('nx deps utils', () => {
           ],
         },
         createCache({
-          nodes: { ...cached.nodes },
-          dependencies: { ...cached.dependencies },
+          projectFileMap: {
+            mylib: [
+              {
+                file: 'index.ts',
+                hash: 'hash1',
+              },
+            ],
+          },
         })
       );
       expect(r.filesToProcess).toEqual({});
@@ -161,23 +149,6 @@ describe('nx deps utils', () => {
     });
 
     it('should handle cases when new projects are added', () => {
-      const cached = {
-        nodes: {
-          mylib: {
-            name: 'mylib',
-            type: 'lib',
-            data: {
-              files: [
-                {
-                  file: 'index.ts',
-                  hash: 'hash1',
-                },
-              ],
-            },
-          },
-        },
-        dependencies: { mylib: [] },
-      } as any;
       const r = extractCachedFileData(
         {
           mylib: [
@@ -194,8 +165,14 @@ describe('nx deps utils', () => {
           ],
         },
         createCache({
-          nodes: { ...cached.nodes },
-          dependencies: { ...cached.dependencies },
+          projectFileMap: {
+            mylib: [
+              {
+                file: 'index.ts',
+                hash: 'hash1',
+              },
+            ],
+          },
         })
       );
       expect(r.filesToProcess).toEqual({
@@ -220,31 +197,6 @@ describe('nx deps utils', () => {
     });
 
     it('should handle cases when files change', () => {
-      const cached = {
-        nodes: {
-          mylib: {
-            name: 'mylib',
-            type: 'lib',
-            data: {
-              files: [
-                {
-                  file: 'index1.ts',
-                  hash: 'hash1',
-                },
-                {
-                  file: 'index2.ts',
-                  hash: 'hash2',
-                },
-                {
-                  file: 'index3.ts',
-                  hash: 'hash3',
-                },
-              ],
-            },
-          },
-        },
-        dependencies: { mylib: [] },
-      } as any;
       const r = extractCachedFileData(
         {
           mylib: [
@@ -263,8 +215,22 @@ describe('nx deps utils', () => {
           ],
         },
         createCache({
-          nodes: { ...cached.nodes },
-          dependencies: { ...cached.dependencies },
+          projectFileMap: {
+            mylib: [
+              {
+                file: 'index1.ts',
+                hash: 'hash1',
+              },
+              {
+                file: 'index2.ts',
+                hash: 'hash2',
+              },
+              {
+                file: 'index3.ts',
+                hash: 'hash3',
+              },
+            ],
+          },
         })
       );
       expect(r.filesToProcess).toEqual({
@@ -292,19 +258,14 @@ describe('nx deps utils', () => {
 
   describe('createCache', () => {
     it('should work with empty tsConfig', () => {
-      _createCache(
-        createNxJson({}),
-        createPackageJsonDeps({}),
-        createCache({}) as ProjectGraph,
-        {}
-      );
+      _createCache(createNxJson({}), createPackageJsonDeps({}), {} as any, {});
     });
 
     it('should work with no tsconfig', () => {
       const result = _createCache(
         createNxJson({}),
         createPackageJsonDeps({}),
-        createCache({}) as ProjectGraph,
+        {} as any,
         undefined
       );
 
@@ -312,19 +273,18 @@ describe('nx deps utils', () => {
     });
   });
 
-  function createCache(p: Partial<ProjectGraphCache>): ProjectGraphCache {
-    const defaults: ProjectGraphCache = {
-      version: '5.1',
+  function createCache(p: Partial<ProjectFileMapCache>): ProjectFileMapCache {
+    const defaults: ProjectFileMapCache = {
+      version: '6.0',
       nxVersion: nxVersion,
       deps: {},
       pathMappings: {
         mylib: ['libs/mylib/index.ts'],
       },
       nxJsonPlugins: [{ name: 'plugin', version: '1.0.0' }],
-      nodes: {
-        mylib: { type: 'lib' } as any,
+      projectFileMap: {
+        mylib: [],
       },
-      dependencies: { mylib: [] },
     };
     return { ...defaults, ...p };
   }

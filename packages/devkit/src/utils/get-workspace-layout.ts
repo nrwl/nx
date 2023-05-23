@@ -18,6 +18,9 @@ export function getWorkspaceLayout(tree: Tree): {
   appsDir: string;
   libsDir: string;
   standaloneAsDefault: boolean;
+  /**
+   * @deprecated This will be removed in Nx 17. Use {@link getNpmScope} instead.
+   */
   npmScope: string;
 } {
   const nxJson = readNxJson(tree);

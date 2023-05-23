@@ -2648,7 +2648,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Deploying a Node.js server to Fly.io",
+            "name": "Deploying a Node App to Fly.io",
             "path": "/recipes/deployment/node-server-fly-io",
             "id": "node-server-fly-io",
             "isExternal": false,
@@ -2656,7 +2656,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Deploying Node.js serverless functions to Netlify",
+            "name": "Add and Deploy Netlify Edge Functions with Node",
             "path": "/recipes/deployment/node-serverless-functions-netlify",
             "id": "node-serverless-functions-netlify",
             "isExternal": false,
@@ -2680,9 +2680,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Serverless deployment with Deno and Netlify",
-            "path": "/recipes/deployment/deno-netlify",
-            "id": "deno-netlify",
+            "name": "Add and Deploy Netlify Edge Functions with Deno",
+            "path": "/recipes/deployment/deno-netlify-functions",
+            "id": "deno-netlify-functions",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -2691,7 +2691,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Deploying a Node.js server to Fly.io",
+        "name": "Deploying a Node App to Fly.io",
         "path": "/recipes/deployment/node-server-fly-io",
         "id": "node-server-fly-io",
         "isExternal": false,
@@ -2699,7 +2699,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Deploying Node.js serverless functions to Netlify",
+        "name": "Add and Deploy Netlify Edge Functions with Node",
         "path": "/recipes/deployment/node-serverless-functions-netlify",
         "id": "node-serverless-functions-netlify",
         "isExternal": false,
@@ -2723,9 +2723,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Serverless deployment with Deno and Netlify",
-        "path": "/recipes/deployment/deno-netlify",
-        "id": "deno-netlify",
+        "name": "Add and Deploy Netlify Edge Functions with Deno",
+        "path": "/recipes/deployment/deno-netlify-functions",
+        "id": "deno-netlify-functions",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4242,6 +4242,14 @@
                 "id": "ngrx-feature-store",
                 "path": "/packages/angular/generators/ngrx-feature-store",
                 "name": "ngrx-feature-store",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "ngrx-root-store",
+                "path": "/packages/angular/generators/ngrx-root-store",
+                "name": "ngrx-root-store",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

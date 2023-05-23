@@ -124,7 +124,7 @@ describe('app', () => {
         'android.eas': {
           binaryPath: '../../../apps/my-dir/my-app/dist/MyApp.apk',
           build:
-            'npx nx run my-app:download --platform android --output=../../../apps/my-dir/my-app/dist/',
+            'npx nx run my-app:download --platform android --distribution simulator --output=../../../apps/my-dir/my-app/dist/',
           type: 'android.apk',
         },
         'android.local': {
@@ -199,7 +199,7 @@ describe('app', () => {
         'android.eas': {
           binaryPath: '../../apps/my-app/dist/MyApp.apk',
           build:
-            'npx nx run my-app:download --platform android --output=../../apps/my-app/dist/',
+            'npx nx run my-app:download --platform android --distribution simulator --output=../../apps/my-app/dist/',
           type: 'android.apk',
         },
         'android.local': {
@@ -275,7 +275,7 @@ describe('app', () => {
         'android.eas': {
           binaryPath: '../../apps/my-app/dist/myappname.apk',
           build:
-            'npx nx run my-app:download --platform android --output=../../apps/my-app/dist/',
+            'npx nx run my-app:download --platform android --distribution simulator --output=../../apps/my-app/dist/',
           type: 'android.apk',
         },
         'android.local': {

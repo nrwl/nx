@@ -1,4 +1,4 @@
-import { CommandModule } from 'yargs';
+import { boolean, CommandModule, middleware } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import {
   withAffectedOptions,
@@ -19,7 +19,18 @@ export const yargsAffectedCommand: CommandModule = {
         withRunOptions(
           withOutputStyleOption(withTargetAndConfigurationOption(yargs))
         )
-      ),
+      )
+        .option('all', {
+          type: 'boolean',
+          deprecated: 'Use `nx run-many` instead',
+        })
+        .middleware((args) => {
+          if (args.all !== undefined) {
+            throw new Error(
+              "The '--all' option has been removed for `nx affected`. Use 'nx run-many' instead."
+            );
+          }
+        }),
       'affected'
     ),
   handler: async (args) =>

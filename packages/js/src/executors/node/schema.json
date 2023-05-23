@@ -67,6 +67,11 @@
       "type": "boolean",
       "description": "Enable re-building when files change.",
       "default": true
+    },
+    "debounce": {
+      "type": "number",
+      "description": "Delay in milliseconds to wait before restarting. Useful to batch multiple file changes events together. Set to zero (0) to disable.",
+      "default": 500
     }
   },
   "additionalProperties": false,

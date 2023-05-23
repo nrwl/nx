@@ -90,7 +90,9 @@ commands:
             equal: [<< parameters.os >>, linux]
           steps:
             - run:
-                command: sudo apt-get install -y ca-certificates
+                command: |
+                  sudo apt-get update
+                  sudo apt-get install -y ca-certificates lsof
             - browser-tools/install-chrome
             - browser-tools/install-chromedriver
       - node/install:
@@ -163,10 +165,6 @@ jobs:
           main-branch-name: 'master'
       - run: pnpm nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
-          name: Check Documentation
-          command: pnpm nx documentation --no-dte
-          no_output_timeout: 20m
-      - run:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
@@ -207,6 +205,8 @@ jobs:
       - setup:
           os: macos
       - rust/install
+      - nx/set-shas:
+          main-branch-name: 'master'
       - run:
           name: Run E2E Tests for macOS
           command: |

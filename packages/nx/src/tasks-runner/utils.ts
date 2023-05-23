@@ -69,6 +69,13 @@ export function expandDependencyConfigSyntaxSugar(
 
   // Support for both `project:target` and `target:with:colons` syntax
   const [maybeProject, ...segments] = splitByColons(targetString);
+
+  // if no additional segments are provided, then the string references
+  // a target of the same project
+  if (!segments.length) {
+    return { target: maybeProject };
+  }
+
   return {
     // Only the first segment could be a project. If it is, the rest is a target.
     // If its not, then the whole targetString was a target with colons in its name.

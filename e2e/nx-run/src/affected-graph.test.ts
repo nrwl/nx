@@ -65,46 +65,46 @@ describe('Nx Affected and Graph Tests', () => {
       );
 
       const affectedApps = runCLI(
-        `print-affected --files="libs/${mylib}/src/index.ts" --select projects`
+        `show projects --affected --files="libs/${mylib}/src/index.ts"`
       );
       expect(affectedApps).toContain(myapp);
       expect(affectedApps).not.toContain(myapp2);
 
       const implicitlyAffectedApps = runCLI(
-        'print-affected --select projects --files="tsconfig.base.json"'
+        'show projects --affected --files="tsconfig.base.json"'
       );
       expect(implicitlyAffectedApps).toContain(myapp);
       expect(implicitlyAffectedApps).toContain(myapp2);
 
       const noAffectedApps = runCLI(
-        'print-affected --select projects --files="README.md"'
+        'show projects --affected projects --files="README.md"'
       );
       expect(noAffectedApps).not.toContain(myapp);
       expect(noAffectedApps).not.toContain(myapp2);
 
       const affectedLibs = runCLI(
-        `print-affected --select projects --files="libs/${mylib}/src/index.ts"`
+        `show projects --affected --files="libs/${mylib}/src/index.ts"`
       );
       expect(affectedLibs).toContain(mypublishablelib);
       expect(affectedLibs).toContain(mylib);
       expect(affectedLibs).not.toContain(mylib2);
 
       const implicitlyAffectedLibs = runCLI(
-        'print-affected --select projects --files="tsconfig.base.json"'
+        'show projects --affected --files="tsconfig.base.json"'
       );
       expect(implicitlyAffectedLibs).toContain(mypublishablelib);
       expect(implicitlyAffectedLibs).toContain(mylib);
       expect(implicitlyAffectedLibs).toContain(mylib2);
 
       const noAffectedLibsNonExistentFile = runCLI(
-        'print-affected --select projects --files="tsconfig.json"'
+        'show projects --affected --files="tsconfig.json"'
       );
       expect(noAffectedLibsNonExistentFile).not.toContain(mypublishablelib);
       expect(noAffectedLibsNonExistentFile).not.toContain(mylib);
       expect(noAffectedLibsNonExistentFile).not.toContain(mylib2);
 
       const noAffectedLibs = runCLI(
-        'print-affected --select projects --files="README.md"'
+        'show projects --affected --files="README.md"'
       );
       expect(noAffectedLibs).not.toContain(mypublishablelib);
       expect(noAffectedLibs).not.toContain(mylib);
@@ -501,6 +501,14 @@ describe('Nx Affected and Graph Tests', () => {
 
       expect(environmentJs).toContain('window.projectGraphResponse');
       expect(environmentJs).toContain('"affected":[]');
+    });
+
+    it('graph should output valid json when stdout is specified', () => {
+      const result = runCLI(`affected -t build --graph stdout`);
+      let model;
+      expect(() => (model = JSON.parse(result))).not.toThrow();
+      expect(model).toHaveProperty('graph');
+      expect(model).toHaveProperty('tasks');
     });
 
     it('affected:graph should include affected projects in environment file', () => {

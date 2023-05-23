@@ -1,5 +1,8 @@
 import { runCommand } from '../../tasks-runner/run-command';
-import type { NxArgs } from '../../utils/command-line-utils';
+import {
+  NxArgs,
+  readGraphFileFromGraphArg,
+} from '../../utils/command-line-utils';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
@@ -33,7 +36,7 @@ export async function runMany(
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
     'run-many',
-    { printWarnings: true },
+    { printWarnings: args.graph !== 'stdout' },
     nxJson
   );
   if (nxArgs.verbose) {
@@ -46,6 +49,7 @@ export async function runMany(
   const projects = projectsToRun(nxArgs, projectGraph);
 
   if (nxArgs.graph) {
+    const file = readGraphFileFromGraphArg(nxArgs);
     const projectNames = projects.map((t) => t.name);
     return await generateGraph(
       {
@@ -55,6 +59,7 @@ export async function runMany(
         all: nxArgs.all,
         targets: nxArgs.targets,
         projects: projectNames,
+        file,
       },
       projectNames
     );
@@ -76,14 +81,14 @@ export function projectsToRun(
   nxArgs: NxArgs,
   projectGraph: ProjectGraph
 ): ProjectGraphProjectNode[] {
-  const selectedProjects = new Map<string, ProjectGraphProjectNode>();
+  const selectedProjects: Record<string, ProjectGraphProjectNode> = {};
   const validProjects = runnableForTarget(projectGraph.nodes, nxArgs.targets);
   const invalidProjects: string[] = [];
 
   // --all is default now, if --projects is provided, it'll override the --all
   if (nxArgs.all && nxArgs.projects.length === 0) {
     for (const projectName of validProjects) {
-      selectedProjects.set(projectName, projectGraph.nodes[projectName]);
+      selectedProjects[projectName] = projectGraph.nodes[projectName];
     }
   } else {
     const matchingProjects = findMatchingProjects(
@@ -94,7 +99,7 @@ export function projectsToRun(
       if (!validProjects.has(project)) {
         invalidProjects.push(project);
       } else {
-        selectedProjects.set(project, projectGraph.nodes[project]);
+        selectedProjects[project] = projectGraph.nodes[project];
       }
     }
 
@@ -114,14 +119,10 @@ export function projectsToRun(
   );
 
   for (const excludedProject of excludedProjects) {
-    const project = selectedProjects.has(excludedProject);
-
-    if (project) {
-      selectedProjects.delete(excludedProject);
-    }
+    delete selectedProjects[excludedProject];
   }
 
-  return Array.from(selectedProjects.values());
+  return Object.values(selectedProjects);
 }
 
 function runnableForTarget(

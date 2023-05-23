@@ -103,7 +103,7 @@ function getData(packageName: string): {
     id: [packageName, 'documents'].join('-'),
     manifest: nxPackagesApi.getPackageDocuments(packageName),
     prefix: '',
-    publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+    publicDocsRoot: 'public/documentation',
     tagsApi,
   });
 

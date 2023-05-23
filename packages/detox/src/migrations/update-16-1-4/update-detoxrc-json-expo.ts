@@ -31,7 +31,10 @@ export default async function update(tree: Tree) {
 
 function updateDetoxrcJson(host: Tree, project: ProjectConfiguration) {
   const detoxConfigPath = `${project.root}/.detoxrc.json`;
-  const projectName = project.name;
+  const projectName = project.name?.endsWith('-e2e')
+    ? project.name.substring(0, project.name.indexOf('-e2e'))
+    : project.name;
+  const appRoot = getProjects(host).get(projectName)?.root;
   const appName = names(projectName).className;
   const offset = offsetFromRoot(project.root);
   const exec = getPackageManagerCommand(detectPackageManager(host.root)).exec;
@@ -40,23 +43,23 @@ function updateDetoxrcJson(host: Tree, project: ProjectConfiguration) {
     if (json.apps?.['ios.eas']) {
       json.apps[
         'ios.eas'
-      ].build = `${exec} nx run ${projectName}:download --platform ios --distribution simulator --output=${offset}${project.root}/dist/`;
+      ].build = `${exec} nx run ${projectName}:download --platform ios --distribution simulator --output=${offset}${appRoot}/dist/`;
     }
     if (json.apps?.['android.eas']) {
       json.apps[
         'android.eas'
-      ].build = `${exec} nx run ${projectName}:download --platform android --distribution simulator --output=${offset}${project.root}/dist/`;
+      ].build = `${exec} nx run ${projectName}:download --platform android --distribution simulator --output=${offset}${appRoot}/dist/`;
       json.apps['android.eas'].type = 'android.apk';
     }
     if (json.apps?.['ios.local']) {
       json.apps[
         'ios.local'
-      ].build = `${exec} nx run ${projectName}:build --platform ios --configuration=debug --output=${offset}${project.root}/dist/${appName}.tar.gz`;
+      ].build = `${exec} nx run ${projectName}:build --platform ios --profile preview --wait --local --no-interactive --output=${offset}${appRoot}/dist/${appName}.tar.gz`;
     }
     if (json.apps?.['android.local']) {
       json.apps[
         'android.local'
-      ].build = `${exec} nx run ${projectName}:build --platform android --configuration=debug --output=${offset}${project.root}/dist/${appName}.apk`;
+      ].build = `${exec} nx run ${projectName}:build --platform android --profile preview --wait --local --no-interactive --output=${offset}${appRoot}/dist/${appName}.apk`;
       json.apps['android.local'].type = 'android.apk';
     }
     return json;

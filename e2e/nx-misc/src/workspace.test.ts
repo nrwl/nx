@@ -582,9 +582,9 @@ describe('Workspace Tests', () => {
     });
 
     it('should work for libraries when scope is unset', async () => {
-      const json = readJson('nx.json');
-      delete json.npmScope;
-      updateFile('nx.json', JSON.stringify(json));
+      const json = readJson('package.json');
+      json.name = proj;
+      updateFile('package.json', JSON.stringify(json));
 
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');

@@ -16,7 +16,6 @@ export function assertWorkspaceValidity(
       type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
       data: {
         ...projectConfiguration,
-        files: [], // missing files
       },
     };
     return graph;

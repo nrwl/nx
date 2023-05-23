@@ -16,7 +16,6 @@ describe('utils', () => {
         targets: {
           build: { ...build, executor: '' },
         },
-        files: [],
       },
     };
   }
@@ -299,7 +298,6 @@ describe('utils', () => {
                   executor: '',
                 },
               },
-              files: [],
             },
           })
         ).toEqual([
@@ -410,6 +408,24 @@ describe('utils', () => {
       });
     });
 
+    it('should assume target of self if simple target also matches project name', () => {
+      const result = expandDependencyConfigSyntaxSugar('build', {
+        dependencies: {},
+        nodes: {
+          build: {
+            name: 'build',
+            type: 'lib',
+            data: {
+              root: 'libs/build',
+            },
+          },
+        },
+      });
+      expect(result).toEqual({
+        target: 'build',
+      });
+    });
+
     it('should expand syntax for simple target names targetting dependencies', () => {
       const result = expandDependencyConfigSyntaxSugar('^build', {
         dependencies: {},
@@ -430,7 +446,6 @@ describe('utils', () => {
             type: 'app',
             data: {
               root: 'libs/project',
-              files: [],
             },
           },
         },

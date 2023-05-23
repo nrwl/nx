@@ -10,7 +10,7 @@ import {
 import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
-} from 'nx/src/command-line/dep-graph';
+} from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { getGraphService } from '../machines/graph.service';
 import { useEffect, useMemo } from 'react';

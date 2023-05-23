@@ -6,14 +6,6 @@ import { WithNxOptions } from './with-nx';
 const addStylusToRegExp = (rx) =>
   new RegExp(rx.source.replace('|sass', '|sass|styl'), rx.flags);
 
-function patchNextCSSWithStylus(
-  nextCSSModule = require('next/dist/build/webpack/config/blocks/css') as any
-) {
-  nextCSSModule.regexLikeCss = addStylusToRegExp(nextCSSModule.regexLikeCss);
-}
-
-patchNextCSSWithStylus();
-
 export function withStylus(
   configOrFn: WithNxOptions | NextConfigFn
 ): NextConfigFn {
@@ -107,4 +99,3 @@ export function withStylus(
 
 module.exports = withStylus;
 module.exports.withStylus = withStylus;
-module.exports.patchNext = patchNextCSSWithStylus;

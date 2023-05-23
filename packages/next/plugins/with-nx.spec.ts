@@ -80,7 +80,6 @@ describe('getAliasForProject', () => {
           type: 'lib',
           data: {
             root: 'packages/proj1',
-            files: [],
           },
         },
         paths
@@ -94,7 +93,6 @@ describe('getAliasForProject', () => {
           type: 'lib',
           data: {
             root: 'packages/proj2', // relative path
-            files: [],
           },
         },
         paths
@@ -108,7 +106,6 @@ describe('getAliasForProject', () => {
           type: 'lib',
           data: {
             root: 'packages/no-alias',
-            files: [],
           },
         },
         paths

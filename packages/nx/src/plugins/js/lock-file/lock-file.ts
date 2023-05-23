@@ -14,7 +14,7 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { ProjectGraph } from '../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { PackageJson } from '../../../utils/package-json';
-import { defaultHashing } from '../../../hasher/hashing-impl';
+import { fileHasher, hashArray } from '../../../hasher/impl';
 import { output } from '../../../utils/output';
 
 import { parseNpmLockfile, stringifyNpmLockfile } from './npm-parser';
@@ -68,7 +68,7 @@ export function lockFileHash(
     content = readFileSync(NPM_LOCK_PATH, 'utf8');
   }
   if (content) {
-    return defaultHashing.hashArray([content]);
+    return hashArray([content]);
   } else {
     throw new Error(
       `Unknown package manager ${packageManager} or lock file missing`

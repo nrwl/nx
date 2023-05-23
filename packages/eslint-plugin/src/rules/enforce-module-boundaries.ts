@@ -171,8 +171,12 @@ export default createESLintRule<Options, MessageIds>({
     );
     const fileName = normalizePath(context.getFilename());
 
-    const { projectGraph, projectRootMappings, targetProjectLocator } =
-      readProjectGraph(RULE_NAME);
+    const {
+      projectGraph,
+      projectRootMappings,
+      projectFileMap,
+      targetProjectLocator,
+    } = readProjectGraph(RULE_NAME);
 
     if (!projectGraph) {
       return {};
@@ -365,7 +369,8 @@ export default createESLintRule<Options, MessageIds>({
 
                       importsToRemap.push({
                         member: importMember,
-                        importPath: importPathResolved.replace('.ts', ''),
+                        // remove .ts or .tsx from the end of the file path
+                        importPath: importPathResolved.replace(/.tsx?$/, ''),
                       });
                     }
                   }
@@ -424,7 +429,10 @@ export default createESLintRule<Options, MessageIds>({
         targetProject
       );
       if (circularPath.length !== 0) {
-        const circularFilePath = findFilesInCircularPath(circularPath);
+        const circularFilePath = findFilesInCircularPath(
+          projectFileMap,
+          circularPath
+        );
 
         // spacer text used for indirect dependencies when printing one line per file.
         // without this, we can end up with a very long line that does not display well in the terminal.

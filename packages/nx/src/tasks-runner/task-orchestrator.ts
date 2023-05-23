@@ -1,6 +1,7 @@
-import { Workspaces } from '../config/workspaces';
+import { defaultMaxListeners } from 'events';
 import { performance } from 'perf_hooks';
-import { Hasher } from '../hasher/hasher';
+import { Workspaces } from '../config/workspaces';
+import { TaskHasher } from '../hasher/task-hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { workspaceRoot } from '../utils/workspace-root';
 import { Cache } from './cache';
@@ -49,7 +50,7 @@ export class TaskOrchestrator {
   // endregion internal state
 
   constructor(
-    private readonly hasher: Hasher,
+    private readonly hasher: TaskHasher,
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
@@ -64,6 +65,9 @@ export class TaskOrchestrator {
     performance.mark('task-execution-begins');
 
     const threads = [];
+
+    process.stdout.setMaxListeners(this.options.parallel + defaultMaxListeners);
+    process.stderr.setMaxListeners(this.options.parallel + defaultMaxListeners);
 
     // initial seeding of the queue
     for (let i = 0; i < this.options.parallel; ++i) {

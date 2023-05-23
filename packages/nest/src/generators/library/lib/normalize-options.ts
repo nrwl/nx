@@ -8,6 +8,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 
 export function normalizeOptions(
   tree: Tree,
@@ -16,7 +17,7 @@ export function normalizeOptions(
   const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
     options.directory
   );
-  const { libsDir: defaultLibsDir, npmScope } = getWorkspaceLayout(tree);
+  const { libsDir: defaultLibsDir } = getWorkspaceLayout(tree);
   const libsDir = layoutDirectory ?? defaultLibsDir;
   const name = names(options.name).fileName;
   const fullProjectDirectory = projectDirectory
@@ -39,7 +40,7 @@ export function normalizeOptions(
     global: options.global ?? false,
     linter: options.linter ?? Linter.EsLint,
     parsedTags,
-    prefix: npmScope, // we could also allow customizing this
+    prefix: getNpmScope(tree), // we could also allow customizing this
     projectDirectory: fullProjectDirectory,
     projectName,
     projectRoot,

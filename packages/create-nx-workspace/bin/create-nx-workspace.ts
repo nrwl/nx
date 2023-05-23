@@ -98,16 +98,16 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'string',
           })
           .option('framework', {
-            describe: chalk.dim`Framework option to be used when the node-server preset is selected`,
+            describe: chalk.dim`Framework option to be used when the node-standalone preset is selected`,
             choices: frameworkList,
             type: 'string',
           })
           .option('docker', {
-            describe: chalk.dim`Generate a Dockerfile with your node-server`,
+            describe: chalk.dim`Generate a Dockerfile with your node-standalone`,
             type: 'boolean',
           })
           .option('nextAppDir', {
-            describe: chalk.dim`Add Experimental app/ layout for next.js`,
+            describe: chalk.dim`Enable the App Router for Next.js`,
             type: 'boolean',
           }),
         withNxCloud,
@@ -638,8 +638,8 @@ async function isNextAppDir(parsedArgs: yargs.Arguments<Arguments>) {
       .prompt<{ appDir: 'Yes' | 'No' }>([
         {
           name: 'appDir',
-          message: 'Do you want to use experimental app/ in this project?',
-          type: 'autocomplete',
+          message: 'Would you like to use the App Router (recommended)?',
+          type: 'autocomplete' as const,
           choices: [
             {
               name: 'No',
@@ -648,7 +648,7 @@ async function isNextAppDir(parsedArgs: yargs.Arguments<Arguments>) {
               name: 'Yes',
             },
           ],
-          initial: 'No' as any,
+          initial: 'Yes' as any,
         },
       ])
       .then((choice) => choice.appDir === 'Yes');

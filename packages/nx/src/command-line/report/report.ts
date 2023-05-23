@@ -23,7 +23,7 @@ import { getNxRequirePaths } from '../../utils/installation-directory';
 import {
   getHashingImplementation,
   HasherImplementation,
-} from '../../utils/get-hashing-implementation';
+} from '../../hasher/impl';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')

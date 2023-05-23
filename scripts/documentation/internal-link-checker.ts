@@ -22,6 +22,8 @@ function isNotAsset(linkPath: string): boolean {
 function isNotImage(linkPath: string): boolean {
   return (
     !linkPath.endsWith('.png') &&
+    !linkPath.endsWith('.jpg') &&
+    !linkPath.endsWith('.jpeg') &&
     !linkPath.endsWith('.gif') &&
     !linkPath.endsWith('.webp') &&
     !linkPath.endsWith('.svg') &&

@@ -25,10 +25,15 @@ import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
 import { Workspaces } from '../config/workspaces';
-import { Hasher } from '../hasher/hasher';
-import { hashDependsOnOtherTasks, hashTask } from '../hasher/hash-task';
+import {
+  DaemonBasedTaskHasher,
+  InProcessTaskHasher,
+} from '../hasher/task-hasher';
+import { hashTasksThatDoNotDependOnOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
+import { fileHasher } from '../hasher/impl';
+import { getProjectFileMap } from '../project-graph/build-project-graph';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -86,29 +91,6 @@ async function getTerminalOutputLifeCycle(
       };
     }
   }
-}
-
-async function hashTasksThatDontDependOnOtherTasks(
-  workspaces: Workspaces,
-  hasher: Hasher,
-  projectGraph: ProjectGraph,
-  taskGraph: TaskGraph
-) {
-  const res = [] as Promise<void>[];
-  for (let t of Object.values(taskGraph.tasks)) {
-    if (
-      !(await hashDependsOnOtherTasks(
-        workspaces,
-        hasher,
-        projectGraph,
-        taskGraph,
-        t
-      ))
-    ) {
-      res.push(hashTask(workspaces, hasher, projectGraph, taskGraph, t));
-    }
-  }
-  return Promise.all(res);
 }
 
 function createTaskGraphAndValidateCycles(
@@ -250,11 +232,25 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
+  let hasher;
+  if (daemonClient.enabled()) {
+    hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
+  } else {
+    const { projectFileMap, allWorkspaceFiles } = getProjectFileMap();
+    hasher = new InProcessTaskHasher(
+      projectFileMap,
+      allWorkspaceFiles,
+      projectGraph,
+      nxJson,
+      runnerOptions,
+      fileHasher
+    );
+  }
+
   // this is used for two reasons: to fetch all remote cache hits AND
   // to submit everything that is known in advance to Nx Cloud to run in
   // a distributed fashion
-  await hashTasksThatDontDependOnOtherTasks(
+  await hashTasksThatDoNotDependOnOtherTasks(
     new Workspaces(workspaceRoot),
     hasher,
     projectGraph,

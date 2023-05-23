@@ -5,6 +5,9 @@ import {
   names,
   Tree,
 } from '@nx/devkit';
+
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
+
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
@@ -28,11 +31,8 @@ export function normalizeOptions(
     ? 'e2e'
     : `${names(options.name).fileName}-e2e`;
 
-  const {
-    appsDir: defaultAppsDir,
-    npmScope,
-    standaloneAsDefault,
-  } = getWorkspaceLayout(host);
+  const { appsDir: defaultAppsDir, standaloneAsDefault } =
+    getWorkspaceLayout(host);
   const appsDir = layoutDirectory ?? defaultAppsDir;
   const appProjectRoot = options.rootProject
     ? '.'
@@ -45,7 +45,11 @@ export function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const prefix = normalizeNewProjectPrefix(options.prefix, npmScope, 'app');
+  const prefix = normalizeNewProjectPrefix(
+    options.prefix,
+    getNpmScope(host),
+    'app'
+  );
 
   options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 

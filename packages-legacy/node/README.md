@@ -1,6 +1,8 @@
-## @nrwl/node has been deprecated!
+## @nrwl/node has been renamed to @nx/node!
 
-@nrwl/node has been deprecated in favor of [@nx/node](https://www.npmjs.com/package/@nx/node). Please use that instead.
+@nrwl/node has been renamed to [@nx/node](https://www.npmjs.com/package/@nx/node). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/node will no longer be published in Nx v17.
 
