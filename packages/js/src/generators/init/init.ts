@@ -41,7 +41,21 @@ export async function initGenerator(
     devDependencies['typescript'] = typescriptVersion;
   }
 
-  if (!tree.exists(`.prettierrc`)) {
+  // https://prettier.io/docs/en/configuration.html
+  const prettierrcNameOptions = [
+    '.prettierrc',
+    '.prettierrc.json',
+    '.prettierrc.yml',
+    '.prettierrc.yaml',
+    '.prettierrc.json5',
+    '.prettierrc.js',
+    '.prettierrc.cjs',
+    'prettier.config.js',
+    'prettier.config.cjs',
+    '.prettierrc.toml',
+  ];
+
+  if (prettierrcNameOptions.every((name) => !tree.exists(name))) {
     writeJson(tree, '.prettierrc', {
       singleQuote: true,
     });
