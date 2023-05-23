@@ -364,7 +364,11 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
     );
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
-      const host = new FsTree(workspaceRoot, verbose);
+      const host = new FsTree(
+        workspaceRoot,
+        verbose,
+        `generating (${opts.collectionName}:${normalizedGeneratorName})`
+      );
       const implementation = implementationFactory();
 
       // @todo(v17): Remove this, isStandalonePreset property is defunct.
