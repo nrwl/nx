@@ -90,7 +90,7 @@ The setup looks like this:
 # Coordinate the agents to run the tasks
 - npx nx-cloud start-ci-run
 # Run any commands you want here
-- nx affected -t lint & nx affected -t test & nx affected -t build
+- nx affected -t lint test build
 # Stop any run away agents
 - npx nx-cloud stop-all-agents
 ```
