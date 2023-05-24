@@ -162,6 +162,6 @@ function wait() {
   return new Promise<void>((res) => {
     setTimeout(() => {
       res();
-    }, 250);
+    }, 500);
   });
 }
