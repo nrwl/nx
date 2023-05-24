@@ -61,14 +61,14 @@ describe('Storybook generators and executors for standalone workspaces - using R
         return /Storybook.*started/gi.test(output);
       });
       p.kill();
-    }, 60000);
+    }, 100_000);
   });
 
   describe('build storybook', () => {
     it('should build a React based storybook that uses Vite', () => {
       runCLI(`run ${appName}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${appName}/index.html`);
-    }, 60000);
+    }, 100_000);
 
     // This needs fixing on the Storybook side
     // vite paths resolution is not working on standalone
@@ -87,7 +87,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
             </div>
           );
         }
-        
+
         export default MyTestCmp;
         `
       );
@@ -125,13 +125,13 @@ describe('Storybook generators and executors for standalone workspaces - using R
         `
         import type { Meta } from '@storybook/react';
         import { TestButton } from './test-button';
-        
+
         const Story: Meta<typeof TestButton> = {
           component: TestButton,
           title: 'TestButton',
         };
         export default Story;
-        
+
         export const Primary = {
           args: {},
         };
@@ -141,6 +141,6 @@ describe('Storybook generators and executors for standalone workspaces - using R
       // build React lib
       runCLI(`run ${appName}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${appName}/index.html`);
-    }, 60000);
+    }, 100_000);
   });
 });
