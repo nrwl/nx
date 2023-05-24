@@ -1,9 +1,6 @@
 use napi::bindgen_prelude::*;
-use std::fs::{metadata, Metadata};
 use std::path::PathBuf;
-use std::time::Duration;
 use tracing::trace;
-use watchexec_events::filekind::{FileEventKind, ModifyKind};
 use watchexec_events::{Event, Tag};
 
 #[napi(string_enum)]
