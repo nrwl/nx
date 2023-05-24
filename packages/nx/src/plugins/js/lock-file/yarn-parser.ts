@@ -2,13 +2,13 @@ import { parseSyml, stringifySyml } from '@yarnpkg/parsers';
 import { stringify } from '@yarnpkg/lockfile';
 import { getHoistedPackageVersion } from './utils/package-json';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
-import { satisfies } from 'semver';
+import { satisfies, Range } from 'semver';
 import { NormalizedPackageJson } from './utils/package-json';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
-import { fileHasher, hashArray } from '../../../hasher/impl';
+import { hashArray } from '../../../hasher/impl';
 import { sortObjectByKeys } from '../../../utils/object-sort';
 
 /**
@@ -141,15 +141,22 @@ function findVersion(
   ) {
     return snapshot.resolution.slice(packageName.length + 1);
   }
-  if (
-    !isBerry &&
-    snapshot.resolved &&
-    !satisfies(snapshot.version, versionRange)
-  ) {
+
+  if (!isBerry && snapshot.resolved && !isValidVersionRange(versionRange)) {
     return snapshot.resolved;
   }
   // otherwise it's a standard version
   return snapshot.version;
+}
+
+// check if value can be parsed as a semver range
+function isValidVersionRange(versionRange: string): boolean {
+  try {
+    new Range(versionRange);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function getHoistedVersion(packageName: string): string {
