@@ -73,7 +73,7 @@ describe('Next.js config: getWithNxContent', () => {
     expect(modulePaths).toEqual([
       'nested/a.cjs',
       'nested/b.cjs',
-      'nested-c.cjs',
+      'nested.c.cjs',
     ]);
   });
 

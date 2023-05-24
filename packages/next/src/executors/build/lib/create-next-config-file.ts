@@ -221,7 +221,8 @@ export function ensureFileExtensions(
 ): string[] {
   const extensions = ['.js', '.cjs', '.mjs'];
   return files.map((file) => {
-    if (extname(file)) return file;
+    const providedExt = extname(file);
+    if (providedExt && extensions.includes(providedExt)) return file;
 
     const ext = extensions.find((ext) =>
       existsSync(join(absoluteDir, file + ext))
