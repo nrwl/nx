@@ -4,7 +4,6 @@ import { tmpdir } from 'os';
 import { mkdtemp, realpathSync, writeFile } from 'fs-extra';
 import { join } from 'path';
 import { TempFs } from '../../utils/testing/temp-fs';
-import { d } from '@pmmmwh/react-refresh-webpack-plugin/types/options';
 
 describe('native', () => {
   it('should hash files', async () => {
@@ -40,6 +39,8 @@ describe('watcher', () => {
       'app1/main.js': '',
       'app1/main.css': '',
       'app2/main.js': '',
+      'nested-ignore/.gitignore': '*',
+      'nested-ignore/file.js': '',
       'node_modules/module/index.js': '',
     });
 
@@ -65,7 +66,7 @@ describe('watcher', () => {
         [
           {
             "path": "app1/main.html",
-            "type": "create",
+            "type": "update",
           },
         ]
       `);
@@ -85,7 +86,7 @@ describe('watcher', () => {
         [
           {
             "path": "app1/main.js",
-            "type": "create",
+            "type": "update",
           },
         ]
       `);
@@ -102,9 +103,9 @@ describe('watcher', () => {
   it('should watch file renames', (done) => {
     watcher.watch((err, paths) => {
       expect(paths.length).toBe(2);
-      expect(paths.find((p) => p.type === 'create')).toMatchObject({
+      expect(paths.find((p) => p.type === 'update')).toMatchObject({
         path: 'app1/rename.js',
-        type: 'create',
+        type: 'update',
       });
       expect(paths.find((p) => p.type === 'delete')).toMatchObject({
         path: 'app1/main.js',
@@ -117,12 +118,50 @@ describe('watcher', () => {
       temp.renameFile('app1/main.js', 'app1/rename.js');
     });
   });
+
+  it('should trigger on deletes', (done) => {
+    watcher.watch((err, paths) => {
+      expect(paths).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "app1/main.js",
+            "type": "delete",
+          },
+        ]
+      `);
+      done();
+    });
+
+    wait().then(() => {
+      temp.removeFileSync('app1/main.js');
+    });
+  });
+
+  it('should ignore nested gitignores', (done) => {
+    watcher.watch((err, paths) => {
+      expect(paths).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "boo.txt",
+            "type": "update",
+          },
+        ]
+      `);
+      done();
+    });
+
+    wait().then(() => {
+      // should not be triggered
+      temp.createFileSync('nested-ignore/hello1.txt', '');
+      temp.createFileSync('boo.txt', '');
+    });
+  });
 });
 
 function wait() {
   return new Promise<void>((res) => {
     setTimeout(() => {
       res();
-    }, 100);
+    }, 75);
   });
 }

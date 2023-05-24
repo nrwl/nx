@@ -10,8 +10,11 @@ export interface FileData {
 export function hashArray(input: Array<string>): string
 export function hashFile(file: string): FileData | null
 export function hashFiles(workspaceRoot: string): Record<string, string>
+/**
+ * Newly created files will have the `update` EventType as well.
+ * This simplifies logic between OS's, IDEs and git operations
+ */
 export const enum EventType {
-  create = 'create',
   delete = 'delete',
   update = 'update'
 }
