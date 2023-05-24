@@ -8,8 +8,8 @@ import {
 } from '@nx/devkit/src/utils/async-iterable';
 import * as chalk from 'chalk';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { spawn } from 'child_process';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
+import { fork } from 'child_process';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];
@@ -83,15 +83,17 @@ export default async function* moduleFederationDevServer(
       );
     } else {
       let outWithErr: null | string[] = [];
-      const staticProcess = spawn(
-        `node ${nxBin} run ${appName}:serve-static${
-          context.configurationName ? `:${context.configurationName}` : ''
-        }`,
+      const staticProcess = fork(
+        nxBin,
+        [
+          'run',
+          `${appName}:serve-static${
+            context.configurationName ? `:${context.configurationName}` : ''
+          }`,
+        ],
         {
           cwd: context.root,
-          stdio: ['ignore', 'pipe', 'pipe'],
-          shell: true,
-          windowsHide: true,
+          stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
         }
       );
       staticProcess.stdout.on('data', (data) => {
