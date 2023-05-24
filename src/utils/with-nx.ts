@@ -1,8 +1,9 @@
-import { Configuration, ExternalItem } from '@rspack/core';
+import { Configuration, ExternalItem, RspackPluginInstance } from '@rspack/core';
 import * as path from 'path';
 import { getCopyPatterns } from './get-copy-patterns';
 import { SharedConfigContext } from './model';
 import { normalizeAssets } from './normalize-assets';
+import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 
 export function withNx(_opts = {}) {
   return function makeConfig(
@@ -22,6 +23,19 @@ export function withNx(_opts = {}) {
       acc[k] = path.join(context.root, paths[k][0]);
       return acc;
     }, {});
+
+    const plugins = config.plugins ?? [];
+    if (options.extractLicenses) {
+      plugins.push(
+        new LicenseWebpackPlugin({
+          stats: {
+            warnings: false,
+            errors: false,
+          },
+          outputFilename: `3rdpartylicenses.txt`,
+        }) as unknown as RspackPluginInstance
+      );
+    }
 
     const externals: ExternalItem = {};
     let externalsType: Configuration['externalsType'];
@@ -83,7 +97,7 @@ export function withNx(_opts = {}) {
         hot: true,
       } as any,
       module: {},
-      plugins: config.plugins ?? [],
+      plugins: plugins,
       resolve: {
         // There are some issues resolving workspace libs in a monorepo.
         // It looks to be an issue with rspack itself, but will check back after Nx 16 release

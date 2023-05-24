@@ -54,6 +54,11 @@
         "$ref": "#/definitions/assetPattern"
       }
     },
+    "extractLicenses": {
+      "type": "boolean",
+      "description": "Extract all licenses in a separate file.",
+      "default": true
+    },
     "mode": {
       "type": "string",
       "description": "Mode to run the build in.",
