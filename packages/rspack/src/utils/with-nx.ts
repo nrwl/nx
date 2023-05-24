@@ -59,6 +59,22 @@ export function withNx(_opts = {}) {
         publicPath: '/',
         filename:
           isProd && options.target !== 'node'
+            ? '[name].[contenthash:8].js'
+            : '[name].js',
+        chunkFilename:
+          isProd && options.target !== 'node'
+            ? '[name].[contenthash:8].js'
+            : '[name].js',
+        cssFilename:
+          isProd && options.target !== 'node'
+            ? '[name].[contenthash:8].css'
+            : '[name].css',
+        cssChunkFilename:
+          isProd && options.target !== 'node'
+            ? '[name].[contenthash:8].css'
+            : '[name].css',
+        assetModuleFilename:
+          isProd && options.target !== 'node'
             ? '[name].[contenthash:8][ext]'
             : '[name][ext]',
       },
