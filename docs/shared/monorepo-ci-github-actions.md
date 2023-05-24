@@ -163,13 +163,6 @@ jobs:
         if: ${{ always() }}
         run: npx nx-cloud stop-all-agents
 
-    with:
-      number-of-agents: 3
-      parallel-commands: |
-        npx nx-cloud record -- npx nx format:check
-      parallel-commands-on-agents: |
-        npx nx affected -t lint --parallel=3 & npx nx affected -t test --parallel=3 --configuration=ci & npx nx affected -t build --parallel=3
-
   agents:
     name: Agent ${{ matrix.agent }}
     runs-on: ubuntu-latest
