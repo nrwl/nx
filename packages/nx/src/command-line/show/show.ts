@@ -15,12 +15,8 @@ import {
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
-import { fileHasher } from '../../hasher/impl';
-import {
-  NxShowArgs,
-  ShowProjectsOptions,
-  ShowProjectOptions,
-} from './command-object';
+import { ShowProjectOptions, ShowProjectsOptions } from './command-object';
+import { allFileData } from '../../utils/all-file-data';
 
 export async function showProjectsHandler(
   args: ShowProjectsOptions
@@ -137,18 +133,14 @@ function getGraphNodesMatchingPatterns(
   return nodes;
 }
 
-function getAffectedGraph(
+async function getAffectedGraph(
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration<'*' | string[]>,
   graph: ProjectGraph
 ) {
   return filterAffected(
     graph,
-    calculateFileChanges(
-      parseFiles(nxArgs).files,
-      fileHasher.allFileData(),
-      nxArgs
-    ),
+    calculateFileChanges(parseFiles(nxArgs).files, await allFileData(), nxArgs),
     nxJson
   );
 }
