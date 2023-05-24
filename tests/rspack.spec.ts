@@ -34,7 +34,7 @@ describe('rspack e2e', () => {
     });
     expect(result.stdout).toContain('Successfully ran target build');
     // Make sure expected files are present.
-    expect(listFiles(`dist/${project}`)).toHaveLength(4);
+    expect(listFiles(`dist/${project}`)).toHaveLength(5);
 
     result = await runNxCommandAsync(`test ${project}`);
     expect(result.stdout).toContain('Successfully ran target test');
@@ -51,7 +51,7 @@ describe('rspack e2e', () => {
       env: { NODE_ENV: 'production' },
     });
     expect(result.stdout).toContain('Successfully ran target build');
-    expect(listFiles(`dist/${project}`)).toHaveLength(4); // same length as before
+    expect(listFiles(`dist/${project}`)).toHaveLength(5); // same length as before
 
     // Generate a new app and check that the files are correct
     const app2 = uniq('app2');
@@ -64,7 +64,7 @@ describe('rspack e2e', () => {
     });
     expect(result.stdout).toContain('Successfully ran target build');
     // Make sure expected files are present.
-    expect(listFiles(`dist/${app2}`)).toHaveLength(4);
+    expect(listFiles(`dist/${app2}`)).toHaveLength(5);
 
     result = await runNxCommandAsync(`test ${app2}`);
     expect(result.stdout).toContain('Successfully ran target test');
