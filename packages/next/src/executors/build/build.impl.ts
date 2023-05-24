@@ -50,7 +50,7 @@ export default async function buildExecutor(
   const { experimentalAppOnly, profile, debug } = options;
 
   const args = createCliOptions({ experimentalAppOnly, profile, debug });
-  const command = `npx next build ${args}`;
+  const command = `npx next build ${args.join(' ')}`;
   const execSyncOptions: ExecSyncOptions = {
     stdio: 'inherit',
     encoding: 'utf-8',
