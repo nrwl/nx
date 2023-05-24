@@ -63,7 +63,7 @@ describe('Vite Plugin', () => {
     });
 
     describe('set up new React app with --bundler=vite option', () => {
-      beforeEach(() => {
+      beforeAll(() => {
         proj = newProject();
         runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
         createFile(`apps/${myApp}/public/hello.md`, `# Hello World`);
@@ -108,7 +108,6 @@ describe('Vite Plugin', () => {
           return config;
         });
       });
-      afterEach(() => cleanupProject());
       it('should build application', async () => {
         runCLI(`build ${myApp}`);
         expect(readFile(`dist/apps/${myApp}/favicon.ico`)).toBeDefined();
@@ -124,7 +123,27 @@ describe('Vite Plugin', () => {
         ).not.toContain('MyDevelopmentValue');
         rmDist();
       }, 200000);
+
+      it('should build application when importing workspace lib in vite config', async () => {
+        runCLI(
+          `generate @nx/js:lib my-lib --bundler=vite --unitTestRunner=none`
+        );
+        updateFile(`apps/${myApp}/vite.config.ts`, (content) => {
+          content = `import { myLib } from '@${proj}/my-lib';
+          ${content}
+          console.log(myLib());
+          `;
+          return content;
+        });
+        runCLI(`build ${myApp}`);
+        expect(readFile(`dist/apps/${myApp}/favicon.ico`)).toBeDefined();
+        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+        expect(fileArray.length).toEqual(2);
+        rmDist();
+      }, 200000);
     });
+    afterAll(() => cleanupProject());
   });
 
   describe('Vite on Web apps', () => {

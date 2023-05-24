@@ -10,7 +10,7 @@ import { loadConfigFromFile } from 'vite';
 import { VitestExecutorOptions } from './schema';
 import { relative, resolve } from 'path';
 import { existsSync } from 'fs';
-import { registerTsConfigPaths } from '@nx/js/src/internal';
+import { registerTsConfigPaths, registerTsProject } from '@nx/js/src/internal';
 
 class NxReporter implements Reporter {
   deferred: {
@@ -54,6 +54,10 @@ export async function* vitestExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   registerTsConfigPaths(resolve(projectRoot, 'tsconfig.json'));
+  if (!(global as any).tsProjectRegistered) {
+    registerTsProject(workspaceRoot, 'tsconfig.base.json');
+    (global as any).tsProjectRegistered = true;
+  }
 
   const { startVitest } = await (Function(
     'return import("vitest/node")'

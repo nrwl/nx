@@ -23,6 +23,7 @@ import {
   viteVersion,
 } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
+import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 
 function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
   const packageJson = readJson(host, 'package.json');
@@ -39,6 +40,9 @@ function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
   devDependencies['vitest'] = vitestVersion;
   devDependencies['@vitest/ui'] = vitestUiVersion;
   devDependencies['jsdom'] = jsdomVersion;
+
+  // for registerTsProject
+  addSwcRegisterDependencies(host);
 
   if (schema.uiFramework === 'react') {
     devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;

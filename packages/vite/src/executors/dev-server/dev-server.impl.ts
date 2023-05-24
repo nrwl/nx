@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, workspaceRoot } from '@nx/devkit';
 import { createServer, InlineConfig, mergeConfig, ViteDevServer } from 'vite';
 
 import {
@@ -11,7 +11,7 @@ import {
 
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
-import { registerTsConfigPaths } from '@nx/js/src/internal';
+import { registerTsConfigPaths, registerTsProject } from '@nx/js/src/internal';
 import { resolve } from 'path';
 
 export async function* viteDevServerExecutor(
@@ -22,7 +22,10 @@ export async function* viteDevServerExecutor(
     context.projectsConfigurations.projects[context.projectName].root;
 
   registerTsConfigPaths(resolve(projectRoot, 'tsconfig.json'));
-
+  if (!(global as any).tsProjectRegistered) {
+    registerTsProject(workspaceRoot, 'tsconfig.base.json');
+    (global as any).tsProjectRegistered = true;
+  }
   // Retrieve the option for the configured buildTarget.
   const buildTargetOptions: ViteBuildExecutorOptions = getNxTargetOptions(
     options.buildTarget,

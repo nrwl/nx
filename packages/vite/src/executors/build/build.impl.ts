@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { ExecutorContext, writeJsonFile } from '@nx/devkit';
+import { ExecutorContext, workspaceRoot, writeJsonFile } from '@nx/devkit';
 import { build, InlineConfig, mergeConfig } from 'vite';
 import {
   getViteBuildOptions,
@@ -16,7 +16,7 @@ import { existsSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 
-import { registerTsConfigPaths } from '@nx/js/src/internal';
+import { registerTsConfigPaths, registerTsProject } from '@nx/js/src/internal';
 
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
@@ -26,6 +26,11 @@ export async function* viteBuildExecutor(
     context.projectsConfigurations.projects[context.projectName].root;
 
   registerTsConfigPaths(resolve(projectRoot, 'tsconfig.json'));
+
+  if (!(global as any).tsProjectRegistered) {
+    registerTsProject(workspaceRoot, 'tsconfig.base.json');
+    (global as any).tsProjectRegistered = true;
+  }
 
   const normalizedOptions = normalizeOptions(options);
 
