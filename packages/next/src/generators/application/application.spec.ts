@@ -30,6 +30,20 @@ describe('app', () => {
       );
     });
 
+    it('should generate an unstyled component page', async () => {
+      await applicationGenerator(tree, {
+        name: 'testApp',
+        style: 'none',
+        appDir: false,
+      });
+
+      const content = tree.read('apps/test-app/pages/index.tsx').toString();
+
+      expect(content).not.toContain('import styles from');
+      expect(content).not.toContain('const StyledPage');
+      expect(content).not.toContain('className={styles.page}');
+    });
+
     it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
         name: 'myApp',
@@ -490,6 +504,21 @@ describe('app', () => {
         'dist/test-app/.next/types/**/*.ts',
         'next-env.d.ts',
       ]);
+    });
+
+    it('should generate an unstyled component page', async () => {
+      await applicationGenerator(tree, {
+        name: 'testApp',
+        style: 'none',
+        appDir: true,
+        rootProject: true,
+      });
+
+      const content = tree.read('app/page.tsx').toString();
+
+      expect(content).not.toContain('import styles from');
+      expect(content).not.toContain('const StyledPage');
+      expect(content).not.toContain('className={styles.page}');
     });
   });
 });

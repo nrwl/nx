@@ -1,19 +1,20 @@
-<% if (styledModule && (styledModule === 'styled-jsx' || styledModule === 'styled-components'))  {%>
-'use client';
-<% }%> 
-<% if (styledModule && styledModule !== 'styled-jsx') {
-  var wrapper = 'StyledPage';
-%>import styled from '<%= styledModule %>';<% } else {
-  var wrapper = 'div';
-%>
-  <%- style !== 'styled-jsx' ? `import styles from './page.module.${style}';` : '' %>
-<% }
-%>
+<% if (style !== 'none') { %>
+  <% if (styledModule && (styledModule === 'styled-jsx' || styledModule === 'styled-components'))  {%>
+  'use client';
+  <% }%> 
+  <% if (styledModule && styledModule !== 'styled-jsx') {
+    var wrapper = 'StyledPage';
+  %>import styled from '<%= styledModule %>';<% } else {
+    var wrapper = 'div';
+  %>
+    <%- style !== 'styled-jsx' ? `import styles from './page.module.${style}';` : '' %>
+  <% }
+  %>
 
-<% if (styledModule && styledModule !== 'styled-jsx') { %>
-const StyledPage = styled.div`<%- pageStyleContent %>`;
-<% }%>
-
+  <% if (styledModule && styledModule !== 'styled-jsx') { %>
+  const StyledPage = styled.div`<%- pageStyleContent %>`;
+  <% }%>
+<% } %>
 export default async function Index() {
   /*
    * Replace the elements below with your own.
@@ -22,7 +23,7 @@ export default async function Index() {
    */
   return (
     <<%= wrapper %><% if (!styledModule) {%> className={styles.page}<% } %>>
-      <%- styledModule === 'styled-jsx' ? `<style jsx>{\`${pageStyleContent}\`}</style>` : `` %>
+      <%- styledModule === 'styled-jsx' && style !== 'none' ? `<style jsx>{\`${pageStyleContent}\`}</style>` : `` %>
       <%- appContent %>
     </<%= wrapper %>>
   );
