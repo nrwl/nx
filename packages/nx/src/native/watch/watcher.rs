@@ -46,7 +46,7 @@ impl Watcher {
         callback: JsFunction,
     ) -> Result<()> {
         _ = tracing_subscriber::fmt()
-            .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOG"))
+            .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOGGING"))
             .try_init();
 
         let mut callback_tsfn: ThreadsafeFunction<HashMap<String, Vec<WatchEventInternal>>> =
