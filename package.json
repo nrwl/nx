@@ -4,6 +4,7 @@
   "homepage": "https://nx.dev",
   "private": true,
   "scripts": {
+    "comment": "a change to affect projects",
     "build": "nx run-many --target build --all --parallel 8 --exclude nx-dev,typedoc-theme",
     "commit": "czg",
     "check-commit": "node ./scripts/commit-lint.js",
