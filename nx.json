@@ -193,6 +193,5 @@
     "build-storybook": {
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
     }
-  },
-  "plugins": ["@monodon/rust"]
+  }
 }

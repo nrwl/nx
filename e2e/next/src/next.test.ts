@@ -443,26 +443,26 @@ describe('Next.js Applications', () => {
     });
   }, 300_000);
 
-  it('should create a generate a next.js app with app layout enabled', async () => {
+  it('should copy relative modules needed by the next.config.js file', async () => {
     const appName = uniq('app');
 
-    runCLI(
-      `generate @nx/next:app ${appName} --style=css --appDir --no-interactive`
+    runCLI(`generate @nx/next:app ${appName} --style=css --no-interactive`);
+
+    updateFile(`apps/${appName}/redirects.js`, 'module.exports = [];');
+    updateFile(
+      `apps/${appName}/nested/headers.js`,
+      `module.exports = require('./headers-2');`
     );
-
-    checkFilesExist(`apps/${appName}/app/api/hello/route.ts`);
-    checkFilesExist(`apps/${appName}/app/page.tsx`);
-    checkFilesExist(`apps/${appName}/app/layout.tsx`);
-    checkFilesExist(`apps/${appName}/app/global.css`);
-    checkFilesExist(`apps/${appName}/app/page.module.css`);
-
-    await checkApp(appName, {
-      checkUnitTest: false,
-      checkLint: false,
-      checkE2E: false,
-      checkExport: false,
+    updateFile(`apps/${appName}/nested/headers-2.js`, 'module.exports = [];');
+    updateFile(`apps/${appName}/next.config.js`, (content) => {
+      return `const redirects = require('./redirects');\nconst headers = require('./nested/headers.js');\n${content}`;
     });
-  }, 300_000);
+
+    runCLI(`build ${appName}`);
+    checkFilesExist(`dist/apps/${appName}/redirects.js`);
+    checkFilesExist(`dist/apps/${appName}/nested/headers.js`);
+    checkFilesExist(`dist/apps/${appName}/nested/headers-2.js`);
+  }, 120_000);
 
   it('should support --turbo to enable Turbopack', async () => {
     const appName = uniq('app');

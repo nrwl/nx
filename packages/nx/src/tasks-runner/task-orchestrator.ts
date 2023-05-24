@@ -229,7 +229,8 @@ export class TaskOrchestrator {
   private async runBatch(batch: Batch) {
     try {
       const results = await this.forkedProcessTaskRunner.forkProcessForBatch(
-        batch
+        batch,
+        this.taskGraph
       );
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
@@ -296,6 +297,7 @@ export class TaskOrchestrator {
             {
               temporaryOutputPath,
               streamOutput,
+              taskGraph: this.taskGraph,
             }
           )
         : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
@@ -303,6 +305,7 @@ export class TaskOrchestrator {
             {
               temporaryOutputPath,
               streamOutput,
+              taskGraph: this.taskGraph,
             }
           );
 

@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration } from '@nx/devkit';
+import type { NxJsonConfiguration, ProjectConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   createNonNxProjectDirectory,
@@ -37,7 +37,7 @@ describe('Nx Commands', () => {
         runCLI('show projects').replace(/.*nx show projects( --verbose)?\n/, '')
       ).toEqual('');
 
-      runCLI(`generate @nx/web:app ${app1}`);
+      runCLI(`generate @nx/web:app ${app1} --tags e2etag`);
       runCLI(`generate @nx/web:app ${app2}`);
 
       const s = runCLI('show projects').split('\n');
@@ -47,6 +47,24 @@ describe('Nx Commands', () => {
       expect(s).toContain(app2);
       expect(s).toContain(`${app1}-e2e`);
       expect(s).toContain(`${app2}-e2e`);
+
+      const withTag = JSON.parse(runCLI('show projects -p tag:e2etag --json'));
+      expect(withTag).toEqual([app1]);
+
+      const withTargets = JSON.parse(
+        runCLI('show projects --with-target e2e --json')
+      );
+      expect(withTargets).toEqual([`${app1}-e2e`, `${app2}-e2e`]);
+    });
+
+    it('should show detailed project info', () => {
+      const app = uniq('myapp');
+      runCLI(`generate @nx/web:app ${app}`);
+      const project: ProjectConfiguration = JSON.parse(
+        runCLI(`show project ${app}`)
+      );
+      expect(project.targets.build).toBeDefined();
+      expect(project.targets.lint).toBeDefined();
     });
   });
 

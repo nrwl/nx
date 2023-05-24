@@ -1,5 +1,6 @@
 import { appendFileSync, openSync, writeFileSync } from 'fs';
-import { run } from '../src/command-line/run/run';
+import { Target, run } from '../src/command-line/run/run';
+import { TaskGraph } from '../src/config/task-graph';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
@@ -12,32 +13,8 @@ if (!process.env.NX_WORKSPACE_ROOT) {
   console.error('Invalid Nx command invocation');
   process.exit(1);
 }
-requireCli();
 
-function requireCli() {
-  process.env.NX_CLI_SET = 'true';
-  try {
-    const args = JSON.parse(process.argv[2]);
-    run(
-      process.cwd(),
-      process.env.NX_WORKSPACE_ROOT,
-      args.targetDescription,
-      args.overrides,
-      args.isVerbose,
-      false
-    )
-      .then((statusCode) => {
-        process.exit(statusCode);
-      })
-      .catch((e) => {
-        console.error(`Unexpected error`);
-        console.error(e);
-      });
-  } catch (e) {
-    console.error(`Could not find 'nx' module in this workspace.`, e);
-    process.exit(1);
-  }
-}
+process.env.NX_CLI_SET = 'true';
 
 /**
  * We need to collect all stdout and stderr and store it, so the caching mechanism
@@ -93,3 +70,28 @@ function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
     }
   });
 }
+
+process.on(
+  'message',
+  async (message: {
+    targetDescription: Target;
+    overrides: Record<string, any>;
+    taskGraph: TaskGraph;
+    isVerbose: boolean;
+  }) => {
+    try {
+      const statusCode = await run(
+        process.cwd(),
+        process.env.NX_WORKSPACE_ROOT,
+        message.targetDescription,
+        message.overrides,
+        message.isVerbose,
+        message.taskGraph
+      );
+      process.exit(statusCode);
+    } catch (e) {
+      console.error(`Could not find 'nx' module in this workspace.`, e);
+      process.exit(1);
+    }
+  }
+);

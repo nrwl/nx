@@ -18,10 +18,7 @@ import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies
 import { assertValidStyle } from '../../utils/assertion';
 import { addImport } from '../../utils/ast-utils';
 import { getInSourceVitestTestsTemplate } from '../../utils/get-in-source-vitest-tests-template';
-import {
-  reactRouterDomVersion,
-  typesReactRouterDomVersion,
-} from '../../utils/versions';
+import { reactRouterDomVersion } from '../../utils/versions';
 import { getComponentTests } from './get-component-tests';
 import { NormalizedSchema } from './noramlized-schema';
 import { Schema } from './schema';
@@ -42,7 +39,7 @@ export async function componentGenerator(host: Tree, schema: Schema) {
     const routingTask = addDependenciesToPackageJson(
       host,
       { 'react-router-dom': reactRouterDomVersion },
-      { '@types/react-router-dom': typesReactRouterDomVersion }
+      {}
     );
     tasks.push(routingTask);
   }
