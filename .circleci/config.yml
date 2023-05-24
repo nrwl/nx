@@ -126,7 +126,7 @@ jobs:
       SELECTED_PM: << parameters.pm >>
       NX_E2E_RUN_CYPRESS: 'true'
       NX_VERBOSE_LOGGING: 'false'
-      NX_NATIVE_LOGGING: 'verbose'
+      NX_NATIVE_LOGGING: 'trace'
       NX_PERF_LOGGING: 'false'
     steps:
       - run:
@@ -155,7 +155,7 @@ jobs:
       NX_VERBOSE_LOGGING: 'false'
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
-      NX_NATIVE_LOGGING: 'verbose'
+      NX_NATIVE_LOGGING: 'trace'
     steps:
       - run:
           name: Set dynamic nx run variable
