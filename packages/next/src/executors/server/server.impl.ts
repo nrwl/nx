@@ -16,6 +16,7 @@ import { spawn } from 'child_process';
 import customServer from './custom-server.impl';
 import { createCliOptions } from '../../utils/create-cli-options';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,
@@ -50,50 +51,14 @@ export default async function* serveExecutor(
   const turbo = options.turbo && options.dev ? '--turbo' : '';
   const command = `npx next ${mode} ${args} ${turbo}`;
   yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
-    ({ done, next, error }) => {
-      // Client to check if server is ready.
-      const client = new net.Socket();
-      const cleanupClient = () => {
-        client.removeAllListeners('connect');
-        client.removeAllListeners('error');
-        client.end();
-        client.destroy();
-        client.unref();
-      };
-
-      const waitForServerReady = (retries = 30) => {
-        const allowedErrorCodes = ['ECONNREFUSED', 'ECONNRESET'];
-
-        client.once('connect', () => {
-          cleanupClient();
-          next({
-            success: true,
-            baseUrl: `http://${options.hostname ?? 'localhost'}:${port}`,
-          });
-        });
-
-        client.on('error', (err) => {
-          if (retries === 0 || !allowedErrorCodes.includes(err['code'])) {
-            cleanupClient();
-            error(err);
-          } else {
-            setTimeout(() => waitForServerReady(retries - 1), 1000);
-          }
-        });
-
-        client.connect({ port, host: '127.0.0.1' });
-      };
-
+    async ({ done, next, error }) => {
       const server = spawn(command, {
         cwd: options.dev ? root : nextDir,
         stdio: 'inherit',
         shell: true,
       });
 
-      waitForServerReady();
-
       server.once('exit', (code) => {
-        cleanupClient();
         if (code === 0) {
           done();
         } else {
@@ -109,6 +74,13 @@ export default async function* serveExecutor(
         } else {
           server.kill('SIGTERM');
         }
+      });
+
+      await waitForPortOpen(port);
+
+      next({
+        success: true,
+        baseUrl: `http://${options.hostname ?? 'localhost'}:${port}`,
       });
     }
   );
