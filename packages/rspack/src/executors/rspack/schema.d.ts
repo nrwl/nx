@@ -12,4 +12,5 @@ export interface RspackExecutorSchema {
   optimization?: boolean;
   sourceMap?: boolean | string;
   assets?: any[];
+  extractLicenses?: boolean;
 }
