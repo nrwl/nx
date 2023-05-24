@@ -6,9 +6,11 @@ import {
   outputFile,
   rmSync,
   emptyDirSync,
+  outputFileSync,
 } from 'fs-extra';
 import { joinPathFragments } from '../path';
-import { appendFileSync, writeFileSync } from 'fs';
+import { appendFileSync, writeFileSync, renameSync } from 'fs';
+import { realpathSync } from 'next/dist/lib/realpath';
 
 type NestedFiles = {
   [fileName: string]: string;
@@ -31,8 +33,18 @@ export class TempFs {
     );
   }
 
+  createFilesSync(fileObject: NestedFiles) {
+    for (let path of Object.keys(fileObject)) {
+      this.createFileSync(path, fileObject[path]);
+    }
+  }
+
   async createFile(filePath: string, content: string) {
     await outputFile(joinPathFragments(this.tempDir, filePath), content);
+  }
+
+  createFileSync(filePath: string, content: string) {
+    outputFileSync(joinPathFragments(this.tempDir, filePath), content);
   }
 
   async readFile(filePath: string): Promise<string> {
@@ -45,6 +57,13 @@ export class TempFs {
 
   writeFile(filePath: string, content: string) {
     writeFileSync(joinPathFragments(this.tempDir, filePath), content);
+  }
+
+  renameFile(oldPath: string, newPath: string) {
+    renameSync(
+      joinPathFragments(this.tempDir, oldPath),
+      joinPathFragments(this.tempDir, newPath)
+    );
   }
 
   cleanup() {

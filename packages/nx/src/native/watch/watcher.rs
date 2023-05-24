@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use std::convert::Infallible;
-use std::path::{PathBuf, MAIN_SEPARATOR};
+use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 
+use crate::native::watch::types::{WatchEvent, WatchEventInternal};
 use itertools::Itertools;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{
@@ -16,7 +17,6 @@ use watchexec::action::{Action, Outcome};
 use watchexec::config::{InitConfig, RuntimeConfig};
 use watchexec::event::Tag;
 use watchexec::Watchexec;
-use watchexec_events::filekind::{FileEventKind, ModifyKind};
 use watchexec_events::{Event, Keyboard, Priority};
 use watchexec_signals::Signal;
 
@@ -45,27 +45,24 @@ impl Watcher {
         #[napi(ts_arg_type = "(err: string | null, paths: WatchEvent[]) => void")]
         callback: JsFunction,
     ) -> Result<()> {
-        tracing_subscriber::fmt()
+        _ = tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOG"))
-            .init();
+            .try_init();
 
-        let mut callback_tsfn: ThreadsafeFunction<HashMap<String, Vec<WatchEvent>>> = callback
-            .create_threadsafe_function(
+        let mut callback_tsfn: ThreadsafeFunction<HashMap<String, Vec<WatchEventInternal>>> =
+            callback.create_threadsafe_function(
                 0,
-                |ctx: ThreadSafeCallContext<HashMap<String, Vec<WatchEvent>>>| {
+                |ctx: ThreadSafeCallContext<HashMap<String, Vec<WatchEventInternal>>>| {
                     let mut watch_events: Vec<WatchEvent> = vec![];
                     trace!(?ctx.value, "Base collection that will be sent");
-                    for (_, value) in ctx.value {
-                        #[cfg(not(windows))]
-                        let event_value = value.first();
-                        #[cfg(windows)]
-                        let event_value = value.last();
 
-                        let event = event_value
+                    for (_, value) in ctx.value {
+                        let event = value
+                            .first()
                             .expect("should always have at least 1 element")
                             .to_owned();
 
-                        watch_events.push(event);
+                        watch_events.push(event.into());
                     }
 
                     trace!(?watch_events, "sending to node");
@@ -118,32 +115,15 @@ impl Watcher {
                     .events
                     .par_iter()
                     .map(|ev| {
-                        let mut watch_event: WatchEvent = ev.into();
-
-                        if matches!(watch_event.r#type, EventType::delete) {
-                            let path = PathBuf::from(&watch_event.path);
-                            if path.exists() {
-                                trace!(?watch_event.path, "incorrectly marked as deleted, changing to update");
-                                watch_event.r#type = EventType::update;
-                            }
-                        }
-
-                        watch_event.path = watch_event
-                            .path
-                            .strip_prefix(&origin_path.clone())
-                            .unwrap_or(&watch_event.path)
-                            .into();
-
-                        #[cfg(windows)]
-                        {
-                            watch_event.path = watch_event.path.replace('\\', "/");
-                        }
-
+                        let mut watch_event: WatchEventInternal = ev.into();
+                        watch_event.origin = Some(origin_path.clone());
                         watch_event
                     })
-                    .collect::<Vec<WatchEvent>>();
+                    .collect::<Vec<WatchEventInternal>>();
 
-                let group_events = events.into_iter().into_group_map_by(|g| g.path.clone());
+                let group_events = events
+                    .into_iter()
+                    .into_group_map_by(|g| g.path.display().to_string());
 
                 callback_tsfn.call(Ok(group_events), ThreadsafeFunctionCallMode::NonBlocking);
 
@@ -186,57 +166,5 @@ impl Watcher {
         };
 
         env.spawn_future(send_terminate)
-    }
-}
-
-#[napi(string_enum)]
-#[derive(Debug)]
-pub enum EventType {
-    #[allow(non_camel_case_types)]
-    create,
-    #[allow(non_camel_case_types)]
-    delete,
-    #[allow(non_camel_case_types)]
-    update,
-}
-
-#[derive(Debug, Clone)]
-#[napi(object)]
-pub struct WatchEvent {
-    pub path: String,
-    pub r#type: EventType,
-}
-
-impl From<&Event> for WatchEvent {
-    fn from(value: &Event) -> Self {
-        let path = value.paths().next().expect("there should always be a path");
-
-        let event_kind = value
-            .tags
-            .iter()
-            .find_map(|t| match t {
-                Tag::FileEventKind(event_kind) => Some(event_kind),
-                _ => None,
-            })
-            .expect("there should always be a file event kind");
-
-        let event_type = if matches!(path.1, None) {
-            EventType::delete
-        } else {
-            match &event_kind {
-                FileEventKind::Modify(ModifyKind::Name(_)) => EventType::create,
-                FileEventKind::Modify(ModifyKind::Data(_)) => EventType::update,
-                FileEventKind::Create(_) => EventType::create,
-                FileEventKind::Remove(_) => EventType::delete,
-                _ => EventType::update,
-            }
-        };
-
-        trace!(?path, ?event_kind, ?event_type, "event kind -> event type");
-
-        WatchEvent {
-            path: path.0.display().to_string(),
-            r#type: event_type,
-        }
     }
 }
