@@ -8,7 +8,8 @@ export enum BatchMessageType {
 export interface BatchTasksMessage {
   type: BatchMessageType.Tasks;
   executorName: string;
-  taskGraph: TaskGraph;
+  batchTaskGraph: TaskGraph;
+  fullTaskGraph: TaskGraph;
 }
 /**
  * Results of running the batch. Mapped from task id to results
