@@ -107,6 +107,10 @@
         "description": "Will not fail if no tests are found (for example while using `--testPathPattern`.) (https://jestjs.io/docs/cli#--passwithnotests)",
         "type": "boolean"
       },
+      "randomize": {
+        "description": "Shuffle the order of the tests within a file. The shuffling is based on the seed. This option is only supported using the default jest-circus test runner.",
+        "type": "boolean"
+      },
       "runInBand": {
         "alias": "i",
         "description": "Run all tests serially in the current process (rather than creating a worker pool of child processes that run tests). This is sometimes useful for debugging, but such use cases are pretty rare. Useful for CI. (https://jestjs.io/docs/cli#--runinband)",

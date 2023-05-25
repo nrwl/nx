@@ -5027,6 +5027,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "verdaccio",
+                "path": "/packages/js/executors/verdaccio",
+                "name": "verdaccio",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -5057,6 +5065,14 @@
                 "id": "convert-to-swc",
                 "path": "/packages/js/generators/convert-to-swc",
                 "name": "convert-to-swc",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup-verdaccio",
+                "path": "/packages/js/generators/setup-verdaccio",
+                "name": "setup-verdaccio",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

@@ -8,7 +8,8 @@ import {
 } from '@nx/devkit/src/utils/async-iterable';
 import * as chalk from 'chalk';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { spawn } from 'child_process';
+import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
+import { fork } from 'child_process';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];
@@ -37,7 +38,9 @@ export default async function* moduleFederationDevServer(
     );
   }
 
-  const remotesToSkip = new Set(options.skipRemotes ?? []);
+  const remotesToSkip = new Set(
+    findMatchingProjects(options.skipRemotes ?? [], context.projectGraph.nodes)
+  );
   const knownRemotes = (moduleFederationConfig.remotes ?? []).filter((r) => {
     const validRemote = Array.isArray(r) ? r[0] : r;
     return !remotesToSkip.has(validRemote);
@@ -49,8 +52,8 @@ export default async function* moduleFederationDevServer(
   const devServeApps = !options.devRemotes
     ? []
     : Array.isArray(options.devRemotes)
-    ? options.devRemotes
-    : [options.devRemotes];
+    ? findMatchingProjects(options.devRemotes, context.projectGraph.nodes)
+    : findMatchingProjects([options.devRemotes], context.projectGraph.nodes);
 
   logger.info(
     `NX Starting module federation dev-server for ${chalk.bold(
@@ -80,15 +83,17 @@ export default async function* moduleFederationDevServer(
       );
     } else {
       let outWithErr: null | string[] = [];
-      const staticProcess = spawn(
-        `node ${nxBin} run ${appName}:serve-static${
-          context.configurationName ? `:${context.configurationName}` : ''
-        }`,
+      const staticProcess = fork(
+        nxBin,
+        [
+          'run',
+          `${appName}:serve-static${
+            context.configurationName ? `:${context.configurationName}` : ''
+          }`,
+        ],
         {
           cwd: context.root,
-          stdio: ['ignore', 'pipe', 'pipe'],
-          shell: true,
-          windowsHide: true,
+          stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
         }
       );
       staticProcess.stdout.on('data', (data) => {

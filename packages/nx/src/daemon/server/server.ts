@@ -51,6 +51,7 @@ import { PackageJson } from '../../utils/package-json';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import { handleHashTasks } from './handle-hash-tasks';
 import { fileHasher, hashArray } from '../../hasher/impl';
+import { handleRequestFileData } from './handle-request-file-data';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -141,6 +142,8 @@ async function handleMessage(socket, data: string) {
     await handleResult(socket, await handleRequestProjectGraph());
   } else if (payload.type === 'HASH_TASKS') {
     await handleResult(socket, await handleHashTasks(payload));
+  } else if (payload.type === 'REQUEST_FILE_DATA') {
+    await handleResult(socket, await handleRequestFileData());
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
     await handleResult(socket, await handleProcessInBackground(payload));
   } else if (payload.type === 'RECORD_OUTPUTS_HASH') {

@@ -30,7 +30,9 @@ export function waitForPortOpen(
         }
       });
 
-      client.connect({ port, host: options.host ?? 'localhost' });
+      // Node will use IPv6 if it is available, but this can cause issues if the server is only listening on IPv4.
+      // Hard-coding to look on 127.0.0.1 to avoid using the IPv6 loopback address "::1".
+      client.connect({ port, host: options.host ?? '127.0.0.1' });
     };
 
     checkPort();

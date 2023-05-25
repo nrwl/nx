@@ -6,6 +6,8 @@ import {
 } from '../config/workspace-json-project-json';
 import { output } from './output';
 
+const LIST_CHOICE_DISPLAY_LIMIT = 10;
+
 type PropertyDescription = {
   type?: string | string[];
   required?: string[];
@@ -760,6 +762,7 @@ type Prompt = ConstructorParameters<typeof import('enquirer').Prompt>[0] & {
   type: 'input' | 'autocomplete' | 'multiselect' | 'confirm' | 'numeral';
   message: string;
   initial?: any;
+  limit?: number;
   choices?: (string | { name: string; message: string })[];
 };
 
@@ -801,6 +804,7 @@ export function getPromptsForSchema(
       if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
         question.type = 'autocomplete';
         question.choices = [...v.enum];
+        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
       } else if (
         v.type === 'string' &&
         (v.$default?.$source === 'projectName' ||
@@ -811,6 +815,7 @@ export function getPromptsForSchema(
       ) {
         question.type = 'autocomplete';
         question.choices = Object.keys(projectsConfigurations.projects);
+        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
       } else if (v.type === 'number' || v['x-prompt'].type == 'number') {
         question.type = 'numeral';
       } else if (
@@ -835,6 +840,7 @@ export function getPromptsForSchema(
               };
             }
           });
+        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
       } else if (v.type === 'boolean') {
         question.type = 'confirm';
       } else {
