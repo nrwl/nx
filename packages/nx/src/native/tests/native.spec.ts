@@ -52,13 +52,6 @@ describe('watcher', () => {
     temp.cleanup();
   });
 
-  xit('should test', (done) => {
-    let w = new Watcher('/Users/jon/Dev/nx');
-    w.watch((err, paths) => {
-      console.log(paths);
-    });
-  }, 10_000_000);
-
   it('should trigger the callback for files that are not ignored', (done) => {
     watcher = new Watcher(realpathSync(temp.tempDir));
     watcher.watch((error, paths) => {
