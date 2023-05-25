@@ -26,12 +26,15 @@ impl From<WatchEventInternal> for WatchEvent {
         let path = value
             .path
             .strip_prefix(&value.origin.expect("origin is available"))
-            .unwrap_or(&value.path);
+            .unwrap_or(&value.path)
+            .display()
+            .to_string();
+
         #[cfg(windows)]
         let path = path.replace('\\', "/");
 
         WatchEvent {
-            path: path.display().to_string(),
+            path,
             r#type: value.r#type,
         }
     }
