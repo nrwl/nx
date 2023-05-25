@@ -72,7 +72,7 @@ The properties of these targets are defined as follows:
 
 ## Running Tasks
 
-![Syntax for Running Tasks in Nx](/shared/node-server-tutorial/run-target-syntax.svg)
+![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
 Run the `build` target for your `auth` project:
 
