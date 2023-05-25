@@ -18,7 +18,7 @@ export interface <%= className %>Entity {
 
 export interface <%= className %>State extends EntityState<<%= className %>Entity> {
   loadingStatus: 'not loaded' | 'loading' | 'loaded' | 'error';
-  error: string;
+  error?: string | null;
 }
 
 export const <%= propertyName %>Adapter = createEntityAdapter<<%= className %>Entity>();
@@ -40,7 +40,7 @@ export const <%= propertyName %>Adapter = createEntityAdapter<<%= className %>En
  * }, [dispatch]);
  * ```
  */
-export const fetch<%= className %> = createAsyncThunk(
+export const fetch<%= className %> = createAsyncThunk<<%= className %>Entity[]>(
   '<%= propertyName %>/fetchStatus',
   async (_, thunkAPI) => {
     /**
@@ -122,7 +122,7 @@ export const <%= propertyName %>Actions = <%= propertyName %>Slice.actions;
  */
 const { selectAll, selectEntities } = <%= propertyName %>Adapter.getSelectors();
 
-export const get<%= className %>State = (rootState: unknown): <%= className %>State => rootState[<%= constantName %>_FEATURE_KEY];
+export const get<%= className %>State = (rootState: {[<%= constantName %>_FEATURE_KEY]: <%= className %>State }): <%= className %>State => rootState[<%= constantName %>_FEATURE_KEY];
 
 export const selectAll<%= className %> = createSelector(get<%= className %>State, selectAll);
 

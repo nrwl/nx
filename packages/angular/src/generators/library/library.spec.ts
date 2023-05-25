@@ -671,17 +671,18 @@ describe('lib', () => {
           tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
         ).toBeTruthy();
         expect(
-          tree
-            .read('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
-            .toString()
-        ).toContain('RouterModule.forChild');
+          tree.read(
+            'libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts',
+            'utf-8'
+          )
+        ).toMatchSnapshot();
 
         expect(
           tree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
         ).toBeTruthy();
         expect(
-          tree.read('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts').toString()
-        ).toContain('RouterModule.forChild');
+          tree.read('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts', 'utf-8')
+        ).toMatchSnapshot();
       });
 
       it('should update the parent module', async () => {

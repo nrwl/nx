@@ -14,7 +14,7 @@ import {
   isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
-import { ProjectGraph } from '../../config/project-graph';
+import { FileData, ProjectGraph } from '../../config/project-graph';
 import { isCI } from '../../utils/is-ci';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
@@ -114,6 +114,10 @@ export class DaemonClient {
   async getProjectGraph(): Promise<ProjectGraph> {
     return (await this.sendToDaemonViaQueue({ type: 'REQUEST_PROJECT_GRAPH' }))
       .projectGraph;
+  }
+
+  async getAllFileData(): Promise<FileData[]> {
+    return await this.sendToDaemonViaQueue({ type: 'REQUEST_FILE_DATA' });
   }
 
   hashTasks(runnerOptions: any, tasks: Task[]): Promise<Hash[]> {

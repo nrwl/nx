@@ -120,8 +120,15 @@
       "description": "The reporter used during cypress run."
     },
     "reporterOptions": {
-      "type": "string",
-      "description": "The reporter options used. Supported options depend on the reporter."
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "description": "The reporter options used. Supported options depend on the reporter. https://docs.cypress.io/guides/tooling/reporters#Reporter-Options"
     },
     "skipServe": {
       "type": "boolean",

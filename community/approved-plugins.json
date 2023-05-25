@@ -443,5 +443,10 @@
     "name": "@jnxplus/nx-quarkus-maven",
     "description": "Nx plugin to add Quarkus and Maven multi-module project support to Nx workspace",
     "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-quarkus-maven"
+  },
+  {
+    "name": "@loft-orbital/terraform",
+    "description": "Terraform executors and generators",
+    "url": "https://github.com/loft-orbital/nx-plugins/tree/main/packages/terraform"
   }
 ]

@@ -205,6 +205,8 @@ jobs:
       - setup:
           os: macos
       - rust/install
+      - nx/set-shas:
+          main-branch-name: 'master'
       - run:
           name: Run E2E Tests for macOS
           command: |

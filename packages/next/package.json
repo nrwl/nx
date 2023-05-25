@@ -53,6 +53,7 @@
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",
     "@nx/react": "file:../react",
+    "@nx/web": "file:../web",
     "@nx/workspace": "file:../workspace"
   },
   "publishConfig": {

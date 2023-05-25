@@ -15,6 +15,7 @@ import { DaemonClient } from '../daemon/client/client';
 import { FileHasher } from './impl/file-hasher-base';
 import { hashArray } from './impl';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
+import { registerPluginTSTranspiler } from '../utils/nx-plugin';
 
 type ExpandedSelfInput =
   | { fileset: string }
@@ -161,7 +162,7 @@ class TaskHasherImpl {
   private runtimeHashes: {
     [runtime: string]: Promise<PartialHash>;
   } = {};
-  private externalDepsHashCache: { [packageName: string]: PartialHash } = {};
+  private externalDepsHashCache: { [packageName: string]: string } = {};
   private projectRootMappings = createProjectRootMappings(
     this.projectGraph.nodes
   );
@@ -180,9 +181,6 @@ class TaskHasherImpl {
   async hashTask(task: Task, visited: string[]): Promise<PartialHash> {
     return Promise.resolve().then(async () => {
       const projectNode = this.projectGraph.nodes[task.target.project];
-      if (!projectNode) {
-        return this.hashExternalDependency(task.target.project);
-      }
       const namedInputs = getNamedInputs(this.nxJson, projectNode);
       const targetData = projectNode.data.targets[task.target.target];
       const targetDefaults = (this.nxJson.targetDefaults || {})[
@@ -225,9 +223,6 @@ class TaskHasherImpl {
     visited: string[]
   ): Promise<PartialHash> {
     const projectNode = this.projectGraph.nodes[projectName];
-    if (!projectNode) {
-      return this.hashExternalDependency(projectName);
-    }
     const namedInputs = {
       default: [{ fileset: '{projectRoot}/**/*' }],
       ...this.nxJson.namedInputs,
@@ -298,11 +293,21 @@ class TaskHasherImpl {
                 return null;
               } else {
                 visited.push(d.target);
-                return await this.hashNamedInputForDependencies(
-                  d.target,
-                  input.input || 'default',
-                  visited
-                );
+                if (this.projectGraph.nodes[d.target]) {
+                  return await this.hashNamedInputForDependencies(
+                    d.target,
+                    input.input || 'default',
+                    visited
+                  );
+                } else {
+                  const hash = this.hashExternalDependency(d.target);
+                  return {
+                    value: hash,
+                    details: {
+                      [d.target]: hash,
+                    },
+                  };
+                }
               }
             })
           );
@@ -316,25 +321,24 @@ class TaskHasherImpl {
   private hashExternalDependency(
     projectName: string,
     visited = new Set<string>()
-  ): PartialHash {
+  ): string {
     // try to retrieve the hash from cache
     if (this.externalDepsHashCache[projectName]) {
       return this.externalDepsHashCache[projectName];
     }
     visited.add(projectName);
     const node = this.projectGraph.externalNodes[projectName];
-    let partialHash;
+    let partialHash: string;
     if (node) {
-      let hash;
+      const partialHashes: string[] = [];
       if (node.data.hash) {
         // we already know the hash of this dependency
-        hash = node.data.hash;
+        partialHashes.push(node.data.hash);
       } else {
         // we take version as a hash
-        hash = node.data.version;
+        partialHashes.push(node.data.version);
       }
       // we want to calculate the hash of the entire dependency tree
-      const partialHashes: PartialHash[] = [];
       if (this.projectGraph.dependencies[projectName]) {
         this.projectGraph.dependencies[projectName].forEach((d) => {
           if (!visited.has(d.target)) {
@@ -342,24 +346,13 @@ class TaskHasherImpl {
           }
         });
       }
-      partialHash = {
-        value: hashArray([hash, ...partialHashes.map((p) => p.value)]),
-        details: {
-          [projectName]: hash,
-          ...partialHashes.reduce((m, c) => ({ ...m, ...c.details }), {}),
-        },
-      };
+      partialHash = hashArray(partialHashes);
     } else {
       // unknown dependency
       // this may occur if dependency is not an npm package
       // but rather symlinked in node_modules or it's pointing to a remote git repo
       // in this case we have no information about the versioning of the given package
-      partialHash = {
-        value: `__${projectName}__`,
-        details: {
-          [projectName]: `__${projectName}__`,
-        },
-      };
+      partialHash = `__${projectName}__`;
     }
     this.externalDepsHashCache[projectName] = partialHash;
     return partialHash;
@@ -377,6 +370,7 @@ class TaskHasherImpl {
       return;
     }
 
+    let hash;
     // we can only vouch for @nx packages's executor dependencies
     // if it's "run commands" or third-party we skip traversing since we have no info what this command depends on
     if (
@@ -386,38 +380,39 @@ class TaskHasherImpl {
       const executorPackage = target.executor.split(':')[0];
       const executorNodeName =
         this.findExternalDependencyNodeName(executorPackage);
-      return this.hashExternalDependency(executorNodeName);
-    }
-
-    // use command external dependencies if available to construct the hash
-    const partialHashes: PartialHash[] = [];
-    let hasCommandExternalDependencies = false;
-    for (const input of selfInputs) {
-      if (input['externalDependencies']) {
-        // if we have externalDependencies with empty array we still want to override the default hash
-        hasCommandExternalDependencies = true;
-        const externalDependencies = input['externalDependencies'];
-        for (let dep of externalDependencies) {
-          dep = this.findExternalDependencyNodeName(dep);
-          partialHashes.push(this.hashExternalDependency(dep));
+      hash = this.hashExternalDependency(executorNodeName);
+    } else {
+      // use command external dependencies if available to construct the hash
+      const partialHashes: string[] = [];
+      let hasCommandExternalDependencies = false;
+      for (const input of selfInputs) {
+        if (input['externalDependencies']) {
+          // if we have externalDependencies with empty array we still want to override the default hash
+          hasCommandExternalDependencies = true;
+          const externalDependencies = input['externalDependencies'];
+          for (let dep of externalDependencies) {
+            dep = this.findExternalDependencyNodeName(dep);
+            partialHashes.push(this.hashExternalDependency(dep));
+          }
+        }
+      }
+      if (hasCommandExternalDependencies) {
+        hash = hashArray(partialHashes);
+      } else {
+        // cache the hash of the entire external dependencies tree
+        if (this.externalDepsHashCache['']) {
+          hash = this.externalDepsHashCache[''];
+        } else {
+          hash = hashArray([JSON.stringify(this.projectGraph.externalNodes)]);
+          this.externalDepsHashCache[''] = hash;
         }
       }
     }
-    if (hasCommandExternalDependencies) {
-      return {
-        value: hashArray(partialHashes.map((h) => h.value)),
-        details: partialHashes.reduce(
-          (acc, c) => ({ ...acc, ...c.details }),
-          {}
-        ),
-      };
-    }
 
-    const hash = hashArray([JSON.stringify(this.projectGraph.externalNodes)]);
     return {
       value: hash,
       details: {
-        [projectNode.name]: target.executor,
+        target: target.executor,
       },
     };
   }

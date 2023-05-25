@@ -656,7 +656,11 @@ export async function generate(
   const logger = getLogger(verbose);
   const fsHost = new NxScopeHostUsedForWrappedSchematics(
     root,
-    new FsTree(root, verbose)
+    new FsTree(
+      root,
+      verbose,
+      `ng-cli generator: ${opts.collectionName}:${opts.generatorName}`
+    )
   );
   const workflow = createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
@@ -745,7 +749,11 @@ export async function runMigration(
   const logger = getLogger(isVerbose);
   const fsHost = new NxScopeHostUsedForWrappedSchematics(
     root,
-    new FsTree(root, isVerbose)
+    new FsTree(
+      root,
+      isVerbose,
+      `ng-cli migration: ${packageName}:${migrationName}`
+    )
   );
   const workflow = createWorkflow(fsHost, root, {});
   const collection = resolveMigrationsCollection(packageName);
