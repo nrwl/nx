@@ -183,6 +183,11 @@
         "description": "Create a React library with a minimal setup, no separate test files.",
         "type": "boolean",
         "default": false
+      },
+      "simpleName": {
+        "description": "Don't include the directory in the name of the module of the library.",
+        "type": "boolean",
+        "default": false
       }
     },
     "required": ["name"],

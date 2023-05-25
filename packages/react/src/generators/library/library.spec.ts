@@ -29,6 +29,7 @@ describe('lib', () => {
     style: 'css',
     component: true,
     strict: true,
+    simpleName: false,
   };
 
   beforeEach(() => {
@@ -733,6 +734,30 @@ describe('lib', () => {
       expect(eslintConfig.overrides[0].parserOptions.project).toEqual([
         'libs/my-lib/tsconfig.*?.json',
       ]);
+    });
+  });
+
+  describe('--simpleName', () => {
+    it('should generate a library with a simple name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        simpleName: true,
+        directory: 'myDir',
+      });
+
+      const indexFile = tree.read('libs/my-dir/my-lib/src/index.ts', 'utf-8');
+
+      expect(indexFile).toContain(`export * from './lib/my-lib';`);
+
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.module.css')
+      ).toBeTruthy();
+
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.spec.tsx')
+      ).toBeTruthy();
+
+      expect(tree.exists('libs/my-dir/my-lib/src/lib/my-lib.tsx')).toBeTruthy();
     });
   });
 

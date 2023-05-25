@@ -128,7 +128,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   if (options.component) {
     const componentTask = await componentGenerator(host, {
-      name: options.name,
+      name: options.fileName,
       project: options.name,
       flat: true,
       style: options.style,
