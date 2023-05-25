@@ -15,6 +15,7 @@ import { DaemonClient } from '../daemon/client/client';
 import { FileHasher } from './impl/file-hasher-base';
 import { hashArray } from './impl';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
+import { registerPluginTSTranspiler } from '../utils/nx-plugin';
 
 type ExpandedSelfInput =
   | { fileset: string }
@@ -180,15 +181,6 @@ class TaskHasherImpl {
   async hashTask(task: Task, visited: string[]): Promise<PartialHash> {
     return Promise.resolve().then(async () => {
       const projectNode = this.projectGraph.nodes[task.target.project];
-      if (!projectNode) {
-        const hash = this.hashExternalDependency(task.target.project);
-        return {
-          value: hash,
-          details: {
-            [task.target.project]: hash,
-          },
-        };
-      }
       const namedInputs = getNamedInputs(this.nxJson, projectNode);
       const targetData = projectNode.data.targets[task.target.target];
       const targetDefaults = (this.nxJson.targetDefaults || {})[
@@ -231,15 +223,6 @@ class TaskHasherImpl {
     visited: string[]
   ): Promise<PartialHash> {
     const projectNode = this.projectGraph.nodes[projectName];
-    if (!projectNode) {
-      const hash = this.hashExternalDependency(projectName);
-      return {
-        value: hash,
-        details: {
-          [projectName]: hash,
-        },
-      };
-    }
     const namedInputs = {
       default: [{ fileset: '{projectRoot}/**/*' }],
       ...this.nxJson.namedInputs,
@@ -310,11 +293,21 @@ class TaskHasherImpl {
                 return null;
               } else {
                 visited.push(d.target);
-                return await this.hashNamedInputForDependencies(
-                  d.target,
-                  input.input || 'default',
-                  visited
-                );
+                if (this.projectGraph.nodes[d.target]) {
+                  return await this.hashNamedInputForDependencies(
+                    d.target,
+                    input.input || 'default',
+                    visited
+                  );
+                } else {
+                  const hash = this.hashExternalDependency(d.target);
+                  return {
+                    value: hash,
+                    details: {
+                      [d.target]: hash,
+                    },
+                  };
+                }
               }
             })
           );
