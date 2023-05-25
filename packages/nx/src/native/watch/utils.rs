@@ -7,7 +7,10 @@ pub(super) fn get_ignore_files<T: AsRef<str>>(root: T) -> Vec<IgnoreFile> {
 
     let mut walker = WalkBuilder::new(root);
     walker.hidden(false);
+    walker.git_ignore(false);
 
+    let node_folder = PathBuf::from(root).join("node_modules");
+    walker.filter_entry(move |entry| !entry.path().starts_with(&node_folder));
     walker
         .build()
         .flatten()

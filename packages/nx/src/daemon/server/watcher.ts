@@ -18,13 +18,14 @@ import {
   getIgnoreObject,
 } from '../../utils/ignore';
 import { platform } from 'os';
-import { serverProcessJsonPath } from '../cache';
+import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
+import type { WatchEvent } from '../../native';
 
 const ALWAYS_IGNORE = [...getAlwaysIgnore(workspaceRoot), FULL_OS_SOCKET_PATH];
 
 export type FileWatcherCallback = (
-  err: Error | null,
-  changeEvents: Event[] | null
+  err: Error | string | null,
+  changeEvents: Event[] | WatchEvent[] | null
 ) => Promise<void>;
 
 export async function subscribeToOutputsChanges(
@@ -50,6 +51,46 @@ export async function subscribeToOutputsChanges(
     },
     watcherOptions([...ALWAYS_IGNORE])
   );
+}
+
+export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
+  const { Watcher } = await import('../../native');
+
+  let relativeServerProcess = normalizePath(
+    relative(workspaceRoot, serverProcessJsonPath)
+  );
+
+  let watcher = new Watcher(workspaceRoot, [`!${relativeServerProcess}`]);
+  watcher.watch((err, events) => {
+    if (err) {
+      return cb(err, null);
+    }
+
+    for (const event of events) {
+      if (
+        event.path == relativeServerProcess &&
+        getDaemonProcessIdSync() !== process.pid
+      ) {
+        handleServerProcessTermination({
+          server,
+          reason: 'this process is no longer the current daemon (native log)',
+        });
+      }
+
+      if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
+        // If the ignore files themselves have changed we need to dynamically update our cached ignoreGlobs
+        handleServerProcessTermination({
+          server,
+          reason:
+            'Stopping the daemon the set of ignored files changed (native log)',
+        });
+      }
+    }
+
+    cb(null, events);
+  });
+
+  return watcher;
 }
 
 export async function subscribeToWorkspaceChanges(

@@ -7,7 +7,10 @@ use tracing::trace;
 use watchexec::config::RuntimeConfig;
 use watchexec_filterer_ignore::IgnoreFilterer;
 
-pub(super) async fn create_runtime(origin: &str) -> napi::Result<RuntimeConfig> {
+pub(super) async fn create_runtime(
+    origin: &str,
+    additional_globs: &[&str],
+) -> napi::Result<RuntimeConfig> {
     let ignore_files = get_ignore_files(origin);
     trace!(?ignore_files, "Using these ignore files for the watcher");
     let mut filter = IgnoreFilter::new(origin, &ignore_files)
@@ -15,7 +18,7 @@ pub(super) async fn create_runtime(origin: &str) -> napi::Result<RuntimeConfig> 
         .map_err(anyhow::Error::from)?;
 
     filter
-        .add_globs(&[".git"], Some(&origin.into()))
+        .add_globs(&additional_globs, Some(&origin.into()))
         .map_err(anyhow::Error::from)?;
 
     let mut runtime = RuntimeConfig::default();

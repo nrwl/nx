@@ -24,7 +24,7 @@ export interface WatchEvent {
 }
 export class Watcher {
   origin: string
-  constructor(origin: string)
+  constructor(origin: string, additionalGlobs?: Array<string> | undefined | null)
   watch(callback: (err: string | null, paths: WatchEvent[]) => void): void
   stop(): Promise<void>
 }

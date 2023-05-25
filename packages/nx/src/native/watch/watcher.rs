@@ -26,16 +26,30 @@ use crate::native::watch::watch_config;
 pub struct Watcher {
     pub origin: String,
     watch_exec: Arc<Watchexec>,
+    additional_globs: Vec<String>,
 }
 
 #[napi]
 impl Watcher {
     #[napi(constructor)]
-    pub fn new(origin: String) -> Result<Watcher> {
+    pub fn new(origin: String, additional_globs: Option<Vec<String>>) -> Result<Watcher> {
         let watch_exec = Watchexec::new(InitConfig::default(), RuntimeConfig::default())
             .map_err(anyhow::Error::from)?;
 
-        Ok(Watcher { origin, watch_exec })
+        let mut globs = if let Some(globs) = additional_globs {
+            globs
+        } else {
+            vec![]
+        };
+
+        // always ignore the .git folder
+        globs.push(".git".into());
+
+        Ok(Watcher {
+            origin,
+            watch_exec,
+            additional_globs: globs,
+        })
     }
 
     #[napi]
@@ -75,8 +89,16 @@ impl Watcher {
 
         let origin = self.origin.clone();
         let watch_exec = self.watch_exec.clone();
+        let additional_globs = self.additional_globs.clone();
         let start = async move {
-            let mut runtime = watch_config::create_runtime(&origin).await?;
+            let mut runtime = watch_config::create_runtime(
+                &origin,
+                &additional_globs
+                    .iter()
+                    .map(String::as_ref)
+                    .collect::<Vec<_>>(),
+            )
+            .await?;
 
             runtime.on_action(move |action: Action| {
                 let ok_future = async { Ok::<(), Infallible>(()) };
