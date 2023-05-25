@@ -556,7 +556,9 @@ export function createOrEditViteConfig(
 
   const reactPluginImportLine =
     options.uiFramework === 'react'
-      ? `import react from '@vitejs/plugin-react';`
+      ? options.compiler === 'swc'
+        ? `import react from '@vitejs/plugin-react-swc';`
+        : `import react from '@vitejs/plugin-react';`
       : '';
 
   const reactPlugin = options.uiFramework === 'react' ? `react(),` : '';
