@@ -92,7 +92,11 @@ function updateCyDirTsConfigReferences(
   tree: Tree,
   projectConfig: ProjectConfiguration
 ) {
-  if (!tree.exists(joinPathFragments(projectConfig.root, 'cypress'))) {
+  if (
+    !tree.exists(
+      joinPathFragments(projectConfig.root, 'cypress', 'tsconfig.json')
+    )
+  ) {
     return;
   }
   updateJson(
