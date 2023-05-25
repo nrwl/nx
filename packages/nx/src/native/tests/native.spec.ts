@@ -45,7 +45,6 @@ describe('watcher', () => {
     });
 
     console.log(`watching ${temp.tempDir}`);
-    watcher = new Watcher(realpathSync(temp.tempDir));
   });
 
   afterEach(() => {
@@ -61,6 +60,7 @@ describe('watcher', () => {
   }, 10_000_000);
 
   it('should trigger the callback for files that are not ignored', (done) => {
+    watcher = new Watcher(realpathSync(temp.tempDir));
     watcher.watch((error, paths) => {
       expect(paths).toMatchInlineSnapshot(`
         [
@@ -81,6 +81,8 @@ describe('watcher', () => {
   });
 
   it('should trigger the callback when files are updated', (done) => {
+    watcher = new Watcher(realpathSync(temp.tempDir));
+
     watcher.watch((err, paths) => {
       expect(paths).toMatchInlineSnapshot(`
         [
@@ -101,6 +103,8 @@ describe('watcher', () => {
   });
 
   it('should watch file renames', (done) => {
+    watcher = new Watcher(realpathSync(temp.tempDir));
+
     watcher.watch((err, paths) => {
       expect(paths.length).toBe(2);
       expect(paths.find((p) => p.type === 'update')).toMatchObject({
@@ -120,6 +124,8 @@ describe('watcher', () => {
   });
 
   it('should trigger on deletes', (done) => {
+    watcher = new Watcher(realpathSync(temp.tempDir));
+
     watcher.watch((err, paths) => {
       expect(paths).toMatchInlineSnapshot(`
         [
@@ -138,6 +144,8 @@ describe('watcher', () => {
   });
 
   it('should ignore nested gitignores', (done) => {
+    watcher = new Watcher(realpathSync(temp.tempDir));
+
     watcher.watch((err, paths) => {
       expect(paths).toMatchInlineSnapshot(`
         [
