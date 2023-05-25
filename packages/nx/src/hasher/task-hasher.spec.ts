@@ -146,7 +146,7 @@ describe('TaskHasher', () => {
     expect(hash.details.nodes).toEqual({
       'parent:{projectRoot}/**/*':
         '/file|file.hash|{"root":"libs/parent","targets":{"build":{"executor":"nx:run-commands","inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"},{"input":"default","projects":["unrelated"]}]}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
-      parent: 'nx:run-commands',
+      target: 'nx:run-commands',
       'unrelated:{projectRoot}/**/*':
         'libs/unrelated/filec.ts|filec.hash|{"root":"libs/unrelated","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
       '{workspaceRoot}/nx.json': 'nx.json.hash',
@@ -854,8 +854,10 @@ describe('TaskHasher', () => {
       });
 
       assertFilesets(hash, {
-        'npm:@nx/webpack': { contains: '16.0.0' },
+        target: { contains: '@nx/webpack:webpack' },
       });
+
+      expect(hash.value).toContain('|16.0.0|');
     });
 
     it('should hash entire subtree of dependencies', async () => {
@@ -949,11 +951,13 @@ describe('TaskHasher', () => {
       });
 
       assertFilesets(hash, {
-        'npm:@nx/webpack': { contains: '$nx/webpack16$' },
-        'npm:@nx/devkit': { contains: '$nx/devkit16$' },
-        'npm:nx': { contains: '$nx16$' },
-        'npm:webpack': { contains: '5.0.0' },
+        target: { contains: '@nx/webpack:webpack' },
       });
+
+      expect(hash.value).toContain('|$nx/webpack16$|');
+      expect(hash.value).toContain('|$nx/devkit16$|');
+      expect(hash.value).toContain('|$nx16$|');
+      expect(hash.value).toContain('|5.0.0|');
     });
 
     it('should not hash when nx:run-commands executor', async () => {
@@ -994,8 +998,8 @@ describe('TaskHasher', () => {
         overrides: { prop: 'prop-value' },
       });
 
-      expect(hash.details.nodes['npm:nx']).not.toBeDefined();
-      expect(hash.details.nodes['app']).toEqual('nx:run-commands');
+      expect(hash.value).not.toContain('|16.0.0|');
+      expect(hash.details.nodes['target']).toEqual('nx:run-commands');
     });
 
     it('should use externalDependencies to override nx:run-commands', async () => {
@@ -1060,10 +1064,10 @@ describe('TaskHasher', () => {
         overrides: { prop: 'prop-value' },
       });
 
-      expect(hash.details.nodes['npm:nx']).not.toBeDefined();
-      expect(hash.details.nodes['app']).not.toBeDefined();
-      expect(hash.details.nodes['npm:webpack']).toEqual('5.0.0');
-      expect(hash.details.nodes['npm:react']).toEqual('17.0.0');
+      expect(hash.value).not.toContain('|16.0.0|');
+      expect(hash.value).toContain('|17.0.0|');
+      expect(hash.value).toContain('|5.0.0|');
+      expect(hash.details.nodes['target']).toEqual('nx:run-commands');
     });
 
     it('should use externalDependencies with empty array to ignore all deps', async () => {
