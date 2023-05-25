@@ -3,6 +3,7 @@ import {
   formatFiles,
   joinPathFragments,
   logger,
+  output,
   ProjectConfiguration,
   readJson,
   readProjectConfiguration,
@@ -190,53 +191,66 @@ function updateProjectEslintConfig(
   // Update the project level lint configuration to specify
   // the plugin schema rule for generated files
   const eslintPath = `${options.root}/.eslintrc.json`;
-  const eslintConfig = readJson<ESLint.Config>(host, eslintPath);
-  eslintConfig.overrides ??= [];
-  let entry: ESLint.ConfigOverride<ESLint.RulesRecord> =
-    eslintConfig.overrides.find(
-      (x) =>
-        Object.keys(x.rules ?? {}).includes('@nx/nx-plugin-checks') ||
-        Object.keys(x.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks')
-    );
-  const newentry = !entry;
-  entry ??= { files: [] };
-  entry.files = [
-    ...new Set([
-      ...(entry.files ?? []),
-      ...[
-        './package.json',
-        packageJson.generators,
-        packageJson.executors,
-        packageJson.schematics,
-        packageJson.builders,
-      ].filter((f) => !!f),
-    ]),
-  ];
-  entry.parser = 'jsonc-eslint-parser';
-  entry.rules ??= {
-    '@nx/nx-plugin-checks': 'error',
-  };
+  if (host.exists(eslintPath)) {
+    const eslintConfig = readJson<ESLint.Config>(host, eslintPath);
+    eslintConfig.overrides ??= [];
+    let entry: ESLint.ConfigOverride<ESLint.RulesRecord> =
+      eslintConfig.overrides.find(
+        (x) =>
+          Object.keys(x.rules ?? {}).includes('@nx/nx-plugin-checks') ||
+          Object.keys(x.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks')
+      );
+    const newentry = !entry;
+    entry ??= { files: [] };
+    entry.files = [
+      ...new Set([
+        ...(entry.files ?? []),
+        ...[
+          './package.json',
+          packageJson.generators,
+          packageJson.executors,
+          packageJson.schematics,
+          packageJson.builders,
+        ].filter((f) => !!f),
+      ]),
+    ];
+    entry.parser = 'jsonc-eslint-parser';
+    entry.rules ??= {
+      '@nx/nx-plugin-checks': 'error',
+    };
 
-  if (newentry) {
-    eslintConfig.overrides.push(entry);
+    if (newentry) {
+      eslintConfig.overrides.push(entry);
+    }
+
+    writeJson(host, eslintPath, eslintConfig);
   }
-
-  writeJson(host, eslintPath, eslintConfig);
 }
 
 // Update the root eslint to specify a parser for json files
 // This is required, otherwise every json file that is not overriden
 // will display false errors in the IDE
 function updateRootEslintConfig(host: Tree) {
-  const rootESLint = readJson<ESLint.Config>(host, '.eslintrc.json');
-  rootESLint.overrides ??= [];
-  if (!eslintConfigContainsJsonOverride(rootESLint)) {
-    rootESLint.overrides.push({
-      files: '*.json',
-      parser: 'jsonc-eslint-parser',
-      rules: {},
+  if (host.exists('.eslintrc.json')) {
+    const rootESLint = readJson<ESLint.Config>(host, '.eslintrc.json');
+    rootESLint.overrides ??= [];
+    if (!eslintConfigContainsJsonOverride(rootESLint)) {
+      rootESLint.overrides.push({
+        files: '*.json',
+        parser: 'jsonc-eslint-parser',
+        rules: {},
+      });
+      writeJson(host, '.eslintrc.json', rootESLint);
+    }
+  } else {
+    output.note({
+      title: 'Unable to update root eslint config.',
+      bodyLines: [
+        'We only automatically update the root eslint config if it is json.',
+        'If you are using a different format, you will need to update it manually.',
+        'You need to set the parser to jsonc-eslint-parser for json files.',
+      ],
     });
-    writeJson(host, '.eslintrc.json', rootESLint);
   }
 }
 

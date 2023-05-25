@@ -1,6 +1,6 @@
 {
   "packages": ["build/packages/*", "build/packages/nx/native-packages/*"],
-  "version": "16.3.0-beta.5",
+  "version": "16.3.0-beta.7",
   "granularPathspec": false,
   "command": {
     "publish": {

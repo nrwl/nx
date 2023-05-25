@@ -23,6 +23,12 @@
       "aliases": ["swc"],
       "x-type": "library",
       "description": "Convert a TypeScript library to compile with SWC."
+    },
+    "setup-verdaccio": {
+      "factory": "./src/generators/setup-verdaccio/generator#setupVerdaccioSchematic",
+      "schema": "./src/generators/setup-verdaccio/schema.json",
+      "alias": ["verdaccio"],
+      "description": "Setup Verdaccio for local package management."
     }
   },
   "generators": {
@@ -47,6 +53,12 @@
       "aliases": ["swc"],
       "x-type": "library",
       "description": "Convert a TypeScript library to compile with SWC."
+    },
+    "setup-verdaccio": {
+      "factory": "./src/generators/setup-verdaccio/generator#setupVerdaccio",
+      "schema": "./src/generators/setup-verdaccio/schema.json",
+      "alias": ["verdaccio"],
+      "description": "Setup Verdaccio for local package management."
     }
   }
 }

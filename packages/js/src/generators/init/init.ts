@@ -19,8 +19,6 @@ import {
 } from '../../utils/versions';
 import { InitSchema } from './schema';
 
-let formatTaskAdded = false;
-
 export async function initGenerator(
   tree: Tree,
   schema: InitSchema

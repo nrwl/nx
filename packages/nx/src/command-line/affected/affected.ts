@@ -21,8 +21,8 @@ import { TargetDependencyConfig } from '../../config/workspace-json-project-json
 import { readNxJson } from '../../config/configuration';
 import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
-import { fileHasher } from '../../hasher/impl';
 import { generateGraph } from '../graph/graph';
+import { allFileData } from '../../utils/all-file-data';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -125,14 +125,13 @@ async function projectsToRun(
   nxArgs: NxArgs,
   projectGraph: ProjectGraph
 ): Promise<ProjectGraphProjectNode[]> {
-  fileHasher.ensureInitialized();
   let affectedGraph = nxArgs.all
     ? projectGraph
     : await filterAffected(
         projectGraph,
         calculateFileChanges(
           parseFiles(nxArgs).files,
-          fileHasher.allFileData(),
+          await allFileData(),
           nxArgs
         )
       );

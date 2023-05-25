@@ -94,6 +94,7 @@ export async function jestConfigParser(
     useStderr: options.useStderr,
     watch: options.watch,
     watchAll: options.watchAll,
+    randomize: options.randomize,
   };
 
   if (!multiProjects) {

@@ -1161,6 +1161,7 @@ ensurePackage(tree, '@nx/jest', nxVersion);
 
 This install the @nx/jest@<nxVersion> and return the module
 When running with --dryRun, the function will throw when dependencies are missing.
+Returns null for ESM dependencies. Import them with a dynamic import instead.
 
 #### Parameters
 
@@ -1180,11 +1181,12 @@ When running with --dryRun, the function will throw when dependencies are missin
 ▸ **ensurePackage**<`T`\>(`pkg`, `version`): `T`
 
 Ensure that dependencies and devDependencies from package.json are installed at the required versions.
+Returns null for ESM dependencies. Import them with a dynamic import instead.
 
 For example:
 
 ```typescript
-ensurePackage(tree, '@nx/jest', nxVersion);
+ensurePackage('@nx/jest', nxVersion);
 ```
 
 #### Type parameters

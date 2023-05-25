@@ -12,6 +12,7 @@ import {
   readPluginPackageJson,
 } from '../nx-plugin';
 import { getNxRequirePaths } from '../installation-directory';
+import { PackageJson } from '../package-json';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -39,47 +40,67 @@ export async function getPluginCapabilities(
       pluginName,
       getNxRequirePaths(workspaceRoot)
     );
-    const pluginModule =
-      packageJson.generators ??
+    const pluginModule = await tryGetModule(packageJson, workspaceRoot);
+    return {
+      name: pluginName,
+      generators: {
+        ...tryGetCollection(
+          packageJsonPath,
+          packageJson.schematics,
+          'schematics'
+        ),
+        ...tryGetCollection(
+          packageJsonPath,
+          packageJson.generators,
+          'schematics'
+        ),
+        ...tryGetCollection(
+          packageJsonPath,
+          packageJson.schematics,
+          'generators'
+        ),
+        ...tryGetCollection(
+          packageJsonPath,
+          packageJson.generators,
+          'generators'
+        ),
+      },
+      executors: {
+        ...tryGetCollection(packageJsonPath, packageJson.builders, 'builders'),
+        ...tryGetCollection(packageJsonPath, packageJson.executors, 'builders'),
+        ...tryGetCollection(packageJsonPath, packageJson.builders, 'executors'),
+        ...tryGetCollection(
+          packageJsonPath,
+          packageJson.executors,
+          'executors'
+        ),
+      },
+      projectGraphExtension: !!pluginModule.processProjectGraph,
+      projectInference: !!pluginModule.projectFilePatterns,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function tryGetModule(
+  packageJson: PackageJson,
+  workspaceRoot: string
+): Promise<NxPlugin | null> {
+  try {
+    return packageJson.generators ??
       packageJson.executors ??
       packageJson['nx-migrations'] ??
       packageJson['schematics'] ??
       packageJson['builders']
-        ? await loadNxPluginAsync(
-            pluginName,
-            getNxRequirePaths(workspaceRoot),
-            workspaceRoot
-          )
-        : ({
-            name: pluginName,
-          } as NxPlugin);
-    return {
-      name: pluginName,
-      generators:
-        tryGetCollection(
-          packageJsonPath,
-          packageJson.generators,
-          'generators'
-        ) ||
-        tryGetCollection(
-          packageJsonPath,
-          packageJson.schematics,
-          'generators'
-        ) ||
-        tryGetCollection(
-          packageJsonPath,
-          packageJson.schematics,
-          'generators'
-        ) ||
-        tryGetCollection(packageJsonPath, packageJson.schematics, 'schematics'),
-      executors:
-        tryGetCollection(packageJsonPath, packageJson.executors, 'executors') ||
-        tryGetCollection(packageJsonPath, packageJson.executors, 'builders') ||
-        tryGetCollection(packageJsonPath, packageJson.builders, 'executors') ||
-        tryGetCollection(packageJsonPath, packageJson.builders, 'builders'),
-      projectGraphExtension: !!pluginModule.processProjectGraph,
-      projectInference: !!pluginModule.projectFilePatterns,
-    };
+      ? await loadNxPluginAsync(
+          packageJson.name,
+          getNxRequirePaths(workspaceRoot),
+          workspaceRoot
+        )
+      : ({
+          name: packageJson.name,
+        } as NxPlugin);
   } catch {
     return null;
   }

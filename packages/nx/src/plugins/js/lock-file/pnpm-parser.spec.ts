@@ -183,12 +183,12 @@ describe('pnpm LockFile utility', () => {
         // this is our pruned lock file structure
         const prunedGraph = pruneProjectGraph(graph, appPackageJson);
         expect(Object.keys(prunedGraph.externalNodes).length).toEqual(
-          864 + 117 // peer cypress adds additional 117 deps
+          864 + 119 // peer cypress adds additional 119 deps
         );
 
         // this should not fail
         expect(() =>
-          stringifyPnpmLockfile(prunedGraph, lockFile, appPackageJson)
+          stringifyPnpmLockfile(prunedGraph, appLockFile, appPackageJson)
         ).not.toThrow();
       });
     });
