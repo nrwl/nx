@@ -1,12 +1,10 @@
 import 'dotenv/config';
-import * as net from 'net';
 import {
   ExecutorContext,
-  logger,
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 
 import {
   NextBuildBuilderOptions,
@@ -25,15 +23,6 @@ export default async function* serveExecutor(
   if (options.customServerTarget) {
     return yield* customServer(options, context);
   }
-  // Cast to any to overwrite NODE_ENV
-  (process.env as any).NODE_ENV = process.env.NODE_ENV
-    ? process.env.NODE_ENV
-    : options.dev
-    ? 'development'
-    : 'production';
-
-  // Setting port that the custom server should use.
-  (process.env as any).PORT = options.port;
 
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
     parseTargetString(options.buildTarget, context.projectGraph),
@@ -42,6 +31,19 @@ export default async function* serveExecutor(
   const root = resolve(context.root, buildOptions.root);
 
   const { port, keepAliveTimeout, hostname } = options;
+
+  // This is required for the default custom server to work. See the @nx/next:app generator.
+  process.env.NX_NEXT_DIR = root;
+
+  // Cast to any to overwrite NODE_ENV
+  (process.env as any).NODE_ENV = process.env.NODE_ENV
+    ? process.env.NODE_ENV
+    : options.dev
+    ? 'development'
+    : 'production';
+
+  // Setting port that the custom server should use.
+  process.env.PORT = `${options.port}`;
 
   const args = createCliOptions({ port, keepAliveTimeout, hostname });
 
