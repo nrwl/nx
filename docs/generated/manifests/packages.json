@@ -1002,6 +1002,15 @@
         "originalFilePath": "/packages/js/src/executors/node/schema.json",
         "path": "/packages/js/executors/node",
         "type": "executor"
+      },
+      "/packages/js/executors/verdaccio": {
+        "description": "Start local registry with verdaccio",
+        "file": "generated/packages/js/executors/verdaccio.json",
+        "hidden": false,
+        "name": "verdaccio",
+        "originalFilePath": "/packages/js/src/executors/verdaccio/schema.json",
+        "path": "/packages/js/executors/verdaccio",
+        "type": "executor"
       }
     },
     "generators": {
@@ -1030,6 +1039,15 @@
         "name": "convert-to-swc",
         "originalFilePath": "/packages/js/src/generators/convert-to-swc/schema.json",
         "path": "/packages/js/generators/convert-to-swc",
+        "type": "generator"
+      },
+      "/packages/js/generators/setup-verdaccio": {
+        "description": "Setup Verdaccio for local package management.",
+        "file": "generated/packages/js/generators/setup-verdaccio.json",
+        "hidden": false,
+        "name": "setup-verdaccio",
+        "originalFilePath": "/packages/js/src/generators/setup-verdaccio/schema.json",
+        "path": "/packages/js/generators/setup-verdaccio",
         "type": "generator"
       }
     },

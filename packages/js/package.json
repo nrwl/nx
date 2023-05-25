@@ -54,6 +54,14 @@
     "@nx/devkit": "file:../devkit",
     "@nx/workspace": "file:../workspace"
   },
+  "peerDependencies": {
+    "verdaccio": "^5.0.4"
+  },
+  "peerDependenciesMeta": {
+    "verdaccio": {
+      "optional": true
+    }
+  },
   "publishConfig": {
     "access": "public"
   }
