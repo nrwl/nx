@@ -135,8 +135,9 @@ export async function* nodeExecutor(
             task.promise = new Promise<void>((resolve, reject) => {
               task.childProcess = fork(
                 joinPathFragments(__dirname, 'node-with-require-overrides'),
-                getExecArgv(options),
+                options.runtimeArgs ?? [],
                 {
+                  execArgv: getExecArgv(options),
                   stdio: [0, 1, 'pipe', 'ipc'],
                   env: {
                     ...process.env,
@@ -230,11 +231,7 @@ export async function* nodeExecutor(
 }
 
 function getExecArgv(options: NodeExecutorOptions) {
-  const args = [
-    '-r',
-    require.resolve('source-map-support/register'),
-    ...options.runtimeArgs,
-  ];
+  const args = ['-r', require.resolve('source-map-support/register')];
 
   if (options.inspect === true) {
     options.inspect = InspectType.Inspect;
