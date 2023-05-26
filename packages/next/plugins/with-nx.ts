@@ -206,7 +206,7 @@ function withNx(
       nextConfig.webpack = (a, b) =>
         createWebpackConfig(
           workspaceRoot,
-          options.root,
+          projectDirectory,
           options.fileReplacements,
           options.assets,
           dependencies,
