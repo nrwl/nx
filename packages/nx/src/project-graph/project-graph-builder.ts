@@ -34,6 +34,17 @@ export class ProjectGraphBuilder {
   }
 
   /**
+   * Merges the nodes and dependencies of p into the built project graph.
+   */
+  mergeProjectGraph(p: ProjectGraph) {
+    this.graph.nodes = { ...this.graph.nodes, ...p.nodes };
+    this.graph.externalNodes = {
+      ...this.graph.externalNodes,
+      ...p.externalNodes,
+    };
+    this.graph.dependencies = { ...this.graph.dependencies, ...p.dependencies };
+  }
+  /**
    * Adds a project node to the project graph
    */
   addNode(node: ProjectGraphProjectNode): void {

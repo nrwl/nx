@@ -165,6 +165,10 @@ jobs:
           main-branch-name: 'master'
       - run: pnpm nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
+          name: Check Documentation
+          command: pnpm nx documentation --no-dte
+          no_output_timeout: 20m
+      - run:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |

@@ -80,9 +80,9 @@ export function lockFileHash(
  * Parses lock file and maps dependencies and metadata to {@link LockFileGraph}
  */
 export function parseLockFile(
-  builder: ProjectGraphBuilder,
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): ProjectGraph {
+  const builder = new ProjectGraphBuilder(null, null);
   try {
     if (packageManager === 'yarn') {
       const content = readFileSync(YARN_LOCK_PATH, 'utf8');

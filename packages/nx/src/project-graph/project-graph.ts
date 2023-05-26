@@ -86,12 +86,7 @@ export async function buildProjectGraphWithoutDaemon() {
       projectConfigurations,
       projectFileMap,
       allWorkspaceFiles,
-      cacheEnabled
-        ? {
-            fileMap: readProjectFileMapCache(),
-            projectGraph: readProjectGraphCache(),
-          }
-        : null,
+      cacheEnabled ? readProjectFileMapCache() : null,
       cacheEnabled
     )
   ).projectGraph;
