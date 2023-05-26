@@ -149,6 +149,7 @@ function getPresetDependencies({
       };
 
     case Preset.NodeStandalone:
+    case Preset.NodeMonorepo:
       return {
         dependencies: {},
         dev: {

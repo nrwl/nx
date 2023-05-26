@@ -14,12 +14,11 @@ import { writeFileSync } from 'fs';
 import { createFileSync } from 'fs-extra';
 
 describe('Storybook generators and executors for standalone workspaces - using React + Vite', () => {
-  const wsName = uniq('react');
-  const appName = uniq('app');
+  const appName = uniq('react');
 
   beforeAll(() => {
     // create a workspace with a single react app at the root
-    runCreateWorkspace(wsName, {
+    runCreateWorkspace(appName, {
       preset: 'react-standalone',
       appName,
       style: 'css',
@@ -80,7 +79,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
       writeFileSync(
         tmpProjPath(`src/app/test-button.tsx`),
         `
-          import { MyLib } from '@${wsName}/my-lib';
+          import { MyLib } from '@${appName}/my-lib';
 
           export function TestButton() {
             return (
