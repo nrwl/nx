@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "outputCapture": "direct-nodejs",
+  "outputCapture": "pipe",
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "title": "Next Build",
