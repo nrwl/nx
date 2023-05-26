@@ -1,6 +1,8 @@
-import { ProjectGraphProcessor } from '../../config/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphProcessor,
+} from '../../config/project-graph';
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
-import { buildNpmPackageNodes } from './project-graph/build-nodes/build-npm-package-nodes';
 import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
 import { readNxJson } from '../../config/configuration';
 import { fileExists, readJsonFile } from '../../utils/fileutils';
@@ -16,7 +18,6 @@ import { projectGraphCacheDirectory } from '../../utils/cache-directory';
 import { readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ensureDirSync } from 'fs-extra';
-import { removeNpmNodes } from './lock-file/remove-npm-nodes';
 
 export const processProjectGraph: ProjectGraphProcessor = async (
   graph,
@@ -29,12 +30,14 @@ export const processProjectGraph: ProjectGraphProcessor = async (
     // during the create-nx-workspace lock file might not exists yet
     if (lockFileExists()) {
       const lockHash = lockFileHash();
+      let parsedLockFile: ProjectGraph;
       if (lockFileNeedsReprocessing(lockHash)) {
-        removeNpmNodes(graph, builder);
-        if (!!parseLockFile(builder)) {
-          writeLastProcessedLockfileHash(lockHash);
-        }
+        parsedLockFile = parseLockFile();
+        writeLastProcessedLockfileHash(lockHash, parsedLockFile);
+      } else {
+        parsedLockFile = readParsedLockFile();
       }
+      builder.mergeProjectGraph(parsedLockFile);
     }
   }
 
@@ -44,6 +47,8 @@ export const processProjectGraph: ProjectGraphProcessor = async (
 };
 
 const lockFileHashFile = join(projectGraphCacheDirectory, 'lockfile.hash');
+const parsedLockFile = join(projectGraphCacheDirectory, 'parsed-lockfile.json');
+
 function lockFileNeedsReprocessing(lockHash: string) {
   try {
     return readFileSync(lockFileHashFile).toString() !== lockHash;
@@ -52,9 +57,14 @@ function lockFileNeedsReprocessing(lockHash: string) {
   }
 }
 
-function writeLastProcessedLockfileHash(hash: string) {
+function writeLastProcessedLockfileHash(hash: string, lockFile: ProjectGraph) {
   ensureDirSync(dirname(lockFileHashFile));
   writeFileSync(lockFileHashFile, hash);
+  writeFileSync(parsedLockFile, JSON.stringify(lockFile, null, 2));
+}
+
+function readParsedLockFile(): ProjectGraph {
+  return JSON.parse(readFileSync(parsedLockFile).toString());
 }
 
 function jsPluginConfig(
