@@ -421,7 +421,7 @@ export async function startServer(): Promise<Server> {
               );
 
               serverLogger.watcherLog(
-                `Subscribed to changes within: ${workspaceRoot}`
+                `Subscribed to changes within: ${workspaceRoot} (native)`
               );
             }
 
