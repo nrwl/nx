@@ -73,7 +73,7 @@ export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
       ) {
         handleServerProcessTermination({
           server,
-          reason: 'this process is no longer the current daemon (native log)',
+          reason: 'this process is no longer the current daemon (native)',
         });
       }
 
@@ -82,7 +82,7 @@ export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
         handleServerProcessTermination({
           server,
           reason:
-            'Stopping the daemon the set of ignored files changed (native log)',
+            'Stopping the daemon the set of ignored files changed (native)',
         });
       }
     }
@@ -90,6 +90,29 @@ export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
     cb(null, events);
   });
 
+  return watcher;
+}
+
+export async function watchOutputFiles(cb: FileWatcherCallback) {
+  const { Watcher } = await import('../../native');
+
+  let watcher = new Watcher(workspaceRoot, null, false);
+  watcher.watch((err, events) => {
+    if (err) {
+      return cb(err, null);
+    }
+
+    for (const event of events) {
+      if (
+        event.path.startsWith('.git') ||
+        event.path.includes('node_modules')
+      ) {
+        return;
+      }
+    }
+
+    cb(null, events);
+  });
   return watcher;
 }
 

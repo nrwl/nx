@@ -10,6 +10,7 @@ import {
 import { serverLogger } from './logger';
 import {
   getOutputsWatcherSubscription,
+  getOutputWatcherInstance,
   getSourceWatcherSubscription,
   getWatcherInstance,
   handleServerProcessTermination,
@@ -18,6 +19,7 @@ import {
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
   storeOutputsWatcherSubscription,
+  storeOutputWatcherInstance,
   storeProcessJsonSubscription,
   storeSourceWatcherSubscription,
   storeWatcherInstance,
@@ -29,6 +31,7 @@ import {
   FileWatcherCallback,
   subscribeToServerProcessJsonChanges,
   watchWorkspace,
+  watchOutputFiles,
 } from './watcher';
 import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
 import { existsSync, statSync } from 'fs';
@@ -381,6 +384,8 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
     if (outputsWatcherError) {
       return;
     }
+
+    serverLogger.watcherLog('Processing file changes in outputs');
     processFileChangesInOutputs(changeEvents);
   } catch (err) {
     serverLogger.watcherLog(`Unexpected outputs watcher error`, err.message);
@@ -412,16 +417,17 @@ export async function startServer(): Promise<Server> {
           if (useNativeWatcher()) {
             if (!getWatcherInstance()) {
               storeWatcherInstance(
-                await watchWorkspace(server, async (err, events) => {
-                  await Promise.all([
-                    handleWorkspaceChanges(err, events),
-                    handleOutputsChanges(err, events),
-                  ]);
-                })
+                await watchWorkspace(server, handleWorkspaceChanges)
               );
 
               serverLogger.watcherLog(
                 `Subscribed to changes within: ${workspaceRoot}`
+              );
+            }
+
+            if (!getOutputWatcherInstance()) {
+              storeOutputWatcherInstance(
+                await watchOutputFiles(handleOutputsChanges)
               );
             }
           } else {

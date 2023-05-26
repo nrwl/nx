@@ -24,7 +24,11 @@ export interface WatchEvent {
 }
 export class Watcher {
   origin: string
-  constructor(origin: string, additionalGlobs?: Array<string> | undefined | null)
-  watch(callback: (err: string | null, paths: WatchEvent[]) => void): void
+  /**
+   * Creates a new Watcher instance.
+   * If `useIgnore` is set to false, no ignores will be used, even when `additionalGlobs` is set
+   */
+  constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
+  watch(callback: (err: string | null, events: WatchEvent[]) => void): void
   stop(): Promise<void>
 }

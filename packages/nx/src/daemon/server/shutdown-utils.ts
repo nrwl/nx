@@ -41,6 +41,14 @@ export function getWatcherInstance() {
   return watcherInstance;
 }
 
+let outputWatcherInstance: Watcher | undefined;
+export function storeOutputWatcherInstance(instance: Watcher) {
+  outputWatcherInstance = instance;
+}
+export function getOutputWatcherInstance() {
+  return outputWatcherInstance;
+}
+
 interface HandleServerProcessTerminationParams {
   server: Server;
   reason: string;
@@ -74,7 +82,16 @@ export async function handleServerProcessTermination({
 
     if (watcherInstance) {
       await watcherInstance.stop();
-      serverLogger.watcherLog(`Stopping the watcher within: ${workspaceRoot}`);
+      serverLogger.watcherLog(
+        `Stopping the watcher for ${workspaceRoot} (sources)`
+      );
+    }
+
+    if (outputWatcherInstance) {
+      await outputWatcherInstance.stop();
+      serverLogger.watcherLog(
+        `Stopping the watcher for ${workspaceRoot} (outputs)`
+      );
     }
 
     serverLogger.log(`Server stopped because: "${reason}"`);

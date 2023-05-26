@@ -27,12 +27,19 @@ pub struct Watcher {
     pub origin: String,
     watch_exec: Arc<Watchexec>,
     additional_globs: Vec<String>,
+    use_ignore: bool,
 }
 
 #[napi]
 impl Watcher {
+    /// Creates a new Watcher instance.
+    /// If `useIgnore` is set to false, no ignores will be used, even when `additionalGlobs` is set
     #[napi(constructor)]
-    pub fn new(origin: String, additional_globs: Option<Vec<String>>) -> Result<Watcher> {
+    pub fn new(
+        origin: String,
+        additional_globs: Option<Vec<String>>,
+        use_ignore: Option<bool>,
+    ) -> Result<Watcher> {
         let watch_exec = Watchexec::new(InitConfig::default(), RuntimeConfig::default())
             .map_err(anyhow::Error::from)?;
 
@@ -42,13 +49,15 @@ impl Watcher {
             vec![]
         };
 
-        // always ignore the .git folder
-        globs.push(".git".into());
+        // always ignore the .git  and node_modules folder
+        globs.push(".git/".into());
+        globs.push("node_modules/".into());
 
         Ok(Watcher {
             origin,
             watch_exec,
             additional_globs: globs,
+            use_ignore: use_ignore.unwrap_or(true),
         })
     }
 
@@ -56,7 +65,7 @@ impl Watcher {
     pub fn watch(
         &mut self,
         env: Env,
-        #[napi(ts_arg_type = "(err: string | null, paths: WatchEvent[]) => void")]
+        #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
         callback: JsFunction,
     ) -> Result<()> {
         _ = tracing_subscriber::fmt()
@@ -90,6 +99,7 @@ impl Watcher {
         let origin = self.origin.clone();
         let watch_exec = self.watch_exec.clone();
         let additional_globs = self.additional_globs.clone();
+        let use_ignore = self.use_ignore.clone();
         let start = async move {
             let mut runtime = watch_config::create_runtime(
                 &origin,
@@ -97,6 +107,7 @@ impl Watcher {
                     .iter()
                     .map(String::as_ref)
                     .collect::<Vec<_>>(),
+                use_ignore,
             )
             .await?;
 
