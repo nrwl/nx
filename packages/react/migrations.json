@@ -884,6 +884,10 @@
         "react-router-dom": {
           "version": "6.11.2",
           "alwaysAddToPackageJson": false
+        },
+        "@svgr/rollup": {
+          "version": "^8.0.1",
+          "alwaysAddToPackageJson": false
         }
       }
     }

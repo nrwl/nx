@@ -62,4 +62,4 @@ export const stylusVersion = '^0.55.0';
 
 // rollup plugins (if needed)
 export const rollupPluginUrlVersion = '^7.0.0';
-export const svgrRollupVersion = '^6.1.2';
+export const svgrRollupVersion = '^8.0.1';
