@@ -57,6 +57,7 @@ import { PackageJson } from '../../utils/package-json';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import { handleHashTasks } from './handle-hash-tasks';
 import { fileHasher, hashArray } from '../../hasher/impl';
+import { handleRequestFileData } from './handle-request-file-data';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
