@@ -18,7 +18,7 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 # Plugin Verticals
 
 ## Angular
-/docs/generated/packages/angular/** @Coly010 @leosvelperez
+/docs/generated/packages/angular/** @Coly010 @leosvelperez @juristr
 /docs/shared/packages/angular/** @Coly010 @leosvelperez @isaacplmann @juristr
 /packages/angular/** @Coly010 @leosvelperez
 /e2e/angular-core/** @Coly010 @leosvelperez
@@ -28,10 +28,10 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /packages/angular/src/generators/component-test/** @leosvelperez @Coly010 @barbados-clemens
 
 ## React
-/docs/generated/packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
-/docs/generated/packages/next/** @jaysoo @ndcunningham @xiongemi
-/docs/shared/packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
-/docs/shared/packages/next/** @jaysoo @ndcunningham @xiongemi
+/docs/generated/packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi @juristr
+/docs/generated/packages/next/** @jaysoo @ndcunningham @xiongemi @juristr
+/docs/shared/packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi @juristr
+/docs/shared/packages/next/** @jaysoo @ndcunningham @xiongemi @juristr
 /packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
 /e2e/react-core/** @jaysoo @mandarini @xiongemi @ndcunningham
 /e2e/react-extensions/** @jaysoo @mandarini @xiongemi @ndcunningham
@@ -42,9 +42,9 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /packages/react/src/generators/component-test/** @jaysoo @ndcunningham @barbados-clemens
 
 # React Native
-/docs/generated/packages/detox/** @xiongemi @jaysoo @ndcunningham
-/docs/generated/packages/expo/** @xiongemi @jaysoo @ndcunningham
-/docs/generated/packages/react-native/** @xiongemi @jaysoo @ndcunningham
+/docs/generated/packages/detox/** @xiongemi @jaysoo @ndcunningham @juristr
+/docs/generated/packages/expo/** @xiongemi @jaysoo @ndcunningham @juristr
+/docs/generated/packages/react-native/** @xiongemi @jaysoo @ndcunningham @juristr
 /docs/shared/packages/react-native/** @xiongemi @jaysoo @ndcunningham @FrozenPandaz @isaacplmann @juristr
 /packages/detox/** @xiongemi @jaysoo @ndcunningham
 /e2e/detox/** @xiongemi @jaysoo @ndcunningham
@@ -54,9 +54,9 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/react-native/** @xiongemi @jaysoo @ndcunningham
 
 ## Node
-/docs/generated/packages/node/** @nartc @ndcunningham @jaysoo
-/docs/generated/packages/nest/** @nartc @ndcunningham @jaysoo
-/docs/generated/packages/express/** @nartc @ndcunningham @jaysoo
+/docs/generated/packages/node/** @nartc @ndcunningham @jaysoo @juristr
+/docs/generated/packages/nest/** @nartc @ndcunningham @jaysoo @juristr
+/docs/generated/packages/express/** @nartc @ndcunningham @jaysoo @juristr
 /docs/shared/packages/node/** @nartc @FrozenPandaz @isaacplmann @juristr
 /docs/shared/packages/express/** @ndcunningham @nartc @FrozenPandaz @isaacplmann @juristr
 /docs/shared/packages/nest/** @ndcunningham @nartc @FrozenPandaz @isaacplmann @juristr
@@ -66,17 +66,17 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/node/** @nartc @ndcunningham @jaysoo
 
 ## JS
-/docs/generated/packages/js/** @nartc @jaysoo @ndcunningham
-/docs/generated/packages/web/** @jaysoo @mandarini @ndcunningham
-/docs/generated/packages/webpack/** @jaysoo @mandarini @ndcunningham
-/docs/generated/packages/esbuild/** @nartc @jaysoo @ndcunningham
-/docs/generated/packages/rollup/** @jaysoo @mandarini @ndcunningham
-/docs/generated/packages/vite/** @jaysoo @mandarini @ndcunningham
-/docs/shared/packages/js/** @nartc @jaysoo @ndcunningham
-/docs/shared/packages/web/** @jaysoo @mandarini @ndcunningham
-/docs/shared/packages/webpack/** @jaysoo @mandarini @ndcunningham
-/docs/shared/packages/esbuild/** @nartc @jaysoo @ndcunningham
-/docs/shared/packages/vite/** @jaysoo @mandarini @ndcunningham
+/docs/generated/packages/js/** @nartc @jaysoo @ndcunningham @juristr
+/docs/generated/packages/web/** @jaysoo @mandarini @ndcunningham @juristr
+/docs/generated/packages/webpack/** @jaysoo @mandarini @ndcunningham @juristr
+/docs/generated/packages/esbuild/** @nartc @jaysoo @ndcunningham @juristr
+/docs/generated/packages/rollup/** @jaysoo @mandarini @ndcunningham @juristr
+/docs/generated/packages/vite/** @jaysoo @mandarini @ndcunningham @juristr
+/docs/shared/packages/js/** @nartc @jaysoo @ndcunningham @juristr
+/docs/shared/packages/web/** @jaysoo @mandarini @ndcunningham @juristr
+/docs/shared/packages/webpack/** @jaysoo @mandarini @ndcunningham @juristr
+/docs/shared/packages/esbuild/** @nartc @jaysoo @ndcunningham @juristr
+/docs/shared/packages/vite/** @jaysoo @mandarini @ndcunningham @juristr
 /packages/js/** @nartc @jaysoo @ndcunningham
 /e2e/js/** @nartc @jaysoo @ndcunningham
 /packages/web/** @jaysoo @mandarini @ndcunningham
@@ -91,8 +91,8 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/vite/** @jaysoo @mandarini @ndcunningham
 
 ## Tools
-/docs/generated/packages/cypress/** @barbados-clemens @FrozenPandaz
-/docs/generated/packages/jest/** @barbados-clemens @FrozenPandaz
+/docs/generated/packages/cypress/** @barbados-clemens @FrozenPandaz @juristr
+/docs/generated/packages/jest/** @barbados-clemens @FrozenPandaz @juristr
 /docs/shared/packages/jest/** @barbados-clemens @FrozenPandaz @isaacplmann @juristr
 /docs/shared/packages/cypress/** @barbados-clemens @FrozenPandaz @isaacplmann @juristr
 /packages/cypress/** @barbados-clemens @FrozenPandaz
@@ -101,8 +101,8 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/jest/** @barbados-clemens @FrozenPandaz
 
 # Linter
-/docs/generated/packages/eslint-plugin/** @meeroslav @FrozenPandaz @JamesHenry
-/docs/generated/packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
+/docs/generated/packages/eslint-plugin/** @meeroslav @FrozenPandaz @JamesHenry @juristr
+/docs/generated/packages/linter/** @meeroslav @FrozenPandaz @JamesHenry @juristr
 /docs/shared/packages/linter/** @meeroslav @FrozenPandaz @isaacplmann @juristr
 /packages/eslint-plugin/** @meeroslav @FrozenPandaz @JamesHenry
 /packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
@@ -110,15 +110,15 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 .eslint* @meeroslav @FrozenPandaz @JamesHenry
 
 # Storybook
-/docs/generated/packages/storybook/** @mandarini @jaysoo @Coly010
-/docs/shared/packages/storybook/** @mandarini @jaysoo @Coly010
+/docs/generated/packages/storybook/** @mandarini @jaysoo @Coly010 @juristr
+/docs/shared/packages/storybook/** @mandarini @jaysoo @Coly010 @juristr
 /packages/storybook/** @mandarini @jaysoo @Coly010
 /e2e/storybook/** @mandarini @FrozenPandaz @Coly010
 /e2e/storybook-angular/** @mandarini @Coly010
 
 ## Devkit
-/docs/generated/devkit/** @FrozenPandaz @AgentEnder
-/docs/generated/packages/devkit/** @FrozenPandaz @AgentEnder
+/docs/generated/devkit/** @FrozenPandaz @AgentEnder @juristr
+/docs/generated/packages/devkit/** @FrozenPandaz @AgentEnder @juristr
 /packages/devkit/** @FrozenPandaz @AgentEnder
 /packages/devkit/index.js @FrozenPandaz @vsavkin
 /packages/devkit/index.d.ts @FrozenPandaz @vsavkin
@@ -127,15 +127,15 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /packages/devkit/src/utils/module-federation @jaysoo @Coly010
 
 # Nx-Plugin
-/docs/generated/packages/plugin/** @AgentEnder @FrozenPandaz
+/docs/generated/packages/plugin/** @AgentEnder @FrozenPandaz @juristr
 /docs/shared/packages/plugin/** @AgentEnder @FrozenPandaz @isaacplmann @juristr
 /packages/plugin/** @AgentEnder @FrozenPandaz
 /e2e/plugin/** @AgentEnder @FrozenPandaz
 
 ## Core
-/docs/generated/cli/** @vsavkin @FrozenPandaz @AgentEnder
-/docs/generated/packages/nx/** @vsavkin @FrozenPandaz @AgentEnder
-/docs/generated/packages/workspace/** @vsavkin @FrozenPandaz @AgentEnder
+/docs/generated/cli/** @vsavkin @FrozenPandaz @AgentEnder @juristr
+/docs/generated/packages/nx/** @vsavkin @FrozenPandaz @AgentEnder @juristr
+/docs/generated/packages/workspace/** @vsavkin @FrozenPandaz @AgentEnder @juristr
 /packages/nx/** @vsavkin @FrozenPandaz @AgentEnder
 /packages/nx/src/adapter @AgentEnder @leosvelperez
 /packages/nx/src/native @vsavkin @FrozenPandaz @Cammisuli
@@ -154,13 +154,13 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
 /e2e/utils/** @meeroslav @barbados-clemens @vsavkin @mandarini
 /community @AgentEnder @FrozenPandaz
-/CONTRIBUTING.md @FrozenPandaz @isaacplmann
+/CONTRIBUTING.md @FrozenPandaz @isaacplmann @juristr
 /CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
 /CODEOWNERS @FrozenPandaz @AgentEnder
 
 # Scripts
 /scripts/depcheck @FrozenPandaz @vsavkin @jaysoo
-/scripts/documentation @bcabanes @isaacplmann
+/scripts/documentation @bcabanes @isaacplmann @juristr
 /scripts/local-registry @FrozenPandaz @vsavkin
 /scripts/angular-support-upgrades @Coly010 @leosvelperez
 
