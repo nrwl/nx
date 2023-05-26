@@ -47,7 +47,7 @@ export const processProjectGraph: ProjectGraphProcessor = async (
 };
 
 const lockFileHashFile = join(projectGraphCacheDirectory, 'lockfile.hash');
-const parsedLockFile = join(projectGraphCacheDirectory, 'parsed-lockfile.json');
+const parsedLockFile = join(projectGraphCacheDirectory, 'parsed-lock-file.json');
 
 function lockFileNeedsReprocessing(lockHash: string) {
   try {
@@ -59,8 +59,8 @@ function lockFileNeedsReprocessing(lockHash: string) {
 
 function writeLastProcessedLockfileHash(hash: string, lockFile: ProjectGraph) {
   ensureDirSync(dirname(lockFileHashFile));
-  writeFileSync(lockFileHashFile, hash);
   writeFileSync(parsedLockFile, JSON.stringify(lockFile, null, 2));
+  writeFileSync(lockFileHashFile, hash);
 }
 
 function readParsedLockFile(): ProjectGraph {
