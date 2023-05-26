@@ -4,8 +4,8 @@
 /e2e/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /scripts/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /tools/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
-package.json @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
-pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
+package.json @nrwl/nx-pipelines-reviewers
+pnpm-lock.yaml @nrwl/nx-pipelines-reviewers
 
 # Docs Site + Graph
 /docs @nrwl/nx-docs-reviewers
@@ -153,7 +153,7 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
 /e2e/utils/** @meeroslav @nrwl/nx-testing-tools-reviewers @vsavkin @mandarini
-/community @AgentEnder @FrozenPandaz
+/community @nrwl/nx-devkit-reviewers
 /CONTRIBUTING.md @FrozenPandaz @isaacplmann
 /CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
 /CODEOWNERS @FrozenPandaz @AgentEnder
@@ -165,10 +165,10 @@ pnpm-lock.yaml @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /scripts/angular-support-upgrades @nrwl/nx-angular-reviewers
 
 # CI
-/.circleci/** @meeroslav @vsavkin @FrozenPandaz
-/.github/** @meeroslav @vsavkin @FrozenPandaz @JamesHenry
-/.husky/** @meeroslav @vsavkin @FrozenPandaz
-/packages/workspace/src/generators/ci-workflow/** @meeroslav @StalkAltan @vsavkin
+/.circleci/** @nrwl/nx-pipelines-reviewers
+/.github/** @nrwl/nx-pipelines-reviewers
+/.husky/** @nrwl/nx-pipelines-reviewers
+/packages/workspace/src/generators/ci-workflow/** @nrwl/nx-pipelines-reviewers
 
 # Global Files
 project.json @FrozenPandaz @vsavkin
@@ -176,5 +176,5 @@ jest.config.ts @nrwl/nx-testing-tools-reviewers @FrozenPandaz
 jest.preset.js @nrwl/nx-testing-tools-reviewers @FrozenPandaz
 
 # Overrides - These are applied last, so override any matches above.
-docs/generated/manifests/* @FrozenPandaz @jaysoo @AgentEnder @nrwl/nx-docs-reviewers
+docs/generated/manifests/* @nrwl/nrwlians
 docs/generated/packages-metadata.json @FrozenPandaz @jaysoo @AgentEnder @nrwl/nx-docs-reviewers
