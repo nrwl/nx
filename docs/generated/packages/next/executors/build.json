@@ -10,11 +10,6 @@
     "description": "Build a Next.js app.",
     "type": "object",
     "properties": {
-      "root": {
-        "description": "The source root",
-        "type": "string",
-        "x-priority": "important"
-      },
       "outputPath": {
         "type": "string",
         "description": "The output path of the generated files.",
@@ -79,7 +74,7 @@
         "description": "Only build 'app' routes"
       }
     },
-    "required": ["root", "outputPath"],
+    "required": ["outputPath"],
     "presets": []
   },
   "description": "Build a Next.js application.",
