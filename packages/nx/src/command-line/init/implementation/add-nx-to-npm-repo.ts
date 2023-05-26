@@ -29,7 +29,7 @@ export async function addNxToNpmRepo(options: Options) {
     (s) => !s.startsWith('pre') && !s.startsWith('post')
   );
 
-  if (options.interactive) {
+  if (options.interactive && scripts.length > 0) {
     output.log({
       title:
         '🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration',
@@ -63,7 +63,9 @@ export async function addNxToNpmRepo(options: Options) {
     useNxCloud = options.nxCloud ?? (await askAboutNxCloud());
   } else {
     cacheableOperations = options.cacheable ?? [];
-    useNxCloud = options.nxCloud ?? false;
+    useNxCloud =
+      options.nxCloud ??
+      (options.interactive ? await askAboutNxCloud() : false);
   }
 
   createNxJsonFile(repoRoot, [], cacheableOperations, {});
