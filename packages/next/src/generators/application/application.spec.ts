@@ -256,7 +256,6 @@ describe('app', () => {
       '@nx/next:build'
     );
     expect(projectConfiguration.targets.build.options).toEqual({
-      root: 'apps/my-app',
       outputPath: 'dist/apps/my-app',
     });
   });

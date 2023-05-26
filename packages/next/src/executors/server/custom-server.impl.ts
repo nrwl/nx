@@ -30,9 +30,9 @@ export default async function* serveExecutor(
     parseTargetString(options.buildTarget, context.projectGraph),
     context
   );
-  const root = resolve(context.root, buildOptions.root);
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
-  yield* runCustomServer(root, options, context);
+  yield* runCustomServer(projectRoot, options, context);
 }
 
 async function* runCustomServer(

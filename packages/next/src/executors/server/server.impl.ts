@@ -28,12 +28,12 @@ export default async function* serveExecutor(
     parseTargetString(options.buildTarget, context.projectGraph),
     context
   );
-  const root = resolve(context.root, buildOptions.root);
+  const projectRoot = context.workspace.projects[context.projectName].root;
 
   const { port, keepAliveTimeout, hostname } = options;
 
   // This is required for the default custom server to work. See the @nx/next:app generator.
-  process.env.NX_NEXT_DIR = root;
+  process.env.NX_NEXT_DIR = projectRoot;
 
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV = process.env.NODE_ENV
@@ -56,7 +56,7 @@ export default async function* serveExecutor(
   yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
     async ({ done, next, error }) => {
       const server = fork(nextBin, [mode, ...args, turbo], {
-        cwd: options.dev ? root : nextDir,
+        cwd: options.dev ? projectRoot : nextDir,
         stdio: 'inherit',
       });
 

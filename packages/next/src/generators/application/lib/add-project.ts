@@ -13,7 +13,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
-      root: options.appProjectRoot,
       outputPath: options.outputPath,
     },
     configurations: {
