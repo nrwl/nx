@@ -15,7 +15,7 @@ import { DaemonClient } from '../daemon/client/client';
 import { FileHasher } from './impl/file-hasher-base';
 import { hashArray } from './impl';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
-import { registerPluginTSTranspiler } from '../utils/nx-plugin';
+import { findMatchingProjects } from '../utils/find-matching-projects';
 
 type ExpandedSelfInput =
   | { fileset: string }
@@ -495,7 +495,11 @@ class TaskHasherImpl {
   ): Promise<PartialHash[]> {
     const partialHashes: Promise<PartialHash[]>[] = [];
     for (const input of projectInputs) {
-      for (const project of input.projects) {
+      const projects = findMatchingProjects(
+        input.projects,
+        this.projectGraph.nodes
+      );
+      for (const project of projects) {
         const namedInputs = getNamedInputs(
           this.nxJson,
           this.projectGraph.nodes[project]
