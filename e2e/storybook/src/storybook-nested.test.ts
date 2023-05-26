@@ -70,33 +70,9 @@ describe('Storybook generators and executors for standalone workspaces - using R
       checkFilesExist(`dist/storybook/${appName}/index.html`);
     }, 100_000);
 
-    // This needs fixing on the Storybook side
-    // vite paths resolution is not working on standalone
-    xit('should build a React based storybook that references another lib and uses Vite', () => {
-      const anotherReactLib = uniq('test-another-lib-react');
-      runCLI(`generate @nx/react:lib ${anotherReactLib} --no-interactive`);
-      // create a React component we can reference
-      createFileSync(tmpProjPath(`${anotherReactLib}/src/lib/mytestcmp.tsx`));
-      writeFileSync(
-        tmpProjPath(`${anotherReactLib}/src/lib/mytestcmp.tsx`),
-        `
-        export function MyTestCmp() {
-          return (
-            <div>
-              <h1>Welcome to OtherLib!</h1>
-            </div>
-          );
-        }
-
-        export default MyTestCmp;
-        `
-      );
-      // update index.ts and export it
-      writeFileSync(
-        tmpProjPath(`${anotherReactLib}/src/index.ts`),
-        `
-            export * from './lib/mytestcmp';
-        `
+    it('should build a React based storybook that references another lib and uses Vite', () => {
+      runCLI(
+        `generate @nx/react:lib my-lib --bundler=vite --unitTestRunner=none --no-interactive`
       );
 
       // create a component and a story in the first lib to reference the cmp from the 2nd lib
@@ -104,12 +80,12 @@ describe('Storybook generators and executors for standalone workspaces - using R
       writeFileSync(
         tmpProjPath(`src/app/test-button.tsx`),
         `
-          import { MyTestCmp } from '@${wsName}/${anotherReactLib}';
+          import { MyLib } from '@${wsName}/my-lib';
 
           export function TestButton() {
             return (
               <div>
-                <MyTestCmp />
+                <MyLib />
               </div>
             );
           }
@@ -141,6 +117,6 @@ describe('Storybook generators and executors for standalone workspaces - using R
       // build React lib
       runCLI(`run ${appName}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${appName}/index.html`);
-    }, 100_000);
+    }, 150_000);
   });
 });
