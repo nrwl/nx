@@ -19,6 +19,8 @@ import {
   determineDefaultBase,
   determineNxCloud,
   determinePackageManager,
+  determinePackageName,
+  determineTypeScriptUsage,
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
@@ -42,6 +44,7 @@ interface Arguments extends CreateWorkspaceOptions {
   nextAppDir: boolean;
   routing: boolean;
   bundler: Bundler;
+  js: boolean;
 }
 
 export const commandsObject: yargs.Argv<Arguments> = yargs
@@ -182,16 +185,17 @@ async function normalizeArgsMiddleware(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   try {
-    let name,
-      appName,
-      style,
-      preset,
-      framework,
-      bundler,
-      docker,
-      nextAppDir,
-      routing,
-      standaloneApi;
+    let name;
+    let appName;
+    let style;
+    let preset;
+    let framework;
+    let bundler;
+    let docker;
+    let nextAppDir;
+    let routing;
+    let standaloneApi;
+    let js;
 
     output.log({
       title:
@@ -224,6 +228,8 @@ async function normalizeArgsMiddleware(
           preset = Preset.AngularStandalone;
         } else if (monorepoStyle === 'node-standalone') {
           preset = Preset.NodeStandalone;
+        } else if (monorepoStyle === 'ts-standalone') {
+          preset = Preset.TsStandalone;
         } else {
           // when choose integrated monorepo, further prompt for preset
           preset = await determinePreset(argv);
@@ -269,6 +275,10 @@ async function normalizeArgsMiddleware(
             argv.routing ??
             (argv.interactive ? await determineRouting(argv) : true);
         }
+      } else if (preset === Preset.TsStandalone) {
+        name = await determinePackageName(preset, argv);
+        appName = name;
+        js = !(await determineTypeScriptUsage(argv));
       } else {
         name = await determineRepoName(argv);
         appName = await determineAppName(preset as Preset, argv);
@@ -308,6 +318,7 @@ async function normalizeArgsMiddleware(
       bundler,
       docker,
       nextAppDir,
+      js,
     });
   } catch (e) {
     console.error(e);
@@ -671,7 +682,8 @@ async function determineStyle(
     preset === Preset.Express ||
     preset === Preset.ReactNative ||
     preset === Preset.Expo ||
-    preset === Preset.NodeStandalone
+    preset === Preset.NodeStandalone ||
+    preset === Preset.TsStandalone
   ) {
     return Promise.resolve(null);
   }

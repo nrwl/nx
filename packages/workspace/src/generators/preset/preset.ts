@@ -147,6 +147,18 @@ async function createPreset(tree: Tree, options: Schema) {
     };
     updateNxJson(tree, c);
     return initGenerator(tree, {});
+  } else if (options.preset === Preset.TsStandalone) {
+    const c = readNxJson(tree);
+    const { libraryGenerator } = require('@nx' + '/js');
+    updateNxJson(tree, c);
+    return libraryGenerator(tree, {
+      name: options.name,
+      bundler: 'swc',
+      unitTestRunner: 'jest',
+      testEnvironment: 'node',
+      js: options.js,
+      rootProject: true,
+    });
   } else if (options.preset === Preset.NodeStandalone) {
     const { applicationGenerator: nodeApplicationGenerator } = require('@nx' +
       '/node');

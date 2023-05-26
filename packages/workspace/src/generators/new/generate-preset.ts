@@ -76,6 +76,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.bundler ? `--bundler=${opts.bundler}` : null,
       opts.framework ? `--framework=${opts.framework}` : null,
       opts.docker ? `--docker=${opts.docker}` : null,
+      opts.js ? `--js` : null,
       opts.nextAppDir ? `--nextAppDir=${opts.nextAppDir}` : null,
       opts.packageManager ? `--packageManager=${opts.packageManager}` : null,
       opts.standaloneApi !== undefined
@@ -98,6 +99,7 @@ function getPresetDependencies({
 }: NormalizedSchema) {
   switch (preset) {
     case Preset.TS:
+    case Preset.TsStandalone:
       return { dependencies: {}, dev: { '@nx/js': nxVersion } };
 
     case Preset.AngularMonorepo:

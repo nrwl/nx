@@ -42,6 +42,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             Preset.Express,
             Preset.NodeStandalone,
             Preset.NextJsStandalone,
+            Preset.TsStandalone,
           ].includes(Preset[preset])
         ) {
           appName = 'app1';

@@ -18,6 +18,7 @@ export enum Preset {
   React = 'react',
   Angular = 'angular',
   NodeStandalone = 'node-standalone',
+  TsStandalone = 'ts-standalone',
 }
 
 /**
