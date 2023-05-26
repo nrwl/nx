@@ -25,5 +25,6 @@ if (swcJestConfig.swcrc === undefined) {
     '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
+  testEnvironment: '<%= testEnvironment %>',
   coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>'
 };
