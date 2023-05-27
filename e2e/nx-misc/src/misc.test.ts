@@ -54,7 +54,10 @@ describe('Nx Commands', () => {
       const withTargets = JSON.parse(
         runCLI('show projects --with-target e2e --json')
       );
-      expect(withTargets).toEqual([`${app1}-e2e`, `${app2}-e2e`]);
+      expect(withTargets).toEqual(
+        expect.arrayContaining([`${app1}-e2e`, `${app2}-e2e`])
+      );
+      expect(withTargets.length).toEqual(2);
     });
 
     it('should show detailed project info', () => {
