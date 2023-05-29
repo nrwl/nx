@@ -32,7 +32,8 @@ export async function affected(
     (TargetDependencyConfig | string)[]
   > = {}
 ): Promise<void> {
-  performance.mark('command-execution-begins');
+  performance.mark('code-loading:end');
+  performance.measure('code-loading', 'init-local', 'code-loading:end');
   workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
