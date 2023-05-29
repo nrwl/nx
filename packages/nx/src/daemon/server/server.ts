@@ -134,26 +134,34 @@ async function handleMessage(socket, data: string) {
   }
 
   if (payload.type === 'PING') {
-    await handleResult(socket, {
-      response: JSON.stringify(true),
-      description: 'ping',
-    });
+    await handleResult(socket, 'PING', () =>
+      Promise.resolve({ response: JSON.stringify(true), description: 'ping' })
+    );
   } else if (payload.type === 'REQUEST_PROJECT_GRAPH') {
-    await handleResult(socket, await handleRequestProjectGraph());
+    await handleResult(socket, 'REQUEST_PROJECT_GRAPH', () =>
+      handleRequestProjectGraph()
+    );
   } else if (payload.type === 'HASH_TASKS') {
-    await handleResult(socket, await handleHashTasks(payload));
+    await handleResult(socket, 'HASH_TASKS', () => handleHashTasks(payload));
   } else if (payload.type === 'REQUEST_FILE_DATA') {
-    await handleResult(socket, await handleRequestFileData());
+    await handleResult(socket, 'REQUEST_FILE_DATA', () =>
+      handleRequestFileData()
+    );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
-    await handleResult(socket, await handleProcessInBackground(payload));
+    await handleResult(socket, 'PROCESS_IN_BACKGROUND', () =>
+      handleProcessInBackground(payload)
+    );
   } else if (payload.type === 'RECORD_OUTPUTS_HASH') {
-    await handleResult(socket, await handleRecordOutputsHash(payload));
+    await handleResult(socket, 'RECORD_OUTPUTS_HASH', () =>
+      handleRecordOutputsHash(payload)
+    );
   } else if (payload.type === 'OUTPUTS_HASHES_MATCH') {
-    await handleResult(socket, await handleOutputsHashesMatch(payload));
+    await handleResult(socket, 'OUTPUTS_HASHES_MATCH', () =>
+      handleOutputsHashesMatch(payload)
+    );
   } else if (payload.type === 'REQUEST_SHUTDOWN') {
-    await handleResult(
-      socket,
-      await handleRequestShutdown(server, numberOfOpenConnections)
+    await handleResult(socket, 'REQUEST_SHUTDOWN', () =>
+      handleRequestShutdown(server, numberOfOpenConnections)
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
@@ -166,12 +174,25 @@ async function handleMessage(socket, data: string) {
   }
 }
 
-export async function handleResult(socket: Socket, hr: HandlerResult) {
+export async function handleResult(
+  socket: Socket,
+  type: string,
+  hrFn: () => Promise<HandlerResult>
+) {
+  const startMark = new Date();
+  const hr = await hrFn();
+  const doneHandlingMark = new Date();
   if (hr.error) {
     await respondWithErrorAndExit(socket, hr.description, hr.error);
   } else {
     await respondToClient(socket, hr.response, hr.description);
   }
+  const endMark = new Date();
+  serverLogger.log(
+    `Handled ${type}. Handling time: ${
+      doneHandlingMark.getTime() - startMark.getTime()
+    }. Response time: ${endMark.getTime() - doneHandlingMark.getTime()}.`
+  );
 }
 
 function handleInactivityTimeout() {
@@ -234,6 +255,7 @@ function nxVersionChanged(): boolean {
 }
 
 const nxPackageJsonPath = require.resolve('nx/package.json');
+
 function getInstalledNxVersion() {
   try {
     const { version } = readJsonFile<PackageJson>(nxPackageJsonPath);

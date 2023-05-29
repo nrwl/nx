@@ -34,6 +34,7 @@ import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { fileHasher } from '../hasher/impl';
 import { getProjectFileMap } from '../project-graph/build-project-graph';
+import { performance } from 'perf_hooks';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -250,12 +251,15 @@ export async function invokeTasksRunner({
   // this is used for two reasons: to fetch all remote cache hits AND
   // to submit everything that is known in advance to Nx Cloud to run in
   // a distributed fashion
+  performance.mark('hashing:start');
   await hashTasksThatDoNotDependOnOtherTasks(
     new Workspaces(workspaceRoot),
     hasher,
     projectGraph,
     taskGraph
   );
+  performance.mark('hashing:end');
+  performance.measure('hashing', 'hashing:start', 'hashing:end');
 
   const promiseOrObservable = tasksRunner(
     tasks,
