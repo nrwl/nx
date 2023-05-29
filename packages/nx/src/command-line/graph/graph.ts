@@ -520,13 +520,13 @@ function debounce(fn: (...args) => void, time: number) {
 function createFileWatcher() {
   return daemonClient.registerFileWatcher(
     { watchProjects: 'all', includeGlobalWorkspaceFiles: true },
-    debounce(async (error, { changedFiles }) => {
+    debounce(async (error, changes) => {
       if (error === 'closed') {
         output.error({ title: `Watch error: Daemon closed the connection` });
         process.exit(1);
       } else if (error) {
         output.error({ title: `Watch error: ${error?.message ?? 'Unknown'}` });
-      } else if (changedFiles.length > 0) {
+      } else if (changes !== null && changes.changedFiles.length > 0) {
         output.note({ title: 'Recalculating project graph...' });
 
         const newGraphClientResponse = await createDepGraphClientResponse();
