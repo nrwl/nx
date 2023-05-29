@@ -13,6 +13,10 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { readNxJson } from '../../config/configuration';
+import {
+  getAsyncIteratorResult,
+  isAsyncIterator,
+} from '../../utils/async-iterator';
 
 function getBatchExecutor(executorName: string) {
   const workspace = new Workspaces(workspaceRoot);
@@ -67,6 +71,10 @@ async function runTasks(
 
     if (typeof results !== 'object') {
       throw new Error(`"${executorName} returned invalid results: ${results}`);
+    }
+
+    if (isAsyncIterator(results)) {
+      return await getAsyncIteratorResult(results);
     }
 
     return results;

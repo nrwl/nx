@@ -1,4 +1,5 @@
-import { TaskGraph } from '../../config/task-graph';
+import type { ExecutorTaskResult } from '../../config/misc-interfaces';
+import type { TaskGraph } from '../../config/task-graph';
 
 export enum BatchMessageType {
   Tasks,
@@ -11,17 +12,14 @@ export interface BatchTasksMessage {
   batchTaskGraph: TaskGraph;
   fullTaskGraph: TaskGraph;
 }
+
 /**
  * Results of running the batch. Mapped from task id to results
  */
 export interface BatchResults {
-  [taskId: string]: {
-    success: boolean;
-    terminalOutput?: string;
-    startTime?: number;
-    endTime?: number;
-  };
+  [taskId: string]: ExecutorTaskResult;
 }
+
 export interface BatchCompleteMessage {
   type: BatchMessageType.Complete;
   results: BatchResults;

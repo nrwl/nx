@@ -144,6 +144,7 @@ export class TaskOrchestrator {
     task: Task;
     status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
   }> {
+    const startTime = new Date().getTime();
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
@@ -165,7 +166,11 @@ export class TaskOrchestrator {
       cachedResult.terminalOutput
     );
     return {
-      task,
+      task: {
+        ...task,
+        startTime,
+        endTime: new Date().getTime(),
+      },
       status,
     };
   }
@@ -235,7 +240,11 @@ export class TaskOrchestrator {
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
         ...result,
-        task: this.taskGraph.tasks[taskId],
+        task: {
+          ...this.taskGraph.tasks[taskId],
+          startTime: result.startTime,
+          endTime: result.endTime,
+        },
         status: (result.success ? 'success' : 'failure') as TaskStatus,
         terminalOutput: result.terminalOutput,
       }));
