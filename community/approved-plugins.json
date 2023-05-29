@@ -390,6 +390,11 @@
     "url": "https://github.com/spaceribs/spaceribs/tree/main/packages/nx-web-ext"
   },
   {
+    "name": "@spaceribs/nx-betterer",
+    "description": "Nx plugin that applies betterer standards on a per-project basis.",
+    "url": "https://github.com/spaceribs/spaceribs/tree/main/packages/nx-betterer"
+  },
+  {
     "name": "@nx-tools/nx-container",
     "description": "Nx plugin to build OCI containers with Docker, Podman or Kaniko.",
     "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-container"
