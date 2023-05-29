@@ -1,4 +1,11 @@
-import { names, offsetFromRoot, Tree, toJS, generateFiles } from '@nx/devkit';
+import {
+  generateFiles,
+  names,
+  offsetFromRoot,
+  toJS,
+  Tree,
+  writeJson,
+} from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
 import { createTsConfig } from '../../../utils/create-ts-config';
@@ -34,16 +41,86 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     inSourceVitestTests: getInSourceVitestTestsTemplate(appTests),
   };
 
-  let fileDirectory: string;
   if (options.bundler === 'vite') {
-    fileDirectory = join(__dirname, '../files/base-vite');
+    generateFiles(
+      host,
+      join(__dirname, '../files/base-vite'),
+      options.appProjectRoot,
+      templateVariables
+    );
   } else if (options.bundler === 'webpack') {
-    fileDirectory = join(__dirname, '../files/base-webpack');
-  } else if (options.bundler === 'rspack') {
-    fileDirectory = join(__dirname, '../files/base-rspack');
-  }
+    generateFiles(
+      host,
+      join(__dirname, '../files/base-webpack'),
+      options.appProjectRoot,
+      templateVariables
+    );
+    if (options.compiler === 'babel') {
+      writeJson(host, `${options.appProjectRoot}/.babelrc`, {
+        presets: [
+          [
+            '@nx/react/babel',
+            {
+              runtime: 'automatic',
+              importSource:
+                options.style === '@emotion/styled'
+                  ? '@emotion/react'
+                  : undefined,
+            },
+          ],
+        ],
+        plugins: [
+          options.style === 'styled-components'
+            ? ['styled-components', { pure: true, ssr: true }]
+            : undefined,
+          options.style === 'styled-jsx' ? 'styled-jsx/babel' : undefined,
+          options.style === '@emotion/styled'
+            ? '@emotion/babel-plugin'
+            : undefined,
+        ].filter(Boolean),
+      });
+    } else if (
+      options.style === 'styled-components' ||
+      options.style === '@emotion/styled' ||
+      options.style === 'styled-jsx'
+    ) {
+      writeJson(
+        host,
+        `${options.appProjectRoot}/.swcrc`,
 
-  generateFiles(host, fileDirectory, options.appProjectRoot, templateVariables);
+        {
+          jsc: {
+            experimental: {
+              plugins: [
+                options.style === 'styled-components'
+                  ? [
+                      '@swc/plugin-styled-components',
+                      {
+                        displayName: true,
+                        ssr: true,
+                      },
+                    ]
+                  : undefined,
+                options.style === 'styled-jsx'
+                  ? ['@swc/plugin-styled-jsx', {}]
+                  : undefined,
+                options.style === '@emotion/styled'
+                  ? ['@swc/plugin-emotion', {}]
+                  : undefined,
+              ].filter(Boolean),
+            },
+          },
+        }
+      );
+    }
+  } else if (options.bundler === 'rspack') {
+    generateFiles(
+      host,
+      join(__dirname, '../files/base-rspack'),
+      options.appProjectRoot,
+      templateVariables
+    );
+  }
 
   if (
     options.unitTestRunner === 'none' ||

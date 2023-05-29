@@ -30,7 +30,7 @@ export async function componentGenerator(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
-  const styledTask = addStyledModuleDependencies(host, options.styledModule);
+  const styledTask = addStyledModuleDependencies(host, options);
   tasks.push(styledTask);
 
   addExportsToBarrel(host, options);
