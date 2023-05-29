@@ -21,7 +21,7 @@ export function createFiles(tree: Tree, options: NormalizedJestProjectSchema) {
     transformer = '@swc/jest';
     if (options.supportTsx) {
       transformerOptions =
-        "{ jsc: { transform: { react: { runtime: 'automatic' } } } }";
+        "{ jsc: { parser: { syntax: 'typescript', tsx: true }, transform: { react: { runtime: 'automatic' } } } }";
     }
   } else {
     transformer = 'ts-jest';
@@ -46,15 +46,6 @@ export function createFiles(tree: Tree, options: NormalizedJestProjectSchema) {
 
   if (options.setupFile === 'none') {
     tree.delete(join(projectConfig.root, './src/test-setup.ts'));
-  }
-
-  if (options.babelJest && !tree.exists('babel.config.json')) {
-    tree.write(
-      'babel.config.json',
-      JSON.stringify({
-        babelrcRoots: ['*'],
-      })
-    );
   }
 
   if (options.js) {

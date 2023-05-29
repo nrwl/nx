@@ -15,7 +15,7 @@ export interface Schema {
   remotes?: string[];
   setParserOptionsProject?: boolean;
   skipFormat?: boolean;
-  skipWorkspaceJson?: boolean;
+  skipNxJson?: boolean;
   ssr?: boolean;
   strict?: boolean;
   style: SupportedStyles;

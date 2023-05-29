@@ -5,6 +5,7 @@ import {
   names,
   offsetFromRoot,
   toJS,
+  writeJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 
@@ -38,10 +39,33 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
       options.projectRoot,
       substitutions
     );
+  }
 
-    if (host.exists(joinPathFragments(options.projectRoot, '.babelrc'))) {
-      host.delete(joinPathFragments(options.projectRoot, '.babelrc'));
-    }
+  if (options.compiler === 'babel') {
+    writeJson(host, joinPathFragments(options.projectRoot, '.babelrc'), {
+      presets: [
+        [
+          '@nx/react/babel',
+          {
+            runtime: 'automatic',
+            useBuiltIns: 'usage',
+            importSource:
+              options.style === '@emotion/styled'
+                ? '@emotion/react'
+                : undefined,
+          },
+        ],
+      ],
+      plugins: [
+        options.style === 'styled-components'
+          ? ['styled-components', { pure: true, ssr: true }]
+          : undefined,
+        options.style === 'styled-jsx' ? 'styled-jsx/babel' : undefined,
+        options.style === '@emotion/styled'
+          ? '@emotion/babel-plugin'
+          : undefined,
+      ].filter(Boolean),
+    });
   }
 
   if (!options.publishable && !options.buildable) {

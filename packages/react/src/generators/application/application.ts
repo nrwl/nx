@@ -39,6 +39,7 @@ import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import * as chalk from 'chalk';
+import { showPossibleWarnings } from './lib/show-possible-warnings';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -73,12 +74,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
       const installTask = await addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
-        {
-          ...extraEslintDependencies.devDependencies,
-          ...(options.compiler === 'swc'
-            ? { 'swc-loader': swcLoaderVersion }
-            : {}),
-        }
+        extraEslintDependencies.devDependencies
       );
       const addSwcTask = addSwcDependencies(host);
       tasks.push(installTask, addSwcTask);
@@ -94,11 +90,11 @@ export async function applicationGenerator(
   const tasks = [];
 
   const options = normalizeOptions(host, schema);
+  showPossibleWarnings(host, options);
 
   const initTask = await reactInitGenerator(host, {
     ...options,
     skipFormat: true,
-    skipBabelConfig: options.bundler === 'vite',
     skipHelperLibs: options.bundler === 'vite',
   });
 

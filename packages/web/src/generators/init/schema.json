@@ -34,11 +34,6 @@
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
-    },
-    "skipBabelConfig": {
-      "description": "Do not generate a root babel.config.json (if babel is not needed).",
-      "type": "boolean",
-      "default": false
     }
   },
   "required": []

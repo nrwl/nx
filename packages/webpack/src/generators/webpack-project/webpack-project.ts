@@ -1,10 +1,11 @@
-import type { ProjectConfiguration, Tree } from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   convertNxGenerator,
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 
 import { webpackInitGenerator } from '../init/init';
@@ -58,7 +59,7 @@ function addBuildTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
   const buildOptions: WebpackExecutorOptions = {
     target: options.target,
     outputPath: joinPathFragments('dist', project.root),
-    compiler: options.compiler ?? 'babel',
+    compiler: options.compiler ?? 'swc',
     main: options.main ?? joinPathFragments(project.root, 'src/main.ts'),
     tsConfig:
       options.tsConfig ?? joinPathFragments(project.root, 'tsconfig.app.json'),
@@ -71,8 +72,11 @@ function addBuildTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
 
   if (options.babelConfig) {
     buildOptions.babelConfig = options.babelConfig;
-  } else {
-    buildOptions.babelUpwardRootMode = true;
+  } else if (options.compiler === 'babel') {
+    // If no babel config file is provided then write a default one, otherwise build will fail.
+    writeJson(tree, joinPathFragments(project.root, '.babelrc'), {
+      presets: ['@nx/js/babel'],
+    });
   }
 
   if (options.target === 'web') {
