@@ -62,6 +62,17 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
+  <% if (style === 'styled-components') { %>
+  compiler: {
+    // For other options, see https://styled-components.com/docs/tooling#babel-plugin
+    styledComponents: true,
+  },
+  <% } else if (style === '@emotion/styled') { %>
+  compiler: {
+    // For other options, see https://nextjs.org/docs/architecture/nextjs-compiler#emotion
+    emotion: true,
+  },
+  <% } %>
 };
 
 const plugins = [
