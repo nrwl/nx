@@ -193,8 +193,6 @@ jobs:
              pnpm install --frozen-lockfile --dev --ignore-scripts --no-optional
              pnpm nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
              rm -rf node_modules
-             rm -rf target
-             rm -rf .yarn/cache
        - name: Upload artifact
          uses: actions/upload-artifact@v3
          with:
