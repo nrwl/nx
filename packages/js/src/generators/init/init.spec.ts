@@ -40,6 +40,20 @@ describe('js init generator', () => {
     expect(prettierignore).toContain('# custom ignore file');
   });
 
+  it('should not overwrite prettier configuration specified in other formats', async () => {
+    tree.delete('.prettierrc');
+    tree.delete('.prettierignore');
+    tree.write('.prettierrc.js', `module.exports = { singleQuote: true };`);
+
+    await init(tree, {});
+
+    expect(tree.exists('.prettierrc')).toBeFalsy();
+    expect(tree.exists('.prettierignore')).toBeTruthy();
+    expect(tree.read('.prettierrc.js', 'utf-8')).toContain(
+      `module.exports = { singleQuote: true };`
+    );
+  });
+
   it('should add prettier vscode extension if .vscode/extensions.json file exists', async () => {
     // No existing recommendations
     writeJson(tree, '.vscode/extensions.json', {});
