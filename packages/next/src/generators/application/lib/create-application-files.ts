@@ -65,6 +65,8 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       join(options.appProjectRoot, 'app'),
       templateVariables
     );
+
+    // RSC is not possible to unit test without extra helpers for data fetching. Leaving it to the user to figure out.
     host.delete(
       joinPathFragments(
         options.appProjectRoot,
@@ -72,6 +74,29 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
         `index.spec.${options.js ? 'jsx' : 'tsx'}`
       )
     );
+
+    if (options.style === 'styled-components') {
+      generateFiles(
+        host,
+        join(__dirname, '../files/app-styled-components'),
+        join(options.appProjectRoot, 'app'),
+        templateVariables
+      );
+    } else if (options.style === 'styled-jsx') {
+      generateFiles(
+        host,
+        join(__dirname, '../files/app-styled-jsx'),
+        join(options.appProjectRoot, 'app'),
+        templateVariables
+      );
+    } else {
+      generateFiles(
+        host,
+        join(__dirname, '../files/app-default-layout'),
+        join(options.appProjectRoot, 'app'),
+        templateVariables
+      );
+    }
   } else {
     generateFiles(
       host,
