@@ -243,43 +243,93 @@ describe('Run Commands', () => {
   });
 
   describe('readyWhen', () => {
-    it('should error when parallel = false', async () => {
-      try {
-        await runCommands(
+    describe('single string', () => {
+      it('should error when parallel = false', async () => {
+        try {
+          await runCommands(
+            {
+              commands: [{ command: 'echo foo' }, { command: 'echo bar' }],
+              parallel: false,
+              readyWhen: 'READY',
+              __unparsed__: [],
+            },
+            context
+          );
+          fail('should throw');
+        } catch (e) {
+          expect(e.message).toEqual(
+            `ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".`
+          );
+        }
+      });
+
+      it('should return success true when the string specified as ready condition is found', async () => {
+        const f = fileSync().name;
+        const result = await runCommands(
           {
-            commands: [{ command: 'echo foo' }, { command: 'echo bar' }],
-            parallel: false,
+            commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
+            parallel: true,
             readyWhen: 'READY',
             __unparsed__: [],
           },
+
           context
         );
-        fail('should throw');
-      } catch (e) {
-        expect(e.message).toEqual(
-          `ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".`
-        );
-      }
+        expect(result).toEqual(expect.objectContaining({ success: true }));
+        expect(readFile(f)).toEqual('');
+
+        setTimeout(() => {
+          expect(readFile(f)).toEqual('1');
+        }, 150);
+      });
     });
 
-    it('should return success true when the string specified as ready condition is found', async () => {
-      const f = fileSync().name;
-      const result = await runCommands(
-        {
-          commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
-          parallel: true,
-          readyWhen: 'READY',
-          __unparsed__: [],
-        },
+    describe('array of strings', () => {
+      it('should return success true when all strings specified as ready condition were found', async () => {
+        const f = fileSync().name;
+        const result = await runCommands(
+          {
+            commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
+            parallel: true,
+            readyWhen: ['READY', 'foo'],
+            __unparsed__: [],
+          },
 
-        context
-      );
-      expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(readFile(f)).toEqual('');
+          context
+        );
+        expect(result).toEqual(expect.objectContaining({ success: true }));
+        expect(readFile(f)).toEqual('');
 
-      setTimeout(() => {
-        expect(readFile(f)).toEqual('1');
-      }, 150);
+        setTimeout(() => {
+          expect(readFile(f)).toEqual('1');
+        }, 150);
+      });
+
+      it('should keep waiting when not all strings specified as ready condition were found', (done) => {
+        const f = fileSync().name;
+        let result: { success: boolean } | null = null;
+
+        runCommands(
+          {
+            commands: [`echo 1 >> ${f} && echo READY`, `echo foo`],
+            parallel: true,
+            readyWhen: ['READY', 'bar'],
+            __unparsed__: [],
+          },
+
+          context
+        ).then((res) => {
+          result = res;
+        });
+
+        expect(readFile(f)).toEqual('');
+
+        setTimeout(() => {
+          expect(readFile(f)).toEqual('1');
+          expect(result).toBeNull();
+          done();
+        }, 150);
+      });
     });
   });
 
