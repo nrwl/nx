@@ -189,7 +189,7 @@ jobs:
              env
              freebsd-version
              pnpm install --frozen-lockfile
-             pnpm nx -- run-many --target=build-native -- --target=x86_64-unknown-freebsd
+             pnpm nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
              rm -rf node_modules
              rm -rf target
              rm -rf .yarn/cache
