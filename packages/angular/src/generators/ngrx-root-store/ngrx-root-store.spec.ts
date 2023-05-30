@@ -1,9 +1,9 @@
 import type { Tree } from '@nx/devkit';
 import { readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import applicationGenerator from '../application/application';
-import ngrxRootStoreGenerator from './ngrx-root-store';
 import { ngrxVersion } from '../../utils/versions';
+import { generateTestApplication } from '../utils/testing';
+import { ngrxRootStoreGenerator } from './ngrx-root-store';
 
 describe('NgRxRootStoreGenerator', () => {
   describe('NgModule', () => {
@@ -127,6 +127,24 @@ describe('NgRxRootStoreGenerator', () => {
       ).toMatchSnapshot();
     });
 
+    it('should instrument the store devtools when "addDevTools: true"', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+      await createNgModuleApp(tree);
+
+      // ACT
+      await ngrxRootStoreGenerator(tree, {
+        project: 'my-app',
+        minimal: true,
+        addDevTools: true,
+      });
+
+      // ASSERT
+      expect(
+        tree.read('my-app/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
     it('should update package.json', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
@@ -152,10 +170,29 @@ describe('NgRxRootStoreGenerator', () => {
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
         ngrxVersion
       );
-      expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
+      expect(
+        packageJson.devDependencies['@ngrx/store-devtools']
+      ).toBeUndefined();
+      expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
+    });
+
+    it('should add @ngrx/store-devtools when "addDevTools: true"', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+      await createNgModuleApp(tree);
+
+      // ACT
+      await ngrxRootStoreGenerator(tree, {
+        project: 'my-app',
+        minimal: true,
+        addDevTools: true,
+      });
+
+      // ASSERT
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@ngrx/store-devtools']).toBe(
         ngrxVersion
       );
-      expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });
 
     it('should not update package.json when --skipPackageJson=true', async () => {
@@ -184,6 +221,7 @@ describe('NgRxRootStoreGenerator', () => {
       expect(packageJson.devDependencies['jasmine-marbles']).toBeUndefined();
     });
   });
+
   describe('Standalone APIs', () => {
     it('should error when project does not exist', async () => {
       const tree = createTreeWithEmptyWorkspace();
@@ -305,6 +343,24 @@ describe('NgRxRootStoreGenerator', () => {
       ).toMatchSnapshot();
     });
 
+    it('should instrument the store devtools when "addDevTools: true"', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+      await createStandaloneApp(tree);
+
+      // ACT
+      await ngrxRootStoreGenerator(tree, {
+        project: 'my-app',
+        minimal: true,
+        addDevTools: true,
+      });
+
+      // ASSERT
+      expect(
+        tree.read('my-app/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
     it('should update package.json', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
@@ -330,10 +386,29 @@ describe('NgRxRootStoreGenerator', () => {
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
         ngrxVersion
       );
-      expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
+      expect(
+        packageJson.devDependencies['@ngrx/store-devtools']
+      ).toBeUndefined();
+      expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
+    });
+
+    it('should add @ngrx/store-devtools when "addDevTools: true"', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+      await createStandaloneApp(tree);
+
+      // ACT
+      await ngrxRootStoreGenerator(tree, {
+        project: 'my-app',
+        minimal: true,
+        addDevTools: true,
+      });
+
+      // ASSERT
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@ngrx/store-devtools']).toBe(
         ngrxVersion
       );
-      expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });
 
     it('should not update package.json when --skipPackageJson=true', async () => {
@@ -365,7 +440,7 @@ describe('NgRxRootStoreGenerator', () => {
 });
 
 async function createNgModuleApp(tree: Tree, name = 'my-app') {
-  await applicationGenerator(tree, {
+  await generateTestApplication(tree, {
     name,
     standalone: false,
     routing: true,
@@ -373,7 +448,7 @@ async function createNgModuleApp(tree: Tree, name = 'my-app') {
 }
 
 async function createStandaloneApp(tree: Tree, name = 'my-app') {
-  await applicationGenerator(tree, {
+  await generateTestApplication(tree, {
     name,
     standalone: true,
     routing: true,

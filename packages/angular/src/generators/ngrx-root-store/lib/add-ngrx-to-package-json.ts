@@ -26,7 +26,9 @@ export function addNgRxToPackageJson(
     },
     {
       '@ngrx/schematics': ngrxVersion,
-      '@ngrx/store-devtools': ngrxVersion,
+      ...(options.addDevTools
+        ? { '@ngrx/store-devtools': ngrxVersion }
+        : undefined),
       'jasmine-marbles': jasmineMarblesVersion,
     }
   );

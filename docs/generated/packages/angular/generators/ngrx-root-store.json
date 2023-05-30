@@ -43,6 +43,11 @@
         "description": "Create a Facade class for the the feature.",
         "x-prompt": "Would you like to use a Facade with your NgRx state?"
       },
+      "addDevTools": {
+        "type": "boolean",
+        "default": false,
+        "description": "Instrument the Store Devtools."
+      },
       "skipImport": {
         "type": "boolean",
         "default": false,
