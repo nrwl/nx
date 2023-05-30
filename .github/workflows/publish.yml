@@ -188,6 +188,8 @@ jobs:
              whoami
              env
              freebsd-version
+             mkdir -p /Users/runner/work/_temp/_github_workflow
+             echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
              ls -a /Users/runner/work/_temp/_github_workflow/
              pnpm install --frozen-lockfile --devDependencies
              pnpm nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
