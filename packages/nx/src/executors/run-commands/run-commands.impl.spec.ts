@@ -160,7 +160,7 @@ describe('Run Commands', () => {
 
         runCommands(
           {
-            commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
+            commands: [`echo 1 >> ${f} && echo READY`, `echo foo`],
             parallel: true,
             readyWhen: ['READY', 'bar'],
             __unparsed__: [],
