@@ -387,7 +387,7 @@ export const examples: Record<string, Example[]> = {
     },
     {
       command:
-        'watch --projects=app1,app2 --includeDependencies -- echo \\$NX_PROJECT_NAME',
+        'watch --projects=app1,app2 --includeDependentProjects -- echo \\$NX_PROJECT_NAME',
       description:
         'Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change',
     },
