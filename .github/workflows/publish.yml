@@ -179,8 +179,8 @@ jobs:
              rustc --version
              echo "~~~~ node -v ~~~~"
              node -v
-             echo "~~~~ yarn --version ~~~~"
-             yarn --version
+             echo "~~~~ pnpm --version ~~~~"
+             pnpm --version
            run: |
              export PATH="/usr/local/cargo/bin:$PATH"
              pwd
