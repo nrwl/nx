@@ -7,7 +7,6 @@ The following is an expanded version showing all options. Your `nx.json` will li
 ```json {% fileName="nx.json" %}
 {
   "extends": "nx/presets/npm.json",
-  "npmScope": "happyorg",
   "affected": {
     "defaultBase": "main"
   },
@@ -52,10 +51,6 @@ The following is an expanded version showing all options. Your `nx.json` will li
 ### Extends
 
 Some presets use the `extends` property to hide some default options in a separate json file. The json file specified in the `extends` property is located in your `node_modules` folder. The Nx preset files are specified in [the `nx` package](https://github.com/nrwl/nx/tree/master/packages/nx/presets).
-
-### NPM Scope
-
-Tells Nx what prefix to use when generating library imports.
 
 ### Affected
 

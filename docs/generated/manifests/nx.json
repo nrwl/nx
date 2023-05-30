@@ -1959,6 +1959,16 @@
         "tags": []
       },
       {
+        "id": "npm-scope",
+        "name": "npmScope",
+        "description": "",
+        "file": "shared/deprecated/npm-scope",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/npm-scope",
+        "tags": []
+      },
+      {
         "id": "storybook",
         "name": "Storybook deprecated docs",
         "description": "Deprecated @nx/storybook package documentation and guides.",
@@ -2092,6 +2102,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/global-implicit-dependencies",
+    "tags": []
+  },
+  "/deprecated/npm-scope": {
+    "id": "npm-scope",
+    "name": "npmScope",
+    "description": "",
+    "file": "shared/deprecated/npm-scope",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/npm-scope",
     "tags": []
   },
   "/deprecated/storybook": {
