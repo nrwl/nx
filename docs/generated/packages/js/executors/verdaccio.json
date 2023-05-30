@@ -13,7 +13,7 @@
         "type": "string",
         "description": "Location option for npm config",
         "default": "user",
-        "enum": ["global", "user", "project"]
+        "enum": ["global", "user", "project", "none"]
       },
       "storage": {
         "type": "string",
