@@ -205,7 +205,7 @@ export async function applicationGenerator(
   updateSpecConfig(host, options);
   const stylePreprocessorTask = installCommonDependencies(host, options);
   tasks.push(stylePreprocessorTask);
-  const styledTask = addStyledModuleDependencies(host, options.styledModule);
+  const styledTask = addStyledModuleDependencies(host, options);
   tasks.push(styledTask);
   const routingTask = addRouting(host, options);
   tasks.push(routingTask);
