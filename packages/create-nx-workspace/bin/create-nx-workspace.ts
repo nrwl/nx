@@ -5,15 +5,12 @@ import * as chalk from 'chalk';
 import { CreateWorkspaceOptions } from '../src/create-workspace-options';
 import { createWorkspace } from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
-import { presetOptions } from '../src/utils/preset/preset-options';
-import { output } from '../src/utils/output';
+import { CLIErrorMessageConfig, output } from '../src/utils/output';
 import { nxVersion } from '../src/utils/nx/nx-version';
 import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-and-course';
 
 import { yargsDecorator } from './decorator';
 import { getThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
-import { Framework, frameworkList } from './types/framework-list';
-import { Bundler, bundlerList } from './types/bundler-list';
 import {
   determineCI,
   determineDefaultBase,
@@ -31,18 +28,54 @@ import {
 import { showNxWarning } from '../src/utils/nx/show-nx-warning';
 import { printNxCloudSuccessMessage } from '../src/utils/nx/nx-cloud';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
+import { existsSync } from 'fs';
 
-interface Arguments extends CreateWorkspaceOptions {
-  preset: string;
+interface BaseArguments extends CreateWorkspaceOptions {
+  preset: Preset;
+}
+
+interface MinimalArguments extends BaseArguments {
+  stack: 'minimal';
+  workspaceType: 'package-based' | 'integrated';
+}
+
+interface ReactArguments extends BaseArguments {
+  stack: 'react';
+  workspaceType: 'standalone' | 'integrated';
+  appName: string;
+  framework: 'none' | 'next';
+  style: string;
+  bundler: 'webpack' | 'vite' | 'rspack';
+  nextAppDir: boolean;
+}
+
+interface AngularArguments extends BaseArguments {
+  stack: 'angular';
+  workspaceType: 'standalone' | 'integrated';
   appName: string;
   style: string;
-  framework: Framework;
-  standaloneApi: boolean;
-  docker: boolean;
-  nextAppDir: boolean;
   routing: boolean;
-  bundler: Bundler;
+  standaloneApi: boolean;
 }
+
+interface NodeArguments extends BaseArguments {
+  stack: 'node';
+  workspaceType: 'standalone' | 'integrated';
+  appName: string;
+  framework: 'express' | 'fastify' | 'koa' | 'nest';
+  docker: boolean;
+}
+
+interface UnknownStackArguments extends BaseArguments {
+  stack: 'unknown';
+}
+
+type Arguments =
+  | MinimalArguments
+  | ReactArguments
+  | AngularArguments
+  | NodeArguments
+  | UnknownStackArguments;
 
 export const commandsObject: yargs.Argv<Arguments> = yargs
   .wrap(yargs.terminalWidth())
@@ -71,17 +104,22 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
               )}]. To build your own see https://nx.dev/packages/nx-plugin#preset`,
             type: 'string',
           })
-          .option('appName', {
-            describe: chalk.dim`The name of the application when a preset with pregenerated app is selected`,
-            type: 'string',
-          })
           .option('interactive', {
             describe: chalk.dim`Enable interactive mode with presets`,
             type: 'boolean',
             default: true,
           })
+          .option('workspaceType', {
+            describe: chalk.dim`The type of workspace to create`,
+            choices: ['integrated', 'package-based', 'standalone'],
+            type: 'string',
+          })
+          .option('appName', {
+            describe: chalk.dim`The name of the app when using a monorepo with certain stacks`,
+            type: 'string',
+          })
           .option('style', {
-            describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,
+            describe: chalk.dim`Stylesheet type to be used with certain stacks`,
             type: 'string',
           })
           .option('standaloneApi', {
@@ -89,21 +127,19 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'boolean',
           })
           .option('routing', {
-            describe: chalk.dim`Add a routing setup when a preset with pregenerated app is selected`,
+            describe: chalk.dim`Add a routing setup for an Angular app`,
             type: 'boolean',
           })
           .option('bundler', {
-            describe: chalk.dim`Bundler to be used to build the application`,
-            choices: bundlerList,
+            describe: chalk.dim`Bundler to be used to build the app`,
             type: 'string',
           })
           .option('framework', {
-            describe: chalk.dim`Framework option to be used when the node-standalone preset is selected`,
-            choices: frameworkList,
+            describe: chalk.dim`Framework option to be used with certain stacks`,
             type: 'string',
           })
           .option('docker', {
-            describe: chalk.dim`Generate a Dockerfile with your node-standalone`,
+            describe: chalk.dim`Generate a Dockerfile for the Node API`,
             type: 'boolean',
           })
           .option('nextAppDir', {
@@ -117,7 +153,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         withGitOptions
       ),
 
-    async (argv: yargs.ArgumentsCamelCase<Arguments>) => {
+    async function handler(argv: yargs.ArgumentsCamelCase<Arguments>) {
       await main(argv).catch((error) => {
         const { version } = require('../package.json');
         output.error({
@@ -181,24 +217,17 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 async function normalizeArgsMiddleware(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
+  output.log({
+    title:
+      "Let's create a new workspace [https://nx.dev/getting-started/intro]",
+  });
+
   try {
-    let name,
-      appName,
-      style,
-      preset,
-      framework,
-      bundler,
-      docker,
-      nextAppDir,
-      routing,
-      standaloneApi;
-
-    output.log({
-      title:
-        "Let's create a new workspace [https://nx.dev/getting-started/intro]",
-    });
-
     let thirdPartyPreset: string | null;
+
+    // Node options
+    let docker: boolean;
+
     try {
       thirdPartyPreset = await getThirdPartyPreset(argv.preset);
     } catch (e) {
@@ -208,84 +237,18 @@ async function normalizeArgsMiddleware(
       process.exit(1);
     }
 
+    argv.name = await determineFolder(argv);
+
     if (thirdPartyPreset) {
-      preset = thirdPartyPreset;
-      name = await determineRepoName(argv);
-      appName = '';
-      style = null;
+      Object.assign(argv, {
+        preset: thirdPartyPreset,
+        appName: '',
+        style: '',
+      });
     } else {
-      if (!argv.preset) {
-        const monorepoStyle = await determineMonorepoStyle();
-        if (monorepoStyle === 'package-based') {
-          preset = 'npm';
-        } else if (monorepoStyle === 'react') {
-          preset = await determineReactFramework(argv);
-        } else if (monorepoStyle === 'angular') {
-          preset = Preset.AngularStandalone;
-        } else if (monorepoStyle === 'node-standalone') {
-          preset = Preset.NodeStandalone;
-        } else {
-          // when choose integrated monorepo, further prompt for preset
-          preset = await determinePreset(argv);
-        }
-      } else if (argv.preset === 'react') {
-        preset = await monorepoOrStandalone('react');
-      } else if (argv.preset === 'angular') {
-        preset = await monorepoOrStandalone('angular');
-      } else {
-        preset = argv.preset;
-      }
-
-      if (
-        preset === Preset.ReactStandalone ||
-        preset === Preset.AngularStandalone ||
-        preset === Preset.NodeStandalone ||
-        preset === Preset.NextJsStandalone
-      ) {
-        appName =
-          argv.appName ?? argv.name ?? (await determineAppName(preset, argv));
-        name = argv.name ?? appName;
-
-        if (preset === Preset.NodeStandalone) {
-          framework = await determineFramework(argv);
-          if (framework !== 'none') {
-            docker = await determineDockerfile(argv);
-          }
-        }
-
-        if (preset === Preset.NextJsStandalone) {
-          nextAppDir = await isNextAppDir(argv);
-        }
-
-        if (preset === Preset.ReactStandalone) {
-          bundler = await determineBundler(argv);
-        }
-
-        if (preset === Preset.AngularStandalone) {
-          standaloneApi =
-            argv.standaloneApi ??
-            (argv.interactive ? await determineStandaloneApi(argv) : false);
-          routing =
-            argv.routing ??
-            (argv.interactive ? await determineRouting(argv) : true);
-        }
-      } else {
-        name = await determineRepoName(argv);
-        appName = await determineAppName(preset as Preset, argv);
-        if (preset === Preset.ReactMonorepo) {
-          bundler = await determineBundler(argv);
-        }
-
-        if (preset === Preset.AngularMonorepo) {
-          standaloneApi =
-            argv.standaloneApi ??
-            (argv.interactive ? await determineStandaloneApi(argv) : false);
-          routing =
-            argv.routing ??
-            (argv.interactive ? await determineRouting(argv) : true);
-        }
-      }
-      style = await determineStyle(preset as Preset, argv);
+      argv.stack = await determineStack(argv);
+      const presetOptions = await determinePresetOptions(argv);
+      Object.assign(argv, presetOptions);
     }
 
     const packageManager = await determinePackageManager(argv);
@@ -294,20 +257,10 @@ async function normalizeArgsMiddleware(
     const ci = await determineCI(argv, nxCloud);
 
     Object.assign(argv, {
-      name,
-      preset,
-      appName,
-      style,
-      standaloneApi,
-      routing,
-      framework,
       nxCloud,
       packageManager,
       defaultBase,
       ci,
-      bundler,
-      docker,
-      nextAppDir,
     });
   } catch (e) {
     console.error(e);
@@ -315,517 +268,637 @@ async function normalizeArgsMiddleware(
   }
 }
 
-async function determineRepoName(
+function invariant(
+  predicate: string | number | boolean,
+  message: CLIErrorMessageConfig
+): asserts predicate is NonNullable<string | number> | true {
+  if (!predicate) {
+    output.error(message);
+    process.exit(1);
+  }
+}
+
+async function determineFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
-  const repoName: string = parsedArgs._[0]
+  const folderName: string = parsedArgs._[0]
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
+  if (folderName) return folderName;
 
-  if (repoName) {
-    return Promise.resolve(repoName);
-  }
-
-  const a = await enquirer.prompt<{ RepoName: string }>([
+  const reply = await enquirer.prompt<{ folderName: string }>([
     {
-      name: 'RepoName',
-      message: `Repository name                      `,
+      name: 'folderName',
+      message: `Where would you like to create your workspace?`,
+      initial: 'org',
       type: 'input',
     },
   ]);
-  if (!a.RepoName) {
-    output.error({
-      title: 'Invalid repository name',
-      bodyLines: [`Repository name cannot be empty`],
-    });
-    process.exit(1);
-  }
-  return a.RepoName;
+
+  invariant(reply.folderName, {
+    title: 'Invalid folder name',
+    bodyLines: [`Folder name cannot be empty`],
+  });
+
+  invariant(!existsSync(reply.folderName), {
+    title: 'That folder is already taken',
+  });
+
+  return reply.folderName;
 }
 
-async function monorepoOrStandalone(preset: string): Promise<string> {
-  const a = await enquirer.prompt<{ MonorepoOrStandalone: string }>([
+async function determineStack(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<'minimal' | 'react' | 'angular' | 'node' | 'unknown'> {
+  if (parsedArgs.preset) {
+    switch (parsedArgs.preset) {
+      case Preset.Angular:
+      case Preset.AngularStandalone:
+      case Preset.AngularMonorepo:
+        return 'angular';
+      case Preset.React:
+      case Preset.ReactStandalone:
+      case Preset.ReactMonorepo:
+      case Preset.NextJs:
+      case Preset.NextJsStandalone:
+        return 'react';
+
+      case Preset.Nest:
+      case Preset.NodeStandalone:
+      case Preset.Express:
+        return 'node';
+      case Preset.Core:
+      case Preset.Empty:
+      case Preset.Apps:
+      case Preset.NPM:
+        return 'minimal';
+      case Preset.TS:
+      case Preset.WebComponents:
+      case Preset.ReactNative:
+      case Preset.Expo:
+      default:
+        return 'unknown';
+    }
+  }
+
+  const { stack } = await enquirer.prompt<{
+    stack: 'minimal' | 'react' | 'angular' | 'node';
+  }>([
     {
-      name: 'MonorepoOrStandalone',
-      message: `--preset=${preset} has been replaced with the following:`,
+      name: 'stack',
+      message: `Which stack do you want to use?`,
       type: 'autocomplete',
       choices: [
         {
-          name: preset + '-standalone',
-          message: `${preset}-standalone: a standalone ${preset} application.`,
+          name: `minimal`,
+          message: `None:          Configures a minimal structure without specific frameworks or technologies.`,
         },
         {
-          name: preset + '-monorepo',
-          message: `${preset}-monorepo:   a monorepo with the apps and libs folders.`,
+          name: `react`,
+          message: `React:         Configures a React app with your framework of choice.`,
+        },
+        {
+          name: `angular`,
+          message: `Angular:       Configures a Angular app with modern tooling.`,
+        },
+        {
+          name: `node`,
+          message: `Node:          Configures a Node API with your framework of choice.`,
         },
       ],
     },
   ]);
-  if (!a.MonorepoOrStandalone) {
-    output.error({
-      title: 'Invalid selection',
-    });
-    process.exit(1);
-  }
-  return a.MonorepoOrStandalone;
+
+  invariant(stack, {
+    title: 'Invalid stack selection',
+  });
+
+  return stack;
 }
 
-async function determineMonorepoStyle(): Promise<string> {
-  const a = await enquirer.prompt<{ MonorepoStyle: string }>([
+async function determinePresetOptions(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<Partial<Arguments>> {
+  switch (parsedArgs.stack) {
+    case 'minimal':
+      return determineMinimalOptions(parsedArgs);
+    case 'react':
+      return determineReactOptions(parsedArgs);
+    case 'angular':
+      return determineAngularOptions(parsedArgs);
+    case 'node':
+      return determineNodeOptions(parsedArgs);
+    default:
+      return parsedArgs;
+  }
+}
+
+async function determineMinimalOptions(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<Partial<Arguments>> {
+  if (parsedArgs.preset) return parsedArgs;
+
+  const { workspaceType } = await enquirer.prompt<{
+    workspaceType: 'package-based' | 'integrated';
+  }>([
     {
-      name: 'MonorepoStyle',
-      message: `Choose what to create                `,
       type: 'autocomplete',
+      name: 'workspaceType',
+      message: `Package-based or integrated?`,
+      initial: 'package-based' as any,
       choices: [
         {
           name: 'package-based',
           message:
-            'Package-based monorepo:      Nx makes it fast, but lets you run things your way.',
+            'Package-based:           Nx makes it fast, but lets you run things your way.',
         },
         {
           name: 'integrated',
           message:
-            'Integrated monorepo:         Nx configures your favorite frameworks and lets you focus on shipping features.',
-        },
-        {
-          name: 'react',
-          message:
-            'Standalone React app:        Nx configures a React app with an optional framework (e.g. Next.js).',
-        },
-        {
-          name: 'angular',
-          message:
-            'Standalone Angular app:      Nx configures Jest, ESLint and Cypress.',
-        },
-        {
-          name: 'node-standalone',
-          message:
-            'Standalone Node app:         Nx configures a framework (e.g. Express), esbuild, ESlint and Jest.',
+            'Integrated:              Nx creates a workspace structure most suitable for building apps.',
         },
       ],
     },
   ]);
-  if (!a.MonorepoStyle) {
-    output.error({
-      title: 'Invalid monorepo style',
-    });
-    process.exit(1);
+
+  if (workspaceType === 'integrated') {
+    return {
+      preset: Preset.Apps,
+    };
+  } else {
+    return {
+      preset: Preset.NPM,
+    };
   }
-  return a.MonorepoStyle;
 }
 
-async function determinePreset(parsedArgs: any): Promise<Preset> {
+async function determineReactOptions(
+  parsedArgs: yargs.Arguments<ReactArguments>
+): Promise<Partial<Arguments>> {
+  let preset: Preset;
+  let style: undefined | string = undefined;
+  let appName: string;
+  let bundler: undefined | 'webpack' | 'vite' | 'rspack' = undefined;
+  let nextAppDir = false;
+
   if (parsedArgs.preset) {
-    if (Object.values(Preset).indexOf(parsedArgs.preset) === -1) {
-      output.error({
-        title: 'Invalid preset',
-        bodyLines: [
-          `It must be one of the following:`,
-          '',
-          ...Object.values(Preset),
-        ],
-      });
-      process.exit(1);
+    preset = parsedArgs.preset;
+    if (
+      preset === Preset.ReactStandalone ||
+      preset === Preset.NextJsStandalone
+    ) {
+      appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
-      return Promise.resolve(parsedArgs.preset);
+      appName = await determineAppName(parsedArgs);
+    }
+  } else {
+    const framework = await determineReactFramework(parsedArgs);
+
+    // React Native and Expo only support integrated monorepos for now.
+    // TODO(jack): Add standalone support for React Native and Expo.
+    const workspaceType =
+      framework === 'react-native' || framework === 'expo'
+        ? 'integrated'
+        : await determineStandAloneOrMonorepo();
+
+    if (workspaceType === 'standalone') {
+      appName = parsedArgs.name;
+    } else {
+      appName = await determineAppName(parsedArgs);
+    }
+
+    if (framework === 'nextjs') {
+      if (workspaceType === 'standalone') {
+        preset = Preset.NextJsStandalone;
+      } else {
+        preset = Preset.NextJs;
+      }
+    } else if (framework === 'react-native') {
+      preset = Preset.ReactNative;
+    } else if (framework === 'expo') {
+      preset = Preset.Expo;
+    } else {
+      if (workspaceType === 'standalone') {
+        preset = Preset.ReactStandalone;
+      } else {
+        preset = Preset.ReactMonorepo;
+      }
     }
   }
 
-  return enquirer
-    .prompt<{ preset: Preset }>([
-      {
-        name: 'preset',
-        message: `What to create in the new workspace  `,
-        initial: 'empty' as any,
-        type: 'autocomplete',
-        choices: presetOptions,
-      },
-    ])
-    .then((a: { preset: Preset }) => a.preset);
-}
+  if (preset === Preset.ReactStandalone || preset === Preset.ReactMonorepo) {
+    bundler = await determineReactBundler(parsedArgs);
+  } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
+    nextAppDir = await determineNextAppDir(parsedArgs);
+  }
 
-async function determineAppName(
-  preset: Preset,
-  parsedArgs: yargs.Arguments<Arguments>
-): Promise<string> {
-  if (
-    preset === Preset.Apps ||
-    preset === Preset.Core ||
-    preset === Preset.TS ||
-    preset === Preset.Empty ||
-    preset === Preset.NPM
+  if (parsedArgs.style) {
+    style = parsedArgs.style;
+  } else if (
+    preset === Preset.ReactStandalone ||
+    preset === Preset.ReactMonorepo ||
+    preset === Preset.NextJs ||
+    preset === Preset.NextJsStandalone
   ) {
-    return Promise.resolve('');
-  }
-
-  if (parsedArgs.appName) {
-    return Promise.resolve(parsedArgs.appName);
-  }
-
-  return enquirer
-    .prompt<{ AppName: string }>([
+    const reply = await enquirer.prompt<{ style: string }>([
       {
-        name: 'AppName',
-        message: `Application name                     `,
-        type: 'input',
-      },
-    ])
-    .then((a) => {
-      if (!a.AppName) {
-        output.error({
-          title: 'Invalid name',
-          bodyLines: [`Name cannot be empty`],
-        });
-        process.exit(1);
-      }
-      return a.AppName;
-    });
-}
-
-async function determineFramework(
-  parsedArgs: yargs.Arguments<Arguments>
-): Promise<string> {
-  const frameworkChoices = [
-    {
-      name: 'express',
-      message: 'Express [https://expressjs.com/]',
-    },
-    {
-      name: 'fastify',
-      message: 'Fastify [https://www.fastify.io/]',
-    },
-    {
-      name: 'koa',
-      message: 'Koa     [https://koajs.com/]',
-    },
-    {
-      name: 'nest',
-      message: 'NestJs  [https://nestjs.com/]',
-    },
-    {
-      name: 'none',
-      message: 'None',
-    },
-  ];
-
-  if (!parsedArgs.framework) {
-    return enquirer
-      .prompt<{ framework: Framework }>([
-        {
-          message: 'What framework should be used?',
-          type: 'autocomplete',
-          name: 'framework',
-          choices: frameworkChoices,
-        },
-      ])
-      .then((a) => a.framework);
-  }
-
-  const foundFramework = frameworkChoices
-    .map(({ name }) => name)
-    .indexOf(parsedArgs.framework);
-
-  if (foundFramework < 0) {
-    output.error({
-      title: 'Invalid framework',
-      bodyLines: [
-        `It must be one of the following:`,
-        '',
-        ...frameworkChoices.map(({ name }) => name),
-      ],
-    });
-
-    process.exit(1);
-  }
-
-  return Promise.resolve(parsedArgs.framework);
-}
-
-async function determineStandaloneApi(
-  parsedArgs: yargs.Arguments<Arguments>
-): Promise<boolean> {
-  if (parsedArgs.standaloneApi === undefined) {
-    return enquirer
-      .prompt<{ standaloneApi: 'Yes' | 'No' }>([
-        {
-          name: 'standaloneApi',
-          message:
-            'Would you like to use Standalone Components in your application?',
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-            },
-
-            {
-              name: 'No',
-            },
-          ],
-          initial: 'No' as any,
-        },
-      ])
-      .then((a) => a.standaloneApi === 'Yes');
-  }
-
-  return parsedArgs.standaloneApi;
-}
-
-async function determineDockerfile(
-  parsedArgs: yargs.Arguments<Arguments>
-): Promise<boolean> {
-  if (parsedArgs.docker === undefined) {
-    return enquirer
-      .prompt<{ docker: 'Yes' | 'No' }>([
-        {
-          name: 'docker',
-          message:
-            'Would you like to generate a Dockerfile? [https://docs.docker.com/]',
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-              hint: 'I want to generate a Dockerfile',
-            },
-            {
-              name: 'No',
-            },
-          ],
-          initial: 'No' as any,
-        },
-      ])
-      .then((a) => a.docker === 'Yes');
-  } else {
-    return Promise.resolve(parsedArgs.docker);
-  }
-}
-
-async function determineReactFramework(parsedArgs: yargs.Arguments<Arguments>) {
-  if (parsedArgs.framework) {
-    return parsedArgs.framework === 'next.js'
-      ? Preset.NextJsStandalone
-      : Preset.ReactStandalone;
-  }
-  return enquirer
-    .prompt<{ framework: 'none' | 'next.js' }>([
-      {
-        name: 'framework',
-        message: 'What framework would you like to use?',
+        name: 'style',
+        message: `Default stylesheet format            `,
+        initial: 'css' as any,
         type: 'autocomplete',
         choices: [
           {
-            name: 'none',
-            message: 'None',
-            hint: 'I only want React',
+            name: 'css',
+            message: 'CSS',
           },
           {
-            name: 'next.js',
-            message: 'Next.js [https://nextjs.org/]',
+            name: 'scss',
+            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+          },
+          {
+            name: 'less',
+            message: 'LESS              [ http://lesscss.org     ]',
+          },
+          {
+            name: 'styled-components',
+            message:
+              'styled-components [ https://styled-components.com            ]',
+          },
+          {
+            name: '@emotion/styled',
+            message:
+              'emotion           [ https://emotion.sh                       ]',
+          },
+          {
+            name: 'styled-jsx',
+            message:
+              'styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]',
           },
         ],
-        initial: 'none' as any,
       },
-    ])
-    .then((choice) =>
-      choice.framework === 'next.js'
-        ? Preset.NextJsStandalone
-        : Preset.ReactStandalone
-    );
+    ]);
+    style = reply.style;
+  }
+
+  return { preset, style, appName, bundler, nextAppDir };
 }
 
-async function isNextAppDir(parsedArgs: yargs.Arguments<Arguments>) {
-  if (parsedArgs.nextAppDir === undefined) {
-    return enquirer
-      .prompt<{ appDir: 'Yes' | 'No' }>([
-        {
-          name: 'appDir',
-          message: 'Would you like to use the App Router (recommended)?',
-          type: 'autocomplete' as const,
-          choices: [
-            {
-              name: 'No',
-            },
-            {
-              name: 'Yes',
-            },
-          ],
-          initial: 'Yes' as any,
-        },
-      ])
-      .then((choice) => choice.appDir === 'Yes');
+async function determineAngularOptions(
+  parsedArgs: yargs.Arguments<AngularArguments>
+): Promise<Partial<Arguments>> {
+  let preset: Preset;
+  let style: string;
+  let appName: string;
+  let standaloneApi: boolean;
+  let routing: boolean;
+
+  if (parsedArgs.preset) {
+    preset = parsedArgs.preset;
+
+    if (preset === Preset.AngularStandalone) {
+      appName = parsedArgs.name;
+    } else {
+      appName = await determineAppName(parsedArgs);
+    }
   } else {
-    return Promise.resolve(parsedArgs.nextAppDir);
+    const workspaceType = await determineStandAloneOrMonorepo();
+
+    if (workspaceType === 'standalone') {
+      preset = Preset.AngularStandalone;
+      appName = parsedArgs.name;
+    } else {
+      preset = Preset.AngularMonorepo;
+      appName = await determineAppName(parsedArgs);
+    }
   }
+
+  if (parsedArgs.style) {
+    style = parsedArgs.style;
+  } else {
+    const reply = await enquirer.prompt<{ style: string }>([
+      {
+        name: 'style',
+        message: `Default stylesheet format            `,
+        initial: 'css' as any,
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'css',
+            message: 'CSS',
+          },
+          {
+            name: 'scss',
+            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+          },
+          {
+            name: 'less',
+            message: 'LESS              [ http://lesscss.org     ]',
+          },
+        ],
+      },
+    ]);
+    style = reply.style;
+  }
+
+  if (parsedArgs.standaloneApi !== undefined) {
+    standaloneApi = parsedArgs.standaloneApi;
+  } else {
+    const reply = await enquirer.prompt<{ standaloneApi: 'Yes' | 'No' }>([
+      {
+        name: 'standaloneApi',
+        message:
+          'Would you like to use Standalone Components in your application?',
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'No',
+          },
+          {
+            name: 'Yes',
+          },
+        ],
+        initial: 'No' as any,
+      },
+    ]);
+    standaloneApi = reply.standaloneApi === 'Yes';
+  }
+
+  if (parsedArgs.routing !== undefined) {
+    routing = parsedArgs.routing;
+  } else {
+    const reply = await enquirer.prompt<{ routing: 'Yes' | 'No' }>([
+      {
+        name: 'routing',
+        message: 'Would you like to add routing?',
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'Yes',
+          },
+
+          {
+            name: 'No',
+          },
+        ],
+        initial: 'Yes' as any,
+      },
+    ]);
+    routing = reply.routing === 'Yes';
+  }
+
+  return { preset, style, appName, standaloneApi, routing };
 }
 
-async function determineStyle(
-  preset: Preset,
-  parsedArgs: yargs.Arguments<Arguments>
-): Promise<string | null> {
-  if (
-    preset === Preset.Apps ||
-    preset === Preset.Core ||
-    preset === Preset.TS ||
-    preset === Preset.Empty ||
-    preset === Preset.NPM ||
-    preset === Preset.Nest ||
-    preset === Preset.Express ||
-    preset === Preset.ReactNative ||
-    preset === Preset.Expo ||
-    preset === Preset.NodeStandalone
-  ) {
-    return Promise.resolve(null);
+async function determineNodeOptions(
+  parsedArgs: yargs.Arguments<NodeArguments>
+): Promise<Partial<Arguments>> {
+  let preset: Preset;
+  let appName: string;
+  let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
+  let docker: boolean;
+
+  if (parsedArgs.preset) {
+    preset = parsedArgs.preset;
+
+    if (
+      preset === Preset.Nest ||
+      preset === Preset.Express ||
+      preset === Preset.NodeMonorepo
+    ) {
+      appName = await determineAppName(parsedArgs);
+    } else {
+      appName = parsedArgs.name;
+    }
+
+    if (preset === Preset.NodeStandalone || preset === Preset.NodeMonorepo) {
+      framework = await determineNodeFramework(parsedArgs);
+    } else {
+      framework = 'none';
+    }
+  } else {
+    framework = await determineNodeFramework(parsedArgs);
+
+    const workspaceType = await determineStandAloneOrMonorepo();
+    if (workspaceType === 'standalone') {
+      preset = Preset.NodeStandalone;
+      appName = await determineAppName(parsedArgs);
+      appName = parsedArgs.name;
+    } else {
+      preset = Preset.NodeMonorepo;
+      appName = await determineAppName(parsedArgs);
+    }
   }
 
-  const choices = [
-    {
-      name: 'css',
-      message: 'CSS',
-    },
-    {
-      name: 'scss',
-      message: 'SASS(.scss)       [ http://sass-lang.com   ]',
-    },
-    {
-      name: 'less',
-      message: 'LESS              [ http://lesscss.org     ]',
-    },
-  ];
-
-  if (
-    [
-      Preset.ReactMonorepo,
-      Preset.ReactStandalone,
-      Preset.NextJs,
-      Preset.NextJsStandalone,
-    ].includes(preset)
-  ) {
-    choices.push(
+  if (parsedArgs.docker !== undefined) {
+    docker = parsedArgs.docker;
+  } else {
+    const reply = await enquirer.prompt<{ docker: 'Yes' | 'No' }>([
       {
-        name: 'styled-components',
+        name: 'docker',
         message:
-          'styled-components [ https://styled-components.com            ]',
+          'Would you like to generate a Dockerfile? [https://docs.docker.com/]',
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'Yes',
+            hint: 'I want to generate a Dockerfile',
+          },
+          {
+            name: 'No',
+          },
+        ],
+        initial: 'No' as any,
       },
-      {
-        name: '@emotion/styled',
-        message:
-          'emotion           [ https://emotion.sh                       ]',
-      },
-      {
-        name: 'styled-jsx',
-        message:
-          'styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]',
-      }
-    );
+    ]);
+    docker = reply.docker === 'Yes';
   }
 
-  if (!parsedArgs.style) {
-    return enquirer
-      .prompt<{ style: string }>([
+  return {
+    preset,
+    appName,
+    framework,
+    docker,
+  };
+}
+
+async function determineStandAloneOrMonorepo(): Promise<
+  'integrated' | 'standalone'
+> {
+  const { workspaceType } = await enquirer.prompt<{
+    workspaceType: 'standalone' | 'integrated';
+  }>([
+    {
+      type: 'autocomplete',
+      name: 'workspaceType',
+      message: `Standalone project or integrated monorepo?`,
+      initial: 'standalone' as any,
+      choices: [
         {
-          name: 'style',
-          message: `Default stylesheet format            `,
-          initial: 'css' as any,
-          type: 'autocomplete',
-          choices: choices,
+          name: 'standalone',
+          message:
+            'Standalone:           Nx creates a single project and makes it fast.',
         },
-      ])
-      .then((a: { style: string }) => a.style);
-  }
-
-  const foundStyle = choices.find((choice) => choice.name === parsedArgs.style);
-
-  if (foundStyle === undefined) {
-    output.error({
-      title: 'Invalid style',
-      bodyLines: [
-        `It must be one of the following:`,
-        '',
-        ...choices.map((choice) => choice.name),
+        {
+          name: 'integrated',
+          message:
+            'Integrated Monorepo:  Nx creates a monorepo that contains multiple projects.',
+        },
       ],
-    });
+    },
+  ]);
 
-    process.exit(1);
-  }
+  invariant(workspaceType, {
+    title: 'Invalid workspace type',
+    bodyLines: [
+      `It must be one of the following: standalone, integrated. Got ${workspaceType}`,
+    ],
+  });
 
-  return Promise.resolve(parsedArgs.style);
+  return workspaceType;
 }
 
-async function determineRouting(
-  parsedArgs: yargs.Arguments<Arguments>
+async function determineAppName(
+  parsedArgs: yargs.Arguments<ReactArguments | AngularArguments | NodeArguments>
+): Promise<string> {
+  if (parsedArgs.appName) return parsedArgs.appName;
+
+  const { appName } = await enquirer.prompt<{ appName: string }>([
+    {
+      name: 'appName',
+      message: `Application name`,
+      type: 'input',
+      initial: parsedArgs.name,
+    },
+  ]);
+  invariant(appName, {
+    title: 'Invalid name',
+    bodyLines: [`Name cannot be empty`],
+  });
+  return appName;
+}
+
+async function determineReactFramework(
+  parsedArgs: yargs.Arguments<ReactArguments>
+): Promise<'none' | 'nextjs' | 'expo' | 'react-native'> {
+  const reply = await enquirer.prompt<{
+    framework: 'none' | 'nextjs' | 'expo' | 'react-native';
+  }>([
+    {
+      name: 'framework',
+      message: 'What framework would you like to use?',
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'none',
+          message: 'None',
+          hint: '         I only want react and react-dom',
+        },
+        {
+          name: 'nextjs',
+          message: 'Next.js       [ https://nextjs.org/      ]',
+        },
+        {
+          name: 'expo',
+          message: 'Expo          [ https://expo.io/         ]',
+        },
+        {
+          name: 'react-native',
+          message: 'React Native  [ https://reactnative.dev/ ]',
+        },
+      ],
+      initial: 'none' as any,
+    },
+  ]);
+  return reply.framework;
+}
+
+async function determineReactBundler(
+  parsedArgs: yargs.Arguments<ReactArguments>
+): Promise<'webpack' | 'vite' | 'rspack'> {
+  if (parsedArgs.bundler) return parsedArgs.bundler;
+  const reply = await enquirer.prompt<{
+    bundler: 'webpack' | 'vite' | 'rspack';
+  }>([
+    {
+      name: 'bundler',
+      message: `Which bundler would you like to use?`,
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'vite',
+          message: 'Vite    [ https://vitejs.dev/     ]',
+        },
+        {
+          name: 'webpack',
+          message: 'Webpack [ https://webpack.js.org/ ]',
+        },
+        {
+          name: 'rspack',
+          message: 'Rspack  [ https://www.rspack.dev/ ]',
+        },
+      ],
+    },
+  ]);
+  return reply.bundler;
+}
+
+async function determineNextAppDir(
+  parsedArgs: yargs.Arguments<ReactArguments>
 ): Promise<boolean> {
-  if (!parsedArgs.routing) {
-    return enquirer
-      .prompt<{ routing: 'Yes' | 'No' }>([
+  if (parsedArgs.nextAppDir !== undefined) return parsedArgs.nextAppDir;
+  const reply = await enquirer.prompt<{ nextAppDir: 'Yes' | 'No' }>([
+    {
+      name: 'nextAppDir',
+      message: 'Would you like to use the App Router (recommended)?',
+      type: 'autocomplete',
+      choices: [
         {
-          name: 'routing',
-          message: 'Would you like to add routing?',
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-            },
-
-            {
-              name: 'No',
-            },
-          ],
-          initial: 'Yes' as any,
+          name: 'Yes',
         },
-      ])
-      .then((a) => a.routing === 'Yes');
-  }
-
-  return parsedArgs.routing;
+        {
+          name: 'No',
+        },
+      ],
+      initial: 'Yes' as any,
+    },
+  ]);
+  return reply.nextAppDir === 'Yes';
 }
 
-async function determineBundler(
-  parsedArgs: yargs.Arguments<Arguments>
-): Promise<Bundler> {
-  const choices = [
+async function determineNodeFramework(
+  parsedArgs: yargs.Arguments<NodeArguments>
+): Promise<'express' | 'fastify' | 'koa' | 'nest' | 'none'> {
+  if (parsedArgs.framework) return parsedArgs.framework;
+  const reply = await enquirer.prompt<{
+    framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
+  }>([
     {
-      name: 'vite',
-      message: 'Vite    [ https://vitejs.dev/ ]',
-    },
-    {
-      name: 'webpack',
-      message: 'Webpack [ https://webpack.js.org/ ]',
-    },
-    {
-      name: 'rspack',
-      message: 'Rspack  [ https://www.rspack.dev/ ]',
-    },
-  ];
-
-  if (!parsedArgs.bundler) {
-    return enquirer
-      .prompt<{ bundler: Bundler }>([
+      message: 'What framework should be used?',
+      type: 'autocomplete',
+      name: 'framework',
+      choices: [
         {
-          name: 'bundler',
-          message: `Bundler to be used to build the application`,
-          initial: 'vite' as any,
-          type: 'autocomplete',
-          choices: choices,
+          name: 'none',
+          message: 'None',
         },
-      ])
-      .then((a) => a.bundler);
-  }
-
-  const foundBundler = choices.find(
-    (choice) => choice.name === parsedArgs.bundler
-  );
-
-  if (foundBundler === undefined) {
-    output.error({
-      title: 'Invalid bundler',
-      bodyLines: [
-        `It must be one of the following:`,
-        '',
-        ...choices.map((choice) => choice.name),
+        {
+          name: 'express',
+          message: 'Express [ https://expressjs.com/ ]',
+        },
+        {
+          name: 'fastify',
+          message: 'Fastify [ https://www.fastify.io/ ]',
+        },
+        {
+          name: 'koa',
+          message: 'Koa     [ https://koajs.com/      ]',
+        },
+        {
+          name: 'nest',
+          message: 'NestJs  [ https://nestjs.com/     ]',
+        },
       ],
-    });
-
-    process.exit(1);
-  }
-
-  return parsedArgs.bundler;
+    },
+  ]);
+  return reply.framework;
 }
