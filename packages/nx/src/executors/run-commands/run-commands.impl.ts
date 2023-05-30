@@ -110,7 +110,10 @@ async function runInParallel(
   context: ExecutorContext
 ) {
   // initialize status for each "readyWhen" string to match
-  const readyWhenStatus = options.readyWhen.map((stringToMatch) => ({ stringToMatch, found: false }));
+  const readyWhenStatus = options.readyWhen.map((stringToMatch) => ({
+    stringToMatch,
+    found: false,
+  }));
 
   const procs = options.commands.map((c) =>
     createProcess(
@@ -208,7 +211,7 @@ function createProcess(
     bgColor?: string;
     prefix?: string;
   },
-  readyWhenStatus: { stringToMatch: string, found: boolean }[],
+  readyWhenStatus: { stringToMatch: string; found: boolean }[],
   color: boolean,
   cwd: string
 ): Promise<boolean> {
@@ -229,7 +232,8 @@ function createProcess(
     process.on('SIGINT', processExitListener);
     process.on('SIGQUIT', processExitListener);
 
-    const isReady = () => readyWhenStatus.every((readyWhenElement) => readyWhenElement.found);
+    const isReady = () =>
+      readyWhenStatus.every((readyWhenElement) => readyWhenElement.found);
 
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(addColorAndPrefix(data, commandConfig));
@@ -256,7 +260,7 @@ function createProcess(
       }
     });
     childProcess.on('error', (err) => {
-      console.log('error', err)
+      console.log('error', err);
       process.stderr.write(addColorAndPrefix(err.toString(), commandConfig));
       res(false);
     });
