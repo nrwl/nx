@@ -210,6 +210,28 @@ If a target uses a command from a npm package, that package should be listed.
 }
 ```
 
+_Dependent tasks output_
+
+This input allows us to depend on the output, rather than the input of the dependent tasks.
+
+Examples:
+
+```json
+{
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": ["default", "!{projectRoot}/**/*.spec.ts"],
+    "deps": [{ "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["production", "deps"]
+    }
+  }
+}
+```
+
 _Named Inputs_
 
 Examples:

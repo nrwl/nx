@@ -242,6 +242,7 @@ export async function invokeTasksRunner({
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
+      taskGraph,
       nxJson,
       runnerOptions,
       fileHasher
