@@ -151,55 +151,54 @@ jobs:
           name: bindings-${{ matrix.settings.target }}
           path: packages/**/*.node
           if-no-files-found: error
-#  build-freebsd:
-#    runs-on: macos-12
-#    name: Build FreeBSD
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Build
-#        id: build
-#        uses: vmactions/freebsd-vm@v0
-#        env:
-#          DEBUG: napi:*
-#          RUSTUP_HOME: /usr/local/rustup
-#          CARGO_HOME: /usr/local/cargo
-#          RUSTUP_IO_THREADS: 1
-#        with:
-#          envs: DEBUG RUSTUP_HOME CARGO_HOME RUSTUP_IO_THREADS
-#          usesh: true
-#          mem: 3000
-#          prepare: |
-#            pkg install -y -f curl node libnghttp2
-#            curl -qL https://www.npmjs.com/install.sh | sh
-#            npm install --location=global --ignore-scripts yarn
-#            curl https://sh.rustup.rs -sSf --output rustup.sh
-#            sh rustup.sh -y --profile minimal --default-toolchain stable
-#            export PATH="/usr/local/cargo/bin:$PATH"
-#            echo "~~~~ rustc --version ~~~~"
-#            rustc --version
-#            echo "~~~~ node -v ~~~~"
-#            node -v
-#            echo "~~~~ yarn --version ~~~~"
-#            yarn --version
-#          run: |
-#            export PATH="/usr/local/cargo/bin:$PATH"
-#            pwd
-#            ls -lah
-#            whoami
-#            env
-#            freebsd-version
-#            yarn install
-#            yarn nx -- run-many --target=build-native -- --target=x86_64-unknown-freebsd
-#            strip -x packages/*/*.node
-#            rm -rf node_modules
-#            rm -rf target
-#            rm -rf .yarn/cache
-#      - name: Upload artifact
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: bindings-freebsd
-#          path: packages/*/*.node
-#          if-no-files-found: error
+  build-freebsd:
+     runs-on: macos-12
+     name: Build FreeBSD
+     steps:
+       - uses: actions/checkout@v3
+       - name: Build
+         id: build
+         uses: vmactions/freebsd-vm@v0
+         env:
+           DEBUG: napi:*
+           RUSTUP_HOME: /usr/local/rustup
+           CARGO_HOME: /usr/local/cargo
+           RUSTUP_IO_THREADS: 1
+         with:
+           envs: DEBUG RUSTUP_HOME CARGO_HOME RUSTUP_IO_THREADS
+           usesh: true
+           mem: 3000
+           prepare: |
+             pkg install -y -f curl node libnghttp2
+             curl -qL https://www.npmjs.com/install.sh | sh
+             corepack prepare pnpm@8.5.0 --activate
+             curl https://sh.rustup.rs -sSf --output rustup.sh
+             sh rustup.sh -y --profile minimal --default-toolchain stable
+             export PATH="/usr/local/cargo/bin:$PATH"
+             echo "~~~~ rustc --version ~~~~"
+             rustc --version
+             echo "~~~~ node -v ~~~~"
+             node -v
+             echo "~~~~ yarn --version ~~~~"
+             yarn --version
+           run: |
+             export PATH="/usr/local/cargo/bin:$PATH"
+             pwd
+             ls -lah
+             whoami
+             env
+             freebsd-version
+             pnpm install --frozen-lockfile
+             pnpm nx -- run-many --target=build-native -- --target=x86_64-unknown-freebsd
+             rm -rf node_modules
+             rm -rf target
+             rm -rf .yarn/cache
+       - name: Upload artifact
+         uses: actions/upload-artifact@v3
+         with:
+           name: bindings-freebsd
+           path: packages/**/*.node
+           if-no-files-found: error
   publish:
     if: ${{ github.repository_owner == 'nrwl' }}
     name: Publish
@@ -207,7 +206,7 @@ jobs:
     permissions:
       id-token: write
     needs:
-      # - build-freebsd
+      - build-freebsd
       - build
     steps:
       - uses: actions/checkout@v3
