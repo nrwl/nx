@@ -129,7 +129,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
       `npm config set registry http://localhost:${options.port}/ --location ${options.location}`
     );
     execSync(
-      `npm config set //localhost:${options.port}/:_authToken="secretVerdaccioToken"`
+      `npm config set //localhost:${options.port}/:_authToken="secretVerdaccioToken" --location ${options.location}`
     );
     logger.info(`Set npm registry to http://localhost:${options.port}/`);
   } catch (e) {
