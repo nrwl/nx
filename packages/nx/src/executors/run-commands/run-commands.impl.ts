@@ -41,7 +41,7 @@ export interface RunCommandsOptions extends Json {
   )[];
   color?: boolean;
   parallel?: boolean;
-  readyWhen?: string;
+  readyWhen?: string | string[];
   cwd?: string;
   args?: string;
   envFile?: string;
@@ -65,6 +65,7 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
     forwardAllArgs?: boolean;
   }[];
   parsedArgs: { [k: string]: any };
+  readyWhen: string[];
 }
 
 export default async function (
@@ -74,7 +75,7 @@ export default async function (
   await loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
-  if (options.readyWhen && !options.parallel) {
+  if (normalized.readyWhen.length > 0 && !normalized.parallel) {
     throw new Error(
       'ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".'
     );
@@ -108,10 +109,13 @@ async function runInParallel(
   options: NormalizedRunCommandsOptions,
   context: ExecutorContext
 ) {
+  // initialize status for each "readyWhen" string to match
+  const readyWhenStatus = options.readyWhen.map((stringToMatch) => ({ stringToMatch, found: false }));
+
   const procs = options.commands.map((c) =>
     createProcess(
       c,
-      options.readyWhen,
+      readyWhenStatus,
       options.color,
       calculateCwd(options.cwd, context)
     ).then((result) => ({
@@ -120,7 +124,7 @@ async function runInParallel(
     }))
   );
 
-  if (options.readyWhen) {
+  if (options.readyWhen.length > 0) {
     const r = await Promise.race(procs);
     if (!r.result) {
       process.stderr.write(
@@ -151,9 +155,15 @@ function normalizeOptions(
 ): NormalizedRunCommandsOptions {
   options.parsedArgs = parseArgs(options);
 
+  if (options.readyWhen && typeof options.readyWhen === 'string') {
+    options.readyWhen = [options.readyWhen];
+  } else {
+    options.readyWhen = options.readyWhen ?? [];
+  }
+
   if (options.command) {
     options.commands = [{ command: options.command }];
-    options.parallel = !!options.readyWhen;
+    options.parallel = options.readyWhen?.length > 0;
   } else {
     options.commands = options.commands.map((c) =>
       typeof c === 'string' ? { command: c } : c
@@ -176,7 +186,7 @@ async function runSerially(
   for (const c of options.commands) {
     const success = await createProcess(
       c,
-      undefined,
+      [],
       options.color,
       calculateCwd(options.cwd, context)
     );
@@ -198,7 +208,7 @@ function createProcess(
     bgColor?: string;
     prefix?: string;
   },
-  readyWhen: string,
+  readyWhenStatus: { stringToMatch: string, found: boolean }[],
   color: boolean,
   cwd: string
 ): Promise<boolean> {
@@ -219,24 +229,39 @@ function createProcess(
     process.on('SIGINT', processExitListener);
     process.on('SIGQUIT', processExitListener);
 
+    const isReady = () => readyWhenStatus.every((readyWhenElement) => readyWhenElement.found);
+
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(addColorAndPrefix(data, commandConfig));
-      if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
-        res(true);
+      for (const readyWhenElement of readyWhenStatus) {
+        if (data.toString().indexOf(readyWhenElement.stringToMatch) > -1) {
+          readyWhenElement.found = true;
+          if (isReady()) {
+            res(true);
+          }
+          break;
+        }
       }
     });
     childProcess.stderr.on('data', (err) => {
       process.stderr.write(addColorAndPrefix(err, commandConfig));
-      if (readyWhen && err.toString().indexOf(readyWhen) > -1) {
-        res(true);
+      for (const readyWhenElement of readyWhenStatus) {
+        if (err.toString().indexOf(readyWhenElement.stringToMatch) > -1) {
+          readyWhenElement.found = true;
+          if (isReady()) {
+            res(true);
+          }
+          break;
+        }
       }
     });
     childProcess.on('error', (err) => {
+      console.log('error', err)
       process.stderr.write(addColorAndPrefix(err.toString(), commandConfig));
       res(false);
     });
     childProcess.on('exit', (code) => {
-      if (!readyWhen) {
+      if (isReady()) {
         res(code === 0);
       }
     });
