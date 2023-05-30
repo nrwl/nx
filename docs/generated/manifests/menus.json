@@ -4808,6 +4808,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "submit",
+                "path": "/packages/expo/executors/submit",
+                "name": "submit",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

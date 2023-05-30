@@ -16,7 +16,7 @@
     "install": {
       "type": "boolean",
       "description": "Installing npm packages and CocoaPods.",
-      "default": false,
+      "default": true,
       "x-priority": "internal"
     },
     "platform": {
