@@ -369,10 +369,6 @@ async function determineStack(
     },
   ]);
 
-  invariant(stack, {
-    title: 'Invalid stack selection',
-  });
-
   return stack;
 }
 
@@ -503,7 +499,7 @@ async function determineReactOptions(
     const reply = await enquirer.prompt<{ style: string }>([
       {
         name: 'style',
-        message: `Default stylesheet format            `,
+        message: `Default stylesheet format`,
         initial: 'css' as any,
         type: 'autocomplete',
         choices: [
@@ -578,7 +574,7 @@ async function determineAngularOptions(
     const reply = await enquirer.prompt<{ style: string }>([
       {
         name: 'style',
-        message: `Default stylesheet format            `,
+        message: `Default stylesheet format`,
         initial: 'css' as any,
         type: 'autocomplete',
         choices: [
@@ -681,7 +677,6 @@ async function determineNodeOptions(
     const workspaceType = await determineStandAloneOrMonorepo();
     if (workspaceType === 'standalone') {
       preset = Preset.NodeStandalone;
-      appName = await determineAppName(parsedArgs);
       appName = parsedArgs.name;
     } else {
       preset = Preset.NodeMonorepo;
