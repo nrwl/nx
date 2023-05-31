@@ -123,7 +123,8 @@ export async function subscribeToServerProcessJsonChanges(
           cb();
         }
       }
-    }
+    },
+    watcherOptions([])
   );
 }
 
