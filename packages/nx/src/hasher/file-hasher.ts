@@ -33,7 +33,7 @@ export class FileHasher {
 
   hashFile(path: string): string {
     // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
-    const { hashFile } = require('../../native');
+    const { hashFile } = require('../native');
     return hashFile(path).hash;
   }
 
