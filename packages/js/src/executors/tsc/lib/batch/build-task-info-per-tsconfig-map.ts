@@ -7,7 +7,7 @@ import { generateTempTsConfig } from './generate-temp-tsconfig';
 import { getTaskOptions } from './get-task-options';
 import type { TaskInfo } from './types';
 
-const taskTsConfigCache = new Map<string, string>();
+const taskTsConfigCache = new Set<string>();
 
 export function buildTaskInfoPerTsConfigMap(
   tsConfigTaskInfoMap: Record<string, TaskInfo>,
@@ -34,7 +34,7 @@ export function buildTaskInfoPerTsConfigMap(
       );
 
       tsConfigTaskInfoMap[tsConfigPath] = taskInfo;
-      taskTsConfigCache.set(taskName, tsConfigPath);
+      taskTsConfigCache.add(taskName);
     } else {
       // if it's not included in the provided map, it could be a cached task and
       // we need to pull the options from the relevant project graph node

@@ -1,8 +1,8 @@
 export function isAsyncIterator<T>(v: any): v is AsyncIterableIterator<T> {
-  return typeof (v as any)?.[Symbol.asyncIterator] === 'function';
+  return typeof v?.[Symbol.asyncIterator] === 'function';
 }
 
-export async function getAsyncIteratorResult<T>(
+export async function getLastValueFromAsyncIterableIterator<T>(
   i: AsyncIterableIterator<T>
 ): Promise<T> {
   let prev: IteratorResult<T, T>;

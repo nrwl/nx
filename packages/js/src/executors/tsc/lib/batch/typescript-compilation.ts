@@ -18,8 +18,6 @@ const TYPESCRIPT_CANNOT_READ_FILE = 5083;
 // Typescript diagnostic message for 6032: File change detected. Starting incremental compilation...
 const TYPESCRIPT_FILE_CHANGE_DETECTED_STARTING_INCREMENTAL_COMPILATION = 6032;
 
-const now = () => new Date().getTime();
-
 export function compileBatchTypescript(
   tsConfigTaskInfoMap: Record<string, TaskInfo>,
   taskGraph: TaskGraph,
@@ -29,7 +27,7 @@ export function compileBatchTypescript(
   iterator: AsyncIterable<BatchResults>;
   close: () => void | Promise<void>;
 } {
-  const timeNow = now();
+  const timeNow = Date.now();
   const defaultResults: BatchResults = Object.keys(taskGraph.tasks).reduce(
     (acc, task) => {
       acc[task] = { success: true, startTime: timeNow, terminalOutput: '' };
@@ -46,9 +44,6 @@ export function compileBatchTypescript(
         compileTSWithWatch(tsConfigTaskInfoMap, postProjectCompilationCallback);
 
         tearDown = () => {
-          // watch runs are not cached and batch executors are not composable,
-          // results here are not meaningful, just return something
-          next(defaultResults);
           done();
         };
       } else {
@@ -232,7 +227,7 @@ function compileTS(
       break;
     }
 
-    const startTime = now();
+    const startTime = Date.now();
     terminalOutput = '';
     const taskInfo = tsConfigTaskInfoMap[project.project];
     const projectName = taskInfo?.context?.projectName;
@@ -256,7 +251,7 @@ function compileTS(
           success: status === ts.ExitStatus.Success,
           terminalOutput,
           startTime,
-          endTime: now(),
+          endTime: Date.now(),
         };
       }
 
@@ -297,7 +292,7 @@ function compileTS(
       success: status === ts.ExitStatus.Success,
       terminalOutput,
       startTime,
-      endTime: now(),
+      endTime: Date.now(),
     };
   }
 

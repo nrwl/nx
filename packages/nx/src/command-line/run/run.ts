@@ -29,7 +29,7 @@ import {
 import { ProjectGraph } from '../../config/project-graph';
 import { readNxJson } from '../../config/configuration';
 import {
-  getAsyncIteratorResult,
+  getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
 } from '../../utils/async-iterator';
 
@@ -83,7 +83,7 @@ async function iteratorToProcessStatusCode(
   // like CI or when running Docker builds.
   const keepProcessAliveInterval = setInterval(() => {}, 1000);
   try {
-    const { success } = await getAsyncIteratorResult(i);
+    const { success } = await getLastValueFromAsyncIterableIterator(i);
     return success ? 0 : 1;
   } finally {
     clearInterval(keepProcessAliveInterval);

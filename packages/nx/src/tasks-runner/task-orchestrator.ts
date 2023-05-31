@@ -169,7 +169,7 @@ export class TaskOrchestrator {
       task: {
         ...task,
         startTime,
-        endTime: new Date().getTime(),
+        endTime: Date.now(),
       },
       status,
     };

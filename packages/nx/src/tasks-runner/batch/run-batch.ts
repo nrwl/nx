@@ -14,7 +14,7 @@ import {
 } from '../../project-graph/project-graph';
 import { readNxJson } from '../../config/configuration';
 import {
-  getAsyncIteratorResult,
+  getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
 } from '../../utils/async-iterator';
 
@@ -74,7 +74,7 @@ async function runTasks(
     }
 
     if (isAsyncIterator(results)) {
-      return await getAsyncIteratorResult(results);
+      return await getLastValueFromAsyncIterableIterator(results);
     }
 
     return results;
