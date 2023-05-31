@@ -1574,14 +1574,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "npmScope",
-            "path": "/deprecated/npm-scope",
-            "id": "npm-scope",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Storybook deprecated docs",
             "path": "/deprecated/storybook",
             "id": "storybook",
@@ -1685,14 +1677,6 @@
         "name": "globalImplicitDependencies",
         "path": "/deprecated/global-implicit-dependencies",
         "id": "global-implicit-dependencies",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "npmScope",
-        "path": "/deprecated/npm-scope",
-        "id": "npm-scope",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

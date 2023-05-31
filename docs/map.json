@@ -622,11 +622,6 @@
               "file": "shared/deprecated/global-implicit-dependencies"
             },
             {
-              "name": "npmScope",
-              "id": "npm-scope",
-              "file": "shared/deprecated/npm-scope"
-            },
-            {
               "name": "Storybook deprecated docs",
               "id": "storybook",
               "description": "Deprecated @nx/storybook package documentation and guides.",
