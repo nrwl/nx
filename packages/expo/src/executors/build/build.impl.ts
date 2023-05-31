@@ -3,7 +3,7 @@ import { join, normalize, sep } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
-import { copyBuildFile, unzipBuild } from '../download/download.impl';
+import { unzipBuild } from '../download/download.impl';
 
 import { ExpoEasBuildOptions } from './schema';
 import { removeSync } from 'fs-extra';
