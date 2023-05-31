@@ -579,19 +579,27 @@ class TaskHasherImpl {
     const mapKey = `runtime:${runtime}`;
     if (!this.runtimeHashes[mapKey]) {
       this.runtimeHashes[mapKey] = new Promise((res, rej) => {
-        exec(runtime, (err, stdout, stderr) => {
-          if (err) {
-            rej(
-              new Error(`Nx failed to execute {runtime: '${runtime}'}. ${err}.`)
-            );
-          } else {
-            const value = `${stdout}${stderr}`.trim();
-            res({
-              details: { [`runtime:${runtime}`]: value },
-              value,
-            });
+        exec(
+          runtime,
+          {
+            windowsHide: true,
+          },
+          (err, stdout, stderr) => {
+            if (err) {
+              rej(
+                new Error(
+                  `Nx failed to execute {runtime: '${runtime}'}. ${err}.`
+                )
+              );
+            } else {
+              const value = `${stdout}${stderr}`.trim();
+              res({
+                details: { [`runtime:${runtime}`]: value },
+                value,
+              });
+            }
           }
-        });
+        );
       });
     }
     return this.runtimeHashes[mapKey];
