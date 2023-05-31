@@ -127,9 +127,7 @@ function compileTSWithWatch(
        */
       if (project.kind === ts.InvalidatedProjectKind.UpdateBundle) {
         logger.warn(
-          `The project ${
-            tsConfigTaskInfoMap[project.project].context.projectName
-          } ` +
+          `The project ${taskInfo.context.projectName} ` +
             `is using the deprecated "prepend" Typescript compiler option. ` +
             `This option is not supported by the batch executor and it's ignored.`
         );
@@ -247,7 +245,7 @@ function compileTS(
       }
 
       if (taskInfo) {
-        results[tsConfigTaskInfoMap[project.project].task] = {
+        results[taskInfo.task] = {
           success: status === ts.ExitStatus.Success,
           terminalOutput,
           startTime,
@@ -264,9 +262,7 @@ function compileTS(
      */
     if (project.kind === ts.InvalidatedProjectKind.UpdateBundle) {
       logWarn(
-        `The project ${
-          tsConfigTaskInfoMap[project.project].context.projectName
-        } ` +
+        `The project ${taskInfo.context.projectName} ` +
           `is using the deprecated "prepend" Typescript compiler option. ` +
           `This option is not supported by the batch executor and it's ignored.`
       );
