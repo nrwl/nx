@@ -61,7 +61,7 @@ export interface WebpackExecutorOptions {
   runtimeChunk?: boolean;
   sourceMap?: boolean | 'hidden';
   statsJson?: boolean;
-  target?: 'node' | 'web';
+  target?: 'node' | 'web' | 'webworker';
   transformers?: TransformerEntry[];
   tsConfig: string;
   vendorChunk?: boolean;

@@ -7,7 +7,7 @@ export interface WebpackProjectGeneratorSchema {
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   skipValidation?: boolean;
-  target?: 'node' | 'web';
+  target?: 'node' | 'web' | 'webworker';
   webpackConfig?: string;
   babelConfig?: string;
 }
