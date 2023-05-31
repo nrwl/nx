@@ -143,7 +143,7 @@ export function getViteBuildOptions(
   return {
     outDir: relative(projectRoot, options.outputPath),
     emptyOutDir: options.emptyOutDir,
-    reportCompressedSize: true,
+    reportCompressedSize: options.reportCompressedSize ?? true,
     cssCodeSplit: options.cssCodeSplit,
     target: options.target ?? 'esnext',
     commonjsOptions: {
