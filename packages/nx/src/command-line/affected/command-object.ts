@@ -105,6 +105,11 @@ export const yargsAffectedE2ECommand: CommandModule = {
     }),
 };
 
+export const affectedGraphDeprecationMessage =
+  'Use `nx graph --affected`, or` nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command will be removed in Nx 18.';
+/**
+ * @deprecated 'Use `nx graph --affected`, or` nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command will be removed in Nx 18.'
+ */
 export const yargsAffectedGraphCommand: CommandModule = {
   command: 'affected:graph',
   describe: 'Graph dependencies affected by changes',
@@ -120,8 +125,14 @@ export const yargsAffectedGraphCommand: CommandModule = {
     ).affected('graph', {
       ...args,
     }),
+  deprecated: affectedGraphDeprecationMessage,
 };
 
+export const printAffectedDeprecationMessage =
+  'Use `nx show --affected`, `nx affected --graph` or `nx graph --affected` depending on which best suits your use case. The `print-affected` command will be removed in Nx 18.';
+/**
+ * @deprecated 'Use `nx show --affected`, `nx affected --graph` or `nx graph --affected` depending on which best suits your use case. The `print-affected` command will be removed in Nx 18.'
+ */
 export const yargsPrintAffectedCommand: CommandModule = {
   command: 'print-affected',
   describe:
@@ -148,4 +159,5 @@ export const yargsPrintAffectedCommand: CommandModule = {
     ).affected('print-affected', withOverrides(args));
     process.exit(0);
   },
+  deprecated: printAffectedDeprecationMessage,
 };
