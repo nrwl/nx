@@ -131,6 +131,7 @@ export async function applicationGenerator(
       newProject: true,
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
+      compiler: options.compiler,
       skipFormat: true,
     });
     tasks.push(viteTask);

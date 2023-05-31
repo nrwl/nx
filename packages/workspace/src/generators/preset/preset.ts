@@ -161,6 +161,19 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: true,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
     });
+  } else if (options.preset === Preset.NodeMonorepo) {
+    const { applicationGenerator: nodeApplicationGenerator } = require('@nx' +
+      '/node');
+    const bundler = options.bundler === 'webpack' ? 'webpack' : 'esbuild';
+    return nodeApplicationGenerator(tree, {
+      bundler,
+      name: options.name,
+      linter: options.linter,
+      framework: options.framework,
+      docker: options.docker,
+      rootProject: false,
+      e2eTestRunner: options.e2eTestRunner ?? 'jest',
+    });
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }

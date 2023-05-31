@@ -19,11 +19,32 @@ describe('Build React applications and libraries with Vite', () => {
     cleanupProject();
   });
 
-  it('should test and lint app with bundler=vite', async () => {
+  it('should test and lint app with bundler=vite and compiler=babel', async () => {
     const viteApp = uniq('viteapp');
 
     runCLI(
-      `generate @nx/react:app ${viteApp} --bundler=vite --unitTestRunner=vitest --no-interactive`
+      `generate @nx/react:app ${viteApp} --bundler=vite --compiler=babel --unitTestRunner=vitest --no-interactive`
+    );
+
+    const appTestResults = await runCLIAsync(`test ${viteApp}`);
+    expect(appTestResults.combinedOutput).toContain(
+      'Successfully ran target test'
+    );
+
+    const appLintResults = await runCLIAsync(`lint ${viteApp}`);
+    expect(appLintResults.combinedOutput).toContain(
+      'Successfully ran target lint'
+    );
+
+    await runCLIAsync(`build ${viteApp}`);
+    checkFilesExist(`dist/apps/${viteApp}/index.html`);
+  }, 300_000);
+
+  it('should test and lint app with bundler=vite and compiler=swc', async () => {
+    const viteApp = uniq('viteapp');
+
+    runCLI(
+      `generate @nx/react:app ${viteApp} --bundler=vite --compiler=swc --unitTestRunner=vitest --no-interactive`
     );
 
     const appTestResults = await runCLIAsync(`test ${viteApp}`);

@@ -174,7 +174,7 @@
       "type": "string",
       "enum": ["babel", "swc"],
       "default": "babel",
-      "description": "Which compiler to use. Only applies to `bundler: 'rollup'`."
+      "description": "Which compiler to use."
     },
     "skipPackageJson": {
       "description": "Do not add dependencies to `package.json`.",

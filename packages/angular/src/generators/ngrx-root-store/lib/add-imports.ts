@@ -77,6 +77,53 @@ function addRouterStoreImport(
   return addImportToModule(tree, sourceFile, parentPath, storeRouterModule);
 }
 
+function addStoreDevTools(
+  tree: Tree,
+  sourceFile: SourceFile,
+  parentPath: string,
+  isParentStandalone: boolean,
+  addImport: (
+    source: SourceFile,
+    symbolName: string,
+    fileName: string,
+    isDefault?: boolean
+  ) => SourceFile
+): SourceFile {
+  sourceFile = addImport(sourceFile, 'isDevMode', '@angular/core');
+  if (isParentStandalone) {
+    sourceFile = addImport(
+      sourceFile,
+      'provideStoreDevtools',
+      '@ngrx/store-devtools'
+    );
+
+    const provideStoreDevTools =
+      'provideStoreDevtools({ logOnly: !isDevMode() })';
+    if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
+      addProviderToAppConfig(tree, parentPath, provideStoreDevTools);
+    } else {
+      addProviderToBootstrapApplication(tree, parentPath, provideStoreDevTools);
+    }
+  } else {
+    sourceFile = addImport(
+      sourceFile,
+      'StoreDevtoolsModule',
+      '@ngrx/store-devtools'
+    );
+
+    const storeDevToolsModule =
+      'StoreDevtoolsModule.instrument({ logOnly: !isDevMode() })';
+    sourceFile = addImportToModule(
+      tree,
+      sourceFile,
+      parentPath,
+      storeDevToolsModule
+    );
+  }
+
+  return sourceFile;
+}
+
 export function addImportsToModule(
   tree: Tree,
   options: NormalizedNgRxRootStoreGeneratorOptions
@@ -162,6 +209,16 @@ export function addImportsToModule(
       addImport,
       parentPath,
       storeRouterModule
+    );
+  }
+
+  if (options.addDevTools) {
+    sourceFile = addStoreDevTools(
+      tree,
+      sourceFile,
+      parentPath,
+      isParentStandalone,
+      addImport
     );
   }
 }

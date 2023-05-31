@@ -16,4 +16,5 @@ export enum Preset {
   Nest = 'nest',
   Express = 'express',
   NodeStandalone = 'node-standalone',
+  NodeMonorepo = 'node-monorepo',
 }
