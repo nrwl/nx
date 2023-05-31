@@ -1,9 +1,10 @@
 import { buildTargetFromScript, PackageJson } from './package-json';
 import { join } from 'path';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { readJsonFile } from './fileutils';
+import { fileExists, readJsonFile } from './fileutils';
 import { readCachedProjectGraph } from '../project-graph/project-graph';
 import { TargetConfiguration } from '../config/workspace-json-project-json';
+import { workspaceRoot } from './workspace-root';
 
 export function projectHasTarget(
   project: ProjectGraphProjectNode,
@@ -22,9 +23,28 @@ export function projectHasTargetAndConfiguration(
   configuration: string
 ) {
   return (
-    projectHasTarget(project, target) &&
-    project.data.targets[target].configurations &&
-    project.data.targets[target].configurations[configuration]
+    // Explicitly defined target + configuration
+    (projectHasTarget(project, target) &&
+      project.data.targets[target].configurations &&
+      project.data.targets[target].configurations[configuration]) ||
+    // Inferred configuration from presence of .env files
+    (projectHasTarget(project, target) &&
+      [
+        join(workspaceRoot, `.env.${configuration}`),
+        join(workspaceRoot, `.${configuration}.env`),
+        join(workspaceRoot, project.data.root, `.env.${configuration}`),
+        join(workspaceRoot, project.data.root, `.${configuration}.env`),
+        join(
+          workspaceRoot,
+          project.data.root,
+          `.env.${target}.${configuration}`
+        ),
+        join(
+          workspaceRoot,
+          project.data.root,
+          `.${target}.${configuration}.env`
+        ),
+      ].some(fileExists))
   );
 }
 
