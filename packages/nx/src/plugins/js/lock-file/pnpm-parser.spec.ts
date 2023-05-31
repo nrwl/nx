@@ -11,6 +11,10 @@ jest.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
+jest.mock('../../../hasher/file-hasher', () => ({
+  hashArray: (values: string[]) => values.join('|'),
+}));
+
 describe('pnpm LockFile utility', () => {
   afterEach(() => {
     vol.reset();
@@ -254,7 +258,7 @@ describe('pnpm LockFile utility', () => {
       expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
         {
           "data": {
-            "hash": "e33995295353137d0e2a79cad3efec01f9bae57a41f44a882c3eb57212cad3d3",
+            "hash": "https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
             "packageName": "postgres",
             "version": "github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
           },
