@@ -1,8 +1,6 @@
 import { performance } from 'perf_hooks';
 import { workspaceRoot } from '../utils/workspace-root';
 import { FileData } from '../config/project-graph';
-import { Simulate } from 'react-dom/test-utils';
-import input = Simulate.input;
 
 export class FileHasher {
   private fileHashes: Map<string, string>;
@@ -98,5 +96,5 @@ export const fileHasher = new FileHasher();
 export function hashArray(content: string[]): string {
   // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
   const { hashArray } = require('../native');
-  return hashArray(input);
+  return hashArray(content);
 }
