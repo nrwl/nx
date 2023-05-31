@@ -13,6 +13,7 @@ import {
 import { major } from 'semver';
 import { stripIndents } from '../src/utils/strip-indents';
 import { readModulePackageJson } from '../src/utils/package-json';
+import { execSync } from 'child_process';
 import { join } from 'path';
 
 function main() {
@@ -170,8 +171,10 @@ function warnIfUsingOutdatedGlobalInstall(
 
   const isOutdatedGlobalInstall =
     globalNxVersion &&
-    localNxVersion &&
-    major(globalNxVersion) < major(localNxVersion);
+    ((localNxVersion && major(globalNxVersion) < major(localNxVersion)) ||
+      (!localNxVersion &&
+        getLatestVersionOfNx() &&
+        major(globalNxVersion) < major(getLatestVersionOfNx())));
 
   // Using a global Nx Install
   if (isOutdatedGlobalInstall) {
@@ -200,5 +203,22 @@ function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
     return packageJson.version;
   } catch {}
 }
+
+function _getLatestVersionOfNx(): string {
+  try {
+    return execSync('npm view nx@latest version').toString().trim();
+  } catch {
+    try {
+      return execSync('pnpm view nx@latest version').toString().trim();
+    } catch {
+      return null;
+    }
+  }
+}
+
+const getLatestVersionOfNx = ((fn: () => string) => {
+  let cache: string = null;
+  return () => cache || (cache = fn());
+})(_getLatestVersionOfNx);
 
 main();
