@@ -54,7 +54,7 @@ export async function affected(
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const projects = await projectsToRun(nxArgs, projectGraph);
+  const projects = await getAffectedGraphNodes(nxArgs, projectGraph);
 
   try {
     switch (command) {
@@ -122,7 +122,7 @@ export async function affected(
   }
 }
 
-async function projectsToRun(
+export async function getAffectedGraphNodes(
   nxArgs: NxArgs,
   projectGraph: ProjectGraph
 ): Promise<ProjectGraphProjectNode[]> {
