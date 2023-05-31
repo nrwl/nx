@@ -1,4 +1,4 @@
-import { fileHasher } from '../../hasher/impl';
+import { fileHasher } from '../../hasher/file-hasher';
 
 export async function handleRequestFileData() {
   const response = JSON.stringify(fileHasher.allFileData());

@@ -21,7 +21,7 @@ import { serverLogger } from './logger';
 import { Workspaces } from '../../config/workspaces';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { execSync } from 'child_process';
-import { fileHasher, hashArray } from '../../hasher/impl';
+import { fileHasher, hashArray } from '../../hasher/file-hasher';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;

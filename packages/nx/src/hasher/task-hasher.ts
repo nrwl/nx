@@ -12,10 +12,9 @@ import { Task } from '../config/task-graph';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { hashTsConfig } from '../plugins/js/hasher/hasher';
 import { DaemonClient } from '../daemon/client/client';
-import { FileHasher } from './impl/file-hasher-base';
-import { hashArray } from './impl';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 import { findMatchingProjects } from '../utils/find-matching-projects';
+import { FileHasher, hashArray } from './file-hasher';
 
 type ExpandedSelfInput =
   | { fileset: string }
