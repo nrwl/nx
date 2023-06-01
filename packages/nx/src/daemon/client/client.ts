@@ -339,6 +339,10 @@ export class DaemonClient {
     this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
     this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
 
+    if (this.nxJson.tasksRunnerOptions.default?.nativeWatcher) {
+      DAEMON_ENV_SETTINGS['NX_NATIVE_WATCHER'] = true;
+    }
+
     const backgroundProcess = spawn(
       process.execPath,
       [join(__dirname, '../server/start.js')],
@@ -352,7 +356,6 @@ export class DaemonClient {
       }
     );
     backgroundProcess.unref();
-    //
 
     /**
      * Ensure the server is actually available to connect to via IPC before resolving

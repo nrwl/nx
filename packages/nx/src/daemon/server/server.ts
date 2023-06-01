@@ -10,15 +10,19 @@ import {
 import { serverLogger } from './logger';
 import {
   getOutputsWatcherSubscription,
+  getOutputWatcherInstance,
   getSourceWatcherSubscription,
+  getWatcherInstance,
   handleServerProcessTermination,
   resetInactivityTimeout,
   respondToClient,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
   storeOutputsWatcherSubscription,
+  storeOutputWatcherInstance,
   storeProcessJsonSubscription,
   storeSourceWatcherSubscription,
+  storeWatcherInstance,
 } from './shutdown-utils';
 import {
   convertChangeEventsToLogMessage,
@@ -26,6 +30,8 @@ import {
   subscribeToWorkspaceChanges,
   FileWatcherCallback,
   subscribeToServerProcessJsonChanges,
+  watchWorkspace,
+  watchOutputFiles,
 } from './watcher';
 import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
 import { existsSync, statSync } from 'fs';
@@ -232,6 +238,10 @@ function registerProcessTerminationListeners() {
 }
 
 async function registerProcessServerJsonTracking() {
+  if (useNativeWatcher()) {
+    return;
+  }
+
   storeProcessJsonSubscription(
     await subscribeToServerProcessJsonChanges(async () => {
       if (getDaemonProcessIdSync() !== process.pid) {
@@ -312,12 +322,13 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
     }
 
     if (err || !changeEvents || !changeEvents.length) {
+      let error = typeof err === 'string' ? new Error(err) : err;
       serverLogger.watcherLog(
         'Unexpected workspace watcher error',
-        err.message
+        error.message
       );
-      console.error(err);
-      workspaceWatcherError = err;
+      console.error(error);
+      workspaceWatcherError = error;
       return;
     }
 
@@ -361,15 +372,21 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
   try {
     if (err || !changeEvents || !changeEvents.length) {
-      serverLogger.watcherLog('Unexpected outputs watcher error', err.message);
-      console.error(err);
-      outputsWatcherError = err;
+      let error = typeof err === 'string' ? new Error(err) : err;
+      serverLogger.watcherLog(
+        'Unexpected outputs watcher error',
+        error.message
+      );
+      console.error(error);
+      outputsWatcherError = error;
       disableOutputsTracking();
       return;
     }
     if (outputsWatcherError) {
       return;
     }
+
+    serverLogger.watcherLog('Processing file changes in outputs');
     processFileChangesInOutputs(changeEvents);
   } catch (err) {
     serverLogger.watcherLog(`Unexpected outputs watcher error`, err.message);
@@ -398,25 +415,46 @@ export async function startServer(): Promise<Server> {
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 
-          if (!getSourceWatcherSubscription()) {
-            storeSourceWatcherSubscription(
-              await subscribeToWorkspaceChanges(server, handleWorkspaceChanges)
-            );
-            serverLogger.watcherLog(
-              `Subscribed to changes within: ${workspaceRoot}`
-            );
-          }
+          if (useNativeWatcher()) {
+            if (!getWatcherInstance()) {
+              storeWatcherInstance(
+                await watchWorkspace(server, handleWorkspaceChanges)
+              );
 
-          // temporary disable outputs tracking on linux
-          const outputsTrackingIsEnabled = process.platform != 'linux';
-          if (outputsTrackingIsEnabled) {
-            if (!getOutputsWatcherSubscription()) {
-              storeOutputsWatcherSubscription(
-                await subscribeToOutputsChanges(handleOutputsChanges)
+              serverLogger.watcherLog(
+                `Subscribed to changes within: ${workspaceRoot} (native)`
+              );
+            }
+
+            if (!getOutputWatcherInstance()) {
+              storeOutputWatcherInstance(
+                await watchOutputFiles(handleOutputsChanges)
               );
             }
           } else {
-            disableOutputsTracking();
+            if (!getSourceWatcherSubscription()) {
+              storeSourceWatcherSubscription(
+                await subscribeToWorkspaceChanges(
+                  server,
+                  handleWorkspaceChanges
+                )
+              );
+              serverLogger.watcherLog(
+                `Subscribed to changes within: ${workspaceRoot}`
+              );
+            }
+
+            // temporary disable outputs tracking on linux
+            const outputsTrackingIsEnabled = process.platform != 'linux';
+            if (outputsTrackingIsEnabled) {
+              if (!getOutputsWatcherSubscription()) {
+                storeOutputsWatcherSubscription(
+                  await subscribeToOutputsChanges(handleOutputsChanges)
+                );
+              }
+            } else {
+              disableOutputsTracking();
+            }
           }
 
           return resolve(server);
@@ -428,4 +466,8 @@ export async function startServer(): Promise<Server> {
       reject(err);
     }
   });
+}
+
+function useNativeWatcher() {
+  return process.env.NX_NATIVE_WATCHER === 'true';
 }
