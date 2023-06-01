@@ -17,7 +17,12 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 
 function main() {
-  if (process.argv[2] !== 'report' && !_supportedPlatform()) {
+  if (
+    process.argv[2] !== 'report' &&
+    process.argv[2] !== '--version' &&
+    process.argv[2] !== '--help' &&
+    !_supportedPlatform()
+  ) {
     output.error({
       title: 'Platform not supported',
       bodyLines: [
