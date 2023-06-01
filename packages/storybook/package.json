@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "dotenv": "~10.0.0",
-    "enquirer": "~2.3.6",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "semver": "7.3.4",
     "@nx/cypress": "file:../cypress",
