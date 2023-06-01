@@ -108,17 +108,28 @@ describe('Node Applications', () => {
       `apps/${nodeapp}/src/additional-main.ts`,
       `console.log('Hello Additional World!');`
     );
-    updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
+    updateFile(
+      `apps/${nodeapp}/src/main.ts`,
+      `console.log('Hello World!');
+    console.log('env: ' + process.env['NODE_ENV']);
+    `
+    );
+
     await runCLIAsync(`build ${nodeapp}`);
 
     checkFilesExist(
       `dist/apps/${nodeapp}/main.js`,
       `dist/apps/${nodeapp}/additional-main.js`
     );
-    const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
-      cwd: tmpProjPath(),
-    }).toString();
+
+    const result = execSync(
+      `NODE_ENV=development && node dist/apps/${nodeapp}/main.js`,
+      {
+        cwd: tmpProjPath(),
+      }
+    ).toString();
     expect(result).toContain('Hello World!');
+    expect(result).toContain('env: development');
 
     const additionalResult = execSync(
       `node dist/apps/${nodeapp}/additional-main.js`,
