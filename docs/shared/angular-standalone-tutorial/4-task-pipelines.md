@@ -181,7 +181,7 @@ Another way that Nx saves you from unnecessary work is the `affected` command. `
 Run the command:
 
 ```shell
-git add . && git commit -m "commiting to test affected"
+git add . ; git commit -m "commiting to test affected"
 ```
 
 Then make a change to the styles of your `cart` project:
