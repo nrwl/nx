@@ -4,7 +4,7 @@ import { join } from 'path';
 import * as yargs from 'yargs';
 import { ensureDirSync, statSync } from 'fs-extra';
 
-async function generateGraph(directory: string, name: string) {
+function generateGraph(directory: string, name: string) {
   if (!existsSync(directory)) {
     console.error(`Could not find directory ${directory}`);
     return;
