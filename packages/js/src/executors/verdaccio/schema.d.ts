@@ -1,5 +1,5 @@
 export interface VerdaccioExecutorSchema {
-  location?: string;
+  location: 'global' | 'user' | 'project' | 'none';
   storage?: string;
   port: number;
   config?: string;

@@ -26,7 +26,7 @@ export function normalizeOptions(
     : name;
 
   const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = projectName;
+  const fileName = options.simpleName ? name : projectName;
   const { libsDir: defaultLibsDir } = getWorkspaceLayout(host);
   const libsDir = layoutDirectory ?? defaultLibsDir;
   const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
