@@ -63,7 +63,7 @@ export async function reportHandler() {
 
   const bodyLines = [
     `Node   : ${process.versions.node}`,
-    `OS     : ${process.platform} ${process.arch}`,
+    `OS     : ${process.platform}-${process.arch}`,
     `${pm.padEnd(7)}: ${pmVersion}`,
     ``,
   ];

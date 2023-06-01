@@ -17,11 +17,11 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 
 function main() {
-  if (!_supportedPlatform()) {
+  if (process.argv[2] !== 'report' && !_supportedPlatform()) {
     output.error({
       title: 'Platform not supported',
       bodyLines: [
-        'This system is currently not supported by Nx.',
+        `This platform (${process.platform}-${process.arch}) is currently not supported by Nx.`,
         'For a list of supported platforms, please see https://nx.dev/recipes/ci/troubleshoot-nx-install-issues#supported-native-module-platform',
       ],
     });
