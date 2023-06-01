@@ -114,7 +114,7 @@ You can read more about it in our [announcement blog post](https://blog.nrwl.io/
 
 While before we provided you with a separate coupon for each workspace, we have now changed to "organization-wide licenses": you receive a single coupon for your whole organization, that gives you unlimited access for the agreed number of workspaces. You are then free to delete, create and re-shuffle your workspaces as often as you want without requiring new coupons for us (as long as you stay within your limit of workspaces).
 
-You will see some updates in the UI to reflect this, however, **you don't need to do anything once you update your images!** We'll automatically migrate you to this, based on your current number of enabled workspaces! 
+You will see some updates in the UI to reflect this, however, **you don't need to do anything once you update your images!** We'll automatically migrate you to this, based on your current number of enabled workspaces!
 
 #### Proxy updates
 
@@ -122,7 +122,7 @@ One of the features of NxCloud is its integrations with your repository hosting 
 
 <img src="https://miro.medium.com/v2/resize:fit:4800/format:webp/0*y9YS0koTyS4Tp2Uh.png" alt="NxCloud github integration screenshot">
 
-Before, if you had a self-hosted instance of Github, Gitlab or Bitbucket, calls from NxCloud to your code-hosting provider would fail, because they'd be using a self-signed certificate, which NxCloud wouldn't recognise. 
+Before, if you had a self-hosted instance of Github, Gitlab or Bitbucket, calls from NxCloud to your code-hosting provider would fail, because they'd be using a self-signed certificate, which NxCloud wouldn't recognise.
 
 [We now support self-signed SVN certificates, via a simple k8s configMap.](https://github.com/nrwl/nx-cloud-helm/blob/main/PROXY-GUIDE.md#supporting-self-signed-ssl-certificates)
 
@@ -150,9 +150,10 @@ If you need assistance, please get in touch at [cloud-support@nrwl.io](mailto:cl
 #### New release process
 
 With this update, we are also changing our release process:
+
 1. We'll start adding release notes with every new version published
 2. We switch to using [calver](https://calver.org/) versioning for our images
-3. We stopped publishing the `latest` tag. 
+3. We stopped publishing the `latest` tag.
 4. We will be emailing Enterprise admins with every new release. If you do not get these emails, please send us an email at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io) to get added
 
 Any questions at all or to report issues with the new release [please get in touch!](mailto:cloud-support@nrwl.io)
