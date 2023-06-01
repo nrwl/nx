@@ -106,7 +106,7 @@ This is one of our biggest NxCloud On-Prem releases. It also marks a change in o
 
 A few months ago we announced a complete re-design of the NxCloud UI! It's faster, easier to use and pleasant to look at! We're now bringing this to On-Prem users as well:
 
-<img src="https://miro.medium.com/v2/resize:fit:4800/format:webp/0*duHzFyDkVs6LunAC.png" alt="NxCloud new UI screenshot">
+<img src="https://miro.medium.com/v2/resize:fit:4800/format:webp/0*L7aZpey4X49M_t4b.png" alt="NxCloud new UI screenshot">
 
 You can read more about it in our [announcement blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
 
@@ -119,6 +119,8 @@ You will see some updates in the UI to reflect this, however, **you don't need t
 #### Proxy updates
 
 One of the features of NxCloud is its integrations with your repository hosting solution. When you open up a Pull Request, you can configure NxCloud to post a comment to it once your CI has finished running, with a summary of all the tasks that succeeded and failed on that code change, and a link to your branch on NxCloud so you can further analyse your run. Your developers save time, and allows them to skip digging through long CI logs.
+
+<img src="https://miro.medium.com/v2/resize:fit:4800/format:webp/0*y9YS0koTyS4Tp2Uh.png" alt="NxCloud github integration screenshot">
 
 Before, if you had a self-hosted instance of Github, Gitlab or Bitbucket, calls from NxCloud to your code-hosting provider would fail, because they'd be using a self-signed certificate, which NxCloud wouldn't recognise. 
 
