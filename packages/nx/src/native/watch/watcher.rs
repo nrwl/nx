@@ -187,7 +187,7 @@ impl Watcher {
             watch_exec
                 .send_event(
                     Event {
-                        tags: vec![Tag::Signal(Signal::Interrupt)],
+                        tags: vec![Tag::Signal(Signal::Terminate)],
                         metadata: HashMap::new(),
                     },
                     Priority::Urgent,
