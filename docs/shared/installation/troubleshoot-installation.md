@@ -12,7 +12,7 @@ are a few reasons why this could potentially happen:
 1. Running your install command with `--no-optional` (or the relative flag in yarn, pnpm, etc)
 2. The package-lock.json file was not correctly updated by npm, and missed optional dependencies used by Nx.
    You can read more about this [issue on the npm repository.](https://github.com/npm/cli/issues/4828)
-3. [#supported-native-module-platforms](Your platform is not supported)
+3. [Your platform is not supported](#supported-native-module-platforms)
 
 {% callout type="note" title="Updating Nx" %}
 When updating Nx that is already on 15.8, the package-lock.json should continue to be updated properly with all the proper optional dependencies.
