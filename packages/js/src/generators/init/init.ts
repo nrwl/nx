@@ -6,18 +6,57 @@ import {
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
+  readJson,
   stripIndents,
   Tree,
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
+import { satisfies, valid } from 'semver';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
   nxVersion,
   prettierVersion,
+  supportedTypescriptVersions,
   typescriptVersion,
 } from '../../utils/versions';
 import { InitSchema } from './schema';
+
+async function getInstalledTypescriptVersion(
+  tree: Tree
+): Promise<string | null> {
+  const rootPackageJson = readJson(tree, 'package.json');
+  const tsVersionInRootPackageJson =
+    rootPackageJson.devDependencies?.['typescript'] ??
+    rootPackageJson.dependencies?.['typescript'];
+
+  if (!tsVersionInRootPackageJson) {
+    return null;
+  }
+  if (valid(tsVersionInRootPackageJson)) {
+    // it's a pinned version, return it
+    return tsVersionInRootPackageJson;
+  }
+
+  // it's a version range, check whether the installed version matches it
+  try {
+    const tsPackageJson = readModulePackageJson('typescript').packageJson;
+    const installedTsVersion =
+      tsPackageJson.devDependencies?.['typescript'] ??
+      tsPackageJson.dependencies?.['typescript'];
+    // the installed version matches the package.json version range
+    if (
+      installedTsVersion &&
+      satisfies(installedTsVersion, tsVersionInRootPackageJson)
+    ) {
+      return installedTsVersion;
+    }
+  } finally {
+    return checkAndCleanWithSemver('typescript', tsVersionInRootPackageJson);
+  }
+}
 
 export async function initGenerator(
   tree: Tree,
@@ -36,7 +75,16 @@ export async function initGenerator(
   };
 
   if (!schema.js) {
-    devDependencies['typescript'] = typescriptVersion;
+    const installedTsVersion = await getInstalledTypescriptVersion(tree);
+
+    if (
+      !installedTsVersion ||
+      !satisfies(installedTsVersion, supportedTypescriptVersions, {
+        includePrerelease: true,
+      })
+    ) {
+      devDependencies['typescript'] = typescriptVersion;
+    }
   }
 
   // https://prettier.io/docs/en/configuration.html
