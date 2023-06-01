@@ -12,7 +12,7 @@ are a few reasons why this could potentially happen:
 1. Running your install command with `--no-optional` (or the relative flag in yarn, pnpm, etc)
 2. The package-lock.json file was not correctly updated by npm, and missed optional dependencies used by Nx.
    You can read more about this [issue on the npm repository.](https://github.com/npm/cli/issues/4828)
-3. Your platform is not supported (see #supported-native-module-platforms)
+3. [#supported-native-module-platforms](Your platform is not supported)
 
 {% callout type="note" title="Updating Nx" %}
 When updating Nx that is already on 15.8, the package-lock.json should continue to be updated properly with all the proper optional dependencies.
@@ -32,6 +32,6 @@ We publish modules for the following platforms:
   - We use the `msvc` target, so as long as Microsoft supports your Windows version, it should work on it
 - Linux (arm64, x64)
   - We use `gnu` ang `musl` targets, which are used by the most popular Linux distributions
-- FreeBSD (x640)
+- FreeBSD (x64)
 
 If you're running a machine that isn't part of the list above, then Nx will not be able to function.
