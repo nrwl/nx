@@ -7,6 +7,7 @@
     "$id": "NxPluginE2E",
     "title": "Create an E2E app for a Nx Plugin",
     "description": "Create an E2E app for a Nx Plugin.",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"E2E Project\" %}\n\nScaffolds an E2E project for the plugin `my-plugin`.\n\n```bash\nnx g @nx/plugin:e2e-project --pluginName my-plugin --npmPackageName my-plugin --pluginOutputPath dist/my-plugin\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "type": "object",
     "properties": {
       "pluginName": {
@@ -29,12 +30,6 @@
         "x-priority": "important"
       },
       "jestConfig": { "type": "string", "description": "Jest config file." },
-      "standaloneConfig": {
-        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-        "type": "boolean",
-        "default": true,
-        "x-deprecated": "Nx only supports standaloneConfig"
-      },
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",

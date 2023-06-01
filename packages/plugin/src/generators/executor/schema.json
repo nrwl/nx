@@ -4,6 +4,7 @@
   "$id": "NxPluginExecutor",
   "title": "Create an Executor for an Nx Plugin",
   "description": "Create an Executor for an Nx Plugin.",
+  "examplesFile": "../../../docs/generators/executor-examples.md",
   "type": "object",
   "examples": [
     {
