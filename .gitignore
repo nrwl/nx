@@ -31,5 +31,6 @@ CHANGELOG.md
 
 # Local dev files
 .env
+.bashrc
 
 *.node
