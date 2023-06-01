@@ -84,6 +84,39 @@
         "@storybook/svelte"
       ],
       "x-deprecated": "Upgrade to Storybook 7."
+    },
+    "webpackStatsJson": {
+      "type": ["boolean", "string"],
+      "description": "Write Webpack Stats JSON to disk.",
+      "default": false
+    },
+    "sslCa": {
+      "type": "string",
+      "description": "Provide an SSL certificate authority. (Optional with --https, required if using a self-signed certificate)."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "Provide an SSL certificate. (Required with --https)."
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "Provide an SSL key. (Required with --https)."
+    },
+    "smokeTest": {
+      "type": "boolean",
+      "description": "Exit after successful start."
+    },
+    "noOpen": {
+      "type": "boolean",
+      "description": "Do not open Storybook automatically in the browser."
+    },
+    "debugWebpack": {
+      "type": "boolean",
+      "description": "Display final webpack configurations for debugging purposes."
+    },
+    "disableTelemetry": {
+      "type": "boolean",
+      "description": "Disables Storybook's telemetry."
     }
   },
   "additionalProperties": true,
