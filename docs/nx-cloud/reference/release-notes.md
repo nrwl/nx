@@ -130,9 +130,9 @@ Before, if you had a self-hosted instance of Github, Gitlab or Bitbucket, calls 
 
 #### DTE performance
 
-We completely re-wrote our Task Distribution engine, which should result in much fewer errors due to agent timeouts, increased performance and more determenistic task distribution.
+We completely re-wrote our Task Distribution engine, which should result in much fewer errors due to agent timeouts, increased performance and more deterministic task distribution.
 
-We've added a new internal task queing system, which should further improve the performance of DTE. You can enable it by setting [`enableMessageQueue: true`](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-cloud/values.yaml#L18) in your Helm config.
+We've also added a new internal task queueing system, which should further improve the performance of DTE. While this is an implementation detail which will be automatically enabled in future releases, you can test it out today by setting [`enableMessageQueue: true`](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-cloud/values.yaml#L18) in your Helm config.
 
 You can read more about the recent DTE improvements in our [NxCloud 3.0 blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
 
@@ -142,9 +142,9 @@ You can read more about the recent DTE improvements in our [NxCloud 3.0 blog pos
 
 #### Breaking changes
 
-NxCloud uses MongoDB internally as its data store. While we've always used Mongo 4.2, in the latest release we started targetting Mongo 6.0. It's a much lighter process, with improved performance, and quicker reads and writes. It also opens up to using its new features.
+NxCloud uses MongoDB internally as its data store. While we've always used Mongo 4.2, in the latest release we started targetting Mongo 6.0. It's a much lighter process, with improved performance, and quicker reads and writes.
 
-While nothing will break if you upgrade to this new image and you stay on Mongo 4.2, we strongly recommend you upgrade your Database to Mongo 6.0 to make sure nothing breaks in the future. [We wrote a full guide on how you can approach the upgrade here](https://github.com/nrwl/nx-cloud-helm/blob/main/MONGO-OPERATOR-GUIDE.md#upgrading-to-mongo-6).
+While you can still upgrade to this new image even if you are on Mongo 4.2 (nothing will break), **we strongly recommend you upgrade your Database to Mongo 6.0 to make sure nothing breaks in the future.** [We wrote a full guide on how you can approach the upgrade here](https://github.com/nrwl/nx-cloud-helm/blob/main/MONGO-OPERATOR-GUIDE.md#upgrading-to-mongo-6).
 If you need assistance, please get in touch at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io).
 
 #### New release process
