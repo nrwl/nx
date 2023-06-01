@@ -267,3 +267,23 @@ export function pleaseUpgrade(): string {
     https://nx.dev/packages/storybook/generators/migrate-7
     `;
 }
+
+export function convertKeysToCamelCase(options: object): object {
+  if (typeof options !== 'object' || options === null) {
+    return options;
+  }
+
+  if (Array.isArray(options)) {
+    return options.map(convertKeysToCamelCase);
+  }
+
+  return Object.keys(options).reduce((result, key) => {
+    const value = options[key];
+    const camelCaseKey = key.replace(/[-_]([a-zA-Z])/g, (_, letter) =>
+      letter.toUpperCase()
+    );
+
+    result[camelCaseKey] = convertKeysToCamelCase(value);
+    return result;
+  }, {});
+}

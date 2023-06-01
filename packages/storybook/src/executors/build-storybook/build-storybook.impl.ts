@@ -3,6 +3,7 @@ import * as build from '@storybook/core-server';
 import { CLIOptions } from '@storybook/types';
 import 'dotenv/config';
 import {
+  convertKeysToCamelCase,
   pleaseUpgrade,
   storybookConfigExistsCheck,
   storybookMajorVersion,
@@ -17,7 +18,7 @@ export default async function buildStorybookExecutor(
   storybookConfigExistsCheck(options.configDir, context.projectName);
   const storybook7 = storybookMajorVersion() === 7;
   if (storybook7) {
-    const buildOptions: CLIOptions = options;
+    const buildOptions: CLIOptions = convertKeysToCamelCase(options);
     logger.info(`NX Storybook builder starting ...`);
     await runInstance(buildOptions, storybook7);
     logger.info(`NX Storybook builder finished ...`);

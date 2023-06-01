@@ -7,6 +7,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   isTheFileAStory,
+  convertKeysToCamelCase,
 } from './utilities';
 import { nxVersion, storybookVersion } from './versions';
 import * as targetVariations from './test-configs/different-target-variations.json';
@@ -209,6 +210,30 @@ describe('testing utilities', () => {
         );
         expect(fileIsStory).toBeFalsy();
       });
+    });
+  });
+
+  describe('Test convertKeysToCamelCase', () => {
+    it('should convert keys to camel case', () => {
+      const object = {
+        ['static-dir']: 'static',
+        ['config-dir']: '.storybook',
+        ['webpack-stats-json']: true,
+        ['disable-telemetry']: true,
+        ['debug-webpack']: false,
+        ['smokeTest']: false,
+      };
+
+      const result = {
+        staticDir: 'static',
+        configDir: '.storybook',
+        webpackStatsJson: true,
+        disableTelemetry: true,
+        debugWebpack: false,
+        smokeTest: false,
+      };
+
+      expect(convertKeysToCamelCase(object)).toMatchObject(result);
     });
   });
 

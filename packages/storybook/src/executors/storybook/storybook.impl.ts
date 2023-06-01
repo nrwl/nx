@@ -2,6 +2,7 @@ import { ExecutorContext, logger } from '@nx/devkit';
 import * as build from '@storybook/core-server';
 import 'dotenv/config';
 import {
+  convertKeysToCamelCase,
   pleaseUpgrade,
   storybookConfigExistsCheck,
   storybookMajorVersion,
@@ -20,7 +21,7 @@ export default async function* storybookExecutor(
   const storybook7 = storybookMajorVersion() === 7;
   storybookConfigExistsCheck(options.configDir, context.projectName);
   if (storybook7) {
-    const buildOptions: CLIOptions = options;
+    const buildOptions: CLIOptions = convertKeysToCamelCase(options);
     const result = await runInstance(buildOptions, storybook7);
     yield {
       success: true,
