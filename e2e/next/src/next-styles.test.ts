@@ -58,6 +58,19 @@ describe('Next.js apps', () => {
       checkExport: false,
     });
 
+    const scAppWithAppRouter = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${scAppWithAppRouter} --no-interactive --style=styled-components --appDir=true`
+    );
+
+    await checkApp(scAppWithAppRouter, {
+      checkUnitTest: false, // No unit tests for app router
+      checkLint: false,
+      checkE2E: false,
+      checkExport: false,
+    });
+
     const emotionApp = uniq('app');
 
     runCLI(

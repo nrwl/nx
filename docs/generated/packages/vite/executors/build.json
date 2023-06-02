@@ -88,6 +88,10 @@
         "description": "Force the optimizer to ignore the cache and re-bundle",
         "type": "boolean"
       },
+      "cssCodeSplit": {
+        "description": "Enable/disable CSS code splitting. When enabled, CSS imported in async chunks will be inlined into the async chunk itself and inserted when the chunk is loaded.",
+        "type": "boolean"
+      },
       "watch": {
         "description": "Enable re-building when files change.",
         "oneOf": [{ "type": "boolean" }, { "type": "object" }],

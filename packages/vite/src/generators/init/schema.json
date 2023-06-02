@@ -12,6 +12,12 @@
       "default": "react",
       "x-prompt": "What UI framework plugin should Vite use?"
     },
+    "compiler": {
+      "type": "string",
+      "description": "Compiler to use for Vite when UI Framework is React.",
+      "enum": ["babel", "swc"],
+      "default": "babel"
+    },
     "includeLib": {
       "type": "boolean",
       "description": "Add dependencies needed to build libraries.",

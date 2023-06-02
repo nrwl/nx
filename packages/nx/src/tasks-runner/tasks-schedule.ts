@@ -134,7 +134,6 @@ export class TasksSchedule {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
       const executorName = await getExecutorNameForTask(
         rootTask,
-        this.nxJson,
         this.projectGraph
       );
       await this.processTaskForBatches(batchMap, rootTask, executorName, true);
@@ -166,11 +165,7 @@ export class TasksSchedule {
       this.projectGraph,
       this.nxJson
     );
-    const executorName = await getExecutorNameForTask(
-      task,
-      this.nxJson,
-      this.projectGraph
-    );
+    const executorName = await getExecutorNameForTask(task, this.projectGraph);
     if (rootExecutorName !== executorName) {
       return;
     }

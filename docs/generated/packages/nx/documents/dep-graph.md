@@ -67,17 +67,35 @@ Watch for changes to project graph and update in-browser:
 
 ## Options
 
+### affected
+
+Type: `boolean`
+
+Highlight affected projects
+
+### base
+
+Type: `string`
+
+Base of the current branch (usually main)
+
 ### exclude
 
 Type: `string`
 
-List of projects delimited by commas to exclude from the project graph.
+Exclude certain projects from being processed
 
 ### file
 
 Type: `string`
 
 Output file (e.g. --file=output.json or --file=dep-graph.html)
+
+### files
+
+Type: `string`
+
+Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces
 
 ### focus
 
@@ -90,6 +108,12 @@ Use to show the project graph for a particular project and every node that is ei
 Type: `boolean`
 
 Group projects by folder in the project graph
+
+### head
+
+Type: `string`
+
+Latest commit of the current branch (usually HEAD)
 
 ### help
 
@@ -122,6 +146,18 @@ Bind the project graph server to a specific port.
 Type: `string`
 
 The target to show tasks for in the task graph
+
+### uncommitted
+
+Type: `boolean`
+
+Uncommitted changes
+
+### untracked
+
+Type: `boolean`
+
+Untracked changes
 
 ### version
 

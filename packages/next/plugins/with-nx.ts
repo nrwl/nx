@@ -12,6 +12,7 @@ import type { ProjectGraph, ProjectGraphProjectNode, Target } from '@nx/devkit';
 export interface WithNxOptions extends NextConfig {
   nx?: {
     svgr?: boolean;
+    babelUpwardRootMode?: boolean;
   };
 }
 
@@ -110,6 +111,7 @@ function getNxContext(
     );
   }
 }
+
 /**
  * Try to read output dir from project, and default to '.next' if executing outside of Nx (e.g. dist is added to a docker image).
  */
@@ -206,7 +208,7 @@ function withNx(
       nextConfig.webpack = (a, b) =>
         createWebpackConfig(
           workspaceRoot,
-          options.root,
+          projectDirectory,
           options.fileReplacements,
           options.assets,
           dependencies,
@@ -239,8 +241,10 @@ export function getNextConfig(
        * Update babel to support our monorepo setup.
        * The 'upward' mode allows the root babel.config.json and per-project .babelrc files to be picked up.
        */
-      options.defaultLoaders.babel.options.babelrc = true;
-      options.defaultLoaders.babel.options.rootMode = 'upward';
+      if (nx?.babelUpwardRootMode) {
+        options.defaultLoaders.babel.options.babelrc = true;
+        options.defaultLoaders.babel.options.rootMode = 'upward';
+      }
 
       /*
        * Modify the Next.js webpack config to allow workspace libs to use css modules.

@@ -1,12 +1,11 @@
-export function createCliOptions(obj: { [key: string]: any }): string {
-  return Object.entries(obj)
-    .reduce((arr, [key, value]) => {
-      if (value !== undefined) {
-        const kebabCase = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
-        return `${arr}--${kebabCase}=${value} `;
-      } else {
-        return arr;
-      }
-    }, '')
-    .trim();
+export function createCliOptions(
+  obj: Record<string, string | number | boolean>
+): string[] {
+  return Object.entries(obj).reduce((arr, [key, value]) => {
+    if (value !== undefined) {
+      const kebabCase = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+      arr.push(`--${kebabCase}=${value}`);
+    }
+    return arr;
+  }, []);
 }

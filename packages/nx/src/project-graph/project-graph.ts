@@ -17,6 +17,7 @@ import { fileExists } from '../utils/fileutils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { Workspaces } from '../config/workspaces';
 import { createProjectFileMap } from './file-map-utils';
+import { performance } from 'perf_hooks';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -86,12 +87,7 @@ export async function buildProjectGraphWithoutDaemon() {
       projectConfigurations,
       projectFileMap,
       allWorkspaceFiles,
-      cacheEnabled
-        ? {
-            fileMap: readProjectFileMapCache(),
-            projectGraph: readProjectGraphCache(),
-          }
-        : null,
+      cacheEnabled ? readProjectFileMapCache() : null,
       cacheEnabled
     )
   ).projectGraph;
@@ -140,9 +136,18 @@ export async function createProjectGraphAsync(
     resetDaemonClient: false,
   }
 ): Promise<ProjectGraph> {
+  performance.mark('create-project-graph-async:start');
+
   if (!daemonClient.enabled()) {
     try {
-      return await buildProjectGraphWithoutDaemon();
+      const res = await buildProjectGraphWithoutDaemon();
+      performance.mark('create-project-graph-async:end');
+      performance.measure(
+        'create-project-graph-async',
+        'create-project-graph-async:start',
+        'create-project-graph-async:end'
+      );
+      return res;
     } catch (e) {
       handleProjectGraphError(opts, e);
     }
@@ -152,6 +157,12 @@ export async function createProjectGraphAsync(
       if (opts.resetDaemonClient) {
         daemonClient.reset();
       }
+      performance.mark('create-project-graph-async:end');
+      performance.measure(
+        'create-project-graph-async',
+        'create-project-graph-async:start',
+        'create-project-graph-async:end'
+      );
       return projectGraph;
     } catch (e) {
       if (e.message.indexOf('inotify_add_watch') > -1) {

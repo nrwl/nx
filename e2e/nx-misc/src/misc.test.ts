@@ -54,7 +54,10 @@ describe('Nx Commands', () => {
       const withTargets = JSON.parse(
         runCLI('show projects --with-target e2e --json')
       );
-      expect(withTargets).toEqual([`${app1}-e2e`, `${app2}-e2e`]);
+      expect(withTargets).toEqual(
+        expect.arrayContaining([`${app1}-e2e`, `${app2}-e2e`])
+      );
+      expect(withTargets.length).toEqual(2);
     });
 
     it('should show detailed project info', () => {
@@ -90,8 +93,8 @@ describe('Nx Commands', () => {
 
       // temporarily make it look like this isn't installed
       renameSync(
-        tmpProjPath('node_modules/@nx/angular'),
-        tmpProjPath('node_modules/@nx/angular_tmp')
+        tmpProjPath('node_modules/@nx/next'),
+        tmpProjPath('node_modules/@nx/next_tmp')
       );
 
       listOutput = runCLI('list');
@@ -109,12 +112,20 @@ describe('Nx Commands', () => {
       // check for builders
       expect(listOutput).toContain('run-commands');
 
-      // // look for uninstalled core plugin
       listOutput = runCLI('list @nx/angular');
 
-      expect(listOutput).toContain(
-        'NX   @nx/angular is not currently installed'
-      );
+      expect(listOutput).toContain('Capabilities in @nx/angular');
+
+      expect(listOutput).toContain('library');
+      expect(listOutput).toContain('component');
+
+      // check for builders
+      expect(listOutput).toContain('package');
+
+      // // look for uninstalled core plugin
+      listOutput = runCLI('list @nx/next');
+
+      expect(listOutput).toContain('NX   @nx/next is not currently installed');
 
       // look for an unknown plugin
       listOutput = runCLI('list @wibble/fish');
@@ -125,8 +136,8 @@ describe('Nx Commands', () => {
 
       // put back the @nx/angular module (or all the other e2e tests after this will fail)
       renameSync(
-        tmpProjPath('node_modules/@nx/angular_tmp'),
-        tmpProjPath('node_modules/@nx/angular')
+        tmpProjPath('node_modules/@nx/next_tmp'),
+        tmpProjPath('node_modules/@nx/next')
       );
     }, 120000);
   });

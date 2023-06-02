@@ -30,7 +30,7 @@ async function main() {
   await nextApp.prepare();
 
   const server = createServer((req, res) => {
-    const parsedUrl = parse(req.url, true);
+    const parsedUrl = parse(req.url ?? '', true);
     handle(req, res, parsedUrl);
   });
 

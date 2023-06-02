@@ -1,4 +1,5 @@
 import { splitArgsIntoNxArgsAndOverrides } from './command-line-utils';
+import { withEnvironmentVariables as withEnvironment } from '../../internal-testing-utils/with-environment';
 
 jest.mock('../project-graph/file-utils');
 
@@ -458,15 +459,3 @@ describe('splitArgs', () => {
     });
   });
 });
-
-function withEnvironment(env: Record<string, string>, callback: () => void) {
-  const originalValues: Record<string, string> = {};
-  for (const key in env) {
-    originalValues[key] = process.env[key];
-    process.env[key] = env[key];
-  }
-  callback();
-  for (const key in env) {
-    process.env[key] = originalValues[key];
-  }
-}

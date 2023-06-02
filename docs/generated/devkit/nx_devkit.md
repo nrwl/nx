@@ -102,6 +102,7 @@ It only uses language primitives and immutable objects
 - [applySharedFunction](../../devkit/documents/nx_devkit#applysharedfunction)
 - [convertNxExecutor](../../devkit/documents/nx_devkit#convertnxexecutor)
 - [convertNxGenerator](../../devkit/documents/nx_devkit#convertnxgenerator)
+- [createProjectFileMapUsingProjectGraph](../../devkit/documents/nx_devkit#createprojectfilemapusingprojectgraph)
 - [createProjectGraphAsync](../../devkit/documents/nx_devkit#createprojectgraphasync)
 - [defaultTasksRunner](../../devkit/documents/nx_devkit#defaulttasksrunner)
 - [detectPackageManager](../../devkit/documents/nx_devkit#detectpackagemanager)
@@ -1056,6 +1057,22 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 ---
 
+### createProjectFileMapUsingProjectGraph
+
+▸ **createProjectFileMapUsingProjectGraph**(`graph`): `Promise`<[`ProjectFileMap`](../../devkit/documents/nx_devkit#projectfilemap)\>
+
+#### Parameters
+
+| Name    | Type                                                            |
+| :------ | :-------------------------------------------------------------- |
+| `graph` | [`ProjectGraph`](../../devkit/documents/nx_devkit#projectgraph) |
+
+#### Returns
+
+`Promise`<[`ProjectFileMap`](../../devkit/documents/nx_devkit#projectfilemap)\>
+
+---
+
 ### createProjectGraphAsync
 
 ▸ **createProjectGraphAsync**(`opts?`): `Promise`<[`ProjectGraph`](../../devkit/documents/nx_devkit#projectgraph)\>
@@ -1161,6 +1178,7 @@ ensurePackage(tree, '@nx/jest', nxVersion);
 
 This install the @nx/jest@<nxVersion> and return the module
 When running with --dryRun, the function will throw when dependencies are missing.
+Returns null for ESM dependencies. Import them with a dynamic import instead.
 
 #### Parameters
 
@@ -1180,11 +1198,12 @@ When running with --dryRun, the function will throw when dependencies are missin
 ▸ **ensurePackage**<`T`\>(`pkg`, `version`): `T`
 
 Ensure that dependencies and devDependencies from package.json are installed at the required versions.
+Returns null for ESM dependencies. Import them with a dynamic import instead.
 
 For example:
 
 ```typescript
-ensurePackage(tree, '@nx/jest', nxVersion);
+ensurePackage('@nx/jest', nxVersion);
 ```
 
 #### Type parameters

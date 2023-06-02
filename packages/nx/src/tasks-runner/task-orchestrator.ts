@@ -62,7 +62,7 @@ export class TaskOrchestrator {
   async run() {
     // initial scheduling
     await this.tasksSchedule.scheduleNextTasks();
-    performance.mark('task-execution-begins');
+    performance.mark('task-execution:start');
 
     const threads = [];
 
@@ -75,11 +75,11 @@ export class TaskOrchestrator {
     }
     await Promise.all(threads);
 
-    performance.mark('task-execution-ends');
+    performance.mark('task-execution:end');
     performance.measure(
-      'command-execution',
-      'task-execution-begins',
-      'task-execution-ends'
+      'task-execution',
+      'task-execution:start',
+      'task-execution:end'
     );
     this.cache.removeOldCacheRecords();
 

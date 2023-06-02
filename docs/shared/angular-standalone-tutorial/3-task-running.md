@@ -70,7 +70,7 @@ The properties inside each of these these targets is defined as follows:
 
 ## Running Tasks
 
-![Syntax for Running Tasks in Nx](/shared/angular-standalone-tutorial/run-target-syntax.svg)
+![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
 Run the `test` target for your `shared-ui` project:
 

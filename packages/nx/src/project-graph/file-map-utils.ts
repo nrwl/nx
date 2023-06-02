@@ -1,9 +1,26 @@
-import { FileData, ProjectFileMap } from '../config/project-graph';
+import {
+  FileData,
+  ProjectFileMap,
+  ProjectGraph,
+} from '../config/project-graph';
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from './utils/find-project-for-path';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { daemonClient } from '../daemon/client/client';
+import { readProjectsConfigurationFromProjectGraph } from './project-graph';
+import { fileHasher } from '../hasher/impl';
+
+export async function createProjectFileMapUsingProjectGraph(
+  graph: ProjectGraph
+): Promise<ProjectFileMap> {
+  const configs = readProjectsConfigurationFromProjectGraph(graph);
+  const files = daemonClient.enabled()
+    ? await daemonClient.getAllFileData()
+    : fileHasher.allFileData();
+  return createProjectFileMap(configs, files).projectFileMap;
+}
 
 export function createProjectFileMap(
   projectsConfigurations: ProjectsConfigurations,

@@ -71,14 +71,14 @@ export default async function exportExecutor(
     buildTarget,
     context
   );
-  const root = resolve(context.root, buildOptions.root);
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
   // Taken from:
   // https://github.com/vercel/next.js/blob/ead56eaab68409e96c19f7d9139747bac1197aa9/packages/next/cli/next-export.ts#L13
   const nextExportCliSpan = nextTrace.trace('next-export-cli');
 
   await exportApp(
-    root,
+    projectRoot,
     {
       statusMessage: 'Exporting',
       silent: options.silent,

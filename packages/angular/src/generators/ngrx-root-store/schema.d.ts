@@ -1,6 +1,7 @@
 export interface Schema {
   project: string;
   minimal: boolean;
+  addDevTools?: boolean;
   name?: string;
   directory?: string;
   facade?: boolean;

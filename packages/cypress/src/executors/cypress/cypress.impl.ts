@@ -47,7 +47,7 @@ export interface CypressExecutorOptions extends Json {
   group?: string;
   ignoreTestFiles?: string;
   reporter?: string;
-  reporterOptions?: string;
+  reporterOptions?: string | Json;
   skipServe?: boolean;
   testingType?: 'component' | 'e2e';
   tag?: string;
