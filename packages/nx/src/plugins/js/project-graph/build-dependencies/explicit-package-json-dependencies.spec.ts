@@ -9,7 +9,7 @@ import {
 } from '../../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
-import { fileHasher } from '../../../../hasher/impl';
+import { fileHasher } from '../../../../hasher/file-hasher';
 
 describe('explicit package json dependencies', () => {
   let ctx: ProjectGraphProcessorContext;

@@ -32,7 +32,7 @@ import {
 import { hashTasksThatDoNotDependOnOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { fileHasher } from '../hasher/impl';
+import { fileHasher } from '../hasher/file-hasher';
 import { getProjectFileMap } from '../project-graph/build-project-graph';
 import { performance } from 'perf_hooks';
 

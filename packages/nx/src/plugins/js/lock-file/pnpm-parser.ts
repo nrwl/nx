@@ -18,7 +18,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
-import { fileHasher, hashArray } from '../../../hasher/impl';
+import { fileHasher, hashArray } from '../../../hasher/file-hasher';
 
 export function parsePnpmLockfile(
   lockFileContent: string,

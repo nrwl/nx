@@ -8,7 +8,6 @@ import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { readNxJson, workspaceLayout } from '../../config/configuration';
-import { fileHasher } from '../../hasher/impl';
 import { output } from '../../utils/output';
 import { writeJsonFile } from '../../utils/fileutils';
 import {
@@ -25,6 +24,7 @@ import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
 import { Server } from 'net';
 import { readProjectFileMapCache } from '../../project-graph/nx-deps-cache';
+import { fileHasher } from '../../hasher/file-hasher';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 
