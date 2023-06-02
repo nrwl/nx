@@ -36,6 +36,7 @@ export async function* nodeExecutor(
   options: NodeExecutorOptions,
   context: ExecutorContext
 ) {
+  process.env.NODE_ENV ??= context?.configurationName ?? 'development';
   const project = context.projectGraph.nodes[context.projectName];
   const buildTarget = parseTargetString(
     options.buildTarget,
