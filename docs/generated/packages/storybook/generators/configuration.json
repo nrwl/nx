@@ -89,6 +89,7 @@
           "@storybook/web-components-vite"
         ],
         "aliases": ["storybook7UiFramework"],
+        "x-prompt": "Choose the Storybook framework that you need to use.",
         "x-priority": "important",
         "hidden": false
       },
