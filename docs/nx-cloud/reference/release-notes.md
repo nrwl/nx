@@ -106,8 +106,6 @@ This is one of our biggest NxCloud On-Prem releases. It also marks a change in o
 
 A few months ago we announced a complete re-design of the NxCloud UI! It's faster, easier to use and pleasant to look at! We're now bringing this to On-Prem users as well:
 
-<img src="https://miro.medium.com/v2/resize:fit:4800/format:webp/0*L7aZpey4X49M_t4b.png" alt="NxCloud new UI screenshot">
-
 You can read more about it in our [announcement blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
 
 #### Pricing updates
@@ -119,8 +117,6 @@ You will see some updates in the UI to reflect this, however, **you don't need t
 #### Proxy updates
 
 One of the features of NxCloud is its integrations with your repository hosting solution. When you open up a Pull Request, you can configure NxCloud to post a comment to it once your CI has finished running, with a summary of all the tasks that succeeded and failed on that code change, and a link to your branch on NxCloud so you can further analyse your run. Your developers save time, and allows them to skip digging through long CI logs.
-
-<img src="https://miro.medium.com/v2/resize:fit:4800/format:webp/0*y9YS0koTyS4Tp2Uh.png" alt="NxCloud github integration screenshot">
 
 Before, if you had a self-hosted instance of Github, Gitlab or Bitbucket, calls from NxCloud to your code-hosting provider would fail, because they'd be using a self-signed certificate, which NxCloud wouldn't recognise.
 
@@ -146,6 +142,14 @@ NxCloud uses MongoDB internally as its data store. While we've always used Mongo
 
 While you can still upgrade to this new image even if you are on Mongo 4.2 (nothing will break), **we strongly recommend you upgrade your Database to Mongo 6.0 to make sure nothing breaks in the future.** [We wrote a full guide on how you can approach the upgrade here](https://github.com/nrwl/nx-cloud-helm/blob/main/MONGO-OPERATOR-GUIDE.md#upgrading-to-mongo-6).
 If you need assistance, please get in touch at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io).
+
+##### Migration from Community Edition to Enterprise
+
+On May 16th, 2023 we announced our plans to sunset the Community Edition of NxCloud On-Prem to align with our new pricing plans. If you are on the Community Edition, please follow these steps to migrate:
+
+1. Use this image: `2306.01.2`
+2. Switch to private Enterprise by setting `NX_CLOUD_MODE=private-enterprise` (or `mode: 'private-enterprise'` if using Helm).
+3. Reach out to us at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io). You will get a FREE, unlimited-use coupon for the next 3 months so you can trial Nx Enterprise.
 
 #### New release process
 
