@@ -23,6 +23,8 @@ import { workspaceConfigurationCheck } from '../../utils/workspace-configuration
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { allFileData } from '../../utils/all-file-data';
+import { NX_PREFIX, logger } from '../../utils/logger';
+import { affectedGraphDeprecationMessage } from './command-object';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -54,11 +56,12 @@ export async function affected(
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const projects = await projectsToRun(nxArgs, projectGraph);
+  const projects = await getAffectedGraphNodes(nxArgs, projectGraph);
 
   try {
     switch (command) {
       case 'graph':
+        logger.warn([NX_PREFIX, affectedGraphDeprecationMessage].join(' '));
         const projectNames = projects.map((p) => p.name);
         await generateGraph(args as any, projectNames);
         break;
@@ -122,7 +125,7 @@ export async function affected(
   }
 }
 
-async function projectsToRun(
+export async function getAffectedGraphNodes(
   nxArgs: NxArgs,
   projectGraph: ProjectGraph
 ): Promise<ProjectGraphProjectNode[]> {
