@@ -43,7 +43,7 @@
         "type": "string",
         "alias": "platform",
         "description": "Target platform for the build, same as the Webpack target option.",
-        "enum": ["node", "web"],
+        "enum": ["node", "web", "webworker"],
         "default": "web"
       },
       "deleteOutputPath": {

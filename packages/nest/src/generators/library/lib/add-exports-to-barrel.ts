@@ -1,7 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { addGlobal, removeChange } from '@nx/js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import * as ts from 'typescript';
 import type { NormalizedOptions } from '../schema';
 
 let tsModule: typeof import('typescript');
@@ -24,7 +23,7 @@ export function addExportsToBarrelFile(
 
   // find the export in the source file
   const exportStatement = sourceFile.statements.find((statement) =>
-    ts.isExportDeclaration(statement)
+    tsModule.isExportDeclaration(statement)
   );
 
   sourceFile = removeChange(

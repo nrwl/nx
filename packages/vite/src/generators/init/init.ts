@@ -17,6 +17,7 @@ import {
   vitePluginDtsVersion,
   vitePluginEslintVersion,
   vitePluginReactVersion,
+  vitePluginReactSwcVersion,
   vitestUiVersion,
   vitestVersion,
   viteTsConfigPathsVersion,
@@ -41,7 +42,11 @@ function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
   devDependencies['jsdom'] = jsdomVersion;
 
   if (schema.uiFramework === 'react') {
-    devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;
+    if (schema.compiler === 'swc') {
+      devDependencies['@vitejs/plugin-react-swc'] = vitePluginReactSwcVersion;
+    } else {
+      devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;
+    }
   }
 
   if (schema.includeLib) {

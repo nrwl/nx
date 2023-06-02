@@ -20,8 +20,8 @@ export function getWebpackConfig(
 ): Configuration {
   const config: Configuration = {};
   const configure =
-    options.target === 'node'
-      ? withNx()
-      : composePluginsSync(withNx(), withWeb());
+    options.target === 'web'
+      ? composePluginsSync(withNx(), withWeb())
+      : withNx();
   return configure(config, { options, context });
 }

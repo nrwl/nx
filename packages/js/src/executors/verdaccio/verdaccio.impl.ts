@@ -25,7 +25,8 @@ export async function verdaccioExecutor(
   if (options.clear && options.storage && existsSync(options.storage)) {
     removeSync(options.storage);
   }
-  const cleanupFunctions = [setupNpm(options), setupYarn(options)];
+  const cleanupFunctions =
+    options.location === 'none' ? [] : [setupNpm(options), setupYarn(options)];
 
   const processExitListener = (signal?: number | NodeJS.Signals) => {
     if (childProcess) {
@@ -129,7 +130,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
       `npm config set registry http://localhost:${options.port}/ --location ${options.location}`
     );
     execSync(
-      `npm config set //localhost:${options.port}/:_authToken="secretVerdaccioToken"`
+      `npm config set //localhost:${options.port}/:_authToken="secretVerdaccioToken" --location ${options.location}`
     );
     logger.info(`Set npm registry to http://localhost:${options.port}/`);
   } catch (e) {
@@ -148,6 +149,9 @@ function setupNpm(options: VerdaccioExecutorSchema) {
       } else {
         execSync(`npm config delete registry --location ${options.location}`);
       }
+      execSync(
+        `npm config delete //localhost:${options.port}/:_authToken  --location ${options.location}`
+      );
     } catch (e) {
       throw new Error(`Failed to reset npm registry: ${e.message}`);
     }

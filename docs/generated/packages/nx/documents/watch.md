@@ -26,7 +26,7 @@ Watch the "app" project and echo the project name and the files that changed:
 Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change:
 
 ```shell
- nx watch --projects=app1,app2 --includeDependencies -- echo \$NX_PROJECT_NAME
+ nx watch --projects=app1,app2 --includeDependentProjects -- echo \$NX_PROJECT_NAME
 ```
 
 Watch all projects (including newly created projects) in the workspace:

@@ -221,3 +221,8 @@ export { hashArray } from './hasher/impl';
  * @category Utils
  */
 export { cacheDir } from './utils/cache-directory';
+
+/**
+ * @category Utils
+ */
+export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';

@@ -79,15 +79,16 @@
     }
   },
   "optionalDependencies": {
-    "@nx/nx-win32-x64-msvc": "*",
     "@nx/nx-darwin-x64": "*",
-    "@nx/nx-linux-x64-gnu": "*",
     "@nx/nx-darwin-arm64": "*",
+    "@nx/nx-linux-x64-gnu": "*",
+    "@nx/nx-linux-x64-musl": "*",
+    "@nx/nx-win32-x64-msvc": "*",
     "@nx/nx-linux-arm64-gnu": "*",
     "@nx/nx-linux-arm64-musl": "*",
-    "@nx/nx-win32-arm64-msvc": "*",
     "@nx/nx-linux-arm-gnueabihf": "*",
-    "@nx/nx-linux-x64-musl": "*"
+    "@nx/nx-win32-arm64-msvc": "*",
+    "@nx/nx-freebsd-x64": "*"
   },
   "nx-migrations": {
     "migrations": "./migrations.json",
@@ -166,7 +167,8 @@
         "aarch64-unknown-linux-musl",
         "aarch64-pc-windows-msvc",
         "armv7-unknown-linux-gnueabihf",
-        "x86_64-unknown-linux-musl"
+        "x86_64-unknown-linux-musl",
+        "x86_64-unknown-freebsd"
       ]
     }
   }

@@ -453,5 +453,10 @@
     "name": "@loft-orbital/terraform",
     "description": "Terraform executors and generators",
     "url": "https://github.com/loft-orbital/nx-plugins/tree/main/packages/terraform"
+  },
+  {
+    "name": "@nxlv/python",
+    "description": "Nx plugin designed to extend the Nx features to work with Python projects based on Poetry.",
+    "url": "https://github.com/lucasvieirasilva/nx-plugins/tree/main/packages/nx-python"
   }
 ]
