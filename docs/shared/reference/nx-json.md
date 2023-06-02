@@ -7,7 +7,6 @@ The following is an expanded version showing all options. Your `nx.json` will li
 ```json {% fileName="nx.json" %}
 {
   "extends": "nx/presets/npm.json",
-  "npmScope": "happyorg",
   "affected": {
     "defaultBase": "main"
   },
@@ -55,7 +54,11 @@ Some presets use the `extends` property to hide some default options in a separa
 
 ### NPM Scope
 
-Tells Nx what prefix to use when generating library imports.
+The `npmScope` property of the `nx.json` file is deprecated as of version 16.2.0. `npmScope` was used as a prefix for the names of newly created projects. The new recommended way to define the organization prefix is to set the `name` property in the root `package.json` file to `@my-org/root`. Then `@my-org/` will be used as a prefix for all newly created projects.
+
+In Nx 16, if the `npmScope` property is present, it will be used as a prefix. If the `npmScope` property is not present, the `name` property of the root `package.json` file will be used to infer the prefix.
+
+In Nx 17, the `npmScope` property will be ignored.
 
 ### Affected
 
