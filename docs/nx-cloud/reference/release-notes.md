@@ -150,6 +150,7 @@ If you need assistance, please get in touch at [cloud-support@nrwl.io](mailto:cl
 ##### Migration from Community Edition to Enterprise
 
 A few weeks ago we announced our plans to sunset the Community Edition of NxCloud On-Prem to align with our new pricing plans. If you are on the Community Edition, please follow these steps to migrate:
+
 1. Use this new image: `2306.01.2`
 2. Switch to private Enterprise by setting `NX_CLOUD_MODE=private-enterprise` (or `mode: 'private-enterprise'` if using Helm).
 3. Reach out to us at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io). You will get a FREE, unlimited-use coupon for the next 3 months so you can trial Nx Enterprise.
