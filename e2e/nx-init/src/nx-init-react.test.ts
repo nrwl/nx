@@ -24,8 +24,7 @@ const pmc = getPackageManagerCommand({
 });
 
 describe('nx init (for React)', () => {
-  // TODO(@jaysoo): Please investigate why this test is failing
-  xit('should convert to an integrated workspace with craco (webpack)', () => {
+  it('should convert to an integrated workspace with craco (webpack)', () => {
     const appName = 'my-app';
     createReactApp(appName);
 
@@ -185,12 +184,12 @@ function createReactApp(appName: string) {
     private: true,
     dependencies: {
       '@testing-library/jest-dom': '5.16.5',
-      '@testing-library/react': '13.4.0',
+      '@testing-library/react': '14.0.0',
       '@testing-library/user-event': '13.5.0',
       react: '^18.2.0',
       'react-dom': '^18.2.0',
       'react-scripts': '5.0.1',
-      'web-vitals': '2.1.4',
+      'web-vitals': '3.3.2',
       redux: '^3.6.0',
     },
     scripts: {
