@@ -1,4 +1,4 @@
-import redirectRules from './redirect-rules.config';
+import redirectRules from './redirect-rules';
 
 describe('Redirect rules configuration', () => {
   describe('Safety checks', () => {

@@ -1654,6 +1654,7 @@ describe('params', () => {
           name: 'pets',
           message: 'What kind of pets do you have?',
           choices: ['Cat', 'Dog', 'Fish'],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
@@ -1694,6 +1695,7 @@ describe('params', () => {
             { message: 'Dog', name: 'dog' },
             { message: 'Fish', name: 'fish' },
           ],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
@@ -1735,6 +1737,7 @@ describe('params', () => {
             { message: 'Dog', name: 'dog' },
             { message: 'Fish', name: 'fish' },
           ],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
@@ -1767,6 +1770,7 @@ describe('params', () => {
             name: 'project',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1798,6 +1802,7 @@ describe('params', () => {
             name: 'projectName',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1830,6 +1835,7 @@ describe('params', () => {
             name: 'projectName',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1864,6 +1870,7 @@ describe('params', () => {
             name: 'yourProject',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1894,6 +1901,7 @@ describe('params', () => {
           name: 'name',
           message: 'What is your name?',
           choices: ['Bob', 'Joe', 'Jeff'],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
@@ -1925,6 +1933,7 @@ describe('params', () => {
           message: 'What is your name?',
           choices: ['Bob', 'Joe', 'Jeff'],
           initial: 'Joe',
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);

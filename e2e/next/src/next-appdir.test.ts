@@ -1,18 +1,11 @@
 import {
   cleanupProject,
-  isNotWindows,
-  killPorts,
   newProject,
   runCLI,
-  runCommandUntil,
-  tmpProjPath,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
-import { getData } from 'ajv/dist/compile/validate';
-import { detectPackageManager } from 'nx/src/utils/package-manager';
 import { checkApp } from './utils';
-import { p } from 'vitest/dist/types-b7007192';
 
 describe('Next.js App Router', () => {
   let proj: string;

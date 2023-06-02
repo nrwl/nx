@@ -17,6 +17,7 @@ export function buildExplicitDependencies(
   builder: ProjectGraphBuilder
 ) {
   let totalNumOfFilesToProcess = totalNumberOfFilesToProcess(ctx);
+  if (totalNumOfFilesToProcess === 0) return;
   // using workers has an overhead, so we only do it when the number of
   // files we need to process is >= 100 and there are more than 2 CPUs
   // to be able to use at least 2 workers (1 worker per CPU and

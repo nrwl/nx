@@ -34,8 +34,8 @@ export async function runOne(
     loadDotEnvFiles: boolean;
   }
 ): Promise<void> {
-  performance.mark('command-execution-begins');
-  performance.measure('code-loading', 'init-local', 'command-execution-begins');
+  performance.mark('code-loading:end');
+  performance.measure('code-loading', 'init-local', 'code-loading:end');
   workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
@@ -57,9 +57,7 @@ export async function runOne(
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
   if (nxArgs.help) {
-    await (
-      await import('./run')
-    ).run(cwd, workspaceRoot, opts, {}, false, true);
+    await (await import('./run')).printTargetRunHelp(opts, workspaceRoot);
     process.exit(0);
   }
 

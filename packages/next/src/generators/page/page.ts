@@ -2,6 +2,8 @@ import { componentGenerator as reactComponentGenerator } from '@nx/react';
 import {
   convertNxGenerator,
   formatFiles,
+  joinPathFragments,
+  readProjectConfiguration,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -15,6 +17,7 @@ import { Schema } from './schema';
  * it is under `pages` folder.
  */
 export async function pageGenerator(host: Tree, options: Schema) {
+  const project = readProjectConfiguration(host, options.project);
   const directory = options.directory ? `pages/${options.directory}` : 'pages';
   const componentTask = await reactComponentGenerator(host, {
     ...options,
@@ -29,7 +32,10 @@ export async function pageGenerator(host: Tree, options: Schema) {
     skipFormat: true,
   });
 
-  const styledTask = addStyleDependencies(host, options.style);
+  const styledTask = addStyleDependencies(host, {
+    style: options.style,
+    swc: !host.exists(joinPathFragments(project.root, '.babelrc')),
+  });
 
   if (!options.skipFormat) {
     await formatFiles(host);

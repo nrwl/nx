@@ -9,15 +9,16 @@ export enum Preset {
   AngularStandalone = 'angular-standalone',
   ReactMonorepo = 'react-monorepo',
   ReactStandalone = 'react-standalone',
+  NextJs = 'next',
   NextJsStandalone = 'nextjs-standalone',
   ReactNative = 'react-native',
   Expo = 'expo',
-  NextJs = 'next',
   Nest = 'nest',
   Express = 'express',
   React = 'react',
   Angular = 'angular',
   NodeStandalone = 'node-standalone',
+  NodeMonorepo = 'node-monorepo',
 }
 
 /**

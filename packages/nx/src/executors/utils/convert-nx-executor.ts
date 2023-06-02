@@ -5,11 +5,6 @@
 import type { Observable } from 'rxjs';
 import { Workspaces } from '../../config/workspaces';
 import { Executor, ExecutorContext } from '../../config/misc-interfaces';
-import {
-  createProjectGraphAsync,
-  readCachedProjectGraph,
-} from '../../project-graph/project-graph';
-import { ProjectGraph } from '../../config/project-graph';
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
@@ -34,6 +29,7 @@ export function convertNxExecutor(executor: Executor) {
         nxJsonConfiguration,
         cwd: process.cwd(),
         projectGraph: null,
+        taskGraph: null,
         isVerbose: false,
       };
       return executor(options, context);

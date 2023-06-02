@@ -62,7 +62,7 @@ export class TaskOrchestrator {
   async run() {
     // initial scheduling
     await this.tasksSchedule.scheduleNextTasks();
-    performance.mark('task-execution-begins');
+    performance.mark('task-execution:start');
 
     const threads = [];
 
@@ -75,11 +75,11 @@ export class TaskOrchestrator {
     }
     await Promise.all(threads);
 
-    performance.mark('task-execution-ends');
+    performance.mark('task-execution:end');
     performance.measure(
-      'command-execution',
-      'task-execution-begins',
-      'task-execution-ends'
+      'task-execution',
+      'task-execution:start',
+      'task-execution:end'
     );
     this.cache.removeOldCacheRecords();
 
@@ -229,7 +229,8 @@ export class TaskOrchestrator {
   private async runBatch(batch: Batch) {
     try {
       const results = await this.forkedProcessTaskRunner.forkProcessForBatch(
-        batch
+        batch,
+        this.taskGraph
       );
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
@@ -296,6 +297,7 @@ export class TaskOrchestrator {
             {
               temporaryOutputPath,
               streamOutput,
+              taskGraph: this.taskGraph,
             }
           )
         : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
@@ -303,6 +305,7 @@ export class TaskOrchestrator {
             {
               temporaryOutputPath,
               streamOutput,
+              taskGraph: this.taskGraph,
             }
           );
 

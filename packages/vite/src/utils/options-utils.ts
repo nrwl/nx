@@ -144,7 +144,7 @@ export function getViteBuildOptions(
     outDir: relative(projectRoot, options.outputPath),
     emptyOutDir: options.emptyOutDir,
     reportCompressedSize: true,
-    cssCodeSplit: true,
+    cssCodeSplit: options.cssCodeSplit,
     target: options.target ?? 'esnext',
     commonjsOptions: {
       transformMixedEsModules: true,

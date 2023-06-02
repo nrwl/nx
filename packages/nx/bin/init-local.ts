@@ -1,8 +1,7 @@
-import { getPackageManagerCommand } from '../src/utils/package-manager';
-
 import { performance } from 'perf_hooks';
 import { execSync } from 'child_process';
 
+import { getPackageManagerCommand } from '../src/utils/package-manager';
 import { commandsObject } from '../src/command-line/nx-commands';
 import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
 import { stripIndents } from '../src/utils/strip-indents';

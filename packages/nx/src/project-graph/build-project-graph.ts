@@ -51,7 +51,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectsConfigurations: ProjectsConfigurations,
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
-  cache: { fileMap: ProjectFileMapCache; projectGraph: ProjectGraph } | null,
+  fileMap: ProjectFileMapCache | null,
   shouldWriteCache: boolean
 ): Promise<{
   projectGraph: ProjectGraph;
@@ -69,16 +69,16 @@ export async function buildProjectGraphUsingProjectFileMap(
   let filesToProcess;
   let cachedFileData;
   const useCacheData =
-    cache?.fileMap &&
+    fileMap &&
     !shouldRecomputeWholeGraph(
-      cache.fileMap,
+      fileMap,
       packageJsonDeps,
       projectsConfigurations,
       nxJson,
       rootTsConfig
     );
   if (useCacheData) {
-    const fromCache = extractCachedFileData(projectFileMap, cache.fileMap);
+    const fromCache = extractCachedFileData(projectFileMap, fileMap);
     filesToProcess = fromCache.filesToProcess;
     cachedFileData = fromCache.cachedFileData;
   } else {
@@ -96,7 +96,6 @@ export async function buildProjectGraphUsingProjectFileMap(
     nxJson,
     context,
     cachedFileData,
-    cache?.projectGraph,
     projectGraphVersion
   );
   const projectFileMapCache = createProjectFileMapCache(
@@ -142,12 +141,11 @@ async function buildProjectGraphUsingContext(
   nxJson: NxJsonConfiguration,
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
-  cachedProjectGraph: ProjectGraph,
   projectGraphVersion: string
 ) {
   performance.mark('build project graph:start');
 
-  const builder = new ProjectGraphBuilder(cachedProjectGraph, ctx.fileMap);
+  const builder = new ProjectGraphBuilder(null, ctx.fileMap);
   builder.setVersion(projectGraphVersion);
 
   await buildWorkspaceProjectNodes(ctx, builder, nxJson);

@@ -209,6 +209,7 @@ describe('create-nx-workspace', () => {
       preset: 'next',
       style: 'css',
       appName,
+      nextAppDir: false,
       packageManager,
     });
 
@@ -250,7 +251,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
       preset: 'express',
-      style: 'css',
+      docker: false,
       appName,
       packageManager,
     });
@@ -309,6 +310,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
       preset: 'nest',
+      docker: false,
       appName,
       packageManager,
     });

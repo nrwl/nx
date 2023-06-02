@@ -25,26 +25,27 @@ export function parsePnpmLockfile(
   builder: ProjectGraphBuilder
 ): void {
   const data = parseAndNormalizePnpmLockfile(lockFileContent);
+  const isV6 = isV6Lockfile(data);
 
   // we use key => node map to avoid duplicate work when parsing keys
   const keyMap = new Map<string, ProjectGraphExternalNode>();
-  addNodes(data, builder, keyMap);
-  addDependencies(data, builder, keyMap);
+
+  addNodes(data, builder, keyMap, isV6);
+  addDependencies(data, builder, keyMap, isV6);
 }
 
 function addNodes(
   data: Lockfile,
   builder: ProjectGraphBuilder,
-  keyMap: Map<string, ProjectGraphExternalNode>
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  isV6: boolean
 ) {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
   Object.entries(data.packages).forEach(([key, snapshot]) => {
     const packageName = findPackageName(key, snapshot, data);
     const rawVersion = findVersion(key, packageName);
-    const version = isV6Lockfile(data)
-      ? rawVersion.split('(')[0]
-      : rawVersion.split('_')[0];
+    const version = parseBaseVersion(rawVersion, isV6);
 
     // we don't need to keep duplicates, we can just track the keys
     const existingNode = nodes.get(packageName)?.get(version);
@@ -83,7 +84,7 @@ function addNodes(
     if (versionMap.size === 1) {
       hoistedNode = versionMap.values().next().value;
     } else {
-      const hoistedVersion = getHoistedVersion(hoistedDeps, packageName);
+      const hoistedVersion = getHoistedVersion(hoistedDeps, packageName, isV6);
       hoistedNode = versionMap.get(hoistedVersion);
     }
     if (hoistedNode) {
@@ -98,7 +99,8 @@ function addNodes(
 
 function getHoistedVersion(
   hoistedDependencies: Record<string, any>,
-  packageName: string
+  packageName: string,
+  isV6: boolean
 ): string {
   let version = getHoistedPackageVersion(packageName);
 
@@ -107,7 +109,7 @@ function getHoistedVersion(
       k.startsWith(`/${packageName}/`)
     );
     if (key) {
-      version = getVersion(key, packageName).split('_')[0];
+      version = parseBaseVersion(getVersion(key, packageName), isV6);
     } else {
       // pnpm might not hoist every package
       // similarly those packages will not be available to be used via import
@@ -121,7 +123,8 @@ function getHoistedVersion(
 function addDependencies(
   data: Lockfile,
   builder: ProjectGraphBuilder,
-  keyMap: Map<string, ProjectGraphExternalNode>
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  isV6: boolean
 ) {
   Object.entries(data.packages).forEach(([key, snapshot]) => {
     const node = keyMap.get(key);
@@ -129,7 +132,10 @@ function addDependencies(
       (section) => {
         if (section) {
           Object.entries(section).forEach(([name, versionRange]) => {
-            const version = findVersion(versionRange, name).split('_')[0];
+            const version = parseBaseVersion(
+              findVersion(versionRange, name),
+              isV6
+            );
             const target =
               builder.graph.externalNodes[`npm:${name}@${version}`] ||
               builder.graph.externalNodes[`npm:${name}`];
@@ -141,6 +147,10 @@ function addDependencies(
       }
     );
   });
+}
+
+function parseBaseVersion(rawVersion: string, isV6: boolean): string {
+  return isV6 ? rawVersion.split('(')[0] : rawVersion.split('_')[0];
 }
 
 export function stringifyPnpmLockfile(

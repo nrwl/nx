@@ -1,6 +1,7 @@
 import {
   convertNxGenerator,
   formatFiles,
+  joinPathFragments,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -36,7 +37,10 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   const lintTask = await addLinting(host, options);
   updateJestConfig(host, options);
   updateCypressTsConfig(host, options);
-  const styledTask = addStyleDependencies(host, options.style);
+  const styledTask = addStyleDependencies(host, {
+    style: options.style,
+    swc: !host.exists(joinPathFragments(options.appProjectRoot, '.babelrc')),
+  });
   setDefaults(host, options);
 
   if (options.customServer) {

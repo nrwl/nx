@@ -1,15 +1,14 @@
 import 'dotenv/config';
 import {
   ExecutorContext,
-  readJsonFile,
-  workspaceRoot,
-  writeJsonFile,
   logger,
+  readJsonFile,
+  writeJsonFile,
 } from '@nx/devkit';
 import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
-import { join, resolve } from 'path';
+import { join } from 'path';
 import { copySync, existsSync, mkdir, writeFileSync } from 'fs-extra';
-import { lt, gte } from 'semver';
+import { gte } from 'semver';
 import { directoryExists } from '@nx/workspace/src/utilities/fileutils';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 
@@ -17,7 +16,7 @@ import { updatePackageJson } from './lib/update-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';
 import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
-import { ExecSyncOptions, execSync } from 'child_process';
+import { execSync, ExecSyncOptions } from 'child_process';
 import { createCliOptions } from '../../utils/create-cli-options';
 
 export default async function buildExecutor(
@@ -27,16 +26,16 @@ export default async function buildExecutor(
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV ||= 'production';
 
-  const root = resolve(context.root, options.root);
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
-  checkPublicDirectory(root);
+  checkPublicDirectory(projectRoot);
 
   // Set `__NEXT_REACT_ROOT` based on installed ReactDOM version
-  const packageJsonPath = join(root, 'package.json');
+  const packageJsonPath = join(projectRoot, 'package.json');
   const packageJson = existsSync(packageJsonPath)
     ? readJsonFile(packageJsonPath)
     : undefined;
-  const rootPackageJson = readJsonFile(join(workspaceRoot, 'package.json'));
+  const rootPackageJson = readJsonFile(join(context.root, 'package.json'));
   const reactDomVersion =
     packageJson?.dependencies?.['react-dom'] ??
     rootPackageJson.dependencies?.['react-dom'];
@@ -50,11 +49,11 @@ export default async function buildExecutor(
   const { experimentalAppOnly, profile, debug } = options;
 
   const args = createCliOptions({ experimentalAppOnly, profile, debug });
-  const command = `npx next build ${args}`;
+  const command = `npx next build ${args.join(' ')}`;
   const execSyncOptions: ExecSyncOptions = {
     stdio: 'inherit',
     encoding: 'utf-8',
-    cwd: root,
+    cwd: projectRoot,
   };
   try {
     execSync(command, execSyncOptions);
@@ -89,7 +88,7 @@ export default async function buildExecutor(
 
   createNextConfigFile(options, context);
 
-  copySync(join(root, 'public'), join(options.outputPath, 'public'), {
+  copySync(join(projectRoot, 'public'), join(options.outputPath, 'public'), {
     dereference: true,
   });
 

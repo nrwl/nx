@@ -211,6 +211,12 @@ export interface ExecutorContext {
   projectGraph?: ProjectGraph;
 
   /**
+   * A snapshot of the task graph as
+   * it existed when the Nx command was kicked off
+   */
+  taskGraph?: TaskGraph;
+
+  /**
    * Deprecated. Use projectsConfigurations or nxJsonConfiguration
    * The full workspace configuration
    * @todo(vsavkin): remove after v17

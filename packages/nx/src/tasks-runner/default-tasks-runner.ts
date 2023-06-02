@@ -77,16 +77,6 @@ async function runAllTasks(
     daemon: DaemonClient;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
-  // TODO: vsavkin: remove this after Nx 16
-  performance.mark('task-graph-created');
-
-  performance.measure('nx-prep-work', 'init-local', 'task-graph-created');
-  performance.measure(
-    'graph-creation',
-    'command-execution-begins',
-    'task-graph-created'
-  );
-
   const orchestrator = new TaskOrchestrator(
     context.hasher,
     context.initiatingProject,
