@@ -34,4 +34,4 @@ We publish modules for the following platforms:
   - We use `gnu` ang `musl` targets, which are used by the most popular Linux distributions
 - FreeBSD (x64)
 
-If you're running a machine that isn't part of the list above, then Nx will not be able to function.
+If you're running a machine that isn't part of the list above, then Nx does not support it at this time. Please open an issue on github if you feel Nx should support that platform and we will assess what can be done.
