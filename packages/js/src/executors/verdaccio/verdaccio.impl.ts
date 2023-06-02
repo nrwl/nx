@@ -1,6 +1,9 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import { removeSync, existsSync } from 'fs-extra';
 import { ChildProcess, execSync, fork } from 'child_process';
+import * as detectPort from 'detect-port';
+import { join } from 'path';
+
 import { VerdaccioExecutorSchema } from './schema';
 
 let childProcess: ChildProcess;
@@ -25,6 +28,7 @@ export async function verdaccioExecutor(
   if (options.clear && options.storage && existsSync(options.storage)) {
     removeSync(options.storage);
   }
+
   const cleanupFunctions =
     options.location === 'none' ? [] : [setupNpm(options), setupYarn(options)];
 
@@ -42,30 +46,43 @@ export async function verdaccioExecutor(
   process.on('SIGHUP', processExitListener);
 
   try {
-    await startVerdaccio(options);
+    const port = await detectPort(options.port);
+    if (port === options.port) {
+      logger.info(`Port ${options.port} was occupied. Using port ${port}.`);
+      options.port = port;
+    }
+    await startVerdaccio(options, context.root);
   } catch (e) {
-    logger.error('Failed to start verdaccio: ' + e.toString());
+    logger.error('Failed to start verdaccio: ' + e?.toString());
     return {
       success: false,
+      port: options.port,
     };
   }
   return {
     success: true,
+    port: options.port,
   };
 }
 
 /**
  * Fork the verdaccio process: https://verdaccio.org/docs/verdaccio-programmatically/#using-fork-from-child_process-module
  */
-function startVerdaccio(options: VerdaccioExecutorSchema) {
+function startVerdaccio(
+  options: VerdaccioExecutorSchema,
+  workspaceRoot: string
+) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
       require.resolve('verdaccio/bin/verdaccio'),
-      createVerdaccioOptions(options),
+      createVerdaccioOptions(options, workspaceRoot),
       {
         env: {
           ...process.env,
           VERDACCIO_HANDLE_KILL_SIGNALS: 'true',
+          ...(options.storage
+            ? { VERDACCIO_STORAGE_PATH: options.storage }
+            : {}),
         },
         stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
       }
@@ -100,13 +117,16 @@ function startVerdaccio(options: VerdaccioExecutorSchema) {
   });
 }
 
-function createVerdaccioOptions(options: VerdaccioExecutorSchema) {
+function createVerdaccioOptions(
+  options: VerdaccioExecutorSchema,
+  workspaceRoot: string
+) {
   const verdaccioArgs: string[] = [];
   if (options.port) {
     verdaccioArgs.push('--listen', options.port.toString());
   }
   if (options.config) {
-    verdaccioArgs.push('--config', options.config);
+    verdaccioArgs.push('--config', join(workspaceRoot, options.config));
   }
   return verdaccioArgs;
 }
