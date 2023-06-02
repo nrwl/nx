@@ -70,7 +70,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc {% fileName="client/package.json" %}
+```jsonc {% fileName="client/project.json" %}
 {
   // ... more project configuration here
   "tags": ["scope:client"]
