@@ -1,11 +1,11 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   convertNxGenerator,
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { webpackInitGenerator } from '../init/init';
 import { WebpackProjectGeneratorSchema } from './schema';
@@ -75,14 +75,14 @@ function addBuildTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
     buildOptions.babelUpwardRootMode = true;
   }
 
-  if (options.target === 'node') {
+  if (options.target === 'web') {
     tree.write(
       joinPathFragments(project.root, 'webpack.config.js'),
       `
-const { composePlugins, withNx } = require('@nrwl/webpack');
+const { composePlugins, withNx, withWeb } = require('@nx/webpack');
 
 // Nx plugins for webpack.
-module.exports = composePlugins(withNx(), (config) => {
+module.exports = composePlugins(withNx(), withWeb(), (config) => {
   // Update the webpack config as needed here.
   // e.g. \`config.plugins.push(new MyPlugin())\`
   return config;
@@ -93,10 +93,10 @@ module.exports = composePlugins(withNx(), (config) => {
     tree.write(
       joinPathFragments(project.root, 'webpack.config.js'),
       `
-const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+const { composePlugins, withNx } = require('@nx/webpack');
 
 // Nx plugins for webpack.
-module.exports = composePlugins(withNx(), withWeb(), (config) => {
+module.exports = composePlugins(withNx(), (config) => {
   // Update the webpack config as needed here.
   // e.g. \`config.plugins.push(new MyPlugin())\`
   return config;
@@ -109,7 +109,7 @@ module.exports = composePlugins(withNx(), withWeb(), (config) => {
     targets: {
       ...project.targets,
       build: {
-        executor: '@nrwl/webpack:webpack',
+        executor: '@nx/webpack:webpack',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: buildOptions,
@@ -135,7 +135,7 @@ function addServeTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
     targets: {
       ...project.targets,
       serve: {
-        executor: '@nrwl/webpack:dev-server',
+        executor: '@nx/webpack:dev-server',
         options: {
           buildTarget: `${options.project}:build`,
         },

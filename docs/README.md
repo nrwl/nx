@@ -50,10 +50,10 @@ Title cards allow to only show a title in a card with a title and an url.
 
 ```markdown
 {% cards cols="4" %}
-{% title-card title="string" href="string" /%}
-{% title-card title="string" href="string" /%}
-{% title-card title="string" href="string" /%}
-{% title-card title="string" href="string" /%}
+{% title-card title="string" url="string" /%}
+{% title-card title="string" url="string" /%}
+{% title-card title="string" url="string" /%}
+{% title-card title="string" url="string" /%}
 {% /cards %}
 ```
 

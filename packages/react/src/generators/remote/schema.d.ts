@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 import { SupportedStyles } from '../../../typings';
 
@@ -19,7 +19,6 @@ export interface Schema {
   skipFormat: boolean;
   skipWorkspaceJson?: boolean;
   ssr?: boolean;
-  standaloneConfig?: boolean;
   strict?: boolean;
   style: SupportedStyles;
   tags?: string;

@@ -7,5 +7,28 @@ export interface FileData {
   file: string
   hash: string
 }
+export function hashArray(input: Array<string>): string
 export function hashFile(file: string): FileData | null
 export function hashFiles(workspaceRoot: string): Record<string, string>
+/**
+ * Newly created files will have the `update` EventType as well.
+ * This simplifies logic between OS's, IDEs and git operations
+ */
+export const enum EventType {
+  delete = 'delete',
+  update = 'update'
+}
+export interface WatchEvent {
+  path: string
+  type: EventType
+}
+export class Watcher {
+  origin: string
+  /**
+   * Creates a new Watcher instance.
+   * If `useIgnore` is set to false, no ignores will be used, even when `additionalGlobs` is set
+   */
+  constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
+  watch(callback: (err: string | null, events: WatchEvent[]) => void): void
+  stop(): Promise<void>
+}

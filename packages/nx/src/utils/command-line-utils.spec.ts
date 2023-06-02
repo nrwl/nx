@@ -1,4 +1,5 @@
 import { splitArgsIntoNxArgsAndOverrides } from './command-line-utils';
+import { withEnvironmentVariables as withEnvironment } from '../../internal-testing-utils/with-environment';
 
 jest.mock('../project-graph/file-utils');
 
@@ -20,7 +21,6 @@ describe('splitArgs', () => {
       base: 'sha1',
       head: 'sha2',
       skipNxCache: false,
-      parallel: 3,
     });
   });
 
@@ -52,7 +52,6 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'main',
       skipNxCache: false,
-      parallel: 3,
     });
   });
 
@@ -70,7 +69,6 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'develop',
       skipNxCache: false,
-      parallel: 3,
     });
   });
 
@@ -88,7 +86,6 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'main',
       skipNxCache: false,
-      parallel: 3,
     });
   });
 
@@ -178,107 +175,194 @@ describe('splitArgs', () => {
         {} as any
       ).nxArgs
     ).toEqual({
-      parallel: 3,
       projects: ['aaa', 'bbb'],
       skipNxCache: false,
     });
   });
 
   it('should set base and head based on environment variables in affected mode, if they are not provided directly on the command', () => {
-    const originalNxBase = process.env.NX_BASE;
-    process.env.NX_BASE = 'envVarSha1';
-    const originalNxHead = process.env.NX_HEAD;
-    process.env.NX_HEAD = 'envVarSha2';
+    withEnvironment(
+      {
+        NX_BASE: 'envVarSha1',
+        NX_HEAD: 'envVarSha2',
+      },
+      () => {
+        expect(
+          splitArgsIntoNxArgsAndOverrides(
+            {
+              __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
+              $0: '',
+            },
+            'affected',
+            {} as any,
+            {} as any
+          ).nxArgs
+        ).toEqual({
+          base: 'envVarSha1',
+          head: 'envVarSha2',
+          skipNxCache: false,
+        });
 
-    expect(
-      splitArgsIntoNxArgsAndOverrides(
-        {
-          __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
-          $0: '',
-        },
-        'affected',
-        {} as any,
-        {} as any
-      ).nxArgs
-    ).toEqual({
-      base: 'envVarSha1',
-      head: 'envVarSha2',
-      skipNxCache: false,
-      parallel: 3,
-    });
+        expect(
+          splitArgsIntoNxArgsAndOverrides(
+            {
+              __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
+              $0: '',
+              head: 'directlyOnCommandSha1', // higher priority than $NX_HEAD
+            },
+            'affected',
+            {} as any,
+            {} as any
+          ).nxArgs
+        ).toEqual({
+          base: 'envVarSha1',
+          head: 'directlyOnCommandSha1',
+          skipNxCache: false,
+        });
 
-    expect(
-      splitArgsIntoNxArgsAndOverrides(
-        {
-          __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
-          $0: '',
-          head: 'directlyOnCommandSha1', // higher priority than $NX_HEAD
-        },
-        'affected',
-        {} as any,
-        {} as any
-      ).nxArgs
-    ).toEqual({
-      base: 'envVarSha1',
-      head: 'directlyOnCommandSha1',
-      skipNxCache: false,
-      parallel: 3,
-    });
-
-    expect(
-      splitArgsIntoNxArgsAndOverrides(
-        {
-          __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
-          $0: '',
-          base: 'directlyOnCommandSha2', // higher priority than $NX_BASE
-        },
-        'affected',
-        {} as any,
-        {} as any
-      ).nxArgs
-    ).toEqual({
-      base: 'directlyOnCommandSha2',
-      head: 'envVarSha2',
-      skipNxCache: false,
-      parallel: 3,
-    });
-
-    // Reset process data
-    process.env.NX_BASE = originalNxBase;
-    process.env.NX_HEAD = originalNxHead;
+        expect(
+          splitArgsIntoNxArgsAndOverrides(
+            {
+              __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
+              $0: '',
+              base: 'directlyOnCommandSha2', // higher priority than $NX_BASE
+            },
+            'affected',
+            {} as any,
+            {} as any
+          ).nxArgs
+        ).toEqual({
+          base: 'directlyOnCommandSha2',
+          head: 'envVarSha2',
+          skipNxCache: false,
+        });
+      }
+    );
   });
 
-  it('should set runner based on environment variables, if it is not provided directly on the command', () => {
-    const originalRunner = process.env.NX_RUNNER;
-    process.env.NX_RUNNER = 'some-env-runner-name';
+  describe('--runner environment handling', () => {
+    it('should set runner based on environment NX_RUNNER, if it is not provided directly on the command', () => {
+      withEnvironment({ NX_RUNNER: 'some-env-runner-name' }, () => {
+        expect(
+          splitArgsIntoNxArgsAndOverrides(
+            {
+              __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
+              $0: '',
+            },
+            'run-one',
+            {} as any,
+            {
+              tasksRunnerOptions: {
+                'some-env-runner-name': { runner: '' },
+              },
+            }
+          ).nxArgs.runner
+        ).toEqual('some-env-runner-name');
 
-    expect(
-      splitArgsIntoNxArgsAndOverrides(
+        expect(
+          splitArgsIntoNxArgsAndOverrides(
+            {
+              __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
+              $0: '',
+              runner: 'directlyOnCommand', // higher priority than $NX_RUNNER
+            },
+            'run-one',
+            {} as any,
+            {
+              tasksRunnerOptions: {
+                'some-env-runner-name': { runner: '' },
+              },
+            }
+          ).nxArgs.runner
+        ).toEqual('directlyOnCommand');
+      });
+    });
+
+    it('should set runner based on environment NX_TASKS_RUNNER, if it is not provided directly on the command', () => {
+      withEnvironment({ NX_TASKS_RUNNER: 'some-env-runner-name' }, () => {
+        expect(
+          splitArgsIntoNxArgsAndOverrides(
+            {
+              __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
+              $0: '',
+            },
+            'run-one',
+            {} as any,
+            {
+              tasksRunnerOptions: {
+                'some-env-runner-name': { runner: '' },
+              },
+            }
+          ).nxArgs.runner
+        ).toEqual('some-env-runner-name');
+
+        expect(
+          splitArgsIntoNxArgsAndOverrides(
+            {
+              __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
+              $0: '',
+              runner: 'directlyOnCommand', // higher priority than $NX_RUNNER
+            },
+            'run-one',
+            {} as any,
+            {
+              tasksRunnerOptions: {
+                'some-env-runner-name': { runner: '' },
+              },
+            }
+          ).nxArgs.runner
+        ).toEqual('directlyOnCommand');
+      });
+    });
+
+    it('should prefer NX_TASKS_RUNNER', () => {
+      withEnvironment(
         {
-          __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
-          $0: '',
+          NX_TASKS_RUNNER: 'some-env-runner-name',
+          NX_RUNNER: 'some-other-runner',
         },
-        'run-one',
-        {} as any,
-        {} as any
-      ).nxArgs.runner
-    ).toEqual('some-env-runner-name');
+        () => {
+          expect(
+            splitArgsIntoNxArgsAndOverrides(
+              {
+                __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
+                $0: '',
+              },
+              'run-one',
+              {} as any,
+              {
+                tasksRunnerOptions: {
+                  'some-env-runner-name': { runner: '' },
+                  'some-other-runner': { runner: '' },
+                },
+              }
+            ).nxArgs.runner
+          ).toEqual('some-env-runner-name');
+        }
+      );
+    });
 
-    expect(
-      splitArgsIntoNxArgsAndOverrides(
+    it('should ignore runners based on environment, if it is valid', () => {
+      withEnvironment(
         {
-          __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
-          $0: '',
-          runner: 'directlyOnCommand', // higher priority than $NX_RUNNER
+          NX_TASKS_RUNNER: 'some-env-runner-name',
+          NX_RUNNER: 'some-other-runner',
         },
-        'run-one',
-        {} as any,
-        {} as any
-      ).nxArgs.runner
-    ).toEqual('directlyOnCommand');
-
-    // Reset process data
-    process.env.NX_RUNNER = originalRunner;
+        () => {
+          expect(
+            splitArgsIntoNxArgsAndOverrides(
+              {
+                __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
+                $0: '',
+              },
+              'run-one',
+              {} as any,
+              {} as any
+            ).nxArgs.runner
+          ).not.toBeDefined();
+        }
+      );
+    });
   });
 
   describe('--parallel', () => {
@@ -295,20 +379,6 @@ describe('splitArgs', () => {
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(5);
-    });
-
-    it('should default to 3 when not specified', () => {
-      const parallel = splitArgsIntoNxArgsAndOverrides(
-        {
-          $0: '',
-          __overrides_unparsed__: [],
-        },
-        'affected',
-        {} as any,
-        {} as any
-      ).nxArgs.parallel;
-
-      expect(parallel).toEqual(3);
     });
 
     it('should default to 3 when used with no value specified', () => {

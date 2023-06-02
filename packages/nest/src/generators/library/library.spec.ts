@@ -1,7 +1,7 @@
-import type { Tree } from '@nrwl/devkit';
-import * as devkit from '@nrwl/devkit';
-import { readJson, readProjectConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import { readJson, readProjectConfiguration } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from './library';
 
 describe('lib', () => {
@@ -22,14 +22,14 @@ describe('lib', () => {
       expect(config.root).toEqual(`libs/${libFileName}`);
       expect(config.targets.build).toBeUndefined();
       expect(config.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: [`libs/${libFileName}/**/*.ts`],
         },
       });
       expect(config.targets.test).toEqual({
-        executor: '@nrwl/jest:jest',
+        executor: '@nx/jest:jest',
         outputs: [`{workspaceRoot}/coverage/{projectRoot}`],
         options: {
           jestConfig: `libs/${libFileName}/jest.config.ts`,
@@ -71,7 +71,7 @@ describe('lib', () => {
       ).toMatchSnapshot();
     });
 
-    it('should remove the default file from @nrwl/node:lib', async () => {
+    it('should remove the default file from @nx/node:lib', async () => {
       await libraryGenerator(tree, { name: libName, global: true });
 
       expect(
@@ -88,13 +88,6 @@ describe('lib', () => {
         controller: true,
         service: true,
       });
-
-      console.log(
-        tree.read(
-          `libs/${libFileName}/src/lib/${libFileName}.controller.spec.ts`,
-          'utf-8'
-        )
-      );
 
       expect(
         tree.read(
@@ -219,7 +212,7 @@ describe('lib', () => {
       const project = readProjectConfiguration(tree, nestedLibFileName);
       expect(project.root).toEqual(`libs/${dirFileName}/${libFileName}`);
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: [`libs/${dirFileName}/${libFileName}/**/*.ts`],
@@ -254,35 +247,14 @@ describe('lib', () => {
     it('should update the projects tsconfig with strict true', async () => {
       await libraryGenerator(tree, { name: libName, strict: true });
 
-      const tsconfigJson = readJson(
-        tree,
-        `/libs/${libFileName}/tsconfig.lib.json`
-      );
-      expect(tsconfigJson.compilerOptions.strict).toBe(true);
+      const tsConfig = readJson(tree, `/libs/${libFileName}/tsconfig.lib.json`);
+      expect(tsConfig.compilerOptions.strictNullChecks).toBeTruthy();
+      expect(tsConfig.compilerOptions.noImplicitAny).toBeTruthy();
+      expect(tsConfig.compilerOptions.strictBindCallApply).toBeTruthy();
       expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).toBe(true);
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBe(true);
-      expect(tsconfigJson.compilerOptions.noFallthroughCasesInSwitch).toBe(
-        true
-      );
-    });
-
-    it('should default to strict false', async () => {
-      await libraryGenerator(tree, { name: libName });
-
-      const tsconfigJson = readJson(
-        tree,
-        `/libs/${libFileName}/tsconfig.lib.json`
-      );
-      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).not.toBeDefined();
+        tsConfig.compilerOptions.forceConsistentCasingInFileNames
+      ).toBeTruthy();
+      expect(tsConfig.compilerOptions.noFallthroughCasesInSwitch).toBeTruthy();
     });
   });
 
@@ -374,6 +346,44 @@ describe('lib', () => {
       expect(
         tree.read(`libs/${libFileName}/jest.config.ts`, 'utf-8')
       ).toMatchSnapshot();
+    });
+  });
+
+  describe('--simpleName', () => {
+    it('should generate a library with a simple name', async () => {
+      await libraryGenerator(tree, {
+        name: libName,
+        simpleName: true,
+        directory: 'api',
+        service: true,
+        controller: true,
+      });
+
+      const indexFile = tree.read('libs/api/my-lib/src/index.ts', 'utf-8');
+
+      expect(indexFile).toContain(`export * from './lib/my-lib.module';`);
+      expect(indexFile).toContain(`export * from './lib/my-lib.service';`);
+      expect(indexFile).toContain(`export * from './lib/my-lib.controller';`);
+
+      expect(
+        tree.exists('libs/api/my-lib/src/lib/my-lib.module.ts')
+      ).toBeTruthy();
+
+      expect(
+        tree.exists('libs/api/my-lib/src/lib/my-lib.service.ts')
+      ).toBeTruthy();
+
+      expect(
+        tree.exists('libs/api/my-lib/src/lib/my-lib.service.spec.ts')
+      ).toBeTruthy();
+
+      expect(
+        tree.exists('libs/api/my-lib/src/lib/my-lib.controller.ts')
+      ).toBeTruthy();
+
+      expect(
+        tree.exists('libs/api/my-lib/src/lib/my-lib.controller.spec.ts')
+      ).toBeTruthy();
     });
   });
 });

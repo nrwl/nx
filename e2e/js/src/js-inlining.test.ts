@@ -6,7 +6,7 @@ import {
   runCLI,
   uniq,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { execSync } from 'child_process';
 
 describe('inlining', () => {
@@ -23,22 +23,22 @@ describe('inlining', () => {
     async (bundler) => {
       const parent = uniq('parent');
       runCLI(
-        `generate @nrwl/js:lib ${parent} --bundler=${bundler} --no-interactive`
+        `generate @nx/js:lib ${parent} --bundler=${bundler} --no-interactive`
       );
 
       const buildable = uniq('buildable');
       runCLI(
-        `generate @nrwl/js:lib ${buildable} --bundler=${bundler} --no-interactive`
+        `generate @nx/js:lib ${buildable} --bundler=${bundler} --no-interactive`
       );
 
       const buildableTwo = uniq('buildabletwo');
       runCLI(
-        `generate @nrwl/js:lib ${buildableTwo} --bundler=${bundler} --no-interactive`
+        `generate @nx/js:lib ${buildableTwo} --bundler=${bundler} --no-interactive`
       );
 
       const nonBuildable = uniq('nonbuildable');
       runCLI(
-        `generate @nrwl/js:lib ${nonBuildable} --bundler=none --no-interactive`
+        `generate @nx/js:lib ${nonBuildable} --bundler=none --no-interactive`
       );
 
       updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
@@ -102,15 +102,13 @@ describe('inlining', () => {
 
   it('should inline nesting libraries', async () => {
     const parent = uniq('parent');
-    runCLI(`generate @nrwl/js:lib ${parent} --no-interactive`);
+    runCLI(`generate @nx/js:lib ${parent} --no-interactive`);
 
     const child = uniq('child');
-    runCLI(`generate @nrwl/js:lib ${child} --bundler=none --no-interactive`);
+    runCLI(`generate @nx/js:lib ${child} --bundler=none --no-interactive`);
 
     const grandChild = uniq('grandchild');
-    runCLI(
-      `generate @nrwl/js:lib ${grandChild} --bundler=none --no-interactive`
-    );
+    runCLI(`generate @nx/js:lib ${grandChild} --bundler=none --no-interactive`);
 
     updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
       return `

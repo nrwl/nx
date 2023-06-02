@@ -1,7 +1,7 @@
-import type { Tree } from '@nrwl/devkit';
-import { addGlobal, removeChange } from '@nrwl/js';
+import type { Tree } from '@nx/devkit';
+import { addGlobal, removeChange } from '@nx/js';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type { NormalizedOptions } from '../schema';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -21,12 +21,17 @@ export function addExportsToBarrelFile(
     true
   );
 
+  // find the export in the source file
+  const exportStatement = sourceFile.statements.find((statement) =>
+    tsModule.isExportDeclaration(statement)
+  );
+
   sourceFile = removeChange(
     tree,
     sourceFile,
     indexPath,
     0,
-    `export * from './lib/${options.fileName}';`
+    exportStatement.getFullText()
   );
   sourceFile = addGlobal(
     tree,

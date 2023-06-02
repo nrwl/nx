@@ -1,35 +1,35 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`convert-tslint-to-eslint should not override .eslint config if migration in progress 1`] = `
-Object {
-  "ignorePatterns": Array [
+{
+  "ignorePatterns": [
     "**/*",
   ],
-  "overrides": Array [
-    Object {
-      "files": Array [
+  "overrides": [
+    {
+      "files": [
         "*.ts",
         "*.tsx",
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {
-        "@nrwl/nx/enforce-module-boundaries": Array [
+      "rules": {
+        "@nx/enforce-module-boundaries": [
           "error",
-          Object {
-            "allow": Array [
+          {
+            "allow": [
               "@nx-example/shared/product/data/testing",
             ],
-            "depConstraints": Array [
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+            "depConstraints": [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:feature",
                   "type:ui",
                 ],
                 "sourceTag": "type:app",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:ui",
                   "type:data",
                   "type:types",
@@ -37,48 +37,48 @@ Object {
                 ],
                 "sourceTag": "type:feature",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                 ],
                 "sourceTag": "type:types",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:state",
                   "type:types",
                   "type:data",
                 ],
                 "sourceTag": "type:state",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                 ],
                 "sourceTag": "type:data",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:e2e-utils",
                 ],
                 "sourceTag": "type:e2e",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                   "type:ui",
                 ],
                 "sourceTag": "type:ui",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "scope:products",
                   "scope:shared",
                 ],
                 "sourceTag": "scope:products",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "scope:cart",
                   "scope:shared",
                 ],
@@ -90,47 +90,47 @@ Object {
         ],
       },
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/typescript",
+    {
+      "extends": [
+        "plugin:@nx/typescript",
       ],
-      "files": Array [
+      "files": [
         "*.ts",
         "*.tsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/javascript",
+    {
+      "extends": [
+        "plugin:@nx/javascript",
       ],
-      "files": Array [
+      "files": [
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.ts",
       ],
-      "plugins": Array [
+      "plugins": [
         "eslint-plugin-import",
         "@angular-eslint/eslint-plugin",
         "@typescript-eslint",
       ],
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
+      "rules": {
+        "@angular-eslint/component-selector": [
           "error",
-          Object {
+          {
             "prefix": "app",
             "style": "kebab-case",
             "type": "element",
           },
         ],
-        "@angular-eslint/directive-selector": Array [
+        "@angular-eslint/directive-selector": [
           "error",
-          Object {
+          {
             "prefix": "app",
             "style": "camelCase",
             "type": "attribute",
@@ -148,17 +148,17 @@ Object {
         "@angular-eslint/use-pipe-transform-interface": "error",
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/dot-notation": "off",
-        "@typescript-eslint/explicit-member-accessibility": Array [
+        "@typescript-eslint/explicit-member-accessibility": [
           "off",
-          Object {
+          {
             "accessibility": "explicit",
           },
         ],
         "@typescript-eslint/member-ordering": "error",
-        "@typescript-eslint/naming-convention": Array [
+        "@typescript-eslint/naming-convention": [
           "error",
-          Object {
-            "format": Array [
+          {
+            "format": [
               "camelCase",
               "UPPER_CASE",
             ],
@@ -169,17 +169,17 @@ Object {
         ],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-interface": "error",
-        "@typescript-eslint/no-inferrable-types": Array [
+        "@typescript-eslint/no-inferrable-types": [
           "error",
-          Object {
+          {
             "ignoreParameters": true,
           },
         ],
         "@typescript-eslint/no-misused-new": "error",
         "@typescript-eslint/no-non-null-assertion": "error",
-        "@typescript-eslint/no-shadow": Array [
+        "@typescript-eslint/no-shadow": [
           "error",
-          Object {
+          {
             "hoist": "all",
           },
         ],
@@ -189,7 +189,7 @@ Object {
         "arrow-body-style": "error",
         "constructor-super": "error",
         "dot-notation": "off",
-        "eqeqeq": Array [
+        "eqeqeq": [
           "error",
           "smart",
         ],
@@ -199,9 +199,9 @@ Object {
         "import/no-deprecated": "warn",
         "no-bitwise": "error",
         "no-caller": "error",
-        "no-console": Array [
+        "no-console": [
           "error",
-          Object {},
+          {},
         ],
         "no-debugger": "error",
         "no-empty": "off",
@@ -209,7 +209,7 @@ Object {
         "no-eval": "error",
         "no-fallthrough": "error",
         "no-new-wrappers": "error",
-        "no-restricted-imports": Array [
+        "no-restricted-imports": [
           "error",
           "rxjs/Rx",
         ],
@@ -223,60 +223,60 @@ Object {
         "radix": "error",
       },
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.html",
       ],
-      "plugins": Array [
+      "plugins": [
         "@angular-eslint/eslint-plugin-template",
       ],
-      "rules": Object {
+      "rules": {
         "@angular-eslint/template/banana-in-box": "error",
         "@angular-eslint/template/eqeqeq": "error",
         "@angular-eslint/template/no-negated-async": "error",
       },
     },
   ],
-  "plugins": Array [
-    "@nrwl/nx",
+  "plugins": [
+    "@nx",
   ],
   "root": true,
 }
 `;
 
 exports[`convert-tslint-to-eslint should not override .eslint config if migration in progress 2`] = `
-Object {
-  "extends": Array [
+{
+  "extends": [
     "../../.eslintrc.json",
   ],
-  "ignorePatterns": Array [
+  "ignorePatterns": [
     "!**/*",
   ],
-  "overrides": Array [
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular",
+  "overrides": [
+    {
+      "extends": [
+        "plugin:@nx/angular",
         "plugin:@angular-eslint/template/process-inline-templates",
       ],
-      "files": Array [
+      "files": [
         "*.ts",
       ],
-      "plugins": Array [
+      "plugins": [
         "@angular-eslint/eslint-plugin",
         "@typescript-eslint",
       ],
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
+      "rules": {
+        "@angular-eslint/component-selector": [
           "error",
-          Object {
+          {
             "prefix": "angular-app",
             "style": "kebab-case",
             "type": "element",
           },
         ],
-        "@angular-eslint/directive-selector": Array [
+        "@angular-eslint/directive-selector": [
           "error",
-          Object {
+          {
             "prefix": "angular-app",
             "style": "camelCase",
             "type": "attribute",
@@ -285,17 +285,17 @@ Object {
         "@typescript-eslint/no-empty-interface": "error",
       },
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular-template",
+    {
+      "extends": [
+        "plugin:@nx/angular-template",
       ],
-      "files": Array [
+      "files": [
         "*.html",
       ],
-      "plugins": Array [
+      "plugins": [
         "@angular-eslint/eslint-plugin-template",
       ],
-      "rules": Object {
+      "rules": {
         "@angular-eslint/template/banana-in-box": "error",
       },
     },
@@ -304,35 +304,35 @@ Object {
 `;
 
 exports[`convert-tslint-to-eslint should not override .eslint config if migration in progress 3`] = `
-Object {
-  "ignorePatterns": Array [
+{
+  "ignorePatterns": [
     "**/*",
   ],
-  "overrides": Array [
-    Object {
-      "files": Array [
+  "overrides": [
+    {
+      "files": [
         "*.ts",
         "*.tsx",
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {
-        "@nrwl/nx/enforce-module-boundaries": Array [
+      "rules": {
+        "@nx/enforce-module-boundaries": [
           "error",
-          Object {
-            "allow": Array [
+          {
+            "allow": [
               "@nx-example/shared/product/data/testing",
             ],
-            "depConstraints": Array [
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+            "depConstraints": [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:feature",
                   "type:ui",
                 ],
                 "sourceTag": "type:app",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:ui",
                   "type:data",
                   "type:types",
@@ -340,48 +340,48 @@ Object {
                 ],
                 "sourceTag": "type:feature",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                 ],
                 "sourceTag": "type:types",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:state",
                   "type:types",
                   "type:data",
                 ],
                 "sourceTag": "type:state",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                 ],
                 "sourceTag": "type:data",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:e2e-utils",
                 ],
                 "sourceTag": "type:e2e",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                   "type:ui",
                 ],
                 "sourceTag": "type:ui",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "scope:products",
                   "scope:shared",
                 ],
                 "sourceTag": "scope:products",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "scope:cart",
                   "scope:shared",
                 ],
@@ -393,47 +393,47 @@ Object {
         ],
       },
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/typescript",
+    {
+      "extends": [
+        "plugin:@nx/typescript",
       ],
-      "files": Array [
+      "files": [
         "*.ts",
         "*.tsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/javascript",
+    {
+      "extends": [
+        "plugin:@nx/javascript",
       ],
-      "files": Array [
+      "files": [
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.ts",
       ],
-      "plugins": Array [
+      "plugins": [
         "eslint-plugin-import",
         "@angular-eslint/eslint-plugin",
         "@typescript-eslint",
       ],
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
+      "rules": {
+        "@angular-eslint/component-selector": [
           "error",
-          Object {
+          {
             "prefix": "app",
             "style": "kebab-case",
             "type": "element",
           },
         ],
-        "@angular-eslint/directive-selector": Array [
+        "@angular-eslint/directive-selector": [
           "error",
-          Object {
+          {
             "prefix": "app",
             "style": "camelCase",
             "type": "attribute",
@@ -451,17 +451,17 @@ Object {
         "@angular-eslint/use-pipe-transform-interface": "error",
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/dot-notation": "off",
-        "@typescript-eslint/explicit-member-accessibility": Array [
+        "@typescript-eslint/explicit-member-accessibility": [
           "off",
-          Object {
+          {
             "accessibility": "explicit",
           },
         ],
         "@typescript-eslint/member-ordering": "error",
-        "@typescript-eslint/naming-convention": Array [
+        "@typescript-eslint/naming-convention": [
           "error",
-          Object {
-            "format": Array [
+          {
+            "format": [
               "camelCase",
               "UPPER_CASE",
             ],
@@ -472,17 +472,17 @@ Object {
         ],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-interface": "error",
-        "@typescript-eslint/no-inferrable-types": Array [
+        "@typescript-eslint/no-inferrable-types": [
           "error",
-          Object {
+          {
             "ignoreParameters": true,
           },
         ],
         "@typescript-eslint/no-misused-new": "error",
         "@typescript-eslint/no-non-null-assertion": "error",
-        "@typescript-eslint/no-shadow": Array [
+        "@typescript-eslint/no-shadow": [
           "error",
-          Object {
+          {
             "hoist": "all",
           },
         ],
@@ -492,7 +492,7 @@ Object {
         "arrow-body-style": "error",
         "constructor-super": "error",
         "dot-notation": "off",
-        "eqeqeq": Array [
+        "eqeqeq": [
           "error",
           "smart",
         ],
@@ -502,9 +502,9 @@ Object {
         "import/no-deprecated": "warn",
         "no-bitwise": "error",
         "no-caller": "error",
-        "no-console": Array [
+        "no-console": [
           "error",
-          Object {},
+          {},
         ],
         "no-debugger": "error",
         "no-empty": "off",
@@ -512,7 +512,7 @@ Object {
         "no-eval": "error",
         "no-fallthrough": "error",
         "no-new-wrappers": "error",
-        "no-restricted-imports": Array [
+        "no-restricted-imports": [
           "error",
           "rxjs/Rx",
         ],
@@ -526,38 +526,38 @@ Object {
         "radix": "error",
       },
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.html",
       ],
-      "plugins": Array [
+      "plugins": [
         "@angular-eslint/eslint-plugin-template",
       ],
-      "rules": Object {
+      "rules": {
         "@angular-eslint/template/banana-in-box": "error",
         "@angular-eslint/template/eqeqeq": "error",
         "@angular-eslint/template/no-negated-async": "error",
       },
     },
   ],
-  "plugins": Array [
-    "@nrwl/nx",
+  "plugins": [
+    "@nx",
   ],
   "root": true,
 }
 `;
 
 exports[`convert-tslint-to-eslint should work for Angular applications 1`] = `
-Object {
-  "dependencies": Object {},
-  "devDependencies": Object {
-    "@angular-eslint/eslint-plugin": "~15.0.0",
-    "@angular-eslint/eslint-plugin-template": "~15.0.0",
-    "@angular-eslint/template-parser": "~15.0.0",
-    "@nrwl/eslint-plugin-nx": "0.0.1",
-    "@nrwl/linter": "0.0.1",
-    "@typescript-eslint/eslint-plugin": "^5.36.1",
-    "@typescript-eslint/parser": "^5.36.1",
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@angular-eslint/eslint-plugin": "~16.0.0",
+    "@angular-eslint/eslint-plugin-template": "~16.0.0",
+    "@angular-eslint/template-parser": "~16.0.0",
+    "@nx/eslint-plugin": "0.0.1",
+    "@nx/linter": "0.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
     "eslint": "~8.15.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-import": "latest",
@@ -567,22 +567,22 @@ Object {
 `;
 
 exports[`convert-tslint-to-eslint should work for Angular applications 2`] = `
-Object {
+{
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "angular-app-1",
   "prefix": "angular-app",
   "projectType": "application",
   "root": "apps/angular-app-1",
-  "targets": Object {
-    "lint": Object {
-      "executor": "@nrwl/linter:eslint",
-      "options": Object {
-        "lintFilePatterns": Array [
+  "targets": {
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
           "apps/angular-app-1/**/*.ts",
           "apps/angular-app-1/**/*.html",
         ],
       },
-      "outputs": Array [
+      "outputs": [
         "{options.outputFile}",
       ],
     },
@@ -591,35 +591,35 @@ Object {
 `;
 
 exports[`convert-tslint-to-eslint should work for Angular applications 3`] = `
-Object {
-  "ignorePatterns": Array [
+{
+  "ignorePatterns": [
     "**/*",
   ],
-  "overrides": Array [
-    Object {
-      "files": Array [
+  "overrides": [
+    {
+      "files": [
         "*.ts",
         "*.tsx",
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {
-        "@nrwl/nx/enforce-module-boundaries": Array [
+      "rules": {
+        "@nx/enforce-module-boundaries": [
           "error",
-          Object {
-            "allow": Array [
+          {
+            "allow": [
               "@nx-example/shared/product/data/testing",
             ],
-            "depConstraints": Array [
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+            "depConstraints": [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:feature",
                   "type:ui",
                 ],
                 "sourceTag": "type:app",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:ui",
                   "type:data",
                   "type:types",
@@ -627,48 +627,48 @@ Object {
                 ],
                 "sourceTag": "type:feature",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                 ],
                 "sourceTag": "type:types",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:state",
                   "type:types",
                   "type:data",
                 ],
                 "sourceTag": "type:state",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                 ],
                 "sourceTag": "type:data",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:e2e-utils",
                 ],
                 "sourceTag": "type:e2e",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                   "type:ui",
                 ],
                 "sourceTag": "type:ui",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "scope:products",
                   "scope:shared",
                 ],
                 "sourceTag": "scope:products",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "scope:cart",
                   "scope:shared",
                 ],
@@ -680,47 +680,47 @@ Object {
         ],
       },
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/typescript",
+    {
+      "extends": [
+        "plugin:@nx/typescript",
       ],
-      "files": Array [
+      "files": [
         "*.ts",
         "*.tsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/javascript",
+    {
+      "extends": [
+        "plugin:@nx/javascript",
       ],
-      "files": Array [
+      "files": [
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.ts",
       ],
-      "plugins": Array [
+      "plugins": [
         "eslint-plugin-import",
         "@angular-eslint/eslint-plugin",
         "@typescript-eslint",
       ],
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
+      "rules": {
+        "@angular-eslint/component-selector": [
           "error",
-          Object {
+          {
             "prefix": "app",
             "style": "kebab-case",
             "type": "element",
           },
         ],
-        "@angular-eslint/directive-selector": Array [
+        "@angular-eslint/directive-selector": [
           "error",
-          Object {
+          {
             "prefix": "app",
             "style": "camelCase",
             "type": "attribute",
@@ -738,17 +738,17 @@ Object {
         "@angular-eslint/use-pipe-transform-interface": "error",
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/dot-notation": "off",
-        "@typescript-eslint/explicit-member-accessibility": Array [
+        "@typescript-eslint/explicit-member-accessibility": [
           "off",
-          Object {
+          {
             "accessibility": "explicit",
           },
         ],
         "@typescript-eslint/member-ordering": "error",
-        "@typescript-eslint/naming-convention": Array [
+        "@typescript-eslint/naming-convention": [
           "error",
-          Object {
-            "format": Array [
+          {
+            "format": [
               "camelCase",
               "UPPER_CASE",
             ],
@@ -759,17 +759,17 @@ Object {
         ],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-interface": "error",
-        "@typescript-eslint/no-inferrable-types": Array [
+        "@typescript-eslint/no-inferrable-types": [
           "error",
-          Object {
+          {
             "ignoreParameters": true,
           },
         ],
         "@typescript-eslint/no-misused-new": "error",
         "@typescript-eslint/no-non-null-assertion": "error",
-        "@typescript-eslint/no-shadow": Array [
+        "@typescript-eslint/no-shadow": [
           "error",
-          Object {
+          {
             "hoist": "all",
           },
         ],
@@ -779,7 +779,7 @@ Object {
         "arrow-body-style": "error",
         "constructor-super": "error",
         "dot-notation": "off",
-        "eqeqeq": Array [
+        "eqeqeq": [
           "error",
           "smart",
         ],
@@ -789,9 +789,9 @@ Object {
         "import/no-deprecated": "warn",
         "no-bitwise": "error",
         "no-caller": "error",
-        "no-console": Array [
+        "no-console": [
           "error",
-          Object {},
+          {},
         ],
         "no-debugger": "error",
         "no-empty": "off",
@@ -799,7 +799,7 @@ Object {
         "no-eval": "error",
         "no-fallthrough": "error",
         "no-new-wrappers": "error",
-        "no-restricted-imports": Array [
+        "no-restricted-imports": [
           "error",
           "rxjs/Rx",
         ],
@@ -813,65 +813,65 @@ Object {
         "radix": "error",
       },
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.html",
       ],
-      "plugins": Array [
+      "plugins": [
         "@angular-eslint/eslint-plugin-template",
       ],
-      "rules": Object {
+      "rules": {
         "@angular-eslint/template/banana-in-box": "error",
         "@angular-eslint/template/eqeqeq": "error",
         "@angular-eslint/template/no-negated-async": "error",
       },
     },
   ],
-  "plugins": Array [
-    "@nrwl/nx",
+  "plugins": [
+    "@nx",
   ],
   "root": true,
 }
 `;
 
 exports[`convert-tslint-to-eslint should work for Angular applications 4`] = `
-Object {
-  "extends": Array [
+{
+  "extends": [
     "../../.eslintrc.json",
   ],
-  "ignorePatterns": Array [
+  "ignorePatterns": [
     "!**/*",
   ],
-  "overrides": Array [
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular",
+  "overrides": [
+    {
+      "extends": [
+        "plugin:@nx/angular",
         "plugin:@angular-eslint/template/process-inline-templates",
       ],
-      "files": Array [
+      "files": [
         "*.ts",
       ],
-      "parserOptions": Object {
-        "project": Array [
+      "parserOptions": {
+        "project": [
           "apps/angular-app-1/tsconfig.*?.json",
         ],
       },
-      "plugins": Array [
+      "plugins": [
         "@angular-eslint/eslint-plugin",
         "@typescript-eslint",
       ],
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
+      "rules": {
+        "@angular-eslint/component-selector": [
           "error",
-          Object {
+          {
             "prefix": "angular-app",
             "style": "kebab-case",
             "type": "element",
           },
         ],
-        "@angular-eslint/directive-selector": Array [
+        "@angular-eslint/directive-selector": [
           "error",
-          Object {
+          {
             "prefix": "angular-app",
             "style": "camelCase",
             "type": "attribute",
@@ -881,17 +881,17 @@ Object {
         "@typescript-eslint/no-empty-interface": "error",
       },
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular-template",
+    {
+      "extends": [
+        "plugin:@nx/angular-template",
       ],
-      "files": Array [
+      "files": [
         "*.html",
       ],
-      "plugins": Array [
+      "plugins": [
         "@angular-eslint/eslint-plugin-template",
       ],
-      "rules": Object {
+      "rules": {
         "@angular-eslint/template/banana-in-box": "error",
       },
     },
@@ -900,16 +900,16 @@ Object {
 `;
 
 exports[`convert-tslint-to-eslint should work for Angular libraries 1`] = `
-Object {
-  "dependencies": Object {},
-  "devDependencies": Object {
-    "@angular-eslint/eslint-plugin": "~15.0.0",
-    "@angular-eslint/eslint-plugin-template": "~15.0.0",
-    "@angular-eslint/template-parser": "~15.0.0",
-    "@nrwl/eslint-plugin-nx": "0.0.1",
-    "@nrwl/linter": "0.0.1",
-    "@typescript-eslint/eslint-plugin": "^5.36.1",
-    "@typescript-eslint/parser": "^5.36.1",
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@angular-eslint/eslint-plugin": "~16.0.0",
+    "@angular-eslint/eslint-plugin-template": "~16.0.0",
+    "@angular-eslint/template-parser": "~16.0.0",
+    "@nx/eslint-plugin": "0.0.1",
+    "@nx/linter": "0.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
     "eslint": "~8.15.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-import": "latest",
@@ -919,22 +919,22 @@ Object {
 `;
 
 exports[`convert-tslint-to-eslint should work for Angular libraries 2`] = `
-Object {
+{
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "angular-lib-1",
   "prefix": "angular-app",
   "projectType": "library",
   "root": "libs/angular-lib-1",
-  "targets": Object {
-    "lint": Object {
-      "executor": "@nrwl/linter:eslint",
-      "options": Object {
-        "lintFilePatterns": Array [
+  "targets": {
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
           "libs/angular-lib-1/**/*.ts",
           "libs/angular-lib-1/**/*.html",
         ],
       },
-      "outputs": Array [
+      "outputs": [
         "{options.outputFile}",
       ],
     },
@@ -943,35 +943,35 @@ Object {
 `;
 
 exports[`convert-tslint-to-eslint should work for Angular libraries 3`] = `
-Object {
-  "ignorePatterns": Array [
+{
+  "ignorePatterns": [
     "**/*",
   ],
-  "overrides": Array [
-    Object {
-      "files": Array [
+  "overrides": [
+    {
+      "files": [
         "*.ts",
         "*.tsx",
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {
-        "@nrwl/nx/enforce-module-boundaries": Array [
+      "rules": {
+        "@nx/enforce-module-boundaries": [
           "error",
-          Object {
-            "allow": Array [
+          {
+            "allow": [
               "@nx-example/shared/product/data/testing",
             ],
-            "depConstraints": Array [
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+            "depConstraints": [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:feature",
                   "type:ui",
                 ],
                 "sourceTag": "type:app",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:ui",
                   "type:data",
                   "type:types",
@@ -979,48 +979,48 @@ Object {
                 ],
                 "sourceTag": "type:feature",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                 ],
                 "sourceTag": "type:types",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:state",
                   "type:types",
                   "type:data",
                 ],
                 "sourceTag": "type:state",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                 ],
                 "sourceTag": "type:data",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:e2e-utils",
                 ],
                 "sourceTag": "type:e2e",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "type:types",
                   "type:ui",
                 ],
                 "sourceTag": "type:ui",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "scope:products",
                   "scope:shared",
                 ],
                 "sourceTag": "scope:products",
               },
-              Object {
-                "onlyDependOnLibsWithTags": Array [
+              {
+                "onlyDependOnLibsWithTags": [
                   "scope:cart",
                   "scope:shared",
                 ],
@@ -1032,47 +1032,47 @@ Object {
         ],
       },
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/typescript",
+    {
+      "extends": [
+        "plugin:@nx/typescript",
       ],
-      "files": Array [
+      "files": [
         "*.ts",
         "*.tsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/javascript",
+    {
+      "extends": [
+        "plugin:@nx/javascript",
       ],
-      "files": Array [
+      "files": [
         "*.js",
         "*.jsx",
       ],
-      "rules": Object {},
+      "rules": {},
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.ts",
       ],
-      "plugins": Array [
+      "plugins": [
         "eslint-plugin-import",
         "@angular-eslint/eslint-plugin",
         "@typescript-eslint",
       ],
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
+      "rules": {
+        "@angular-eslint/component-selector": [
           "error",
-          Object {
+          {
             "prefix": "app",
             "style": "kebab-case",
             "type": "element",
           },
         ],
-        "@angular-eslint/directive-selector": Array [
+        "@angular-eslint/directive-selector": [
           "error",
-          Object {
+          {
             "prefix": "app",
             "style": "camelCase",
             "type": "attribute",
@@ -1090,17 +1090,17 @@ Object {
         "@angular-eslint/use-pipe-transform-interface": "error",
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/dot-notation": "off",
-        "@typescript-eslint/explicit-member-accessibility": Array [
+        "@typescript-eslint/explicit-member-accessibility": [
           "off",
-          Object {
+          {
             "accessibility": "explicit",
           },
         ],
         "@typescript-eslint/member-ordering": "error",
-        "@typescript-eslint/naming-convention": Array [
+        "@typescript-eslint/naming-convention": [
           "error",
-          Object {
-            "format": Array [
+          {
+            "format": [
               "camelCase",
               "UPPER_CASE",
             ],
@@ -1111,17 +1111,17 @@ Object {
         ],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-interface": "error",
-        "@typescript-eslint/no-inferrable-types": Array [
+        "@typescript-eslint/no-inferrable-types": [
           "error",
-          Object {
+          {
             "ignoreParameters": true,
           },
         ],
         "@typescript-eslint/no-misused-new": "error",
         "@typescript-eslint/no-non-null-assertion": "error",
-        "@typescript-eslint/no-shadow": Array [
+        "@typescript-eslint/no-shadow": [
           "error",
-          Object {
+          {
             "hoist": "all",
           },
         ],
@@ -1131,7 +1131,7 @@ Object {
         "arrow-body-style": "error",
         "constructor-super": "error",
         "dot-notation": "off",
-        "eqeqeq": Array [
+        "eqeqeq": [
           "error",
           "smart",
         ],
@@ -1141,9 +1141,9 @@ Object {
         "import/no-deprecated": "warn",
         "no-bitwise": "error",
         "no-caller": "error",
-        "no-console": Array [
+        "no-console": [
           "error",
-          Object {},
+          {},
         ],
         "no-debugger": "error",
         "no-empty": "off",
@@ -1151,7 +1151,7 @@ Object {
         "no-eval": "error",
         "no-fallthrough": "error",
         "no-new-wrappers": "error",
-        "no-restricted-imports": Array [
+        "no-restricted-imports": [
           "error",
           "rxjs/Rx",
         ],
@@ -1165,60 +1165,60 @@ Object {
         "radix": "error",
       },
     },
-    Object {
-      "files": Array [
+    {
+      "files": [
         "*.html",
       ],
-      "plugins": Array [
+      "plugins": [
         "@angular-eslint/eslint-plugin-template",
       ],
-      "rules": Object {
+      "rules": {
         "@angular-eslint/template/banana-in-box": "error",
         "@angular-eslint/template/eqeqeq": "error",
         "@angular-eslint/template/no-negated-async": "error",
       },
     },
   ],
-  "plugins": Array [
-    "@nrwl/nx",
+  "plugins": [
+    "@nx",
   ],
   "root": true,
 }
 `;
 
 exports[`convert-tslint-to-eslint should work for Angular libraries 4`] = `
-Object {
-  "extends": Array [
+{
+  "extends": [
     "../../.eslintrc.json",
   ],
-  "ignorePatterns": Array [
+  "ignorePatterns": [
     "!**/*",
   ],
-  "overrides": Array [
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular",
+  "overrides": [
+    {
+      "extends": [
+        "plugin:@nx/angular",
         "plugin:@angular-eslint/template/process-inline-templates",
       ],
-      "files": Array [
+      "files": [
         "*.ts",
       ],
-      "plugins": Array [
+      "plugins": [
         "@angular-eslint/eslint-plugin",
         "@typescript-eslint",
       ],
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
+      "rules": {
+        "@angular-eslint/component-selector": [
           "error",
-          Object {
+          {
             "prefix": "angular-app",
             "style": "kebab-case",
             "type": "element",
           },
         ],
-        "@angular-eslint/directive-selector": Array [
+        "@angular-eslint/directive-selector": [
           "error",
-          Object {
+          {
             "prefix": "angular-app",
             "style": "camelCase",
             "type": "attribute",
@@ -1227,17 +1227,17 @@ Object {
         "@typescript-eslint/no-empty-interface": "error",
       },
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular-template",
+    {
+      "extends": [
+        "plugin:@nx/angular-template",
       ],
-      "files": Array [
+      "files": [
         "*.html",
       ],
-      "plugins": Array [
+      "plugins": [
         "@angular-eslint/eslint-plugin-template",
       ],
-      "rules": Object {
+      "rules": {
         "@angular-eslint/template/banana-in-box": "error",
       },
     },

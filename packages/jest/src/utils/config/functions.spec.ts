@@ -1,4 +1,4 @@
-import { createTree } from '@nrwl/devkit/testing';
+import { createTree } from '@nx/devkit/testing';
 import { jestConfigObject, jestConfigObjectAst } from './functions';
 
 describe('jestConfigObject', () => {
@@ -21,13 +21,13 @@ describe('jestConfigObject', () => {
 
     xit('should work with async functions', async () => {
       const tree = createTree();
-      jest.mock('@nrwl/jest', () => ({
+      jest.mock('@nx/jest', () => ({
         getJestProjects: () => ['<rootDir>/project-a', '<rootDir>/project-b'],
       }));
       tree.write(
         'jest.config.js',
         `
-      const { getJestProjects } = require('@nrwl/jest');
+      const { getJestProjects } = require('@nx/jest');
       module.exports = async () => ({
         foo: 'bar'
       });
@@ -41,13 +41,13 @@ describe('jestConfigObject', () => {
 
     it('should work with `getJestConfig`', () => {
       const tree = createTree();
-      jest.mock('@nrwl/jest', () => ({
+      jest.mock('@nx/jest', () => ({
         getJestProjects: () => ['<rootDir>/project-a', '<rootDir>/project-b'],
       }));
       tree.write(
         'jest.config.js',
         `
-      const { getJestProjects } = require('@nrwl/jest');
+      const { getJestProjects } = require('@nx/jest');
       module.exports = {
         projects: getJestProjects()
       };
@@ -61,13 +61,13 @@ describe('jestConfigObject', () => {
 
     it('should work with node globals (require, __dirname, process, __filename, console, and other globals)', () => {
       const tree = createTree();
-      jest.mock('@nrwl/jest', () => ({
+      jest.mock('@nx/jest', () => ({
         getJestProjects: () => ['<rootDir>/project-a', '<rootDir>/project-b'],
       }));
       tree.write(
         'jest.config.js',
         `
-      const { getJestProjects } = require('@nrwl/jest');
+      const { getJestProjects } = require('@nx/jest');
       module.exports = {
         projects: getJestProjects(),
         filename: __filename,
@@ -98,7 +98,7 @@ describe('jestConfigObject', () => {
 
     it('should handle spread assignments', () => {
       const content = `
-       import { nxPreset } from '@nrwl/jest/preset';
+       import { nxPreset } from '@nx/jest/preset';
       
         export default {
           ...nxPreset,

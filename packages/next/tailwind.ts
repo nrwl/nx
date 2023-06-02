@@ -1,3 +1,3 @@
 // Re-exporting for convenience and backwards compatibility.
-import { createGlobPatternsForDependencies } from '@nrwl/react/tailwind';
+import { createGlobPatternsForDependencies } from '@nx/react/tailwind';
 export { createGlobPatternsForDependencies };

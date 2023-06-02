@@ -6,13 +6,11 @@ import type {
 import { AdditionalSharedConfig, SharedFunction } from './models';
 import { dirname, join, normalize } from 'path';
 import { readRootPackageJson } from './package-json';
-import { readTsPathMappings } from './typescript';
+import { readTsPathMappings, getRootTsConfigPath } from './typescript';
 import {
   collectPackageSecondaryEntryPoints,
   collectWorkspaceLibrarySecondaryEntryPoints,
 } from './secondary-entry-points';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getRootTsConfigPath } from 'nx/src/utils/typescript';
 import type { ProjectGraph } from 'nx/src/config/project-graph';
 import { requireNx } from '../../../nx';
 

@@ -1,7 +1,7 @@
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
-import { moveGenerator } from '@nrwl/workspace/generators';
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
+import { moveGenerator } from '@nx/workspace/generators';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { generateTestLibrary } from '../../utils/testing';
 import { Schema } from '../schema';

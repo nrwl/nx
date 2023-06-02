@@ -3,9 +3,9 @@ import {
   ProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
-import type { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import type { JestExecutorOptions } from '@nx/jest/src/executors/jest/schema';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { StringLiteral } from 'typescript';
 

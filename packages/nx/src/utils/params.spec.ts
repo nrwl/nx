@@ -32,7 +32,7 @@ describe('params', () => {
     it('should use target options', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -58,7 +58,7 @@ describe('params', () => {
     it('should combine target, configuration', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -88,7 +88,7 @@ describe('params', () => {
         overriddenOpt: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -118,7 +118,7 @@ describe('params', () => {
         overriddenOpt: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOptAlias: 'target value',
         },
@@ -148,7 +148,7 @@ describe('params', () => {
         overriddenOptAlias: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -176,7 +176,7 @@ describe('params', () => {
     it('should handle targets without options', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
       };
 
       const options = combineOptionsForExecutor(
@@ -982,6 +982,27 @@ describe('params', () => {
         ).not.toThrow();
       });
 
+      it('should handle const value', () => {
+        const schema = {
+          properties: {
+            a: {
+              const: 3,
+            },
+          },
+        };
+        expect(() => validateOptsAgainstSchema({ a: 3 }, schema)).not.toThrow();
+        expect(() =>
+          validateOptsAgainstSchema({ a: true }, schema)
+        ).toThrowErrorMatchingInlineSnapshot(
+          `"Property 'a' does not match the schema. 'true' should be '3'."`
+        );
+        expect(() =>
+          validateOptsAgainstSchema({ a: 123 }, schema)
+        ).toThrowErrorMatchingInlineSnapshot(
+          `"Property 'a' does not match the schema. '123' should be '3'."`
+        );
+      });
+
       describe('array', () => {
         it('should handle validating patterns', () => {
           const schema = {
@@ -1633,6 +1654,7 @@ describe('params', () => {
           name: 'pets',
           message: 'What kind of pets do you have?',
           choices: ['Cat', 'Dog', 'Fish'],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
@@ -1673,6 +1695,7 @@ describe('params', () => {
             { message: 'Dog', name: 'dog' },
             { message: 'Fish', name: 'fish' },
           ],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
@@ -1714,6 +1737,7 @@ describe('params', () => {
             { message: 'Dog', name: 'dog' },
             { message: 'Fish', name: 'fish' },
           ],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
@@ -1746,6 +1770,7 @@ describe('params', () => {
             name: 'project',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1777,6 +1802,7 @@ describe('params', () => {
             name: 'projectName',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1809,6 +1835,7 @@ describe('params', () => {
             name: 'projectName',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1843,6 +1870,7 @@ describe('params', () => {
             name: 'yourProject',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1873,6 +1901,7 @@ describe('params', () => {
           name: 'name',
           message: 'What is your name?',
           choices: ['Bob', 'Joe', 'Jeff'],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
@@ -1904,6 +1933,7 @@ describe('params', () => {
           message: 'What is your name?',
           choices: ['Bob', 'Joe', 'Jeff'],
           initial: 'Joe',
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);

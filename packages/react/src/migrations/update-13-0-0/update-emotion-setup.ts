@@ -4,7 +4,7 @@ import {
   Tree,
   readJson,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export async function updateEmotionSetup(host: Tree) {
   const projects = getProjects(host);

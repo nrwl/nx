@@ -2,8 +2,8 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import changeNpmScriptExecutor from './change-npm-script-executor';
 
 describe('changeNxJsonPresets', () => {
@@ -31,18 +31,18 @@ describe('changeNxJsonPresets', () => {
     await changeNpmScriptExecutor(tree);
 
     expect(readProjectConfiguration(tree, 'proj1')).toMatchInlineSnapshot(`
-      Object {
+      {
         "$schema": "../node_modules/nx/schemas/project-schema.json",
         "name": "proj1",
         "root": "proj1",
-        "targets": Object {
-          "notScriptTarget": Object {
+        "targets": {
+          "notScriptTarget": {
             "executor": "@nrwl/workspace:something",
-            "options": Object {},
+            "options": {},
           },
-          "scriptTarget": Object {
+          "scriptTarget": {
             "executor": "nx:run-script",
-            "options": Object {},
+            "options": {},
           },
         },
       }

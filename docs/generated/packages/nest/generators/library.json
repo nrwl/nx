@@ -110,7 +110,7 @@
       "strict": {
         "description": "Whether to enable tsconfig strict mode or not.",
         "type": "boolean",
-        "default": false
+        "default": true
       },
       "standaloneConfig": {
         "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
@@ -128,6 +128,11 @@
         "type": "boolean",
         "default": false,
         "x-priority": "internal"
+      },
+      "simpleName": {
+        "description": "Don't include the directory in the name of the module of the library.",
+        "type": "boolean",
+        "default": false
       }
     },
     "additionalProperties": false,

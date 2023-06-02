@@ -6,7 +6,6 @@ import {
   runCLI,
   uniq,
   updateFile,
-  expectJestTestsToPass,
   readFile,
   exists,
   updateProjectConfig,
@@ -16,7 +15,8 @@ import {
   getPackageManagerCommand,
   getSelectedPackageManager,
   runCommand,
-} from '@nrwl/e2e/utils';
+  runCreateWorkspace,
+} from '@nx/e2e/utils';
 
 let proj: string;
 
@@ -27,91 +27,11 @@ describe('Workspace Tests', () => {
 
   afterAll(() => cleanupProject());
 
-  describe('@nrwl/workspace:library', () => {
-    it('should create a library that can be tested and linted', async () => {
-      const libName = uniq('mylib');
-      const dirName = uniq('dir');
-
-      runCLI(`generate @nrwl/workspace:lib ${libName} --directory ${dirName}`);
-
-      checkFilesExist(
-        `libs/${dirName}/${libName}/src/index.ts`,
-        `libs/${dirName}/${libName}/README.md`
-      );
-
-      // Lint
-      const result = runCLI(`lint ${dirName}-${libName}`);
-
-      expect(result).toContain(`Linting "${dirName}-${libName}"...`);
-      expect(result).toContain('All files pass linting.');
-
-      // Test
-      await expectJestTestsToPass('@nrwl/workspace:lib');
-    }, 100000);
-
-    it('should be able to use and be used by other libs', () => {
-      const consumerLib = uniq('consumer');
-      const producerLib = uniq('producer');
-
-      runCLI(`generate @nrwl/workspace:lib ${consumerLib}`);
-      runCLI(`generate @nrwl/workspace:lib ${producerLib}`);
-
-      updateFile(
-        `libs/${producerLib}/src/lib/${producerLib}.ts`,
-        'export const a = 0;'
-      );
-
-      updateFile(
-        `libs/${consumerLib}/src/lib/${consumerLib}.ts`,
-        `
-    import { a } from '@${proj}/${producerLib}';
-
-    export function ${consumerLib}() {
-      return a + 1;
-    }`
-      );
-      updateFile(
-        `libs/${consumerLib}/src/lib/${consumerLib}.spec.ts`,
-        `
-    import { ${consumerLib} } from './${consumerLib}';
-
-    describe('', () => {
-      it('should return 1', () => {
-        expect(${consumerLib}()).toEqual(1);
-      });
-    });`
-      );
-
-      runCLI(`test ${consumerLib}`);
-    });
-
-    it('should be able to be built when it is buildable', () => {
-      const buildableLib = uniq('buildable');
-
-      runCLI(`generate @nrwl/workspace:lib ${buildableLib} --buildable`);
-
-      const result = runCLI(`build ${buildableLib}`);
-
-      expect(result).toContain(
-        `Compiling TypeScript files for project "${buildableLib}"...`
-      );
-      expect(result).toContain(
-        `Done compiling TypeScript files for project "${buildableLib}".`
-      );
-
-      checkFilesExist(`dist/libs/${buildableLib}/README.md`);
-
-      const json = readJson(`dist/libs/${buildableLib}/package.json`);
-      expect(json.main).toEqual('./src/index.js');
-      expect(json.types).toEqual('./src/index.d.ts');
-    });
-  });
-
-  describe('@nrwl/workspace:npm-package', () => {
+  describe('@nx/workspace:npm-package', () => {
     it('should create a minimal npm package', () => {
       const npmPackage = uniq('npm-package');
 
-      runCLI(`generate @nrwl/workspace:npm-package ${npmPackage}`);
+      runCLI(`generate @nx/workspace:npm-package ${npmPackage}`);
 
       updateFile('package.json', (content) => {
         const json = JSON.parse(content);
@@ -130,178 +50,6 @@ describe('Workspace Tests', () => {
     });
   });
 
-  describe('workspace-generator', () => {
-    let custom: string;
-    let failing: string;
-
-    beforeEach(() => {
-      custom = uniq('custom');
-      failing = uniq('custom-failing');
-      runCLI(
-        `g @nrwl/workspace:workspace-generator ${custom} --no-interactive`
-      );
-      runCLI(
-        `g @nrwl/workspace:workspace-generator ${failing} --no-interactive`
-      );
-
-      checkFilesExist(
-        `tools/generators/${custom}/index.ts`,
-        `tools/generators/${custom}/schema.json`
-      );
-      checkFilesExist(
-        `tools/generators/${failing}/index.ts`,
-        `tools/generators/${failing}/schema.json`
-      );
-    });
-
-    it('should compile only generator files with dependencies', () => {
-      const workspace = uniq('workspace');
-
-      updateFile(
-        'tools/utils/command-line-utils.ts',
-        `
-        export const noop = () => {}
-        `
-      );
-      updateFile(
-        'tools/utils/logger.ts',
-        `
-        export const log = (...args: any[]) => console.log(...args)
-        `
-      );
-      updateFile(
-        `tools/generators/utils.ts`,
-        `
-        export const noop = ()=>{}
-        `
-      );
-      updateFile(`tools/generators/${custom}/index.ts`, (content) => {
-        return `
-          import { log } from '../../utils/logger'; \n
-          ${content}
-        `;
-      });
-
-      runCLI(`workspace-generator ${custom} ${workspace} --no-interactive -d`);
-
-      expect(() =>
-        checkFilesExist(
-          `dist/out-tsc/tools/generators/${custom}/index.js`,
-          `dist/out-tsc/tools/generators/utils.js`,
-          `dist/out-tsc/tools/utils/logger.js`
-        )
-      ).not.toThrow();
-      expect(() =>
-        checkFilesExist(`dist/out-tsc/tools/utils/utils.js`)
-      ).toThrow();
-    });
-
-    it('should support workspace-specific generators', async () => {
-      const json = readJson(`tools/generators/${custom}/schema.json`);
-      json.properties['directory'] = {
-        type: 'string',
-        description: 'lib directory',
-      };
-      json.properties['skipTsConfig'] = {
-        type: 'boolean',
-        description: 'skip changes to tsconfig',
-      };
-      json.properties['inlineprop'] = json.properties['name'];
-      json.required = ['inlineprop'];
-      delete json.properties['name'];
-
-      updateFile(
-        `tools/generators/${custom}/schema.json`,
-        JSON.stringify(json)
-      );
-
-      const indexFile = readFile(`tools/generators/${custom}/index.ts`);
-      updateFile(
-        `tools/generators/${custom}/index.ts`,
-        indexFile.replace(
-          'name: schema.name',
-          'name: schema.inlineprop, directory: schema.directory, skipTsConfig: schema.skipTsConfig'
-        )
-      );
-
-      const helpOutput = runCLI(`workspace-generator ${custom} --help`);
-      expect(helpOutput).toContain(
-        `workspace-generator ${custom} [inlineprop] (options)`
-      );
-      expect(helpOutput).toContain(`--directory`);
-      expect(helpOutput).toContain(`--skipTsConfig`);
-
-      const workspace = uniq('workspace');
-      const dryRunOutput = runCLI(
-        `workspace-generator ${custom} ${workspace} --no-interactive --directory=dir --skipTsConfig=true -d`
-      );
-      expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
-      expect(dryRunOutput).toContain(
-        `CREATE libs/dir/${workspace}/src/index.ts`
-      );
-
-      runCLI(
-        `workspace-generator ${custom} ${workspace} --no-interactive --directory=dir`
-      );
-      checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
-
-      const jsonFailing = readJson(`tools/generators/${failing}/schema.json`);
-      jsonFailing.properties = {};
-      jsonFailing.required = [];
-      updateFile(
-        `tools/generators/${failing}/schema.json`,
-        JSON.stringify(jsonFailing)
-      );
-
-      updateFile(
-        `tools/generators/${failing}/index.ts`,
-        `
-          export default function() {
-            throw new Error();
-          }
-        `
-      );
-
-      try {
-        await runCLI(`workspace-generator ${failing} --no-interactive`);
-        fail(`Should exit 1 for a workspace-generator that throws an error`);
-      } catch (e) {}
-
-      const listOutput = runCLI('workspace-generator --list-generators');
-      expect(listOutput).toContain(custom);
-      expect(listOutput).toContain(failing);
-    }, 1000000);
-
-    it('should support angular devkit schematics', () => {
-      const angularDevkitSchematic = uniq('angular-devkit-schematic');
-      runCLI(
-        `g @nrwl/workspace:workspace-generator ${angularDevkitSchematic} --no-interactive`
-      );
-
-      const json = readJson(
-        `tools/generators/${angularDevkitSchematic}/schema.json`
-      );
-      json.properties = {};
-      json.required = [];
-      delete json.cli;
-      updateFile(
-        `tools/generators/${angularDevkitSchematic}/schema.json`,
-        JSON.stringify(json)
-      );
-
-      updateFile(
-        `tools/generators/${angularDevkitSchematic}/index.ts`,
-        `
-          export default function() {
-            return (tree) => tree;
-          }
-        `
-      );
-
-      runCLI(`workspace-generator ${angularDevkitSchematic} --no-interactive`);
-    });
-  });
-
   describe('move project', () => {
     /**
      * Tries moving a library from ${lib}/data-access -> shared/${lib}/data-access
@@ -310,7 +58,7 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
-      runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
+      runCLI(`generate @nx/js:lib ${lib1}/data-access`);
 
       updateFile(
         `libs/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
@@ -326,7 +74,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+      runCLI(`generate @nx/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -339,7 +87,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      runCLI(`generate @nx/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -350,7 +98,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nrwl/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
       );
 
       expect(moveOutput).toContain(`DELETE libs/${lib1}/data-access`);
@@ -446,7 +194,7 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
       runCLI(
-        `generate @nrwl/workspace:lib ${lib1}/data-access --importPath=${importPath}`
+        `generate @nx/js:lib ${lib1}/data-access --importPath=${importPath}`
       );
 
       updateFile(
@@ -463,7 +211,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+      runCLI(`generate @nx/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -476,7 +224,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      runCLI(`generate @nx/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -487,7 +235,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nrwl/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
       );
 
       expect(moveOutput).toContain(`DELETE libs/${lib1}/data-access`);
@@ -579,7 +327,7 @@ describe('Workspace Tests', () => {
       nxJson.workspaceLayout = { libsDir: 'packages' };
       updateFile('nx.json', JSON.stringify(nxJson));
 
-      runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
+      runCLI(`generate @nx/js:lib ${lib1}/data-access`);
 
       updateFile(
         `packages/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
@@ -595,7 +343,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+      runCLI(`generate @nx/js:lib ${lib2}/ui`);
 
       updateFile(
         `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -608,7 +356,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      runCLI(`generate @nx/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -619,7 +367,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nrwl/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
       );
 
       expect(moveOutput).toContain(`DELETE packages/${lib1}/data-access`);
@@ -707,7 +455,7 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('lib1');
       const lib2 = uniq('lib2');
       const lib3 = uniq('lib3');
-      runCLI(`generate @nrwl/workspace:lib ${lib1}`);
+      runCLI(`generate @nx/js:lib ${lib1}`);
 
       updateFile(
         `libs/${lib1}/src/lib/${lib1}.ts`,
@@ -723,7 +471,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+      runCLI(`generate @nx/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -736,7 +484,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      runCLI(`generate @nx/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [lib1];
         return config;
@@ -747,7 +495,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nrwl/workspace:move --project ${lib1} ${lib1}/data-access`
+        `generate @nx/workspace:move --project ${lib1} ${lib1}/data-access`
       );
 
       expect(moveOutput).toContain(`DELETE libs/${lib1}/project.json`);
@@ -834,14 +582,14 @@ describe('Workspace Tests', () => {
     });
 
     it('should work for libraries when scope is unset', async () => {
-      const json = readJson('nx.json');
-      delete json.npmScope;
-      updateFile('nx.json', JSON.stringify(json));
+      const json = readJson('package.json');
+      json.name = proj;
+      updateFile('package.json', JSON.stringify(json));
 
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
-      runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
+      runCLI(`generate @nx/js:lib ${lib1}/data-access`);
       let rootTsConfig = readJson('tsconfig.base.json');
       expect(
         rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
@@ -864,7 +612,7 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+      runCLI(`generate @nx/js:lib ${lib2}/ui`);
 
       updateFile(
         `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -877,7 +625,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      runCLI(`generate @nx/js:lib ${lib3}`);
       updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
@@ -888,7 +636,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nrwl/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
       );
 
       expect(moveOutput).toContain(`DELETE libs/${lib1}/data-access`);
@@ -955,14 +703,14 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('myliba');
       const lib2 = uniq('mylibb');
 
-      runCLI(`generate @nrwl/workspace:lib ${lib1}`);
+      runCLI(`generate @nx/js:lib ${lib1}`);
       expect(exists(tmpProjPath(`libs/${lib1}`))).toBeTruthy();
 
       /**
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nrwl/workspace:lib ${lib2}`);
+      runCLI(`generate @nx/js:lib ${lib2}`);
       updateProjectConfig(lib2, (config) => {
         config.implicitDependencies = [lib1];
         return config;
@@ -974,9 +722,7 @@ describe('Workspace Tests', () => {
 
       let error;
       try {
-        console.log(
-          runCLI(`generate @nrwl/workspace:remove --project ${lib1}`)
-        );
+        console.log(runCLI(`generate @nx/workspace:remove --project ${lib1}`));
       } catch (e) {
         error = e;
       }
@@ -992,7 +738,7 @@ describe('Workspace Tests', () => {
        */
 
       const removeOutputForced = runCLI(
-        `generate @nrwl/workspace:remove --project ${lib1} --forceRemove`
+        `generate @nx/workspace:remove --project ${lib1} --forceRemove`
       );
 
       expect(removeOutputForced).toContain(`DELETE libs/${lib1}`);

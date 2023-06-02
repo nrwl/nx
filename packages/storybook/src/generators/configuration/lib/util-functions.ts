@@ -16,9 +16,9 @@ import {
   updateProjectConfiguration,
   workspaceRoot,
   writeJson,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import { Linter } from '@nx/linter';
 import { join, relative } from 'path';
 import {
   dedupe,
@@ -26,7 +26,7 @@ import {
   TsConfig,
 } from '../../../utils/utilities';
 import { StorybookConfigureSchema } from '../schema';
-import { UiFramework, UiFramework7 } from '../../../utils/models';
+import { UiFramework7 } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
 
 const DEFAULT_PORT = 4400;
@@ -35,15 +35,14 @@ export function addStorybookTask(
   tree: Tree,
   projectName: string,
   uiFramework: string,
-  configureTestRunner: boolean,
-  usesV7?: boolean
+  configureTestRunner: boolean
 ) {
   if (uiFramework === '@storybook/react-native') {
     return;
   }
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['storybook'] = {
-    executor: '@nrwl/storybook:storybook',
+    executor: '@nx/storybook:storybook',
     options: {
       port: DEFAULT_PORT,
       configDir: `${projectConfig.root}/.storybook`,
@@ -56,7 +55,7 @@ export function addStorybookTask(
   };
 
   projectConfig.targets['build-storybook'] = {
-    executor: '@nrwl/storybook:build',
+    executor: '@nx/storybook:build',
     outputs: ['{options.outputDir}'],
     options: {
       outputDir: joinPathFragments('dist/storybook', projectName),
@@ -68,11 +67,6 @@ export function addStorybookTask(
       },
     },
   };
-
-  if (!usesV7) {
-    projectConfig.targets['storybook'].options.uiFramework = uiFramework;
-    projectConfig.targets['build-storybook'].options.uiFramework = uiFramework;
-  }
 
   if (configureTestRunner === true) {
     projectConfig.targets['test-storybook'] = {
@@ -143,10 +137,7 @@ export function addAngularStorybookTask(
 }
 
 export function addStaticTarget(tree: Tree, opts: StorybookConfigureSchema) {
-  const nrwlWeb = ensurePackage<typeof import('@nrwl/web')>(
-    '@nrwl/web',
-    nxVersion
-  );
+  const nrwlWeb = ensurePackage<typeof import('@nx/web')>('@nx/web', nxVersion);
   nrwlWeb.webStaticServeGenerator(tree, {
     buildTarget: `${opts.name}:build-storybook`,
     outputPath: joinPathFragments('dist/storybook', opts.name),
@@ -195,9 +186,8 @@ export function configureTsProjectConfig(
       ...(tsConfigContent.exclude || []),
       '**/*.stories.ts',
       '**/*.stories.js',
-      ...(schema.uiFramework === '@storybook/react' ||
-      schema.uiFramework === '@storybook/react-native' ||
-      schema.storybook7UiFramework?.startsWith('@storybook/react')
+      ...(schema.uiFramework === '@storybook/react-native' ||
+      schema.uiFramework?.startsWith('@storybook/react')
         ? ['**/*.stories.jsx', '**/*.stories.tsx']
         : []),
     ];
@@ -348,7 +338,7 @@ export function addStorybookToNamedInputs(tree: Tree) {
 export function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
-  uiFramework: UiFramework | UiFramework7,
+  uiFramework: UiFramework7,
   js: boolean,
   tsConfiguration: boolean,
   root: string,
@@ -357,7 +347,6 @@ export function createProjectStorybookDir(
   isNextJs?: boolean,
   usesSwc?: boolean,
   usesVite?: boolean,
-  usesV7?: boolean,
   viteConfigFilePath?: string
 ) {
   const projectDirectory =
@@ -383,7 +372,7 @@ export function createProjectStorybookDir(
 
   const templatePath = join(
     __dirname,
-    `../project-files${usesV7 ? '-7' : ''}${tsConfiguration ? '-ts' : ''}`
+    `../project-files${tsConfiguration ? '-ts' : ''}`
   );
 
   generateFiles(tree, templatePath, root, {
@@ -483,7 +472,7 @@ export async function getE2EProjectName(
   const graph = await createProjectGraphAsync();
   forEachExecutorOptions(
     tree,
-    '@nrwl/cypress:cypress',
+    '@nx/cypress:cypress',
     (options, projectName) => {
       if (e2eProject) {
         return;

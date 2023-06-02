@@ -48,10 +48,6 @@
             "label": "SASS(.scss)       [ http://sass-lang.com          ]"
           },
           {
-            "value": "styl",
-            "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
-          },
-          {
             "value": "less",
             "label": "LESS              [ http://lesscss.org            ]"
           },
@@ -70,6 +66,10 @@
           {
             "value": "none",
             "label": "None"
+          },
+          {
+            "value": "styl",
+            "label": "Stylus(.styl)     [ http://stylus-lang.com        ] (DEPRECATED)"
           }
         ]
       }
@@ -162,12 +162,6 @@
       "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
-    "standaloneConfig": {
-      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
-    },
     "bundler": {
       "type": "string",
       "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
@@ -180,7 +174,7 @@
       "type": "string",
       "enum": ["babel", "swc"],
       "default": "babel",
-      "description": "Which compiler to use. Only applies to `bundler: 'rollup'`."
+      "description": "Which compiler to use."
     },
     "skipPackageJson": {
       "description": "Do not add dependencies to `package.json`.",
@@ -190,6 +184,11 @@
     },
     "minimal": {
       "description": "Create a React library with a minimal setup, no separate test files.",
+      "type": "boolean",
+      "default": false
+    },
+    "simpleName": {
+      "description": "Don't include the directory in the name of the module of the library.",
       "type": "boolean",
       "default": false
     }

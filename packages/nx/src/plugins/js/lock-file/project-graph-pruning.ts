@@ -85,6 +85,7 @@ function findNodeMatchingVersion(
     return nodes.sort((a, b) => +gte(b.data.version, a.data.version))[0];
   }
   if (
+    graph.externalNodes[`npm:${packageName}`] &&
     satisfies(
       graph.externalNodes[`npm:${packageName}`].data.version,
       versionExpr
@@ -147,7 +148,7 @@ function rehoistNodes(
   });
   // invert dependencies for easier traversal back
   const invertedGraph = reverse(builder.graph);
-  const invBuilder = new ProjectGraphBuilder(invertedGraph);
+  const invBuilder = new ProjectGraphBuilder(invertedGraph, {});
 
   // find new hoisted version
   packagesToRehoist.forEach((nestedNodes) => {

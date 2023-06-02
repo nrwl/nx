@@ -8,7 +8,7 @@ import {
   Tree,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
@@ -42,22 +42,41 @@ export function findExistingTargetsInProject(
   const supportedExecutors = {
     build: [
       '@nxext/vite:build',
+      '@nx/js:babel',
+      '@nx/js:swc',
+      '@nx/webpack:webpack',
+      '@nx/rollup:rollup',
       '@nrwl/js:babel',
       '@nrwl/js:swc',
       '@nrwl/webpack:webpack',
       '@nrwl/rollup:rollup',
       '@nrwl/web:rollup',
     ],
-    serve: ['@nxext/vite:dev', '@nrwl/webpack:dev-server'],
-    test: ['@nrwl/jest:jest', '@nxext/vitest:vitest'],
+    serve: [
+      '@nxext/vite:dev',
+      '@nx/webpack:dev-server',
+      '@nrwl/webpack:dev-server',
+    ],
+    test: ['@nx/jest:jest', '@nrwl/jest:jest', '@nxext/vitest:vitest'],
   };
 
   const unsupportedExecutors = [
+    '@nx/angular:ng-packagr-lite',
+    '@nx/angular:package',
+    '@nx/angular:webpack-browser',
+    '@nx/esbuild:esbuild',
+    '@nx/react-native:run-ios',
+    '@nx/react-native:start',
+    '@nx/react-native:run-android',
+    '@nx/react-native:bundle',
+    '@nx/react-native:build-android',
+    '@nx/react-native:bundle',
+    '@nx/next:build',
+    '@nx/next:server',
+    '@nx/js:tsc',
     '@nrwl/angular:ng-packagr-lite',
     '@nrwl/angular:package',
     '@nrwl/angular:webpack-browser',
-    '@angular-devkit/build-angular:browser',
-    '@angular-devkit/build-angular:dev-server',
     '@nrwl/esbuild:esbuild',
     '@nrwl/react-native:run-ios',
     '@nrwl/react-native:start',
@@ -68,6 +87,8 @@ export function findExistingTargetsInProject(
     '@nrwl/next:build',
     '@nrwl/next:server',
     '@nrwl/js:tsc',
+    '@angular-devkit/build-angular:browser',
+    '@angular-devkit/build-angular:dev-server',
   ];
 
   // First, we check if the user has provided a target
@@ -107,10 +128,16 @@ export function findExistingTargetsInProject(
     const executorName = targets[target].executor;
 
     const hasViteTargets = output.alreadyHasNxViteTargets;
-    hasViteTargets.build ||= executorName === '@nrwl/vite:build';
-    hasViteTargets.serve ||= executorName === '@nrwl/vite:dev-server';
-    hasViteTargets.test ||= executorName === '@nrwl/vite:test';
-    hasViteTargets.preview ||= executorName === '@nrwl/vite:preview-server';
+    hasViteTargets.build ||=
+      executorName === '@nx/vite:build' || executorName === '@nrwl/vite:build';
+    hasViteTargets.serve ||=
+      executorName === '@nx/vite:dev-server' ||
+      executorName === '@nrwl/vite:dev-server';
+    hasViteTargets.test ||=
+      executorName === '@nx/vite:test' || executorName === '@nrwl/vite:test';
+    hasViteTargets.preview ||=
+      executorName === '@nx/vite:preview-server' ||
+      executorName === '@nrwl/vite:preview-server';
 
     const foundTargets = output.validFoundTargetName;
     if (
@@ -159,11 +186,11 @@ export function addOrChangeTestTarget(
   project.targets ??= {};
 
   if (project.targets[target]) {
-    project.targets[target].executor = '@nrwl/vite:test';
+    project.targets[target].executor = '@nx/vite:test';
     delete project.targets[target].options?.jestConfig;
   } else {
     project.targets[target] = {
-      executor: '@nrwl/vite:test',
+      executor: '@nx/vite:test',
       outputs: [coveragePath],
       options: testOptions,
     };
@@ -196,10 +223,10 @@ export function addOrChangeBuildTarget(
       buildOptions.sourcemap = project.targets[target].options?.sourcemaps;
     }
     project.targets[target].options = { ...buildOptions };
-    project.targets[target].executor = '@nrwl/vite:build';
+    project.targets[target].executor = '@nx/vite:build';
   } else {
     project.targets[target] = {
-      executor: '@nrwl/vite:build',
+      executor: '@nx/vite:build',
       outputs: ['{options.outputPath}'],
       defaultConfiguration: 'production',
       options: buildOptions,
@@ -237,11 +264,11 @@ export function addOrChangeServeTarget(
     if (serveTarget.executor === '@nxext/vite:dev') {
       serveOptions.proxyConfig = project.targets[target].options.proxyConfig;
     }
-    serveTarget.executor = '@nrwl/vite:dev-server';
+    serveTarget.executor = '@nx/vite:dev-server';
     serveTarget.options = serveOptions;
   } else {
     project.targets[target] = {
-      executor: '@nrwl/vite:dev-server',
+      executor: '@nx/vite:dev-server',
       defaultConfiguration: 'development',
       options: {
         buildTarget: `${options.project}:build`,
@@ -295,7 +322,7 @@ export function addPreviewTarget(
 
   // Adds a preview target.
   project.targets.preview = {
-    executor: '@nrwl/vite:preview-server',
+    executor: '@nx/vite:preview-server',
     defaultConfiguration: 'development',
     options: previewOptions,
     configurations: {
@@ -492,7 +519,7 @@ export function createOrEditViteConfig(
     : options.includeLib
     ? `dts({
       entryRoot: 'src',
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),`
     : '';
@@ -500,7 +527,7 @@ export function createOrEditViteConfig(
   const dtsImportLine = onlyVitest
     ? ''
     : options.includeLib
-    ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
+    ? `import dts from 'vite-plugin-dts';\nimport { joinPathFragments } from '@nx/devkit';`
     : '';
 
   let viteConfigContent = '';
@@ -529,7 +556,9 @@ export function createOrEditViteConfig(
 
   const reactPluginImportLine =
     options.uiFramework === 'react'
-      ? `import react from '@vitejs/plugin-react';`
+      ? options.compiler === 'swc'
+        ? `import react from '@vitejs/plugin-react-swc';`
+        : `import react from '@vitejs/plugin-react';`
       : '';
 
   const reactPlugin = options.uiFramework === 'react' ? `react(),` : '';
@@ -641,7 +670,9 @@ export function getViteConfigPathForProject(
     viteConfigPath = targets?.[target]?.options?.configFile;
   } else {
     const config = Object.values(targets).find(
-      (config) => config.executor === '@nrwl/vite:build'
+      (config) =>
+        config.executor === '@nrwl/nx:build' ||
+        config.executor === '@nrwl/vite:build'
     );
     viteConfigPath = config?.options?.configFile;
   }
@@ -689,7 +720,7 @@ async function handleUnsupportedUserProvidedTargetsErrors(
   executor: 'build' | 'dev-server' | 'test'
 ) {
   logger.warn(
-    `The custom ${target} target you provided (${userProvidedTargetName}) cannot be converted to use the @nrwl/vite:${executor} executor.
+    `The custom ${target} target you provided (${userProvidedTargetName}) cannot be converted to use the @nx/vite:${executor} executor.
      However, we found the following ${target} target in your project that can be converted: ${validFoundTargetName}
 
      Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
@@ -699,13 +730,13 @@ async function handleUnsupportedUserProvidedTargetsErrors(
   const { Confirm } = require('enquirer');
   const prompt = new Confirm({
     name: 'question',
-    message: `Should we convert the ${validFoundTargetName} target to use the @nrwl/vite:${executor} executor?`,
+    message: `Should we convert the ${validFoundTargetName} target to use the @nx/vite:${executor} executor?`,
     initial: true,
   });
   const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(
-      `The ${target} target ${userProvidedTargetName} cannot be converted to use the @nrwl/vite:${executor} executor.
+      `The ${target} target ${userProvidedTargetName} cannot be converted to use the @nx/vite:${executor} executor.
       Please try again, either by providing a different ${target} target or by not providing a target at all (Nx will
         convert the first one it finds, most probably this one: ${validFoundTargetName})
 
@@ -720,13 +751,13 @@ export async function handleUnknownExecutors(projectName: string) {
   logger.warn(
     `
       We could not find any targets in project ${projectName} that use executors which 
-      can be converted to the @nrwl/vite executors.
+      can be converted to the @nx/vite executors.
 
       This either means that your project may not have a target 
       for building, serving, or testing at all, or that your targets are 
       using executors that are not known to Nx.
       
-      If you still want to convert your project to use the @nrwl/vite executors,
+      If you still want to convert your project to use the @nx/vite executors,
       please make sure to commit your changes before running this generator.
       `
   );
@@ -734,13 +765,13 @@ export async function handleUnknownExecutors(projectName: string) {
   const { Confirm } = require('enquirer');
   const prompt = new Confirm({
     name: 'question',
-    message: `Should Nx convert your project to use the @nrwl/vite executors?`,
+    message: `Should Nx convert your project to use the @nx/vite executors?`,
     initial: true,
   });
   const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(`
-      Nx could not verify that the executors you are using can be converted to the @nrwl/vite executors.
+      Nx could not verify that the executors you are using can be converted to the @nx/vite executors.
       Please try again with a different project.
     `);
   }

@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import type { NxJsonConfiguration } from '@nx/devkit';
 import {
   newWrappedNxWorkspace,
   updateFile,
@@ -10,7 +10,7 @@ import {
   uniq,
   readJson,
   readFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { bold } from 'chalk';
 
 describe('nx wrapper / .nx installation', () => {
@@ -42,7 +42,7 @@ describe('nx wrapper / .nx installation', () => {
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
       json.tasksRunnerOptions.default.options.cacheableOperations = ['echo'];
       json.installation.plugins = {
-        '@nrwl/nest': getPublishedVersion(),
+        '@nx/js': getPublishedVersion(),
       };
       return json;
     });
@@ -66,10 +66,8 @@ describe('nx wrapper / .nx installation', () => {
   it('should work with nx report', () => {
     const output = runNxWrapper('report');
     expect(output).toMatch(new RegExp(`nx.*:.*${getPublishedVersion()}`));
-    expect(output).toMatch(
-      new RegExp(`@nrwl/nest.*:.*${getPublishedVersion()}`)
-    );
-    expect(output).not.toContain('@nrwl/express');
+    expect(output).toMatch(new RegExp(`@nx/js.*:.*${getPublishedVersion()}`));
+    expect(output).not.toContain('@nx/express');
   });
 
   it('should work with nx list', () => {
@@ -87,18 +85,16 @@ describe('nx wrapper / .nx installation', () => {
     );
 
     expect(installedPluginLines.some((x) => x.includes(`${bold('nx')}`)));
-    expect(
-      installedPluginLines.some((x) => x.includes(`${bold('@nrwl/nest')}`))
-    );
+    expect(installedPluginLines.some((x) => x.includes(`${bold('@nx/js')}`)));
 
-    output = runNxWrapper('list @nrwl/nest');
-    expect(output).toContain('Capabilities in @nrwl/nest');
+    output = runNxWrapper('list @nx/js');
+    expect(output).toContain('Capabilities in @nx/js');
   });
 
   it('should work with basic generators', () => {
     updateJson<NxJsonConfiguration>('nx.json', (j) => {
       j.installation.plugins ??= {};
-      j.installation.plugins['@nrwl/workspace'] = getPublishedVersion();
+      j.installation.plugins['@nx/workspace'] = getPublishedVersion();
       return j;
     });
     expect(() => runNxWrapper(`g npm-package ${uniq('pkg')}`)).not.toThrow();
@@ -118,12 +114,7 @@ describe('nx wrapper / .nx installation', () => {
     updateFile(
       `.nx/installation/node_modules/migrate-parent-package/migrations.json`,
       JSON.stringify({
-        schematics: {
-          run11: {
-            version: '1.1.0',
-            description: '1.1.0',
-            factory: './run11',
-          },
+        generators: {
           run20: {
             version: '2.0.0',
             description: '2.0.0',
@@ -131,17 +122,6 @@ describe('nx wrapper / .nx installation', () => {
           },
         },
       })
-    );
-
-    updateFile(
-      `.nx/installation/node_modules/migrate-parent-package/run11.js`,
-      `
-        exports.default = function default_1() {
-          return function(host) {
-            host.create('file-11', 'content11')
-          }
-        }
-        `
     );
 
     updateFile(
@@ -165,7 +145,7 @@ describe('nx wrapper / .nx installation', () => {
      * Patches migration fetcher to load in migrations that we are using to test.
      */
     updateFile(
-      '.nx/installation/node_modules/nx/src/command-line/migrate.js',
+      '.nx/installation/node_modules/nx/src/command-line/migrate/migrate.js',
       (content) => {
         const start = content.indexOf('// testing-fetch-start');
         const end = content.indexOf('// testing-fetch-end');
@@ -179,9 +159,6 @@ describe('nx wrapper / .nx installation', () => {
                   return Promise.resolve({
                     version: '2.0.0',
                     generators: {
-                      'run11': {
-                        version: '1.1.0'
-                      },
                       'run20': {
                         version: '2.0.0',
                         cli: 'nx'
@@ -235,11 +212,6 @@ describe('nx wrapper / .nx installation', () => {
       migrations: [
         {
           package: 'migrate-parent-package',
-          version: '1.1.0',
-          name: 'run11',
-        },
-        {
-          package: 'migrate-parent-package',
           version: '2.0.0',
           name: 'run20',
           cli: 'nx',
@@ -256,7 +228,6 @@ describe('nx wrapper / .nx installation', () => {
         NX_WRAPPER_SKIP_INSTALL: 'true',
       },
     });
-    expect(readFile('file-11')).toEqual('content11');
     expect(readFile('file-20')).toEqual('content20');
   });
 });

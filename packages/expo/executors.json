@@ -20,41 +20,6 @@
       "schema": "./src/executors/download/schema.json",
       "description": "Download an EAS build"
     },
-    "build-ios": {
-      "implementation": "./src/executors/build-ios/build-ios.impl",
-      "schema": "./src/executors/build-ios/schema.json",
-      "description": "Build and sign a standalone IPA for the Apple App Store"
-    },
-    "build-android": {
-      "implementation": "./src/executors/build-android/build-android.impl",
-      "schema": "./src/executors/build-android/schema.json",
-      "description": "Build and sign a standalone APK or App Bundle for the Google Play Store"
-    },
-    "build-web": {
-      "implementation": "./src/executors/build-web/build-web.impl",
-      "schema": "./src/executors/build-web/schema.json",
-      "description": "Build the web app for production"
-    },
-    "build-status": {
-      "implementation": "./src/executors/build-status/build-status.impl",
-      "schema": "./src/executors/build-status/schema.json",
-      "description": "Get the status of the latest build for the project"
-    },
-    "publish": {
-      "implementation": "./src/executors/publish/publish.impl",
-      "schema": "./src/executors/publish/schema.json",
-      "description": "Deploy a project to Expo hosting"
-    },
-    "publish-set": {
-      "implementation": "./src/executors/publish-set/publish-set.impl",
-      "schema": "./src/executors/publish-set/schema.json",
-      "description": "Specify the channel to serve a published release"
-    },
-    "rollback": {
-      "implementation": "./src/executors/rollback/rollback.impl",
-      "schema": "./src/executors/rollback/schema.json",
-      "description": "Undo an update to a channel"
-    },
     "run": {
       "implementation": "./src/executors/run/run.impl",
       "schema": "./src/executors/run/schema.json",
@@ -111,41 +76,6 @@
       "implementation": "./src/executors/download/compat",
       "schema": "./src/executors/download/schema.json",
       "description": "Download an EAS build"
-    },
-    "build-ios": {
-      "implementation": "./src/executors/build-ios/compat",
-      "schema": "./src/executors/build-ios/schema.json",
-      "description": "Build and sign a standalone IPA for the Apple App Store"
-    },
-    "build-android": {
-      "implementation": "./src/executors/build-android/compat",
-      "schema": "./src/executors/build-android/schema.json",
-      "description": "Build and sign a standalone APK or App Bundle for the Google Play Store"
-    },
-    "build-web": {
-      "implementation": "./src/executors/build-web/compat",
-      "schema": "./src/executors/build-web/schema.json",
-      "description": "Build the web app for production"
-    },
-    "build-status": {
-      "implementation": "./src/executors/build-status/compat",
-      "schema": "./src/executors/build-status/schema.json",
-      "description": "Get the status of the latest build for the project"
-    },
-    "publish": {
-      "implementation": "./src/executors/publish/compat",
-      "schema": "./src/executors/publish/schema.json",
-      "description": "Deploy a project to Expo hosting"
-    },
-    "publish-set": {
-      "implementation": "./src/executors/publish-set/compat",
-      "schema": "./src/executors/publish-set/schema.json",
-      "description": "Specify the channel to serve a published release"
-    },
-    "rollback": {
-      "implementation": "./src/executors/rollback/compat",
-      "schema": "./src/executors/rollback/schema.json",
-      "description": "Undo an update to a channel"
     },
     "run": {
       "implementation": "./src/executors/run/compat",

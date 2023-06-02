@@ -1,4 +1,4 @@
-import { MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
+import { MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 
 export function getBasicNxSection(items: MenuItem[]): MenuSection {
   return {
@@ -9,6 +9,7 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
       .filter(
         (m) =>
           m.id === 'getting-started' ||
+          m.id === 'tutorials' ||
           m.id === 'core-features' ||
           m.id === 'plugin-features' ||
           m.id === 'concepts' ||
@@ -40,15 +41,28 @@ export function getBasicRecipesSection(items: MenuItem[]): MenuSection {
   };
 }
 
+export function getBasicPluginsSection(items: MenuItem[]): MenuSection {
+  return {
+    id: 'basic',
+    name: 'Basic',
+    hideSectionHeader: true,
+    itemList: items
+      // .filter((m) => m.id === 'getting-started')
+      .map((m) => {
+        return {
+          ...m,
+          disableCollapsible: true,
+        };
+      }),
+  };
+}
+
 export function getPackagesSections(items: MenuItem[]): MenuSection[] {
   return items
     .filter(
       (m) =>
-        m.id !== 'add-nx-to-monorepo' &&
-        m.id !== 'cra-to-nx' &&
         m.id !== 'create-nx-plugin' &&
         m.id !== 'create-nx-workspace' &&
-        m.id !== 'make-angular-cli-faster' &&
         m.id !== 'tao'
     )
     .map((m) => ({

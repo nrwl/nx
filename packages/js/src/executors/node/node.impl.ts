@@ -1,65 +1,247 @@
+import * as chalk from 'chalk';
+import { ChildProcess, exec, fork } from 'child_process';
 import {
   ExecutorContext,
   joinPathFragments,
   logger,
   parseTargetString,
-  runExecutor,
-} from '@nrwl/devkit';
-import { calculateProjectDependencies } from '../../utils/buildable-libs-utils';
-import { ChildProcess, fork } from 'child_process';
+} from '@nx/devkit';
+import { daemonClient } from 'nx/src/daemon/client/client';
 import { randomUUID } from 'crypto';
-import { HashingImpl } from 'nx/src/hasher/hashing-impl';
-import * as treeKill from 'tree-kill';
-import { promisify } from 'util';
+import { join } from 'path';
+
 import { InspectType, NodeExecutorOptions } from './schema';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import { calculateProjectDependencies } from '../../utils/buildable-libs-utils';
+import { killTree } from './lib/kill-tree';
 
-const hasher = new HashingImpl();
-const processMap = new Map<string, ChildProcess>();
-const hashedMap = new Map<string, string>();
+interface ActiveTask {
+  id: string;
+  killed: boolean;
+  promise: Promise<void>;
+  childProcess: null | ChildProcess;
+  start: () => Promise<void>;
+  stop: (signal: NodeJS.Signals) => Promise<void>;
+}
 
-export interface ExecutorEvent {
-  outfile: string;
-  success: boolean;
+function debounce(fn: () => void, wait: number) {
+  let timeoutId: NodeJS.Timeout;
+  return () => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(fn, wait);
+  };
 }
 
 export async function* nodeExecutor(
   options: NodeExecutorOptions,
   context: ExecutorContext
 ) {
-  const uniqueKey = randomUUID();
-  process.on('SIGTERM', async () => {
-    await killCurrentProcess(uniqueKey, options, 'SIGTERM');
-    process.exit(128 + 15);
-  });
-  process.on('SIGINT', async () => {
-    await killCurrentProcess(uniqueKey, options, 'SIGINT');
-    process.exit(128 + 2);
-  });
-  process.on('SIGHUP', async () => {
-    await killCurrentProcess(uniqueKey, options, 'SIGHUP');
-    process.exit(128 + 1);
-  });
+  const project = context.projectGraph.nodes[context.projectName];
+  const buildTarget = parseTargetString(
+    options.buildTarget,
+    context.projectGraph
+  );
 
-  if (options.waitUntilTargets && options.waitUntilTargets.length > 0) {
-    const results = await runWaitUntilTargets(options, context);
-    for (const [i, result] of results.entries()) {
-      if (!result.success) {
-        throw new Error(
-          `Wait until target failed: ${options.waitUntilTargets[i]}.`
-        );
-      }
-    }
+  const buildOptions = project.data.targets[buildTarget.target]?.options;
+  if (!buildOptions) {
+    throw new Error(
+      `Cannot find build target ${chalk.bold(
+        options.buildTarget
+      )} for project ${chalk.bold(context.projectName)}`
+    );
   }
 
+  // Re-map buildable workspace projects to their output directory.
   const mappings = calculateResolveMappings(context, options);
-  for await (const event of startBuild(options, context)) {
-    if (!event.success) {
-      logger.error('There was an error with the build. See above.');
-      logger.info(`${event.outfile} was not restarted.`);
+  const fileToRun = join(
+    context.root,
+    buildOptions.outputPath,
+    buildOptions.outputFileName ?? 'main.js'
+  );
+
+  const tasks: ActiveTask[] = [];
+  let currentTask: ActiveTask = null;
+
+  yield* createAsyncIterable<{ success: boolean }>(
+    async ({ done, next, error }) => {
+      const processQueue = async () => {
+        if (tasks.length === 0) return;
+
+        const previousTask = currentTask;
+        const task = tasks.shift();
+        currentTask = task;
+        await previousTask?.stop('SIGTERM');
+        await task.start();
+      };
+
+      const debouncedProcessQueue = debounce(
+        processQueue,
+        options.debounce ?? 1_000
+      );
+
+      const addToQueue = async () => {
+        const task: ActiveTask = {
+          id: randomUUID(),
+          killed: false,
+          childProcess: null,
+          promise: null,
+          start: async () => {
+            let buildFailed = false;
+            // Run the build
+            task.promise = new Promise<void>(async (resolve, reject) => {
+              task.childProcess = exec(
+                `npx nx run ${context.projectName}:${buildTarget.target}${
+                  buildTarget.configuration
+                    ? `:${buildTarget.configuration}`
+                    : ''
+                }`,
+                {
+                  cwd: context.root,
+                },
+                (error, stdout, stderr) => {
+                  if (
+                    // Build succeeded
+                    !error ||
+                    // If task was killed then another build process has started, ignore errors.
+                    task.killed
+                  ) {
+                    resolve();
+                    return;
+                  }
+
+                  logger.info(stdout);
+                  buildFailed = true;
+                  if (options.watch) {
+                    logger.error(
+                      `Build failed, waiting for changes to restart...`
+                    );
+                    resolve(); // Don't reject because it'll error out and kill the Nx process.
+                  } else {
+                    logger.error(`Build failed. See above for errors.`);
+                    reject();
+                  }
+                }
+              );
+            });
+
+            // Wait for build to finish
+            await task.promise;
+
+            // Task may have been stopped due to another running task.
+            // OR build failed, so don't start the process.
+            if (task.killed || buildFailed) return;
+
+            // Run the program
+            task.promise = new Promise<void>((resolve, reject) => {
+              task.childProcess = fork(
+                joinPathFragments(__dirname, 'node-with-require-overrides'),
+                options.runtimeArgs ?? [],
+                {
+                  execArgv: getExecArgv(options),
+                  stdio: [0, 1, 'pipe', 'ipc'],
+                  env: {
+                    ...process.env,
+                    NX_FILE_TO_RUN: fileToRun,
+                    NX_MAPPINGS: JSON.stringify(mappings),
+                  },
+                }
+              );
+
+              task.childProcess.stderr.on('data', (data) => {
+                // Don't log out error if task is killed and new one has started.
+                // This could happen if a new build is triggered while new process is starting, since the operation is not atomic.
+                if (options.watch && !task.killed) {
+                  logger.error(data.toString());
+                }
+              });
+
+              task.childProcess.once('exit', (code) => {
+                if (options.watch && !task.killed) {
+                  logger.info(
+                    `NX Process exited with code ${code}, waiting for changes to restart...`
+                  );
+                }
+                if (!options.watch) done();
+                resolve();
+              });
+
+              next({ success: true });
+            });
+          },
+          stop: async (signal = 'SIGTERM') => {
+            task.killed = true;
+            // Request termination and wait for process to finish gracefully.
+            // NOTE: `childProcess` may not have been set yet if the task did not have a chance to start.
+            // e.g. multiple file change events in a short time (like git checkout).
+            if (task.childProcess) {
+              await killTree(task.childProcess.pid, signal);
+            }
+            await task.promise;
+          },
+        };
+
+        tasks.push(task);
+      };
+
+      const stopWatch = await daemonClient.registerFileWatcher(
+        {
+          watchProjects: [context.projectName],
+          includeDependentProjects: true,
+        },
+        async (err, data) => {
+          if (err === 'closed') {
+            logger.error(`Watch error: Daemon closed the connection`);
+            process.exit(1);
+          } else if (err) {
+            logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
+          } else {
+            logger.info(`NX File change detected. Restarting...`);
+            await addToQueue();
+            await debouncedProcessQueue();
+          }
+        }
+      );
+
+      const stopAllTasks = (signal: NodeJS.Signals = 'SIGTERM') => {
+        for (const task of tasks) {
+          task.stop(signal);
+        }
+      };
+
+      process.on('SIGTERM', async () => {
+        stopWatch();
+        stopAllTasks('SIGTERM');
+        process.exit(128 + 15);
+      });
+      process.on('SIGINT', async () => {
+        stopWatch();
+        stopAllTasks('SIGINT');
+        process.exit(128 + 2);
+      });
+      process.on('SIGHUP', async () => {
+        stopWatch();
+        stopAllTasks('SIGHUP');
+        process.exit(128 + 1);
+      });
+
+      await addToQueue();
+      await processQueue();
     }
-    await handleBuildEvent(uniqueKey, event, options, mappings);
-    yield event;
+  );
+}
+
+function getExecArgv(options: NodeExecutorOptions) {
+  const args = ['-r', require.resolve('source-map-support/register')];
+
+  if (options.inspect === true) {
+    options.inspect = InspectType.Inspect;
   }
+
+  if (options.inspect) {
+    args.push(`--${options.inspect}=${options.host}:${options.port}`);
+  }
+
+  return args;
 }
 
 function calculateResolveMappings(
@@ -80,158 +262,6 @@ function calculateResolveMappings(
     }
     return m;
   }, {});
-}
-
-async function runProcess(
-  uniqueKey: string,
-  event: ExecutorEvent,
-  options: NodeExecutorOptions,
-  mappings: { [project: string]: string }
-) {
-  const execArgv = getExecArgv(options);
-
-  const hashedKey = JSON.stringify([uniqueKey, ...options.args]);
-  const hashed = hasher.hashArray(execArgv.concat(hashedKey));
-  hashedMap.set(hashedKey, hashed);
-
-  const subProcess = fork(
-    joinPathFragments(__dirname, 'node-with-require-overrides'),
-    options.args,
-    {
-      execArgv,
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        NX_FILE_TO_RUN: event.outfile,
-        NX_MAPPINGS: JSON.stringify(mappings),
-      },
-    }
-  );
-
-  processMap.set(hashed, subProcess);
-
-  if (!options.watch) {
-    return new Promise<void>((resolve, reject) => {
-      subProcess.on('exit', (code) => {
-        if (code === 0) {
-          resolve(undefined);
-        } else {
-          reject();
-        }
-      });
-    });
-  }
-}
-
-function getExecArgv(options: NodeExecutorOptions) {
-  const args = [
-    '-r',
-    require.resolve('source-map-support/register'),
-    ...options.runtimeArgs,
-  ];
-
-  if (options.inspect === true) {
-    options.inspect = InspectType.Inspect;
-  }
-
-  if (options.inspect) {
-    args.push(`--${options.inspect}=${options.host}:${options.port}`);
-  }
-
-  return args;
-}
-
-async function handleBuildEvent(
-  uniqueKey: string,
-  event: ExecutorEvent,
-  options: NodeExecutorOptions,
-  mappings: { [project: string]: string }
-) {
-  // Don't kill previous run unless new build is successful.
-  if (options.watch && event.success) {
-    await killCurrentProcess(uniqueKey, options);
-  }
-
-  if (event.success) {
-    await runProcess(uniqueKey, event, options, mappings);
-  }
-}
-
-const promisifiedTreeKill: (pid: number, signal: string) => Promise<void> =
-  promisify(treeKill);
-
-async function killCurrentProcess(
-  uniqueKey: string,
-  options: NodeExecutorOptions,
-  signal: string = 'SIGTERM'
-) {
-  const hashedKey = JSON.stringify([uniqueKey, ...options.args]);
-  const currentProcessKey = hashedMap.get(hashedKey);
-  if (!currentProcessKey) return;
-
-  const currentProcess = processMap.get(currentProcessKey);
-  if (!currentProcess) return;
-
-  try {
-    await promisifiedTreeKill(currentProcess.pid, signal);
-
-    // if the currentProcess.killed is false, invoke kill()
-    // to properly send the signal to the process
-    if (!currentProcess.killed) {
-      currentProcess.kill(signal as NodeJS.Signals);
-    }
-  } catch (err) {
-    if (Array.isArray(err) && err[0] && err[2]) {
-      const errorMessage = err[2];
-      logger.error(errorMessage);
-    } else if (err.message) {
-      logger.error(err.message);
-    }
-  } finally {
-    processMap.delete(currentProcessKey);
-    hashedMap.delete(hashedKey);
-  }
-}
-
-async function* startBuild(
-  options: NodeExecutorOptions,
-  context: ExecutorContext
-) {
-  const buildTarget = parseTargetString(
-    options.buildTarget,
-    context.projectGraph
-  );
-
-  yield* await runExecutor<ExecutorEvent>(
-    buildTarget,
-    {
-      ...options.buildTargetOptions,
-      watch: options.watch,
-    },
-    context
-  );
-}
-
-function runWaitUntilTargets(
-  options: NodeExecutorOptions,
-  context: ExecutorContext
-): Promise<{ success: boolean }[]> {
-  return Promise.all(
-    options.waitUntilTargets.map(async (waitUntilTarget) => {
-      const target = parseTargetString(waitUntilTarget, context.projectGraph);
-      const output = await runExecutor(target, {}, context);
-      return new Promise<{ success: boolean }>(async (resolve) => {
-        let event = await output.next();
-        // Resolve after first event
-        resolve(event.value as { success: boolean });
-
-        // Continue iterating
-        while (!event.done) {
-          event = await output.next();
-        }
-      });
-    })
-  );
 }
 
 export default nodeExecutor;

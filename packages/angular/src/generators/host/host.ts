@@ -5,7 +5,7 @@ import {
   runTasksInSerial,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Schema } from './schema';
 import applicationGenerator from '../application/application';
 import remoteGenerator from '../remote/remote';
@@ -64,6 +64,7 @@ export async function host(tree: Tree, options: Schema) {
     skipFormat: true,
     skipE2E,
     e2eProjectName: skipE2E ? undefined : `${appName}-e2e`,
+    prefix: options.prefix,
   });
 
   let installTasks = [appInstallTask];

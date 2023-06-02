@@ -1,11 +1,85 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import type * as ts from 'typescript';
 // TODO(colum): replace when https://github.com/nrwl/nx/pull/15497 is merged
-import { getSourceNodes } from '@nrwl/workspace/src/utilities/typescript';
-import { findNodes } from 'nx/src/utils/typescript';
+import { getSourceNodes } from '@nx/workspace/src/utilities/typescript';
 import { ensureTypescript } from './ensure-typescript';
+import { Node, SyntaxKind } from 'typescript';
+import { workspaceRoot } from '@nx/devkit';
+import { dirname } from 'path';
+
+const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
 let tsModule: typeof import('typescript');
+
+let compilerHost: {
+  host: ts.CompilerHost;
+  options: ts.CompilerOptions;
+  moduleResolutionCache: ts.ModuleResolutionCache;
+};
+
+/**
+ * Find a module based on its import
+ *
+ * @param importExpr Import used to resolve to a module
+ * @param filePath
+ * @param tsConfigPath
+ */
+export function resolveModuleByImport(
+  importExpr: string,
+  filePath: string,
+  tsConfigPath: string
+) {
+  compilerHost = compilerHost || getCompilerHost(tsConfigPath);
+  const { options, host, moduleResolutionCache } = compilerHost;
+
+  const { resolvedModule } = tsModule.resolveModuleName(
+    importExpr,
+    filePath,
+    options,
+    host,
+    moduleResolutionCache
+  );
+
+  if (!resolvedModule) {
+    return;
+  } else {
+    return resolvedModule.resolvedFileName.replace(`${normalizedAppRoot}/`, '');
+  }
+}
+
+function getCompilerHost(tsConfigPath: string) {
+  const options = readTsConfigOptions(tsConfigPath);
+  const host = tsModule.createCompilerHost(options, true);
+  const moduleResolutionCache = tsModule.createModuleResolutionCache(
+    workspaceRoot,
+    host.getCanonicalFileName
+  );
+  return { options, host, moduleResolutionCache };
+}
+
+function readTsConfigOptions(tsConfigPath: string) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
+  const readResult = tsModule.readConfigFile(
+    tsConfigPath,
+    tsModule.sys.readFile
+  );
+
+  // we don't need to scan the files, we only care about options
+  const host: Partial<ts.ParseConfigHost> = {
+    readDirectory: () => [],
+    readFile: () => '',
+    fileExists: tsModule.sys.fileExists,
+  };
+
+  return tsModule.parseJsonConfigFileContent(
+    readResult.config,
+    host as ts.ParseConfigHost,
+    dirname(tsConfigPath)
+  ).options;
+}
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -343,4 +417,39 @@ export function findClass(
   }
 
   return clazz;
+}
+
+export function findNodes(
+  node: Node,
+  kind: SyntaxKind | SyntaxKind[],
+  max = Infinity
+): Node[] {
+  if (!node || max == 0) {
+    return [];
+  }
+
+  const arr: Node[] = [];
+  const hasMatch = Array.isArray(kind)
+    ? kind.includes(node.kind)
+    : node.kind === kind;
+  if (hasMatch) {
+    arr.push(node);
+    max--;
+  }
+  if (max > 0) {
+    for (const child of node.getChildren()) {
+      findNodes(child, kind, max).forEach((node) => {
+        if (max > 0) {
+          arr.push(node);
+        }
+        max--;
+      });
+
+      if (max <= 0) {
+        break;
+      }
+    }
+  }
+
+  return arr;
 }

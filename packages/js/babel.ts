@@ -20,7 +20,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
 
   const isModern = api.caller((caller) => caller?.isModern);
 
-  // This is set by `@nrwl/web:rollup` executor
+  // This is set by `@nx/rollup:rollup` executor
   const isNxPackage = api.caller((caller) => caller?.isNxPackage);
 
   const emitDecoratorMetadata = api.caller(

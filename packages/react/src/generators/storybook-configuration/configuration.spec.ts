@@ -1,14 +1,14 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import { logger, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { logger, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
 import libraryGenerator from '../library/library';
 import storybookConfigurationGenerator from './configuration';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
@@ -27,9 +27,6 @@ describe('react:storybook-configuration', () => {
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
     jest.resetModules();
-    jest.doMock('@storybook/angular/package.json', () => ({
-      version: '7.0.2',
-    }));
   });
 
   afterEach(() => {
@@ -129,7 +126,7 @@ describe('react:storybook-configuration', () => {
     });
 
     // Currently the auto-generate stories feature only picks up components under the 'lib' directory.
-    // In our 'createTestAppLib' function, we call @nrwl/react:component to generate a component
+    // In our 'createTestAppLib' function, we call @nx/react:component to generate a component
     // under the specified 'lib' directory
     expect(
       appTree.exists(

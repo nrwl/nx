@@ -7,9 +7,9 @@ import {
   stripIndents,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
-import { fileExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { findNodes } from 'nx/src/utils/typescript';
+} from '@nx/devkit';
+import { fileExists } from '@nx/workspace/src/utilities/fileutils';
+import { findNodes } from '@nx/js';
 import { join, normalize } from 'path';
 import { SyntaxKind } from 'typescript';
 import { getTsSourceFile } from '../../../utils/utilities';

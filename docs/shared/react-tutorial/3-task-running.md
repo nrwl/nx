@@ -23,14 +23,14 @@ Here's the `project.json` file for your `common-ui` project:
   "tags": [],
   "targets": {
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["libs/common-ui/**/*.{ts,tsx,js,jsx}"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/libs/common-ui"],
       "options": {
         "jestConfig": "libs/common-ui/jest.config.ts",
@@ -51,7 +51,7 @@ The properties inside each of these these targets is defined as follows:
 
 ## Running Tasks
 
-![Syntax for Running Tasks in Nx](/shared/react-tutorial/run-target-syntax.svg)
+![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
 Run the `test` target for your `common-ui` project:
 

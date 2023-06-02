@@ -1,63 +1,17 @@
 import {
-  BeakerIcon,
-  ChatBubbleLeftEllipsisIcon,
-  ClipboardIcon,
-} from '@heroicons/react/24/solid';
-import { Footer, Header, SectionHeading } from '@nrwl/nx-dev/ui-common';
-import {
-  ConnectWithUs,
-  CreateNxPlugin,
-  PluginDirectory,
-} from '@nrwl/nx-dev/ui-community';
+  Footer,
+  Header,
+  SectionHeading,
+  ChampionCard,
+  Champion,
+  ChampionPerks,
+} from '@nx/nx-dev/ui-common';
+import { ConnectWithUs } from '@nx/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { nxPackagesApi } from '../lib/packages.api';
+import { champions1, champions2, champions3 } from '../lib/champions';
 
-declare const fetch: any;
-
-interface PluginInfo {
-  description: string;
-  name: string;
-  url: string;
-  isOfficial: boolean;
-}
-interface CommunityProps {
-  pluginList: PluginInfo[];
-}
-
-export async function getStaticProps(): Promise<{ props: CommunityProps }> {
-  const res = await fetch(
-    'https://raw.githubusercontent.com/nrwl/nx/master/community/approved-plugins.json'
-  );
-  const pluginList = await res.json();
-
-  const officialPluginList = (nxPackagesApi.getRootPackageIndex() ?? []).filter(
-    (m) =>
-      m.name !== 'add-nx-to-monorepo' &&
-      m.name !== 'cra-to-nx' &&
-      m.name !== 'create-nx-plugin' &&
-      m.name !== 'create-nx-workspace' &&
-      m.name !== 'make-angular-cli-faster' &&
-      m.name !== 'tao'
-  );
-
-  return {
-    props: {
-      pluginList: [
-        ...officialPluginList.map((plugin) => ({
-          name: plugin.packageName,
-          description: plugin.description ?? '',
-          url: plugin.path,
-          isOfficial: true,
-        })),
-        ...pluginList.map((plugin) => ({
-          ...plugin,
-          isOfficial: false,
-        })),
-      ],
-    },
-  };
-}
+interface CommunityProps {}
 
 export default function Community(props: CommunityProps): JSX.Element {
   const router = useRouter();
@@ -65,16 +19,16 @@ export default function Community(props: CommunityProps): JSX.Element {
   return (
     <>
       <NextSeo
-        title="Nx Community and Plugin Listing"
+        title="Nx Community"
         description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx Community and Plugin Listing',
+          title: 'Nx Community',
           description:
             'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.jpg',
+              url: 'https://nx.dev/images/nx-media.webp',
               width: 800,
               height: 421,
               alt: 'Nx: Smart, Fast and Extensible Build System',
@@ -88,83 +42,56 @@ export default function Community(props: CommunityProps): JSX.Element {
       <Header />
       <main id="main" role="main">
         <div className="w-full">
-          <article
-            id="getting-started"
-            className="relative pt-28 pt-16 sm:pt-24 lg:pt-32"
+          <div
+            id="connect-with-us"
+            className="py-18 bg-slate-50 dark:bg-slate-800/40"
           >
-            <header className="mx-auto max-w-prose px-4 text-center sm:max-w-3xl sm:px-6 lg:px-8">
-              <div>
-                <SectionHeading as="h1" variant="title" id="community">
-                  <span className="sr-only">Nx has </span> A strong and dynamic
-                  community
-                </SectionHeading>
-                <SectionHeading as="p" variant="display" className="mt-4">
-                  It's always better when we're together.
-                </SectionHeading>
+            <ConnectWithUs />
+          </div>
+          <article id="nx-champions" className="relative">
+            <div className="mx-auto max-w-7xl items-stretch py-12 px-4 sm:grid sm:grid-cols-1 sm:gap-8 sm:px-6 md:grid-cols-3 lg:py-16 lg:px-8">
+              <div className="md:col-span-2">
+                <header>
+                  <SectionHeading as="h1" variant="title" id="champions">
+                    Get to know our
+                  </SectionHeading>
+                  <SectionHeading
+                    as="p"
+                    variant="display"
+                    id="nx-champions"
+                    className="mt-4"
+                  >
+                    Nx Champions
+                  </SectionHeading>
+                </header>
+                <div className="mt-8 flex gap-16 font-normal">
+                  <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
+                    These friendly people promote Nx in the community by
+                    publishing content and sharing their expertise. They also
+                    gather feedback from the community to help improve Nx.
+                  </p>
+                </div>
+                <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
+                  <div className="space-y-6">
+                    {champions1.map((data, index) => (
+                      <ChampionCard key={data.name} data={data} />
+                    ))}
+                  </div>
+                  <div className="space-y-6">
+                    {champions2.map((data) => (
+                      <ChampionCard key={data.name} data={data} />
+                    ))}
+                  </div>
+                </div>
               </div>
-            </header>
-
-            <div className="mx-auto px-4 py-16 lg:px-8 lg:py-32 xl:max-w-7xl">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="relative rounded-lg border border-slate-200 bg-white/60 p-5 shadow-sm transition hover:border-green-500 hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-green-500 dark:hover:bg-slate-800">
-                  <ChatBubbleLeftEllipsisIcon className="mb-5 inline-block h-10 w-10 text-green-500" />
-                  <h4 className="mb-2 text-lg font-bold dark:text-slate-300">
-                    Community
-                  </h4>
-                  <a className="focus:outline-none" href="#community">
-                    <span className="absolute inset-0" aria-hidden="true" />
-                    <p className="leading-relaxed">
-                      There are many ways you can connect with the open-source
-                      Nx community: Slack, Youtube, Twitter and email newsletter
-                      are available to keep you on top of all the Nx things!
-                    </p>
-                  </a>
-                </div>
-                <div className="relative rounded-lg border border-slate-200 bg-white/60 p-5 shadow-sm transition hover:border-blue-500 hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-sky-500 dark:hover:bg-slate-800">
-                  <BeakerIcon className="mb-5 inline-block h-10 w-10 text-blue-500 dark:text-sky-500" />
-                  <h4 className="mb-2 text-lg font-bold">
-                    Create and Share your own{' '}
-                    <span className="sr-only">Nx plugin</span>
-                  </h4>
-                  <a className="focus:outline-none" href="#create-nx-plugin">
-                    <span className="absolute inset-0" aria-hidden="true" />
-                    <p className="leading-relaxed">
-                      Official Nx plugins are created and maintained by the Nx
-                      team but you can easily create your own! Follow our
-                      documentation on how to create your own plugin.
-                    </p>
-                  </a>
-                </div>
-                <div className="relative rounded-lg border border-slate-200 bg-white/60 p-5 shadow-sm transition hover:border-pink-500 hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-pink-500 dark:hover:bg-slate-800">
-                  <ClipboardIcon className="mb-5 inline-block h-10 w-10 text-pink-500" />
-                  <h4 className="mb-2 text-lg font-bold">
-                    Browse the community plugin directory
-                  </h4>
-                  <a className="focus:outline-none" href="#plugin-directory">
-                    <span className="absolute inset-0" aria-hidden="true" />
-                    <p className="leading-relaxed">
-                      Check all the community plugins available for Nx! These
-                      plugins have been approved by the Nx core team, are well
-                      maintained and regularly updated to make sure they work
-                      with the latest versions.
-                    </p>
-                  </a>
-                </div>
+              <div className="mt-6 flex h-full w-full flex-col items-start items-stretch gap-6 md:mt-0">
+                {champions3.map((data) => (
+                  <ChampionCard key={data.name} data={data} />
+                ))}
               </div>
             </div>
           </article>
-
-          <div id="connect-with-us" className="py-28">
-            <ConnectWithUs />
-          </div>
-
-          <div id="create-nx-plugin" className="py-28">
-            <CreateNxPlugin />
-          </div>
-
-          <div id="plugin-directory" className="py-28">
-            <PluginDirectory pluginList={props.pluginList} />
-          </div>
+          <ChampionPerks />
         </div>
       </main>
       <Footer />

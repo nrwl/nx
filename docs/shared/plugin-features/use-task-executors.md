@@ -5,7 +5,7 @@ Executors perform actions on your code. This can include building, linting, test
 There are two main differences between an executor and a shell script or an npm script:
 
 1. Executors encourage a consistent methodology for performing similar actions on unrelated projects. i.e. A developer switching between teams can be confident that `nx build project2` will build `project2` with the default settings, just like `nx build project1` built `project1`.
-2. Nx can leverage this consistency to run the same target across multiple projects. i.e. `nx affected --target=test` will run the `test` executor associated with the `test` target on every project that is affected by the current code change.
+2. Nx can leverage this consistency to run the same target across multiple projects. i.e. `nx affected -t test` will run the `test` executor associated with the `test` target on every project that is affected by the current code change.
 3. Executors provide metadata to define the available options. This metadata allows the Nx CLI to show prompts in the terminal and Nx Console to generate a GUI for the executor.
 
 ## Executor definitions
@@ -20,7 +20,7 @@ Executors are associated with specific targets in a project's `project.json` fil
   "generators": {},
   "targets": {
     "build": {
-      "executor": "@nrwl/web:webpack",
+      "executor": "@nx/webpack:webpack",
       "options": {
         "outputPath": "dist/apps/cart",
         ...
@@ -33,7 +33,7 @@ Executors are associated with specific targets in a project's `project.json` fil
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "options": {
         ...
       }
@@ -50,7 +50,7 @@ Each project has targets configured to run an executor with a specific set of op
 
 Each executor definition has an `executor` property and, optionally, an `options` and a `configurations` property.
 
-- `executor` is a string of the form `[package name]:[executor name]`. For the `build` executor, the package name is `@nrwl/web` and the executor name is `webpack`.
+- `executor` is a string of the form `[package name]:[executor name]`. For the `build` executor, the package name is `@nx/web` and the executor name is `webpack`.
 - `options` is an object that contains any configuration defaults for the executor. These options vary from executor to executor.
 - `configurations` allows you to create presets of options for different scenarios. All the configurations start with the properties defined in `options` as a baseline and then overwrite those options. In the example, there is a `production` configuration that overrides the default options to set `sourceMap` to `false`.
 

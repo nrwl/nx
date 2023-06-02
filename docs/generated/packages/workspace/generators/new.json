@@ -25,10 +25,6 @@
         "type": "boolean",
         "default": true
       },
-      "npmScope": {
-        "type": "string",
-        "description": "Npm scope for importing libs."
-      },
       "standaloneApi": {
         "description": "Use Standalone Components if generating an Angular application.",
         "type": "boolean",
@@ -68,6 +64,16 @@
         "description": "The framework which the application is using",
         "type": "string",
         "enum": ["express", "koa", "fastify", "nest", "none"]
+      },
+      "nextAppDir": {
+        "description": "Enable the App Router for this project.",
+        "type": "boolean",
+        "default": true
+      },
+      "e2eTestRunner": {
+        "description": "The tool to use for running e2e tests.",
+        "type": "string",
+        "enum": ["cypress", "jest", "detox", "none"]
       }
     },
     "additionalProperties": true,

@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 
 const publishScriptContent = `
 /**
@@ -10,10 +10,12 @@ const publishScriptContent = `
  * You might need to authenticate with NPM before running this script.
  */
 
-import { readCachedProjectGraph  } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import chalk from 'chalk';
+
+import devkit from '@nx/devkit';
+const { readCachedProjectGraph } = devkit;
 
 function invariant(condition, message) {
   if (!condition) {

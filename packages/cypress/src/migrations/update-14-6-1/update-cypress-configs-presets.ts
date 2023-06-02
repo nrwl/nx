@@ -5,8 +5,8 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
@@ -111,10 +111,11 @@ async function addBuildTargetToConfig(
   const projectWithBuild = await findBuildConfig(tree, {
     project: projectName,
     validExecutorNames: new Set(['@nrwl/web:webpack']),
+    skipGetOptions: true,
   });
   // didn't find the config so can't update. consumer should collect list of them and display a warning at the end
   // no reason to fail since the preset will fallback to a default config so should still keep working.
-  if (!projectWithBuild?.target || !projectWithBuild?.config) {
+  if (!projectWithBuild?.target) {
     return false;
   }
 

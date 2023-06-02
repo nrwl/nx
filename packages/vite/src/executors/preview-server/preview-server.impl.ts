@@ -1,4 +1,4 @@
-import { ExecutorContext, parseTargetString, runExecutor } from '@nrwl/devkit';
+import { ExecutorContext, parseTargetString, runExecutor } from '@nx/devkit';
 import { InlineConfig, mergeConfig, preview, PreviewServer } from 'vite';
 import {
   getNxTargetOptions,
@@ -27,6 +27,7 @@ export async function* vitePreviewServerExecutor(
   }
 
   const isCustomBuildTarget =
+    targetConfiguration.executor !== '@nx/vite:build' &&
     targetConfiguration.executor !== '@nrwl/vite:build';
 
   // Retrieve the option for the configured buildTarget.

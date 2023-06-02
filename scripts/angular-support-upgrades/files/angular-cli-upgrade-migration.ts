@@ -1,8 +1,8 @@
 export const getAngularCliMigrationGenerator = (
   version: string
-) => `import { formatFiles, Tree, updateJson } from '@nrwl/devkit';
+) => `import { formatFiles, Tree, updateJson } from '@nx/devkit';
 
-const angularCliVersion = '~${version}';
+export const angularCliVersion = '~${version}';
 
 export default async function (tree: Tree) {
   let shouldFormat = false;
@@ -25,11 +25,10 @@ export default async function (tree: Tree) {
 }
 `;
 
-export const getAngularCliMigrationGeneratorSpec = (
-  version: string
-) => `import { readJson, Tree, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import updateAngularCli from './update-angular-cli';
+export const getAngularCliMigrationGeneratorSpec =
+  () => `import { readJson, Tree, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import updateAngularCli, { angularCliVersion } from './update-angular-cli';
 
 describe('update-angular-cli migration', () => {
   let tree: Tree;
@@ -46,7 +45,7 @@ describe('update-angular-cli migration', () => {
     await updateAngularCli(tree);
 
     const { devDependencies } = readJson(tree, 'package.json');
-    expect(devDependencies['@angular/cli']).toEqual('~${version}');
+    expect(devDependencies['@angular/cli']).toBe(angularCliVersion);
   });
 
   it('should update @angular/cli version when defined as a dependency', async () => {
@@ -57,10 +56,10 @@ describe('update-angular-cli migration', () => {
     await updateAngularCli(tree);
 
     const { dependencies } = readJson(tree, 'package.json');
-    expect(dependencies['@angular/cli']).toEqual('~${version}');
+    expect(dependencies['@angular/cli']).toBe(angularCliVersion);
   });
 
-  it('should add @angular/cli to package.json when it is not set', async () => {
+  it('should not add @angular/cli to package.json when it is not set', async () => {
     const initialPackageJson = readJson(tree, 'package.json');
 
     await updateAngularCli(tree);

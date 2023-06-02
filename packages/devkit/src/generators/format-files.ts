@@ -25,35 +25,32 @@ export async function formatFiles(tree: Tree): Promise<void> {
     tree.listChanges().filter((file) => file.type !== 'DELETE')
   );
 
+  const changedPrettierInTree = getChangedPrettierConfigInTree(tree);
+
   await Promise.all(
     Array.from(files).map(async (file) => {
-      const systemPath = path.join(tree.root, file.path);
-
-      const resolvedOptions = await prettier.resolveConfig(systemPath, {
-        editorconfig: true,
-      });
-
-      let optionsFromTree;
-      if (!resolvedOptions) {
-        try {
-          optionsFromTree = readJson(tree, '.prettierrc');
-        } catch {}
-      }
-      const options: any = {
-        filepath: systemPath,
-        ...(resolvedOptions ?? optionsFromTree),
-      };
-
-      if (file.path.endsWith('.swcrc')) {
-        options.parser = 'json';
-      }
-
-      const support = await prettier.getFileInfo(systemPath, options);
-      if (support.ignored || !support.inferredParser) {
-        return;
-      }
-
       try {
+        const systemPath = path.join(tree.root, file.path);
+
+        const resolvedOptions = await prettier.resolveConfig(systemPath, {
+          editorconfig: true,
+        });
+
+        const options: Prettier.Options = {
+          ...resolvedOptions,
+          ...changedPrettierInTree,
+          filepath: systemPath,
+        };
+
+        if (file.path.endsWith('.swcrc')) {
+          options.parser = 'json';
+        }
+
+        const support = await prettier.getFileInfo(systemPath, options as any);
+        if (support.ignored || !support.inferredParser) {
+          return;
+        }
+
         tree.write(
           file.path,
           prettier.format(file.content.toString('utf-8'), options)
@@ -91,4 +88,16 @@ function getRootTsConfigPath(tree: Tree): string | null {
   }
 
   return null;
+}
+
+function getChangedPrettierConfigInTree(tree: Tree): Prettier.Options | null {
+  if (tree.listChanges().find((file) => file.path === '.prettierrc')) {
+    try {
+      return readJson(tree, '.prettierrc');
+    } catch {
+      return null;
+    }
+  } else {
+    return null;
+  }
 }

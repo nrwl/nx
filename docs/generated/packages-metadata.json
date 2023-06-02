@@ -1,16 +1,5 @@
 [
   {
-    "description": "Make any monorepo faster by adding Nx to it",
-    "documents": [],
-    "executors": [],
-    "generators": [],
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "add-nx-to-monorepo",
-    "packageName": "add-nx-to-monorepo",
-    "root": "/packages/add-nx-to-monorepo",
-    "source": "/packages/add-nx-to-monorepo/src"
-  },
-  {
     "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
     "documents": [
       {
@@ -265,6 +254,24 @@
         "type": "generator"
       },
       {
+        "description": "Adds an NgRx Feature Store to an application or library.",
+        "file": "generated/packages/angular/generators/ngrx-feature-store.json",
+        "hidden": false,
+        "name": "ngrx-feature-store",
+        "originalFilePath": "/packages/angular/src/generators/ngrx-feature-store/schema.json",
+        "path": "angular/generators/ngrx-feature-store",
+        "type": "generator"
+      },
+      {
+        "description": "Adds an NgRx Root Store to an application.",
+        "file": "generated/packages/angular/generators/ngrx-root-store.json",
+        "hidden": false,
+        "name": "ngrx-root-store",
+        "originalFilePath": "/packages/angular/src/generators/ngrx-root-store/schema.json",
+        "path": "angular/generators/ngrx-root-store",
+        "type": "generator"
+      },
+      {
         "description": "Generate an Angular Pipe",
         "file": "generated/packages/angular/generators/pipe.json",
         "hidden": false,
@@ -375,20 +382,9 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "angular",
-    "packageName": "@nrwl/angular",
+    "packageName": "@nx/angular",
     "root": "/packages/angular",
     "source": "/packages/angular/src"
-  },
-  {
-    "description": "This package will turn your React app into an Nx workspace. To use this package, your React app must have been generated and kept the structure of Create-React-App, with files generated either in js/jsx or ts/tsx.",
-    "documents": [],
-    "executors": [],
-    "generators": [],
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "cra-to-nx",
-    "packageName": "cra-to-nx",
-    "root": "/packages/cra-to-nx",
-    "source": "/packages/cra-to-nx/src"
   },
   {
     "description": "This package is used to scaffold a brand-new workspace used to develop an Nx plugin, and sets up a pre-configured plugin with the specified name. The new plugin is created with a default generator, executor, and e2e app.",
@@ -490,11 +486,11 @@
       },
       {
         "description": "Set up Cypress Component Test for a project",
-        "file": "generated/packages/cypress/generators/cypress-component-project.json",
+        "file": "generated/packages/cypress/generators/cypress-component-configuration.json",
         "hidden": true,
-        "name": "cypress-component-project",
-        "originalFilePath": "/packages/cypress/src/generators/cypress-component-project/schema.json",
-        "path": "cypress/generators/cypress-component-project",
+        "name": "cypress-component-configuration",
+        "originalFilePath": "/packages/cypress/src/generators/cypress-component-configuration/schema.json",
+        "path": "cypress/generators/cypress-component-configuration",
         "type": "generator"
       },
       {
@@ -509,7 +505,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "cypress",
-    "packageName": "@nrwl/cypress",
+    "packageName": "@nx/cypress",
     "root": "/packages/cypress",
     "source": "/packages/cypress/src"
   },
@@ -570,7 +566,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "detox",
-    "packageName": "@nrwl/detox",
+    "packageName": "@nx/detox",
     "root": "/packages/detox",
     "source": "/packages/detox/src"
   },
@@ -578,15 +574,15 @@
     "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.",
     "documents": [
       {
-        "id": "nrwl_devkit",
+        "id": "nx_devkit",
         "name": "Overview",
         "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.",
-        "file": "generated/packages/devkit/documents/nrwl_devkit",
+        "file": "generated/packages/devkit/documents/nx_devkit",
         "itemList": [],
         "isExternal": false,
-        "path": "devkit/documents/nrwl_devkit",
+        "path": "devkit/documents/nx_devkit",
         "tags": [],
-        "originalFilePath": "generated/devkit/nrwl_devkit"
+        "originalFilePath": "generated/devkit/nx_devkit"
       },
       {
         "id": "ngcli_adapter",
@@ -604,7 +600,7 @@
     "generators": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "devkit",
-    "packageName": "@nrwl/devkit",
+    "packageName": "@nx/devkit",
     "root": "/packages/devkit",
     "source": "/packages/devkit/src"
   },
@@ -656,32 +652,32 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "esbuild",
-    "packageName": "@nrwl/esbuild",
+    "packageName": "@nx/esbuild",
     "root": "/packages/esbuild",
     "source": "/packages/esbuild/src"
   },
   {
-    "description": "The eslint-plugin-nx package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
+    "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
     "documents": [
       {
         "id": "overview",
         "name": "Overview",
-        "description": "The eslint-plugin-nx package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin-nx/documents/overview",
+        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
+        "file": "generated/packages/eslint-plugin/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "eslint-plugin-nx/documents/overview",
+        "path": "eslint-plugin/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/linter/eslint-plugin-nx"
+        "originalFilePath": "shared/packages/linter/eslint-plugin"
       },
       {
         "id": "enforce-module-boundaries",
         "name": "The `enforce-module-boundaries` rule",
-        "description": "The eslint-plugin-nx package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin-nx/documents/enforce-module-boundaries",
+        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
+        "file": "generated/packages/eslint-plugin/documents/enforce-module-boundaries",
         "itemList": [],
         "isExternal": false,
-        "path": "eslint-plugin-nx/documents/enforce-module-boundaries",
+        "path": "eslint-plugin/documents/enforce-module-boundaries",
         "tags": [],
         "originalFilePath": "shared/packages/linter/enforce-module-boundaries"
       }
@@ -689,10 +685,10 @@
     "executors": [],
     "generators": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "eslint-plugin-nx",
-    "packageName": "@nrwl/eslint-plugin-nx",
-    "root": "/packages/eslint-plugin-nx",
-    "source": "/packages/eslint-plugin-nx/src"
+    "name": "eslint-plugin",
+    "packageName": "@nx/eslint-plugin",
+    "root": "/packages/eslint-plugin",
+    "source": "/packages/eslint-plugin/src"
   },
   {
     "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
@@ -744,69 +740,6 @@
         "name": "download",
         "originalFilePath": "/packages/expo/src/executors/download/schema.json",
         "path": "expo/executors/download",
-        "type": "executor"
-      },
-      {
-        "description": "Build and sign a standalone IPA for the Apple App Store",
-        "file": "generated/packages/expo/executors/build-ios.json",
-        "hidden": false,
-        "name": "build-ios",
-        "originalFilePath": "/packages/expo/src/executors/build-ios/schema.json",
-        "path": "expo/executors/build-ios",
-        "type": "executor"
-      },
-      {
-        "description": "Build and sign a standalone APK or App Bundle for the Google Play Store",
-        "file": "generated/packages/expo/executors/build-android.json",
-        "hidden": false,
-        "name": "build-android",
-        "originalFilePath": "/packages/expo/src/executors/build-android/schema.json",
-        "path": "expo/executors/build-android",
-        "type": "executor"
-      },
-      {
-        "description": "Build the web app for production",
-        "file": "generated/packages/expo/executors/build-web.json",
-        "hidden": false,
-        "name": "build-web",
-        "originalFilePath": "/packages/expo/src/executors/build-web/schema.json",
-        "path": "expo/executors/build-web",
-        "type": "executor"
-      },
-      {
-        "description": "Get the status of the latest build for the project",
-        "file": "generated/packages/expo/executors/build-status.json",
-        "hidden": false,
-        "name": "build-status",
-        "originalFilePath": "/packages/expo/src/executors/build-status/schema.json",
-        "path": "expo/executors/build-status",
-        "type": "executor"
-      },
-      {
-        "description": "Deploy a project to Expo hosting",
-        "file": "generated/packages/expo/executors/publish.json",
-        "hidden": false,
-        "name": "publish",
-        "originalFilePath": "/packages/expo/src/executors/publish/schema.json",
-        "path": "expo/executors/publish",
-        "type": "executor"
-      },
-      {
-        "description": "Specify the channel to serve a published release",
-        "file": "generated/packages/expo/executors/publish-set.json",
-        "hidden": false,
-        "name": "publish-set",
-        "originalFilePath": "/packages/expo/src/executors/publish-set/schema.json",
-        "path": "expo/executors/publish-set",
-        "type": "executor"
-      },
-      {
-        "description": "Undo an update to a channel",
-        "file": "generated/packages/expo/executors/rollback.json",
-        "hidden": false,
-        "name": "rollback",
-        "originalFilePath": "/packages/expo/src/executors/rollback/schema.json",
-        "path": "expo/executors/rollback",
         "type": "executor"
       },
       {
@@ -913,7 +846,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "expo",
-    "packageName": "@nrwl/expo",
+    "packageName": "@nx/expo",
     "root": "/packages/expo",
     "source": "/packages/expo/src"
   },
@@ -955,7 +888,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "express",
-    "packageName": "@nrwl/express",
+    "packageName": "@nx/express",
     "root": "/packages/express",
     "source": "/packages/express/src"
   },
@@ -1007,7 +940,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "jest",
-    "packageName": "@nrwl/jest",
+    "packageName": "@nx/jest",
     "root": "/packages/jest",
     "source": "/packages/jest/src"
   },
@@ -1053,6 +986,15 @@
         "originalFilePath": "/packages/js/src/executors/node/schema.json",
         "path": "js/executors/node",
         "type": "executor"
+      },
+      {
+        "description": "Start local registry with verdaccio",
+        "file": "generated/packages/js/executors/verdaccio.json",
+        "hidden": false,
+        "name": "verdaccio",
+        "originalFilePath": "/packages/js/src/executors/verdaccio/schema.json",
+        "path": "js/executors/verdaccio",
+        "type": "executor"
       }
     ],
     "generators": [
@@ -1082,11 +1024,20 @@
         "originalFilePath": "/packages/js/src/generators/convert-to-swc/schema.json",
         "path": "js/generators/convert-to-swc",
         "type": "generator"
+      },
+      {
+        "description": "Setup Verdaccio for local package management.",
+        "file": "generated/packages/js/generators/setup-verdaccio.json",
+        "hidden": false,
+        "name": "setup-verdaccio",
+        "originalFilePath": "/packages/js/src/generators/setup-verdaccio/schema.json",
+        "path": "js/generators/setup-verdaccio",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "js",
-    "packageName": "@nrwl/js",
+    "packageName": "@nx/js",
     "root": "/packages/js",
     "source": "/packages/js/src"
   },
@@ -1138,20 +1089,9 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "linter",
-    "packageName": "@nrwl/linter",
+    "packageName": "@nx/linter",
     "root": "/packages/linter",
     "source": "/packages/linter/src"
-  },
-  {
-    "description": "Make Angular CLI faster by enabling distributed computation caching",
-    "documents": [],
-    "executors": [],
-    "generators": [],
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "make-angular-cli-faster",
-    "packageName": "make-angular-cli-faster",
-    "root": "/packages/make-angular-cli-faster",
-    "source": "/packages/make-angular-cli-faster/src"
   },
   {
     "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
@@ -1344,7 +1284,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nest",
-    "packageName": "@nrwl/nest",
+    "packageName": "@nx/nest",
     "root": "/packages/nest",
     "source": "/packages/nest/src"
   },
@@ -1360,7 +1300,18 @@
         "isExternal": false,
         "path": "next/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/next/next-plugin"
+        "originalFilePath": "shared/packages/next/plugin-overview"
+      },
+      {
+        "id": "next-config-setup",
+        "name": "How to configure Next.js plugins",
+        "description": "A guide for configuring Next.js plugins with Nx",
+        "file": "generated/packages/next/documents/next-config-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "next/documents/next-config-setup",
+        "tags": [],
+        "originalFilePath": "shared/packages/next/next-config-setup"
       }
     ],
     "executors": [
@@ -1446,11 +1397,20 @@
         "originalFilePath": "/packages/next/src/generators/custom-server/schema.json",
         "path": "next/generators/custom-server",
         "type": "generator"
+      },
+      {
+        "description": "cypress-component-configuration generator",
+        "file": "generated/packages/next/generators/cypress-component-configuration.json",
+        "hidden": false,
+        "name": "cypress-component-configuration",
+        "originalFilePath": "/packages/next/src/generators/cypress-component-configuration/schema.json",
+        "path": "next/generators/cypress-component-configuration",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "next",
-    "packageName": "@nrwl/next",
+    "packageName": "@nx/next",
     "root": "/packages/next",
     "source": "/packages/next/src"
   },
@@ -1470,15 +1430,6 @@
       }
     ],
     "executors": [
-      {
-        "description": "Build a Node application using Webpack.",
-        "file": "generated/packages/node/executors/webpack.json",
-        "hidden": false,
-        "name": "webpack",
-        "originalFilePath": "/packages/node/src/executors/webpack/schema.json",
-        "path": "node/executors/webpack",
-        "type": "executor"
-      },
       {
         "description": "Execute a Node application.",
         "file": "generated/packages/node/executors/node.json",
@@ -1529,7 +1480,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "node",
-    "packageName": "@nrwl/node",
+    "packageName": "@nx/node",
     "root": "/packages/node",
     "source": "/packages/node/src"
   },
@@ -1634,28 +1585,6 @@
         "path": "nx/documents/affected-dep-graph",
         "tags": [],
         "originalFilePath": "generated/cli/affected-graph"
-      },
-      {
-        "id": "affected-apps",
-        "name": "affected:apps",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/affected-apps",
-        "itemList": [],
-        "isExternal": false,
-        "path": "nx/documents/affected-apps",
-        "tags": [],
-        "originalFilePath": "generated/cli/affected-apps"
-      },
-      {
-        "id": "affected-libs",
-        "name": "affected:libs",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/affected-libs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "nx/documents/affected-libs",
-        "tags": [],
-        "originalFilePath": "generated/cli/affected-libs"
       },
       {
         "id": "print-affected",
@@ -1866,95 +1795,104 @@
         "id": "overview",
         "name": "Overview",
         "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
-        "file": "generated/packages/nx-plugin/documents/overview",
+        "file": "generated/packages/plugin/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "nx-plugin/documents/overview",
+        "path": "plugin/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/nx-plugin/nx-plugin"
+        "originalFilePath": "shared/packages/plugin/plugin"
       }
     ],
     "executors": [
       {
         "description": "Creates and runs the E2E tests for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/executors/e2e.json",
+        "file": "generated/packages/plugin/executors/e2e.json",
         "hidden": false,
         "name": "e2e",
-        "originalFilePath": "/packages/nx-plugin/src/executors/e2e/schema.json",
-        "path": "nx-plugin/executors/e2e",
+        "originalFilePath": "/packages/plugin/src/executors/e2e/schema.json",
+        "path": "plugin/executors/e2e",
         "type": "executor"
       }
     ],
     "generators": [
       {
         "description": "Create a Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/plugin.json",
+        "file": "generated/packages/plugin/generators/plugin.json",
         "hidden": false,
         "name": "plugin",
-        "originalFilePath": "/packages/nx-plugin/src/generators/plugin/schema.json",
-        "path": "nx-plugin/generators/plugin",
+        "originalFilePath": "/packages/plugin/src/generators/plugin/schema.json",
+        "path": "plugin/generators/plugin",
+        "type": "generator"
+      },
+      {
+        "description": "Create a package which can be used by npx to create a new workspace",
+        "file": "generated/packages/plugin/generators/create-package.json",
+        "hidden": false,
+        "name": "create-package",
+        "originalFilePath": "/packages/plugin/src/generators/create-package/schema.json",
+        "path": "plugin/generators/create-package",
         "type": "generator"
       },
       {
         "description": "Create a E2E application for a Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/e2e-project.json",
-        "hidden": true,
+        "file": "generated/packages/plugin/generators/e2e-project.json",
+        "hidden": false,
         "name": "e2e-project",
-        "originalFilePath": "/packages/nx-plugin/src/generators/e2e-project/schema.json",
-        "path": "nx-plugin/generators/e2e-project",
+        "originalFilePath": "/packages/plugin/src/generators/e2e-project/schema.json",
+        "path": "plugin/generators/e2e-project",
         "type": "generator"
       },
       {
         "description": "Create a migration for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/migration.json",
+        "file": "generated/packages/plugin/generators/migration.json",
         "hidden": false,
         "name": "migration",
-        "originalFilePath": "/packages/nx-plugin/src/generators/migration/schema.json",
-        "path": "nx-plugin/generators/migration",
+        "originalFilePath": "/packages/plugin/src/generators/migration/schema.json",
+        "path": "plugin/generators/migration",
         "type": "generator"
       },
       {
         "description": "Create a generator for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/generator.json",
+        "file": "generated/packages/plugin/generators/generator.json",
         "hidden": false,
         "name": "generator",
-        "originalFilePath": "/packages/nx-plugin/src/generators/generator/schema.json",
-        "path": "nx-plugin/generators/generator",
+        "originalFilePath": "/packages/plugin/src/generators/generator/schema.json",
+        "path": "plugin/generators/generator",
         "type": "generator"
       },
       {
         "description": "Create an executor for an Nx Plugin.",
-        "file": "generated/packages/nx-plugin/generators/executor.json",
+        "file": "generated/packages/plugin/generators/executor.json",
         "hidden": false,
         "name": "executor",
-        "originalFilePath": "/packages/nx-plugin/src/generators/executor/schema.json",
-        "path": "nx-plugin/generators/executor",
+        "originalFilePath": "/packages/plugin/src/generators/executor/schema.json",
+        "path": "plugin/generators/executor",
         "type": "generator"
       },
       {
         "description": "Adds linting configuration to validate common json files for nx plugins.",
-        "file": "generated/packages/nx-plugin/generators/plugin-lint-checks.json",
+        "file": "generated/packages/plugin/generators/plugin-lint-checks.json",
         "hidden": false,
         "name": "plugin-lint-checks",
-        "originalFilePath": "/packages/nx-plugin/src/generators/lint-checks/schema.json",
-        "path": "nx-plugin/generators/plugin-lint-checks",
+        "originalFilePath": "/packages/plugin/src/generators/lint-checks/schema.json",
+        "path": "plugin/generators/plugin-lint-checks",
         "type": "generator"
       },
       {
         "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nrwl/nx-plugin`.",
-        "file": "generated/packages/nx-plugin/generators/preset.json",
+        "file": "generated/packages/plugin/generators/preset.json",
         "hidden": true,
         "name": "preset",
-        "originalFilePath": "/packages/nx-plugin/src/generators/preset/schema.json",
-        "path": "nx-plugin/generators/preset",
+        "originalFilePath": "/packages/plugin/src/generators/preset/schema.json",
+        "path": "plugin/generators/preset",
         "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "nx-plugin",
-    "packageName": "@nrwl/nx-plugin",
-    "root": "/packages/nx-plugin",
-    "source": "/packages/nx-plugin/src"
+    "name": "plugin",
+    "packageName": "@nx/plugin",
+    "root": "/packages/plugin",
+    "source": "/packages/plugin/src"
   },
   {
     "description": "The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
@@ -2139,7 +2077,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "react",
-    "packageName": "@nrwl/react",
+    "packageName": "@nx/react",
     "root": "/packages/react",
     "source": "/packages/react/src"
   },
@@ -2326,7 +2264,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "react-native",
-    "packageName": "@nrwl/react-native",
+    "packageName": "@nx/react-native",
     "root": "/packages/react-native",
     "source": "/packages/react-native/src"
   },
@@ -2366,7 +2304,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "rollup",
-    "packageName": "@nrwl/rollup",
+    "packageName": "@nx/rollup",
     "root": "/packages/rollup",
     "source": "/packages/rollup/src"
   },
@@ -2407,17 +2345,6 @@
         "originalFilePath": "shared/packages/storybook/plugin-angular"
       },
       {
-        "id": "storybook-7-setup",
-        "name": "Storybook 7 setup guide",
-        "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
-        "file": "generated/packages/storybook/documents/storybook-7-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/storybook-7-setup",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/storybook-7-setup"
-      },
-      {
         "id": "best-practices",
         "name": "Storybook best practices for making the most out of Nx",
         "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
@@ -2427,6 +2354,17 @@
         "path": "storybook/documents/best-practices",
         "tags": [],
         "originalFilePath": "shared/packages/storybook/best-practices"
+      },
+      {
+        "id": "storybook-7-setup",
+        "name": "Storybook 7 overview",
+        "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+        "file": "generated/packages/storybook/documents/storybook-7-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "storybook/documents/storybook-7-setup",
+        "tags": [],
+        "originalFilePath": "shared/packages/storybook/storybook-7-setup"
       },
       {
         "id": "configuring-storybook",
@@ -2482,72 +2420,6 @@
         "path": "storybook/documents/angular-configuring-styles",
         "tags": [],
         "originalFilePath": "shared/packages/storybook/angular-configuring-styles"
-      },
-      {
-        "id": "angular-storybook-targets",
-        "name": "Angular: Information about the Storybook targets",
-        "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-        "file": "generated/packages/storybook/documents/angular-storybook-targets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/angular-storybook-targets",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/angular-storybook-targets"
-      },
-      {
-        "id": "angular-browser-target",
-        "name": "Angular: The browserTarget",
-        "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-        "file": "generated/packages/storybook/documents/angular-browser-target",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/angular-browser-target",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/angular-browser-target"
-      },
-      {
-        "id": "migrate-webpack-final-angular",
-        "name": "Angular: Storybook Migration to webpackFinal",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-        "file": "generated/packages/storybook/documents/migrate-webpack-final-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/migrate-webpack-final-angular",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/migrate-webpack-final-angular"
-      },
-      {
-        "id": "upgrade-storybook-v6-angular",
-        "name": "Angular: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-        "file": "generated/packages/storybook/documents/upgrade-storybook-v6-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/upgrade-storybook-v6-angular",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/storybook-v6-angular"
-      },
-      {
-        "id": "migrate-webpack-final-react",
-        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-        "file": "generated/packages/storybook/documents/migrate-webpack-final-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/migrate-webpack-final-react",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/migrate-webpack-final-react"
-      },
-      {
-        "id": "upgrade-storybook-v6-react",
-        "name": "React: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-        "file": "generated/packages/storybook/documents/upgrade-storybook-v6-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/upgrade-storybook-v6-react",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/storybook-v6-react"
       }
     ],
     "executors": [
@@ -2610,7 +2482,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "storybook",
-    "packageName": "@nrwl/storybook",
+    "packageName": "@nx/storybook",
     "root": "/packages/storybook",
     "source": "/packages/storybook/src"
   },
@@ -2720,7 +2592,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "vite",
-    "packageName": "@nrwl/vite",
+    "packageName": "@nx/vite",
     "root": "/packages/vite",
     "source": "/packages/vite/src"
   },
@@ -2740,33 +2612,6 @@
       }
     ],
     "executors": [
-      {
-        "description": "Build an application using Webpack.",
-        "file": "generated/packages/web/executors/webpack.json",
-        "hidden": false,
-        "name": "webpack",
-        "originalFilePath": "/packages/web/src/executors/webpack/schema.json",
-        "path": "web/executors/webpack",
-        "type": "executor"
-      },
-      {
-        "description": "Package a library using Rollup.",
-        "file": "generated/packages/web/executors/rollup.json",
-        "hidden": false,
-        "name": "rollup",
-        "originalFilePath": "/packages/web/src/executors/rollup/schema.json",
-        "path": "web/executors/rollup",
-        "type": "executor"
-      },
-      {
-        "description": "Serve a web application.",
-        "file": "generated/packages/web/executors/dev-server.json",
-        "hidden": false,
-        "name": "dev-server",
-        "originalFilePath": "/packages/web/src/executors/dev-server/schema.json",
-        "path": "web/executors/dev-server",
-        "type": "executor"
-      },
       {
         "description": "Serve a web application from a folder.",
         "file": "generated/packages/web/executors/file-server.json",
@@ -2808,7 +2653,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "web",
-    "packageName": "@nrwl/web",
+    "packageName": "@nx/web",
     "root": "/packages/web",
     "source": "/packages/web/src"
   },
@@ -2900,7 +2745,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "webpack",
-    "packageName": "@nrwl/webpack",
+    "packageName": "@nx/webpack",
     "root": "/packages/webpack",
     "source": "/packages/webpack/src"
   },
@@ -2932,30 +2777,12 @@
     ],
     "executors": [
       {
-        "description": "Run any custom commands with Nx.",
-        "file": "generated/packages/workspace/executors/run-commands.json",
-        "hidden": false,
-        "name": "run-commands",
-        "originalFilePath": "/packages/workspace/src/executors/run-commands/schema.json",
-        "path": "workspace/executors/run-commands",
-        "type": "executor"
-      },
-      {
         "description": "A dummy executor useful for E2E tests.",
         "file": "generated/packages/workspace/executors/counter.json",
         "hidden": true,
         "name": "counter",
         "originalFilePath": "/packages/workspace/src/executors/counter/schema.json",
         "path": "workspace/executors/counter",
-        "type": "executor"
-      },
-      {
-        "description": "Run an NPM script using Nx.",
-        "file": "generated/packages/workspace/executors/run-script.json",
-        "hidden": false,
-        "name": "run-script",
-        "originalFilePath": "/packages/workspace/src/executors/run-script/schema.json",
-        "path": "workspace/executors/run-script",
         "type": "executor"
       }
     ],
@@ -2994,15 +2821,6 @@
         "name": "new",
         "originalFilePath": "/packages/workspace/src/generators/new/schema.json",
         "path": "workspace/generators/new",
-        "type": "generator"
-      },
-      {
-        "description": "Create a library.",
-        "file": "generated/packages/workspace/generators/library.json",
-        "hidden": false,
-        "name": "library",
-        "originalFilePath": "/packages/workspace/src/generators/library/schema.json",
-        "path": "workspace/generators/library",
         "type": "generator"
       },
       {
@@ -3053,7 +2871,7 @@
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "workspace",
-    "packageName": "@nrwl/workspace",
+    "packageName": "@nx/workspace",
     "root": "/packages/workspace",
     "source": "/packages/workspace/src"
   }

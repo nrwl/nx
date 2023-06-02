@@ -1,4 +1,4 @@
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import {
   getPackageManagerCommand,
   runCLI,
@@ -9,14 +9,13 @@ import { uniq } from './create-project-utils';
 import { readFile } from './file-utils';
 
 type GeneratorsWithDefaultTests =
-  | '@nrwl/js:lib'
-  | '@nrwl/node:lib'
-  | '@nrwl/react:lib'
-  | '@nrwl/react:app'
-  | '@nrwl/next:app'
-  | '@nrwl/angular:app'
-  | '@nrwl/workspace:lib'
-  | '@nrwl/web:app';
+  | '@nx/js:lib'
+  | '@nx/node:lib'
+  | '@nx/react:lib'
+  | '@nx/react:app'
+  | '@nx/next:app'
+  | '@nx/angular:app'
+  | '@nx/web:app';
 
 /**
  * Runs the pass in generator and then runs test on

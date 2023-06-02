@@ -36,9 +36,9 @@ describe('printHelp', () => {
     let output = '';
     jest.spyOn(logger, 'info').mockImplementation((x) => (output = x));
 
-    printHelp('nx g @nrwl/demo:example', schema, {
+    printHelp('nx g @nx/demo:example', schema, {
       mode: 'generate',
-      plugin: '@nrwl/demo',
+      plugin: '@nx/demo',
       entity: 'example',
       aliases: ['ex'],
     });
@@ -48,7 +48,7 @@ describe('printHelp', () => {
       .map((x) => x.replace('--', ''));
 
     expect(flagsFromOutput).toMatchInlineSnapshot(`
-      Array [
+      [
         "aReq",
         "bReq",
         "aImp",

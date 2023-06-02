@@ -31,10 +31,14 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
 
-✔ Choose your style                     · integrated
-✔ What to create in the new workspace   · react
-✔ Repository name                       · myorg
-✔ Application name                      · store
+ >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
+✔ Where would you like to create your workspace? · myorg
+✔ Which stack do you want to use? · react
+✔ What framework would you like to use? · none
+✔ Standalone project or integrated monorepo? · integrated
+✔ Application name · store
+✔ Which bundler would you like to use? · vite
 ✔ Default stylesheet format             · css
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
@@ -46,15 +50,15 @@ Once the command completes, notice two projects were added to the workspace:
 - A React application located in `apps/store`.
 - A Project for Cypress e2e tests for our `store` application in `apps/store-e2e`.
 
-{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nrwl/cypress package page." url="/packages/cypress" /%}
+{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nx/cypress package page." url="/packages/cypress" /%}
 
 ## Adding Another Application to Your Workspace
 
 Run this command to create your `admin` app:
 
-```{% command="npx nx g @nrwl/react:app admin" path="~/myorg" %}
+```{% command="npx nx g @nx/react:app admin" path="~/myorg" %}
 
->  NX  Generating @nrwl/react:application
+>  NX  Generating @nx/react:application
 
 CREATE apps/admin/.babelrc
 CREATE apps/admin/.browserslistrc
@@ -91,11 +95,11 @@ CREATE apps/admin/tsconfig.spec.json
 
 ## Generating Libraries
 
-To create the `common-ui` and `products` libraries, use the `@nrwl/react:lib` and `@nrwl/js:lib` generators respectively:
+To create the `common-ui` and `products` libraries, use the `@nx/react:lib` and `@nx/js:lib` generators respectively:
 
-```{% command="npx nx g @nrwl/react:lib common-ui" path="~/myorg" %}
+```{% command="npx nx g @nx/react:lib common-ui" path="~/myorg" %}
 
-> NX Generating @nrwl/react:library
+> NX Generating @nx/react:library
 
 CREATE libs/common-ui/project.json
 CREATE libs/common-ui/.eslintrc.json
@@ -112,9 +116,9 @@ CREATE libs/common-ui/src/lib/common-ui.spec.tsx
 CREATE libs/common-ui/src/lib/common-ui.tsx
 ```
 
-```{% command="npx nx g @nrwl/js:lib products" path="~/myorg" %}
+```{% command="npx nx g @nx/js:lib products" path="~/myorg" %}
 
->  NX  Generating @nrwl/js:library
+>  NX  Generating @nx/js:library
 
 CREATE libs/products/README.md
 CREATE libs/products/package.json

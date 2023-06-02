@@ -34,10 +34,6 @@
               "label": "SASS(.scss)  [ http://sass-lang.com   ]"
             },
             {
-              "value": "styl",
-              "label": "Stylus(.styl)[ http://stylus-lang.com ]"
-            },
-            {
               "value": "less",
               "label": "LESS         [ http://lesscss.org     ]"
             }
@@ -104,7 +100,7 @@
       }
     },
     "required": ["name"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/web:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/web:app my-app --bundler=vite\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory\" %}\n\nCreate an application named `my-app` in the `my-dir` directory:\n\n```bash\nnx g @nrwl/web:app my-app --directory=my-dir\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nrwl/web:app my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/web:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/web:app my-app --bundler=vite\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory\" %}\n\nCreate an application named `my-app` in the `my-dir` directory:\n\n```bash\nnx g @nx/web:app my-app --directory=my-dir\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nx/web:app my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },
   "aliases": ["app"],

@@ -6,7 +6,7 @@ import {
   readJson,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { output } from 'nx/src/utils/output';
 import { litVersion } from '../../utils/versions';

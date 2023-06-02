@@ -13,14 +13,14 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 >
 > Info about [using Cypress and Storybook can be found here](/packages/storybook/documents/overview-react#cypress-tests-for-storiesbook)
 
-If the `@nrwl/cypress` package is not installed, install the version that matches your `nx` package version.
+If the `@nx/cypress` package is not installed, install the version that matches your `nx` package version.
 
 ```shell
-yarn add --dev @nrwl/cypress
+yarn add --dev @nx/cypress
 ```
 
 ```shell
-npm install --save-dev @nrwl/cypress
+npm install --save-dev @nx/cypress
 ```
 
 ## E2E Testing
@@ -28,7 +28,7 @@ npm install --save-dev @nrwl/cypress
 By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.
 
 ```shell
-nx g @nrwl/web:app frontend
+nx g @nx/web:app frontend
 ```
 
 ### Creating a Cypress E2E project for an existing project
@@ -36,13 +36,13 @@ nx g @nrwl/web:app frontend
 To generate an E2E project based on an existing project, run the following generator
 
 ```shell
-nx g @nrwl/cypress:cypress-project your-app-name-e2e --project=your-app-name
+nx g @nx/cypress:cypress-project your-app-name-e2e --project=your-app-name
 ```
 
 Optionally, you can use the `--baseUrl` option if you don't want cypress plugin to serve `your-app-name`.
 
 ```shell
-nx g @nrwl/cypress:cypress-project your-app-name-e2e --baseUrl=http://localhost:4200
+nx g @nx/cypress:cypress-project your-app-name-e2e --baseUrl=http://localhost:4200
 ```
 
 Replace `your-app-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`.
@@ -51,7 +51,7 @@ Replace `your-app-name` with the app's name as defined in your `tsconfig.base.js
 
 Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
-You can run your e2e test against a production build by using the `production` [configuration](https://nx.dev/recipe/use-executor-configurations#use-executor-configurations)
+You can run your e2e test against a production build by using the `production` [configuration](https://nx.dev/recipes/executors/use-executor-configurations#use-executor-configurations)
 
 ```shell
 nx e2e frontend-e2e --configuration=production
@@ -114,7 +114,7 @@ There are a handful of ways to pass environment variables to Cypress, but the mo
 
 Create a `cypress.env.json` file in the projects root i.e. `apps/my-cool-app-e2e/cypress.env.json`. Cypress will automatically pick up this file. This method is helpful for configurations that you want to not commit. Just don't forget to add the file to the `.gitignore` and add documentation so people in your repo know what values to popluate in their local copy of the `cypress.env.json` file.
 
-Using [@nrwl/cypress:cypress](/packages/cypress/executors/cypress) env executor option is a good way to add values you want to define that you don't mine commit to the repository, such as a base API url. You can leverage [target configurations](/reference/project-configuration#targets) to define different values as well.
+Using [@nx/cypress:cypress](/packages/cypress/executors/cypress) env executor option is a good way to add values you want to define that you don't mine commit to the repository, such as a base API url. You can leverage [target configurations](/reference/project-configuration#targets) to define different values as well.
 
 Optionally, you can pass environment variables via the commandline with the `--env` flag.
 

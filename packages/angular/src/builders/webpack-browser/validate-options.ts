@@ -1,4 +1,4 @@
-import { stripIndents } from '@nrwl/devkit';
+import { stripIndents } from '@nx/devkit';
 import { extname } from 'path';
 import type { VersionInfo } from '../../executors/utilities/angular-version-utils';
 import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';

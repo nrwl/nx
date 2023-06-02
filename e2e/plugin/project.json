@@ -1,0 +1,11 @@
+{
+  "name": "e2e-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/plugin",
+  "projectType": "application",
+  "targets": {
+    "e2e": {},
+    "run-e2e-tests": {}
+  },
+  "implicitDependencies": ["create-nx-plugin"]
+}

@@ -1,6 +1,6 @@
 ---
 title: Storybook builder executor examples
-description: This page contains examples for the @nrwl/storybook:build executor.
+description: This page contains examples for the @nx/storybook:build executor.
 ---
 
 `project.json`:
@@ -11,10 +11,9 @@ description: This page contains examples for the @nrwl/storybook:build executor.
     "targets": {
         //...
         "build-storybook": {
-            "executor": "@nrwl/storybook:build",
+            "executor": "@nx/storybook:build",
             "outputs": ["{options.outputDir}"],
             "options": {
-                "uiFramework": "@storybook/react",
                 "outputDir": "dist/storybook/ui",
                 "configDir": "libs/ui/.storybook"
             },
@@ -36,28 +35,6 @@ nx run ui:build-storybook
 ### For non-Angular projects
 
 {% tabs %}
-{% tab label="Setting the uiFramework" %}
-
-You can change the `uiFramework` option, to correspond to the framework you are using for your project. Supported values are: `"@storybook/react"`, `"@storybook/html"`, `"@storybook/web-components"`, `"@storybook/vue"`, `"@storybook/vue3"` and `"@storybook/svelte"`. If you are using Angular, please check out the Angular-specific Storybook executor.
-
-```json
-"build-storybook": {
-    "executor": "@nrwl/storybook:build",
-    "outputs": ["{options.outputDir}"],
-    "options": {
-        "uiFramework": "@storybook/web-components",
-        "outputDir": "dist/storybook/ui",
-        "configDir": "libs/ui/.storybook"
-    },
-    "configurations": {
-        "ci": {
-            "quiet": true
-        }
-    }
-}
-```
-
-{% /tab %}
 {% tab label="Working in docsMode" %}
 
 You can work in docs mode, building a documentation-only site, by setting the `docsMode` option to `true` and using the `@storybook/addon-docs` addon.
@@ -66,9 +43,8 @@ Read more on the [Storybook documentation page for `addon-docs`](https://storybo
 
 ```json
 "storybook": {
-    "executor": "@nrwl/storybook:build",
+    "executor": "@nx/storybook:build",
     "options": {
-        "uiFramework": "@storybook/react",
         "port": 4400,
         "configDir": "libs/ui/.storybook",
         "docsMode": true
@@ -113,7 +89,7 @@ This is the default configuration for Angular projects using Storybook. You can 
 {% /tab %}
 {% tab label="Changing the browserTarget" %}
 
-You can set the [`browserTarget`](/packages/storybook/documents/angular-browser-target) to use `build-storybook` as the builder. This is most useful in the cases where your project does not have a `build` target.
+You can set the [`browserTarget`](/deprecated/storybook/angular-browser-target) to use `build-storybook` as the builder. This is most useful in the cases where your project does not have a `build` target.
 
 ```json
 "build-storybook": {

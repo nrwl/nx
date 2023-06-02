@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/vite",
+  "name": "@nx/vite",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for building and testing applications using Vite",
@@ -29,17 +29,16 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/workspace": "file:../workspace",
-    "@nrwl/js": "file:../js",
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "@swc/helpers": "^0.4.11",
+    "@swc/helpers": "~0.5.0",
     "dotenv": "~10.0.0",
-    "enquirer": "~2.3.6"
+    "enquirer": "~2.3.6",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js"
   },
   "peerDependencies": {
-    "vite": "^4.0.1",
-    "vitest": ">=0.25.8 <1.0.0"
+    "vite": "^4.3.4",
+    "vitest": ">=0.31.0 <1.0.0"
   },
   "publishConfig": {
     "access": "public"
@@ -48,6 +47,12 @@
     "./package.json": {
       "require": "./package.json"
     },
-    "./executors": "./executors.js"
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./executors": "./executors.js",
+    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
+    "./src/executors/*.impl": "./src/executors/*.impl.js",
+    "./src/executors/*/compat": "./src/executors/*/compat.js"
   }
 }

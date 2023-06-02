@@ -4,7 +4,7 @@ import {
   EsBuildExecutorOptions,
   NormalizedEsBuildExecutorOptions,
 } from '../schema';
-import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
+import { ExecutorContext, joinPathFragments, logger } from '@nx/devkit';
 import chalk = require('chalk');
 import * as esbuild from 'esbuild';
 
@@ -71,7 +71,7 @@ export function normalizeOptions(
       external: options.external ?? [],
       singleEntry: false,
       // Use the `main` file name as the output file name.
-      // This is needed for `@nrwl/js:node` to know the main file to execute.
+      // This is needed for `@nx/js:node` to know the main file to execute.
       // NOTE: The .js default extension may be replaced later in getOutfile() call.
       outputFileName: `${path.parse(options.main).name}.js`,
     };

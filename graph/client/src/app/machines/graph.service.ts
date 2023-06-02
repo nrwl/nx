@@ -1,4 +1,4 @@
-import { GraphService } from '@nrwl/graph/ui-graph';
+import { GraphService } from '@nx/graph/ui-graph';
 import { selectValueByThemeStatic } from '../theme-resolver';
 
 let graphService: GraphService;

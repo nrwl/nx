@@ -1,14 +1,13 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   convertNxGenerator,
   formatFiles,
-  getImportPath,
-  getWorkspaceLayout,
   joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 import { rollupInitGenerator } from '../init/init';
 import { RollupExecutorOptions } from '../../executors/rollup/schema';
@@ -43,9 +42,8 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
   const packageJsonPath = joinPathFragments(project.root, 'package.json');
 
   if (!tree.exists(packageJsonPath)) {
-    const { npmScope } = getWorkspaceLayout(tree);
     const importPath =
-      options.importPath || getImportPath(npmScope, options.project);
+      options.importPath || getImportPath(tree, options.project);
     writeJson(tree, packageJsonPath, {
       name: importPath,
       version: '0.0.1',
@@ -82,7 +80,7 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
     targets: {
       ...project.targets,
       build: {
-        executor: '@nrwl/rollup:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: buildOptions,

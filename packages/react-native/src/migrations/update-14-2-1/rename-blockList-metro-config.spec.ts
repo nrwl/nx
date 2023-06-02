@@ -1,5 +1,5 @@
-import { addProjectConfiguration, Tree, getProjects } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, Tree, getProjects } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import update from './rename-blockList-metro-config';
 
@@ -26,7 +26,7 @@ describe('Rename blacklistRE to blockList in metro.config.js for react native ap
     tree.write(
       'apps/products/metro.config.js',
       `
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 
 module.exports = (async () => {
@@ -66,7 +66,7 @@ module.exports = (async () => {
     await update(tree);
 
     expect(tree.read('apps/products/metro.config.js', 'utf-8')).toEqual(`
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 
 module.exports = (async () => {
@@ -108,7 +108,7 @@ module.exports = (async () => {
     tree.write(
       'apps/products/metro.config.js',
       `
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 
 module.exports = (async () => {
@@ -149,7 +149,7 @@ module.exports = (async () => {
 
     expect(tree.read('apps/products/metro.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { withNxMetro } = require('@nrwl/react-native');
+      "const { withNxMetro } = require('@nx/react-native');
       const { getDefaultConfig } = require('metro-config');
 
       module.exports = (async () => {

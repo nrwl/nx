@@ -1,0 +1,39 @@
+{
+  "name": "node-legacy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages-legacy/node",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "node ./scripts/copy-readme.js node-legacy"
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "dependsOn": ["^build-base"],
+      "options": {
+        "main": "packages-legacy/node/index.ts",
+        "tsConfig": "packages-legacy/node/tsconfig.json",
+        "outputPath": "build/packages/node-legacy",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages-legacy/node",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages-legacy/node",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    }
+  }
+}

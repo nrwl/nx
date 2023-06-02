@@ -6,17 +6,17 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema } from './schema';
 import {
   babelPresetExpoVersion,
-  deprecatedExpoCliVersion,
   easCliVersion,
   expoCliVersion,
   expoMetroConfigVersion,
   expoSplashScreenVersion,
   expoStatusBarVersion,
   expoVersion,
+  jestExpoVersion,
   metroVersion,
   nxVersion,
   reactDomVersion,
@@ -32,9 +32,9 @@ import {
   typesReactVersion,
 } from '../../utils/versions';
 
-import { jestInitGenerator } from '@nrwl/jest';
-import { detoxInitGenerator } from '@nrwl/detox';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { jestInitGenerator } from '@nx/jest';
+import { detoxInitGenerator } from '@nx/detox';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { initRootBabelConfig } from './lib/init-root-babel-config';
@@ -93,7 +93,7 @@ export function updateDependencies(host: Tree) {
       'react-native-svg': reactNativeSvgVersion,
     },
     {
-      '@nrwl/expo': nxVersion,
+      '@nx/expo': nxVersion,
       '@types/react': typesReactVersion,
       '@types/react-native': typesReactNativeVersion,
       metro: metroVersion,
@@ -101,7 +101,7 @@ export function updateDependencies(host: Tree) {
       'react-test-renderer': reactTestRendererVersion,
       '@testing-library/react-native': testingLibraryReactNativeVersion,
       '@testing-library/jest-native': testingLibraryJestNativeVersion,
-      'expo-cli': deprecatedExpoCliVersion,
+      'jest-expo': jestExpoVersion,
       '@expo/cli': expoCliVersion,
       'eas-cli': easCliVersion,
       'babel-preset-expo': babelPresetExpoVersion,
@@ -110,7 +110,7 @@ export function updateDependencies(host: Tree) {
 }
 
 function moveDependency(host: Tree) {
-  return removeDependenciesFromPackageJson(host, ['@nrwl/react-native'], []);
+  return removeDependenciesFromPackageJson(host, ['@nx/react-native'], []);
 }
 
 export default expoInitGenerator;

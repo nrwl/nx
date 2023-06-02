@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nrwl/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { XMLParser } from 'fast-xml-parser';
 import * as glob from 'glob';
 import { readFileSync } from 'node:fs';
@@ -22,6 +22,8 @@ function isNotAsset(linkPath: string): boolean {
 function isNotImage(linkPath: string): boolean {
   return (
     !linkPath.endsWith('.png') &&
+    !linkPath.endsWith('.jpg') &&
+    !linkPath.endsWith('.jpeg') &&
     !linkPath.endsWith('.gif') &&
     !linkPath.endsWith('.webp') &&
     !linkPath.endsWith('.svg') &&
@@ -34,8 +36,11 @@ function removeAnchors(linkPath: string): string {
 function extractAllLinks(basePath: string): Record<string, string[]> {
   return glob.sync(`${basePath}/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
-
+    const cardLinks = (fileContents.match(/url="(.*)"/g) || []).map((v) =>
+      v.slice(5, -1)
+    );
     const links = parseLinks(fileContents)
+      .concat(cardLinks)
       .filter(isLinkInternal)
       .filter(isNotAsset)
       .filter(isNotImage)

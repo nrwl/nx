@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/workspace",
+  "name": "@nx/workspace",
   "version": "0.0.1",
   "private": false,
   "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
@@ -47,7 +47,7 @@
       "@nrwl/nest": "*",
       "@nrwl/next": "*",
       "@nrwl/node": "*",
-      "@nrwl/nx-cloud": "latest",
+      "nx-cloud": "latest",
       "@nrwl/nx-plugin": "*",
       "@nrwl/react-native": "*",
       "@nrwl/react": "*",
@@ -61,7 +61,6 @@
     }
   },
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
     "@parcel/watcher": "2.0.4",
     "chalk": "^4.1.0",
     "chokidar": "^3.5.1",
@@ -74,11 +73,12 @@
     "minimatch": "3.0.5",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
-    "rxjs": "^6.5.4",
+    "rxjs": "^7.8.0",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
     "yargs": "^17.6.2",
-    "yargs-parser": "21.1.1"
+    "yargs-parser": "21.1.1",
+    "@nx/devkit": "file:../devkit"
   },
   "publishConfig": {
     "access": "public"

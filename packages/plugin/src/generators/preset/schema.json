@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "NxPluginPreset",
+  "title": "Generator ran by create-nx-plugin",
+  "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-plugin` or `create-nx-workspace --preset @nx/nx-plugin`.",
+  "type": "object",
+  "properties": {
+    "pluginName": {
+      "type": "string",
+      "description": "Plugin name",
+      "aliases": ["name"]
+    },
+    "createPackageName": {
+      "type": "string",
+      "description": "Name of package which creates a workspace"
+    }
+  },
+  "required": ["pluginName"]
+}

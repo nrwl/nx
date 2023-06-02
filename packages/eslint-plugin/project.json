@@ -1,0 +1,60 @@
+{
+  "name": "eslint-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/eslint-plugin",
+  "projectType": "library",
+  "targets": {
+    "test": {},
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/eslint-plugin/src/index.ts",
+        "assets": [
+          {
+            "input": "packages/eslint-plugin",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint-plugin",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint-plugin",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint-plugin",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint-plugin",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/eslint-plugin"],
+      "options": {
+        "commands": [
+          "node ./scripts/copy-readme.js eslint-plugin",
+          "node ./scripts/add-dependency-to-build.js eslint-plugin @nrwl/eslint-plugin-nx"
+        ]
+      }
+    },
+    "lint": {}
+  }
+}

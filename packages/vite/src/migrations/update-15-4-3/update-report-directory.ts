@@ -3,8 +3,8 @@ import {
   offsetFromRoot,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { VitestExecutorOptions } from '../../executors/test/schema';
 
 export function updateReportDirectoryPlaceholders(tree: Tree) {

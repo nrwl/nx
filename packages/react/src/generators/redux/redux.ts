@@ -18,9 +18,9 @@ import {
   readJson,
   toJS,
   Tree,
-} from '@nrwl/devkit';
-import { getRootTsConfigPathInTree } from '@nrwl/js';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+} from '@nx/devkit';
+import { getRootTsConfigPathInTree } from '@nx/js';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

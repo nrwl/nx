@@ -1,4 +1,4 @@
-import { ExecutorContext, logger, names } from '@nrwl/devkit';
+import { ExecutorContext, logger, names } from '@nx/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 import { platform } from 'os';
@@ -12,7 +12,6 @@ import { podInstall } from '../../utils/pod-install-task';
 import { ReactNativeRunIosOptions } from './schema';
 import { runCliStart } from '../start/start.impl';
 import { getCliOptions } from '../../utils/get-cli-options';
-import { rmdirSync } from 'fs-extra';
 
 export interface ReactNativeRunIosOutput {
   success: boolean;

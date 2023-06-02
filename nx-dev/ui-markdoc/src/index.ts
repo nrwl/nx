@@ -38,6 +38,9 @@ import { tab, tabs } from './lib/tags/tabs.schema';
 import { YouTube } from './lib/tags/youtube.components';
 import { youtube } from './lib/tags/youtube.schema';
 
+// TODO fix this export
+export { GithubRepository } from './lib/tags/github-repository.component';
+
 export const getMarkdocCustomConfig = (
   documentFilePath: string
 ): { config: any; components: any } => ({

@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
@@ -39,6 +39,7 @@ export function runCliBuild(
       ['build', ...createDetoxBuildOptions(options)],
       {
         cwd: join(workspaceRoot, projectRoot),
+        env: process.env,
       }
     );
 

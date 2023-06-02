@@ -15,7 +15,7 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Web Components Applications', () => {
   beforeEach(() => newProject());
@@ -24,7 +24,7 @@ describe('Web Components Applications', () => {
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     const lintResults = runCLI(`lint ${appName}`);
@@ -64,10 +64,10 @@ describe('Web Components Applications', () => {
     const libName = uniq('lib');
 
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive --compiler swc`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler swc`
     );
     runCLI(
-      `generate @nrwl/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`
+      `generate @nx/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`
     );
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
@@ -103,7 +103,7 @@ describe('Web Components Applications', () => {
   it('should emit decorator metadata when it is enabled in tsconfig', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
@@ -158,7 +158,7 @@ describe('Web Components Applications', () => {
   it('should support custom webpackConfig option', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     updateProjectConfig(appName, (config) => {
@@ -170,7 +170,7 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
       module.exports = composePlugins(withNx(), withWeb(), (config, context) => {
         return config;
       });
@@ -185,7 +185,7 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
       module.exports = composePlugins(withNx(), withWeb(), async (config, context) => {
         return config;
       });
@@ -200,7 +200,7 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
       module.exports = composePlugins(withNx(), withWeb(), Promise.resolve((config, context) => {
         return config;
       }));
@@ -257,7 +257,7 @@ describe('CLI - Environment Variables', () => {
       `;
 
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     const content = readFile(main);
@@ -282,7 +282,7 @@ describe('CLI - Environment Variables', () => {
     const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];`;
 
     runCLI(
-      `generate @nrwl/web:app ${appName2} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive`
     );
 
     const content2 = readFile(main2);
@@ -316,7 +316,7 @@ describe('Build Options', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     const srcPath = `apps/${appName}/src`;
@@ -395,7 +395,7 @@ describe('index.html interpolation', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     const srcPath = `apps/${appName}/src`;

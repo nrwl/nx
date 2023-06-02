@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import type { Schema } from '../schema';
 import { getInstalledAngularMajorVersion } from '../../utils/version-utils';
 
@@ -18,7 +18,7 @@ export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
 
   const bootstrapImportCode = `import('./bootstrap').catch(err => console.error(err))`;
 
-  const fetchMFManifestCode = `import { setRemoteDefinitions } from '@nrwl/angular/mf';
+  const fetchMFManifestCode = `import { setRemoteDefinitions } from '@nx/angular/mf';
 
   fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())

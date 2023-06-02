@@ -28,12 +28,14 @@ describe('nx init (Angular CLI)', () => {
     cleanupProject();
   });
 
-  it('should successfully convert an Angular CLI workspace to an Nx workspace', () => {
+  it('should successfully convert an Angular CLI workspace to an Nx standalone workspace', () => {
     const output = runCommand(
-      `${pmc.runUninstalledPackage} nx@${getPublishedVersion()} init -y`
+      `${
+        pmc.runUninstalledPackage
+      } nx@${getPublishedVersion()} init --no-interactive`
     );
 
-    expect(output).toContain('Nx is now enabled in your workspace!');
+    expect(output).toContain('🎉 Done!');
     // angular.json should have been deleted
     checkFilesDoNotExist('angular.json');
     // check nx config files exist
@@ -48,6 +50,40 @@ describe('nx init (Angular CLI)', () => {
       `Successfully ran target build for project ${project}`
     );
     checkFilesExist(`dist/${project}/main.js`);
+
+    // run build again to check is coming from cache
+    const cachedBuildOutput = runCLI(`build ${project} --outputHashing none`);
+    expect(cachedBuildOutput).toContain(
+      `> nx run ${project}:build:production --outputHashing none  [local cache]`
+    );
+    expect(cachedBuildOutput).toContain('Nx read the output from the cache');
+    expect(cachedBuildOutput).toContain(
+      `Successfully ran target build for project ${project}`
+    );
+  });
+
+  it('should successfully convert an Angular CLI workspace to an Nx integrated workspace', () => {
+    const output = runCommand(
+      `${
+        pmc.runUninstalledPackage
+      } nx@${getPublishedVersion()} init --integrated --no-interactive`
+    );
+
+    expect(output).toContain('🎉 Done!');
+    // angular.json should have been deleted
+    checkFilesDoNotExist('angular.json');
+    // check nx config files exist
+    checkFilesExist('nx.json', `apps/${project}/project.json`);
+
+    // check build
+    const coldBuildOutput = runCLI(`build ${project} --outputHashing none`);
+    expect(coldBuildOutput).toContain(
+      `> nx run ${project}:build:production --outputHashing none`
+    );
+    expect(coldBuildOutput).toContain(
+      `Successfully ran target build for project ${project}`
+    );
+    checkFilesExist(`dist/apps/${project}/main.js`);
 
     // run build again to check is coming from cache
     const cachedBuildOutput = runCLI(`build ${project} --outputHashing none`);

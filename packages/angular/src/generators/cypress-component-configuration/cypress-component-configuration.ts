@@ -1,14 +1,17 @@
-import { cypressComponentProject } from '@nrwl/cypress';
-import { findBuildConfig } from '@nrwl/cypress/src/utils/find-target-options';
+import { cypressComponentConfiguration as baseCyCTConfig } from '@nx/cypress';
+import {
+  addMountDefinition,
+  addDefaultCTConfig,
+} from '@nx/cypress/src/utils/config';
+import { findBuildConfig } from '@nx/cypress/src/utils/find-target-options';
 import {
   formatFiles,
-  generateFiles,
   joinPathFragments,
   ProjectConfiguration,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { relative } from 'path';
 import { componentTestGenerator } from '../component-test/component-test';
 import {
@@ -28,40 +31,49 @@ export async function cypressComponentConfiguration(
   options: CypressComponentConfigSchema
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
-  const installTask = await cypressComponentProject(tree, {
+  const installTask = await baseCyCTConfig(tree, {
     project: options.project,
     skipFormat: true,
   });
 
   await updateProjectConfig(tree, options);
-  addFiles(tree, projectConfig, options);
-  if (options.skipFormat) {
+  await addFiles(tree, projectConfig, options);
+  if (!options.skipFormat) {
     await formatFiles(tree);
   }
   return () => {
     installTask();
   };
 }
-function addFiles(
+async function addFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
   options: CypressComponentConfigSchema
 ) {
-  const cypressConfigPath = joinPathFragments(
+  const cyConfigFile = joinPathFragments(
     projectConfig.root,
     'cypress.config.ts'
   );
+  const updatedCyConfig = await addDefaultCTConfig(
+    tree.read(cyConfigFile, 'utf-8')
+  );
+  tree.write(
+    cyConfigFile,
+    `import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';\n${updatedCyConfig}`
+  );
 
-  if (tree.exists(cypressConfigPath)) {
-    tree.delete(cypressConfigPath);
-  }
-  generateFiles(
-    tree,
-    joinPathFragments(__dirname, 'files'),
+  const componentFile = joinPathFragments(
     projectConfig.root,
-    {
-      tpl: '',
-    }
+    'cypress',
+    'support',
+    'component.ts'
+  );
+  const updatedCmpContents = await addMountDefinition(
+    tree.read(componentFile, 'utf-8')
+  );
+  tree.write(
+    componentFile,
+    `import { mount } from 'cypress/angular';\n${updatedCmpContents}`
   );
 
   if (options.generateTests) {
@@ -108,6 +120,7 @@ async function updateProjectConfig(
     project: options.project,
     buildTarget: options.buildTarget,
     validExecutorNames: new Set<string>([
+      '@nx/angular:webpack-browser',
       '@nrwl/angular:webpack-browser',
       '@angular-devkit/build-angular:browser',
     ]),

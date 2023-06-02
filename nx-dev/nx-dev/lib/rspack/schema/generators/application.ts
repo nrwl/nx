@@ -25,6 +25,16 @@ export const schema = {
         pattern: '^[a-zA-Z].*$',
         'x-priority': 'important',
       },
+      framework: {
+        type: 'string',
+        description: 'The framework to use for the application.',
+        'x-prompt':
+          'What framework do you want to use when generating this application?',
+        enum: ['none', 'react', 'web', 'nest'],
+        alias: ['uiFramework'],
+        'x-priority': 'important',
+        default: 'react',
+      },
       style: {
         description: 'The file extension to be used for style files.',
         type: 'string',
@@ -44,14 +54,14 @@ export const schema = {
                 'SASS(.scss)       [ http://sass-lang.com                     ]',
             },
             {
-              value: 'styl',
-              label:
-                'Stylus(.styl)     [ http://stylus-lang.com                   ]',
-            },
-            {
               value: 'less',
               label:
                 'LESS              [ http://lesscss.org                       ]',
+            },
+            {
+              value: 'styl',
+              label:
+                'DEPRECATED: Stylus(.styl) [ http://stylus-lang.com           ]',
             },
             {
               value: 'none',
@@ -77,12 +87,9 @@ export const schema = {
         description: 'The directory to nest the app under.',
       },
       tags: {
-        type: 'array',
-        description: 'The tags to assign to the project.',
-        items: {
-          type: 'string',
-        },
-        default: [],
+        type: 'string',
+        description: 'Add tags to the application (used for linting).',
+        alias: 't',
       },
       monorepo: {
         type: 'boolean',

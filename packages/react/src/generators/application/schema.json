@@ -28,8 +28,7 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z].*$",
-      "x-priority": "important"
+      "pattern": "^[a-zA-Z].*$"
     },
     "directory": {
       "description": "The directory of the new application.",
@@ -55,10 +54,6 @@
             "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
           },
           {
-            "value": "styl",
-            "label": "Stylus(.styl)     [ http://stylus-lang.com                   ]"
-          },
-          {
             "value": "less",
             "label": "LESS              [ http://lesscss.org                       ]"
           },
@@ -77,6 +72,10 @@
           {
             "value": "none",
             "label": "None"
+          },
+          {
+            "value": "styl",
+            "label": "Stylus(.styl)     [ http://stylus-lang.com                   ] (DEPRECATED)"
           }
         ]
       }
@@ -159,12 +158,6 @@
       "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
-    "standaloneConfig": {
-      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
-    },
     "compiler": {
       "type": "string",
       "description": "The compiler to use.",
@@ -186,7 +179,7 @@
     "bundler": {
       "description": "The bundler to use.",
       "type": "string",
-      "enum": ["vite", "webpack"],
+      "enum": ["vite", "webpack", "rspack"],
       "x-prompt": "Which bundler do you want to use to build the application?",
       "default": "webpack",
       "x-priority": "important"
@@ -197,6 +190,6 @@
       "default": false
     }
   },
-  "required": [],
+  "required": ["name"],
   "examplesFile": "../../../docs/application-examples.md"
 }

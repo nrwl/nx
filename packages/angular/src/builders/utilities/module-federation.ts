@@ -1,7 +1,7 @@
 import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
-import { Remotes } from '@nrwl/devkit';
+import { Remotes } from '@nx/devkit';
 
 export function getDynamicRemotes(
   project: ProjectConfiguration,
@@ -81,7 +81,7 @@ export function getStaticRemotes(
     mfeConfig = require(mfConfigPath);
   } catch {
     throw new Error(
-      `Could not load ${mfConfigPath}. Was this project generated with "@nrwl/angular:host"?`
+      `Could not load ${mfConfigPath}. Was this project generated with "@nx/angular:host"?`
     );
   }
 

@@ -1,4 +1,4 @@
-import { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
+import { ProjectGraphProjectNode } from '../../config/project-graph';
 import { normalizeImplicitDependencies } from './workspace-projects';
 
 describe('workspace-projects', () => {
@@ -8,7 +8,6 @@ describe('workspace-projects', () => {
       type: 'lib',
       data: {
         root: 'lib/test-project',
-        files: [],
         tags: ['api', 'theme1'],
       },
     },
@@ -17,7 +16,6 @@ describe('workspace-projects', () => {
       type: 'lib',
       data: {
         root: 'lib/a',
-        files: [],
         tags: ['api', 'theme2'],
       },
     },
@@ -26,7 +24,6 @@ describe('workspace-projects', () => {
       type: 'lib',
       data: {
         root: 'lib/b',
-        files: [],
         tags: ['ui'],
       },
     },
@@ -35,7 +32,6 @@ describe('workspace-projects', () => {
       type: 'lib',
       data: {
         root: 'lib/c',
-        files: [],
         tags: ['api'],
       },
     },
@@ -62,7 +58,6 @@ describe('workspace-projects', () => {
           type: 'lib',
           data: {
             root: 'lib/b-1',
-            files: [],
             tags: [],
           },
         },
@@ -71,7 +66,6 @@ describe('workspace-projects', () => {
           type: 'lib',
           data: {
             root: 'lib/b-2',
-            files: [],
             tags: [],
           },
         },

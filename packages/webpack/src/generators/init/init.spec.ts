@@ -1,5 +1,5 @@
-import { Tree, readJson, NxJsonConfiguration, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree, readJson, NxJsonConfiguration, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { webpackInitGenerator } from './init';
 
@@ -33,10 +33,12 @@ describe('webpackInitGenerator', () => {
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson).toEqual({
       name: expect.any(String),
-      dependencies: {},
-      devDependencies: {
-        '@nrwl/webpack': expect.any(String),
+      dependencies: {
         '@swc/helpers': expect.any(String),
+      },
+      devDependencies: {
+        '@nx/webpack': expect.any(String),
+        '@swc/cli': expect.any(String),
         '@swc/core': expect.any(String),
         'swc-loader': expect.any(String),
       },
@@ -51,7 +53,7 @@ describe('webpackInitGenerator', () => {
       name: expect.any(String),
       dependencies: {},
       devDependencies: {
-        '@nrwl/webpack': expect.any(String),
+        '@nx/webpack': expect.any(String),
         tslib: expect.any(String),
       },
     });

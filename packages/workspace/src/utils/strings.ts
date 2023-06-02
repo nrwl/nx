@@ -22,7 +22,7 @@ const STRING_UNDERSCORE_REGEXP_2 = /-|\s+/g;
  ```
 
  @method decamelize
- @deprecated This will be removed from `@nrwl/workspace` in version 17. Prefer `@nrwl/js` when importing.
+ @deprecated This will be removed from `@nx/workspace` in version 17. Prefer `@nx/js` when importing.
  @param {String} str The string to decamelize.
  @return {String} the decamelized string.
  */
@@ -42,7 +42,7 @@ export function decamelize(str: string): string {
  ```
 
  @method dasherize
- @deprecated This will be removed from `@nrwl/workspace` in version 17. Prefer `@nrwl/js` when importing.
+ @deprecated This will be removed from `@nx/workspace` in version 17. Prefer `@nx/js` when importing.
  @param {String} str The string to dasherize.
  @return {String} the dasherized string.
  */
@@ -62,7 +62,7 @@ export function dasherize(str?: string): string {
  ```
 
  @method camelize
- @deprecated This will be removed from `@nrwl/workspace` in version 17. Prefer `@nrwl/js` when importing.
+ @deprecated This will be removed from `@nx/workspace` in version 17. Prefer `@nx/js` when importing.
  @param {String} str The string to camelize.
  @return {String} the camelized string.
  */
@@ -88,7 +88,7 @@ export function camelize(str: string): string {
  ```
 
  @method classify
- @deprecated This will be removed from `@nrwl/workspace` in version 17. Prefer `@nrwl/js` when importing.
+ @deprecated This will be removed from `@nx/workspace` in version 17. Prefer `@nx/js` when importing.
  @param {String} str the string to classify
  @return {String} the classified string
  */
@@ -111,7 +111,7 @@ export function classify(str: string): string {
  ```
 
  @method underscore
- @deprecated This will be removed from `@nrwl/workspace` in version 17. Prefer `@nrwl/js` when importing.
+ @deprecated This will be removed from `@nx/workspace` in version 17. Prefer `@nx/js` when importing.
  @param {String} str The string to underscore.
  @return {String} the underscored string.
  */
@@ -133,7 +133,7 @@ export function underscore(str: string): string {
  ```
 
  @method capitalize
- @deprecated This will be removed from `@nrwl/workspace` in version 17. Prefer `@nrwl/js` when importing.
+ @deprecated This will be removed from `@nx/workspace` in version 17. Prefer `@nx/js` when importing.
  @param {String} str The string to capitalize.
  @return {String} The capitalized string.
  */
@@ -142,14 +142,14 @@ export function capitalize(str: string): string {
 }
 
 /**
- * @deprecated This will be removed from `@nrwl/workspace` in version 17. Prefer `@nrwl/js` when importing.
+ * @deprecated This will be removed from `@nx/workspace` in version 17. Prefer `@nx/js` when importing.
  */
 export function group(name: string, group: string | undefined) {
   return group ? `${group}/${name}` : name;
 }
 
 /**
- * @deprecated This will be removed from `@nrwl/workspace` in version 17. Prefer `@nrwl/js` when importing.
+ * @deprecated This will be removed from `@nx/workspace` in version 17. Prefer `@nx/js` when importing.
  */
 export function featurePath(
   group: boolean | undefined,

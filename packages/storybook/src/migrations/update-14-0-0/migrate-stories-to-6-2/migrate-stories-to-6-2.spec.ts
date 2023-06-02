@@ -2,11 +2,11 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { joinPathFragments, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { storybookVersion } from '@nrwl/storybook';
-import { findNodes } from 'nx/src/utils/typescript';
+} from '@nx/devkit';
+import { joinPathFragments, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { storybookVersion } from '../../../utils/versions';
+import { findNodes } from '@nx/js';
 import * as ts from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { nxVersion } from '../../../utils/versions';
@@ -14,8 +14,8 @@ import { migrateStoriesTo62Generator } from './migrate-stories-to-6-2';
 import {
   overrideCollectionResolutionForTesting,
   wrapAngularDevkitSchematic,
-} from '@nrwl/devkit/ngcli-adapter';
-import { getTsSourceFile } from '@nrwl/storybook/src/utils/utilities';
+} from '@nx/devkit/ngcli-adapter';
+import { getTsSourceFile } from '../../../utils/utilities';
 
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
@@ -35,7 +35,7 @@ const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
 );
 
 const runAngularStorybookSchematic = wrapAngularDevkitSchematic(
-  '@nrwl/angular',
+  '@nx/angular',
   'storybook-configuration'
 );
 
@@ -45,7 +45,7 @@ describe('migrate-stories-to-6-2 schematic', () => {
   describe('angular project', () => {
     beforeEach(async () => {
       overrideCollectionResolutionForTesting({
-        '@nrwl/storybook': joinPathFragments(
+        '@nx/storybook': joinPathFragments(
           __dirname,
           '../../../../generators.json'
         ),
@@ -64,7 +64,7 @@ describe('migrate-stories-to-6-2 schematic', () => {
 
       writeJson(appTree, 'package.json', {
         devDependencies: {
-          '@nrwl/storybook': nxVersion,
+          '@nx/storybook': nxVersion,
           '@storybook/addon-knobs': storybookVersion,
           '@storybook/angular': storybookVersion,
         },

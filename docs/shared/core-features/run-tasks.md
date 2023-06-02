@@ -40,7 +40,7 @@ Each project has the `test` and `build` targets defined. Tasks can be defined as
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "options": {
         "codeCoverage": true
       }
@@ -52,7 +52,13 @@ Each project has the `test` and `build` targets defined. Tasks can be defined as
 {% /tab %}
 {% /tabs %}
 
-## Run a Single Task
+## Running Tasks
+
+Nx uses the following syntax:
+
+![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
+
+### Run a Single Task
 
 To run the `test` target on the `header` project run this command:
 
@@ -60,41 +66,57 @@ To run the `test` target on the `header` project run this command:
 npx nx test header
 ```
 
-## Run Everything
+### Run Tasks for Multiple Projects
 
-To run the `build` target for all projects in the repo, run:
+you can use the `run-many` command to run a task for multiple projects. Here are a couple of examples.
+
+Run the `build` target for all projects in the repo:
 
 ```shell
-npx nx run-many --target=build
+npx nx run-many -t build
 ```
 
-This will build the projects in the right order: `footer` and `header` and then `myapp`.
+Run the `build`, `lint` and `test` target for all projects in the repo:
 
-```{% command="npx nx run-many --target=build" %}
-    ✔  nx run header:build (501ms)
-    ✔  nx run footer:build (503ms)
-    ✔  nx run myapp:build (670ms)
-
-—————————————————————————————————————————————————————————————————————————————
-
->  NX   Successfully ran target build for 3 projects (1s)
+```shell
+npx nx run-many -t build lint test
 ```
 
-Note that Nx doesn't care what each of the build scripts does. The name `build` is also **not** special: it's simply
-the name of the target.
+Run the `build`, `lint` and `test` target just on the `header` and `footer` projects:
 
-## Run Tasks Affected by a PR
+```shell
+npx nx run-many -t build lint test -p header footer
+```
+
+Note that Nx parallelizes all these tasks making also sure they are run in the right order based on their dependencies and the [task pipeline configuration](/concepts/task-pipeline-configuration).
+
+Learn more about the [run-many](/packages/nx/documents/run-many) command.
+
+### Run Tasks on Projects Affected by a PR
 
 You can also run a command for all the projects affected by your PR like this:
 
 ```shell
-npx nx affected --target=test
+npx nx affected -t test
 ```
 
 Learn more about the affected command [here](/concepts/affected).
 
-## Control How Tasks Run
+## Defining the Task Pipeline
 
-For more control over the order tasks are executed, edit the [Task Pipeline Configuration](../concepts/task-pipeline-configuration).
+In a monorepo you might need to define the order with which the tasks are being run. For example, if project `app` depends on `header` you might want to run the `build` target on `header` before running the `build` target on `app`.
 
-To speed up your task execution, learn how to [Cache Task Results](/core-features/cache-task-results) and [Distribute Task Execution](/core-features/distribute-task-execution)
+Nx automatically understands these dependencies but you can configure for which targets such ordering needs to be respected by defining them in the `nx.json`:
+
+```json {% fileName="nx.json" %}
+{
+  ...
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
+  }
+}
+```
+
+Learn more about it in the [Task Pipeline Configuration](/concepts/task-pipeline-configuration).

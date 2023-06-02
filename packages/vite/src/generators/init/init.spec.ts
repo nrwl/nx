@@ -4,13 +4,13 @@ import {
   readJson,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
 import { initGenerator } from './init';
 
-describe('@nrwl/vite:init', () => {
+describe('@nx/vite:init', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -23,7 +23,7 @@ describe('@nrwl/vite:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+        { '@nx/vite': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {

@@ -1,7 +1,7 @@
 import type * as ts from 'typescript';
 
 /**
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function getSourceNodes(sourceFile: ts.SourceFile): ts.Node[] {
   const nodes: ts.Node[] = [sourceFile];

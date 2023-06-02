@@ -1,24 +1,29 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { versions } from '../utils/version-utils';
 import {
   generateSSRFiles,
   normalizeOptions,
   updateAppModule,
   updateProjectConfig,
+  validateOptions,
 } from './lib';
 import type { Schema } from './schema';
 
 export async function setupSsr(tree: Tree, schema: Schema) {
+  validateOptions(tree, schema);
   const options = normalizeOptions(tree, schema);
 
-  generateSSRFiles(tree, options);
-  updateAppModule(tree, options);
   updateProjectConfig(tree, options);
+  generateSSRFiles(tree, options);
+
+  if (!options.standalone) {
+    updateAppModule(tree, options);
+  }
 
   const pkgVersions = versions(tree);
 

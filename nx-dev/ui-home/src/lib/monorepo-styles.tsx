@@ -1,4 +1,4 @@
-import { ButtonLink, SectionHeading } from '@nrwl/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
 import Link from 'next/link';
 
 export function MonorepoStyles(): JSX.Element {
@@ -38,7 +38,7 @@ export function MonorepoStyles(): JSX.Element {
               <span className="font-medium">let Nx do the heavy lifting</span>{' '}
               with its set of{' '}
               <Link
-                href="/community#plugin-directory"
+                href="/plugins"
                 title="Install VSCode's native extension for Nx"
                 className="font-medium text-blue-500 dark:text-sky-500"
               >
@@ -118,9 +118,7 @@ export function MonorepoStyles(): JSX.Element {
                   </span>{' '}
                   <span>$</span>
                 </p>
-                <p className="typing mt-0.5 flex-1 pl-2">
-                  npx add-nx-to-monorepo
-                </p>
+                <p className="typing mt-0.5 flex-1 pl-2">npx nx@latest init</p>
               </div>
               <div className="mt-4 flex">
                 <p className="typing flex-1 items-center pl-2">
@@ -130,14 +128,6 @@ export function MonorepoStyles(): JSX.Element {
                   🐳 Nx initialization
                 </p>
               </div>
-              <div className="mt-4 flex">
-                <p className="typing flex-1 items-center pl-2">
-                  <span className="mr-2 bg-pink-300 px-1 py-0.5 dark:bg-fuchsia-600">
-                    NX
-                  </span>
-                  🧑‍🔧 Analyzing the source code and creating configuration files
-                </p>
-              </div>{' '}
               <div className="mt-4 flex">
                 <p className="typing flex-1 items-center pl-2">
                   <span className="mr-2 bg-pink-300 px-1 py-0.5 dark:bg-fuchsia-600">

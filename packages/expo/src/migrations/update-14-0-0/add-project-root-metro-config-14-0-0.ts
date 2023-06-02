@@ -4,7 +4,7 @@ import {
   logger,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * Add projectRoot and watchFolders options in metro.config.js

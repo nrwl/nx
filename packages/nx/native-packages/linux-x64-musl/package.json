@@ -1,6 +1,11 @@
 {
-  "name": "@nrwl/nx-linux-x64-musl",
+  "name": "@nx/nx-linux-x64-musl",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx/native-packages/linux-x64-musl"
+  },
   "os": [
     "linux"
   ],

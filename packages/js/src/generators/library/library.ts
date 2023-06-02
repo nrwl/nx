@@ -17,18 +17,18 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
-import { getImportPath } from 'nx/src/utils/path';
+} from '@nx/devkit';
 
 import {
+  addTsConfigPath,
   getRelativePathToRootTsConfig,
-  updateRootTsConfig,
 } from '../../utils/typescript/ts-config';
 import { join } from 'path';
 import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
 import { Bundler, LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import { getImportPath } from '../../utils/get-import-path';
 import {
   esbuildVersion,
   nxVersion,
@@ -36,6 +36,8 @@ import {
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
 import { PackageJson } from 'nx/src/utils/package-json';
+import setupVerdaccio from '../setup-verdaccio/generator';
+import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -62,6 +64,7 @@ export async function projectGenerator(
     await jsInitGenerator(tree, {
       ...schema,
       skipFormat: true,
+      tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     })
   );
   const options = normalizeOptions(tree, schema, destinationDir);
@@ -72,11 +75,12 @@ export async function projectGenerator(
 
   tasks.push(addProjectDependencies(tree, options));
 
+  if (options.publishable) {
+    tasks.push(await setupVerdaccio(tree, { ...options, skipFormat: true }));
+  }
+
   if (options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage(
-      '@nrwl/vite',
-      nxVersion
-    );
+    const { viteConfigurationGenerator } = ensurePackage('@nx/vite', nxVersion);
     const viteTask = await viteConfigurationGenerator(tree, {
       project: options.name,
       newProject: true,
@@ -106,7 +110,7 @@ export async function projectGenerator(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    const { vitestGenerator } = ensurePackage('@nrwl/vite', nxVersion);
+    const { vitestGenerator } = ensurePackage('@nx/vite', nxVersion);
     const vitestTask = await vitestGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
@@ -117,7 +121,13 @@ export async function projectGenerator(
   }
 
   if (!schema.skipTsConfig) {
-    updateRootTsConfig(tree, options);
+    addTsConfigPath(tree, options.importPath, [
+      joinPathFragments(
+        options.projectRoot,
+        './src',
+        'index.' + (options.js ? 'js' : 'ts')
+      ),
+    ]);
   }
 
   if (!options.skipFormat) {
@@ -154,9 +164,7 @@ function addProject(
     options.bundler !== 'none' &&
     options.config !== 'npm-scripts'
   ) {
-    const outputPath = destinationDir
-      ? `dist/${destinationDir}/${options.projectDirectory}`
-      : `dist/${options.projectDirectory}`;
+    const outputPath = getOutputPath(options, destinationDir);
     projectConfiguration.targets.build = {
       executor: getBuildExecutor(options.bundler),
       outputs: ['{options.outputPath}'],
@@ -196,10 +204,7 @@ function addProject(
       const publishScriptPath = addMinimalPublishScript(tree);
 
       projectConfiguration.targets.publish = {
-        executor: 'nx:run-commands',
-        options: {
-          command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
-        },
+        command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
         dependsOn: ['build'],
       };
     }
@@ -225,7 +230,7 @@ export async function addLint(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const { lintProjectGenerator } = ensurePackage('@nrwl/linter', nxVersion);
+  const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
   return lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
@@ -264,7 +269,7 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
   const filename = '.babelrc';
 
   const babelrc = {
-    presets: [['@nrwl/js/babel', { useBuiltIns: 'usage' }]],
+    presets: [['@nx/js/babel', { useBuiltIns: 'usage' }]],
   };
 
   writeJson(tree, join(options.projectRoot, filename), babelrc);
@@ -272,6 +277,9 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
 
 function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
   const { className, name, propertyName } = names(options.name);
+
+  createProjectTsConfigJson(tree, options);
+
   generateFiles(tree, filesDir, options.projectRoot, {
     ...options,
     dot: '.',
@@ -283,7 +291,6 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     strict: undefined,
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
-    rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
     buildable: options.bundler && options.bundler !== 'none',
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
@@ -317,10 +324,14 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     'package.json'
   );
   if (tree.exists(packageJsonPath)) {
-    updateJson(tree, packageJsonPath, (json) => {
+    updateJson<PackageJson>(tree, packageJsonPath, (json) => {
       json.name = options.importPath;
       json.version = '0.0.1';
       json.type = 'commonjs';
+      // If the package is publishable, we should remove the private field.
+      if (json.private && options.publishable) {
+        delete json.private;
+      }
       return json;
     });
   } else {
@@ -357,7 +368,7 @@ async function addJest(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const { jestProjectGenerator } = ensurePackage('@nrwl/jest', nxVersion);
+  const { jestProjectGenerator } = ensurePackage('@nx/jest', nxVersion);
   return await jestProjectGenerator(tree, {
     ...options,
     project: options.name,
@@ -396,6 +407,7 @@ function replaceJestConfig(
     project: options.name,
     offsetFromRoot: offsetFromRoot(options.projectRoot),
     projectRoot: options.projectRoot,
+    testEnvironment: options.testEnvironment,
   });
 }
 
@@ -423,10 +435,15 @@ function normalizeOptions(
    *
    * In the past, the only way to get a non-buildable library was to set buildable to false.
    * Now, the only way to get a non-buildble library is to set bundler to none.
-   * By default, with nothing provided, libraries are buildable with `@nrwl/js:tsc`.
+   * By default, with nothing provided, libraries are buildable with `@nx/js:tsc`.
    */
 
   options.bundler = options.bundler ?? options.compiler ?? 'tsc';
+
+  // ensure programmatic runs have an expected default
+  if (!options.config) {
+    options.config = 'project';
+  }
 
   if (options.publishable) {
     if (!options.importPath) {
@@ -445,7 +462,7 @@ function normalizeOptions(
     options.bundler = 'none';
   }
 
-  const { Linter } = ensurePackage('@nrwl/linter', nxVersion);
+  const { Linter } = ensurePackage('@nx/linter', nxVersion);
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;
@@ -480,11 +497,9 @@ function normalizeOptions(
     ? name
     : projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = getCaseAwareFileName({
-    fileName: options.simpleModuleName ? name : projectName,
+    fileName: options.simpleName ? name : projectName,
     pascalCaseFiles: options.pascalCaseFiles,
   });
-
-  const { npmScope } = getWorkspaceLayout(tree);
 
   const projectRoot = joinPathFragments(destinationDir, projectDirectory);
 
@@ -493,7 +508,7 @@ function normalizeOptions(
     : [];
 
   const importPath =
-    options.importPath || getImportPath(npmScope, projectDirectory);
+    options.importPath || getImportPath(tree, projectDirectory);
 
   options.minimal ??= false;
 
@@ -526,18 +541,22 @@ function addProjectDependencies(
       tree,
       {},
       {
-        '@nrwl/esbuild': nxVersion,
+        '@nx/esbuild': nxVersion,
         '@types/node': typesNodeVersion,
         esbuild: esbuildVersion,
       }
     );
-  }
-
-  if (options.bundler == 'rollup') {
+  } else if (options.bundler == 'rollup') {
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@nrwl/rollup': nxVersion, '@types/node': typesNodeVersion }
+      { '@nx/rollup': nxVersion, '@types/node': typesNodeVersion }
+    );
+  } else {
+    return addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@types/node': typesNodeVersion }
     );
   }
 
@@ -550,14 +569,14 @@ function addProjectDependencies(
 function getBuildExecutor(bundler: Bundler) {
   switch (bundler) {
     case 'esbuild':
-      return `@nrwl/esbuild:esbuild`;
+      return `@nx/esbuild:esbuild`;
     case 'rollup':
-      return `@nrwl/rollup:rollup`;
+      return `@nx/rollup:rollup`;
     case 'swc':
     case 'tsc':
-      return `@nrwl/js:${bundler}`;
+      return `@nx/js:${bundler}`;
     case 'vite':
-      return `@nrwl/vite:build`;
+      return `@nx/vite:build`;
     case 'none':
     default:
       return undefined;
@@ -570,6 +589,44 @@ function ensureBabelRootConfigExists(tree: Tree) {
   writeJson(tree, 'babel.config.json', {
     babelrcRoots: ['*'],
   });
+}
+
+function getOutputPath(options: NormalizedSchema, destinationDir?: string) {
+  const parts = ['dist'];
+  if (destinationDir) {
+    parts.push(destinationDir);
+  }
+  if (options.projectDirectory === '.') {
+    parts.push(options.name);
+  } else {
+    parts.push(options.projectDirectory);
+  }
+  return joinPathFragments(...parts);
+}
+
+function createProjectTsConfigJson(tree: Tree, options: NormalizedSchema) {
+  const tsconfig = {
+    extends: options.rootProject
+      ? undefined
+      : getRelativePathToRootTsConfig(tree, options.projectRoot),
+    compilerOptions: {
+      ...(options.rootProject ? tsConfigBaseOptions : {}),
+      module: 'commonjs',
+      allowJs: options.js ? true : undefined,
+    },
+    files: [],
+    include: [],
+    references: [
+      {
+        path: './tsconfig.lib.json',
+      },
+    ],
+  };
+  writeJson(
+    tree,
+    joinPathFragments(options.projectRoot, 'tsconfig.json'),
+    tsconfig
+  );
 }
 
 export default libraryGenerator;

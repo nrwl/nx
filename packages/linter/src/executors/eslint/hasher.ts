@@ -1,16 +1,17 @@
 import {
+  Hash,
   ProjectGraph,
+  ProjectsConfigurations,
   Task,
   TaskGraph,
-  ProjectsConfigurations,
-  Hasher,
-  Hash,
-} from '@nrwl/devkit';
+  TaskHasher,
+  hashArray,
+} from '@nx/devkit';
 
 export default async function run(
   task: Task,
   context: {
-    hasher: Hasher;
+    hasher: TaskHasher;
     projectGraph: ProjectGraph;
     taskGraph: TaskGraph;
     projectsConfigurations: ProjectsConfigurations;
@@ -22,7 +23,7 @@ export default async function run(
   }
 
   const deps = allDeps(task.id, context.taskGraph, context.projectGraph);
-  const tags = context.hasher.hashArray(
+  const tags = hashArray(
     deps.map((d) =>
       (context.projectsConfigurations.projects[d].tags || []).join('|')
     )
@@ -45,7 +46,7 @@ export default async function run(
     }
   }
   return {
-    value: context.hasher.hashArray([command, selfSource, ...hashes, tags]),
+    value: hashArray([command, selfSource, ...hashes, tags]),
     details: {
       command,
       nodes: { [task.target.project]: selfSource, tags, ...nodes },
@@ -62,8 +63,7 @@ function allDeps(
     return [];
   }
   const project = taskGraph.tasks[taskId].target.project;
-  const dependencies = projectGraph.dependencies[project]
+  return projectGraph.dependencies[project]
     .filter((d) => !!projectGraph.nodes[d.target])
     .map((d) => d.target);
-  return dependencies;
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/nest",
+  "name": "@nx/nest",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
@@ -30,12 +30,12 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nestjs/schematics": "^9.0.0",
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/js": "file:../js",
-    "@nrwl/linter": "file:../linter",
-    "@nrwl/node": "file:../node",
-    "enquirer": "~2.3.6"
+    "@nestjs/schematics": "^9.1.0",
+    "enquirer": "~2.3.6",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter",
+    "@nx/node": "file:../node"
   },
   "publishConfig": {
     "access": "public"

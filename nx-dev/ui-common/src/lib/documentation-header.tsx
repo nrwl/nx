@@ -1,9 +1,10 @@
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
-import { ThemeSwitcher } from '@nrwl/nx-dev/ui-theme';
+import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
+import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { AnnouncementBanner } from './announcement-banner';
 
 function Menu({ tabs }: { tabs: any[] }): JSX.Element {
   return (
@@ -44,7 +45,7 @@ export function DocumentationHeader({
   const isNx: boolean = !isNxCloud && !isPackages && !isPlugins && !isRecipes;
 
   const sections = [
-    { name: 'Home', href: '/getting-started/intro', current: isNx },
+    { name: 'Nx', href: '/getting-started/intro', current: isNx },
     {
       name: 'Nx Cloud',
       href: '/nx-cloud/intro/what-is-nx-cloud',
@@ -57,7 +58,7 @@ export function DocumentationHeader({
     },
     {
       name: 'Plugins',
-      href: '/community#plugin-directory',
+      href: '/plugins/intro/getting-started',
       current: isPlugins,
     },
     {
@@ -191,6 +192,9 @@ export function DocumentationHeader({
         </div>
         {/*NAVIGATION*/}
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
+        <div className="hidden lg:flex">
+          <AnnouncementBanner />
+        </div>
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="accessory-nav"

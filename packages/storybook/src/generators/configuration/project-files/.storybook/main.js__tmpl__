@@ -1,37 +1,23 @@
-<% if (usesVite){ %>const { mergeConfig } = require('vite');<% } %>
-<% if (usesVite){ %>const viteTsConfigPaths = require('vite-tsconfig-paths').default;<% } %>
-<% if (isNextJs){ %>const path = require('path');<% } %>
-
-module.exports = {
-  core: { builder: <% if (!usesVite) { %>'webpack5'<% } %><% if (usesVite) { %>'@storybook/builder-vite'<% } %> },
+const config = {
   stories: [
     <% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
-    '../**/*.stories.mdx',
-    '../**/*.stories.@(js|jsx|ts|tsx)' <% } else { %>
-    '../<%= projectDirectory %>/**/*.stories.mdx',
-    '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx)'
+    '../**/*.stories.@(js|jsx|ts|tsx|mdx)' <% } else { %>
+    '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   <% } %>],
-  addons: ['@storybook/addon-essentials' <% if(uiFramework === '@storybook/react' && !usesVite) { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
-    <% if(usesSwc && !isNextJs) { %>, 'storybook-addon-swc' <% } %>
-    <% if(isNextJs) { %>, 'storybook-addon-swc', 
-        {
-      name: 'storybook-addon-next',
-      options: {
-        nextConfigPath: path.resolve(__dirname, '../next.config.js'),
+  addons: ['@storybook/addon-essentials' <% if(uiFramework === '@storybook/react-webpack5') { %>, '@nx/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>],
+  framework: {
+    name: '<%= uiFramework %>',
+    options: {
+      <% if (usesVite) { %>
+      builder: {
+        viteConfigPath: '<%= viteConfigFilePath %>',
       },
-    }
-     <% } %>
-  ]<% if (usesVite) { %>,
-  async viteFinal(config, { configType }) {
-    return mergeConfig(config, {
-      plugins: [
-        viteTsConfigPaths({
-          root: '<%= offsetFromRoot %>../',
-        }),
-      ],
-    });
-  },<% } %>
+      <% } %>
+    },
+  },
 };
+
+export default config;
 
 <% if(!usesVite) { %>
 // To customize your webpack configuration you can use the webpackFinal field.
@@ -40,7 +26,7 @@ module.exports = {
 <% } %>
 
 <% if(usesVite) { %>
-// To customize your Vite configuration you can use the viteFinal field. 
+// To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
 // and https://nx.dev/packages/storybook/documents/custom-builder-configs
 <% } %>

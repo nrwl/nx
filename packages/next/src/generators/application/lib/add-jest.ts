@@ -4,7 +4,7 @@ import {
   readJson,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
@@ -14,8 +14,8 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
     return () => {};
   }
 
-  const { jestProjectGenerator } = ensurePackage<typeof import('@nrwl/jest')>(
-    '@nrwl/jest',
+  const { jestProjectGenerator } = ensurePackage<typeof import('@nx/jest')>(
+    '@nx/jest',
     nxVersion
   );
   const jestTask = await jestProjectGenerator(host, {

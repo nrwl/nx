@@ -1,7 +1,6 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, writeJson } from '@nrwl/devkit';
-import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import type { Tree } from '@nx/devkit';
+import { writeJson } from '@nx/devkit';
 import { Linter } from 'packages/linter/src/generators/utils/linter';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
@@ -11,7 +10,7 @@ import { storybookConfigurationGenerator } from './storybook-configuration';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
@@ -42,30 +41,7 @@ describe('StorybookConfiguration generator', () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     tree = await createStorybookTestWorkspaceForLib(libName);
 
-    overrideCollectionResolutionForTesting({
-      '@nrwl/storybook': joinPathFragments(
-        __dirname,
-        '../../../../storybook/generators.json'
-      ),
-    });
     jest.resetModules();
-    jest.doMock('@storybook/angular/package.json', () => ({
-      version: '7.0.2',
-    }));
-  });
-
-  it('should throw when the @storybook/angular version is lower than 6.4.0-rc.1', async () => {
-    jest.doMock('@storybook/angular/package.json', () => ({
-      version: '5.1.0',
-    }));
-
-    await expect(
-      storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-        name: libName,
-      })
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
-      '"Incompatible Storybook Version: Please use a version of @storybook/angular higher than 6.4.0-rc.1"'
-    );
   });
 
   it('should throw when generateCypressSpecs is true and generateStories is false', async () => {

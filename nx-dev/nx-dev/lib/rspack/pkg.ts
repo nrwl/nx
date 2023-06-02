@@ -1,4 +1,4 @@
-import { ProcessedPackageMetadata } from '@nrwl/nx-dev/models-package';
+import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
 
 export const pkg: ProcessedPackageMetadata = {
   description: '',
@@ -58,7 +58,7 @@ export const pkg: ProcessedPackageMetadata = {
   },
   generators: {
     '/packages/rspack/generators/init': {
-      description: 'Initialize the `@nrwl/rspack` plugin.',
+      description: 'Initialize the `@nx/rspack` plugin.',
       file: 'generated/packages/rspack/generators/init.json',
       hidden: false,
       name: 'init',
@@ -89,7 +89,7 @@ export const pkg: ProcessedPackageMetadata = {
   },
   githubRoot: 'https://github.com/nrwl/nx-labs/tree/main/packages/rspack',
   name: 'Rspack',
-  packageName: '@nrwl/rspack',
+  packageName: '@nx/rspack',
   path: '',
   root: '',
   source: '',

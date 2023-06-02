@@ -1,4 +1,4 @@
-import type { ProjectConfiguration } from '@nrwl/devkit';
+import type { ProjectConfiguration } from '@nx/devkit';
 
 export function getWebpackConfigPath(
   project: ProjectConfiguration,
@@ -7,7 +7,8 @@ export function getWebpackConfigPath(
   let pathToWebpackConfig = '';
   for (const target of Object.values(project.targets ?? {})) {
     if (
-      target.executor === '@nrwl/angular:webpack-browser' &&
+      (target.executor === '@nx/angular:webpack-browser' ||
+        target.executor === '@nrwl/angular:webpack-browser') &&
       target.options.customWebpackConfig?.path
     ) {
       pathToWebpackConfig = target.options.customWebpackConfig?.path;

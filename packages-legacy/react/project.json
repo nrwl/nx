@@ -1,0 +1,39 @@
+{
+  "name": "react-legacy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages-legacy/react",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "node ./scripts/copy-readme.js react-legacy"
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "dependsOn": ["^build-base"],
+      "options": {
+        "main": "packages-legacy/react/index.ts",
+        "tsConfig": "packages-legacy/react/tsconfig.json",
+        "outputPath": "build/packages/react-legacy",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages-legacy/react",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages-legacy/react",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -7,14 +7,14 @@ import {
   runTasksInSerial,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   cypressVersion,
   nxVersion,
   typesNodeVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
-import { initGenerator } from '@nrwl/js';
+import { initGenerator } from '@nx/js';
 
 function setupE2ETargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -37,13 +37,13 @@ function setupE2ETargetDefaults(tree: Tree) {
 }
 
 function updateDependencies(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, ['@nrwl/cypress'], []);
+  removeDependenciesFromPackageJson(tree, ['@nx/cypress'], []);
 
   return addDependenciesToPackageJson(
     tree,
     {},
     {
-      ['@nrwl/cypress']: nxVersion,
+      ['@nx/cypress']: nxVersion,
       cypress: cypressVersion,
       '@types/node': typesNodeVersion,
     }

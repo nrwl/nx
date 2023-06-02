@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import { addChildren } from './add-children';
 import { addLazyLoadedRouterConfiguration } from './add-lazy-loaded-router-configuration';
 import { addLoadChildren } from './add-load-children';

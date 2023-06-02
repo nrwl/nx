@@ -17,6 +17,7 @@ const {
   getPackageManagerCommand,
   workspaceRoot,
   detectPackageManager,
+  createTempNpmDirectory,
 } = requireNx();
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
@@ -384,13 +385,14 @@ const packageMapCache = new Map<string, any>();
  *
  * For example:
  * ```typescript
- * ensurePackage(tree, '@nrwl/jest', nxVersion)
+ * ensurePackage(tree, '@nx/jest', nxVersion)
  * ```
- * This install the @nrwl/jest@<nxVersion> and return the module
+ * This install the @nx/jest@<nxVersion> and return the module
  * When running with --dryRun, the function will throw when dependencies are missing.
+ * Returns null for ESM dependencies. Import them with a dynamic import instead.
  *
  * @param tree the file system tree
- * @param pkg the package to check (e.g. @nrwl/jest)
+ * @param pkg the package to check (e.g. @nx/jest)
  * @param requiredVersion the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0)
  * @param {EnsurePackageOptions} options?
  */
@@ -403,11 +405,13 @@ export function ensurePackage(
 
 /**
  * Ensure that dependencies and devDependencies from package.json are installed at the required versions.
+ * Returns null for ESM dependencies. Import them with a dynamic import instead.
  *
  * For example:
  * ```typescript
- * ensurePackage(tree, '@nrwl/jest', nxVersion)
+ * ensurePackage('@nx/jest', nxVersion)
  * ```
+ *
  * @param pkg the package to install and require
  * @param version the version to install if the package doesn't exist already
  */
@@ -439,7 +443,11 @@ export function ensurePackage<T extends any = any>(
   try {
     return require(pkg);
   } catch (e) {
-    if (e.code !== 'MODULE_NOT_FOUND') {
+    if (e.code === 'ERR_REQUIRE_ESM') {
+      // The package is installed, but is an ESM package.
+      // The consumer of this function can import it as needed.
+      return null;
+    } else if (e.code !== 'MODULE_NOT_FOUND') {
       throw e;
     }
   }
@@ -450,7 +458,9 @@ export function ensurePackage<T extends any = any>(
     );
   }
 
-  const tempDir = dirSync().name;
+  const { dir: tempDir } = createTempNpmDirectory?.() ?? {
+    dir: dirSync().name,
+  };
 
   console.log(`Fetching ${pkg}...`);
   const packageManager = detectPackageManager();
@@ -471,13 +481,23 @@ export function ensurePackage<T extends any = any>(
   // Re-initialize the added paths into require
   (Module as any)._initPaths();
 
-  const result = require(require.resolve(pkg, {
-    paths: [tempDir],
-  }));
+  try {
+    const result = require(require.resolve(pkg, {
+      paths: [tempDir],
+    }));
 
-  packageMapCache.set(pkg, result);
+    packageMapCache.set(pkg, result);
 
-  return result;
+    return result;
+  } catch (e) {
+    if (e.code === 'ERR_REQUIRE_ESM') {
+      // The package is installed, but is an ESM package.
+      // The consumer of this function can import it as needed.
+      packageMapCache.set(pkg, null);
+      return null;
+    }
+    throw e;
+  }
 }
 
 function addToNodePath(dir: string) {

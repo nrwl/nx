@@ -1,0 +1,39 @@
+{
+  "name": "workspace-legacy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages-legacy/workspace",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "node ./scripts/copy-readme.js workspace-legacy"
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "dependsOn": ["^build-base"],
+      "options": {
+        "main": "packages-legacy/workspace/index.ts",
+        "tsConfig": "packages-legacy/workspace/tsconfig.json",
+        "outputPath": "build/packages/workspace-legacy",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages-legacy/workspace",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages-legacy/workspace",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,8 +1,14 @@
-import { extractLayoutDirectory, Tree } from '@nrwl/devkit';
-import { getWorkspaceLayout, joinPathFragments, names } from '@nrwl/devkit';
-import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nrwl/js/src/utils/schema';
-import { Linter } from '@nrwl/linter';
+import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/utils/schema';
+import { Linter } from '@nx/linter';
+import {
+  extractLayoutDirectory,
+  getWorkspaceLayout,
+  joinPathFragments,
+  names,
+  Tree,
+} from '@nx/devkit';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 
 export function normalizeOptions(
   tree: Tree,
@@ -11,7 +17,7 @@ export function normalizeOptions(
   const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
     options.directory
   );
-  const { libsDir: defaultLibsDir, npmScope } = getWorkspaceLayout(tree);
+  const { libsDir: defaultLibsDir } = getWorkspaceLayout(tree);
   const libsDir = layoutDirectory ?? defaultLibsDir;
   const name = names(options.name).fileName;
   const fullProjectDirectory = projectDirectory
@@ -19,7 +25,7 @@ export function normalizeOptions(
     : name;
 
   const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = projectName;
+  const fileName = options.simpleName ? name : projectName;
   const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
   const parsedTags = options.tags
@@ -28,12 +34,13 @@ export function normalizeOptions(
 
   const normalized: NormalizedOptions = {
     ...options,
+    strict: options.strict ?? true,
     controller: options.controller ?? false,
     fileName,
     global: options.global ?? false,
     linter: options.linter ?? Linter.EsLint,
     parsedTags,
-    prefix: npmScope, // we could also allow customizing this
+    prefix: getNpmScope(tree), // we could also allow customizing this
     projectDirectory: fullProjectDirectory,
     projectName,
     projectRoot,

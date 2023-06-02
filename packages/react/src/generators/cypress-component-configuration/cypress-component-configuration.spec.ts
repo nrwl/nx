@@ -1,33 +1,31 @@
-import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
   DependencyType,
   ProjectGraph,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { applicationGenerator } from '../application/application';
 import { componentGenerator } from '../component/component';
 import { libraryGenerator } from '../library/library';
 import { cypressComponentConfigGenerator } from './cypress-component-configuration';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   readTargetOptions: jest.fn().mockImplementation(() => ({})),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),
 }));
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  readCachedProjectGraph: jest
-    .fn()
-    .mockImplementation(async () => projectGraph),
+  readCachedProjectGraph: jest.fn().mockImplementation(() => projectGraph),
 }));
 
 describe('React:CypressComponentTestConfiguration', () => {
@@ -153,7 +151,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     expect(
       readProjectConfiguration(tree, 'some-lib').targets['component-test']
     ).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         cypressConfig: 'libs/some-lib/cypress.config.ts',
         devServerTarget: 'my-app:build',
@@ -219,7 +217,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     expect(
       readProjectConfiguration(tree, 'some-lib').targets['component-test']
     ).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         cypressConfig: 'libs/some-lib/cypress.config.ts',
         devServerTarget: 'my-app:build',
@@ -285,7 +283,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     expect(
       readProjectConfiguration(tree, 'some-lib').targets['component-test']
     ).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         cypressConfig: 'libs/some-lib/cypress.config.ts',
         devServerTarget: 'my-app:build',
@@ -448,7 +446,106 @@ describe('React:CypressComponentTestConfiguration', () => {
       "Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
       Provided project? some-lib
       Provided build target? my-app:build
-      Provided Executors? @nrwl/webpack:webpack, @nrwl/vite:build"
+      Provided Executors? @nx/webpack:webpack, @nx/vite:build, @nrwl/webpack:webpack, @nrwl/vite:build"
+    `);
+  });
+
+  it('should setup cypress config files correctly', async () => {
+    mockedAssertCypressVersion.mockReturnValue();
+
+    await applicationGenerator(tree, {
+      e2eTestRunner: 'none',
+      linter: Linter.EsLint,
+      skipFormat: true,
+      style: 'scss',
+      unitTestRunner: 'none',
+      name: 'my-app',
+      bundler: 'vite',
+    });
+    await libraryGenerator(tree, {
+      linter: Linter.EsLint,
+      name: 'some-lib',
+      skipFormat: true,
+      skipTsConfig: false,
+      style: 'scss',
+      unitTestRunner: 'none',
+      component: true,
+    });
+
+    projectGraph = {
+      nodes: {
+        'my-app': {
+          name: 'my-app',
+          type: 'app',
+          data: {
+            ...readProjectConfiguration(tree, 'my-app'),
+          } as any,
+        },
+        'some-lib': {
+          name: 'some-lib',
+          type: 'lib',
+          data: {
+            ...readProjectConfiguration(tree, 'some-lib'),
+          } as any,
+        },
+      },
+      dependencies: {
+        'my-app': [
+          { type: DependencyType.static, source: 'my-app', target: 'some-lib' },
+        ],
+      },
+    };
+
+    await cypressComponentConfigGenerator(tree, {
+      project: 'some-lib',
+      generateTests: false,
+      buildTarget: 'my-app:build',
+    });
+
+    const config = tree.read('libs/some-lib/cypress.config.ts', 'utf-8');
+    expect(config).toMatchInlineSnapshot(`
+      "import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
+      import { defineConfig } from 'cypress';
+
+      export default defineConfig({
+        component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+      });
+      "
+    `);
+    expect(tree.read('libs/some-lib/cypress/support/component.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { mount } from 'cypress/react18';
+      // ***********************************************************
+      // This example support/component.ts is processed and
+      // loaded automatically before your test files.
+      //
+      // This is a great place to put global configuration and
+      // behavior that modifies Cypress.
+      //
+      // You can change the location of this file or turn off
+      // automatically serving support files with the
+      // 'supportFile' configuration option.
+      //
+      // You can read more here:
+      // https://on.cypress.io/configuration
+      // ***********************************************************
+
+      // Import commands.ts using ES2015 syntax:
+      import './commands';
+
+      // add component testing only related command here, such as mount
+      declare global {
+        // eslint-disable-next-line @typescript-eslint/no-namespace
+        namespace Cypress {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          interface Chainable<Subject> {
+            mount: typeof mount;
+          }
+        }
+      }
+
+      Cypress.Commands.add('mount', mount);
+      "
     `);
   });
 });

@@ -107,6 +107,10 @@
         "description": "Will not fail if no tests are found (for example while using `--testPathPattern`.) (https://jestjs.io/docs/cli#--passwithnotests)",
         "type": "boolean"
       },
+      "randomize": {
+        "description": "Shuffle the order of the tests within a file. The shuffling is based on the seed. This option is only supported using the default jest-circus test runner.",
+        "type": "boolean"
+      },
       "runInBand": {
         "alias": "i",
         "description": "Run all tests serially in the current process (rather than creating a worker pool of child processes that run tests). This is sometimes useful for debugging, but such use cases are pretty rare. Useful for CI. (https://jestjs.io/docs/cli#--runinband)",
@@ -190,7 +194,7 @@
       }
     },
     "required": ["jestConfig"],
-    "examplesFile": "Jest can be configured in many ways, but primarily you'll need to at least have the jestConfig options\n\n```json\n\"test\": {\n  \"executor\": \"@nrwl/jest:jest\",\n  \"options\": {\n    \"jestConfig\": \"libs/my-lib/jest.config.ts\"\n  }\n}\n```\n\nIt is also helpful to have `passWithNoTests: true` set so your project doesn't fail testing while tests are still being added.\n\n```json\n\"test\": {\n  \"executor\": \"@nrwl/jest:jest\",\n  \"options\": {\n    \"jestConfig\": \"libs/my-lib/jest.config.ts\",\n    \"passWithNoTests\": true\n  }\n}\n```\n\n### Snapshots\n\nUpdate snapshots running with `--update-snapshot` or `-u` for short.\n\n```bash\nnx test my-project -u\n```\n\nOther times you might not want to allow updating snapshots such as in CI.\nAdding a _ci_ configuration is helpful for adding this behavior.\n\n```json\n\"test\": {\n  \"executor\": \"@nrwl/jest:jest\",\n  \"options\": {\n    \"jestConfig\": \"libs/my-lib/jest.config.ts\",\n    \"passWithNoTests\": true\n  },\n  \"configurations\": {\n    \"ci\": {\n      \"ci\": true\n    }\n  }\n}\n```\n\n```bash\nnx affected --target=test --configuration=ci\n```\n\nLearn more [about _affected_](/concepts/affected)\n"
+    "examplesFile": "Jest can be configured in many ways, but primarily you'll need to at least have the jestConfig options\n\n```json\n\"test\": {\n  \"executor\": \"@nx/jest:jest\",\n  \"options\": {\n    \"jestConfig\": \"libs/my-lib/jest.config.ts\"\n  }\n}\n```\n\nIt is also helpful to have `passWithNoTests: true` set so your project doesn't fail testing while tests are still being added.\n\n```json\n\"test\": {\n  \"executor\": \"@nx/jest:jest\",\n  \"options\": {\n    \"jestConfig\": \"libs/my-lib/jest.config.ts\",\n    \"passWithNoTests\": true\n  }\n}\n```\n\n### Snapshots\n\nUpdate snapshots running with `--update-snapshot` or `-u` for short.\n\n```bash\nnx test my-project -u\n```\n\nOther times you might not want to allow updating snapshots such as in CI.\nAdding a _ci_ configuration is helpful for adding this behavior.\n\n```json\n\"test\": {\n  \"executor\": \"@nx/jest:jest\",\n  \"options\": {\n    \"jestConfig\": \"libs/my-lib/jest.config.ts\",\n    \"passWithNoTests\": true\n  },\n  \"configurations\": {\n    \"ci\": {\n      \"ci\": true\n    }\n  }\n}\n```\n\n```bash\nnx affected --target=test --configuration=ci\n```\n\nLearn more [about _affected_](/concepts/affected)\n"
   },
   "description": "Run Jest unit tests.",
   "aliases": [],

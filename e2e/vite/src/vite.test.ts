@@ -9,6 +9,7 @@ import {
   newProject,
   promisifiedTreeKill,
   readFile,
+  readJson,
   rmDist,
   runCLI,
   runCLIAsync,
@@ -17,7 +18,7 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 const myApp = uniq('my-app');
 
@@ -28,8 +29,8 @@ describe('Vite Plugin', () => {
     describe('convert React webpack app to vite using the vite:configuration generator', () => {
       beforeEach(() => {
         proj = newProject();
-        runCLI(`generate @nrwl/react:app ${myApp} --bundler=webpack`);
-        runCLI(`generate @nrwl/vite:configuration ${myApp}`);
+        runCLI(`generate @nx/react:app ${myApp} --bundler=webpack`);
+        runCLI(`generate @nx/vite:configuration ${myApp}`);
       });
       afterEach(() => cleanupProject());
 
@@ -64,7 +65,7 @@ describe('Vite Plugin', () => {
     describe('set up new React app with --bundler=vite option', () => {
       beforeEach(() => {
         proj = newProject();
-        runCLI(`generate @nrwl/react:app ${myApp} --bundler=vite`);
+        runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
         createFile(`apps/${myApp}/public/hello.md`, `# Hello World`);
         updateFile(
           `apps/${myApp}/src/environments/environment.prod.ts`,
@@ -127,10 +128,10 @@ describe('Vite Plugin', () => {
   });
 
   describe('Vite on Web apps', () => {
-    describe('set up new @nrwl/web app with --bundler=vite option', () => {
+    describe('set up new @nx/web app with --bundler=vite option', () => {
       beforeEach(() => {
         proj = newProject();
-        runCLI(`generate @nrwl/web:app ${myApp} --bundler=vite`);
+        runCLI(`generate @nx/web:app ${myApp} --bundler=vite`);
       });
       afterEach(() => cleanupProject());
       it('should build application', async () => {
@@ -144,13 +145,62 @@ describe('Vite Plugin', () => {
         expect(fileExists(`dist/apps/${myApp}/package.json`)).toBeFalsy();
         rmDist();
       }, 200_000);
+
+      it('should build application with new package json generation', async () => {
+        runCLI(`build ${myApp} --generatePackageJson`);
+        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+        const mainBundle = fileArray.find((file) => file.endsWith('.js'));
+        expect(
+          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
+        ).toBeDefined();
+
+        const packageJson = readJson(`dist/apps/${myApp}/package.json`);
+        expect(packageJson).toEqual({
+          name: myApp,
+          version: '0.0.1',
+          type: 'module',
+        });
+        rmDist();
+      }, 200_000);
+
+      it('should build application with existing package json generation', async () => {
+        createFile(
+          `apps/${myApp}/package.json`,
+          JSON.stringify({
+            name: 'my-existing-app',
+            version: '1.0.1',
+            scripts: {
+              start: 'node server.js',
+            },
+          })
+        );
+        runCLI(`build ${myApp} --generatePackageJson`);
+        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+        const mainBundle = fileArray.find((file) => file.endsWith('.js'));
+        expect(
+          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
+        ).toBeDefined();
+
+        const packageJson = readJson(`dist/apps/${myApp}/package.json`);
+        expect(packageJson).toEqual({
+          name: 'my-existing-app',
+          version: '1.0.1',
+          type: 'module',
+          scripts: {
+            start: 'node server.js',
+          },
+        });
+        rmDist();
+      }, 200_000);
     });
 
-    describe('convert @nrwl/web webpack app to vite using the vite:configuration generator', () => {
+    describe('convert @nx/web webpack app to vite using the vite:configuration generator', () => {
       beforeEach(() => {
         proj = newProject();
-        runCLI(`generate @nrwl/web:app ${myApp} --bundler=webpack`);
-        runCLI(`generate @nrwl/vite:configuration ${myApp}`);
+        runCLI(`generate @nx/web:app ${myApp} --bundler=webpack`);
+        runCLI(`generate @nx/vite:configuration ${myApp}`);
       });
       afterEach(() => cleanupProject());
       it('should build application', async () => {
@@ -198,7 +248,7 @@ describe('Vite Plugin', () => {
       100_000;
 
     it('should be able to run tests', async () => {
-      runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
+      runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
       expect(exists(tmpProjPath(`libs/${lib}/vite.config.ts`))).toBeTruthy();
 
       const result = await runCLIAsync(`test ${lib}`);
@@ -216,48 +266,47 @@ describe('Vite Plugin', () => {
     }, 100_000);
 
     it('should collect coverage', () => {
-      runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
+      runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
       updateFile(`libs/${lib}/vite.config.ts`, () => {
         return `/// <reference types="vitest" />
         import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+        import react from '@vitejs/plugin-react';
+        import viteTsConfigPaths from 'vite-tsconfig-paths';
 
-export default defineConfig({
-  server: {
-    port: 4200,
-    host: 'localhost',
-  },
-  plugins: [
-    react(),
-    viteTsConfigPaths({
-      root: './',
-    }),
-  ],
-  test: {
-    globals: true,
-    cache: {
-      dir: './node_modules/.vitest',
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    coverage: {
-      provider: "c8",
-      enabled: true,
-      lines: 100,
-      statements: 100,
-      functions: 100,
-      branches: 1000,
-    }
-  },
-});
-`;
+        export default defineConfig({
+          server: {
+            port: 4200,
+            host: 'localhost',
+          },
+          plugins: [
+            react(),
+            viteTsConfigPaths({
+              root: './',
+            }),
+          ],
+          test: {
+            globals: true,
+            cache: {
+              dir: './node_modules/.vitest',
+            },
+            environment: 'jsdom',
+            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            coverage: {
+              provider: "c8",
+              enabled: true,
+              lines: 100,
+              statements: 100,
+              functions: 100,
+              branches: 1000,
+            }
+          },
+        });
+        `;
       });
 
       const coverageDir = `${tmpProjPath()}/coverage/libs/${lib}`;
 
       const results = runCLI(`test ${lib} --coverage`, { silenceError: true });
-
       expect(results).toContain(
         `Running target test for project ${lib} failed`
       );
@@ -267,8 +316,8 @@ export default defineConfig({
 
     it('should not delete the project directory when coverage is enabled', () => {
       // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
-      // from the @nrwl/vite:test executor options, vite will delete the project root directory
-      runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
+      // from the @nx/vite:test executor options, vite will delete the project root directory
+      runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
       updateFile(`libs/${lib}/vite.config.ts`, () => {
         return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -320,7 +369,7 @@ export default defineConfig({
 
     it('should be able to run tests with inSourceTests set to true', async () => {
       runCLI(
-        `generate @nrwl/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
+        `generate @nx/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
       );
       expect(
         exists(tmpProjPath(`libs/${lib}/src/lib/${lib}.spec.tsx`))

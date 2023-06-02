@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 export interface Schema {
   appProject: string; // name of the project app to be tested (directory + app name in kebab class)

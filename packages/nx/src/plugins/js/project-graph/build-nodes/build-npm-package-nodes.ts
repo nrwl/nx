@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { defaultHashing } from '../../../../hasher/hashing-impl';
+import { hashArray } from '../../../../hasher/impl';
 import { join } from 'path';
 
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
@@ -24,7 +24,7 @@ export function buildNpmPackageNodes(builder: ProjectGraphBuilder) {
         data: {
           version: deps[d],
           packageName: d,
-          hash: defaultHashing.hashArray([d, deps[d]]),
+          hash: hashArray([d, deps[d]]),
         },
       });
     }

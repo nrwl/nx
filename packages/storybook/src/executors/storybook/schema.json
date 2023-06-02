@@ -8,24 +8,10 @@
   "presets": [
     {
       "name": "Default minimum setup",
-      "keys": ["uiFramework", "port", "configDir"]
+      "keys": ["port", "configDir"]
     }
   ],
   "properties": {
-    "uiFramework": {
-      "type": "string",
-      "description": "Storybook framework npm package.",
-      "enum": [
-        "@storybook/react",
-        "@storybook/html",
-        "@storybook/web-components",
-        "@storybook/vue",
-        "@storybook/vue3",
-        "@storybook/svelte"
-      ],
-      "default": "@storybook/react",
-      "x-priority": "important"
-    },
     "port": {
       "type": "number",
       "description": "Port to listen on.",
@@ -85,10 +71,23 @@
       "type": "boolean",
       "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation.",
       "default": false
+    },
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook framework npm package.",
+      "enum": [
+        "@storybook/react",
+        "@storybook/html",
+        "@storybook/web-components",
+        "@storybook/vue",
+        "@storybook/vue3",
+        "@storybook/svelte"
+      ],
+      "x-deprecated": "Upgrade to Storybook 7."
     }
   },
   "additionalProperties": true,
   "definitions": {},
-  "required": ["uiFramework", "configDir"],
+  "required": ["configDir"],
   "examplesFile": "../../../docs/storybook-executor-examples.md"
 }

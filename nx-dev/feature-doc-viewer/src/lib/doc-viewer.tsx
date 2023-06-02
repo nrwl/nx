@@ -3,12 +3,12 @@ import {
   generateRelatedDocumentsTemplate,
   ProcessedDocument,
   RelatedDocument,
-} from '@nrwl/nx-dev/models-document';
-import { Breadcrumbs, Footer } from '@nrwl/nx-dev/ui-common';
-import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
+} from '@nx/nx-dev/models-document';
+import { Breadcrumbs, Footer } from '@nx/nx-dev/ui-common';
+import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { cx } from 'nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev/ui-primitives';
 import { useRef } from 'react';
 import { collectHeadings, TableOfContents } from './table-of-contents';
 
@@ -98,7 +98,7 @@ export function DocViewer({
               {!isIntro && (
                 <div
                   className={cx(
-                    'fixed top-36 right-[max(4rem,calc(50%-55rem))] z-20 hidden w-60 overflow-y-auto bg-white py-10 text-sm dark:bg-slate-900 xl:block'
+                    'fixed top-36 right-[max(2rem,calc(50%-55rem))] z-20 hidden w-60 overflow-y-auto bg-white py-10 text-sm dark:bg-slate-900 xl:block'
                   )}
                 >
                   <TableOfContents

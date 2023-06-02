@@ -18,7 +18,6 @@ export interface NextServerOptions {
   staticMarkup: boolean;
   quiet: boolean;
   port: number;
-  path: string;
   hostname: string;
   customServer?: boolean;
 }
@@ -29,7 +28,6 @@ export interface FileReplacement {
 }
 
 export interface NextBuildBuilderOptions {
-  root: string;
   outputPath: string;
   fileReplacements: FileReplacement[];
   assets?: any[];
@@ -38,6 +36,9 @@ export interface NextBuildBuilderOptions {
   includeDevDependenciesInPackageJson?: boolean;
   generateLockfile?: boolean;
   watch?: boolean;
+  debug?: boolean;
+  profile?: boolean;
+  experimentalAppOnly?: boolean;
 }
 
 export interface NextServeBuilderOptions {
@@ -47,12 +48,11 @@ export interface NextServeBuilderOptions {
   quiet: boolean;
   buildTarget: string;
   customServerTarget?: string;
-  /** @deprecated Use customServerTarget
-   */
-  customServerPath?: string;
   hostname?: string;
   proxyConfig?: string;
   buildLibsFromSource?: boolean;
+  keepAliveTimeout?: number;
+  turbo?: boolean;
 }
 
 export interface NextExportBuilderOptions {

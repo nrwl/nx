@@ -7,7 +7,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
@@ -50,9 +50,13 @@ function updateProjectBuildTargets(
 ) {
   for (const target of projectTargets) {
     const targetConfiguration = projectConfiguration.targets[target];
-    if (!targetConfiguration || targetConfiguration.executor !== '@nrwl/js:tsc')
+    if (
+      !targetConfiguration ||
+      (targetConfiguration.executor !== '@nx/js:tsc' &&
+        targetConfiguration.executor !== '@nrwl/js:tsc')
+    )
       continue;
-    targetConfiguration.executor = '@nrwl/js:swc';
+    targetConfiguration.executor = '@nx/js:swc';
   }
 
   updateProjectConfiguration(tree, projectName, projectConfiguration);

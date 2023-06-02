@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getNewProjectName } from '../../utils/get-new-project-name';
 import { join } from 'path';
 import { Schema } from '../schema';

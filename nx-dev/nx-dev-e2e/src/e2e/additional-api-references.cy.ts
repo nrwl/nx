@@ -14,8 +14,6 @@ describe('nx-dev: Additional API references section', () => {
     { title: 'run-many', path: '/cli/run-many' },
     { title: 'affected', path: '/cli/affected' },
     { title: 'affected:graph', path: '/cli/affected-dep-graph' },
-    { title: 'affected:apps', path: '/cli/affected-apps' },
-    { title: 'affected:libs', path: '/cli/affected-libs' },
     { title: 'print-affected', path: '/cli/print-affected' },
     { title: 'format:check', path: '/cli/format-check' },
     { title: 'format:write', path: '/cli/format-write' },
@@ -49,7 +47,7 @@ describe('nx-dev: Additional API references section', () => {
       path: '/storybook/storybook-composition-setup',
     },
     {
-      title: 'Module: @nrwl/devkit',
+      title: 'Module: @nx/devkit',
       path: '/devkit/index',
     },
     {

@@ -1,6 +1,37 @@
 # Advanced update process
 
-This is an advanced version of the [standard update process](/core-features/automate-updating-dependencies).
+This guide describes advanced scenarios when it comes to updating Nx and the workspaces dependencies. It starts with a summary of the [standard update process](/core-features/automate-updating-dependencies) and continues with those advanced use cases.
+
+## Updating to the latest Nx version
+
+The following steps are a summary of the [standard update process](/core-features/automate-updating-dependencies). For more information on each step, please visit that page.
+
+### Step 1: Updating dependencies and generating migrations
+
+First, run the `migrate` command:
+
+```shell
+nx migrate latest # same as nx migrate nx@latest
+```
+
+This performs the following changes:
+
+- Updates the versions of the relevant packages in the `package.json` file.
+- Generates a `migrations.json` if there are pending migrations.
+
+### Step 2: Running migrations
+
+The next step in the process involves using the `migrate` command to apply the migrations that were generated in the `migrations.json` file in the previous step. You can do so by running:
+
+```shell
+nx migrate --run-migrations
+```
+
+All changes to your source code will be unstaged and ready for you to review and commit yourself.
+
+### Step 3: Cleaning up
+
+After you run all the migrations, you can remove `migrations.json` and commit any outstanding changes.
 
 ## Managing migration steps
 
@@ -103,7 +134,7 @@ As the migration runs and collects the package updates, you'll be prompted to ap
 
 Once you have skipped some optional updates, there'll come a time when you'll want to update those packages. To do so, you'll need to generate the package updates and migrations from the Nx version that contained those skipped updates.
 
-Say you skipped updating Jest to **v28.x.x**. That package update was meant to happen as part of the `@nrwl/jest@14.6.0` update, but you decided to skip it at the time. The recommended way to collect the migrations from such an older version is to run the following:
+Say you skipped updating Jest to **v28.x.x**. That package update was meant to happen as part of the `@nx/jest@14.6.0` update, but you decided to skip it at the time. The recommended way to collect the migrations from such an older version is to run the following:
 
 ```shell
 nx migrate latest --from=nx@14.5.0 --exclude-applied-migrations
@@ -133,7 +164,7 @@ nx migrate latest --to="jest@22.0.0,cypress@3.4.0"
 By default, Nx uses currently installed packages to calculate what migrations need to run. To override them, override the version:
 
 ```shell
-nx migrate latest --to="@nrwl/jest@12.0.0"
+nx migrate latest --to="@nx/jest@12.0.0"
 ```
 
 {% callout type="warning" title="Overriding versions" %}

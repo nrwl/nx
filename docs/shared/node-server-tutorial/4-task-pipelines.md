@@ -139,21 +139,21 @@ Here are the outputs defined for the `auth` project:
   "name": "auth",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/auth"
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "outputFile": "dist/auth/lint-report.txt"
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {}
     }
@@ -171,7 +171,7 @@ Another way that Nx saves you from unnecessary work is the `affected` command. `
 Run the command:
 
 ```shell
-git add . && git commit -m "commiting to test affected"
+git add . ; git commit -m "commiting to test affected"
 ```
 
 Then make a change to an endpoint of your `products-api` project:
@@ -212,12 +212,12 @@ The change made to the `products-api` project is also affecting the `e2e` projec
 To run the `lint` targets only for affected projects, run the command:
 
 ```shell
-npx nx affected --target=lint
+npx nx affected -t lint
 ```
 
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.
 
-{% card title="Affected Documentation" description="Checkout Affected documentation for more details" url="/nx/affected" /%}
+{% card title="Affected Documentation" description="Checkout Affected documentation for more details" url="/packages/nx/documents/affected" /%}
 
 ## What's Next
 

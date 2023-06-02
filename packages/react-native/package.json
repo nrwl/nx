@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/react-native",
+  "name": "@nx/react-native",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides: \n\n-Integration with libraries such as Jest, Detox, and Storybook.\n-Scaffolding for creating buildable libraries that can be published to npm.\n-Utilities for automatic workspace refactoring.",
@@ -25,24 +25,25 @@
   "main": "./index",
   "types": "index.d.ts",
   "dependencies": {
-    "@nrwl/detox": "file:../detox",
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/jest": "file:../jest",
-    "@nrwl/js": "file:../js",
-    "@nrwl/linter": "file:../linter",
-    "@nrwl/react": "file:../react",
-    "@nrwl/workspace": "file:../workspace",
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.8.3",
     "fs-extra": "^11.1.0",
+    "glob": "7.1.4",
     "ignore": "^5.0.4",
     "metro-resolver": "^0.74.1",
     "minimatch": "3.0.5",
     "node-fetch": "^2.6.7",
-    "tsconfig-paths": "^4.1.2"
+    "tsconfig-paths": "^4.1.2",
+    "@nx/detox": "file:../detox",
+    "@nx/devkit": "file:../devkit",
+    "@nx/jest": "file:../jest",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter",
+    "@nx/react": "file:../react",
+    "@nx/workspace": "file:../workspace"
   },
   "peerDependencies": {
-    "react-native": "^0.71.4"
+    "react-native": ">= 0.71.0"
   },
   "builders": "./executors.json",
   "ng-update": {

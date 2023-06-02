@@ -5,13 +5,15 @@
   },
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/nx-cloud",
+      "runner": "nx-cloud",
+      "nativeWatcher": true,
       "options": {
         "accessToken": "NDg1NTA3MTAtOGFmZC00YmIwLTk2Y2MtOTkzNzc4ZTczYTlkfHJlYWQtb25seQ==",
         "cacheableOperations": [
           "build",
           "lint-base",
           "lint",
+          "build-ng",
           "build-base",
           "build-native",
           "e2e",
@@ -19,7 +21,8 @@
           "test",
           "test-native",
           "sitemap",
-          "build-storybook"
+          "build-storybook",
+          "copy-docs"
         ],
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1,
@@ -62,7 +65,7 @@
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "outputPath": "build/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
@@ -79,7 +82,7 @@
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",
         "passWithNoTests": true
@@ -93,7 +96,7 @@
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/tools/eslint-rules/**/*"
       ],
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "{projectRoot}/**/*.{ts,tsx,js,jsx}",
@@ -128,10 +131,10 @@
       "options": {
         "commands": [
           {
-            "command": "yarn e2e-start-local-registry"
+            "command": "pnpm e2e-start-local-registry"
           },
           {
-            "command": "yarn e2e-build-package-publish"
+            "command": "pnpm e2e-build-package-publish"
           },
           {
             "command": "nx run-e2e-tests {projectName}"
@@ -158,10 +161,10 @@
       "options": {
         "commands": [
           {
-            "command": "yarn e2e-start-local-registry"
+            "command": "pnpm e2e-start-local-registry"
           },
           {
-            "command": "yarn e2e-build-package-publish"
+            "command": "pnpm e2e-build-package-publish"
           },
           {
             "command": "nx run-e2e-tests {projectName}"
@@ -174,8 +177,13 @@
       "inputs": ["default", "^production"]
     },
     "run-e2e-tests": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "executor": "@nrwl/jest:jest",
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js",
+        "{workspaceRoot}/.verdaccio/config.yml"
+      ],
+      "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",
         "passWithNoTests": true,
@@ -187,6 +195,5 @@
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
     }
   },
-  "defaultProject": "@nrwl/nx-source",
   "plugins": ["@monodon/rust"]
 }

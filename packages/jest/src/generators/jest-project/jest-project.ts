@@ -10,7 +10,7 @@ import {
   convertNxGenerator,
   GeneratorCallback,
   readProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 const schemaDefaults = {
   setupFile: 'none',

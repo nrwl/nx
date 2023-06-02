@@ -9,37 +9,54 @@
       "description": "Nx documentation for you to discover!",
       "itemList": [
         {
-          "name": "Getting Started",
+          "name": "Start Here",
           "id": "getting-started",
           "description": "Get started with basic information, concepts and tutorials.",
           "itemList": [
             {
-              "name": "Intro to Nx",
+              "name": "Getting Started",
               "id": "intro",
               "file": "shared/getting-started/intro"
             },
             {
-              "name": "Package-Based Repo Tutorial",
+              "name": "Installation",
+              "id": "installation",
+              "file": "shared/getting-started/installation"
+            },
+            {
+              "name": "Why Nx?",
+              "id": "why-nx",
+              "file": "shared/getting-started/why-nx"
+            }
+          ]
+        },
+        {
+          "name": "5 min Tutorials",
+          "id": "tutorials",
+          "description": "Get started with basic information, concepts and tutorials.",
+          "itemList": [
+            {
+              "name": "Package-Based Monorepo",
               "id": "package-based-repo-tutorial",
               "file": "shared/npm-tutorial/package-based"
             },
             {
-              "name": "Integrated Repo Tutorial",
+              "name": "Integrated Monorepo",
               "id": "integrated-repo-tutorial",
               "file": "shared/npm-tutorial/integrated"
             },
             {
-              "name": "React Standalone Tutorial",
+              "name": "React Standalone",
               "id": "react-standalone-tutorial",
               "file": "shared/react-standalone-tutorial/1-code-generation"
             },
             {
-              "name": "Angular Standalone Tutorial",
+              "name": "Angular Standalone",
               "id": "angular-standalone-tutorial",
               "file": "shared/angular-standalone-tutorial/1-code-generation"
             },
             {
-              "name": "Node Server Tutorial",
+              "name": "Node Standalone",
               "id": "node-server-tutorial",
               "file": "shared/node-server-tutorial/1-code-generation"
             }
@@ -318,12 +335,6 @@
               "id": "use-code-generators",
               "tags": ["use-code-generators"],
               "file": "shared/plugin-features/use-code-generators"
-            },
-            {
-              "name": "Create Your Own Plugin",
-              "id": "create-your-own-plugin",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/plugin-features/create-your-own-plugin"
             }
           ]
         },
@@ -564,7 +575,7 @@
               "id": "packages-devkit",
               "tags": ["create-your-own-plugin"],
               "file": "",
-              "path": "/packages/devkit/documents/nrwl_devkit",
+              "path": "/packages/devkit/documents/nx_devkit",
               "isExternal": true
             },
             {
@@ -609,6 +620,49 @@
               "name": "globalImplicitDependencies",
               "id": "global-implicit-dependencies",
               "file": "shared/deprecated/global-implicit-dependencies"
+            },
+            {
+              "name": "Storybook deprecated docs",
+              "id": "storybook",
+              "description": "Deprecated @nx/storybook package documentation and guides.",
+              "itemList": [
+                {
+                  "id": "angular-storybook-targets",
+                  "name": "Angular: Information about the Storybook targets",
+                  "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
+                  "file": "shared/deprecated/storybook/angular-storybook-targets"
+                },
+                {
+                  "id": "angular-browser-target",
+                  "name": "Angular: The browserTarget",
+                  "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
+                  "file": "shared/deprecated/storybook/angular-browser-target"
+                },
+                {
+                  "id": "migrate-webpack-final-angular",
+                  "name": "Angular: Storybook Migration to webpackFinal",
+                  "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
+                  "file": "shared/deprecated/storybook/migrate-webpack-final-angular"
+                },
+                {
+                  "id": "upgrade-storybook-v6-angular",
+                  "name": "Angular: Upgrading to Storybook 6",
+                  "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
+                  "file": "shared/deprecated/storybook/storybook-v6-angular"
+                },
+                {
+                  "id": "migrate-webpack-final-react",
+                  "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
+                  "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
+                  "file": "shared/deprecated/storybook/migrate-webpack-final-react"
+                },
+                {
+                  "id": "upgrade-storybook-v6-react",
+                  "name": "React: Upgrading to Storybook 6",
+                  "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
+                  "file": "shared/deprecated/storybook/storybook-v6-react"
+                }
+              ]
             }
           ]
         },
@@ -680,6 +734,124 @@
               "tags": ["use-code-generators"],
               "path": "/reference/nx-json#generators",
               "isExternal": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Plugins",
+      "id": "plugins",
+      "description": "Learn more about creating your own plugin, extending Nx.",
+      "itemList": [
+        {
+          "name": "Intro",
+          "id": "intro",
+          "description": "Learn about plugins.",
+          "itemList": [
+            {
+              "name": "Getting Started with Plugins",
+              "id": "getting-started",
+              "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
+              "file": "shared/plugins/intro"
+            },
+            {
+              "name": "Plugin Registry",
+              "description": "Browse official and community plugins",
+              "id": "registry",
+              "file": "",
+              "path": "/plugins/registry",
+              "isExternal": false
+            }
+          ]
+        },
+        {
+          "name": "5 Min Tutorials",
+          "id": "tutorials",
+          "description": "Get started with plugins",
+          "itemList": [
+            {
+              "name": "Create a Local Plugin",
+              "id": "create-plugin",
+              "file": "shared/plugins/create-plugin"
+            },
+            {
+              "name": "Maintain a Published Plugin",
+              "id": "publish-plugin",
+              "file": "shared/plugins/maintain-published-plugin"
+            }
+          ]
+        },
+        {
+          "name": "Recipes",
+          "id": "recipes",
+          "description": "Focused instructions to complete a specific task",
+          "itemList": [
+            {
+              "name": "Write a Simple Executor",
+              "id": "local-executors",
+              "tags": ["use-task-executors"],
+              "file": "shared/recipes/plugins/local-executors"
+            },
+            {
+              "name": "Compose Executors",
+              "id": "compose-executors",
+              "tags": ["use-task-executors"],
+              "file": "shared/recipes/plugins/compose-executors"
+            },
+            {
+              "name": "Write a Simple Generator",
+              "id": "local-generators",
+              "tags": ["use-code-generators"],
+              "file": "shared/recipes/generators/local-generators"
+            },
+            {
+              "name": "Compose Generators",
+              "id": "composing-generators",
+              "tags": ["use-code-generators"],
+              "file": "shared/recipes/generators/composing-generators"
+            },
+            {
+              "name": "Provide Options for Generators",
+              "id": "generator-options",
+              "tags": ["use-code-generators"],
+              "file": "shared/recipes/generators/generator-options"
+            },
+            {
+              "name": "Create Files",
+              "id": "creating-files",
+              "tags": ["use-code-generators"],
+              "file": "shared/recipes/generators/creating-files"
+            },
+            {
+              "name": "Modify Files",
+              "id": "modifying-files",
+              "tags": ["use-code-generators"],
+              "file": "shared/recipes/generators/modifying-files"
+            },
+            {
+              "name": "Write a Migration",
+              "id": "migration-generators",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/migration-generators"
+            },
+            {
+              "name": "Create a Preset",
+              "id": "create-preset",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/create-preset"
+            },
+            {
+              "name": "Modify the Project Graph",
+              "id": "project-graph-plugins",
+              "tags": ["create-your-own-plugin", "explore-graph"],
+              "file": "shared/recipes/plugins/project-graph-plugins"
+            },
+            {
+              "name": "Identify Custom Projects",
+              "id": "project-inference-plugins",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/project-inference-plugins"
             }
           ]
         }
@@ -792,6 +964,11 @@
               "name": "Setting up Bitbucket",
               "id": "monorepo-ci-bitbucket-pipelines",
               "file": "shared/monorepo-ci-bitbucket-pipelines"
+            },
+            {
+              "name": "Troubleshooting Nx Install Issues",
+              "id": "troubleshoot-nx-install-issues",
+              "file": "shared/installation/troubleshoot-installation"
             }
           ]
         },
@@ -843,6 +1020,33 @@
           ]
         },
         {
+          "name": "Adopting Nx From Angular CLI",
+          "id": "adopting-nx-angular",
+          "description": "Advanced guides to adopt Nx coming from the Angular CLI",
+          "itemList": [
+            {
+              "name": "From Angular CLI",
+              "id": "migration-angular",
+              "file": "shared/migration/migration-angular"
+            },
+            {
+              "name": "From Angular CLI to Integrated",
+              "id": "angular-integrated",
+              "file": "shared/migration/angular-integrated"
+            },
+            {
+              "name": "From Angular CLI Manually",
+              "id": "angular-manual",
+              "file": "shared/migration/angular-manual"
+            },
+            {
+              "name": "From Multiple Angular CLI Repos",
+              "id": "angular-multiple",
+              "file": "shared/migration/angular-multiple"
+            }
+          ]
+        },
+        {
           "name": "Executors",
           "id": "executors",
           "description": "Use, extend and compose executors.",
@@ -858,92 +1062,6 @@
               "id": "run-commands-executor",
               "tags": ["use-task-executors"],
               "file": "shared/running-custom-commands"
-            },
-            {
-              "name": "Local Executors",
-              "id": "creating-custom-executors",
-              "tags": ["use-task-executors", "create-your-own-plugin"],
-              "file": "shared/recipes/plugins/local-executors"
-            },
-            {
-              "name": "Compose Executors",
-              "id": "compose-executors",
-              "tags": ["use-task-executors"],
-              "file": "shared/recipes/plugins/compose-executors"
-            }
-          ]
-        },
-        {
-          "name": "Generators",
-          "id": "generators",
-          "description": "Use, extend and compose generators.",
-          "itemList": [
-            {
-              "name": "Local Generators",
-              "id": "local-generators",
-              "tags": ["use-code-generators", "create-your-own-plugin"],
-              "file": "shared/recipes/generators/local-generators"
-            },
-            {
-              "name": "Composing Generators",
-              "id": "composing-generators",
-              "tags": ["use-code-generators"],
-              "file": "shared/recipes/generators/composing-generators"
-            },
-            {
-              "name": "Generator Options",
-              "id": "generator-options",
-              "tags": ["use-code-generators"],
-              "file": "shared/recipes/generators/generator-options"
-            },
-            {
-              "name": "Creating Files",
-              "id": "creating-files",
-              "tags": ["use-code-generators"],
-              "file": "shared/recipes/generators/creating-files"
-            },
-            {
-              "name": "Modifying Files",
-              "id": "modifying-files",
-              "tags": ["use-code-generators"],
-              "file": "shared/recipes/generators/modifying-files"
-            }
-          ]
-        },
-        {
-          "name": "Advanced Plugins",
-          "id": "advanced-plugins",
-          "description": "Learn more about creating your own plugin, extending Nx.",
-          "itemList": [
-            {
-              "name": "Share Your Plugin",
-              "id": "share-your-plugin",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/share-your-plugin"
-            },
-            {
-              "name": "Create a Preset",
-              "id": "create-preset",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/create-preset"
-            },
-            {
-              "name": "Migration Generators",
-              "id": "migration-generators",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/migration-generators"
-            },
-            {
-              "name": "Project Graph Plugins",
-              "id": "project-graph-plugins",
-              "tags": ["create-your-own-plugin", "explore-graph"],
-              "file": "shared/recipes/plugins/project-graph-plugins"
-            },
-            {
-              "name": "Project Inference Plugins",
-              "id": "project-inference-plugins",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/project-inference-plugins"
             }
           ]
         },
@@ -1043,13 +1161,13 @@
           "description": "Deployment recipes for Node.js and Deno server applications.",
           "itemList": [
             {
-              "name": "Deploying a Node.js server to Fly.io",
+              "name": "Deploying a Node App to Fly.io",
               "id": "node-server-fly-io",
               "tags": ["deployment", "node"],
               "file": "shared/recipes/deployment/node-server-fly-io"
             },
             {
-              "name": "Deploying Node.js serverless functions to Netlify",
+              "name": "Add and Deploy Netlify Edge Functions with Node",
               "id": "node-serverless-functions-netlify",
               "tags": ["deployment", "node"],
               "file": "shared/recipes/deployment/node-serverless-functions-netlify"
@@ -1067,10 +1185,10 @@
               "file": "shared/recipes/deployment/deno-deploy"
             },
             {
-              "name": "Serverless deployment with Deno and Netlify",
-              "id": "deno-netlify",
+              "name": "Add and Deploy Netlify Edge Functions with Deno",
+              "id": "deno-netlify-functions",
               "tags": ["deployment", "deno"],
-              "file": "shared/recipes/deployment/deno-netlify"
+              "file": "shared/recipes/deployment/deno-netlify-edge-functions"
             }
           ]
         },
@@ -1245,10 +1363,22 @@
               "file": "shared/recipes/include-all-packagejson"
             },
             {
+              "name": "Include Assets in Build",
+              "id": "include-assets-in-build",
+              "tags": [],
+              "file": "shared/recipes/include-assets-in-build"
+            },
+            {
               "name": "Identify Dependencies Between Folders",
               "id": "identify-dependencies-between-folders",
               "tags": [],
               "file": "shared/recipes/identify-dependencies-between-folders"
+            },
+            {
+              "name": "Rescope Packages from @nrwl to @nx",
+              "id": "rescope",
+              "tags": [],
+              "file": "shared/recipes/rescope"
             },
             {
               "name": "Standalone NgRx APIs",
@@ -1309,11 +1439,6 @@
           "id": "account",
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
-            {
-              "name": "Billing and Utilization",
-              "id": "billing",
-              "file": "nx-cloud/account/billing"
-            },
             {
               "name": "Users",
               "id": "users",
@@ -1484,16 +1609,6 @@
               "file": "generated/cli/affected-graph"
             },
             {
-              "name": "affected:apps",
-              "id": "affected-apps",
-              "file": "generated/cli/affected-apps"
-            },
-            {
-              "name": "affected:libs",
-              "id": "affected-libs",
-              "file": "generated/cli/affected-libs"
-            },
-            {
               "name": "print-affected",
               "id": "print-affected",
               "file": "generated/cli/print-affected"
@@ -1593,14 +1708,14 @@
         },
         {
           "name": "Nx Plugin",
-          "id": "nx-plugin",
+          "id": "plugin",
           "description": "Plugin package.",
           "itemList": [
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/nx-plugin",
-              "file": "shared/packages/nx-plugin/nx-plugin"
+              "path": "/packages/plugin",
+              "file": "shared/packages/plugin/plugin"
             }
           ]
         },
@@ -1610,9 +1725,9 @@
           "description": "Devkit package.",
           "itemList": [
             {
-              "id": "nrwl_devkit",
+              "id": "nx_devkit",
               "name": "Overview",
-              "file": "generated/devkit/nrwl_devkit"
+              "file": "generated/devkit/nx_devkit"
             },
             {
               "id": "ngcli_adapter",
@@ -1799,16 +1914,16 @@
               "file": "shared/packages/storybook/plugin-angular"
             },
             {
-              "id": "storybook-7-setup",
-              "name": "Storybook 7 setup guide",
-              "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
-              "file": "shared/packages/storybook/storybook-7-setup"
-            },
-            {
               "id": "best-practices",
               "name": "Storybook best practices for making the most out of Nx",
               "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
               "file": "shared/packages/storybook/best-practices"
+            },
+            {
+              "id": "storybook-7-setup",
+              "name": "Storybook 7 overview",
+              "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+              "file": "shared/packages/storybook/storybook-7-setup"
             },
             {
               "id": "configuring-storybook",
@@ -1839,42 +1954,6 @@
               "name": "Angular: Configuring styles and preprocessor options",
               "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
               "file": "shared/packages/storybook/angular-configuring-styles"
-            },
-            {
-              "id": "angular-storybook-targets",
-              "name": "Angular: Information about the Storybook targets",
-              "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-              "file": "shared/packages/storybook/angular-storybook-targets"
-            },
-            {
-              "id": "angular-browser-target",
-              "name": "Angular: The browserTarget",
-              "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-              "file": "shared/packages/storybook/angular-browser-target"
-            },
-            {
-              "id": "migrate-webpack-final-angular",
-              "name": "Angular: Storybook Migration to webpackFinal",
-              "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-              "file": "shared/packages/storybook/migrate-webpack-final-angular"
-            },
-            {
-              "id": "upgrade-storybook-v6-angular",
-              "name": "Angular: Upgrading to Storybook 6",
-              "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-              "file": "shared/packages/storybook/storybook-v6-angular"
-            },
-            {
-              "id": "migrate-webpack-final-react",
-              "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-              "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-              "file": "shared/packages/storybook/migrate-webpack-final-react"
-            },
-            {
-              "id": "upgrade-storybook-v6-react",
-              "name": "React: Upgrading to Storybook 6",
-              "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-              "file": "shared/packages/storybook/storybook-v6-react"
             }
           ]
         },
@@ -1892,20 +1971,20 @@
           ]
         },
         {
-          "name": "eslint-plugin-nx",
-          "id": "eslint-plugin-nx",
+          "name": "eslint-plugin",
+          "id": "eslint-plugin",
           "description": "ESLint plugin package.",
           "itemList": [
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/eslint-plugin-nx",
-              "file": "shared/packages/linter/eslint-plugin-nx"
+              "path": "/packages/eslint-plugin",
+              "file": "shared/packages/linter/eslint-plugin"
             },
             {
               "id": "enforce-module-boundaries",
               "name": "The `enforce-module-boundaries` rule",
-              "path": "/packages/eslint-plugin-nx",
+              "path": "/packages/eslint-plugin",
               "file": "shared/packages/linter/enforce-module-boundaries"
             }
           ]
@@ -1958,7 +2037,13 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/next",
-              "file": "shared/packages/next/next-plugin"
+              "file": "shared/packages/next/plugin-overview"
+            },
+            {
+              "id": "next-config-setup",
+              "name": "How to configure Next.js plugins",
+              "description": "A guide for configuring Next.js plugins with Nx",
+              "file": "shared/packages/next/next-config-setup"
             }
           ]
         },

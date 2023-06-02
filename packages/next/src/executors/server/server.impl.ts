@@ -1,29 +1,40 @@
 import 'dotenv/config';
 import {
   ExecutorContext,
-  logger,
   parseTargetString,
   readTargetOptions,
-  runExecutor,
-} from '@nrwl/devkit';
-import * as chalk from 'chalk';
-import { existsSync } from 'fs';
+} from '@nx/devkit';
 import { join, resolve } from 'path';
 
 import {
   NextBuildBuilderOptions,
   NextServeBuilderOptions,
-  NextServer,
-  NextServerOptions,
-  ProxyConfig,
 } from '../../utils/types';
-import { customServer } from './lib/custom-server';
-import { defaultServer } from './lib/default-server';
+import { fork } from 'child_process';
+import customServer from './custom-server.impl';
+import { createCliOptions } from '../../utils/create-cli-options';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,
   context: ExecutorContext
 ) {
+  if (options.customServerTarget) {
+    return yield* customServer(options, context);
+  }
+
+  const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
+    parseTargetString(options.buildTarget, context.projectGraph),
+    context
+  );
+  const projectRoot = context.workspace.projects[context.projectName].root;
+
+  const { port, keepAliveTimeout, hostname } = options;
+
+  // This is required for the default custom server to work. See the @nx/next:app generator.
+  process.env.NX_NEXT_DIR = projectRoot;
+
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV = process.env.NODE_ENV
     ? process.env.NODE_ENV
@@ -32,112 +43,47 @@ export default async function* serveExecutor(
     : 'production';
 
   // Setting port that the custom server should use.
-  (process.env as any).PORT = options.port;
+  process.env.PORT = `${options.port}`;
 
-  const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
-    parseTargetString(options.buildTarget, context.projectGraph),
-    context
-  );
-  const root = resolve(context.root, buildOptions.root);
+  const args = createCliOptions({ port, keepAliveTimeout, hostname });
 
-  if (options.customServerTarget) {
-    yield* runCustomServer(root, options, buildOptions, context);
-  } else {
-    yield* runNextDevServer(root, options, buildOptions, context);
-  }
-}
+  const nextDir = resolve(context.root, buildOptions.outputPath);
 
-async function* runNextDevServer(
-  root: string,
-  options: NextServeBuilderOptions,
-  buildOptions: NextBuildBuilderOptions,
-  context: ExecutorContext
-) {
-  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
-  const settings: NextServerOptions = {
-    dev: options.dev,
-    dir: root,
-    staticMarkup: options.staticMarkup,
-    quiet: options.quiet,
-    port: options.port,
-    customServer: !!options.customServerTarget,
-    hostname: options.hostname || 'localhost',
+  const mode = options.dev ? 'dev' : 'start';
+  const turbo = options.turbo && options.dev ? '--turbo' : '';
+  const nextBin = require.resolve('next/dist/bin/next');
 
-    // TOOD(jack): Remove in Nx 15
-    path: options.customServerPath,
-  };
+  yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
+    async ({ done, next, error }) => {
+      const server = fork(nextBin, [mode, ...args, turbo], {
+        cwd: options.dev ? projectRoot : nextDir,
+        stdio: 'inherit',
+      });
 
-  const server: NextServer = options.customServerPath
-    ? customServer
-    : defaultServer;
+      server.once('exit', (code) => {
+        if (code === 0) {
+          done();
+        } else {
+          error(new Error(`Next.js app exited with code ${code}`));
+        }
+      });
 
-  // look for the proxy.conf.json
-  let proxyConfig: ProxyConfig;
-  const proxyConfigPath = options.proxyConfig
-    ? join(context.root, options.proxyConfig)
-    : join(root, 'proxy.conf.json');
+      const killServer = () => {
+        if (server.connected) {
+          server.kill('SIGTERM');
+        }
+      };
+      process.on('exit', () => killServer());
+      process.on('SIGINT', () => killServer());
+      process.on('SIGTERM', () => killServer());
+      process.on('SIGHUP', () => killServer());
 
-  // TODO(v16): Remove proxy support.
-  if (existsSync(proxyConfigPath)) {
-    logger.warn(
-      `The "proxyConfig" option will be removed in Nx 16. Use the "rewrites" feature from Next.js instead. See: https://nextjs.org/docs/api-reference/next.config.js/rewrites`
-    );
-    proxyConfig = require(proxyConfigPath);
-  }
+      await waitForPortOpen(port);
 
-  try {
-    await server(settings, proxyConfig);
-    logger.info(`[ ${chalk.green('ready')} ] on ${baseUrl}`);
-
-    yield {
-      baseUrl,
-      success: true,
-    };
-
-    // This Promise intentionally never resolves, leaving the process running
-    await new Promise<{ success: boolean }>(() => {});
-  } catch (e) {
-    if (options.dev) {
-      throw e;
-    } else {
-      if (process.env.NX_VERBOSE_LOGGING) {
-        console.error(e);
-      }
-      throw new Error(
-        `Could not start production server. Try building your app with \`nx build ${context.projectName}\`.`
-      );
+      next({
+        success: true,
+        baseUrl: `http://${options.hostname ?? 'localhost'}:${port}`,
+      });
     }
-  }
-}
-
-async function* runCustomServer(
-  root: string,
-  options: NextServeBuilderOptions,
-  buildOptions: NextBuildBuilderOptions,
-  context: ExecutorContext
-) {
-  process.env.NX_NEXT_DIR = root;
-  process.env.NX_NEXT_PUBLIC_DIR = join(root, 'public');
-
-  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
-
-  const customServerBuild = await runExecutor(
-    parseTargetString(options.customServerTarget, context.projectGraph),
-    {
-      watch: options.dev ? true : false,
-    },
-    context
   );
-
-  for await (const result of customServerBuild) {
-    if (!result.success) {
-      return result;
-    }
-    yield {
-      success: true,
-      baseUrl,
-    };
-  }
-
-  return { success: true };
 }

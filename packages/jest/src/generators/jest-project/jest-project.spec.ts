@@ -4,8 +4,8 @@ import {
   readProjectConfiguration,
   Tree,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { jestConfigObject } from '../../utils/config/functions';
 
 import { jestProjectGenerator } from './jest-project';
@@ -50,7 +50,11 @@ describe('jestProject', () => {
       project: 'lib1',
       setupFile: 'angular',
     } as JestProjectSchema);
-    expect(tree.exists('libs/lib1/src/test-setup.ts')).toBeTruthy();
+    expect(tree.read('libs/lib1/src/test-setup.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import 'jest-preset-angular/setup-jest';
+      "
+    `);
     expect(tree.exists('libs/lib1/jest.config.ts')).toBeTruthy();
     expect(tree.exists('libs/lib1/tsconfig.spec.json')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
@@ -73,7 +77,7 @@ describe('jestProject', () => {
     } as JestProjectSchema);
     const lib1 = readProjectConfiguration(tree, 'lib1');
     expect(lib1.targets.test).toEqual({
-      executor: '@nrwl/jest:jest',
+      executor: '@nx/jest:jest',
       outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
       options: {
         jestConfig: 'libs/lib1/jest.config.ts',

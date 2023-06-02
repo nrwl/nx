@@ -12,10 +12,48 @@
       "rules": {
         "no-restricted-imports": [
           "error",
-          "@nrwl/workspace",
+          "@nx/workspace",
           "@angular-devkit/core",
           "@angular-devkit/schematics",
           "@angular-devkit/architect"
+        ]
+      }
+    },
+    {
+      "files": ["./plugins/with-nx.ts"],
+      "rules": {
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              "@nx/workspace",
+              "@angular-devkit/core",
+              "@angular-devkit/architect",
+              "@angular-devkit/schematics"
+            ],
+            "patterns": [
+              {
+                "group": ["**/src/**/*"],
+                "message": "Inline functions instead of importing relative files. Relative files are not available in dist.",
+                "allowTypeImports": true
+              },
+              {
+                "group": ["./**/*"],
+                "message": "Inline functions instead of importing relative files. Relative files are not available in dist.",
+                "allowTypeImports": true
+              },
+              {
+                "group": ["@nx/**/*"],
+                "message": "Do not import Nx plugins.",
+                "allowTypeImports": true
+              },
+              {
+                "group": ["nx/**/*"],
+                "message": "Do not import Nx package.",
+                "allowTypeImports": true
+              }
+            ]
+          }
         ]
       }
     },
@@ -28,7 +66,7 @@
       ],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nrwl/nx/nx-plugin-checks": "error"
+        "@nx/nx-plugin-checks": "error"
       }
     }
   ],

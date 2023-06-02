@@ -1,9 +1,5 @@
 import type { Schema } from './schema';
-import {
-  readCachedProjectGraph,
-  workspaceRoot,
-  Workspaces,
-} from '@nrwl/devkit';
+import { readCachedProjectGraph, workspaceRoot, Workspaces } from '@nx/devkit';
 import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
 import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
@@ -14,6 +10,7 @@ import {
 } from '../utilities/module-federation';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
+import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 
 export function executeModuleFederationDevServerBuilder(
   schema: Schema,
@@ -51,7 +48,9 @@ export function executeModuleFederationDevServerBuilder(
 
   validateDevRemotes(options, workspaceProjects);
 
-  const remotesToSkip = new Set(options.skipRemotes ?? []);
+  const remotesToSkip = new Set(
+    findMatchingProjects(options.skipRemotes, projectGraph.nodes) ?? []
+  );
   const staticRemotes = getStaticRemotes(
     project,
     context,
@@ -70,8 +69,8 @@ export function executeModuleFederationDevServerBuilder(
   const devServeRemotes = !options.devRemotes
     ? []
     : Array.isArray(options.devRemotes)
-    ? options.devRemotes
-    : [options.devRemotes];
+    ? findMatchingProjects(options.devRemotes, projectGraph.nodes)
+    : findMatchingProjects([options.devRemotes], projectGraph.nodes);
 
   for (const remote of remotes) {
     const isDev = devServeRemotes.includes(remote);

@@ -1,4 +1,4 @@
-const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+const { composePlugins, withNx, withWeb } = require('@nx/webpack');
 
 // Nx plugins for webpack.
 module.exports = composePlugins(withNx(), withWeb(), (config) => {

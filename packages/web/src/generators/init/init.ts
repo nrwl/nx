@@ -7,10 +7,10 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   nxVersion,
   tsLibVersion,
@@ -19,18 +19,16 @@ import {
 import { Schema } from './schema';
 
 function updateDependencies(tree: Tree, schema: Schema) {
-  removeDependenciesFromPackageJson(tree, ['@nrwl/web'], []);
+  removeDependenciesFromPackageJson(tree, ['@nx/web'], []);
 
   const devDependencies = {
-    '@nrwl/web': nxVersion,
+    '@nx/web': nxVersion,
     '@types/node': typesNodeVersion,
   };
 
   return addDependenciesToPackageJson(
     tree,
     {
-      'core-js': '^3.6.5',
-      'regenerator-runtime': '0.13.7',
       tslib: tsLibVersion,
     },
     devDependencies
@@ -47,7 +45,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
   tasks.push(jsInitTask);
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const { jestInitGenerator } = await ensurePackage('@nrwl/jest', nxVersion);
+    const { jestInitGenerator } = await ensurePackage('@nx/jest', nxVersion);
     const jestTask = await jestInitGenerator(tree, {
       skipPackageJson: schema.skipPackageJson,
     });
@@ -55,7 +53,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
     const { cypressInitGenerator } = await ensurePackage(
-      '@nrwl/cypress',
+      '@nx/cypress',
       nxVersion
     );
     const cypressTask = await cypressInitGenerator(tree, {

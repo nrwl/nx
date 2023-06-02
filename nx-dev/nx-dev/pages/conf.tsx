@@ -1,11 +1,11 @@
-import { Footer, Header } from '@nrwl/nx-dev/ui-common';
+import { Footer, Header } from '@nx/nx-dev/ui-common';
 import {
   ConfHealthAndSafety,
   ConfLocation,
   ConfScheduleShort,
   ConfSpeakers,
   ConfWorkshop,
-} from '@nrwl/nx-dev/ui-conference';
+} from '@nx/nx-dev/ui-conference';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';

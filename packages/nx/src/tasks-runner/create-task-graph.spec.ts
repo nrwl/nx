@@ -12,21 +12,26 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app1-root',
-            files: [],
             targets: {
               prebuild: {
+                executor: 'nx:run-commands',
+              },
+              prebuild2: {
                 executor: 'nx:run-commands',
               },
               build: {
                 executor: 'nx:run-commands',
                 dependsOn: [
                   {
-                    projects: 'dependencies',
+                    dependencies: true,
                     target: 'build',
                   },
                   {
-                    projects: 'self',
                     target: 'prebuild',
+                  },
+                  {
+                    projects: 'app1',
+                    target: 'prebuild2',
                   },
                 ],
               },
@@ -44,7 +49,6 @@ describe('createTaskGraph', () => {
           type: 'lib',
           data: {
             root: 'lib1-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -166,7 +170,7 @@ describe('createTaskGraph', () => {
                 },
                 dependsOn: [
                   {
-                    projects: 'dependencies',
+                    dependencies: true,
                     target: 'build',
                   },
                 ],
@@ -189,7 +193,7 @@ describe('createTaskGraph', () => {
                 defaultConfiguration: 'libDefault',
                 dependsOn: [
                   {
-                    projects: 'dependencies',
+                    dependencies: true,
                     target: 'build',
                   },
                 ],
@@ -330,7 +334,7 @@ describe('createTaskGraph', () => {
                 executor: 'my-executor',
                 dependsOn: [
                   {
-                    projects: 'dependencies',
+                    dependencies: true,
                     target: 'build',
                   },
                 ],
@@ -489,7 +493,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app1-root',
-            files: [],
             targets: {
               'prebuild-base': {
                 executor: 'nx:run-commands',
@@ -501,11 +504,11 @@ describe('createTaskGraph', () => {
                 executor: 'nx:run-commands',
                 dependsOn: [
                   {
-                    projects: 'dependencies',
+                    dependencies: true,
                     target: 'build',
                     params: 'forward',
                   },
-                  { projects: 'self', target: 'prebuild', params: 'forward' },
+                  { target: 'prebuild', params: 'forward' },
                 ],
               },
               test: {
@@ -522,13 +525,12 @@ describe('createTaskGraph', () => {
           type: 'lib',
           data: {
             root: 'lib1-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
                 dependsOn: [
                   {
-                    projects: 'dependencies',
+                    dependencies: true,
                     target: 'build',
                     params: 'ignore',
                   },
@@ -545,7 +547,6 @@ describe('createTaskGraph', () => {
           type: 'lib',
           data: {
             root: 'lib2-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -640,7 +641,7 @@ describe('createTaskGraph', () => {
     );
     // prebuild should also be in here
     expect(taskGraph).toEqual({
-      roots: ['lib1:build', 'app1:prebuild'],
+      roots: ['lib1:build', 'app1:prebuild', 'app1:prebuild2'],
       tasks: {
         'app1:build': {
           id: 'app1:build',
@@ -664,6 +665,17 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
         },
+        'app1:prebuild2': {
+          id: 'app1:prebuild2',
+          target: {
+            project: 'app1',
+            target: 'prebuild2',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+        },
         'lib1:build': {
           id: 'lib1:build',
           target: {
@@ -677,8 +689,9 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:build': ['lib1:build', 'app1:prebuild'],
+        'app1:build': ['lib1:build', 'app1:prebuild', 'app1:prebuild2'],
         'app1:prebuild': [],
+        'app1:prebuild2': [],
         'lib1:build': [],
       },
     });
@@ -697,7 +710,7 @@ describe('createTaskGraph', () => {
     );
     // prebuild should also be in here
     expect(taskGraph).toEqual({
-      roots: ['app1:prebuild', 'lib1:build'],
+      roots: ['app1:prebuild', 'lib1:build', 'app1:prebuild2'],
       tasks: {
         'app1:build': {
           id: 'app1:build',
@@ -721,6 +734,17 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
         },
+        'app1:prebuild2': {
+          id: 'app1:prebuild2',
+          target: {
+            project: 'app1',
+            target: 'prebuild2',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+        },
         'lib1:build': {
           id: 'lib1:build',
           target: {
@@ -734,8 +758,9 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:build': ['lib1:build', 'app1:prebuild'],
+        'app1:build': ['lib1:build', 'app1:prebuild', 'app1:prebuild2'],
         'app1:prebuild': [],
+        'app1:prebuild2': [],
         'lib1:build': [],
       },
     });
@@ -749,7 +774,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app1-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -762,7 +786,6 @@ describe('createTaskGraph', () => {
           type: 'lib',
           data: {
             root: 'lib1-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -775,7 +798,6 @@ describe('createTaskGraph', () => {
           type: 'lib',
           data: {
             root: 'lib2-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -788,7 +810,6 @@ describe('createTaskGraph', () => {
           type: 'lib',
           data: {
             root: 'lib3-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -813,7 +834,7 @@ describe('createTaskGraph', () => {
       {
         build: [
           {
-            projects: 'dependencies',
+            dependencies: true,
             target: 'build',
           },
         ],
@@ -891,7 +912,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app1-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -904,7 +924,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app2-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -917,7 +936,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'infra1-root',
-            files: [],
             targets: {
               apply: {
                 executor: 'nx:run-commands',
@@ -930,7 +948,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'infra2-root',
-            files: [],
             targets: {
               apply: {
                 executor: 'nx:run-commands',
@@ -943,7 +960,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'infra3-root',
-            files: [],
             targets: {
               apply: {
                 executor: 'nx:run-commands',
@@ -974,9 +990,9 @@ describe('createTaskGraph', () => {
       {
         build: ['^build'],
         apply: [
-          { projects: 'dependencies', target: 'build' },
+          { dependencies: true, target: 'build' },
           {
-            projects: 'dependencies',
+            dependencies: true,
             target: 'apply',
             params: 'forward',
           },
@@ -1048,15 +1064,14 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app1-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
-                dependsOn: [{ target: 'test', projects: 'self' }],
+                dependsOn: [{ target: 'test' }],
               },
               test: {
                 executor: 'nx:run-commands',
-                dependsOn: [{ target: 'build', projects: 'self' }],
+                dependsOn: [{ target: 'build' }],
               },
             },
           },
@@ -1117,7 +1132,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app1-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -1130,7 +1144,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app2-root',
-            files: [],
             targets: {},
           },
         },
@@ -1139,7 +1152,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app3-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -1161,7 +1173,7 @@ describe('createTaskGraph', () => {
     const taskGraph = createTaskGraph(
       projectGraph,
       {
-        build: [{ target: 'build', projects: 'dependencies' }],
+        build: [{ target: 'build', dependencies: true }],
       },
       ['app1'],
       ['build'],
@@ -1211,7 +1223,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app1-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -1224,7 +1235,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app2-root',
-            files: [],
             targets: {},
           },
         },
@@ -1233,7 +1243,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app3-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -1252,7 +1261,7 @@ describe('createTaskGraph', () => {
     const taskGraph = createTaskGraph(
       projectGraph,
       {
-        build: [{ target: 'build', projects: 'dependencies' }],
+        build: [{ target: 'build', dependencies: true }],
       },
       ['app1'],
       ['build'],
@@ -1302,13 +1311,12 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app1-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
                 dependsOn: [
-                  { target: 'prebuild', projects: 'self' },
-                  { target: 'build', projects: 'dependencies' },
+                  { target: 'prebuild' },
+                  { target: 'build', dependencies: true },
                 ],
               },
               prebuild: {
@@ -1322,7 +1330,6 @@ describe('createTaskGraph', () => {
           type: 'app',
           data: {
             root: 'app2-root',
-            files: [],
             targets: {
               build: {
                 executor: 'nx:run-commands',
@@ -1412,5 +1419,60 @@ describe('createTaskGraph', () => {
         'app2:build': [],
       },
     });
+  });
+
+  it('should handle glob patterns in dependsOn', () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                dependsOn: [{ target: 'build', projects: 'lib*' }],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+      },
+    };
+    const taskGraph = createTaskGraph(graph, {}, ['app1'], ['build'], null, {});
+    expect(taskGraph.tasks).toHaveProperty('app1:build');
+    expect(taskGraph.tasks).toHaveProperty('lib1:build');
+    expect(taskGraph.tasks).toHaveProperty('lib2:build');
+    expect(taskGraph.dependencies['app1:build']).toEqual([
+      'lib1:build',
+      'lib2:build',
+    ]);
   });
 });

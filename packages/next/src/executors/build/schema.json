@@ -1,17 +1,12 @@
 {
   "version": 2,
-  "outputCapture": "direct-nodejs",
+  "outputCapture": "pipe",
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "title": "Next Build",
   "description": "Build a Next.js app.",
   "type": "object",
   "properties": {
-    "root": {
-      "description": "The source root",
-      "type": "string",
-      "x-priority": "important"
-    },
     "outputPath": {
       "type": "string",
       "description": "The output path of the generated files.",
@@ -59,10 +54,22 @@
     },
     "generateLockfile": {
       "type": "boolean",
-      "description": "Generate a lockfile (e.g. yarn.lock) that matches the workspace lockfile to ensure package versions match.",
+      "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match.",
       "default": false,
       "x-priority": "internal"
+    },
+    "debug": {
+      "type": "boolean",
+      "description": "Enable Next.js debug build logging"
+    },
+    "profile": {
+      "type": "boolean",
+      "description": "Used to enable React Production Profiling"
+    },
+    "experimentalAppOnly": {
+      "type": "boolean",
+      "description": "Only build 'app' routes"
     }
   },
-  "required": ["root", "outputPath"]
+  "required": ["outputPath"]
 }

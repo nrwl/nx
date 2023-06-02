@@ -27,13 +27,13 @@ The following configuration creates `build` and `test` targets for Nx.
   "root": "libs/mylib/",
   "targets": {
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "options": {
         /* ... */
       }
     },
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         /* ... */
       }
@@ -96,14 +96,14 @@ You can add Nx-specific configuration as follows:
   },
   "targets": {
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "inputs": ["default", "^production"],
       "outputs": [],
       "dependsOn": ["build"],
       "options": {}
     },
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "inputs": ["production", "^production"],
       "outputs": ["{workspaceRoot}/dist/libs/mylib"],
       "dependsOn": ["^build"],
@@ -158,12 +158,60 @@ Examples:
 
 Note the result value is hashed, so it is never displayed.
 
+_External Dependencies_
+
+For official plugins, Nx intelligently finds a set of external dependencies which it hashes for the target. `nx:run-commands` is an exception to this.
+Because you may specify any command to be run, it is not possible to determine which, if any, external dependencies are used by the target.
+To be safe, Nx assumes that updating any external dependency invalidates the cache for the target.
+
+> Note: Community plugins are also treated like `nx:run-commands`
+
+This input type allows for you to override this cautious behavior by specifying a set of external dependencies to hash for the target.
+
+Examples:
+
+Targets that only use commands natively available in the terminal will not depend on any external dependencies. Specify an empty array to not hash any external dependencies.
+
+```json
+{
+  "copyFiles": {
+    "inputs": [
+      {
+        "externalDependencies": []
+      }
+    ],
+    "executor": "nx:run-commands",
+    "options": {
+      "command": "cp src/assets dist"
+    }
+  }
+}
+```
+
+If a target uses a command from a npm package, that package should be listed.
+
+```json
+{
+  "copyFiles": {
+    "inputs": [
+      {
+        "externalDependencies": ["lerna"]
+      }
+    ],
+    "executor": "nx:run-commands",
+    "options": {
+      "command": "npx lerna publish"
+    }
+  }
+}
+```
+
 _Named Inputs_
 
 Examples:
 
 - `inputs: ["production"]`
-- same as `inputs: [{input: "production", projects: "self"}]`
+- same as `"inputs": [{"input": "production", "projects": "self"}]` in versions prior to Nx 16, or `"inputs": [{"input": "production"}]` after version 16.
 
 Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
 keeping them in sync is error-prone, we recommend defining `namedInputs`, which you can then reference in all of those
@@ -174,7 +222,7 @@ places.
 Examples:
 
 - `inputs: ["^production"]`
-- same as `inputs: [{input: "production", projects: "dependencies"}]`
+- same as `inputs: [{"input": "production", "projects": "dependencies"}]` prior to Nx 16, or `"inputs": [{"input": "production", "dependencies": true }]` after version 16.
 
 Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
 an example.
@@ -274,7 +322,68 @@ instance, `"dependsOn": ["build"]` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
 
-You can also express the same configuration using:
+You can also express task dependencies with an object syntax:
+
+{% tabs %}
+{% tab label="Version < 16" %}
+
+```json
+"build": {
+  "dependsOn": [{
+    "projects": "dependencies", // "dependencies" or "self"
+    "target": "build", // target name
+    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+  }]
+}
+```
+
+{% /tab %}
+{% tab label="Version 16+ (self)" %}
+
+```json
+"build": {
+  "dependsOn": [{
+    "target": "build", // target name
+    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+  }]
+}
+```
+
+{% /tab %}
+{% tab label="Version 16+ (dependencies)" %}
+
+```json
+"build": {
+  "dependsOn": [{
+    "dependencies": true, // Run this target on all dependencies first
+    "target": "build", // target name
+    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+  }]
+}
+```
+
+{% /tab %}
+{% tab label="Version 16+ (specific projects)" %}
+
+```json
+"build": {
+  "dependsOn": [{
+    "projects": ["my-app"], // Run build on "my-app" first
+    "target": "build", // target name
+    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+  }]
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+#### Examples
+
+You can write the shorthand configuration above in the object syntax like this:
+
+{% tabs %}
+{% tab label="Version < 16" %}
 
 ```json
 "build": {
@@ -285,7 +394,25 @@ You can also express the same configuration using:
 }
 ```
 
+{% /tab %}
+{% tab label="Version 16+" %}
+
+```json
+"build": {
+  "dependsOn": [{ "dependencies": true, "target": "build" }] // Run build on my dependencies first
+},
+"test": {
+  "dependsOn": [{ "target": "build" }] // Run build on myself first
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
 With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target. You can either forward them or you can ignore them (default).
+
+{% tabs %}
+{% tab label="Version < 16" %}
 
 ```json
 "build": {
@@ -302,7 +429,31 @@ With the expanded syntax, you also have a third option available to configure ho
 }
 ```
 
-Obviously this also works when defining a relation for the target of the project itself using `"projects": "self"`:
+{% /tab %}
+{% tab label="Version 16+" %}
+
+```json
+"build": {
+   // forward params passed to this target to the dependency targets
+  "dependsOn": [{ "projects": "{dependencies}", "target": "build", "params": "forward" }]
+},
+"test": {
+  // ignore params passed to this target, won't be forwarded to the dependency targets
+  "dependsOn": [{ "projects": "{dependencies}", "target": "build", "params": "ignore" }]
+}
+"lint": {
+  // ignore params passed to this target, won't be forwarded to the dependency targets
+  "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+This also works when defining a relation for the target of the project itself using `"projects": "self"`:
+
+{% tabs %}
+{% tab label="Version < 16" %}
 
 ```json
 "build": {
@@ -310,6 +461,34 @@ Obviously this also works when defining a relation for the target of the project
   "dependsOn": [{ "projects": "self", "target": "pre-build", "params": "forward" }]
 }
 ```
+
+{% /tab %}
+{% tab label="Version 16+" %}
+
+```json
+"build": {
+   // forward params passed to this target to the project target
+  "dependsOn": [{ "target": "pre-build", "params": "forward" }]
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+Additionally, when using the expanded object syntax, you can specify individual projects in version 16 or greater.
+
+{% tabs %}
+{% tab label="Version 16+" %}
+
+```json
+"build": {
+   // Run is-even:pre-build and is-odd:pre-build before this target
+  "dependsOn": [{ "projects": ["is-even", "is-odd"], "target": "pre-build" }]
+}
+```
+
+{% /tab %}
+{% /tabs %}
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.

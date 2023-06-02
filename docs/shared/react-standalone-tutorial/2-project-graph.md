@@ -85,7 +85,7 @@ root.render(
 ```
 
 ```javascript {% fileName="src/app/app.tsx" %}
-import { RoutesCart } from '@store/cart';
+import { Cart } from '@store/cart';
 import { Route, Routes } from 'react-router-dom';
 import Shop from './shop/shop';
 
@@ -94,7 +94,7 @@ export function App() {
     <>
       <Routes>
         <Route path="/" element={<Shop />}></Route>
-        <Route path="/cart" element={<RoutesCart />}></Route>
+        <Route path="/cart" element={<Cart />}></Route>
       </Routes>
     </>
   );
@@ -109,11 +109,11 @@ When a library is created, Nx adds a new Typescript path to the `tsconfig.base.j
 
 ### `shared-ui`
 
-Run the `@nrwl/react:component` generator with the command:
+Run the `@nx/react:component` generator with the command:
 
-```{% command="npx nx g @nrwl/react:component banner --project=shared-ui --export" path="~/store" %}
+```{% command="npx nx g @nx/react:component banner --project=shared-ui --export" path="~/store" %}
 
->  NX  Generating @nrwl/react:component
+>  NX  Generating @nx/react:component
 
 CREATE shared/ui/src/lib/banner/banner.module.css
 CREATE shared/ui/src/lib/banner/banner.spec.tsx
@@ -145,9 +145,9 @@ import { Link } from 'react-router-dom';
 import styles from './cart.module.css';
 
 /* eslint-disable-next-line */
-export interface RoutesCartProps {}
+export interface CartProps {}
 
-export function RoutesCart(props: RoutesCartProps) {
+export function Cart(props: CartProps) {
   return (
     <div className={styles['container']}>
       <Banner text="Welcome to the cart." />
@@ -156,7 +156,7 @@ export function RoutesCart(props: RoutesCartProps) {
   );
 }
 
-export default RoutesCart;
+export default Cart;
 ```
 
 ### `store`

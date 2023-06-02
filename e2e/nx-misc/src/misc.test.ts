@@ -1,6 +1,7 @@
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import type { NxJsonConfiguration, ProjectConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
+  createNonNxProjectDirectory,
   e2eCwd,
   getPackageManagerCommand,
   getPublishedVersion,
@@ -16,7 +17,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { renameSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
@@ -36,8 +37,8 @@ describe('Nx Commands', () => {
         runCLI('show projects').replace(/.*nx show projects( --verbose)?\n/, '')
       ).toEqual('');
 
-      runCLI(`generate @nrwl/web:app ${app1}`);
-      runCLI(`generate @nrwl/web:app ${app2}`);
+      runCLI(`generate @nx/web:app ${app1} --tags e2etag`);
+      runCLI(`generate @nx/web:app ${app2}`);
 
       const s = runCLI('show projects').split('\n');
 
@@ -46,6 +47,27 @@ describe('Nx Commands', () => {
       expect(s).toContain(app2);
       expect(s).toContain(`${app1}-e2e`);
       expect(s).toContain(`${app2}-e2e`);
+
+      const withTag = JSON.parse(runCLI('show projects -p tag:e2etag --json'));
+      expect(withTag).toEqual([app1]);
+
+      const withTargets = JSON.parse(
+        runCLI('show projects --with-target e2e --json')
+      );
+      expect(withTargets).toEqual(
+        expect.arrayContaining([`${app1}-e2e`, `${app2}-e2e`])
+      );
+      expect(withTargets.length).toEqual(2);
+    });
+
+    it('should show detailed project info', () => {
+      const app = uniq('myapp');
+      runCLI(`generate @nx/web:app ${app}`);
+      const project: ProjectConfiguration = JSON.parse(
+        runCLI(`show project ${app}`)
+      );
+      expect(project.targets.build).toBeDefined();
+      expect(project.targets.lint).toBeDefined();
     });
   });
 
@@ -55,10 +77,10 @@ describe('Nx Commands', () => {
 
       expect(reportOutput).toEqual(
         expect.stringMatching(
-          new RegExp(`\@nrwl\/workspace.*:.*${getPublishedVersion()}`)
+          new RegExp(`\@nx\/workspace.*:.*${getPublishedVersion()}`)
         )
       );
-      expect(reportOutput).toContain('@nrwl/workspace');
+      expect(reportOutput).toContain('@nx/workspace');
     }, 120000);
 
     it(`should list plugins`, async () => {
@@ -67,36 +89,43 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('NX   Installed plugins');
 
       // just check for some, not all
-      expect(listOutput).toContain('@nrwl/angular');
+      expect(listOutput).toContain('@nx/workspace');
 
       // temporarily make it look like this isn't installed
       renameSync(
-        tmpProjPath('node_modules/@nrwl/angular'),
-        tmpProjPath('node_modules/@nrwl/angular_tmp')
+        tmpProjPath('node_modules/@nx/next'),
+        tmpProjPath('node_modules/@nx/next_tmp')
       );
 
       listOutput = runCLI('list');
       expect(listOutput).toContain('NX   Also available');
 
       // look for specific plugin
-      listOutput = runCLI('list @nrwl/workspace');
+      listOutput = runCLI('list @nx/workspace');
 
-      expect(listOutput).toContain('Capabilities in @nrwl/workspace');
+      expect(listOutput).toContain('Capabilities in @nx/workspace');
 
       // check for schematics
       expect(listOutput).toContain('workspace');
       expect(listOutput).toContain('library');
-      expect(listOutput).toContain('workspace-generator');
 
       // check for builders
       expect(listOutput).toContain('run-commands');
 
-      // // look for uninstalled core plugin
-      listOutput = runCLI('list @nrwl/angular');
+      listOutput = runCLI('list @nx/angular');
 
-      expect(listOutput).toContain(
-        'NX   @nrwl/angular is not currently installed'
-      );
+      expect(listOutput).toContain('Capabilities in @nx/angular');
+
+      expect(listOutput).toContain('library');
+      expect(listOutput).toContain('component');
+
+      // check for builders
+      expect(listOutput).toContain('package');
+
+      // // look for uninstalled core plugin
+      listOutput = runCLI('list @nx/next');
+
+      expect(listOutput).toContain('NX   @nx/next is not currently installed');
 
       // look for an unknown plugin
       listOutput = runCLI('list @wibble/fish');
@@ -105,10 +134,10 @@ describe('Nx Commands', () => {
         'NX   @wibble/fish is not currently installed'
       );
 
-      // put back the @nrwl/angular module (or all the other e2e tests after this will fail)
+      // put back the @nx/angular module (or all the other e2e tests after this will fail)
       renameSync(
-        tmpProjPath('node_modules/@nrwl/angular_tmp'),
-        tmpProjPath('node_modules/@nrwl/angular')
+        tmpProjPath('node_modules/@nx/next_tmp'),
+        tmpProjPath('node_modules/@nx/next')
       );
     }, 120000);
   });
@@ -118,8 +147,8 @@ describe('Nx Commands', () => {
     const mylib = uniq('mylib');
 
     beforeAll(() => {
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      runCLI(`generate @nrwl/js:lib ${mylib}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
     });
 
     beforeEach(() => {
@@ -297,6 +326,8 @@ describe('migrate', () => {
             description: '1.1.0',
             factory: './run11',
           },
+        },
+        generators: {
           run20: {
             version: '2.0.0',
             description: '2.0.0',
@@ -309,6 +340,7 @@ describe('migrate', () => {
     updateFile(
       `./node_modules/migrate-parent-package/run11.js`,
       `
+        var angular_devkit_core1 = require("@angular-devkit/core");
         exports.default = function default_1() {
           return function(host) {
             host.create('file-11', 'content11')
@@ -334,13 +366,15 @@ describe('migrate', () => {
       })
     );
 
-    updateFile('./node_modules/nx/src/command-line/migrate.js', (content) => {
-      const start = content.indexOf('// testing-fetch-start');
-      const end = content.indexOf('// testing-fetch-end');
+    updateFile(
+      './node_modules/nx/src/command-line/migrate/migrate.js',
+      (content) => {
+        const start = content.indexOf('// testing-fetch-start');
+        const end = content.indexOf('// testing-fetch-end');
 
-      const before = content.substring(0, start);
-      const after = content.substring(end);
-      const newFetch = `
+        const before = content.substring(0, start);
+        const after = content.substring(end);
+        const newFetch = `
              function createFetcher(logger) {
               return function fetch(packageName) {
                 if (packageName === 'migrate-parent-package') {
@@ -372,8 +406,9 @@ describe('migrate', () => {
             }
             `;
 
-      return `${before}${newFetch}${after}`;
-    });
+        return `${before}${newFetch}${after}`;
+      }
+    );
   });
 
   it('should run migrations', () => {
@@ -583,8 +618,6 @@ describe('global installation', () => {
   let oldPath: string;
 
   beforeAll(() => {
-    newProject();
-
     ensureDirSync(globalsPath);
     writeFileSync(
       path.join(path.dirname(path.dirname(globalsPath)), 'package.json'),
@@ -613,66 +646,95 @@ describe('global installation', () => {
     process.env.PATH = oldPath;
   });
 
-  it('should invoke Nx commands from local repo', () => {
-    const nxJsContents = readFile('node_modules/nx/bin/nx.js');
-    updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
-    let output: string;
-    expect(() => {
-      output = runCommand(`nx show projects`);
-    }).not.toThrow();
-    expect(output).toContain('local install');
-    updateFile('node_modules/nx/bin/nx.js', nxJsContents);
+  describe('inside nx directory', () => {
+    beforeAll(() => {
+      newProject();
+    });
+
+    it('should invoke Nx commands from local repo', () => {
+      const nxJsContents = readFile('node_modules/nx/bin/nx.js');
+      updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
+      let output: string;
+      expect(() => {
+        output = runCommand(`nx show projects`);
+      }).not.toThrow();
+      expect(output).toContain('local install');
+      updateFile('node_modules/nx/bin/nx.js', nxJsContents);
+    });
+
+    it('should warn if local Nx has higher major version', () => {
+      const packageJsonContents = readFile('node_modules/nx/package.json');
+      updateJson('node_modules/nx/package.json', (json) => {
+        json.version = `${major(getPublishedVersion()) + 2}.0.0`;
+        return json;
+      });
+      let output: string;
+      expect(() => {
+        output = runCommand(`nx show projects`);
+      }).not.toThrow();
+      expect(output).toContain('Its time to update Nx');
+      updateFile('node_modules/nx/package.json', packageJsonContents);
+    });
+
+    it('--version should display global installs version', () => {
+      const packageJsonContents = readFile('node_modules/nx/package.json');
+      const localVersion = `${major(getPublishedVersion()) + 2}.0.0`;
+      updateJson('node_modules/nx/package.json', (json) => {
+        json.version = localVersion;
+        return json;
+      });
+      let output: string;
+      expect(() => {
+        output = runCommand(`nx --version`);
+      }).not.toThrow();
+      expect(output).toContain(`- Local: v${localVersion}`);
+      expect(output).toContain(`- Global: v${getPublishedVersion()}`);
+      updateFile('node_modules/nx/package.json', packageJsonContents);
+    });
+
+    it('report should display global installs version', () => {
+      const packageJsonContents = readFile('node_modules/nx/package.json');
+      const localVersion = `${major(getPublishedVersion()) + 2}.0.0`;
+      updateJson('node_modules/nx/package.json', (json) => {
+        json.version = localVersion;
+        return json;
+      });
+      let output: string;
+      expect(() => {
+        output = runCommand(`nx report`);
+      }).not.toThrow();
+      expect(output).toEqual(
+        expect.stringMatching(new RegExp(`nx.*:.*${localVersion}`))
+      );
+      expect(output).toEqual(
+        expect.stringMatching(
+          new RegExp(`nx \\(global\\).*:.*${getPublishedVersion()}`)
+        )
+      );
+      updateFile('node_modules/nx/package.json', packageJsonContents);
+    });
   });
 
-  it('should warn if local Nx has higher major version', () => {
-    const packageJsonContents = readFile('node_modules/nx/package.json');
-    updateJson('node_modules/nx/package.json', (json) => {
-      json.version = `${major(getPublishedVersion()) + 2}.0.0`;
-      return json;
+  describe('non-nx directory', () => {
+    beforeAll(() => {
+      createNonNxProjectDirectory();
     });
-    let output: string;
-    expect(() => {
-      output = runCommand(`nx show projects`);
-    }).not.toThrow();
-    expect(output).toContain('Its time to update Nx');
-    updateFile('node_modules/nx/package.json', packageJsonContents);
-  });
 
-  it('--version should display global installs version', () => {
-    const packageJsonContents = readFile('node_modules/nx/package.json');
-    const localVersion = `${major(getPublishedVersion()) + 2}.0.0`;
-    updateJson('node_modules/nx/package.json', (json) => {
-      json.version = localVersion;
-      return json;
+    it('--version should report global version and local not found', () => {
+      let output: string;
+      expect(() => {
+        output = runCommand(`nx --version`);
+      }).not.toThrow();
+      expect(output).toContain(`- Local: Not found`);
+      expect(output).toContain(`- Global: v${getPublishedVersion()}`);
     });
-    let output: string;
-    expect(() => {
-      output = runCommand(`nx --version`);
-    }).not.toThrow();
-    expect(output).toContain(`- Local: v${localVersion}`);
-    expect(output).toContain(`- Global: v${getPublishedVersion()}`);
-    updateFile('node_modules/nx/package.json', packageJsonContents);
-  });
 
-  it('report should display global installs version', () => {
-    const packageJsonContents = readFile('node_modules/nx/package.json');
-    const localVersion = `${major(getPublishedVersion()) + 2}.0.0`;
-    updateJson('node_modules/nx/package.json', (json) => {
-      json.version = localVersion;
-      return json;
+    it('graph should work in npm workspaces repo', () => {
+      expect(() => {
+        runCommand(`nx graph --file graph.json`);
+      }).not.toThrow();
+      const { graph } = readJson('graph.json');
+      expect(graph).toHaveProperty('nodes');
     });
-    let output: string;
-    expect(() => {
-      output = runCommand(`nx report`);
-    }).not.toThrow();
-    expect(output).toEqual(
-      expect.stringMatching(new RegExp(`nx.*:.*${localVersion}`))
-    );
-    expect(output).toEqual(
-      expect.stringMatching(
-        new RegExp(`nx \\(global\\).*:.*${getPublishedVersion()}`)
-      )
-    );
-    updateFile('node_modules/nx/package.json', packageJsonContents);
   });
 });

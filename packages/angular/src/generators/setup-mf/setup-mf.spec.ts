@@ -3,8 +3,8 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../utils/testing';
 import { setupMf } from './setup-mf';
 
@@ -125,15 +125,29 @@ describe('Init MF', () => {
 
       expect(serve.executor).toEqual(
         type === 'host'
-          ? '@nrwl/angular:module-federation-dev-server'
-          : '@nrwl/angular:webpack-dev-server'
+          ? '@nx/angular:module-federation-dev-server'
+          : '@nx/angular:webpack-dev-server'
       );
-      expect(build.executor).toEqual('@nrwl/angular:webpack-browser');
+      expect(build.executor).toEqual('@nx/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(
         `apps/${app}/webpack.config.js`
       );
     }
   );
+
+  it('should not generate a webpack prod file for dynamic host', async () => {
+    // ACT
+    await setupMf(tree, {
+      appName: 'app1',
+      mfType: 'host',
+      federationType: 'dynamic',
+    });
+
+    // ASSERT
+    const { build } = readProjectConfiguration(tree, 'app1').targets;
+    expect(tree.exists('apps/app1/webpack.prod.config.js')).toBeFalsy();
+    expect(build.configurations.production.customWebpackConfig).toBeUndefined();
+  });
 
   it('should generate the remote entry module and component correctly', async () => {
     // ACT

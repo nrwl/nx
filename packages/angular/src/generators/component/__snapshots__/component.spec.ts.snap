@@ -24,6 +24,18 @@ export class ExampleComponent {}
 "
 `;
 
+exports[`component Generator --module should import the component correctly to the module file when flat is false 1`] = `
+"import { NgModule } from '@angular/core';
+import { ExampleComponent } from './example/example.component';
+
+@NgModule({
+  declarations: [ExampleComponent],
+  exports: [ExampleComponent],
+})
+export class LibModule {}
+"
+`;
+
 exports[`component Generator --path should create the component correctly and export it in the entry point 1`] = `
 "import { Component } from '@angular/core';
 

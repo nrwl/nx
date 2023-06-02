@@ -5,11 +5,11 @@ import {
   Tree,
   updateNxJson,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { npmPackageGenerator } from './npm-package';
 
-describe('@nrwl/workspace:npm-package', () => {
+describe('@nx/workspace:npm-package', () => {
   let tree: Tree;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
@@ -29,7 +29,7 @@ describe('@nrwl/workspace:npm-package', () => {
 
     const project = readProjectConfiguration(tree, 'my-package');
     expect(project).toMatchInlineSnapshot(`
-      Object {
+      {
         "$schema": "../../node_modules/nx/schemas/project-schema.json",
         "name": "my-package",
         "root": "packages/my-package",
@@ -45,10 +45,10 @@ describe('@nrwl/workspace:npm-package', () => {
     expect(tree.read('packages/my-package/package.json').toString())
       .toMatchInlineSnapshot(`
       "{
-        \\"name\\": \\"@proj/my-package\\",
-        \\"version\\": \\"0.0.0\\",
-        \\"scripts\\": {
-          \\"test\\": \\"node index.js\\"
+        "name": "@proj/my-package",
+        "version": "0.0.0",
+        "scripts": {
+          "test": "node index.js"
         }
       }
       "

@@ -1,13 +1,13 @@
 import { dirname, join, relative } from 'path';
 import { directoryExists, fileExists } from './fileutils';
-import type { ProjectGraph, ProjectGraphProjectNode } from '@nrwl/devkit';
+import type { ProjectGraph, ProjectGraphProjectNode } from '@nx/devkit';
 import {
   getOutputsForTargetAndConfiguration,
   ProjectGraphExternalNode,
   readJsonFile,
   stripIndents,
   writeJsonFile,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from './output';
@@ -25,7 +25,7 @@ function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
 }
 
 /**
- * @deprecated This type will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This type will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export type DependentBuildableProjectNode = {
   name: string;
@@ -34,7 +34,7 @@ export type DependentBuildableProjectNode = {
 };
 
 /**
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function calculateProjectDependencies(
   projGraph: ProjectGraph,
@@ -139,7 +139,8 @@ function collectDependencies(
   areTopLevelDeps = true
 ): { name: string; isTopLevel: boolean }[] {
   (projGraph.dependencies[project] || []).forEach((dependency) => {
-    if (!acc.some((dep) => dep.name === dependency.target)) {
+    const existingEntry = acc.find((dep) => dep.name === dependency.target);
+    if (!existingEntry) {
       // Temporary skip this. Currently the set of external nodes is built from package.json, not lock file.
       // As a result, some nodes might be missing. This should not cause any issues, we can just skip them.
       if (
@@ -153,6 +154,8 @@ function collectDependencies(
       if (!shallow && isInternalTarget) {
         collectDependencies(dependency.target, projGraph, acc, shallow, false);
       }
+    } else if (areTopLevelDeps && !existingEntry.isTopLevel) {
+      existingEntry.isTopLevel = true;
     }
   });
   return acc;
@@ -223,7 +226,7 @@ function readPaths(tsConfig: string | ts.ParsedCommandLine) {
 }
 
 /**
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function createTmpTsConfig(
   tsconfigPath: string,
@@ -256,7 +259,7 @@ function cleanupTmpTsConfigFile(tmpTsConfigPath) {
 }
 
 /**
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function checkDependentProjectsHaveBeenBuilt(
   root: string,
@@ -285,7 +288,7 @@ export function checkDependentProjectsHaveBeenBuilt(
 }
 
 /**
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function findMissingBuildDependencies(
   root: string,
@@ -312,7 +315,7 @@ export function findMissingBuildDependencies(
 }
 
 /**
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function updatePaths(
   dependencies: DependentBuildableProjectNode[],
@@ -361,7 +364,7 @@ export function updatePaths(
 /**
  * Updates the peerDependencies section in the `dist/lib/xyz/package.json` with
  * the proper dependency and version
- * @deprecated This function will be removed from @nrwl/workspace in version 17. Prefer importing from @nrwl/js.
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function updateBuildableProjectPackageJsonDependencies(
   root: string,

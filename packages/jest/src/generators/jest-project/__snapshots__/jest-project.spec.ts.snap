@@ -6,7 +6,7 @@ export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': [
+    '^.+\\\\.[tj]sx?$': [
       '@swc/jest',
       { jsc: { transform: { react: { runtime: 'automatic' } } } },
     ],
@@ -23,7 +23,7 @@ export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': 'babel-jest',
+    '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/libs/lib1',
@@ -37,7 +37,7 @@ export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]s$': 'babel-jest',
+    '^.+\\\\.[tj]s$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/lib1',
@@ -53,15 +53,15 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../coverage/libs/lib1',
   transform: {
-    '^.+\\\\\\\\.(ts|mjs|js|html)$': [
+    '^.+\\\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
-        stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
+        stringifyContentPathRegex: '\\\\.(html|svg)$',
       },
     ],
   },
-  transformIgnorePatterns: ['node_modules/(?!.*\\\\\\\\.mjs$)'],
+  transformIgnorePatterns: ['node_modules/(?!.*\\\\.mjs$)'],
   snapshotSerializers: [
     'jest-preset-angular/build/serializers/no-ng-attributes',
     'jest-preset-angular/build/serializers/ng-snapshot',
@@ -81,7 +81,7 @@ export default {
 "
 `;
 
-exports[`jestProject should generate files 1`] = `
+exports[`jestProject should generate files 2`] = `
 "/* eslint-disable */
 export default {
   displayName: 'lib1',
@@ -89,15 +89,15 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../coverage/libs/lib1',
   transform: {
-    '^.+\\\\\\\\.(ts|mjs|js|html)$': [
+    '^.+\\\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
-        stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
+        stringifyContentPathRegex: '\\\\.(html|svg)$',
       },
     ],
   },
-  transformIgnorePatterns: ['node_modules/(?!.*\\\\\\\\.mjs$)'],
+  transformIgnorePatterns: ['node_modules/(?!.*\\\\.mjs$)'],
   snapshotSerializers: [
     'jest-preset-angular/build/serializers/no-ng-attributes',
     'jest-preset-angular/build/serializers/ng-snapshot',
@@ -108,19 +108,19 @@ export default {
 `;
 
 exports[`jestProject should use jest.config.js in project config with --js flag 1`] = `
-Object {
-  "configurations": Object {
-    "ci": Object {
+{
+  "configurations": {
+    "ci": {
       "ci": true,
       "codeCoverage": true,
     },
   },
-  "executor": "@nrwl/jest:jest",
-  "options": Object {
+  "executor": "@nx/jest:jest",
+  "options": {
     "jestConfig": "libs/lib1/jest.config.js",
     "passWithNoTests": true,
   },
-  "outputs": Array [
+  "outputs": [
     "{workspaceRoot}/coverage/{projectRoot}",
   ],
 }

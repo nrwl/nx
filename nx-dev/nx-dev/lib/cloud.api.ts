@@ -1,7 +1,7 @@
 import {
   DocumentsApi,
   TagsApi,
-} from '@nrwl/nx-dev/data-access-documents/node-only';
+} from '@nx/nx-dev/data-access-documents/node-only';
 
 // Imports JSON directly, so they can be bundled into the app and functions.
 // Also provides some test safety.
@@ -12,6 +12,6 @@ export const nxCloudApi = new DocumentsApi({
   id: 'cloud',
   manifest: documents,
   prefix: '',
-  publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+  publicDocsRoot: 'public/documentation',
   tagsApi: new TagsApi(tags),
 });

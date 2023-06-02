@@ -15,11 +15,12 @@ export interface Globals {
 export interface RollupExecutorOptions {
   outputPath: string;
   tsConfig: string;
+  allowJs?: boolean;
   project: string;
   main: string;
   outputFileName?: string;
   extractCss?: boolean | string;
-  external?: string[];
+  external?: string[] | 'all' | 'none';
   rollupConfig?: string | string[];
   watch?: boolean;
   assets?: any[];
@@ -29,7 +30,6 @@ export interface RollupExecutorOptions {
   format?: string[];
   compiler?: 'babel' | 'tsc' | 'swc';
   javascriptEnabled?: boolean;
-  // TODO(jack): remove this for Nx 16
-  skipTypeField?: boolean;
   generateExportsField?: boolean;
+  skipTypeCheck?: boolean;
 }

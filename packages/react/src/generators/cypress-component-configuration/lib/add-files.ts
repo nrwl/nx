@@ -1,27 +1,19 @@
 import {
   addDependenciesToPackageJson,
-  createProjectGraphAsync,
-  ensurePackage,
-  generateFiles,
   joinPathFragments,
   logger,
-  parseTargetString,
   ProjectConfiguration,
-  readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from 'nx/src/utils/versions';
-import { getComponentNode } from '../../../utils/ast-utils';
 import { componentTestGenerator } from '../../component-test/component-test';
-import { CypressComponentConfigurationSchema } from '../schema';
-import { FoundTarget } from './update-configs';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
-
-let tsModule: typeof import('typescript');
-
-const allowedFileExt = new RegExp(/\.[jt]sx?/g);
-const isSpecFile = new RegExp(/(spec|test)\./g);
+import type { CypressComponentConfigurationSchema } from '../schema';
+import {
+  FoundTarget,
+  getBundlerFromTarget,
+  isComponent,
+} from '../../../utils/ct-utils';
 
 export async function addFiles(
   tree: Tree,
@@ -29,15 +21,12 @@ export async function addFiles(
   options: CypressComponentConfigurationSchema,
   found: FoundTarget
 ) {
-  const cypressConfigPath = joinPathFragments(
-    projectConfig.root,
-    'cypress.config.ts'
+  // must dyanmicaly import to prevent packages not using cypress from erroring out
+  // when importing react
+  const { addMountDefinition, addDefaultCTConfig } = await import(
+    '@nx/cypress/src/utils/config'
   );
-  if (tree.exists(cypressConfigPath)) {
-    tree.delete(cypressConfigPath);
-  }
-
-  const actualBundler = await getBundler(found, tree);
+  const actualBundler = await getBundlerFromTarget(found, tree);
 
   if (options.bundler && options.bundler !== actualBundler) {
     logger.warn(
@@ -46,21 +35,45 @@ export async function addFiles(
     );
   }
 
-  generateFiles(
-    tree,
-    joinPathFragments(__dirname, '..', 'files'),
+  const bundlerToUse = options.bundler ?? actualBundler;
+
+  const commandFile = joinPathFragments(
     projectConfig.root,
-    {
-      tpl: '',
-      bundler: options.bundler ?? actualBundler,
-    }
+    'cypress',
+    'support',
+    'component.ts'
+  );
+
+  const updatedCommandFile = await addMountDefinition(
+    tree.read(commandFile, 'utf-8')
+  );
+  tree.write(
+    commandFile,
+    `import { mount } from 'cypress/react18';\n${updatedCommandFile}`
+  );
+  const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
+  const updatedCyConfig = await addDefaultCTConfig(
+    tree.read(cyFile, 'utf-8'),
+
+    { bundler: bundlerToUse }
+  );
+  tree.write(
+    cyFile,
+    `import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';\n${updatedCyConfig}`
   );
 
   if (
     options.bundler === 'webpack' ||
     (!options.bundler && actualBundler === 'webpack')
   ) {
-    addDependenciesToPackageJson(tree, {}, { '@nrwl/webpack': nxVersion });
+    addDependenciesToPackageJson(tree, {}, { '@nx/webpack': nxVersion });
+  }
+
+  if (
+    options.bundler === 'vite' ||
+    (!options.bundler && actualBundler === 'vite')
+  ) {
+    addDependenciesToPackageJson(tree, {}, { '@nx/vite': nxVersion });
   }
 
   if (options.generateTests) {
@@ -78,43 +91,4 @@ export async function addFiles(
       });
     }
   }
-}
-
-async function getBundler(
-  found: FoundTarget,
-  tree: Tree
-): Promise<'vite' | 'webpack'> {
-  if (found.target && found.config?.executor) {
-    return found.config.executor === '@nrwl/vite:build' ? 'vite' : 'webpack';
-  }
-
-  const { target, project } = parseTargetString(
-    found.target,
-    await createProjectGraphAsync()
-  );
-  const projectConfig = readProjectConfiguration(tree, project);
-  return projectConfig?.targets?.[target]?.executor === '@nrwl/vite:build'
-    ? 'vite'
-    : 'webpack';
-}
-
-function isComponent(tree: Tree, filePath: string): boolean {
-  if (!tsModule) {
-    tsModule = ensureTypescript();
-  }
-
-  if (isSpecFile.test(filePath) || !allowedFileExt.test(filePath)) {
-    return false;
-  }
-
-  const content = tree.read(filePath, 'utf-8');
-  const sourceFile = tsModule.createSourceFile(
-    filePath,
-    content,
-    tsModule.ScriptTarget.Latest,
-    true
-  );
-
-  const cmpDeclaration = getComponentNode(sourceFile);
-  return !!cmpDeclaration;
 }

@@ -3,7 +3,7 @@ import {
   formatFiles,
   getProjects,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * Add build-ios target for react-native
@@ -26,9 +26,8 @@ export default async function update(tree: Tree) {
           options: {},
         };
       }
+      updateProjectConfiguration(tree, name, config);
     }
-
-    updateProjectConfiguration(tree, name, config);
   }
 
   await formatFiles(tree);

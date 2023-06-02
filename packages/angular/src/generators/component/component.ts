@@ -1,10 +1,10 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   formatFiles,
   generateFiles,
   joinPathFragments,
   names,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { addToNgModule } from '../utils';
 import {
   exportComponentInEntryPoint,
@@ -82,12 +82,7 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
       modulePath,
       componentNames.fileName,
       `${componentNames.className}${typeNames.className}`,
-      options.flat
-        ? `${componentNames.fileName}.${typeNames.fileName}`
-        : joinPathFragments(
-            componentNames.fileName,
-            `${componentNames.fileName}.${typeNames.fileName}`
-          ),
+      `${componentNames.fileName}.${typeNames.fileName}`,
       'declarations',
       options.flat,
       options.export

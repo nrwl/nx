@@ -1,4 +1,4 @@
-import type { Target } from 'nx/src/command-line/run';
+import type { Target } from 'nx/src/command-line/run/run';
 import type { ExecutorContext } from 'nx/src/config/misc-interfaces';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { combineOptionsForExecutor } from 'nx/src/utils/params';
@@ -15,7 +15,9 @@ export function readTargetOptions<T = any>(
   { project, target, configuration }: Target,
   context: ExecutorContext
 ): T {
-  const projectConfiguration = context.workspace.projects[project];
+  const projectConfiguration = (
+    context.workspace || context.projectsConfigurations
+  ).projects[project];
   const targetConfiguration = projectConfiguration.targets[target];
 
   const ws = new Workspaces(context.root);
@@ -24,7 +26,7 @@ export function readTargetOptions<T = any>(
 
   const defaultProject = ws.calculateDefaultProjectName(
     context.cwd,
-    { version: 2, projects: context.workspace.projects },
+    { version: 2, projects: context.projectsConfigurations.projects },
     context.nxJsonConfiguration
   );
 

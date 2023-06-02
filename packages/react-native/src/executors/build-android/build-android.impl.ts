@@ -1,4 +1,4 @@
-import { ExecutorContext, names } from '@nrwl/devkit';
+import { ExecutorContext, names } from '@nx/devkit';
 import { join } from 'path';
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { ChildProcess, fork } from 'child_process';
@@ -71,7 +71,7 @@ function runCliBuild(
      */
     childProcess = fork(
       join(workspaceRoot, './node_modules/react-native/cli.js'),
-      ['run-android', ...createBuildAndroidOptions(options), '--no-packager'],
+      ['build-android', ...createBuildAndroidOptions(options), '--no-packager'],
       {
         cwd: join(workspaceRoot, projectRoot),
         env: { ...process.env, RCT_METRO_PORT: options.port.toString() },

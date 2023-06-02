@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nrwl/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 

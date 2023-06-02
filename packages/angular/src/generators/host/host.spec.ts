@@ -1,5 +1,5 @@
-import { stripIndents, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { stripIndents, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
   readProjectConfiguration,
@@ -64,10 +64,10 @@ describe('Host App Generator', () => {
     ).toContain(`'remote1', 'remote2'`);
     expect(tree.read('apps/host-app/src/app/app.component.html', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "<ul class=\\"remote-menu\\">
-        <li><a routerLink=\\"/\\">Home</a></li>
-        <li><a routerLink=\\"remote1\\">Remote1</a></li>
-        <li><a routerLink=\\"remote2\\">Remote2</a></li>
+      "<ul class="remote-menu">
+        <li><a routerLink="/">Home</a></li>
+        <li><a routerLink="remote1">Remote1</a></li>
+        <li><a routerLink="remote2">Remote2</a></li>
       </ul>
       <router-outlet></router-outlet>
       "
@@ -225,6 +225,49 @@ describe('Host App Generator', () => {
       ).toMatchSnapshot();
       expect(
         tree.read(`apps/test/src/app/app.routes.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(project.targets.server).toMatchSnapshot();
+      expect(project.targets['serve-ssr']).toMatchSnapshot();
+    });
+
+    it('should generate the correct files for standalone', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+      // ACT
+      await generateTestHostApplication(tree, {
+        name: 'test',
+        standalone: true,
+        ssr: true,
+      });
+
+      // ASSERT
+      const project = readProjectConfiguration(tree, 'test');
+      expect(tree.exists(`apps/test/src/app/app.module.ts`)).toBeFalsy();
+      expect(
+        tree.read(`apps/test/src/bootstrap.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/bootstrap.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/main.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(tree.read(`apps/test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/module-federation.config.js`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/webpack.server.config.js`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/app.routes.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/app.config.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/app.config.server.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();

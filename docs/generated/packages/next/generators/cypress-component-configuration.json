@@ -1,0 +1,53 @@
+{
+  "name": "cypress-component-configuration",
+  "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "CypressComponentConfiguration",
+    "title": "NextJS Component Testing Configuration",
+    "description": "Add Cypress Componet Testing to an existing NextJS project.",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g @nx/next:cypress-component-configuration --project=my-next-project",
+        "description": "Add component testing to your Next project"
+      },
+      {
+        "command": "nx g @nx/next:cypress-component-configuration --project=my-next-project --generate-tests",
+        "description": "Add component testing to your Next project and generate component tests for your existing components"
+      }
+    ],
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project to add cypress component testing configuration to",
+        "x-dropdown": "projects",
+        "x-prompt": "What project should we add Cypress component testing to?",
+        "x-priority": "important"
+      },
+      "generateTests": {
+        "type": "boolean",
+        "description": "Generate default component tests for existing components in the project",
+        "x-prompt": "Automatically generate tests for components declared in this project?",
+        "default": false,
+        "x-priority": "important"
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["project"],
+    "examplesFile": "{% callout type=\"caution\" title=\"Can I use component testing?\" %}\nNext component testing with Nx requires **Cypress version 10.7.0** and up.\n\nYou can migrate with to v10 via the [migrate-to-cypress-11 generator](/packages/cypress/generators/migrate-to-cypress-11).\n\nThis generator is for Cypress based component testing.\n\nIf you want to test components via Storybook with Cypress, then check out the [storybook-configuration generator docs](/packages/react/generators/storybook-configuration)\n{% /callout %}\n\nThis generator is designed to get your Next project up and running with Cypress Component Testing.\n\n```shell\nnx g @nx/next:cypress-component-configuration --project=my-cool-next-project\n```\n\nRunning this generator, adds the required files to the specified project with a preconfigured `cypress.config.ts` designed for Nx workspaces.\n\n```ts {% fileName=\"cypress.config.ts\" %}\nimport { defineConfig } from 'cypress';\nimport { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';\n\nexport default defineConfig({\n  component: nxComponentTestingPreset(__filename),\n});\n```\n\nHere is an example on how to add custom options to the configuration\n\n```ts {% fileName=\"cypress.config.ts\" %}\nimport { defineConfig } from 'cypress';\nimport { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';\n\nexport default defineConfig({\n  component: {\n    ...nxComponentTestingPreset(__filename),\n    // extra options here\n  },\n});\n```\n\n```shell\nnx g @nx/next:cypress-component-project --project=my-cool-next-project\n```\n\n## Auto Generating Tests\n\nYou can optionally use the `--generate-tests` flag to generate a test file for each component in your project.\n\n```shell\nnx g @nx/next:cypress-component-configuration --project=my-cool-next-project --generate-tests\n```\n\n## Running Component Tests\n\nA new `component-test` target will be added to the specified project to run your component tests.\n\n```shell\nnx g component-test my-cool-next-project\n```\n\nHere is an example of the project configuration that is generated.\n\n```json {% fileName=\"project.json\" %}\n{\n  \"targets\" {\n    \"component-test\": {\n      \"executor\": \"@nx/cypress:cypress\",\n      \"options\": {\n        \"cypressConfig\": \"<path-to-project-root>/cypress.config.ts\",\n        \"testingType\": \"component\",\n        \"skipServe\": true\n      }\n    }\n  }\n}\n```\n\nNx also supports [Angular component testing](/packages/angular/generators/cypress-component-configuration).\n",
+    "presets": []
+  },
+  "description": "cypress-component-configuration generator",
+  "implementation": "/packages/next/src/generators/cypress-component-configuration/cypress-component-configuration.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/next/src/generators/cypress-component-configuration/schema.json",
+  "type": "generator"
+}

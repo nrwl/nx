@@ -3,12 +3,12 @@ import * as depcheck from 'depcheck';
 // Ignore packages that are defined here per package.
 // Note: If @babel/parser fails to parse a file, then its imports will not be detected.
 const IGNORE_MATCHES = {
-  '*': ['@nrwl/devkit', '@nrwl/workspace', 'chalk', 'tslib', '@swc/helpers'],
+  '*': ['@nx/devkit', '@nx/workspace', 'chalk', 'tslib', '@swc/helpers'],
   angular: ['@angular-devkit/schematics', '@schematics/angular', 'http-server'],
   cli: [],
   cypress: [],
   devkit: [],
-  'eslint-plugin-nx': [],
+  'eslint-plugin': [],
   jest: [
     // This is used for the type import only, we should remove it.
     'jest-resolve',
@@ -44,7 +44,6 @@ const IGNORE_MATCHES = {
     'tmp',
     'yargs',
   ],
-  'make-angular-cli-faster': ['tmp', 'yargs'],
 };
 
 export default async function getUnusedDependencies(

@@ -17,14 +17,14 @@ Install the express plugin
 {%tab label="npm"%}
 
 ```shell
-npm i --save-dev @nrwl/express
+npm i --save-dev @nx/express
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nrwl/express
+yarn add --dev @nx/express
 ```
 
 {% /tab %}
@@ -35,7 +35,7 @@ yarn add --dev @nrwl/express
 Add a new application to your workspace with the following command:
 
 ```shell
-nx g @nrwl/express:app my-app
+nx g @nx/express:app my-app
 ```
 
 Serve the application by running
@@ -46,7 +46,7 @@ nx serve my-app
 
 This starts the application on localhost:3333/api by default.
 
-> Express does not come with any library generators, but you can leverage the[`@nrwl/js`](/packages/js#create-libraries) plugin to generate a Node.js library for your express application.
+> Express does not come with any library generators, but you can leverage the[`@nx/js`](/packages/js#create-libraries) plugin to generate a Node.js library for your express application.
 
 ### Application Proxies
 
@@ -54,7 +54,7 @@ The Express application generator has an option to configure other projects in t
 can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
 ```shell
-nx g @nrwl/express:app <express-app> --frontendProject my-react-app
+nx g @nx/express:app <express-app> --frontendProject my-react-app
 ```
 
 ## Using Express
@@ -89,5 +89,5 @@ before serving the Express application.
 ## More Documentation
 
 - [Using Jest](/packages/jest)
-- [@nrwl/js](/packages/js)
+- [@nx/js](/packages/js)
 - [Express](https://expressjs.com/)

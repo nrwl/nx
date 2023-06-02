@@ -1,0 +1,800 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NgRxRootStoreGenerator NgModule should add a facade when --facade=true 1`] = `
+"import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
+import { appRoutes } from './app.routes';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects';
+import { UsersFacade } from './+state/users.facade';
+
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+    StoreModule.forRoot(
+      {},
+      {
+        metaReducers: [],
+        runtimeChecks: {
+          strictActionImmutability: true,
+          strictStateImmutability: true,
+        },
+      }
+    ),
+    EffectsModule.forRoot([]),
+    StoreRouterConnectingModule.forRoot(),
+    StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
+    EffectsModule.forFeature([UsersEffects]),
+  ],
+  providers: [UsersFacade],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+"
+`;
+
+exports[`NgRxRootStoreGenerator NgModule should add a facade when --facade=true 2`] = `
+"import { Injectable, inject } from '@angular/core';
+import { select, Store, Action } from '@ngrx/store';
+
+import * as UsersActions from './users.actions';
+import * as UsersFeature from './users.reducer';
+import * as UsersSelectors from './users.selectors';
+
+@Injectable()
+export class UsersFacade {
+  private readonly store = inject(Store);
+
+  /**
+   * Combine pieces of state using createSelector,
+   * and expose them as observables through the facade.
+   */
+  loaded$ = this.store.pipe(select(UsersSelectors.selectUsersLoaded));
+  allUsers$ = this.store.pipe(select(UsersSelectors.selectAllUsers));
+  selectedUsers$ = this.store.pipe(select(UsersSelectors.selectEntity));
+
+  /**
+   * Use the initialization action to perform one
+   * or more tasks in your Effects.
+   */
+  init() {
+    this.store.dispatch(UsersActions.initUsers());
+  }
+}
+"
+`;
+
+exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 1`] = `
+"import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
+import { appRoutes } from './app.routes';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects';
+
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+    StoreModule.forRoot(
+      {},
+      {
+        metaReducers: [],
+        runtimeChecks: {
+          strictActionImmutability: true,
+          strictStateImmutability: true,
+        },
+      }
+    ),
+    EffectsModule.forRoot([]),
+    StoreRouterConnectingModule.forRoot(),
+    StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
+    EffectsModule.forFeature([UsersEffects]),
+  ],
+  providers: [],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+"
+`;
+
+exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 2`] = `
+"import { createAction, props } from '@ngrx/store';
+import { UsersEntity } from './users.models';
+
+export const initUsers = createAction('[Users Page] Init');
+
+export const loadUsersSuccess = createAction(
+  '[Users/API] Load Users Success',
+  props<{ users: UsersEntity[] }>()
+);
+
+export const loadUsersFailure = createAction(
+  '[Users/API] Load Users Failure',
+  props<{ error: any }>()
+);
+"
+`;
+
+exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 3`] = `
+"import { Injectable, inject } from '@angular/core';
+import { createEffect, Actions, ofType } from '@ngrx/effects';
+import { switchMap, catchError, of } from 'rxjs';
+import * as UsersActions from './users.actions';
+import * as UsersFeature from './users.reducer';
+
+@Injectable()
+export class UsersEffects {
+  private actions$ = inject(Actions);
+
+  init$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UsersActions.initUsers),
+      switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
+      catchError((error) => {
+        console.error('Error', error);
+        return of(UsersActions.loadUsersFailure({ error }));
+      })
+    )
+  );
+}
+"
+`;
+
+exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 4`] = `
+"import { TestBed } from '@angular/core/testing';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { Action } from '@ngrx/store';
+import { provideMockStore } from '@ngrx/store/testing';
+import { hot } from 'jasmine-marbles';
+import { Observable } from 'rxjs';
+
+import * as UsersActions from './users.actions';
+import { UsersEffects } from './users.effects';
+
+describe('UsersEffects', () => {
+  let actions: Observable<Action>;
+  let effects: UsersEffects;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [],
+      providers: [
+        UsersEffects,
+        provideMockActions(() => actions),
+        provideMockStore(),
+      ],
+    });
+
+    effects = TestBed.inject(UsersEffects);
+  });
+
+  describe('init$', () => {
+    it('should work', () => {
+      actions = hot('-a-|', { a: UsersActions.initUsers() });
+
+      const expected = hot('-a-|', {
+        a: UsersActions.loadUsersSuccess({ users: [] }),
+      });
+
+      expect(effects.init$).toBeObservable(expected);
+    });
+  });
+});
+"
+`;
+
+exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 5`] = `
+"import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
+import { createReducer, on, Action } from '@ngrx/store';
+
+import * as UsersActions from './users.actions';
+import { UsersEntity } from './users.models';
+
+export const USERS_FEATURE_KEY = 'users';
+
+export interface UsersState extends EntityState<UsersEntity> {
+  selectedId?: string | number; // which Users record has been selected
+  loaded: boolean; // has the Users list been loaded
+  error?: string | null; // last known error (if any)
+}
+
+export interface UsersPartialState {
+  readonly [USERS_FEATURE_KEY]: UsersState;
+}
+
+export const usersAdapter: EntityAdapter<UsersEntity> =
+  createEntityAdapter<UsersEntity>();
+
+export const initialUsersState: UsersState = usersAdapter.getInitialState({
+  // set initial required properties
+  loaded: false,
+});
+
+const reducer = createReducer(
+  initialUsersState,
+  on(UsersActions.initUsers, (state) => ({
+    ...state,
+    loaded: false,
+    error: null,
+  })),
+  on(UsersActions.loadUsersSuccess, (state, { users }) =>
+    usersAdapter.setAll(users, { ...state, loaded: true })
+  ),
+  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error }))
+);
+
+export function usersReducer(state: UsersState | undefined, action: Action) {
+  return reducer(state, action);
+}
+"
+`;
+
+exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 6`] = `
+"import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
+
+// Lookup the 'Users' feature state managed by NgRx
+export const selectUsersState =
+  createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+
+const { selectAll, selectEntities } = usersAdapter.getSelectors();
+
+export const selectUsersLoaded = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.loaded
+);
+
+export const selectUsersError = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.error
+);
+
+export const selectAllUsers = createSelector(
+  selectUsersState,
+  (state: UsersState) => selectAll(state)
+);
+
+export const selectUsersEntities = createSelector(
+  selectUsersState,
+  (state: UsersState) => selectEntities(state)
+);
+
+export const selectSelectedId = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.selectedId
+);
+
+export const selectEntity = createSelector(
+  selectUsersEntities,
+  selectSelectedId,
+  (entities, selectedId) => (selectedId ? entities[selectedId] : undefined)
+);
+"
+`;
+
+exports[`NgRxRootStoreGenerator NgModule should add a root module and root state when --minimal=false 7`] = `
+"import { UsersEntity } from './users.models';
+import {
+  usersAdapter,
+  UsersPartialState,
+  initialUsersState,
+} from './users.reducer';
+import * as UsersSelectors from './users.selectors';
+
+describe('Users Selectors', () => {
+  const ERROR_MSG = 'No Error Available';
+  const getUsersId = (it: UsersEntity) => it.id;
+  const createUsersEntity = (id: string, name = '') =>
+    ({
+      id,
+      name: name || \`name-\${id}\`,
+    } as UsersEntity);
+
+  let state: UsersPartialState;
+
+  beforeEach(() => {
+    state = {
+      users: usersAdapter.setAll(
+        [
+          createUsersEntity('PRODUCT-AAA'),
+          createUsersEntity('PRODUCT-BBB'),
+          createUsersEntity('PRODUCT-CCC'),
+        ],
+        {
+          ...initialUsersState,
+          selectedId: 'PRODUCT-BBB',
+          error: ERROR_MSG,
+          loaded: true,
+        }
+      ),
+    };
+  });
+
+  describe('Users Selectors', () => {
+    it('selectAllUsers() should return the list of Users', () => {
+      const results = UsersSelectors.selectAllUsers(state);
+      const selId = getUsersId(results[1]);
+
+      expect(results.length).toBe(3);
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('selectEntity() should return the selected Entity', () => {
+      const result = UsersSelectors.selectEntity(state) as UsersEntity;
+      const selId = getUsersId(result);
+
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('selectUsersLoaded() should return the current "loaded" status', () => {
+      const result = UsersSelectors.selectUsersLoaded(state);
+
+      expect(result).toBe(true);
+    });
+
+    it('selectUsersError() should return the current "error" state', () => {
+      const result = UsersSelectors.selectUsersError(state);
+
+      expect(result).toBe(ERROR_MSG);
+    });
+  });
+});
+"
+`;
+
+exports[`NgRxRootStoreGenerator NgModule should add an empty root module when --minimal=true 1`] = `
+"import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
+import { appRoutes } from './app.routes';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
+
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+    StoreModule.forRoot(
+      {},
+      {
+        metaReducers: [],
+        runtimeChecks: {
+          strictActionImmutability: true,
+          strictStateImmutability: true,
+        },
+      }
+    ),
+    EffectsModule.forRoot([]),
+    StoreRouterConnectingModule.forRoot(),
+  ],
+  providers: [],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+"
+`;
+
+exports[`NgRxRootStoreGenerator NgModule should instrument the store devtools when "addDevTools: true" 1`] = `
+"import { NgModule, isDevMode } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
+import { appRoutes } from './app.routes';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+    StoreModule.forRoot(
+      {},
+      {
+        metaReducers: [],
+        runtimeChecks: {
+          strictActionImmutability: true,
+          strictStateImmutability: true,
+        },
+      }
+    ),
+    EffectsModule.forRoot([]),
+    StoreRouterConnectingModule.forRoot(),
+    StoreDevtoolsModule.instrument({ logOnly: !isDevMode() }),
+  ],
+  providers: [],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should add a facade when --facade=true 1`] = `
+"import { ApplicationConfig } from '@angular/core';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
+import { appRoutes } from './app.routes';
+import { provideStore, provideState } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects';
+import { UsersFacade } from './+state/users.facade';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideEffects(UsersEffects),
+    provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
+    UsersFacade,
+    provideEffects(),
+    provideStore(),
+    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+  ],
+};
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should add a facade when --facade=true 2`] = `
+"import { Injectable, inject } from '@angular/core';
+import { select, Store, Action } from '@ngrx/store';
+
+import * as UsersActions from './users.actions';
+import * as UsersFeature from './users.reducer';
+import * as UsersSelectors from './users.selectors';
+
+@Injectable()
+export class UsersFacade {
+  private readonly store = inject(Store);
+
+  /**
+   * Combine pieces of state using createSelector,
+   * and expose them as observables through the facade.
+   */
+  loaded$ = this.store.pipe(select(UsersSelectors.selectUsersLoaded));
+  allUsers$ = this.store.pipe(select(UsersSelectors.selectAllUsers));
+  selectedUsers$ = this.store.pipe(select(UsersSelectors.selectEntity));
+
+  /**
+   * Use the initialization action to perform one
+   * or more tasks in your Effects.
+   */
+  init() {
+    this.store.dispatch(UsersActions.initUsers());
+  }
+}
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 1`] = `
+"import { ApplicationConfig } from '@angular/core';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
+import { appRoutes } from './app.routes';
+import { provideStore, provideState } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideEffects(UsersEffects),
+    provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
+    provideEffects(),
+    provideStore(),
+    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+  ],
+};
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 2`] = `
+"import { createAction, props } from '@ngrx/store';
+import { UsersEntity } from './users.models';
+
+export const initUsers = createAction('[Users Page] Init');
+
+export const loadUsersSuccess = createAction(
+  '[Users/API] Load Users Success',
+  props<{ users: UsersEntity[] }>()
+);
+
+export const loadUsersFailure = createAction(
+  '[Users/API] Load Users Failure',
+  props<{ error: any }>()
+);
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 3`] = `
+"import { Injectable, inject } from '@angular/core';
+import { createEffect, Actions, ofType } from '@ngrx/effects';
+import { switchMap, catchError, of } from 'rxjs';
+import * as UsersActions from './users.actions';
+import * as UsersFeature from './users.reducer';
+
+@Injectable()
+export class UsersEffects {
+  private actions$ = inject(Actions);
+
+  init$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UsersActions.initUsers),
+      switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
+      catchError((error) => {
+        console.error('Error', error);
+        return of(UsersActions.loadUsersFailure({ error }));
+      })
+    )
+  );
+}
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 4`] = `
+"import { TestBed } from '@angular/core/testing';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { Action } from '@ngrx/store';
+import { provideMockStore } from '@ngrx/store/testing';
+import { hot } from 'jasmine-marbles';
+import { Observable } from 'rxjs';
+
+import * as UsersActions from './users.actions';
+import { UsersEffects } from './users.effects';
+
+describe('UsersEffects', () => {
+  let actions: Observable<Action>;
+  let effects: UsersEffects;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [],
+      providers: [
+        UsersEffects,
+        provideMockActions(() => actions),
+        provideMockStore(),
+      ],
+    });
+
+    effects = TestBed.inject(UsersEffects);
+  });
+
+  describe('init$', () => {
+    it('should work', () => {
+      actions = hot('-a-|', { a: UsersActions.initUsers() });
+
+      const expected = hot('-a-|', {
+        a: UsersActions.loadUsersSuccess({ users: [] }),
+      });
+
+      expect(effects.init$).toBeObservable(expected);
+    });
+  });
+});
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 5`] = `
+"import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
+import { createReducer, on, Action } from '@ngrx/store';
+
+import * as UsersActions from './users.actions';
+import { UsersEntity } from './users.models';
+
+export const USERS_FEATURE_KEY = 'users';
+
+export interface UsersState extends EntityState<UsersEntity> {
+  selectedId?: string | number; // which Users record has been selected
+  loaded: boolean; // has the Users list been loaded
+  error?: string | null; // last known error (if any)
+}
+
+export interface UsersPartialState {
+  readonly [USERS_FEATURE_KEY]: UsersState;
+}
+
+export const usersAdapter: EntityAdapter<UsersEntity> =
+  createEntityAdapter<UsersEntity>();
+
+export const initialUsersState: UsersState = usersAdapter.getInitialState({
+  // set initial required properties
+  loaded: false,
+});
+
+const reducer = createReducer(
+  initialUsersState,
+  on(UsersActions.initUsers, (state) => ({
+    ...state,
+    loaded: false,
+    error: null,
+  })),
+  on(UsersActions.loadUsersSuccess, (state, { users }) =>
+    usersAdapter.setAll(users, { ...state, loaded: true })
+  ),
+  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error }))
+);
+
+export function usersReducer(state: UsersState | undefined, action: Action) {
+  return reducer(state, action);
+}
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 6`] = `
+"import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
+
+// Lookup the 'Users' feature state managed by NgRx
+export const selectUsersState =
+  createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+
+const { selectAll, selectEntities } = usersAdapter.getSelectors();
+
+export const selectUsersLoaded = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.loaded
+);
+
+export const selectUsersError = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.error
+);
+
+export const selectAllUsers = createSelector(
+  selectUsersState,
+  (state: UsersState) => selectAll(state)
+);
+
+export const selectUsersEntities = createSelector(
+  selectUsersState,
+  (state: UsersState) => selectEntities(state)
+);
+
+export const selectSelectedId = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.selectedId
+);
+
+export const selectEntity = createSelector(
+  selectUsersEntities,
+  selectSelectedId,
+  (entities, selectedId) => (selectedId ? entities[selectedId] : undefined)
+);
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 7`] = `
+"import { UsersEntity } from './users.models';
+import {
+  usersAdapter,
+  UsersPartialState,
+  initialUsersState,
+} from './users.reducer';
+import * as UsersSelectors from './users.selectors';
+
+describe('Users Selectors', () => {
+  const ERROR_MSG = 'No Error Available';
+  const getUsersId = (it: UsersEntity) => it.id;
+  const createUsersEntity = (id: string, name = '') =>
+    ({
+      id,
+      name: name || \`name-\${id}\`,
+    } as UsersEntity);
+
+  let state: UsersPartialState;
+
+  beforeEach(() => {
+    state = {
+      users: usersAdapter.setAll(
+        [
+          createUsersEntity('PRODUCT-AAA'),
+          createUsersEntity('PRODUCT-BBB'),
+          createUsersEntity('PRODUCT-CCC'),
+        ],
+        {
+          ...initialUsersState,
+          selectedId: 'PRODUCT-BBB',
+          error: ERROR_MSG,
+          loaded: true,
+        }
+      ),
+    };
+  });
+
+  describe('Users Selectors', () => {
+    it('selectAllUsers() should return the list of Users', () => {
+      const results = UsersSelectors.selectAllUsers(state);
+      const selId = getUsersId(results[1]);
+
+      expect(results.length).toBe(3);
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('selectEntity() should return the selected Entity', () => {
+      const result = UsersSelectors.selectEntity(state) as UsersEntity;
+      const selId = getUsersId(result);
+
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('selectUsersLoaded() should return the current "loaded" status', () => {
+      const result = UsersSelectors.selectUsersLoaded(state);
+
+      expect(result).toBe(true);
+    });
+
+    it('selectUsersError() should return the current "error" state', () => {
+      const result = UsersSelectors.selectUsersError(state);
+
+      expect(result).toBe(ERROR_MSG);
+    });
+  });
+});
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should add an empty root module when --minimal=true 1`] = `
+"import { ApplicationConfig } from '@angular/core';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
+import { appRoutes } from './app.routes';
+import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideEffects(),
+    provideStore(),
+    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+  ],
+};
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should instrument the store devtools when "addDevTools: true" 1`] = `
+"import { ApplicationConfig, isDevMode } from '@angular/core';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
+import { appRoutes } from './app.routes';
+import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideStoreDevtools({ logOnly: !isDevMode() }),
+    provideEffects(),
+    provideStore(),
+    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+  ],
+};
+"
+`;

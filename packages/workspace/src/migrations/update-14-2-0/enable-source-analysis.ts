@@ -1,9 +1,4 @@
-import {
-  formatFiles,
-  NxJsonConfiguration,
-  Tree,
-  updateJson,
-} from '@nrwl/devkit';
+import { formatFiles, NxJsonConfiguration, Tree, updateJson } from '@nx/devkit';
 
 export async function enableSourceAnalysis(tree: Tree) {
   updateJson<NxJsonConfiguration>(tree, 'nx.json', (config) => {

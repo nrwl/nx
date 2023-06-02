@@ -1,8 +1,5 @@
-import {
-  addProjectConfiguration,
-  readProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, readProjectConfiguration } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateSwcrcPath from './update-swcrc-path';
 
 describe('update-swcrc-path migration', () => {

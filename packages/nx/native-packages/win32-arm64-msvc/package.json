@@ -1,6 +1,11 @@
 {
-  "name": "@nrwl/nx-win32-arm64-msvc",
+  "name": "@nx/nx-win32-arm64-msvc",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx/native-packages/win32-arm64-msvc"
+  },
   "os": [
     "win32"
   ],

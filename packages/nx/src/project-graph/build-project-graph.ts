@@ -4,19 +4,16 @@ import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
 import { FileData } from './file-utils';
 import {
-  createCache,
+  createProjectFileMapCache,
   extractCachedFileData,
-  ProjectGraphCache,
-  readCache,
+  ProjectFileMapCache,
   shouldRecomputeWholeGraph,
   writeCache,
 } from './nx-deps-cache';
 import { buildImplicitProjectDependencies } from './build-dependencies';
 import { buildWorkspaceProjectNodes } from './build-nodes';
 import { loadNxPlugins } from '../utils/nx-plugin';
-import { defaultFileHasher } from '../hasher/file-hasher';
-import { createProjectFileMap } from './file-map-utils';
-import { getRootTsConfigPath } from '../utils/typescript';
+import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   ProjectFileMap,
   ProjectGraph,
@@ -30,61 +27,58 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
-import { Workspaces } from '../config/workspaces';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
 
-export async function buildProjectGraph() {
-  const projectConfigurations = new Workspaces(
-    workspaceRoot
-  ).readProjectsConfigurations();
-  const { projectFileMap, allWorkspaceFiles } = createProjectFileMap(
-    projectConfigurations,
-    defaultFileHasher.allFileData()
-  );
+let storedProjectFileMap: ProjectFileMap | null = null;
+let storedAllWorkspaceFiles: FileData[] | null = null;
 
-  const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
-  let cache = cacheEnabled ? readCache() : null;
-  return (
-    await buildProjectGraphUsingProjectFileMap(
-      projectConfigurations,
-      projectFileMap,
-      allWorkspaceFiles,
-      cache,
-      cacheEnabled
-    )
-  ).projectGraph;
+export function getProjectFileMap(): {
+  projectFileMap: ProjectFileMap;
+  allWorkspaceFiles: FileData[];
+} {
+  if (!!storedProjectFileMap) {
+    return {
+      projectFileMap: storedProjectFileMap,
+      allWorkspaceFiles: storedAllWorkspaceFiles,
+    };
+  } else {
+    return { projectFileMap: {}, allWorkspaceFiles: [] };
+  }
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
   projectsConfigurations: ProjectsConfigurations,
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
-  cache: ProjectGraphCache | null,
+  fileMap: ProjectFileMapCache | null,
   shouldWriteCache: boolean
 ): Promise<{
   projectGraph: ProjectGraph;
-  projectGraphCache: ProjectGraphCache;
+  projectFileMapCache: ProjectFileMapCache;
 }> {
+  storedProjectFileMap = projectFileMap;
+  storedAllWorkspaceFiles = allWorkspaceFiles;
+
   const nxJson = readNxJson();
-  const projectGraphVersion = '5.1';
+  const projectGraphVersion = '6.0';
   assertWorkspaceValidity(projectsConfigurations, nxJson);
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
   let filesToProcess;
   let cachedFileData;
-  if (
-    cache &&
+  const useCacheData =
+    fileMap &&
     !shouldRecomputeWholeGraph(
-      cache,
+      fileMap,
       packageJsonDeps,
       projectsConfigurations,
       nxJson,
       rootTsConfig
-    )
-  ) {
-    const fromCache = extractCachedFileData(projectFileMap, cache);
+    );
+  if (useCacheData) {
+    const fromCache = extractCachedFileData(projectFileMap, fileMap);
     filesToProcess = fromCache.filesToProcess;
     cachedFileData = fromCache.cachedFileData;
   } else {
@@ -102,22 +96,20 @@ export async function buildProjectGraphUsingProjectFileMap(
     nxJson,
     context,
     cachedFileData,
-    projectGraphVersion,
-    cache
+    projectGraphVersion
   );
-  const projectGraphCache = createCache(
+  const projectFileMapCache = createProjectFileMapCache(
     nxJson,
     packageJsonDeps,
-    projectGraph,
+    projectFileMap,
     rootTsConfig
   );
   if (shouldWriteCache) {
-    writeCache(projectGraphCache);
+    writeCache(projectFileMapCache, projectGraph);
   }
-  projectGraph.allWorkspaceFiles = allWorkspaceFiles;
   return {
     projectGraph,
-    projectGraphCache,
+    projectFileMapCache,
   };
 }
 
@@ -149,20 +141,11 @@ async function buildProjectGraphUsingContext(
   nxJson: NxJsonConfiguration,
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
-  projectGraphVersion: string,
-  cache: ProjectGraphCache | null
+  projectGraphVersion: string
 ) {
   performance.mark('build project graph:start');
 
-  const builder = new ProjectGraphBuilder(
-    cache
-      ? {
-          nodes: cache.nodes,
-          externalNodes: cache.externalNodes,
-          dependencies: cache.dependencies,
-        }
-      : null
-  );
+  const builder = new ProjectGraphBuilder(null, ctx.fileMap);
   builder.setVersion(projectGraphVersion);
 
   await buildWorkspaceProjectNodes(ctx, builder, nxJson);
@@ -170,12 +153,12 @@ async function buildProjectGraphUsingContext(
 
   const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
 
-  const updatedBuilder = new ProjectGraphBuilder(r);
+  const updatedBuilder = new ProjectGraphBuilder(r, ctx.fileMap);
   for (const proj of Object.keys(cachedFileData)) {
-    for (const f of updatedBuilder.graph.nodes[proj].data.files) {
+    for (const f of ctx.fileMap[proj] || []) {
       const cached = cachedFileData[proj][f.file];
-      if (cached && cached.dependencies) {
-        f.dependencies = [...cached.dependencies];
+      if (cached && cached.deps) {
+        f.deps = [...cached.deps];
       }
     }
   }

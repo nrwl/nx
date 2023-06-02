@@ -10,10 +10,12 @@ Run the following command with the options listed to create an empty workspace.
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
 
-✔ Choose your style                     · integrated
-✔ What to create in the new workspace   · apps
-✔ Repository name                       · myorg
-✔ Enable distributed caching to make your CI faster · No
+ >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
+✔ Where would you like to create your workspace? · myorg
+✔ Which stack do you want to use? · none
+✔ Package-based or integrated? · integrated
+✔ Enable distributed caching to make your CI faster · Yes
 ```
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this recipe, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}
@@ -24,7 +26,7 @@ Run the following command with the options listed to create an empty workspace.
 
 {% tab label="Angular" %}
 
-```{% command="npm install --save-dev @nrwl/angular" path="~/myorg" %}
+```{% command="npm install --save-dev @nx/angular" path="~/myorg" %}
 
 ```
 
@@ -32,7 +34,7 @@ Run the following command with the options listed to create an empty workspace.
 
 {% tab label="React" %}
 
-```{% command="npm install --save-dev @nrwl/react" path="~/myorg" %}
+```{% command="npm install --save-dev @nx/react" path="~/myorg" %}
 
 ```
 
@@ -55,7 +57,7 @@ Nx allows you to do this with a single command:
 
 {% tab label="Angular" %}
 
-```{% command="npx nx g @nrwl/angular:host store --ssr --remotes=product,checkout" path="~/myorg" %}
+```{% command="npx nx g @nx/angular:host store --ssr --remotes=product,checkout" path="~/myorg" %}
 
 ```
 
@@ -63,7 +65,7 @@ Nx allows you to do this with a single command:
 
 {% tab label="React" %}
 
-```{% command="npx nx g @nrwl/react:host store --ssr --remotes=product,checkout" path="~/myorg" %}
+```{% command="npx nx g @nx/react:host store --ssr --remotes=product,checkout" path="~/myorg" %}
 
 ```
 

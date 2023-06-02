@@ -4,7 +4,11 @@ import { fileExists } from './fileutils';
 /**
  * The root of the workspace
  */
-export const workspaceRoot = workspaceRootInner(process.cwd(), process.cwd());
+export let workspaceRoot = workspaceRootInner(process.cwd(), process.cwd());
+
+export function setWorkspaceRoot(root: string): void {
+  workspaceRoot = root;
+}
 
 export function workspaceRootInner(
   dir: string,
@@ -25,7 +29,7 @@ export function workspaceRootInner(
 
     // This handles the case where we have a workspace which uses npm / yarn / pnpm
     // workspaces, and has a project which contains Nx in its dependency tree.
-    // e.g. packages/my-lib/package.json contains @nrwl/devkit, which references Nx and is
+    // e.g. packages/my-lib/package.json contains @nx/devkit, which references Nx and is
     // thus located in //packages/my-lib/node_modules/nx/package.json
   } else if (fileExists(path.join(dir, 'node_modules', 'nx', 'package.json'))) {
     return workspaceRootInner(path.dirname(dir), dir);

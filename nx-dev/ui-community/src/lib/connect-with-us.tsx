@@ -1,5 +1,5 @@
 import { EnvelopeIcon } from '@heroicons/react/24/solid';
-import { SectionHeading } from '@nrwl/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 
 export function ConnectWithUs(): JSX.Element {
   return (
@@ -15,6 +15,13 @@ export function ConnectWithUs(): JSX.Element {
           <p className="mt-4">
             There are many ways you can connect with the open-source Nx
             community. Let's connect together!
+          </p>
+          <p className="py-4">
+            Looking for community plugins? Find them listed in the{' '}
+            <a href="/plugins/registry" className="underline font-semibold">
+              plugin registry
+            </a>
+            .
           </p>
         </div>
       </header>

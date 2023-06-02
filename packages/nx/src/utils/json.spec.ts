@@ -61,10 +61,10 @@ describe('parseJson', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       "InvalidCommentToken in JSON at 2:7
       [0m [90m 1 | [39m{[0m
-      [0m[31m[1m>[22m[39m[90m 2 | [39m      //\\"test\\": 123,[0m
+      [0m[31m[1m>[22m[39m[90m 2 | [39m      //"test": 123,[0m
       [0m [90m   | [39m      [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
-      [0m [90m 3 | [39m      \\"nested\\": {[0m
-      [0m [90m 4 | [39m          \\"test\\": 123[0m
+      [0m [90m 3 | [39m      "nested": {[0m
+      [0m [90m 4 | [39m          "test": 123[0m
       [0m [90m 5 | [39m          /*[0m
       "
     `);
@@ -89,10 +89,10 @@ describe('parseJson', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       "InvalidCommentToken in JSON at 2:7
       [0m [90m 1 | [39m{[0m
-      [0m[31m[1m>[22m[39m[90m 2 | [39m      //\\"test\\": 123,[0m
+      [0m[31m[1m>[22m[39m[90m 2 | [39m      //"test": 123,[0m
       [0m [90m   | [39m      [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
-      [0m [90m 3 | [39m      \\"nested\\": {[0m
-      [0m [90m 4 | [39m          \\"test\\": 123[0m
+      [0m [90m 3 | [39m      "nested": {[0m
+      [0m [90m 4 | [39m          "test": 123[0m
       [0m [90m 5 | [39m          /*[0m
       "
     `);
@@ -128,11 +128,11 @@ describe('parseJson', () => {
       )
     ).toThrowErrorMatchingInlineSnapshot(`
       "PropertyNameExpected in JSON at 6:6
-      [0m [90m 4 | [39m          \\"test\\": 123,[0m
-      [0m [90m 5 | [39m          \\"more\\": 456,[0m
+      [0m [90m 4 | [39m          "test": 123,[0m
+      [0m [90m 5 | [39m          "more": 456,[0m
       [0m[31m[1m>[22m[39m[90m 6 | [39m     },[0m
       [0m [90m   | [39m     [31m[1m^[22m[39m[0m
-      [0m [90m 7 | [39m      \\"array\\": [1, 2, 3,][0m
+      [0m [90m 7 | [39m      "array": [1, 2, 3,][0m
       [0m [90m 8 | [39m  }[0m
       "
     `);

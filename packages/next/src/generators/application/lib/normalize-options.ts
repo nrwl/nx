@@ -1,18 +1,19 @@
-import { assertValidStyle } from '@nrwl/react/src/utils/assertion';
+import { assertValidStyle } from '@nx/react/src/utils/assertion';
 import {
   extractLayoutDirectory,
   getWorkspaceLayout,
   joinPathFragments,
   names,
   Tree,
-} from '@nrwl/devkit';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { Linter } from '@nx/linter';
 
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
   projectName: string;
   appProjectRoot: string;
+  outputPath: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];
@@ -28,6 +29,7 @@ export function normalizeOptions(
   const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
     options.directory
   );
+  const name = names(options.name).fileName;
 
   const appDirectory = projectDirectory
     ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
@@ -36,10 +38,21 @@ export function normalizeOptions(
   const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
-  const e2eProjectName = `${appProjectName}-e2e`;
+  const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
 
-  const appProjectRoot = joinPathFragments(appsDir, appDirectory);
-  const e2eProjectRoot = joinPathFragments(appsDir, `${appDirectory}-e2e`);
+  const appProjectRoot = options.rootProject
+    ? '.'
+    : joinPathFragments(appsDir, appDirectory);
+
+  const e2eProjectRoot = options.rootProject
+    ? '.'
+    : joinPathFragments(appsDir, `${appDirectory}-e2e`);
+
+  const outputPath = joinPathFragments(
+    'dist',
+    appProjectRoot,
+    ...(options.rootProject ? [name] : [])
+  );
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -47,7 +60,7 @@ export function normalizeOptions(
 
   const fileName = 'index';
 
-  const appDir = options.appDir ?? false;
+  const appDir = options.appDir ?? true;
 
   const styledModule = /^(css|scss|less|styl)$/.test(options.style)
     ? null
@@ -58,17 +71,18 @@ export function normalizeOptions(
   return {
     ...options,
     appDir,
-    name: names(options.name).fileName,
-    projectName: appProjectName,
-    linter: options.linter || Linter.EsLint,
-    unitTestRunner: options.unitTestRunner || 'jest',
-    e2eTestRunner: options.e2eTestRunner || 'cypress',
-    style: options.style || 'css',
     appProjectRoot,
-    e2eProjectRoot,
     e2eProjectName,
-    parsedTags,
+    e2eProjectRoot,
+    e2eTestRunner: options.e2eTestRunner || 'cypress',
     fileName,
+    linter: options.linter || Linter.EsLint,
+    name,
+    outputPath,
+    parsedTags,
+    projectName: appProjectName,
+    style: options.style || 'css',
     styledModule,
+    unitTestRunner: options.unitTestRunner || 'jest',
   };
 }

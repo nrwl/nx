@@ -12,20 +12,17 @@ import {
   runTasksInSerial,
   toJS,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import { assertValidStyle } from '../../utils/assertion';
 import { addImport } from '../../utils/ast-utils';
 import { getInSourceVitestTestsTemplate } from '../../utils/get-in-source-vitest-tests-template';
-import {
-  reactRouterDomVersion,
-  typesReactRouterDomVersion,
-} from '../../utils/versions';
+import { reactRouterDomVersion } from '../../utils/versions';
 import { getComponentTests } from './get-component-tests';
 import { NormalizedSchema } from './noramlized-schema';
 import { Schema } from './schema';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
@@ -33,7 +30,7 @@ export async function componentGenerator(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
-  const styledTask = addStyledModuleDependencies(host, options.styledModule);
+  const styledTask = addStyledModuleDependencies(host, options);
   tasks.push(styledTask);
 
   addExportsToBarrel(host, options);
@@ -42,7 +39,7 @@ export async function componentGenerator(host: Tree, schema: Schema) {
     const routingTask = addDependenciesToPackageJson(
       host,
       { 'react-router-dom': reactRouterDomVersion },
-      { '@types/react-router-dom': typesReactRouterDomVersion }
+      {}
     );
     tasks.push(routingTask);
   }

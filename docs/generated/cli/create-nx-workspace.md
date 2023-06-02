@@ -29,15 +29,13 @@ Show all prompts
 
 Type: `string`
 
-The name of the application when a preset with pregenerated app is selected
+The name of the app when using a monorepo with certain stacks
 
 ### bundler
 
 Type: `string`
 
-Choices: [webpack, vite]
-
-Bundler to be used to build the application
+Bundler to be used to build the app
 
 ### ci
 
@@ -79,15 +77,13 @@ Default base to use for new projects
 
 Type: `boolean`
 
-Generate a Dockerfile with your node-server
+Generate a Dockerfile for the Node API
 
 ### framework
 
 Type: `string`
 
-Choices: [express, fastify, koa, nest]
-
-Framework option to be used when the node-server preset is selected
+Framework option to be used with certain stacks
 
 ### help
 
@@ -109,6 +105,12 @@ Type: `string`
 
 Workspace name (e.g. org name)
 
+### nextAppDir
+
+Type: `boolean`
+
+Enable the App Router for Next.js
+
 ### nxCloud
 
 Type: `boolean`
@@ -129,13 +131,13 @@ Package manager to use
 
 Type: `string`
 
-Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "react-native", "expo", "next", "nest", "express", "react", "angular", "node-standalone"]. To build your own see https://nx.dev/packages/nx-plugin#preset
+Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "next", "nextjs-standalone", "react-native", "expo", "nest", "express", "react", "angular", "node-standalone", "node-monorepo"]. To build your own see https://nx.dev/packages/nx-plugin#preset
 
 ### routing
 
 Type: `boolean`
 
-Add a routing setup when a preset with pregenerated app is selected
+Add a routing setup for an Angular app
 
 ### skipGit
 
@@ -155,10 +157,18 @@ Use Standalone Components if generating an Angular app
 
 Type: `string`
 
-Style option to be used when a preset with pregenerated app is selected
+Stylesheet type to be used with certain stacks
 
 ### version
 
 Type: `boolean`
 
 Show version number
+
+### workspaceType
+
+Type: `string`
+
+Choices: [integrated, package-based, standalone]
+
+The type of workspace to create

@@ -14,10 +14,6 @@
       "description": "The name of the application.",
       "type": "string"
     },
-    "npmScope": {
-      "description": "Npm scope for importing libs.",
-      "type": "string"
-    },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
@@ -44,10 +40,6 @@
           {
             "value": "scss",
             "label": "SASS(.scss)  [ http://sass-lang.com   ]"
-          },
-          {
-            "value": "styl",
-            "label": "Stylus(.styl)[ http://stylus-lang.com ]"
           },
           {
             "value": "less",
@@ -80,13 +72,24 @@
     "bundler": {
       "description": "The bundler to use for building the application.",
       "type": "string",
-      "enum": ["webpack", "vite"],
+      "enum": ["webpack", "vite", "rspack", "esbuild"],
       "default": "vite"
     },
     "docker": {
       "description": "Generate a Dockerfile",
       "type": "boolean",
       "default": false
+    },
+    "nextAppDir": {
+      "description": "Enable the App Router for this project.",
+      "type": "boolean",
+      "default": true
+    },
+    "e2eTestRunner": {
+      "description": "The tool to use for running e2e tests.",
+      "type": "string",
+      "enum": ["cypress", "jest", "detox", "none"]
     }
-  }
+  },
+  "required": ["preset", "name"]
 }

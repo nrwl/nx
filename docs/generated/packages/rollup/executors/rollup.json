@@ -57,6 +57,11 @@
         "x-completion-glob": "tsconfig.*.json",
         "x-priority": "important"
       },
+      "allowJs": {
+        "type": "boolean",
+        "description": "Allow JavaScript files to be compiled.",
+        "default": false
+      },
       "format": {
         "type": "array",
         "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
@@ -65,8 +70,11 @@
       },
       "external": {
         "type": "array",
-        "description": "A list of external modules that will not be bundled (`react`, `react-dom`, etc.).",
-        "items": { "type": "string" }
+        "description": "A list of external modules that will not be bundled (`react`, `react-dom`, etc.). Can also be set to `all` (bundle nothing) or `none` (bundle everything).",
+        "oneOf": [
+          { "type": "string", "enum": ["all", "none"] },
+          { "type": "array", "items": { "type": "string" } }
+        ]
       },
       "watch": {
         "type": "boolean",
@@ -152,9 +160,9 @@
         "description": "Generate package.json with 'exports' field. This field defines entry points in the package and is used by Node and the TypeScript compiler.",
         "default": false
       },
-      "skipTypeField": {
+      "skipTypeCheck": {
         "type": "boolean",
-        "description": "Prevents 'type' field from being added to compiled package.json file. Only use this if you are having an issue with this field.",
+        "description": "Whether to skip TypeScript type checking.",
         "default": false
       }
     },
@@ -185,7 +193,7 @@
         ]
       }
     },
-    "examplesFile": "{% tabs %}\n{% tab label=\"Including Dependencies\" %}\nTo include dependencies in the output `package.json`, the dependencies must be installed as a **dependencies** in the root `package.json`\n\n```json {% fileName=\"package.json\" %}\n{\n  \"dependencies\": {\n    \"some-dependency\": \"^1.0.0\"\n  }\n}\n```\n\nTo have dependencies in the be listed in the final `package.json` of your project, set the `updateBuildableProjectDepsInPackageJson` option to `true`. After than dependencies will be added to the `peerDependencies` field of the output `package.json`. You can use `buildableProjectDepsInPackageJsonType` option to change which field the dependencies are output to.\n\n```json {% fileName=\"project.json\" %}\n{\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nrwl/rollup:rollup\",\n      \"options\": {\n        \"buildableProjectDepsInPackageJsonType\": \"dependencies\",\n        \"updateBuildableProjectDepsInPackageJson\": true\n      }\n    }\n  }\n}\n```\n\n{% /tab}\n{% /tabs %}\n"
+    "examplesFile": "{% tabs %}\n{% tab label=\"Including Dependencies\" %}\nTo include dependencies in the output `package.json`, the dependencies must be installed as a **dependencies** in the root `package.json`\n\n```json {% fileName=\"package.json\" %}\n{\n  \"dependencies\": {\n    \"some-dependency\": \"^1.0.0\"\n  }\n}\n```\n\nTo have dependencies in the be listed in the final `package.json` of your project, set the `updateBuildableProjectDepsInPackageJson` option to `true`. After than dependencies will be added to the `peerDependencies` field of the output `package.json`. You can use `buildableProjectDepsInPackageJsonType` option to change which field the dependencies are output to.\n\n```json {% fileName=\"project.json\" %}\n{\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/rollup:rollup\",\n      \"options\": {\n        \"buildableProjectDepsInPackageJsonType\": \"dependencies\",\n        \"updateBuildableProjectDepsInPackageJson\": true\n      }\n    }\n  }\n}\n```\n\n{% /tab}\n{% /tabs %}\n"
   },
   "description": "Bundle a package using Rollup.",
   "aliases": [],

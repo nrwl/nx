@@ -3,7 +3,7 @@ import {
   getProjects,
   joinPathFragments,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export async function update(tree: Tree) {
   const projects = getProjects(tree);

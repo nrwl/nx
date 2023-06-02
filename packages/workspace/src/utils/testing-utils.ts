@@ -3,13 +3,16 @@ import {
   _test_addWorkspaceFile,
   WorkspaceFormat,
 } from '@angular-devkit/core/src/workspace/core';
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import type { NxJsonConfiguration } from '@nx/devkit';
 import { Architect, BuilderContext, Target } from '@angular-devkit/architect';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { json, JsonObject } from '@angular-devkit/core';
 import { ScheduleOptions } from '@angular-devkit/architect/src/api';
 import { LoggerApi, LogLevel } from '@angular-devkit/core/src/logger';
 
+/**
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. Use tree.read(filePath, 'utf-8') instead.
+ */
 export function getFileContent(tree: Tree, path: string): string {
   const fileEntry = tree.get(path);
 
@@ -20,6 +23,9 @@ export function getFileContent(tree: Tree, path: string): string {
   return fileEntry.content.toString();
 }
 
+/**
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. Tests for Generators can use 'createTreeWithEmptyWorkspace()' from @nx/devkit/testing.
+ */
 export function createEmptyWorkspace(tree: Tree): Tree {
   _test_addWorkspaceFile('workspace.json', WorkspaceFormat.JSON);
 
@@ -113,6 +119,7 @@ class NoopLogger implements LoggerApi {
 
 /**
  * Mock context which makes testing builders easier
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit.
  */
 export class MockBuilderContext implements BuilderContext {
   id: 0;
@@ -130,9 +137,11 @@ export class MockBuilderContext implements BuilderContext {
   get currentDirectory() {
     return this.architectHost.currentDirectory;
   }
+
   get workspaceRoot() {
     return this.architectHost.workspaceRoot;
   }
+
   constructor(
     private architect: Architect,
     private architectHost: TestingArchitectHost

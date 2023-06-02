@@ -1,24 +1,23 @@
 import 'dotenv/config';
 import {
   ExecutorContext,
+  logger,
   readJsonFile,
-  workspaceRoot,
   writeJsonFile,
-} from '@nrwl/devkit';
-import { createLockFile, createPackageJson } from '@nrwl/js';
-import build from 'next/dist/build';
-import { join, resolve } from 'path';
+} from '@nx/devkit';
+import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
+import { join } from 'path';
 import { copySync, existsSync, mkdir, writeFileSync } from 'fs-extra';
 import { gte } from 'semver';
-import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
+import { directoryExists } from '@nx/workspace/src/utilities/fileutils';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 
 import { updatePackageJson } from './lib/update-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';
 import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
-
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
+import { execSync, ExecSyncOptions } from 'child_process';
+import { createCliOptions } from '../../utils/create-cli-options';
 
 export default async function buildExecutor(
   options: NextBuildBuilderOptions,
@@ -27,16 +26,16 @@ export default async function buildExecutor(
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV ||= 'production';
 
-  const root = resolve(context.root, options.root);
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
-  checkPublicDirectory(root);
+  checkPublicDirectory(projectRoot);
 
   // Set `__NEXT_REACT_ROOT` based on installed ReactDOM version
-  const packageJsonPath = join(root, 'package.json');
+  const packageJsonPath = join(projectRoot, 'package.json');
   const packageJson = existsSync(packageJsonPath)
     ? readJsonFile(packageJsonPath)
     : undefined;
-  const rootPackageJson = readJsonFile(join(workspaceRoot, 'package.json'));
+  const rootPackageJson = readJsonFile(join(context.root, 'package.json'));
   const reactDomVersion =
     packageJson?.dependencies?.['react-dom'] ??
     rootPackageJson.dependencies?.['react-dom'];
@@ -44,10 +43,25 @@ export default async function buildExecutor(
     reactDomVersion &&
     gte(checkAndCleanWithSemver('react-dom', reactDomVersion), '18.0.0');
   if (hasReact18) {
-    (process.env as any).__NEXT_REACT_ROOT ||= 'true';
+    process.env['__NEXT_REACT_ROOT'] ||= 'true';
   }
 
-  await build(root);
+  const { experimentalAppOnly, profile, debug } = options;
+
+  const args = createCliOptions({ experimentalAppOnly, profile, debug });
+  const command = `npx next build ${args.join(' ')}`;
+  const execSyncOptions: ExecSyncOptions = {
+    stdio: 'inherit',
+    encoding: 'utf-8',
+    cwd: projectRoot,
+  };
+  try {
+    execSync(command, execSyncOptions);
+  } catch (error) {
+    logger.error(`Error occurred while trying to run the ${command}`);
+    logger.error(error);
+    return { success: false };
+  }
 
   if (!directoryExists(options.outputPath)) {
     mkdir(options.outputPath);
@@ -74,7 +88,7 @@ export default async function buildExecutor(
 
   createNextConfigFile(options, context);
 
-  copySync(join(root, 'public'), join(options.outputPath, 'public'), {
+  copySync(join(projectRoot, 'public'), join(options.outputPath, 'public'), {
     dereference: true,
   });
 

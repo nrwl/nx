@@ -23,7 +23,7 @@ Here's the `project.json` file for your `common-ui` project:
   "prefix": "myorg",
   "targets": {
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "libs/common-ui/jest.config.ts",
@@ -31,7 +31,7 @@ Here's the `project.json` file for your `common-ui` project:
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "libs/common-ui/**/*.ts",
@@ -54,7 +54,7 @@ The properties inside each of these targets is defined as follows:
 
 ## Running Tasks
 
-![Syntax for Running Tasks in Nx](/shared/angular-tutorial/run-target-syntax.svg)
+![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
 Run the `test` target for your `common-ui` project:
 

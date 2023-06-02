@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "use-react-jsx-in-tsconfig-12.0.0": {
       "cli": "nx",
       "version": "12.0.0-beta.0",
@@ -83,6 +83,24 @@
       "version": "15.6.3-beta.0",
       "description": "Creates or updates webpack.config.js file with the new options for webpack.",
       "factory": "./src/migrations/update-15-6-3/webpack-config-setup"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/react with @nx/react",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-2-0-remove-package": {
+      "cli": "nx",
+      "version": "16.2.0-beta.0",
+      "description": "Remove react-test-renderer from package.json",
+      "implementation": "./src/migrations/update-16-2-0-remove-package/update-16-2-0-remove-package"
+    },
+    "remove-types-react-router-dom": {
+      "cli": "nx",
+      "version": "16.3.0-beta.2",
+      "description": "Remove @types/react-router-dom from package.json",
+      "implementation": "./src/migrations/update-16-3-0/remove-types-react-router-dom-package"
     }
   },
   "packageJsonUpdates": {
@@ -787,8 +805,8 @@
         }
       }
     },
-    "5.8.0": {
-      "version": "5.8.0-beta.0",
+    "15.8.0": {
+      "version": "15.8.0-beta.0",
       "packages": {
         "@types/react": {
           "version": "18.0.28",
@@ -856,6 +874,19 @@
         },
         "less": {
           "version": "4.1.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.3.0": {
+      "version": "16.3.0-beta.2",
+      "packages": {
+        "react-router-dom": {
+          "version": "6.11.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@svgr/rollup": {
+          "version": "^8.0.1",
           "alwaysAddToPackageJson": false
         }
       }

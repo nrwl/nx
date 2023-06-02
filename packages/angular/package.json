@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/angular",
+  "name": "@nx/angular",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
@@ -16,13 +16,24 @@
     "CLI"
   ],
   "exports": {
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
     "./generators": "./generators.js",
     "./executors": "./executors.js",
     "./tailwind": "./tailwind.js",
-    "./src/generators/utils": "./src/generators/utils/index.js",
-    "./src/utils": "./src/utils/public-api.js",
     "./module-federation": "./module-federation/index.js",
-    "./plugins/component-testing": "./plugins/component-testing.js"
+    "./src/utils": "./src/utils/public-api.js",
+    "./plugins/component-testing": "./plugins/component-testing.js",
+    "./src/generators/utils": "./src/generators/utils/index.js",
+    "./src/builders/*/schema.json": "./src/builders/*/schema.json",
+    "./src/builders/*.impl": "./src/builders/*.impl.js",
+    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
+    "./src/executors/*.impl": "./src/executors/*.impl.js",
+    "./src/executors/*/compat": "./src/executors/*/compat.js",
+    ".": {
+      "require": "./index.cjs"
+    }
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -37,14 +48,8 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/cypress": "file:../cypress",
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/jest": "file:../jest",
-    "@nrwl/js": "file:../js",
-    "@nrwl/linter": "file:../linter",
-    "@nrwl/webpack": "file:../webpack",
-    "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "~5.0.1",
+    "@typescript-eslint/type-utils": "^5.36.1",
     "chalk": "^4.1.0",
     "chokidar": "^3.5.1",
     "http-server": "^14.1.0",
@@ -54,16 +59,23 @@
     "semver": "7.3.4",
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.1.2",
-    "webpack": "^5.75.0",
+    "webpack": "^5.80.0",
     "webpack-merge": "5.7.3",
-    "enquirer": "^2.3.6"
+    "enquirer": "^2.3.6",
+    "@nx/cypress": "file:../cypress",
+    "@nx/devkit": "file:../devkit",
+    "@nx/jest": "file:../jest",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter",
+    "@nx/webpack": "file:../webpack",
+    "@nx/workspace": "file:../workspace"
   },
   "peerDependencies": {
-    "@angular-devkit/build-angular": ">= 14.0.0 < 16.0.0",
-    "@angular-devkit/schematics": ">= 14.0.0 < 16.0.0",
-    "@schematics/angular": ">= 14.0.0 < 16.0.0",
-    "@angular-devkit/core": ">= 14.0.0 < 16.0.0",
-    "@nguniversal/builders": ">= 14.0.0 < 16.0.0",
+    "@angular-devkit/build-angular": ">= 14.0.0 < 17.0.0",
+    "@angular-devkit/schematics": ">= 14.0.0 < 17.0.0",
+    "@schematics/angular": ">= 14.0.0 < 17.0.0",
+    "@angular-devkit/core": ">= 14.0.0 < 17.0.0",
+    "@nguniversal/builders": ">= 14.0.0 < 17.0.0",
     "rxjs": "^6.5.3 || ^7.5.0"
   },
   "peerDependenciesMeta": {

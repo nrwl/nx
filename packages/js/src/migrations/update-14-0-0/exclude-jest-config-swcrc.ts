@@ -1,5 +1,5 @@
-import { readProjectConfiguration, Tree, updateJson } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+import { readProjectConfiguration, Tree, updateJson } from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { SwcExecutorOptions } from '../../utils/schema';
 import { join } from 'path';
 

@@ -32,13 +32,16 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     options.packageManager = packageManager;
   }
 
+  options.name = getFileName(name);
+  const directory = options.name;
+
   const args = unparse({
     ...options,
   }).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
 
-  const command = `new ${name} ${args}`;
+  const command = `new ${args}`;
 
   const workingDir = process.cwd().replace(/\\/g, '/');
   let nxWorkspaceRoot = `"${workingDir}"`;
@@ -56,7 +59,7 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     }
   }
   let workspaceSetupSpinner = ora(
-    `Creating your workspace in ${getFileName(name)}`
+    `Creating your workspace in ${directory}`
   ).start();
 
   try {
@@ -64,13 +67,13 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     await execAndWait(fullCommand, tmpDir);
 
     workspaceSetupSpinner.succeed(
-      `Nx has successfully created the workspace: ${getFileName(name)}.`
+      `Successfully created the workspace: ${directory}.`
     );
   } catch (e) {
     workspaceSetupSpinner.fail();
     if (e instanceof Error) {
       output.error({
-        title: `Nx failed to create a workspace.`,
+        title: `Failed to create a workspace.`,
         bodyLines: mapErrorToBodyLines(e),
       });
     } else {
@@ -80,5 +83,5 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
   } finally {
     workspaceSetupSpinner.stop();
   }
-  return join(workingDir, getFileName(name));
+  return join(workingDir, directory);
 }

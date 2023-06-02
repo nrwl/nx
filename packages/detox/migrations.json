@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "add-build-target-test-13-5-0": {
       "version": "13.5.0-beta.0",
       "cli": "nx",
@@ -17,6 +17,24 @@
       "cli": "nx",
       "description": "Update jest.config.json under detox project, add key verbsoe: true",
       "factory": "./src/migrations/update-13-10-3/add-verbose-jest-config-13-10-3"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/detox with @nx/detox",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-0-0-update-detoxrc": {
+      "cli": "nx",
+      "version": "16.0.0-beta.3",
+      "description": "Update .detoxrc.json and jest.config.json for detox 20",
+      "implementation": "./src/migrations/update-16-0-0/update-detoxrc-json"
+    },
+    "update-detoxrc-json-expo-16-1-4": {
+      "cli": "nx",
+      "version": "16.1.4-beta.0",
+      "description": "Update .detoxrc.json for expo",
+      "implementation": "./src/migrations/update-16-1-4/update-detoxrc-json-expo"
     }
   },
   "packageJsonUpdates": {
@@ -198,6 +216,37 @@
       "packages": {
         "detox": {
           "version": "~20.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.3",
+      "packages": {
+        "detox": {
+          "version": "~20.7.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.1.1": {
+      "version": "16.1.1-beta.0",
+      "packages": {
+        "detox": {
+          "version": "~20.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@config-plugins/detox": {
+          "version": "~5.0.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.1.5": {
+      "version": "16.1.5-beta.0",
+      "packages": {
+        "detox": {
+          "version": "^20.9.0",
           "alwaysAddToPackageJson": false
         }
       }

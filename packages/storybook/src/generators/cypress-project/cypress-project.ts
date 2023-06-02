@@ -1,11 +1,11 @@
 import {
   cypressInitGenerator as _cypressInitGenerator,
   cypressProjectGenerator as _cypressProjectGenerator,
-} from '@nrwl/cypress';
+} from '@nx/cypress';
 import {
   getE2eProjectName,
   getUnscopedLibName,
-} from '@nrwl/cypress/src/utils/project-name';
+} from '@nx/cypress/src/utils/project-name';
 import {
   convertNxGenerator,
   formatFiles,
@@ -18,8 +18,8 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { Linter } from '@nx/linter';
 
 import { join } from 'path';
 import { safeFileDelete } from '../../utils/utilities';
@@ -144,7 +144,9 @@ function updateAngularJsonBuilder(
 function projectAlreadyHasCypress(tree: Tree): boolean {
   const packageJsonContents = readJson(tree, 'package.json');
   return (
-    (packageJsonContents?.['devDependencies']?.['@nrwl/cypress'] ||
+    (packageJsonContents?.['devDependencies']?.['@nx/cypress'] ||
+      packageJsonContents?.['dependencies']?.['@nx/cypress'] ||
+      packageJsonContents?.['devDependencies']?.['@nrwl/cypress'] ||
       packageJsonContents?.['dependencies']?.['@nrwl/cypress']) &&
     (packageJsonContents?.['devDependencies']?.['cypress'] ||
       packageJsonContents?.['dependencies']?.['cypress'])

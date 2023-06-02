@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/webpack",
+  "name": "@nx/webpack",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
@@ -30,9 +30,6 @@
   },
   "dependencies": {
     "@babel/core": "^7.15.0",
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/js": "file:../js",
-    "@nrwl/workspace": "file:../workspace",
     "autoprefixer": "^10.4.9",
     "babel-loader": "^9.1.2",
     "chalk": "^4.1.0",
@@ -53,7 +50,7 @@
     "postcss": "^8.4.14",
     "postcss-import": "~14.1.0",
     "postcss-loader": "^6.1.1",
-    "rxjs": "^6.5.4",
+    "rxjs": "^7.8.0",
     "sass": "^1.42.1",
     "sass-loader": "^12.2.0",
     "source-map-loader": "^3.0.0",
@@ -66,10 +63,12 @@
     "tsconfig-paths": "^4.1.2",
     "tsconfig-paths-webpack-plugin": "4.0.0",
     "tslib": "^2.3.0",
-    "webpack": "^5.75.0",
+    "webpack": "^5.80.0",
     "webpack-dev-server": "^4.9.3",
     "webpack-node-externals": "^3.0.0",
-    "webpack-subresource-integrity": "^5.1.0"
+    "webpack-subresource-integrity": "^5.1.0",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js"
   },
   "publishConfig": {
     "access": "public"

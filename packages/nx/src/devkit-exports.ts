@@ -1,5 +1,5 @@
 /**
- * Note to developers: STOP! These exports end up as the public API of @nrwl/devkit.
+ * Note to developers: STOP! These exports end up as the public API of @nx/devkit.
  * Try hard to not add to this API to reduce the surface area we need to maintain.
  */
 
@@ -92,11 +92,11 @@ export {
 /**
  * @category Commands
  */
-export type { Target } from './command-line/run';
+export type { Target } from './command-line/run/run';
 /**
  * @category Commands
  */
-export { runExecutor } from './command-line/run';
+export { runExecutor } from './command-line/run/run';
 
 /**
  * @category Generators
@@ -177,12 +177,7 @@ export { stripIndents } from './utils/strip-indents';
 /**
  * @category Utils
  */
-export {
-  joinPathFragments,
-  normalizePath,
-  getImportPath,
-  detectWorkspaceScope,
-} from './utils/path';
+export { joinPathFragments, normalizePath } from './utils/path';
 
 // TODO(v16): Change this to export from './utils/workspace-root'
 /**
@@ -219,24 +214,15 @@ export {
 /**
  * @category Utils
  */
-export { Hash, Hasher } from './hasher/hasher';
+export { Hash, TaskHasher, Hasher } from './hasher/task-hasher';
+export { hashArray } from './hasher/impl';
 
 /**
  * @category Utils
  */
 export { cacheDir } from './utils/cache-directory';
 
-import { createLockFile as _createLockFile } from './plugins/js/lock-file/lock-file';
-import { createPackageJson as _createPackageJson } from './plugins/js/package-json/create-package-json';
-
 /**
- * @category Package Manager
+ * @category Utils
  */
-/**
- * @deprecated Import this from @nrwl/js instead
- */
-export const createLockFile = _createLockFile;
-/**
- * @deprecated Import this from @nrwl/js instead
- */
-export const createPackageJson = _createPackageJson;
+export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';

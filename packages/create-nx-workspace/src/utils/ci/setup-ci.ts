@@ -5,10 +5,9 @@ import { execAndWait } from '../child-process-utils';
 import { mapErrorToBodyLines } from '../error-utils';
 import { output } from '../output';
 import { getPackageManagerCommand, PackageManager } from '../package-manager';
-import { getFileName } from '../string-utils';
 
 export async function setupCI(
-  name: string,
+  directory: string,
   ci: string,
   packageManager: PackageManager,
   nxCloudSuccessfullyInstalled: boolean
@@ -26,8 +25,8 @@ export async function setupCI(
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
-      `${pmc.exec} nx g @nrwl/workspace:ci-workflow --ci=${ci}`,
-      join(process.cwd(), getFileName(name))
+      `${pmc.exec} nx g @nx/workspace:ci-workflow --ci=${ci}`,
+      directory
     );
     ciSpinner.succeed('CI workflow has been generated successfully');
     return res;
@@ -35,7 +34,7 @@ export async function setupCI(
     ciSpinner.fail();
     if (e instanceof Error) {
       output.error({
-        title: `Nx failed to generate CI workflow`,
+        title: `Failed to generate CI workflow`,
         bodyLines: mapErrorToBodyLines(e),
       });
     } else {

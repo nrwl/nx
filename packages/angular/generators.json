@@ -1,7 +1,7 @@
 {
   "name": "Nx Angular",
   "version": "0.1",
-  "extends": ["@schematics/angular", "@nrwl/workspace"],
+  "extends": ["@schematics/angular", "@nx/workspace"],
   "schematics": {
     "add-linting": {
       "factory": "./src/generators/add-linting/compat",
@@ -40,7 +40,7 @@
       "description": "Creates a cypress component test file for a component."
     },
     "convert-tslint-to-eslint": {
-      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
+      "factory": "./src/generators/convert-tslint-to-eslint/compat",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
       "description": "Converts a project from TSLint to ESLint."
     },
@@ -70,7 +70,7 @@
       "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
-      "factory": "./src/generators/move/move#angularMoveSchematic",
+      "factory": "./src/generators/move/compat",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
@@ -95,7 +95,8 @@
     "ngrx": {
       "factory": "./src/generators/ngrx/compat",
       "schema": "./src/generators/ngrx/schema.json",
-      "description": "Adds NgRx support to an application or library."
+      "description": "Adds NgRx support to an application or library.",
+      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead."
     },
     "scam-to-standalone": {
       "factory": "./src/generators/scam-to-standalone/compat",
@@ -252,7 +253,18 @@
     "ngrx": {
       "factory": "./src/generators/ngrx/ngrx",
       "schema": "./src/generators/ngrx/schema.json",
-      "description": "Adds NgRx support to an application or library."
+      "description": "Adds NgRx support to an application or library.",
+      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead."
+    },
+    "ngrx-feature-store": {
+      "factory": "./src/generators/ngrx-feature-store/ngrx-feature-store",
+      "schema": "./src/generators/ngrx-feature-store/schema.json",
+      "description": "Adds an NgRx Feature Store to an application or library."
+    },
+    "ngrx-root-store": {
+      "factory": "./src/generators/ngrx-root-store/ngrx-root-store",
+      "schema": "./src/generators/ngrx-root-store/schema.json",
+      "description": "Adds an NgRx Root Store to an application."
     },
     "pipe": {
       "factory": "./src/generators/pipe/pipe",

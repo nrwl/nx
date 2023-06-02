@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -6,10 +6,15 @@ import {
   readJson,
   readProjectConfiguration,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { extname } from 'path';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { jasmineMarblesVersion } from '../../utils/versions';
+import {
+  jasmineMarblesVersion as latestJasmineMarblesVersion,
+  rxjsVersion as latestRxjsVersion,
+} from '../../utils/versions';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
+import { gte } from 'semver';
 
 export default async function switchToJasmineMarbles(tree: Tree) {
   const usesJasmineMarbles = await replaceJasmineMarbleUsagesInFiles(tree);
@@ -144,6 +149,8 @@ function addJasmineMarblesDevDependencyIfUsed(
     return;
   }
 
+  const jasmineMarblesVersion = getJasmineMarblesVersion(tree);
+
   addDependenciesToPackageJson(
     tree,
     {},
@@ -151,4 +158,19 @@ function addJasmineMarblesDevDependencyIfUsed(
       'jasmine-marbles': jasmineMarblesVersion,
     }
   );
+}
+
+function getJasmineMarblesVersion(tree: Tree): string {
+  let rxjsVersion: string;
+  try {
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    rxjsVersion = checkAndCleanWithSemver(
+      'rxjs',
+      dependencies?.rxjs ?? devDependencies?.rxjs
+    );
+  } catch {
+    rxjsVersion = checkAndCleanWithSemver('rxjs', latestRxjsVersion);
+  }
+
+  return gte(rxjsVersion, '7.0.0') ? latestJasmineMarblesVersion : '~0.8.3';
 }

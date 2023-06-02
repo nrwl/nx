@@ -15,8 +15,8 @@ import {
   runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+} from '@nx/devkit';
+import { Linter, lintProjectGenerator } from '@nx/linter';
 
 import { Schema } from './schema';
 import { axiosVersion } from '../../utils/versions';
@@ -24,7 +24,7 @@ import { join } from 'path';
 import {
   globalJavaScriptOverrides,
   globalTypeScriptOverrides,
-} from '@nrwl/linter/src/generators/init/global-eslint-config';
+} from '@nx/linter/src/generators/init/global-eslint-config';
 
 export async function e2eProjectGenerator(host: Tree, _options: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -36,7 +36,7 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
     implicitDependencies: [options.project],
     targets: {
       e2e: {
-        executor: '@nrwl/jest:jest',
+        executor: '@nx/jest:jest',
         outputs: ['{workspaceRoot}/coverage/{e2eProjectRoot}'],
         options: {
           jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
@@ -113,7 +113,7 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
 
     updateJson(host, join(options.e2eProjectRoot, '.eslintrc.json'), (json) => {
       if (options.rootProject) {
-        json.plugins = ['@nrwl/nx'];
+        json.plugins = ['@nx'];
         json.extends = [];
       }
       json.overrides = [

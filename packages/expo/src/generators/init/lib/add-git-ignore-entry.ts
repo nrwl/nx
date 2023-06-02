@@ -1,4 +1,4 @@
-import { logger, Tree } from '@nrwl/devkit';
+import { logger, Tree } from '@nx/devkit';
 import { gitIgnoreEntriesForExpo } from './gitignore-entries';
 
 export function addGitIgnoreEntry(host: Tree) {

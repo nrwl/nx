@@ -39,7 +39,7 @@ interface NxInstallationConfiguration {
   version: string;
   /**
    * Record<pluginPackageName, pluginVersion>. e.g.
-   * plugins: { '@nrwl/angular': '1.0.0' }
+   * plugins: { '@nx/angular': '1.0.0' }
    */
   plugins?: Record<string, string>;
 }
@@ -60,11 +60,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   implicitDependencies?: ImplicitDependencyEntry<T>;
   /**
-   * @deprecated use targetDefaults instead
-   * Dependencies between different target names across all projects
-   */
-  targetDependencies?: TargetDependencies;
-  /**
    * Named inputs targets can refer to reduce duplication
    */
   namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
@@ -73,6 +68,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   targetDefaults?: TargetDefaults;
   /**
+   * @deprecated This is inferred from the package.json in the workspace root. Please use {@link getNpmScope} instead.
    * NPM Scope that the workspace uses
    */
   npmScope?: string;
@@ -100,6 +96,10 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
        * Default options for the runner
        */
       options?: any;
+      /**
+       * Enables the Rust watcher within the daemon
+       */
+      nativeWatcher?: boolean;
     };
   };
   /**
@@ -111,7 +111,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    *
    * ```
    * {
-   *   "@nrwl/react": {
+   *   "@nx/react": {
    *     "library": {
    *       "style": "scss"
    *     }

@@ -1,22 +1,23 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
   DependencyType,
   joinPathFragments,
   ProjectGraph,
   readProjectConfiguration,
+  stripIndents,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),
@@ -24,9 +25,7 @@ jest.mock('@nrwl/devkit', () => ({
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  readCachedProjectGraph: jest
-    .fn()
-    .mockImplementation(async () => projectGraph),
+  readCachedProjectGraph: jest.fn().mockImplementation(() => projectGraph),
 }));
 
 describe('Cypress Component Testing Configuration', () => {
@@ -94,7 +93,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'libs/fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build',
@@ -156,7 +155,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'libs/fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build:development',
@@ -218,7 +217,7 @@ describe('Cypress Component Testing Configuration', () => {
         "Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
         Provided project? fancy-lib
         Provided build target? fancy-app:build
-        Provided Executors? @nrwl/angular:webpack-browser, @angular-devkit/build-angular:browser"
+        Provided Executors? @nx/angular:webpack-browser, @nrwl/angular:webpack-browser, @angular-devkit/build-angular:browser"
       `);
     });
     it('should use own project config', async () => {
@@ -249,7 +248,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-app').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'apps/fancy-app/cypress.config.ts',
           devServerTarget: 'fancy-app:build',
@@ -309,7 +308,7 @@ describe('Cypress Component Testing Configuration', () => {
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
-        executor: '@nrwl/cypress:cypress',
+        executor: '@nx/cypress:cypress',
         options: {
           cypressConfig: 'libs/fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build',
@@ -319,8 +318,63 @@ describe('Cypress Component Testing Configuration', () => {
       });
     });
   });
+  it('should setup angular specific configs', async () => {
+    await generateTestLibrary(tree, {
+      name: 'my-lib',
+    });
 
-  it('should throw if an invalid --build-target', async () => {});
+    await setup(tree, {
+      project: 'my-lib',
+      name: 'something',
+      standalone: false,
+    });
+    projectGraph = {
+      nodes: {
+        something: {
+          name: 'something',
+          type: 'app',
+          data: {
+            ...readProjectConfiguration(tree, 'something'),
+          } as any,
+        },
+        'my-lib': {
+          name: 'my-lib',
+          type: 'lib',
+          data: {
+            ...readProjectConfiguration(tree, 'my-lib'),
+          } as any,
+        },
+      },
+      dependencies: {
+        'my-lib': [
+          {
+            type: DependencyType.static,
+            source: 'my-lib',
+            target: 'something',
+          },
+        ],
+      },
+    };
+    await cypressComponentConfiguration(tree, {
+      project: 'my-lib',
+      buildTarget: 'something:build',
+      generateTests: true,
+    });
+
+    expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
+      import { defineConfig } from 'cypress';
+
+      export default defineConfig({
+        component: nxComponentTestingPreset(__filename),
+      });
+      "
+    `);
+    expect(
+      tree.read('libs/my-lib/cypress/support/component.ts', 'utf-8')
+    ).toMatchSnapshot('component.ts');
+  });
   it('should work with simple components', async () => {
     await generateTestLibrary(tree, {
       name: 'my-lib',
@@ -605,15 +659,15 @@ describe('Cypress Component Testing Configuration', () => {
     await setup(tree, { project: 'cool-lib', name: 'abc', standalone: false });
     tree.write(
       'libs/cool-lib/src/lib/abc-one/abc-one.component.cy.ts',
-      'should not overwrite abc-one'
+      `const msg = 'should not overwrite abc-one';`
     );
     tree.write(
       'libs/cool-lib/src/lib/abc-two/abc-two.component.cy.ts',
-      'should not overwrite abc-two'
+      `const msg = 'should not overwrite abc-two';`
     );
     tree.write(
       'libs/cool-lib/src/lib/abc-three/abc-three.component.cy.ts',
-      'should not overwrite abc-three'
+      `const msg = 'should not overwrite abc-three';`
     );
     projectGraph = {
       nodes: {
@@ -645,9 +699,18 @@ describe('Cypress Component Testing Configuration', () => {
       basePath: 'libs/cool-lib/src/lib',
     });
 
-    expect(one.cy).toEqual('should not overwrite abc-one');
-    expect(two.cy).toEqual('should not overwrite abc-two');
-    expect(three.cy).toEqual('should not overwrite abc-three');
+    expect(one.cy).toMatchInlineSnapshot(`
+      "const msg = 'should not overwrite abc-one';
+      "
+    `);
+    expect(two.cy).toMatchInlineSnapshot(`
+      "const msg = 'should not overwrite abc-two';
+      "
+    `);
+    expect(three.cy).toMatchInlineSnapshot(`
+      "const msg = 'should not overwrite abc-three';
+      "
+    `);
   });
 
   // TODO: should we support this?

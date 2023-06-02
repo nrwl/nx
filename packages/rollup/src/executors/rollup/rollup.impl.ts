@@ -6,15 +6,15 @@ import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import { dirname, join, parse, resolve } from 'path';
 import { from, Observable, of } from 'rxjs';
 import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
-import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
+import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
-import type { ExecutorContext } from '@nrwl/devkit';
-import { joinPathFragments, logger, names, readJsonFile } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
+import { joinPathFragments, logger, names, readJsonFile } from '@nx/devkit';
 import {
   calculateProjectDependencies,
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
-} from '@nrwl/js/src/utils/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils';
 import nodeResolve from '@rollup/plugin-node-resolve';
 
 import { AssetGlobPattern, RollupExecutorOptions } from './schema';
@@ -142,7 +142,7 @@ export async function* rollupExecutor(
             })
           )
         ),
-        scan<RollupExecutorEvent>(
+        scan<RollupExecutorEvent, RollupExecutorEvent>(
           (acc, result) => {
             if (!acc.success) return acc;
             return result;
@@ -214,7 +214,7 @@ export function createRollupOptions(
       json(),
       (useTsc || useBabel) &&
         require('rollup-plugin-typescript2')({
-          check: true,
+          check: !options.skipTypeCheck,
           tsconfig: options.tsConfig,
           tsconfigOverride: {
             compilerOptions: createTsCompilerOptions(
@@ -245,7 +245,7 @@ export function createRollupOptions(
       useSwc && swc(),
       useBabel &&
         getBabelInputPlugin({
-          // Lets `@nrwl/js/babel` preset know that we are packaging.
+          // Lets `@nx/js/babel` preset know that we are packaging.
           caller: {
             // @ts-ignore
             // Ignoring type checks for caller since we have custom attributes
@@ -271,10 +271,18 @@ export function createRollupOptions(
       analyze(),
     ];
 
-    const externalPackages = dependencies
-      .map((d) => d.name)
-      .concat(options.external || [])
-      .concat(Object.keys(packageJson.dependencies || {}));
+    let externalPackages = [
+      ...Object.keys(packageJson.dependencies || {}),
+      ...Object.keys(packageJson.peerDependencies || {}),
+    ]; // If external is set to none, include all dependencies and peerDependencies in externalPackages
+    if (options.external === 'all') {
+      externalPackages = externalPackages
+        .concat(dependencies.map((d) => d.name))
+        .concat(npmDeps);
+    } else if (Array.isArray(options.external) && options.external.length > 0) {
+      externalPackages = externalPackages.concat(options.external);
+    }
+    externalPackages = [...new Set(externalPackages)];
 
     const rollupConfig = {
       input: options.outputFileName
@@ -289,10 +297,11 @@ export function createRollupOptions(
         entryFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
         chunkFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
       },
-      external: (id) =>
-        externalPackages.some(
+      external: (id: string) => {
+        return externalPackages.some(
           (name) => id === name || id.startsWith(`${name}/`)
-        ) || npmDeps.some((name) => id === name || id.startsWith(`${name}/`)), // Could be a deep import
+        ); // Could be a deep import
+      },
       plugins,
     };
 
@@ -304,13 +313,13 @@ export function createRollupOptions(
 
 function createTsCompilerOptions(
   config: ts.ParsedCommandLine,
-  dependencies,
-  options
+  dependencies: DependentBuildableProjectNode[],
+  options: NormalizedRollupExecutorOptions
 ) {
   const compilerOptionPaths = computeCompilerOptionsPaths(config, dependencies);
   const compilerOptions = {
     rootDir: options.projectRoot,
-    allowJs: false,
+    allowJs: options.allowJs,
     declaration: true,
     paths: compilerOptionPaths,
   };

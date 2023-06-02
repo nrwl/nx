@@ -2,14 +2,14 @@ import type {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   readJson,
   readNxJson,
   readProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { MigrationProjectConfiguration } from '../../utilities/types';
 import { AppMigrator } from './app.migrator';
 
@@ -125,7 +125,7 @@ describe('app migrator', () => {
         `The "build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration (\\"@angular-devkit/build-angular:browser\\", \\"@angular-devkit/build-angular:protractor\\", \\"@cypress/schematic:cypress\\", \\"@angular-devkit/build-angular:extract-i18n\\", \\"@nguniversal/builders:prerender\\", \\"@angular-devkit/build-angular:dev-server\\", \\"@angular-devkit/build-angular:server\\", \\"@nguniversal/builders:ssr-dev-server\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -148,7 +148,7 @@ describe('app migrator', () => {
         `The "test" target is using a builder "@other/not-supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration (\\"@angular-devkit/build-angular:browser\\", \\"@angular-devkit/build-angular:protractor\\", \\"@cypress/schematic:cypress\\", \\"@angular-devkit/build-angular:extract-i18n\\", \\"@nguniversal/builders:prerender\\", \\"@angular-devkit/build-angular:dev-server\\", \\"@angular-devkit/build-angular:server\\", \\"@nguniversal/builders:ssr-dev-server\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -167,7 +167,7 @@ describe('app migrator', () => {
         `The "my-build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration (\\"@angular-devkit/build-angular:browser\\", \\"@angular-devkit/build-angular:protractor\\", \\"@cypress/schematic:cypress\\", \\"@angular-devkit/build-angular:extract-i18n\\", \\"@nguniversal/builders:prerender\\", \\"@angular-devkit/build-angular:dev-server\\", \\"@angular-devkit/build-angular:server\\", \\"@nguniversal/builders:ssr-dev-server\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -877,7 +877,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
         },
@@ -903,7 +903,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.myCustomLintTarget).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
         },
@@ -930,7 +930,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           eslintConfig: 'apps/app1/.eslintrc.json',
           lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
@@ -945,7 +945,7 @@ describe('app migrator', () => {
         overrides: [
           {
             files: ['*.ts', '*.tsx'],
-            extends: ['plugin:@nrwl/nx/typescript'],
+            extends: ['plugin:@nx/typescript'],
             rules: { '@typescript-eslint/await-thenable': 'error' },
           },
         ],
@@ -969,7 +969,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           eslintConfig: 'apps/app1/.eslintrc.json',
           hasTypeAwareRules: true,

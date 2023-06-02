@@ -1,5 +1,5 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { writeJson, readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { writeJson, readJson, Tree } from '@nx/devkit';
 import migrate from './update-13-10-0';
 
 describe('Update tsconfig for React apps', () => {

@@ -3,12 +3,12 @@
 {% tabs %}
 {% tab label="Using TypeScript Transformer Plugins" %}
 
-`@nrwl/js:tsc` can run the [TypeScript Transformers](https://github.com/madou/typescript-transformer-handbook) by using the `transformers` option.
+`@nx/js:tsc` can run the [TypeScript Transformers](https://github.com/madou/typescript-transformer-handbook) by using the `transformers` option.
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
   "build": {
-    "executor": "@nrwl/js:tsc",
+    "executor": "@nx/js:tsc",
     "options": {
       "outputPath": "dist/libs/ts-lib",
       "main": "libs/ts-lib/src/index.ts",
@@ -29,12 +29,12 @@
 {% /tab %}
 {% tab label="Inline libraries" %}
 
-`@nrwl/js:tsc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.
+`@nx/js:tsc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
   "build": {
-    "executor": "@nrwl/js:tsc",
+    "executor": "@nx/js:tsc",
     "options": {
       "outputPath": "dist/libs/ts-lib",
       "main": "libs/ts-lib/src/index.ts",
@@ -50,12 +50,12 @@
 npx nx build ts-lib --external=all
 ```
 
-`@nrwl/js:tsc` can also inline buildable libraries by setting `external: 'none'`
+`@nx/js:tsc` can also inline buildable libraries by setting `external: 'none'`
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
   "build": {
-    "executor": "@nrwl/js:tsc",
+    "executor": "@nx/js:tsc",
     "options": {
       "outputPath": "dist/libs/ts-lib",
       "main": "libs/ts-lib/src/index.ts",

@@ -6,38 +6,35 @@ import {
   joinPathFragments,
   normalizePath,
   Tree,
-} from '@nrwl/devkit';
-import * as ts from 'typescript';
+} from '@nx/devkit';
+import type * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
-  getComponentPropsInterface,
-} from '@nrwl/react/src/utils/ast-utils';
-import { CreateComponentStoriesFileSchema } from './schema';
+} from '@nx/react/src/utils/ast-utils';
+import { getDefaultsForComponent } from '@nx/react/src/utils/component-props';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
-export function getArgsDefaultValue(property: ts.SyntaxKind): string {
-  const typeNameToDefault: Record<number, any> = {
-    [ts.SyntaxKind.StringKeyword]: "''",
-    [ts.SyntaxKind.NumberKeyword]: 0,
-    [ts.SyntaxKind.BooleanKeyword]: false,
-  };
+let tsModule: typeof import('typescript');
 
-  const resolvedValue = typeNameToDefault[property];
-  if (typeof resolvedValue === undefined) {
-    return "''";
-  } else {
-    return resolvedValue;
-  }
+export interface CreateComponentStoriesFileSchema {
+  project: string;
+  componentPath: string;
+  skipFormat?: boolean;
 }
 
 export function createComponentStoriesFile(
   host: Tree,
   { project, componentPath }: CreateComponentStoriesFileSchema
 ) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const proj = getProjects(host).get(project);
   const sourceRoot = proj.sourceRoot;
 
   const componentFilePath = joinPathFragments(sourceRoot, componentPath);
+
   const componentDirectory = componentFilePath.replace(
     componentFilePath.slice(componentFilePath.lastIndexOf('/')),
     ''
@@ -65,10 +62,10 @@ export function createComponentStoriesFile(
     throw new Error(`Failed to read ${componentFilePath}`);
   }
 
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = tsModule.createSourceFile(
     componentFilePath,
     contents,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
@@ -107,7 +104,7 @@ export function createComponentStoriesFile(
   }
 }
 
-function findPropsAndGenerateFile(
+export function findPropsAndGenerateFile(
   host: Tree,
   sourceFile: ts.SourceFile,
   cmpDeclaration: ts.Node,
@@ -117,37 +114,10 @@ function findPropsAndGenerateFile(
   fileExt: string,
   fromNodeArray?: boolean
 ) {
-  const propsInterface = getComponentPropsInterface(sourceFile, cmpDeclaration);
-
-  let propsTypeName: string = null;
-  let props: {
-    name: string;
-    defaultValue: any;
-  }[] = [];
-  let argTypes: {
-    name: string;
-    type: string;
-    actionText: string;
-  }[] = [];
-
-  if (propsInterface) {
-    propsTypeName = propsInterface.name.text;
-    props = propsInterface.members.map((member: ts.PropertySignature) => {
-      if (member.type.kind === ts.SyntaxKind.FunctionType) {
-        argTypes.push({
-          name: (member.name as ts.Identifier).text,
-          type: 'action',
-          actionText: `${(member.name as ts.Identifier).text} executed!`,
-        });
-      } else {
-        return {
-          name: (member.name as ts.Identifier).text,
-          defaultValue: getArgsDefaultValue(member.type.kind),
-        };
-      }
-    });
-    props = props.filter((p) => p && p.defaultValue !== undefined);
-  }
+  const { propsTypeName, props, argTypes } = getDefaultsForComponent(
+    sourceFile,
+    cmpDeclaration
+  );
 
   generateFiles(
     host,
@@ -164,7 +134,6 @@ function findPropsAndGenerateFile(
       componentName: (cmpDeclaration as any).name.text,
       isPlainJs,
       fileExt,
-      hasActions: argTypes && argTypes.length,
     }
   );
 }

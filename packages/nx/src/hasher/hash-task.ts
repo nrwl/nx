@@ -1,34 +1,43 @@
 import { Task, TaskGraph } from '../config/task-graph';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
-import { Hasher } from './hasher';
+import { TaskHasher } from './task-hasher';
 import { ProjectGraph } from '../config/project-graph';
 import { Workspaces } from '../config/workspaces';
 
-export async function hashDependsOnOtherTasks(
+export async function hashTasksThatDoNotDependOnOtherTasks(
   workspaces: Workspaces,
-  hasher: Hasher,
+  hasher: TaskHasher,
   projectGraph: ProjectGraph,
-  taskGraph: TaskGraph,
-  task: Task
+  taskGraph: TaskGraph
 ) {
-  try {
-    const customHasher = await getCustomHasher(
-      task,
-      workspaces,
-      workspaces.readNxJson(),
-      projectGraph
-    );
-    if (customHasher) return true;
-  } catch {
-    return true;
+  const tasks = Object.values(taskGraph.tasks);
+  const tasksWithHashers = await Promise.all(
+    tasks.map(async (task) => {
+      const customHasher = await getCustomHasher(
+        task,
+        workspaces,
+        workspaces.readNxJson(),
+        projectGraph
+      );
+      return { task, customHasher };
+    })
+  );
+
+  const tasksToHash = tasksWithHashers
+    .filter((t) => !t.customHasher)
+    .map((t) => t.task);
+
+  const hashes = await hasher.hashTasks(tasksToHash);
+  for (let i = 0; i < tasksToHash.length; i++) {
+    tasksToHash[i].hash = hashes[i].value;
+    tasksToHash[i].hashDetails = hashes[i].details;
   }
-  return hasher.hashDependsOnOtherTasks(task);
 }
 
 export async function hashTask(
   workspaces: Workspaces,
-  hasher: Hasher,
+  hasher: TaskHasher,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   task: Task

@@ -1,4 +1,4 @@
-import type { Target } from 'nx/src/command-line/run';
+import type { Target } from 'nx/src/command-line/run/run';
 import type { ProjectGraph } from 'nx/src/config/project-graph';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { splitTarget } from 'nx/src/utils/split-target';
@@ -27,8 +27,15 @@ export function parseTargetString(
 ): Target;
 export function parseTargetString(
   targetString: string,
-  projectGraph = readCachedProjectGraph()
+  projectGraph?: ProjectGraph
 ): Target {
+  if (!projectGraph) {
+    try {
+      projectGraph = readCachedProjectGraph();
+    } catch (e) {
+      projectGraph = { nodes: {} } as any;
+    }
+  }
   const [project, target, configuration] = splitTarget(
     targetString,
     projectGraph

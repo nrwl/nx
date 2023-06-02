@@ -1,5 +1,5 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { readJson, NxJsonConfiguration, Tree } from '@nx/devkit';
 
 import { nextInitGenerator } from './init';
 
@@ -13,8 +13,8 @@ describe('init', () => {
   it('should add react dependencies', async () => {
     await nextInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.dependencies['@nrwl/react']).toBeUndefined();
-    expect(packageJson.dependencies['@nrwl/next']).toBeDefined();
+    expect(packageJson.dependencies['@nx/react']).toBeUndefined();
+    expect(packageJson.dependencies['@nx/next']).toBeDefined();
     expect(packageJson.dependencies['next']).toBeDefined();
   });
 

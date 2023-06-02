@@ -6,11 +6,12 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { jestVersion, typesNodeVersion } from '@nrwl/jest/src/utils/versions';
+} from '@nx/devkit';
+import { jestVersion, typesNodeVersion } from '@nx/jest/src/utils/versions';
 
 import { Schema } from './schema';
 import {
+  configPluginsDetoxVersion,
   detoxVersion,
   nxVersion,
   testingLibraryJestDom,
@@ -21,7 +22,7 @@ export async function detoxInitGenerator(host: Tree, schema: Schema) {
 
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
-    tasks.push(updateDependencies(host));
+    tasks.push(updateDependencies(host, schema));
   }
 
   if (!schema.skipFormat) {
@@ -31,22 +32,25 @@ export async function detoxInitGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function updateDependencies(host: Tree) {
+export function updateDependencies(host: Tree, schema: Schema) {
   return addDependenciesToPackageJson(
     host,
     {},
     {
-      '@nrwl/detox': nxVersion,
+      '@nx/detox': nxVersion,
       detox: detoxVersion,
       '@testing-library/jest-dom': testingLibraryJestDom,
       '@types/node': typesNodeVersion,
       'jest-circus': jestVersion,
+      ...(schema.framework === 'expo'
+        ? { '@config-plugins/detox': configPluginsDetoxVersion }
+        : {}),
     }
   );
 }
 
 function moveDependency(host: Tree) {
-  return removeDependenciesFromPackageJson(host, ['@nrwl/detox'], []);
+  return removeDependenciesFromPackageJson(host, ['@nx/detox'], []);
 }
 
 export default detoxInitGenerator;

@@ -1,5 +1,7 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphDependency, ProjectGraphProjectNode } from '@nrwl/devkit';
+import { ProjectGraphDependency, ProjectGraphProjectNode } from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { getEnvironmentConfig } from './hooks/use-environment-config';
 import { To, useParams, useSearchParams } from 'react-router-dom';
 

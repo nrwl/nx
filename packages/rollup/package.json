@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/rollup",
+  "name": "@nx/rollup",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.",
@@ -29,9 +29,6 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/js": "file:../js",
-    "@nrwl/workspace": "file:../workspace",
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-commonjs": "^20.0.0",
     "@rollup/plugin-image": "^2.1.0",
@@ -47,8 +44,10 @@
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-postcss": "^4.0.1",
     "rollup-plugin-typescript2": "0.34.1",
-    "rxjs": "^6.5.4",
-    "tslib": "^2.3.0"
+    "rxjs": "^7.8.0",
+    "tslib": "^2.3.0",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js"
   },
   "publishConfig": {
     "access": "public"

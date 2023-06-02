@@ -4,8 +4,8 @@ import {
   readNxJson,
   readProjectConfiguration,
   updateNxJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateFileServerExecutor from './update-file-server-executor';
 
 describe('updateFileServerExecutor', () => {
@@ -78,8 +78,6 @@ describe('updateFileServerExecutor', () => {
     addProjectConfiguration(tree, 'test', project);
 
     // ACT
-    expect(async () => {
-      await updateFileServerExecutor(tree);
-    }).not.toThrow();
+    await expect(updateFileServerExecutor(tree)).resolves.not.toThrow();
   });
 });

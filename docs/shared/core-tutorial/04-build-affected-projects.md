@@ -63,7 +63,7 @@ Update `packages/ascii/assets/cow.txt`:
 
 Printing the affected projects can be handy, but usually you want to do something with them. For instance, you may want to build everything that has been affected.
 
-**Run `nx affected --target=build` to rebuild only the projects affected by the change.**
+**Run `nx affected -t build` to rebuild only the projects affected by the change.**
 
 ```shell
     ✔  nx run blog:build (1s)
@@ -78,12 +78,12 @@ Printing the affected projects can be handy, but usually you want to do somethin
 
 Note that Nx only built `blog` and `cli`. It didn't build `ascii` because there is no build script created for it.
 
-## Affected --target=\*
+## Affected -t \*
 
 You can run any target against the affected projects in the graph like this:
 
 ```shell
-nx affected --target=test
+nx affected -t test
 ```
 
 ## What's Next

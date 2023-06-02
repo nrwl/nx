@@ -1,8 +1,6 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { presetGenerator } from './preset';
-import * as path from 'path';
 import { Preset } from '../utils/presets';
 
 describe('preset', () => {
@@ -10,35 +8,6 @@ describe('preset', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    overrideCollectionResolutionForTesting({
-      '@nrwl/workspace': path.join(
-        __dirname,
-        '../../../../workspace/generators.json'
-      ),
-      '@nrwl/angular': path.join(
-        __dirname,
-        '../../../../angular/generators.json'
-      ),
-      '@nrwl/linter': path.join(
-        __dirname,
-        '../../../../linter/generators.json'
-      ),
-      '@nrwl/nest': path.join(__dirname, '../../../../nest/generators.json'),
-      '@nrwl/node': path.join(__dirname, '../../../../node/generators.json'),
-      '@nrwl/jest': path.join(__dirname, '../../../../jest/generators.json'),
-      '@nrwl/cypress': path.join(
-        __dirname,
-        '../../../../cypress/generators.json'
-      ),
-      '@nrwl/express': path.join(
-        __dirname,
-        '../../../../express/generators.json'
-      ),
-    });
-  });
-
-  afterEach(() => {
-    overrideCollectionResolutionForTesting(null);
   });
 
   it(`should create files (preset = ${Preset.AngularMonorepo})`, async () => {
@@ -79,7 +48,7 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
     });
-    expect(tree.exists('/apps/proj/pages/index.tsx')).toBe(true);
+    expect(tree.exists('/apps/proj/app/page.tsx')).toBe(true);
   });
 
   it(`should create files (preset = ${Preset.Express})`, async () => {

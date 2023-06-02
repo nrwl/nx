@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../utils/versions';
 
 export function updateModuleFederationProject(
@@ -29,12 +29,12 @@ export function updateModuleFederationProject(
   };
 
   projectConfig.targets.serve.executor =
-    '@nrwl/react:module-federation-dev-server';
+    '@nx/react:module-federation-dev-server';
   projectConfig.targets.serve.options.port = options.devServerPort;
 
   // `serve-static` for remotes that don't need to be in development mode
   projectConfig.targets['serve-static'] = {
-    executor: '@nrwl/web:file-server',
+    executor: '@nx/web:file-server',
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
@@ -52,5 +52,5 @@ export function updateModuleFederationProject(
 
   updateProjectConfiguration(host, options.projectName, projectConfig);
 
-  return addDependenciesToPackageJson(host, {}, { '@nrwl/web': nxVersion });
+  return addDependenciesToPackageJson(host, {}, { '@nx/web': nxVersion });
 }

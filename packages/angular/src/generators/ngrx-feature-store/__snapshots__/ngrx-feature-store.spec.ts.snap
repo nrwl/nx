@@ -1,0 +1,961 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ngrx-feature-store NgModule should generate the files with the correct content 1`] = `
+"import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects';
+import { UsersFacade } from './+state/users.facade';
+
+@NgModule({
+  imports: [
+    CommonModule,
+    StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
+    EffectsModule.forFeature([UsersEffects]),
+  ],
+  providers: [UsersFacade],
+})
+export class FeatureModuleModule {}
+"
+`;
+
+exports[`ngrx-feature-store NgModule should generate the files with the correct content 2`] = `
+"import { Injectable, inject } from '@angular/core';
+import { select, Store, Action } from '@ngrx/store';
+
+import * as UsersActions from './users.actions';
+import * as UsersFeature from './users.reducer';
+import * as UsersSelectors from './users.selectors';
+
+@Injectable()
+export class UsersFacade {
+  private readonly store = inject(Store);
+
+  /**
+   * Combine pieces of state using createSelector,
+   * and expose them as observables through the facade.
+   */
+  loaded$ = this.store.pipe(select(UsersSelectors.selectUsersLoaded));
+  allUsers$ = this.store.pipe(select(UsersSelectors.selectAllUsers));
+  selectedUsers$ = this.store.pipe(select(UsersSelectors.selectEntity));
+
+  /**
+   * Use the initialization action to perform one
+   * or more tasks in your Effects.
+   */
+  init() {
+    this.store.dispatch(UsersActions.initUsers());
+  }
+}
+"
+`;
+
+exports[`ngrx-feature-store NgModule should generate the files with the correct content 3`] = `
+"import { NgModule } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule, Store } from '@ngrx/store';
+import { readFirst } from '@nx/angular/testing';
+
+import * as UsersActions from './users.actions';
+import { UsersEffects } from './users.effects';
+import { UsersFacade } from './users.facade';
+import { UsersEntity } from './users.models';
+import {
+  USERS_FEATURE_KEY,
+  UsersState,
+  initialUsersState,
+  usersReducer,
+} from './users.reducer';
+import * as UsersSelectors from './users.selectors';
+
+interface TestSchema {
+  users: UsersState;
+}
+
+describe('UsersFacade', () => {
+  let facade: UsersFacade;
+  let store: Store<TestSchema>;
+  const createUsersEntity = (id: string, name = ''): UsersEntity => ({
+    id,
+    name: name || \`name-\${id}\`,
+  });
+
+  describe('used in NgModule', () => {
+    beforeEach(() => {
+      @NgModule({
+        imports: [
+          StoreModule.forFeature(USERS_FEATURE_KEY, usersReducer),
+          EffectsModule.forFeature([UsersEffects]),
+        ],
+        providers: [UsersFacade],
+      })
+      class CustomFeatureModule {}
+
+      @NgModule({
+        imports: [
+          StoreModule.forRoot({}),
+          EffectsModule.forRoot([]),
+          CustomFeatureModule,
+        ],
+      })
+      class RootModule {}
+      TestBed.configureTestingModule({ imports: [RootModule] });
+
+      store = TestBed.inject(Store);
+      facade = TestBed.inject(UsersFacade);
+    });
+
+    /**
+     * The initially generated facade::loadAll() returns empty array
+     */
+    it('loadAll() should return empty list with loaded == true', async () => {
+      let list = await readFirst(facade.allUsers$);
+      let isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(false);
+
+      facade.init();
+
+      list = await readFirst(facade.allUsers$);
+      isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(true);
+    });
+
+    /**
+     * Use \`loadUsersSuccess\` to manually update list
+     */
+    it('allUsers$ should return the loaded list; and loaded flag == true', async () => {
+      let list = await readFirst(facade.allUsers$);
+      let isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(false);
+
+      store.dispatch(
+        UsersActions.loadUsersSuccess({
+          users: [createUsersEntity('AAA'), createUsersEntity('BBB')],
+        })
+      );
+
+      list = await readFirst(facade.allUsers$);
+      isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(2);
+      expect(isLoaded).toBe(true);
+    });
+  });
+});
+"
+`;
+
+exports[`ngrx-feature-store NgModule should generate the files with the correct content 4`] = `
+"import { createAction, props } from '@ngrx/store';
+import { UsersEntity } from './users.models';
+
+export const initUsers = createAction('[Users Page] Init');
+
+export const loadUsersSuccess = createAction(
+  '[Users/API] Load Users Success',
+  props<{ users: UsersEntity[] }>()
+);
+
+export const loadUsersFailure = createAction(
+  '[Users/API] Load Users Failure',
+  props<{ error: any }>()
+);
+"
+`;
+
+exports[`ngrx-feature-store NgModule should generate the files with the correct content 5`] = `
+"import { Injectable, inject } from '@angular/core';
+import { createEffect, Actions, ofType } from '@ngrx/effects';
+import { switchMap, catchError, of } from 'rxjs';
+import * as UsersActions from './users.actions';
+import * as UsersFeature from './users.reducer';
+
+@Injectable()
+export class UsersEffects {
+  private actions$ = inject(Actions);
+
+  init$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UsersActions.initUsers),
+      switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
+      catchError((error) => {
+        console.error('Error', error);
+        return of(UsersActions.loadUsersFailure({ error }));
+      })
+    )
+  );
+}
+"
+`;
+
+exports[`ngrx-feature-store NgModule should generate the files with the correct content 6`] = `
+"import { TestBed } from '@angular/core/testing';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { Action } from '@ngrx/store';
+import { provideMockStore } from '@ngrx/store/testing';
+import { hot } from 'jasmine-marbles';
+import { Observable } from 'rxjs';
+
+import * as UsersActions from './users.actions';
+import { UsersEffects } from './users.effects';
+
+describe('UsersEffects', () => {
+  let actions: Observable<Action>;
+  let effects: UsersEffects;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [],
+      providers: [
+        UsersEffects,
+        provideMockActions(() => actions),
+        provideMockStore(),
+      ],
+    });
+
+    effects = TestBed.inject(UsersEffects);
+  });
+
+  describe('init$', () => {
+    it('should work', () => {
+      actions = hot('-a-|', { a: UsersActions.initUsers() });
+
+      const expected = hot('-a-|', {
+        a: UsersActions.loadUsersSuccess({ users: [] }),
+      });
+
+      expect(effects.init$).toBeObservable(expected);
+    });
+  });
+});
+"
+`;
+
+exports[`ngrx-feature-store NgModule should generate the files with the correct content 7`] = `
+"/**
+ * Interface for the 'Users' data
+ */
+export interface UsersEntity {
+  id: string | number; // Primary ID
+  name: string;
+}
+"
+`;
+
+exports[`ngrx-feature-store NgModule should generate the files with the correct content 8`] = `
+"import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
+import { createReducer, on, Action } from '@ngrx/store';
+
+import * as UsersActions from './users.actions';
+import { UsersEntity } from './users.models';
+
+export const USERS_FEATURE_KEY = 'users';
+
+export interface UsersState extends EntityState<UsersEntity> {
+  selectedId?: string | number; // which Users record has been selected
+  loaded: boolean; // has the Users list been loaded
+  error?: string | null; // last known error (if any)
+}
+
+export interface UsersPartialState {
+  readonly [USERS_FEATURE_KEY]: UsersState;
+}
+
+export const usersAdapter: EntityAdapter<UsersEntity> =
+  createEntityAdapter<UsersEntity>();
+
+export const initialUsersState: UsersState = usersAdapter.getInitialState({
+  // set initial required properties
+  loaded: false,
+});
+
+const reducer = createReducer(
+  initialUsersState,
+  on(UsersActions.initUsers, (state) => ({
+    ...state,
+    loaded: false,
+    error: null,
+  })),
+  on(UsersActions.loadUsersSuccess, (state, { users }) =>
+    usersAdapter.setAll(users, { ...state, loaded: true })
+  ),
+  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error }))
+);
+
+export function usersReducer(state: UsersState | undefined, action: Action) {
+  return reducer(state, action);
+}
+"
+`;
+
+exports[`ngrx-feature-store NgModule should generate the files with the correct content 9`] = `
+"import { Action } from '@ngrx/store';
+
+import * as UsersActions from './users.actions';
+import { UsersEntity } from './users.models';
+import { UsersState, initialUsersState, usersReducer } from './users.reducer';
+
+describe('Users Reducer', () => {
+  const createUsersEntity = (id: string, name = ''): UsersEntity => ({
+    id,
+    name: name || \`name-\${id}\`,
+  });
+
+  describe('valid Users actions', () => {
+    it('loadUsersSuccess should return the list of known Users', () => {
+      const users = [
+        createUsersEntity('PRODUCT-AAA'),
+        createUsersEntity('PRODUCT-zzz'),
+      ];
+      const action = UsersActions.loadUsersSuccess({ users });
+
+      const result: UsersState = usersReducer(initialUsersState, action);
+
+      expect(result.loaded).toBe(true);
+      expect(result.ids.length).toBe(2);
+    });
+  });
+
+  describe('unknown action', () => {
+    it('should return the previous state', () => {
+      const action = {} as Action;
+
+      const result = usersReducer(initialUsersState, action);
+
+      expect(result).toBe(initialUsersState);
+    });
+  });
+});
+"
+`;
+
+exports[`ngrx-feature-store NgModule should generate the files with the correct content 10`] = `
+"import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
+
+// Lookup the 'Users' feature state managed by NgRx
+export const selectUsersState =
+  createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+
+const { selectAll, selectEntities } = usersAdapter.getSelectors();
+
+export const selectUsersLoaded = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.loaded
+);
+
+export const selectUsersError = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.error
+);
+
+export const selectAllUsers = createSelector(
+  selectUsersState,
+  (state: UsersState) => selectAll(state)
+);
+
+export const selectUsersEntities = createSelector(
+  selectUsersState,
+  (state: UsersState) => selectEntities(state)
+);
+
+export const selectSelectedId = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.selectedId
+);
+
+export const selectEntity = createSelector(
+  selectUsersEntities,
+  selectSelectedId,
+  (entities, selectedId) => (selectedId ? entities[selectedId] : undefined)
+);
+"
+`;
+
+exports[`ngrx-feature-store NgModule should generate the files with the correct content 11`] = `
+"import { UsersEntity } from './users.models';
+import {
+  usersAdapter,
+  UsersPartialState,
+  initialUsersState,
+} from './users.reducer';
+import * as UsersSelectors from './users.selectors';
+
+describe('Users Selectors', () => {
+  const ERROR_MSG = 'No Error Available';
+  const getUsersId = (it: UsersEntity) => it.id;
+  const createUsersEntity = (id: string, name = '') =>
+    ({
+      id,
+      name: name || \`name-\${id}\`,
+    } as UsersEntity);
+
+  let state: UsersPartialState;
+
+  beforeEach(() => {
+    state = {
+      users: usersAdapter.setAll(
+        [
+          createUsersEntity('PRODUCT-AAA'),
+          createUsersEntity('PRODUCT-BBB'),
+          createUsersEntity('PRODUCT-CCC'),
+        ],
+        {
+          ...initialUsersState,
+          selectedId: 'PRODUCT-BBB',
+          error: ERROR_MSG,
+          loaded: true,
+        }
+      ),
+    };
+  });
+
+  describe('Users Selectors', () => {
+    it('selectAllUsers() should return the list of Users', () => {
+      const results = UsersSelectors.selectAllUsers(state);
+      const selId = getUsersId(results[1]);
+
+      expect(results.length).toBe(3);
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('selectEntity() should return the selected Entity', () => {
+      const result = UsersSelectors.selectEntity(state) as UsersEntity;
+      const selId = getUsersId(result);
+
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('selectUsersLoaded() should return the current "loaded" status', () => {
+      const result = UsersSelectors.selectUsersLoaded(state);
+
+      expect(result).toBe(true);
+    });
+
+    it('selectUsersError() should return the current "error" state', () => {
+      const result = UsersSelectors.selectUsersError(state);
+
+      expect(result).toBe(ERROR_MSG);
+    });
+  });
+});
+"
+`;
+
+exports[`ngrx-feature-store NgModule should have the correct entry point when --barrels=false 1`] = `
+"export * from './lib/+state/users.facade';
+export * from './lib/+state/users.models';
+export * from './lib/+state/users.selectors';
+export * from './lib/+state/users.reducer';
+export * from './lib/+state/users.actions';
+export * from './lib/feature-module.module';
+"
+`;
+
+exports[`ngrx-feature-store NgModule should have the correct entry point when --barrels=true 1`] = `
+"import * as UsersActions from './lib/+state/users.actions';
+
+import * as UsersFeature from './lib/+state/users.reducer';
+
+import * as UsersSelectors from './lib/+state/users.selectors';
+
+export * from './lib/+state/users.facade';
+
+export * from './lib/+state/users.models';
+
+export { UsersActions, UsersFeature, UsersSelectors };
+export * from './lib/feature-module.module';
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 1`] = `
+"import { Injectable, inject } from '@angular/core';
+import { select, Store, Action } from '@ngrx/store';
+
+import * as UsersActions from './users.actions';
+import * as UsersFeature from './users.reducer';
+import * as UsersSelectors from './users.selectors';
+
+@Injectable()
+export class UsersFacade {
+  private readonly store = inject(Store);
+
+  /**
+   * Combine pieces of state using createSelector,
+   * and expose them as observables through the facade.
+   */
+  loaded$ = this.store.pipe(select(UsersSelectors.selectUsersLoaded));
+  allUsers$ = this.store.pipe(select(UsersSelectors.selectAllUsers));
+  selectedUsers$ = this.store.pipe(select(UsersSelectors.selectEntity));
+
+  /**
+   * Use the initialization action to perform one
+   * or more tasks in your Effects.
+   */
+  init() {
+    this.store.dispatch(UsersActions.initUsers());
+  }
+}
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 2`] = `
+"import { NgModule } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule, Store } from '@ngrx/store';
+import { readFirst } from '@nx/angular/testing';
+
+import * as UsersActions from './users.actions';
+import { UsersEffects } from './users.effects';
+import { UsersFacade } from './users.facade';
+import { UsersEntity } from './users.models';
+import {
+  USERS_FEATURE_KEY,
+  UsersState,
+  initialUsersState,
+  usersReducer,
+} from './users.reducer';
+import * as UsersSelectors from './users.selectors';
+
+interface TestSchema {
+  users: UsersState;
+}
+
+describe('UsersFacade', () => {
+  let facade: UsersFacade;
+  let store: Store<TestSchema>;
+  const createUsersEntity = (id: string, name = ''): UsersEntity => ({
+    id,
+    name: name || \`name-\${id}\`,
+  });
+
+  describe('used in NgModule', () => {
+    beforeEach(() => {
+      @NgModule({
+        imports: [
+          StoreModule.forFeature(USERS_FEATURE_KEY, usersReducer),
+          EffectsModule.forFeature([UsersEffects]),
+        ],
+        providers: [UsersFacade],
+      })
+      class CustomFeatureModule {}
+
+      @NgModule({
+        imports: [
+          StoreModule.forRoot({}),
+          EffectsModule.forRoot([]),
+          CustomFeatureModule,
+        ],
+      })
+      class RootModule {}
+      TestBed.configureTestingModule({ imports: [RootModule] });
+
+      store = TestBed.inject(Store);
+      facade = TestBed.inject(UsersFacade);
+    });
+
+    /**
+     * The initially generated facade::loadAll() returns empty array
+     */
+    it('loadAll() should return empty list with loaded == true', async () => {
+      let list = await readFirst(facade.allUsers$);
+      let isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(false);
+
+      facade.init();
+
+      list = await readFirst(facade.allUsers$);
+      isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(true);
+    });
+
+    /**
+     * Use \`loadUsersSuccess\` to manually update list
+     */
+    it('allUsers$ should return the loaded list; and loaded flag == true', async () => {
+      let list = await readFirst(facade.allUsers$);
+      let isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(0);
+      expect(isLoaded).toBe(false);
+
+      store.dispatch(
+        UsersActions.loadUsersSuccess({
+          users: [createUsersEntity('AAA'), createUsersEntity('BBB')],
+        })
+      );
+
+      list = await readFirst(facade.allUsers$);
+      isLoaded = await readFirst(facade.loaded$);
+
+      expect(list.length).toBe(2);
+      expect(isLoaded).toBe(true);
+    });
+  });
+});
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 3`] = `
+"import { createAction, props } from '@ngrx/store';
+import { UsersEntity } from './users.models';
+
+export const initUsers = createAction('[Users Page] Init');
+
+export const loadUsersSuccess = createAction(
+  '[Users/API] Load Users Success',
+  props<{ users: UsersEntity[] }>()
+);
+
+export const loadUsersFailure = createAction(
+  '[Users/API] Load Users Failure',
+  props<{ error: any }>()
+);
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 4`] = `
+"import { Injectable, inject } from '@angular/core';
+import { createEffect, Actions, ofType } from '@ngrx/effects';
+import { switchMap, catchError, of } from 'rxjs';
+import * as UsersActions from './users.actions';
+import * as UsersFeature from './users.reducer';
+
+@Injectable()
+export class UsersEffects {
+  private actions$ = inject(Actions);
+
+  init$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UsersActions.initUsers),
+      switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
+      catchError((error) => {
+        console.error('Error', error);
+        return of(UsersActions.loadUsersFailure({ error }));
+      })
+    )
+  );
+}
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 5`] = `
+"import { TestBed } from '@angular/core/testing';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { Action } from '@ngrx/store';
+import { provideMockStore } from '@ngrx/store/testing';
+import { hot } from 'jasmine-marbles';
+import { Observable } from 'rxjs';
+
+import * as UsersActions from './users.actions';
+import { UsersEffects } from './users.effects';
+
+describe('UsersEffects', () => {
+  let actions: Observable<Action>;
+  let effects: UsersEffects;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [],
+      providers: [
+        UsersEffects,
+        provideMockActions(() => actions),
+        provideMockStore(),
+      ],
+    });
+
+    effects = TestBed.inject(UsersEffects);
+  });
+
+  describe('init$', () => {
+    it('should work', () => {
+      actions = hot('-a-|', { a: UsersActions.initUsers() });
+
+      const expected = hot('-a-|', {
+        a: UsersActions.loadUsersSuccess({ users: [] }),
+      });
+
+      expect(effects.init$).toBeObservable(expected);
+    });
+  });
+});
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 6`] = `
+"/**
+ * Interface for the 'Users' data
+ */
+export interface UsersEntity {
+  id: string | number; // Primary ID
+  name: string;
+}
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 7`] = `
+"import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
+import { createReducer, on, Action } from '@ngrx/store';
+
+import * as UsersActions from './users.actions';
+import { UsersEntity } from './users.models';
+
+export const USERS_FEATURE_KEY = 'users';
+
+export interface UsersState extends EntityState<UsersEntity> {
+  selectedId?: string | number; // which Users record has been selected
+  loaded: boolean; // has the Users list been loaded
+  error?: string | null; // last known error (if any)
+}
+
+export interface UsersPartialState {
+  readonly [USERS_FEATURE_KEY]: UsersState;
+}
+
+export const usersAdapter: EntityAdapter<UsersEntity> =
+  createEntityAdapter<UsersEntity>();
+
+export const initialUsersState: UsersState = usersAdapter.getInitialState({
+  // set initial required properties
+  loaded: false,
+});
+
+const reducer = createReducer(
+  initialUsersState,
+  on(UsersActions.initUsers, (state) => ({
+    ...state,
+    loaded: false,
+    error: null,
+  })),
+  on(UsersActions.loadUsersSuccess, (state, { users }) =>
+    usersAdapter.setAll(users, { ...state, loaded: true })
+  ),
+  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error }))
+);
+
+export function usersReducer(state: UsersState | undefined, action: Action) {
+  return reducer(state, action);
+}
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 8`] = `
+"import { Action } from '@ngrx/store';
+
+import * as UsersActions from './users.actions';
+import { UsersEntity } from './users.models';
+import { UsersState, initialUsersState, usersReducer } from './users.reducer';
+
+describe('Users Reducer', () => {
+  const createUsersEntity = (id: string, name = ''): UsersEntity => ({
+    id,
+    name: name || \`name-\${id}\`,
+  });
+
+  describe('valid Users actions', () => {
+    it('loadUsersSuccess should return the list of known Users', () => {
+      const users = [
+        createUsersEntity('PRODUCT-AAA'),
+        createUsersEntity('PRODUCT-zzz'),
+      ];
+      const action = UsersActions.loadUsersSuccess({ users });
+
+      const result: UsersState = usersReducer(initialUsersState, action);
+
+      expect(result.loaded).toBe(true);
+      expect(result.ids.length).toBe(2);
+    });
+  });
+
+  describe('unknown action', () => {
+    it('should return the previous state', () => {
+      const action = {} as Action;
+
+      const result = usersReducer(initialUsersState, action);
+
+      expect(result).toBe(initialUsersState);
+    });
+  });
+});
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 9`] = `
+"import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
+
+// Lookup the 'Users' feature state managed by NgRx
+export const selectUsersState =
+  createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+
+const { selectAll, selectEntities } = usersAdapter.getSelectors();
+
+export const selectUsersLoaded = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.loaded
+);
+
+export const selectUsersError = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.error
+);
+
+export const selectAllUsers = createSelector(
+  selectUsersState,
+  (state: UsersState) => selectAll(state)
+);
+
+export const selectUsersEntities = createSelector(
+  selectUsersState,
+  (state: UsersState) => selectEntities(state)
+);
+
+export const selectSelectedId = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.selectedId
+);
+
+export const selectEntity = createSelector(
+  selectUsersEntities,
+  selectSelectedId,
+  (entities, selectedId) => (selectedId ? entities[selectedId] : undefined)
+);
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 10`] = `
+"import { UsersEntity } from './users.models';
+import {
+  usersAdapter,
+  UsersPartialState,
+  initialUsersState,
+} from './users.reducer';
+import * as UsersSelectors from './users.selectors';
+
+describe('Users Selectors', () => {
+  const ERROR_MSG = 'No Error Available';
+  const getUsersId = (it: UsersEntity) => it.id;
+  const createUsersEntity = (id: string, name = '') =>
+    ({
+      id,
+      name: name || \`name-\${id}\`,
+    } as UsersEntity);
+
+  let state: UsersPartialState;
+
+  beforeEach(() => {
+    state = {
+      users: usersAdapter.setAll(
+        [
+          createUsersEntity('PRODUCT-AAA'),
+          createUsersEntity('PRODUCT-BBB'),
+          createUsersEntity('PRODUCT-CCC'),
+        ],
+        {
+          ...initialUsersState,
+          selectedId: 'PRODUCT-BBB',
+          error: ERROR_MSG,
+          loaded: true,
+        }
+      ),
+    };
+  });
+
+  describe('Users Selectors', () => {
+    it('selectAllUsers() should return the list of Users', () => {
+      const results = UsersSelectors.selectAllUsers(state);
+      const selId = getUsersId(results[1]);
+
+      expect(results.length).toBe(3);
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('selectEntity() should return the selected Entity', () => {
+      const result = UsersSelectors.selectEntity(state) as UsersEntity;
+      const selId = getUsersId(result);
+
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('selectUsersLoaded() should return the current "loaded" status', () => {
+      const result = UsersSelectors.selectUsersLoaded(state);
+
+      expect(result).toBe(true);
+    });
+
+    it('selectUsersError() should return the current "error" state', () => {
+      const result = UsersSelectors.selectUsersError(state);
+
+      expect(result).toBe(ERROR_MSG);
+    });
+  });
+});
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 11`] = `
+"import { Route } from '@angular/router';
+import { FeatureComponent } from './feature/feature.component';
+import { provideStore, provideState } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects';
+import { UsersFacade } from './+state/users.facade';
+
+export const featureRoutes: Route[] = [
+  {
+    path: '',
+    component: FeatureComponent,
+    providers: [
+      UsersFacade,
+      provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
+      provideEffects(UsersEffects),
+    ],
+  },
+];
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should have the correct entry point when --barrels=false 1`] = `
+"export * from './lib/+state/users.facade';
+export * from './lib/+state/users.models';
+export * from './lib/+state/users.selectors';
+export * from './lib/+state/users.reducer';
+export * from './lib/+state/users.actions';
+export * from './lib/lib.routes';
+
+export * from './lib/feature/feature.component';
+"
+`;
+
+exports[`ngrx-feature-store Standalone APIs should have the correct entry point when --barrels=true 1`] = `
+"import * as UsersActions from './lib/+state/users.actions';
+
+import * as UsersFeature from './lib/+state/users.reducer';
+
+import * as UsersSelectors from './lib/+state/users.selectors';
+
+export * from './lib/+state/users.facade';
+
+export * from './lib/+state/users.models';
+
+export { UsersActions, UsersFeature, UsersSelectors };
+export * from './lib/lib.routes';
+
+export * from './lib/feature/feature.component';
+"
+`;

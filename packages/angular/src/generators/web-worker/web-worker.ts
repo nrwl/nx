@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   formatFiles,
   generateFiles,
@@ -7,10 +7,10 @@ import {
   offsetFromRoot,
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { addSnippet, normalizeOptions } from './lib';
 import type { WebWorkerGeneratorOptions } from './schema';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 
 export async function webWorkerGenerator(
   tree: Tree,

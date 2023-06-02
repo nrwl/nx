@@ -4,7 +4,7 @@ import {
   TaskNodeTooltipProps,
   ProjectNodeToolTipProps,
   ProjectEdgeNodeTooltipProps,
-} from '@nrwl/graph/ui-tooltips';
+} from '@nx/graph/ui-tooltips';
 import { TooltipEvent } from './interfaces';
 
 export class GraphTooltipService {

@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   expectTestsPass,
+  getPackageManagerCommand,
   isOSX,
   killPorts,
   newProject,
@@ -9,10 +10,11 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
+  runCommand,
   runCommandUntil,
   uniq,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
 import { join } from 'path';
 
@@ -24,10 +26,10 @@ describe('react native', () => {
   beforeAll(() => {
     proj = newProject();
     runCLI(
-      `generate @nrwl/react-native:application ${appName} --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName} --install=false --no-interactive`
     );
     runCLI(
-      `generate @nrwl/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
+      `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
     );
   });
   afterAll(() => cleanupProject());
@@ -35,7 +37,7 @@ describe('react native', () => {
   it('should test and lint', async () => {
     const componentName = uniq('component');
     runCLI(
-      `generate @nrwl/react-native:component ${componentName} --project=${libName} --export --no-interactive`
+      `generate @nx/react-native:component ${componentName} --project=${libName} --export --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
@@ -109,7 +111,8 @@ describe('react native', () => {
   });
 
   if (isOSX()) {
-    it('should pod install', async () => {
+    // TODO(@meeroslav): this test is causing git-hasher to overflow with arguments. Enable when it's fixed.
+    xit('should pod install', async () => {
       expect(async () => {
         await runCLIAsync(`pod-install ${appName}`);
         checkFilesExist(`apps/${appName}/ios/Podfile.lock`);
@@ -119,11 +122,11 @@ describe('react native', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nrwl/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
     );
     expect(() =>
       checkFilesExist(
-        `.storybook/story-loader.js`,
+        `.storybook/story-loader.ts`,
         `apps/${appName}/src/storybook/storybook.ts`,
         `apps/${appName}/src/storybook/toggle-storybook.tsx`,
         `apps/${appName}/src/app/App.stories.tsx`
@@ -145,7 +148,7 @@ describe('react native', () => {
   it('should upgrade native for application', async () => {
     expect(() =>
       runCLI(
-        `generate @nrwl/react-native:upgrade-native ${appName} --install=false`
+        `generate @nx/react-native:upgrade-native ${appName} --install=false`
       )
     ).not.toThrow();
   });
@@ -154,7 +157,7 @@ describe('react native', () => {
     const componentName = uniq('component');
 
     runCLI(
-      `generate @nrwl/react-native:component ${componentName} --project=${libName} --export`
+      `generate @nx/react-native:component ${componentName} --project=${libName} --export`
     );
     expect(() => {
       runCLI(`build ${libName}`);
@@ -167,28 +170,26 @@ describe('react native', () => {
     // Add npm package with native modules
     updateFile(join('package.json'), (content) => {
       const json = JSON.parse(content);
-      json.dependencies['react-native-image-picker'] = '1.0.0';
-      json.dependencies['react-native-gesture-handler'] = '1.0.0';
-      json.dependencies['react-native-safe-area-contex'] = '1.0.0';
+      json.dependencies['react-native-image-picker'] = '5.3.1';
+      json.dependencies['@react-native-async-storage/async-storage'] = '1.18.1';
       return JSON.stringify(json, null, 2);
     });
+    runCommand(`${getPackageManagerCommand().install}`);
+
     // Add import for Nx to pick up
     updateFile(join('apps', appName, 'src/app/App.tsx'), (content) => {
-      return `import AsyncStorage from '@react-native-async-storage/async-storage';import Config from 'react-native-config';\n${content}`;
+      return `import AsyncStorage from '@react-native-async-storage/async-storage';${content}`;
     });
 
     await runCLIAsync(
-      `sync-deps ${appName} --include=react-native-gesture-handler,react-native-safe-area-context,react-native-image-picker`
+      `sync-deps ${appName} --include=react-native-image-picker`
     );
 
     const result = readJson(join('apps', appName, 'package.json'));
     expect(result).toMatchObject({
       dependencies: {
         'react-native-image-picker': '*',
-        'react-native-gesture-handler': '*',
-        'react-native-safe-area-context': '*',
         'react-native': '*',
-        'react-native-config': '*',
         '@react-native-async-storage/async-storage': '*',
       },
     });

@@ -3,7 +3,7 @@ import {
   ProjectGraph,
   ProjectGraphDependency,
   readJsonFile,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { DependentBuildableProjectNode } from './buildable-libs-utils';
 import { join } from 'path';
 import { readTsConfig } from './typescript/ts-config';
@@ -16,12 +16,12 @@ export enum HelperDependency {
 }
 
 const jsExecutors = {
-  '@nrwl/js:tsc': {
+  '@nx/js:tsc': {
     helperDependency: HelperDependency.tsc,
     getConfigPath: (options: ExecutorOptions, contextRoot: string, _: string) =>
       join(contextRoot, options.tsConfig),
   } as const,
-  '@nrwl/js:swc': {
+  '@nx/js:swc': {
     helperDependency: HelperDependency.swc,
     getConfigPath: (
       options: SwcExecutorOptions,

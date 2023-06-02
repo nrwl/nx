@@ -6,12 +6,14 @@ import cytoscape, {
   NodeSingular,
 } from 'cytoscape';
 
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import {
+  ProjectFileMap,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from 'nx/src/config/project-graph';
-import { edgeStyles, nodeStyles } from '../styles-graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { ProjectNode } from './project-node';
 import { ProjectEdge } from './project-edge';
 import { ParentNode } from './parent-node';
@@ -234,6 +236,7 @@ export class ProjectTraversalGraph {
   }
 
   initGraph(
+    fileMap: ProjectFileMap,
     allProjects: ProjectGraphProjectNode[],
     groupByFolder: boolean,
     workspaceLayout,
@@ -242,6 +245,7 @@ export class ProjectTraversalGraph {
     collapseEdges: boolean
   ) {
     this.generateCytoscapeLayout(
+      fileMap,
       allProjects,
       groupByFolder,
       workspaceLayout,
@@ -251,6 +255,7 @@ export class ProjectTraversalGraph {
   }
 
   private generateCytoscapeLayout(
+    fileMap: ProjectFileMap,
     allProjects: ProjectGraphProjectNode[],
     groupByFolder: boolean,
     workspaceLayout,
@@ -258,6 +263,7 @@ export class ProjectTraversalGraph {
     affectedProjectIds: string[]
   ) {
     const elements = this.createElements(
+      fileMap,
       allProjects,
       groupByFolder,
       workspaceLayout,
@@ -273,6 +279,7 @@ export class ProjectTraversalGraph {
   }
 
   private createElements(
+    fileMap: ProjectFileMap,
     projects: ProjectGraphProjectNode[],
     groupByFolder: boolean,
     workspaceLayout: {
@@ -298,7 +305,7 @@ export class ProjectTraversalGraph {
           ? workspaceLayout.appsDir
           : workspaceLayout.libsDir;
 
-      const projectNode = new ProjectNode(project, workspaceRoot);
+      const projectNode = new ProjectNode(fileMap, project, workspaceRoot);
 
       projectNode.affected = affectedProjectIds.includes(project.name);
 

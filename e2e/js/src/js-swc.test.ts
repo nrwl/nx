@@ -29,7 +29,7 @@ describe('js e2e', () => {
 
   it('should create libs with js executors (--bundler=swc)', async () => {
     const lib = uniq('lib');
-    runCLI(`generate @nrwl/js:lib ${lib} --bundler=swc --no-interactive`);
+    runCLI(`generate @nx/js:lib ${lib} --bundler=swc --no-interactive`);
 
     const libPackageJson = readJson(`libs/${lib}/package.json`);
     expect(libPackageJson.scripts).toBeUndefined();
@@ -48,7 +48,7 @@ describe('js e2e', () => {
     checkFilesDoNotExist(`libs/${lib}/.babelrc`);
 
     const parentLib = uniq('parentlib');
-    runCLI(`generate @nrwl/js:lib ${parentLib} --bundler=swc --no-interactive`);
+    runCLI(`generate @nx/js:lib ${parentLib} --bundler=swc --no-interactive`);
     const parentLibPackageJson = readJson(`libs/${parentLib}/package.json`);
     expect(parentLibPackageJson.scripts).toBeUndefined();
     expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
@@ -120,7 +120,7 @@ describe('js e2e', () => {
 
   it('should handle swcrc path mappings', async () => {
     const lib = uniq('lib');
-    runCLI(`generate @nrwl/js:lib ${lib} --bundler=swc --no-interactive`);
+    runCLI(`generate @nx/js:lib ${lib} --bundler=swc --no-interactive`);
 
     // add a dummy x.ts file for path mappings
     updateFile(
@@ -134,8 +134,9 @@ export function x() {
 
     // update .swcrc to use path mappings
     updateJson(`libs/${lib}/.swcrc`, (json) => {
+      json.jsc.baseUrl = '.';
       json.jsc.paths = {
-        'src/*': ['src/*'],
+        '~/*': ['./src/*'],
       };
       return json;
     });
@@ -144,7 +145,7 @@ export function x() {
     updateFile(`libs/${lib}/src/lib/${lib}.ts`, () => {
       return `
 // @ts-ignore
-import { x } from 'src/x';
+import { x } from '~/x';
 
 export function myLib() {
   console.log(x());
@@ -154,8 +155,8 @@ myLib();
   `;
     });
 
-    // now run build
-    runCLI(`build ${lib}`);
+    // now run build without type checking (since we're using path mappings not in tsconfig)
+    runCLI(`build ${lib} --skipTypeCheck`);
 
     // invoke the lib with node
     const result = execSync(`node dist/libs/${lib}/src/lib/${lib}.js`, {

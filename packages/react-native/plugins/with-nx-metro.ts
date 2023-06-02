@@ -1,4 +1,4 @@
-import { workspaceLayout, workspaceRoot } from '@nrwl/devkit';
+import { workspaceLayout, workspaceRoot } from '@nx/devkit';
 import { join } from 'path';
 import { existsSync } from 'fs-extra';
 
@@ -28,6 +28,7 @@ export function withNxMetro(config: any, opts: WithNxOptions = {}) {
   watchFolders = watchFolders.concat([
     join(workspaceRoot, 'node_modules'),
     join(workspaceRoot, workspaceLayout().libsDir),
+    join(workspaceRoot, 'packages'),
     join(workspaceRoot, '.storybook'),
   ]);
   if (opts.watchFolders?.length) {

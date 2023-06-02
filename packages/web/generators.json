@@ -1,7 +1,7 @@
 {
   "name": "nx/web",
   "version": "0.1",
-  "extends": ["@nrwl/workspace"],
+  "extends": ["@nx/workspace"],
   "generators": {
     "init": {
       "factory": "./src/generators/init/init#webInitGenerator",

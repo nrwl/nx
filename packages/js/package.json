@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/js",
+  "name": "@nx/js",
   "version": "0.0.1",
   "private": false,
   "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
@@ -39,8 +39,6 @@
     "@babel/preset-env": "^7.15.0",
     "@babel/preset-typescript": "^7.15.0",
     "@babel/runtime": "^7.14.8",
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "babel-plugin-const-enum": "^1.0.1",
     "babel-plugin-macros": "^2.8.0",
@@ -51,9 +49,19 @@
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",
     "minimatch": "3.0.5",
+    "semver": "7.3.4",
     "source-map-support": "0.5.19",
-    "tree-kill": "1.2.2",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "@nx/devkit": "file:../devkit",
+    "@nx/workspace": "file:../workspace"
+  },
+  "peerDependencies": {
+    "verdaccio": "^5.0.4"
+  },
+  "peerDependenciesMeta": {
+    "verdaccio": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

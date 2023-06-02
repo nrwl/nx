@@ -1,0 +1,60 @@
+{
+  "name": "angular-legacy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages-legacy/angular",
+  "projectType": "library",
+  "targets": {
+    "build-ng": {
+      "dependsOn": ["^build", "build-base"],
+      "executor": "@nx/angular:package",
+      "options": {
+        "project": "packages-legacy/angular/ng-package.json",
+        "tsConfig": "packages-legacy/angular/tsconfig.runtime.json"
+      },
+      "outputs": ["build/packages/angular-legacy"]
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "dependsOn": ["^build"],
+      "options": {
+        "main": "packages-legacy/angular/index.ts",
+        "tsConfig": "packages-legacy/angular/tsconfig.json",
+        "outputPath": "build/packages/angular-legacy",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages-legacy/angular",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages-legacy/angular",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "dependsOn": ["build-ng", "build-base", "^build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js angular-legacy"
+          },
+          {
+            "command": "echo 'Built angular-legacy'"
+          }
+        ]
+      }
+    }
+  },
+  "implicitDependencies": ["workspace", "cypress", "jest"]
+}

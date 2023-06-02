@@ -32,12 +32,12 @@ myorg/
 Nx comes with generators that can help with scaffolding applications. Run this generator to make a new library named `is-even`:
 
 ```shell
-npx nx generate @nrwl/js:library is-even --publishable --importPath @myorg/is-even
+npx nx generate @nx/js:library is-even --publishable --importPath @myorg/is-even
 ```
 
 This command:
 
-- Uses the `@nrwl/js` plugin's `library` generator to scaffold a new library named `is-even`.
+- Uses the `@nx/js` plugin's `library` generator to scaffold a new library named `is-even`.
 - The `--publishable` flag makes sure we also get a `package.json` generated and a `publish` target we can invoke to publish to NPM.
 - The `--importPath` allows us to define the name of the NPM package.
 
@@ -103,7 +103,7 @@ The local linking of packages in an integrated monorepo style is handled by Nx a
 To illustrate that, let's create another package `is-odd`. We can again run the generator for that:
 
 ```shell
-npx nx generate @nrwl/js:library is-odd --publishable --importPath @myorg/is-odd
+npx nx generate @nx/js:library is-odd --publishable --importPath @myorg/is-odd
 ```
 
 Note how the `tsconfig.base.json` now has two entries:
@@ -195,12 +195,12 @@ Done compiling TypeScript files for project "is-even".
 To run the `build` target for all the packages in the workspace, use:
 
 ```shell
-npx nx run-many --target=build
+npx nx run-many -t build
 ```
 
 What you would get is the following:
 
-```{% command="npx nx run-many --target=build" %}
+```{% command="npx nx run-many -t build" %}
     ✔  nx run is-even:build  [existing outputs match the cache, left as is]
     ✔  nx run is-odd:build (906ms)
 
@@ -216,7 +216,7 @@ Note how on the `is-even:build` it didn't run the build but rather pulled it out
 You can also only run tasks on packages that got changed by using
 
 ```shell
-npx nx affected --target=build
+npx nx affected -t build
 ```
 
 ## Learn More
@@ -233,6 +233,6 @@ npx nx affected --target=build
 
 {% card title="React Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with React applications sharing code." url="/react-tutorial/1-code-generation" /%}
 
-{% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/getting-started/node-server-tutorial" /%}
+{% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/tutorials/node-server-tutorial" /%}
 
 {% /cards %}

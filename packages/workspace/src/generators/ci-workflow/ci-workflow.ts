@@ -8,7 +8,7 @@ import {
   NxJsonConfiguration,
   formatFiles,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
 
 export interface Schema {
@@ -22,7 +22,7 @@ export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
 
   const nxJson: NxJsonConfiguration = readJson(host, 'nx.json');
   const nxCloudUsed = Object.values(nxJson.tasksRunnerOptions).find(
-    (r) => r.runner == '@nrwl/nx-cloud'
+    (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
   );
   if (!nxCloudUsed) {
     throw new Error('This workspace is not connected to Nx Cloud.');

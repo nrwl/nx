@@ -1,34 +1,34 @@
 {
   "extends": "../../.eslintrc",
-  "rules": {
-    "@typescript-eslint/no-restricted-imports": [
-      "error",
-      {
-        "paths": [
-          "@nrwl/workspace",
-          "@angular-devkit/core",
-          "@angular-devkit/architect",
-          "@angular-devkit/schematics"
-        ],
-        "patterns": [
-          {
-            "group": ["nx/**/*"],
-            "message": "Use requireNx() from packages/devkit/nx.ts OR use a type import instead.",
-            "allowTypeImports": true
-          },
-          {
-            "group": ["@nrwl/devkit/**/*"],
-            "message": "Use a relative import"
-          }
-        ]
-      }
-    ]
-  },
   "ignorePatterns": ["!**/*"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "@typescript-eslint/explicit-module-boundary-types": ["error"],
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              "@nx/workspace",
+              "@angular-devkit/core",
+              "@angular-devkit/architect",
+              "@angular-devkit/schematics"
+            ],
+            "patterns": [
+              {
+                "group": ["nx/**/*"],
+                "message": "Use requireNx() from packages/devkit/nx.ts OR use a type import instead.",
+                "allowTypeImports": true
+              },
+              {
+                "group": ["@nx/devkit/**/*"],
+                "message": "Use a relative import"
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "files": ["*.spec.ts"],
@@ -38,9 +38,7 @@
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {
-        "@typescript-eslint/explicit-module-boundary-types": ["error"]
-      }
+      "rules": {}
     },
     {
       "files": ["*.js", "*.jsx"],
@@ -50,7 +48,7 @@
       "files": ["./package.json"],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nrwl/nx/nx-plugin-checks": "error"
+        "@nx/nx-plugin-checks": "error"
       }
     }
   ]

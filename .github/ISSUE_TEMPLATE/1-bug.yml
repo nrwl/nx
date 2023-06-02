@@ -1,7 +1,6 @@
-
 name: 🐞 Bug Report
 description: This form is to report unexpected behavior in Nx.
-labels: ["type: bug"]
+labels: [ "type: bug" ]
 body:
   - type: markdown
     attributes:
@@ -54,6 +53,16 @@ body:
       label: Failure Logs
       description: Please include any relevant log snippets or files here. This will be automatically formatted into code, so no need for backticks.
       render: shell
+  - type: checkboxes
+    id: os
+    attributes:
+      label: Operating System
+      description: What Operating System are you using?
+      options:
+        - label: macOS
+        - label: Linux
+        - label: Windows
+        - label: Other (Please specify)
   - type: textarea
     id: additional
     attributes:

@@ -1,4 +1,4 @@
-import { printDiagnostics, runTypeCheck } from '@nrwl/js';
+import { printDiagnostics, runTypeCheck } from '@nx/js';
 import { join } from 'path';
 
 export async function validateTypes(opts: {

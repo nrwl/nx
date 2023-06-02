@@ -12,6 +12,8 @@ export function spawnAndWait(command: string, args: string[], cwd: string) {
       cwd,
       stdio: 'inherit',
       env: { ...process.env, NX_DAEMON: 'false' },
+      shell: true,
+      windowsHide: true,
     });
 
     childProcess.on('exit', (code) => {

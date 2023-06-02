@@ -1,4 +1,1 @@
-export interface Schema {
-  name: string;
-  skipFormat: boolean;
-}
+export interface Schema {}

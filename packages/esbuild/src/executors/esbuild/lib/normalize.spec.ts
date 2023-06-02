@@ -1,5 +1,5 @@
 import { normalizeOptions } from './normalize';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 
 describe('normalizeOptions', () => {
   const context: ExecutorContext = {
@@ -14,7 +14,6 @@ describe('normalizeOptions', () => {
           name: 'myapp',
           data: {
             root: 'apps/myapp',
-            files: [],
           },
         },
       },

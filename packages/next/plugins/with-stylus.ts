@@ -1,21 +1,18 @@
 // Adapted from https://raw.githubusercontent.com/elado/next-with-less/main/src/index.js
 import { merge } from 'webpack-merge';
-import { NextConfigFn } from './with-nx';
+import { NextConfigFn } from '../src/utils/config';
+import { WithNxOptions } from './with-nx';
 
 const addStylusToRegExp = (rx) =>
   new RegExp(rx.source.replace('|sass', '|sass|styl'), rx.flags);
 
-function patchNextCSSWithStylus(
-  nextCSSModule = require('next/dist/build/webpack/config/blocks/css') as any
-) {
-  nextCSSModule.regexLikeCss = addStylusToRegExp(nextCSSModule.regexLikeCss);
-}
-
-patchNextCSSWithStylus();
-
-export function withStylus(configFn: NextConfigFn): NextConfigFn {
+export function withStylus(
+  configOrFn: WithNxOptions | NextConfigFn
+): NextConfigFn {
   return async (phase: string) => {
-    const { stylusLoaderOptions = {}, ...nextConfig } = await configFn(phase);
+    const baseConfig =
+      typeof configOrFn === 'function' ? await configOrFn(phase) : configOrFn;
+    const { stylusLoaderOptions = {}, ...nextConfig } = baseConfig;
 
     return Object.assign({}, nextConfig, {
       webpack(config, opts) {
@@ -102,4 +99,3 @@ export function withStylus(configFn: NextConfigFn): NextConfigFn {
 
 module.exports = withStylus;
 module.exports.withStylus = withStylus;
-module.exports.patchNext = patchNextCSSWithStylus;

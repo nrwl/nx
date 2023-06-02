@@ -1,14 +1,14 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   convertNxGenerator,
   formatFiles,
-  getImportPath,
-  getWorkspaceLayout,
   joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
+
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 import { esbuildInitGenerator } from '../init/init';
 import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
@@ -43,9 +43,8 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
   const packageJsonPath = joinPathFragments(project.root, 'package.json');
 
   if (!tree.exists(packageJsonPath)) {
-    const { npmScope } = getWorkspaceLayout(tree);
     const importPath =
-      options.importPath || getImportPath(npmScope, options.project);
+      options.importPath || getImportPath(tree, options.project);
     writeJson(tree, packageJsonPath, {
       name: importPath,
       version: '0.0.1',
@@ -82,7 +81,7 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
     targets: {
       ...project.targets,
       build: {
-        executor: '@nrwl/esbuild:esbuild',
+        executor: '@nx/esbuild:esbuild',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',
         options: buildOptions,

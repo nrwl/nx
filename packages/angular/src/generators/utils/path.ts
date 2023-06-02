@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   names,
   normalizePath,
   readProjectConfiguration,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename, dirname, relative } from 'path';
 import { parseNameWithPath } from './names';
 
@@ -29,30 +29,6 @@ export function getRelativeImportToFile(
     relativeDirToTarget,
     basename(targetFilePath, '.ts')
   )}`;
-}
-
-export function checkPathUnderProjectRoot(
-  tree: Tree,
-  projectName: string,
-  path: string
-): void {
-  if (!path) {
-    return;
-  }
-
-  const { root } = readProjectConfiguration(tree, projectName);
-
-  let pathToComponent = normalizePath(path);
-  pathToComponent = pathToComponent.startsWith('/')
-    ? pathToComponent.slice(1)
-    : pathToComponent;
-
-  if (!pathStartsWith(pathToComponent, root)) {
-    throw new Error(
-      `The path provided (${path}) does not exist under the project root (${root}). ` +
-        `Please make sure to provide a path that exists under the project root.`
-    );
-  }
 }
 
 export type PathGenerationOptions = {

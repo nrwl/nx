@@ -1,4 +1,4 @@
-import { ProjectConfiguration, Workspaces } from '@nrwl/devkit';
+import { ProjectConfiguration, Workspaces } from '@nx/devkit';
 import { join } from 'path';
 import { tmpProjPath } from './create-project-utils';
 import { readJson, updateFile } from './file-utils';

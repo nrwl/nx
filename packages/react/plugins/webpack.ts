@@ -4,7 +4,7 @@ import { withReact } from './with-react';
 const legacyExport: any = withReact();
 legacyExport.withReact = withReact;
 
-/** @deprecated use `import { withReact } from '@nrwl/react'` */
+/** @deprecated use `import { withReact } from '@nx/react'` */
 // This is here for backward compatibility if anyone imports {getWebpackConfig} directly.
 // TODO(jack): Remove in Nx 16
 const getWebpackConfig = withReact();

@@ -1,10 +1,10 @@
 import * as minimatch from 'minimatch';
 import * as path from 'path';
 import * as fse from 'fs-extra';
-import ignore, { Ignore } from 'ignore';
+import ignore from 'ignore';
 import * as fg from 'fast-glob';
 import { AssetGlob } from './assets';
-import { logger } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
 import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
 
 export type FileEventType = 'create' | 'update' | 'delete';
@@ -52,7 +52,7 @@ export class CopyAssetsHandler {
   private readonly rootDir: string;
   private readonly outputDir: string;
   private readonly assetGlobs: AssetEntry[];
-  private readonly ignore: Ignore;
+  private readonly ignore: ReturnType<typeof ignore>;
   private readonly callback: (events: FileEvent[]) => void;
 
   constructor(opts: CopyAssetHandlerOptions) {

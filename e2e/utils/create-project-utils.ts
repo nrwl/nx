@@ -17,7 +17,7 @@ import {
 } from './get-env-info';
 import * as isCI from 'is-ci';
 
-import { angularCliVersion as defaultAngularCliVersion } from '@nrwl/workspace/src/utils/versions';
+import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'child_process';
 
@@ -28,7 +28,7 @@ import {
   RunCmdOpts,
   runCommand,
 } from './command-utils';
-import { output } from '@nrwl/devkit';
+import { output } from '@nx/devkit';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -61,25 +61,25 @@ export function newProject({
 
       // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
       const packages = [
-        `@nrwl/angular`,
-        `@nrwl/eslint-plugin-nx`,
-        `@nrwl/express`,
-        `@nrwl/esbuild`,
-        `@nrwl/jest`,
-        `@nrwl/js`,
-        `@nrwl/linter`,
-        `@nrwl/nest`,
-        `@nrwl/next`,
-        `@nrwl/node`,
-        `@nrwl/nx-plugin`,
-        `@nrwl/rollup`,
-        `@nrwl/react`,
-        `@nrwl/storybook`,
-        `@nrwl/vite`,
-        `@nrwl/web`,
-        `@nrwl/webpack`,
-        `@nrwl/react-native`,
-        `@nrwl/expo`,
+        `@nx/angular`,
+        `@nx/eslint-plugin`,
+        `@nx/express`,
+        `@nx/esbuild`,
+        `@nx/jest`,
+        `@nx/js`,
+        `@nx/linter`,
+        `@nx/nest`,
+        `@nx/next`,
+        `@nx/node`,
+        `@nx/plugin`,
+        `@nx/rollup`,
+        `@nx/react`,
+        `@nx/storybook`,
+        `@nx/vite`,
+        `@nx/web`,
+        `@nx/webpack`,
+        `@nx/react-native`,
+        `@nx/expo`,
       ];
       packageInstall(packages.join(` `), projScope);
 
@@ -135,6 +135,8 @@ export function runCreateWorkspace(
     bundler,
     routing,
     standaloneApi,
+    docker,
+    nextAppDir,
   }: {
     preset: string;
     appName?: string;
@@ -148,6 +150,8 @@ export function runCreateWorkspace(
     bundler?: 'webpack' | 'vite';
     standaloneApi?: boolean;
     routing?: boolean;
+    docker?: boolean;
+    nextAppDir?: boolean;
   }
 ) {
   projName = name;
@@ -167,6 +171,14 @@ export function runCreateWorkspace(
 
   if (bundler) {
     command += ` --bundler=${bundler}`;
+  }
+
+  if (nextAppDir !== undefined) {
+    command += ` --nextAppDir=${nextAppDir}`;
+  }
+
+  if (docker !== undefined) {
+    command += ` --docker=${docker}`;
   }
 
   if (standaloneApi !== undefined) {
@@ -215,12 +227,10 @@ export function runCreateWorkspace(
 export function runCreatePlugin(
   name: string,
   {
-    pluginName,
     packageManager,
     extraArgs,
     useDetectedPm = false,
   }: {
-    pluginName?: string;
     packageManager?: 'npm' | 'yarn' | 'pnpm';
     extraArgs?: string;
     useDetectedPm?: boolean;
@@ -232,11 +242,7 @@ export function runCreatePlugin(
 
   let command = `${
     pm.runUninstalledPackage
-  } create-nx-plugin@${getPublishedVersion()} ${name}`;
-
-  if (pluginName) {
-    command += ` --pluginName=${pluginName} --no-nxCloud`;
-  }
+  } create-nx-plugin@${getPublishedVersion()} ${name} --no-nxCloud`;
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;
@@ -284,20 +290,15 @@ export function packageInstall(
 
   const command = `${
     mode === 'dev' ? pm.addDev : pm.addProd
-  } ${pkgsWithVersions}${isVerbose() ? ' --verbose' : ''}`;
+  } ${pkgsWithVersions}`;
 
   try {
-    const install = execSync(
-      `${mode === 'dev' ? pm.addDev : pm.addProd} ${pkgsWithVersions}${
-        isVerbose() ? ' --verbose' : ''
-      }`,
-      {
-        cwd,
-        stdio: 'pipe',
-        env: process.env,
-        encoding: 'utf-8',
-      }
-    );
+    const install = execSync(command, {
+      cwd,
+      stdio: isVerbose() ? 'inherit' : 'ignore',
+      env: process.env,
+      encoding: 'utf-8',
+    });
 
     if (isVerbose()) {
       output.log({
@@ -400,6 +401,7 @@ export function newLernaWorkspace({
         ...json.overrides,
         nx: nxVersion,
         '@nrwl/devkit': nxVersion,
+        '@nx/devkit': nxVersion,
       };
       if (packageManager === 'pnpm') {
         json.pnpm = {
@@ -513,11 +515,13 @@ export function cleanupProject({
 }: RunCmdOpts & { skipReset?: boolean } = {}) {
   if (isCI) {
     // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    if (!skipReset) {
-      runCLI('reset', opts);
-    }
+    try {
+      if (!skipReset) {
+        runCLI('reset', opts);
+      }
+    } catch {} // ignore crashed daemon
     try {
       removeSync(tmpProjPath());
-    } catch (e) {}
+    } catch {}
   }
 }

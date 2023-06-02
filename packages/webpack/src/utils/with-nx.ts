@@ -2,7 +2,7 @@ import * as path from 'path';
 import { Configuration, WebpackPluginInstance, ProgressPlugin } from 'webpack';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import { readTsConfig } from '@nrwl/js';
+import { readTsConfig } from '@nx/js';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
@@ -139,16 +139,20 @@ export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
         : undefined,
       target: options.target,
       node: false as const,
-      // When mode is development or production, webpack will automatically
-      // configure DefinePlugin to replace `process.env.NODE_ENV` with the
-      // build-time value. Thus, we need to make sure it's the same value to
-      // avoid conflicts.
-      //
-      // When the NODE_ENV is something else (e.g. test), then set it to none
-      // to prevent extra behavior from webpack.
       mode:
-        process.env.NODE_ENV === 'development' ||
-        process.env.NODE_ENV === 'production'
+        // When the target is Node avoid any optimizations, such as replacing `process.env.NODE_ENV` with build time value.
+        options.target === ('node' as const)
+          ? 'none'
+          : // Otherwise, make sure it matches `process.env.NODE_ENV`.
+          // When mode is development or production, webpack will automatically
+          // configure DefinePlugin to replace `process.env.NODE_ENV` with the
+          // build-time value. Thus, we need to make sure it's the same value to
+          // avoid conflicts.
+          //
+          // When the NODE_ENV is something else (e.g. test), then set it to none
+          // to prevent extra behavior from webpack.
+          process.env.NODE_ENV === 'development' ||
+            process.env.NODE_ENV === 'production'
           ? (process.env.NODE_ENV as 'development' | 'production')
           : ('none' as const),
       devtool:
@@ -326,7 +330,7 @@ export function createLoaderFromCompiler(
         },
       };
     case 'tsc':
-      const { loadTsTransformers } = require('@nrwl/js');
+      const { loadTsTransformers } = require('@nx/js');
       const { compilerPluginHooks, hasPlugin } = loadTsTransformers(
         options.transformers
       );

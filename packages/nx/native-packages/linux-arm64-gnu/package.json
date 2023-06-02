@@ -1,6 +1,11 @@
 {
-  "name": "@nrwl/nx-linux-arm64-gnu",
+  "name": "@nx/nx-linux-arm64-gnu",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx/native-packages/linux-arm64-gnu"
+  },
   "os": [
     "linux"
   ],

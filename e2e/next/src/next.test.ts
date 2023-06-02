@@ -1,5 +1,5 @@
-import { detectPackageManager, joinPathFragments } from '@nrwl/devkit';
-import { capitalize } from '@nrwl/devkit/src/utils/string-utils';
+import { detectPackageManager, joinPathFragments } from '@nx/devkit';
+import { capitalize } from '@nx/devkit/src/utils/string-utils';
 import {
   checkFilesExist,
   cleanupProject,
@@ -18,10 +18,10 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import * as http from 'http';
 import { checkApp } from './utils';
-import { removeSync } from 'fs-extra';
+import { removeSync, mkdirSync } from 'fs-extra';
 
 describe('Next.js Applications', () => {
   let proj: string;
@@ -40,20 +40,29 @@ describe('Next.js Applications', () => {
   });
 
   it('should generate app + libs', async () => {
+    // Remove apps/libs folder and use packages.
+    // Allows us to test other integrated monorepo setup that had a regression.
+    // See: https://github.com/nrwl/nx/issues/16658
+    removeSync(`${tmpProjPath()}/libs`);
+    removeSync(`${tmpProjPath()}/apps`);
+    mkdirSync(`${tmpProjPath()}/packages`);
+
     const appName = uniq('app');
     const nextLib = uniq('nextlib');
     const jsLib = uniq('tslib');
     const buildableLib = uniq('buildablelib');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
-    runCLI(`generate @nrwl/next:lib ${nextLib} --no-interactive`);
-    runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
     runCLI(
-      `generate @nrwl/js:lib ${buildableLib} --no-interactive --bundler=vite`
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+    );
+    runCLI(`generate @nx/next:lib ${nextLib} --no-interactive`);
+    runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
+    runCLI(
+      `generate @nx/js:lib ${buildableLib} --no-interactive --bundler=vite`
     );
 
     // Create file in public that should be copied to dist
-    updateFile(`apps/${appName}/public/a/b.txt`, `Hello World!`);
+    updateFile(`packages/${appName}/public/a/b.txt`, `Hello World!`);
 
     // Additional assets that should be copied to dist
     const sharedLib = uniq('sharedLib');
@@ -61,23 +70,23 @@ describe('Next.js Applications', () => {
       json.targets.build.options.assets = [
         {
           glob: '**/*',
-          input: `libs/${sharedLib}/src/assets`,
+          input: `packages/${sharedLib}/src/assets`,
           output: 'shared/ui',
         },
       ];
       return json;
     });
-    updateFile(`libs/${sharedLib}/src/assets/hello.txt`, 'Hello World!');
+    updateFile(`packages/${sharedLib}/src/assets/hello.txt`, 'Hello World!');
 
     // create a css file in node_modules so that it can be imported in a lib
     // to test that it works as expected
     updateFile(
-      'node_modules/@nrwl/next/test-styles.css',
+      'node_modules/@nx/next/test-styles.css',
       'h1 { background-color: red; }'
     );
 
     updateFile(
-      `libs/${jsLib}/src/lib/${jsLib}.ts`,
+      `packages/${jsLib}/src/lib/${jsLib}.ts`,
       `
           export function jsLib(): string {
             return 'Hello Nx';
@@ -91,7 +100,7 @@ describe('Next.js Applications', () => {
     );
 
     updateFile(
-      `libs/${buildableLib}/src/lib/${buildableLib}.ts`,
+      `packages/${buildableLib}/src/lib/${buildableLib}.ts`,
       `
           export function buildableLib(): string {
             return 'Hello Buildable';
@@ -99,15 +108,16 @@ describe('Next.js Applications', () => {
           `
     );
 
-    const mainPath = `apps/${appName}/pages/index.tsx`;
+    const mainPath = `packages/${appName}/pages/index.tsx`;
     const content = readFile(mainPath);
 
     updateFile(
-      `apps/${appName}/pages/api/hello.ts`,
+      `packages/${appName}/pages/api/hello.ts`,
       `
           import { jsLibAsync } from '@${proj}/${jsLib}';
 
-          export default async function handler(_, res) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          export default async function handler(_: any, res: any) {
             const value = await jsLibAsync();
             res.send(value);
           }
@@ -139,7 +149,7 @@ describe('Next.js Applications', () => {
           )}`
     );
 
-    const e2eTestPath = `apps/${appName}-e2e/src/e2e/app.cy.ts`;
+    const e2eTestPath = `packages/${appName}-e2e/src/e2e/app.cy.ts`;
     const e2eContent = readFile(e2eTestPath);
     updateFile(
       e2eTestPath,
@@ -160,13 +170,20 @@ describe('Next.js Applications', () => {
       checkLint: true,
       checkE2E: isNotWindows(),
       checkExport: false,
+      appsDir: 'packages',
     });
 
     // public and shared assets should both be copied to dist
     checkFilesExist(
-      `dist/apps/${appName}/public/a/b.txt`,
-      `dist/apps/${appName}/public/shared/ui/hello.txt`
+      `dist/packages/${appName}/public/a/b.txt`,
+      `dist/packages/${appName}/public/shared/ui/hello.txt`
     );
+
+    // Check that compiled next config does not contain bad imports
+    const nextConfigPath = `dist/packages/${appName}/next.config.js`;
+    expect(nextConfigPath).not.toContain(`require("../`); // missing relative paths
+    expect(nextConfigPath).not.toContain(`require("nx/`); // dev-only packages
+    expect(nextConfigPath).not.toContain(`require("@nx/`); // dev-only packages
 
     // Check that `nx serve <app> --prod` works with previous production build (e.g. `nx build <app>`).
     const prodServePort = 4000;
@@ -178,14 +195,9 @@ describe('Next.js Applications', () => {
     );
 
     // Check that the output is self-contained (i.e. can run with its own package.json + node_modules)
-    const distPath = joinPathFragments(tmpProjPath(), 'dist/apps', appName);
     const selfContainedPort = 3000;
-    const pmc = getPackageManagerCommand();
-    runCommand(`${pmc.install}`, {
-      cwd: distPath,
-    });
     runCLI(
-      `generate @nrwl/workspace:run-commands serve-prod --project ${appName} --cwd=dist/apps/${appName} --command="npx next start --port=${selfContainedPort}"`
+      `generate @nx/workspace:run-commands serve-prod --project ${appName} --cwd=dist/packages/${appName} --command="npx next start --port=${selfContainedPort}"`
     );
     const selfContainedProcess = await runCommandUntil(
       `run ${appName}:serve-prod`,
@@ -202,7 +214,7 @@ describe('Next.js Applications', () => {
 
   it('should build and install pruned lock file', () => {
     const appName = uniq('app');
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
 
     const result = runCLI(`build ${appName} --generateLockfile=true`);
     expect(result).not.toMatch(/Graph is not consistent/);
@@ -221,8 +233,8 @@ describe('Next.js Applications', () => {
 
     const port = 4200;
 
-    runCLI(`generate @nrwl/next:app ${appName}`);
-    runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
+    runCLI(`generate @nx/next:app ${appName} --appDir=false`);
+    runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
 
     const proxyConf = {
       '/external-api': {
@@ -262,7 +274,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/pages/api/hello.js`,
       `
-        export default (_req, res) => {
+        export default (_req: any, res: any) => {
           res.status(200).send('Welcome');
         };
       `
@@ -287,12 +299,14 @@ describe('Next.js Applications', () => {
   it('should support custom next.config.js and output it in dist', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+    );
 
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-        const { withNx } = require('@nrwl/next/plugins/with-nx');
+        const { withNx } = require('@nx/next/plugins/with-nx');
         const nextConfig = {
           nx: {
             svgr: false,
@@ -327,7 +341,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-        const { withNx } = require('@nrwl/next/plugins/with-nx');
+        const { withNx } = require('@nx/next/plugins/with-nx');
         // Not including "nx" entry should still work.
         const nextConfig = {};
 
@@ -344,7 +358,9 @@ describe('Next.js Applications', () => {
   it('should support --js flag', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --js`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --js --appDir=false`
+    );
 
     checkFilesExist(`apps/${appName}/pages/index.js`);
 
@@ -359,7 +375,7 @@ describe('Next.js Applications', () => {
     const libName = uniq('lib');
 
     runCLI(
-      `generate @nrwl/next:lib ${libName} --no-interactive --style=none --js`
+      `generate @nx/next:lib ${libName} --no-interactive --style=none --js`
     );
 
     const mainPath = `apps/${appName}/pages/index.js`;
@@ -396,7 +412,7 @@ describe('Next.js Applications', () => {
   it('should support --no-swc flag', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --no-swc`);
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --no-swc`);
 
     // Next.js enables SWC when custom .babelrc is not provided.
     checkFilesExist(`apps/${appName}/.babelrc`);
@@ -414,7 +430,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nrwl/next:app ${appName} --style=css --no-interactive --custom-server`
+      `generate @nx/next:app ${appName} --style=css --no-interactive --custom-server`
     );
 
     checkFilesExist(`apps/${appName}/server/main.ts`);
@@ -425,6 +441,45 @@ describe('Next.js Applications', () => {
       checkE2E: true,
       checkExport: false,
     });
+  }, 300_000);
+
+  it('should copy relative modules needed by the next.config.js file', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nx/next:app ${appName} --style=css --no-interactive`);
+
+    updateFile(`apps/${appName}/redirects.js`, 'module.exports = [];');
+    updateFile(
+      `apps/${appName}/nested/headers.js`,
+      `module.exports = require('./headers-2');`
+    );
+    updateFile(`apps/${appName}/nested/headers-2.js`, 'module.exports = [];');
+    updateFile(`apps/${appName}/next.config.js`, (content) => {
+      return `const redirects = require('./redirects');\nconst headers = require('./nested/headers.js');\n${content}`;
+    });
+
+    runCLI(`build ${appName}`);
+    checkFilesExist(`dist/apps/${appName}/redirects.js`);
+    checkFilesExist(`dist/apps/${appName}/nested/headers.js`);
+    checkFilesExist(`dist/apps/${appName}/nested/headers-2.js`);
+  }, 120_000);
+
+  it('should support --turbo to enable Turbopack', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --style=css --appDir --no-interactive`
+    );
+
+    const port = 4000;
+    const selfContainedProcess = await runCommandUntil(
+      `run ${appName}:serve --port=${port} --turbo`,
+      (output) => {
+        return output.includes(`TURBOPACK`);
+      }
+    );
+    selfContainedProcess.kill();
+    await killPorts();
   }, 300_000);
 });
 

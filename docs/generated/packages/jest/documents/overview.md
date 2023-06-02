@@ -9,27 +9,27 @@
 By default, Nx will use Jest when creating applications and libraries.
 
 ```shell
-nx g @nrwl/web:app frontend
+nx g @nx/web:app frontend
 ```
 
 ### Adding Jest to an Existing Project
 
-Add Jest to a project using the `jest-project` generator from `@nrwl/jest`.
+Add Jest to a project using the `jest-project` generator from `@nx/jest`.
 
-First, install `@nrwl/jest`, if not already installed using your preferred package manager.
+First, install `@nx/jest`, if not already installed using your preferred package manager.
 
 ```shell
-npm install --save-dev @nrwl/jest
+npm install --save-dev @nx/jest
 ```
 
 ```shell
-yarn add --dev @nrwl/jest
+yarn add --dev @nx/jest
 ```
 
 Once installed, run the `jest-project` generator
 
 ```shell
-nx g @nrwl/jest:jest-project --project=<project-name>
+nx g @nx/jest:jest-project --project=<project-name>
 ```
 
 > Hint: You can use the `--dry-run` flag to see what will be generated.
@@ -86,7 +86,7 @@ Snapshot files should be checked in with your code.
 
 ### Performance in CI
 
-Typically, in CI it's recommended to use `nx affected --target=test --parallel=[# CPUs] -- --runInBand` for the best performance.
+Typically, in CI it's recommended to use `nx affected -t test --parallel=[# CPUs] -- --runInBand` for the best performance.
 
 This is because each [jest process creates a workers based on system resources](https://jestjs.io/docs/cli#--maxworkersnumstring), running multiple projects via nx and using jest workers will create too many process overall causing the system to run slower than desired. Using the `--runInBand` flag tells jest to run in a single process.
 
@@ -95,6 +95,21 @@ This is because each [jest process creates a workers based on system resources](
 ### Jest
 
 Primary configurations for Jest will be via the `jest.config.ts` file that generated for your project. This file will extend the root `jest.preset.js` file. Learn more about [Jest configurations](https://jestjs.io/docs/configuration#options).
+
+The root level `jest.config.ts` file configures [Jest multi project support](https://jestjs.io/docs/configuration#projects-arraystring--projectconfig).
+This configuration allows editor/IDE integrations to pick up individual project's configurations rather than the one at the root.
+
+The set of Jest projects within Nx workspaces tends to change. Instead of statically defining a list in `jest.config.ts`, Nx provides a utility function called `getJestProjects` which queries for Jest configurations defined for targets which use the `@nx/jest:jest` executor.
+
+You can add Jest projects which are not included in `getJestProjects()`, because they do not use the Nx Jest executor, by doing something like the following:
+
+```typescript {% fileName="jest.config.ts"}
+import { getJestProjects } from '@nx/jest';
+
+export default {
+  projects: [...getJestProjects(), '<rootDir>/path/to/jest.config.ts'],
+};
+```
 
 ### Nx
 
@@ -120,7 +135,7 @@ In order to use Jest's global setup/teardown functions that reference nx librari
 Nx provides a helper function that you can import within your setup/teardown file.
 
 ```typescript {% fileName="global-setup.ts" %}
-import { registerTsProject } from 'nx/src/utils/register';
+import { registerTsProject } from '@nx/js/src/internal';
 const cleanupRegisteredPaths = registerTsProject('.', 'tsconfig.base.json');
 
 import { yourFancyFunction } from '@some-org/my-util-library';
@@ -133,17 +148,50 @@ cleanupRegisteredPaths();
 
 {% callout type="note" title="@swc/jest & global scripts" %}
 When using @swc/jest and a global setup/teardown file,
-You'll have to set the global setup/teardown file to be transformed with ts-jest.
-For example, if your files are named `global-setup.ts` and `global-teardown.ts`,
-then you would need to add to your _project level `jest.config.ts`_ a new entry in the transformers object
+You have to set the `noInterop: false` and use dynamic imports within the setup function
 
 ```typescript {% fileName="apps/<your-project>/jest.config.ts" %}
+/* eslint-disable */
+import { readFileSync } from 'fs';
+
+// Reading the SWC compilation config and remove the "exclude"
+// for the test files to be compiled by SWC
+const { exclude: _, ...swcJestConfig } = JSON.parse(
+  readFileSync(`${__dirname}/.swcrc`, 'utf-8')
+);
+
+// disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
+// If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to "exclude"
+if (swcJestConfig.swcrc === undefined) {
+  swcJestConfig.swcrc = false;
+}
+
+// jest needs EsModule Interop to find the default exported function
+swcJestConfig.module.noInterop = false;
+
 export default {
+  globalSetup: '<rootDir>/src/global-setup-swc.ts',
   transform: {
-    'global-(setup|teardown).ts': 'ts-jest',
-    // resest of the transformers
+    '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },
+  // other settings
 };
+```
+
+```typescript {% fileName="global-setup-swc.ts" %}
+import { registerTsProject } from '@nx/js/src/internal';
+const cleanupRegisteredPaths = registerTsProject('.', 'tsconfig.base.json');
+
+export default async function () {
+  // swc will hoist all imports, and we need to make sure the register happens first
+  // so we import all nx project alias within the setup function first.
+  const { yourFancyFunction } = await import('@some-org/my-util-library');
+
+  yourFancyFunction();
+
+  // make sure to run the clean up!
+  cleanupRegisteredPaths();
+}
 ```
 
 {% /callout %}
@@ -151,4 +199,4 @@ export default {
 ## More Documentation
 
 - [Jest Docs](https://jestjs.io/)
-- [@nrwl/jest options](/packages/jest)
+- [@nx/jest options](/packages/jest)

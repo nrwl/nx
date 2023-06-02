@@ -1,5 +1,5 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { readNxJson, Tree, updateNxJson } from '@nx/devkit';
 import addBabelInputs from './add-babel-inputs';
 
 describe('15.0.0 migration (add-babel-inputs)', () => {
@@ -23,16 +23,16 @@ describe('15.0.0 migration (add-babel-inputs)', () => {
 
     const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
           ],
-          "sharedGlobals": Array [
+          "sharedGlobals": [
             "{workspaceRoot}/babel.config.json",
           ],
         },
@@ -54,16 +54,16 @@ describe('15.0.0 migration (add-babel-inputs)', () => {
 
     const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
           ],
-          "sharedGlobals": Array [
+          "sharedGlobals": [
             "{workspaceRoot}/babel.config.js",
           ],
         },

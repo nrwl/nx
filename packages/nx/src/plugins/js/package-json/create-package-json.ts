@@ -1,6 +1,8 @@
 import { readJsonFile } from '../../../utils/fileutils';
 import { sortObjectByKeys } from '../../../utils/object-sort';
 import {
+  fileDataDepTarget,
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
@@ -10,8 +12,9 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import {
   filterUsingGlobPatterns,
   getTargetInputs,
-} from '../../../hasher/hasher';
+} from '../../../hasher/task-hasher';
 import { readNxJson } from '../../../config/configuration';
+import { readProjectFileMapCache } from '../../../project-graph/nx-deps-cache';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -33,9 +36,15 @@ export function createPackageJson(
     root?: string;
     isProduction?: boolean;
     helperDependencies?: string[];
-  } = {}
+  } = {},
+  fileMap: ProjectFileMap = null
 ): PackageJson {
+  if (fileMap == null) {
+    fileMap = readProjectFileMapCache()?.projectFileMap || {};
+  }
+
   const projectNode = graph.nodes[projectName];
+  const isLibrary = projectNode.type === 'lib';
 
   const { selfInputs, dependencyInputs } = options.target
     ? getTargetInputs(readNxJson(), projectNode, options.target)
@@ -57,6 +66,7 @@ export function createPackageJson(
   });
 
   findAllNpmDeps(
+    fileMap,
     projectNode,
     graph,
     npmDeps,
@@ -91,6 +101,18 @@ export function createPackageJson(
     } catch (e) {}
   }
 
+  const getVersion = (
+    packageName: string,
+    version: string,
+    section: 'devDependencies' | 'dependencies'
+  ) => {
+    return (
+      packageJson[section][packageName] ||
+      (isLibrary && rootPackageJson[section]?.[packageName]) ||
+      version
+    );
+  };
+
   const rootPackageJson = readJsonFile(
     `${options.root || workspaceRoot}/package.json`
   );
@@ -103,44 +125,64 @@ export function createPackageJson(
       // don't store dev dependencies for production
       if (!options.isProduction) {
         packageJson.devDependencies ??= {};
-        packageJson.devDependencies[packageName] = version;
+        packageJson.devDependencies[packageName] = getVersion(
+          packageName,
+          version,
+          'devDependencies'
+        );
       }
     } else {
       if (!packageJson.peerDependencies?.[packageName]) {
         packageJson.dependencies ??= {};
-        packageJson.dependencies[packageName] = version;
+        packageJson.dependencies[packageName] = getVersion(
+          packageName,
+          version,
+          'dependencies'
+        );
       }
     }
   });
-  Object.entries(npmDeps.peerDependencies).forEach(([packageName, version]) => {
-    if (!packageJson.peerDependencies?.[packageName]) {
-      if (rootPackageJson.dependencies?.[packageName]) {
-        packageJson.dependencies ??= {};
-        packageJson.dependencies[packageName] = version;
-        return;
-      }
+  if (!isLibrary) {
+    Object.entries(npmDeps.peerDependencies).forEach(
+      ([packageName, version]) => {
+        if (!packageJson.peerDependencies?.[packageName]) {
+          if (rootPackageJson.dependencies?.[packageName]) {
+            packageJson.dependencies ??= {};
+            packageJson.dependencies[packageName] = getVersion(
+              packageName,
+              version,
+              'dependencies'
+            );
+            return;
+          }
 
-      const isOptionalPeer =
-        npmDeps.peerDependenciesMeta[packageName]?.optional;
-      if (!isOptionalPeer) {
-        if (
-          !options.isProduction ||
-          rootPackageJson.dependencies?.[packageName]
-        ) {
-          packageJson.peerDependencies ??= {};
-          packageJson.peerDependencies[packageName] = version;
+          const isOptionalPeer =
+            npmDeps.peerDependenciesMeta[packageName]?.optional;
+          if (!isOptionalPeer) {
+            if (
+              !options.isProduction ||
+              rootPackageJson.dependencies?.[packageName]
+            ) {
+              packageJson.peerDependencies ??= {};
+              packageJson.peerDependencies[packageName] = getVersion(
+                packageName,
+                version,
+                'dependencies'
+              );
+            }
+          } else if (!options.isProduction) {
+            // add peer optional dependencies if not in production
+            packageJson.peerDependencies ??= {};
+            packageJson.peerDependencies[packageName] = version;
+            packageJson.peerDependenciesMeta ??= {};
+            packageJson.peerDependenciesMeta[packageName] = {
+              optional: true,
+            };
+          }
         }
-      } else if (!options.isProduction) {
-        // add peer optional dependencies if not in production
-        packageJson.peerDependencies ??= {};
-        packageJson.peerDependencies[packageName] = version;
-        packageJson.peerDependenciesMeta ??= {};
-        packageJson.peerDependenciesMeta[packageName] = {
-          optional: true,
-        };
       }
-    }
-  });
+    );
+  }
 
   packageJson.devDependencies &&= sortObjectByKeys(packageJson.devDependencies);
   packageJson.dependencies &&= sortObjectByKeys(packageJson.dependencies);
@@ -155,6 +197,7 @@ export function createPackageJson(
 }
 
 function findAllNpmDeps(
+  projectFileMap: ProjectFileMap,
   projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,
   npmDeps: NpmDeps,
@@ -168,14 +211,16 @@ function findAllNpmDeps(
 
   const projectFiles = filterUsingGlobPatterns(
     projectNode.data.root,
-    projectNode.data.files,
+    projectFileMap[projectNode.name] || [],
     rootPatterns ?? dependencyPatterns
   );
 
   const projectDependencies = new Set<string>();
 
   projectFiles.forEach((fileData) =>
-    fileData.dependencies?.forEach((dep) => projectDependencies.add(dep.target))
+    fileData.deps?.forEach((dep) =>
+      projectDependencies.add(fileDataDepTarget(dep))
+    )
   );
 
   for (const dep of projectDependencies) {
@@ -193,8 +238,9 @@ function findAllNpmDeps(
         seen.add(dep);
         npmDeps.dependencies[node.data.packageName] = node.data.version;
         recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
-      } else {
+      } else if (graph.nodes[dep]) {
         findAllNpmDeps(
+          projectFileMap,
           graph.nodes[dep],
           graph,
           npmDeps,

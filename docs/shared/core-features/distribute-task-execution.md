@@ -11,7 +11,7 @@ have build tasks as prerequisites, but assuming you figure out some way to handl
 the diagram below. Here the test tasks are delayed until all necessary build artifacts are ready, but the build and lint
 tasks can start right away.
 
-![CI using binning](../images/dte/binning.svg)
+![CI using binning](/shared/images/dte/binning.svg)
 
 The problem with the binning approach is you'll end up with some idle time on one or more jobs. Nx's distributed task
 execution reduces that idle time to the minimum possible by assigning each individual task to agent jobs based on the
@@ -20,7 +20,7 @@ make sure that build artifacts from previous tasks are present on every agent jo
 
 When you set up Nx's distributed task execution, your task graph will look more like this:
 
-![CI using DTE](../images/dte/3agents.svg)
+![CI using DTE](/shared/images/dte/3agents.svg)
 
 And not only will CI finish faster, but the debugging experience is the same as if you ran all of your CI on a single
 job. That's because Nx uses distributed caching to recreate all of the logs and build artifacts on the main job.
@@ -37,13 +37,13 @@ nx connect
 ```
 
 {% callout type="note" title="Use the latest version of Nx Cloud" %}
-This command installs the latest version of `@nrwl/nx-cloud`. The latest version works with any version of Nx >= 13.0.
+This command installs the latest version of `nx-cloud`. The latest version works with any version of Nx >= 13.0.
 {% /callout %}
 
 If you have a new workspace, you can generate the CI configuration as follows:
 
 ```shell title="2. Enable DTE in CI"
-nx generate @nrwl/workspace:ci-workflow --ci=github
+nx generate @nx/workspace:ci-workflow --ci=github
 ```
 
 The `--ci` flag can be `github`, `circleci` or `azure`.
@@ -59,7 +59,7 @@ create in your CI system.
 1. Main job that controls what is going to be executed
 2. Multiple agent jobs that actually execute the tasks
 
-![Diagram showing Nx Cloud distributing tasks to multiple agents](../images/dte/distributed-caching-and-task-execution.svg)
+![Diagram showing Nx Cloud distributing tasks to multiple agents](/shared/images/dte/distributed-caching-and-task-execution.svg)
 
 The main CI job execution flow looks like this:
 
@@ -108,7 +108,7 @@ machine. I.e., Nx Cloud doesn't manage your agents--you need to do it in your CI
 Nx Cloud is an orchestrator. The main job tells Nx Cloud what you want to run, and Nx Cloud will distribute those tasks
 across the agents. Nx Cloud will automatically move files from one agent to another, from the agents to the main job.
 
-The end result is that when say `nx affected --target=build` completes on the main job, all the file artifacts created
+The end result is that when say `nx affected -t build` completes on the main job, all the file artifacts created
 on agents are copied over to the main job, as if the main job had built everything locally.
 
 ## Running Things in Parallel

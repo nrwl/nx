@@ -1,10 +1,7 @@
-import type { Tree } from '@nrwl/devkit';
-import { generateFiles, joinPathFragments } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { generateFiles, joinPathFragments } from '@nx/devkit';
 import type { NormalizedSchema } from './normalized-schema';
-import {
-  getRelativePathToRootTsConfig,
-  getRootTsConfigFileName,
-} from '@nrwl/js';
+import { getRelativePathToRootTsConfig, getRootTsConfigFileName } from '@nx/js';
 import { createTsConfig } from '../../utils/create-ts-config';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';

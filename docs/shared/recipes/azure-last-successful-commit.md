@@ -76,7 +76,7 @@ jobs:
       - script: npx nx workspace-lint
       - script: npx nx format:check
 
-      - script: npx nx affected --base=$(BASE_SHA) --target=lint --parallel=3
-      - script: npx nx affected --base=$(BASE_SHA) --target=test --parallel=3 --ci --code-coverage
-      - script: npx nx affected --base=$(BASE_SHA) --target=build --parallel=3
+      - script: npx nx affected --base=$(BASE_SHA) -t lint --parallel=3
+      - script: npx nx affected --base=$(BASE_SHA) -t test --parallel=3 --ci --code-coverage
+      - script: npx nx affected --base=$(BASE_SHA) -t build --parallel=3
 ```

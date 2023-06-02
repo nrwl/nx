@@ -1,6 +1,6 @@
 import { basename, dirname, join, relative, resolve } from 'path';
 import { statSync } from 'fs';
-import { normalizePath } from '@nrwl/devkit';
+import { normalizePath } from '@nx/devkit';
 
 import type { AssetGlobPattern, RollupExecutorOptions } from '../schema';
 
@@ -44,6 +44,7 @@ export function normalizeRollupExecutorOptions(
     project,
     projectRoot,
     outputPath,
+    skipTypeCheck: options.skipTypeCheck || false,
   };
 }
 

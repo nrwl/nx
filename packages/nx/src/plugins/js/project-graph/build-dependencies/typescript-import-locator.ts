@@ -25,8 +25,10 @@ export class TypeScriptImportLocator {
     const extension = path.extname(filePath);
     if (
       extension !== '.ts' &&
+      extension !== '.mts' &&
       extension !== '.tsx' &&
       extension !== '.js' &&
+      extension !== '.mjs' &&
       extension !== '.jsx'
     ) {
       return;

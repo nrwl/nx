@@ -36,9 +36,13 @@ For this tutorial, you'll create an Express API application, a library that the 
 Run the command `npx create-nx-workspace@latest` and when prompted, provide the following responses:
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
-✔ Choose what to create                 · node-standalone
-✔ Application name                      · products-api
+
+ >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
+✔ Where would you like to create your workspace? · products-api
+✔ Which stack do you want to use? · node
 ✔ What framework should be used? · express
+✔ Standalone project or integrated monorepo? · standalone
 ✔ Would you like to generate a Dockerfile? [https://docs.docker.com/] · Yes
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
@@ -53,12 +57,12 @@ This tutorial uses the `express` framework. The `node-standalone` preset also pr
 
 ## Generating Libraries
 
-To create the `auth` library, use the `@nrwl/node:lib` generator:
+To create the `auth` library, use the `@nx/node:lib` generator:
 
 ![Nx Generator Syntax](/shared/node-server-tutorial/generator-syntax.svg)
 
-```{% command="npx nx g @nrwl/node:lib auth --buildable" path="~/products-api" %}
->  NX  Generating @nrwl/node:library
+```{% command="npx nx g @nx/node:lib auth --buildable" path="~/products-api" %}
+>  NX  Generating @nx/node:library
 
 CREATE auth/README.md
 CREATE auth/.babelrc

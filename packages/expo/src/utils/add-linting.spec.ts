@@ -1,7 +1,7 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
-import { libraryGenerator } from '@nrwl/workspace/src/generators/library/library';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
+import { libraryGenerator } from '@nx/js';
 import { addLinting } from './add-linting';
 
 describe('Add Linting', () => {
@@ -15,28 +15,26 @@ describe('Add Linting', () => {
     });
   });
 
-  it('should add update `project configuration` file properly when eslint is passed', () => {
-    addLinting(
-      tree,
-      'my-lib',
-      'libs/my-lib',
-      ['libs/my-lib/tsconfig.lib.json'],
-      Linter.EsLint
-    );
+  it('should add update configuration when eslint is passed', () => {
+    addLinting(tree, {
+      projectName: 'my-lib',
+      linter: Linter.EsLint,
+      tsConfigPaths: ['libs/my-lib/tsconfig.lib.json'],
+      projectRoot: 'libs/my-lib',
+    });
     const project = readProjectConfiguration(tree, 'my-lib');
 
     expect(project.targets.lint).toBeDefined();
-    expect(project.targets.lint.executor).toEqual('@nrwl/linter:eslint');
+    expect(project.targets.lint.executor).toEqual('@nx/linter:eslint');
   });
 
   it('should not add lint target when "none" is passed', async () => {
-    addLinting(
-      tree,
-      'my-lib',
-      'libs/my-lib',
-      ['libs/my-lib/tsconfig.lib.json'],
-      Linter.None
-    );
+    addLinting(tree, {
+      projectName: 'my-lib',
+      linter: Linter.None,
+      tsConfigPaths: ['libs/my-lib/tsconfig.lib.json'],
+      projectRoot: 'libs/my-lib',
+    });
     const project = readProjectConfiguration(tree, 'my-lib');
 
     expect(project.targets.lint).toBeUndefined();

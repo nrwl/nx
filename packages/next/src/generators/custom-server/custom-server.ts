@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   updateJson,
   convertNxGenerator,
@@ -8,7 +8,7 @@ import {
   offsetFromRoot,
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { CustomServerSchema } from './schema';
 
 export async function customServerGenerator(
@@ -17,9 +17,12 @@ export async function customServerGenerator(
 ): Promise<void> {
   const project = readProjectConfiguration(host, options.project);
 
-  if (project.targets?.build?.executor !== '@nrwl/next:build') {
+  if (
+    project.targets?.build?.executor !== '@nx/next:build' &&
+    project.targets?.build?.executor !== '@nrwl/next:build'
+  ) {
     logger.error(
-      `Project ${options.project} is not a Next.js project. Did you generate it with "nx g @nrwl/next:app"?`
+      `Project ${options.project} is not a Next.js project. Did you generate it with "nx g @nx/next:app"?`
     );
     return;
   }
@@ -34,7 +37,7 @@ export async function customServerGenerator(
     !project.targets?.build?.configurations?.production
   ) {
     logger.error(
-      `Project ${options.project} has invalid config. Did you generate it with "nx g @nrwl/next:app"?`
+      `Project ${options.project} has invalid config. Did you generate it with "nx g @nx/next:app"?`
     );
     return;
   }
@@ -62,7 +65,7 @@ export async function customServerGenerator(
   project.targets.serve.configurations.production.customServerTarget = `${options.project}:serve-custom-server:production`;
 
   project.targets['build-custom-server'] = {
-    executor: '@nrwl/js:tsc',
+    executor: '@nx/js:tsc',
     defaultConfiguration: 'production',
     options: {
       outputPath,
@@ -78,7 +81,7 @@ export async function customServerGenerator(
   };
 
   project.targets['serve-custom-server'] = {
-    executor: '@nrwl/js:node',
+    executor: '@nx/js:node',
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.project}:build-custom-server`,

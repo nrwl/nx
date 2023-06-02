@@ -14,4 +14,8 @@ export interface ViteBuildExecutorOptions {
   mode?: string;
   ssr?: boolean | string;
   watch?: object | boolean;
+  target?: string | string[];
+  generatePackageJson?: boolean;
+  includeDevDependenciesInPackageJson?: boolean;
+  cssCodeSplit?: boolean;
 }

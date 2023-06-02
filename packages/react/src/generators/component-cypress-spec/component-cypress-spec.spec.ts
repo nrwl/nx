@@ -1,6 +1,6 @@
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { formatFile } from '../../utils/format-file';
 import applicationGenerator from '../application/application';
 import libraryGenerator from '../library/library';

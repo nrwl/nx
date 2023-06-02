@@ -1,14 +1,16 @@
 import {
   ExecutorContext,
+  joinPathFragments,
   logger,
   stripIndents,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { CoverageOptions, File, Reporter } from 'vitest';
 import { loadConfigFromFile } from 'vite';
 import { VitestExecutorOptions } from './schema';
-import { join, relative } from 'path';
+import { relative, resolve } from 'path';
 import { existsSync } from 'fs';
+import { registerTsConfigPaths } from '@nx/js/src/internal';
 
 class NxReporter implements Reporter {
   deferred: {
@@ -49,6 +51,10 @@ export async function* vitestExecutor(
   options: VitestExecutorOptions,
   context: ExecutorContext
 ) {
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
+  registerTsConfigPaths(resolve(projectRoot, 'tsconfig.json'));
+
   const { startVitest } = await (Function(
     'return import("vitest/node")'
   )() as Promise<typeof import('vitest/node')>);
@@ -56,8 +62,9 @@ export async function* vitestExecutor(
   const nxReporter = new NxReporter(options.watch);
   const settings = await getSettings(options, context);
   settings.reporters.push(nxReporter);
+  const cliFilters = options.testFile ? [options.testFile] : [];
 
-  const ctx = await startVitest(options.mode, [], settings);
+  const ctx = await startVitest(options.mode, cliFilters, settings);
 
   let hasErrors = false;
 
@@ -93,18 +100,19 @@ async function getSettings(
 ) {
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
   const offset = relative(workspaceRoot, context.cwd);
-  // if reportsDirectory is not provides vitest will remove all files in the project root
+  // if reportsDirectory is not provided vitest will remove all files in the project root
   // when coverage is enabled in the vite.config.ts
   const coverage: CoverageOptions = options.reportsDirectory
     ? {
         enabled: options.coverage,
         reportsDirectory: options.reportsDirectory,
+        provider: 'c8',
       }
-    : {};
+    : ({} as CoverageOptions);
 
   const viteConfigPath = options.config
-    ? join(context.root, options.config)
-    : findViteConfig(join(context.root, projectRoot));
+    ? joinPathFragments(context.root, options.config)
+    : findViteConfig(joinPathFragments(context.root, projectRoot));
 
   const resolved = await loadConfigFromFile(
     {
@@ -114,9 +122,9 @@ async function getSettings(
     viteConfigPath
   );
 
-  if (!viteConfigPath || !resolved?.config?.test) {
+  if (!viteConfigPath || !resolved?.config?.['test']) {
     logger.warn(stripIndents`Unable to load test config from config file ${
-      resolved.path ?? viteConfigPath
+      resolved?.path ?? viteConfigPath
     }
 Some settings may not be applied as expected.
 You can manually set the config in the project, ${
@@ -133,10 +141,10 @@ You can manually set the config in the project, ${
     root: offset === '' ? projectRoot : '',
     reporters: [
       ...(options.reporters ?? []),
-      ...((resolved?.config?.test?.reporters as string[]) ?? []),
+      ...((resolved?.config?.['test']?.reporters as string[]) ?? []),
       'default',
     ] as (string | Reporter)[],
-    coverage: { ...resolved?.config?.test?.coverage, ...coverage },
+    coverage: { ...coverage, ...resolved?.config?.['test']?.coverage },
   };
 
   return settings;
@@ -146,8 +154,10 @@ function findViteConfig(projectRootFullPath: string): string {
   const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
 
   for (const ext of allowsExt) {
-    if (existsSync(join(projectRootFullPath, `vite.config.${ext}`))) {
-      return join(projectRootFullPath, `vite.config.${ext}`);
+    if (
+      existsSync(joinPathFragments(projectRootFullPath, `vite.config.${ext}`))
+    ) {
+      return joinPathFragments(projectRootFullPath, `vite.config.${ext}`);
     }
   }
 }

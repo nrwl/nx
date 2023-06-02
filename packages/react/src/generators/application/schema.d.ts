@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
@@ -9,10 +9,6 @@ export interface Schema {
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   inSourceTests?: boolean;
-  /**
-   * @deprecated
-   */
-  babelJest?: boolean;
   e2eTestRunner: 'cypress' | 'none';
   linter: Linter;
   pascalCaseFiles?: boolean;
@@ -23,13 +19,12 @@ export interface Schema {
   globalCss?: boolean;
   strict?: boolean;
   setParserOptionsProject?: boolean;
-  standaloneConfig?: boolean;
   compiler?: 'babel' | 'swc';
   remotes?: string[];
   devServerPort?: number;
   skipPackageJson?: boolean;
   rootProject?: boolean;
-  bundler?: 'webpack' | 'vite';
+  bundler?: 'webpack' | 'vite' | 'rspack';
   minimal?: boolean;
 }
 

@@ -1,6 +1,8 @@
-import { ProjectGraphProcessor } from '../../config/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphProcessor,
+} from '../../config/project-graph';
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
-import { buildNpmPackageNodes } from './project-graph/build-nodes/build-npm-package-nodes';
 import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
 import { readNxJson } from '../../config/configuration';
 import { fileExists, readJsonFile } from '../../utils/fileutils';
@@ -16,36 +18,40 @@ import { projectGraphCacheDirectory } from '../../utils/cache-directory';
 import { readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ensureDirSync } from 'fs-extra';
-import { removeNpmNodes } from 'nx/src/plugins/js/lock-file/remove-npm-nodes';
 
 export const processProjectGraph: ProjectGraphProcessor = async (
   graph,
   context
 ) => {
-  const builder = new ProjectGraphBuilder(graph);
+  const builder = new ProjectGraphBuilder(graph, context.fileMap);
+  const pluginConfig = jsPluginConfig(readNxJson());
 
-  // during the create-nx-workspace lock file might not exists yet
-  if (lockFileExists()) {
-    const lockHash = lockFileHash() ?? 'n/a';
-    if (lockFileNeedsReprocessing(lockHash)) {
-      removeNpmNodes(graph, builder);
-      parseLockFile(builder);
+  if (pluginConfig.analyzePackageJson) {
+    // during the create-nx-workspace lock file might not exists yet
+    if (lockFileExists()) {
+      const lockHash = lockFileHash();
+      let parsedLockFile: ProjectGraph;
+      if (lockFileNeedsReprocessing(lockHash)) {
+        parsedLockFile = parseLockFile();
+        writeLastProcessedLockfileHash(lockHash, parsedLockFile);
+      } else {
+        parsedLockFile = readParsedLockFile();
+      }
+      builder.mergeProjectGraph(parsedLockFile);
     }
-    writeLastProcessedLockfileHash(lockHash);
   }
 
-  buildNpmPackageNodes(builder);
-
-  await buildExplicitDependencies(
-    jsPluginConfig(readNxJson()),
-    context,
-    builder
-  );
+  await buildExplicitDependencies(pluginConfig, context, builder);
 
   return builder.getUpdatedProjectGraph();
 };
 
 const lockFileHashFile = join(projectGraphCacheDirectory, 'lockfile.hash');
+const parsedLockFile = join(
+  projectGraphCacheDirectory,
+  'parsed-lock-file.json'
+);
+
 function lockFileNeedsReprocessing(lockHash: string) {
   try {
     return readFileSync(lockFileHashFile).toString() !== lockHash;
@@ -54,14 +60,28 @@ function lockFileNeedsReprocessing(lockHash: string) {
   }
 }
 
-function writeLastProcessedLockfileHash(hash: string) {
+function writeLastProcessedLockfileHash(hash: string, lockFile: ProjectGraph) {
   ensureDirSync(dirname(lockFileHashFile));
+  writeFileSync(parsedLockFile, JSON.stringify(lockFile, null, 2));
   writeFileSync(lockFileHashFile, hash);
 }
 
-function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
-  if (nxJson?.pluginsConfig?.['@nrwl/js']) {
-    return nxJson?.pluginsConfig?.['@nrwl/js'];
+function readParsedLockFile(): ProjectGraph {
+  return JSON.parse(readFileSync(parsedLockFile).toString());
+}
+
+function jsPluginConfig(
+  nxJson: NxJsonConfiguration
+): Required<NrwlJsPluginConfig> {
+  const nxJsonConfig: NrwlJsPluginConfig =
+    nxJson?.pluginsConfig?.['@nx/js'] ?? nxJson?.pluginsConfig?.['@nrwl/js'];
+
+  if (nxJsonConfig) {
+    return {
+      analyzePackageJson: true,
+      analyzeSourceFiles: true,
+      ...nxJsonConfig,
+    };
   }
 
   if (!fileExists(join(workspaceRoot, 'package.json'))) {
@@ -80,6 +100,13 @@ function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
     ...packageJson.devDependencies,
   };
   if (
+    packageJsonDeps['@nx/workspace'] ||
+    packageJsonDeps['@nx/js'] ||
+    packageJsonDeps['@nx/node'] ||
+    packageJsonDeps['@nx/next'] ||
+    packageJsonDeps['@nx/react'] ||
+    packageJsonDeps['@nx/angular'] ||
+    packageJsonDeps['@nx/web'] ||
     packageJsonDeps['@nrwl/workspace'] ||
     packageJsonDeps['@nrwl/js'] ||
     packageJsonDeps['@nrwl/node'] ||

@@ -1,5 +1,5 @@
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import experimentalToUtilsUpdate from './experimental-to-utils-rules';
 
 describe('experimentalToUtilsUpdate()', () => {
@@ -73,7 +73,7 @@ describe('experimentalToUtilsUpdate()', () => {
       "import { ESLintUtils } from '@typescript-eslint/utils';
       import { rule, RULE_NAME } from './existing-rule';
 
-      // NOTE: The rule will be available in ESLint configs as \\"@nrwl/nx/workspace/existing-rule\\"
+      // NOTE: The rule will be available in ESLint configs as "@nrwl/nx/workspace/existing-rule"
       export const RULE_NAME = 'existing-rule';
 
       export const rule = ESLintUtils.RuleCreator(() => __filename)({

@@ -1,11 +1,11 @@
-import * as devkit from '@nrwl/devkit';
+import * as devkit from '@nx/devkit';
 import {
   addProjectConfiguration,
   readJson,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { librarySecondaryEntryPointGenerator } from './library-secondary-entry-point';
 
 describe('librarySecondaryEntryPoint generator', () => {

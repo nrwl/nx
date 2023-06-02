@@ -1,4 +1,4 @@
-import { DependencyType, ProjectGraph } from '@nrwl/devkit';
+import { DependencyType, ProjectGraph } from '@nx/devkit';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
@@ -42,7 +42,6 @@ describe('calculateProjectDependencies', () => {
           type: 'lib',
           name: 'example',
           data: {
-            files: [],
             root: '/root/example',
           },
         },
@@ -91,7 +90,6 @@ describe('calculateProjectDependencies', () => {
           type: 'lib',
           name: 'example',
           data: {
-            files: [],
             root: '/root/example',
           },
         },
@@ -172,7 +170,6 @@ describe('missingDependencies', () => {
           type: 'lib',
           name: 'example',
           data: {
-            files: [],
             root: '/root/example',
           },
         },

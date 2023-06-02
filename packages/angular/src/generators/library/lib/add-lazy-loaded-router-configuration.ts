@@ -1,9 +1,9 @@
-import { joinPathFragments, names, Tree } from '@nrwl/devkit';
-import { insertImport } from '@nrwl/js';
+import { joinPathFragments, names, Tree } from '@nx/devkit';
+import { insertImport } from '@nx/js';
 import { addImportToModule } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 import { dirname } from 'path';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -28,13 +28,6 @@ export const ${constName}: Route[] = [/* {path: '', pathMatch: 'full', component
     routeFileSource,
     tsModule.ScriptTarget.Latest,
     true
-  );
-  sourceFile = addImportToModule(
-    tree,
-    sourceFile,
-    options.modulePath,
-    `
-    RouterModule.forChild(${constName}) `
   );
 
   sourceFile = insertImport(

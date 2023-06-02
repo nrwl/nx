@@ -1,12 +1,12 @@
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nx/linter';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
   runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
+} from '@nx/devkit';
+import { extendReactEslintJson, extraEslintDependencies } from '@nx/react';
 import { NormalizedSchema } from './normalize-options';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {

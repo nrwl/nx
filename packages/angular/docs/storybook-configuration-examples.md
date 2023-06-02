@@ -1,7 +1,7 @@
-This generator will set up Storybook for your Angular project.
+This generator will set up Storybook for your **Angular** project. By default, starting Nx 16, Storybook v7 is used.
 
 ```bash
-nx g @nrwl/angular:storybook-configuration project-name
+nx g @nx/angular:storybook-configuration project-name
 ```
 
 You can read more about how this generator works, in the [Storybook for Angular overview page](/packages/storybook/documents/overview-angular#generate-storybook-configuration-for-an-angular-project).
@@ -20,32 +20,28 @@ There are a number of other options available. Let's take a look at some example
 
 ## Examples
 
+### Generate Storybook configuration
+
+```bash
+nx g @nx/angular:storybook-configuration ui
+```
+
+This will generate Storybook configuration for the `ui` project.
+
 ### Generate Storybook configuration using TypeScript
 
 ```bash
-nx g @nrwl/angular:storybook-configuration ui --tsConfiguration=true
+nx g @nx/angular:storybook-configuration ui --tsConfiguration=true
 ```
 
-This will generate a Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory).
+This will generate Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory, eg. `.storybook/main.ts`).
 
 ### Ignore certain paths when generating stories
 
 ```bash
-nx g @nrwl/angular:storybook-configuration ui --generateStories=true --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts
+nx g @nx/angular:storybook-configuration ui --generateStories=true --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts
 ```
 
 This will generate a Storybook configuration for the `ui` project and generate stories for all components in the `libs/ui/src/lib` directory, except for the ones in the `libs/ui/src/not-stories` directory, and the ones in the `apps/my-app` directory that end with `.something.ts`, and also for components that their file name is of the pattern `*.other.*`.
 
 This is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.
-
-### Generate Storybook configuration for Storybook version 7
-
-```bash
-nx g @nrwl/angular:storybook-configuration ui --storybook7Configuration=true
-```
-
-{% callout type="info" title="For Nx versions <15.9" %}
-The flag is called `storybook7betaConfiguration` for Nx versions <15.9.
-{% /callout %}
-
-This will generate a Storybook configuration for the `ui` project using Storybook version 7. It will install the Storybook version 7 dependencies and configure the Storybook configuration files (the files inside the `.storybook` directory) to use Storybook version 7. You can read more about Storybook 7 Nx support in the [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup).

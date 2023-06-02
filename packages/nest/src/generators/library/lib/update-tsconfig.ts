@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { readProjectConfiguration, updateJson } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { readProjectConfiguration, updateJson } from '@nx/devkit';
 import type { NormalizedOptions } from '../schema';
 
 export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
@@ -10,9 +10,10 @@ export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
     if (options.strict) {
       json.compilerOptions = {
         ...json.compilerOptions,
+        strictNullChecks: true,
+        noImplicitAny: true,
+        strictBindCallApply: true,
         forceConsistentCasingInFileNames: true,
-        strict: true,
-        noImplicitReturns: true,
         noFallthroughCasesInSwitch: true,
       };
     }

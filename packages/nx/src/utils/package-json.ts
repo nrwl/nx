@@ -6,7 +6,6 @@ import {
 } from '../config/workspace-json-project-json';
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
-import { workspaceRoot } from './workspace-root';
 
 export type PackageJsonTargetConfiguration = Omit<
   TargetConfiguration,
@@ -39,6 +38,7 @@ export interface PackageJson {
   name: string;
   version: string;
   license?: string;
+  private?: boolean;
   scripts?: Record<string, string>;
   type?: 'module' | 'commonjs';
   main?: string;

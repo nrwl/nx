@@ -3,12 +3,12 @@ import {
   getSchemaFromResult,
   getTitleForSchema,
   Lookup,
-} from '@nrwl/nx-dev/data-access-packages';
+} from '@nx/nx-dev/data-access-packages';
 import {
   JsonSchema,
   JsonSchema1,
   SimpleTypes,
-} from '@nrwl/nx-dev/models-package';
+} from '@nx/nx-dev/models-package';
 import React from 'react';
 import { joinTypes } from './join-types';
 import {

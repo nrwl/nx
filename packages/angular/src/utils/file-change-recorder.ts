@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import MagicString from 'magic-string';
 import type { Node } from 'typescript';
 
@@ -19,6 +19,10 @@ export class FileChangeRecorder {
 
   applyChanges(): void {
     this.tree.write(this.filePath, this.mutableContent.toString());
+  }
+
+  hasChanged(): boolean {
+    return this.mutableContent.hasChanged();
   }
 
   insertLeft(index: number, content: string): void {

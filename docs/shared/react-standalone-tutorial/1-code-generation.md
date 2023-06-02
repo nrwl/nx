@@ -33,9 +33,11 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Choose what to create                 · react
-✔ Repository name                       · store
-✔ Application name                      · store
+✔ Where would you like to create your workspace? · store
+✔ Which stack do you want to use? · react
+✔ What framework would you like to use? · none
+✔ Standalone project or integrated monorepo? · standalone
+✔ Which bundler would you like to use? · vite
 ✔ Default stylesheet format             · css
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
@@ -64,14 +66,15 @@ There are two projects that have been created for you:
 
 As far as Nx is concerned, the root-level `store` app owns every file that doesn't belong to a different project. So files in the `e2e` folder belong to the `e2e` project, everything else belongs to `store`.
 
-{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nrwl/cypress package page." url="/packages/cypress" /%}
+{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nx/cypress package page." url="/packages/cypress" /%}
 
 ## Generating a Component for the Store
 
-```{% command="npx nx g @nrwl/react:component shop" path="~/store" %}
+```{% command="npx nx g @nx/react:component shop" path="~/store" %}
 
->  NX  Generating @nrwl/react:component
+>  NX  Generating @nx/react:component
 
+✔ Which stylesheet format would you like to use? · css
 ✔ Should this component be exported in the project? (y/N) · false
 CREATE src/app/shop/shop.module.css
 CREATE src/app/shop/shop.spec.tsx
@@ -82,12 +85,13 @@ CREATE src/app/shop/shop.tsx
 
 ## Generating Libraries
 
-To create the `cart` and `shared/ui` libraries, use the `@nrwl/react:lib` generator:
+To create the `cart` and `shared/ui` libraries, use the `@nx/react:lib` generator:
 
-```{% command="npx nx g @nrwl/react:library cart" path="~/store" %}
+```{% command="npx nx g @nx/react:library cart" path="~/store" %}
 
->  NX  Generating @nrwl/react:library
-
+>  NX  Generating @nx/react:library
+✔ Which stylesheet format would you like to use? · css
+✔ What unit test runner should be used? · vitest
 ✔ Which bundler would you like to use to build the library? · vite
 UPDATE nx.json
 CREATE cart/project.json
@@ -112,9 +116,9 @@ CREATE cart/src/lib/cart.spec.tsx
 CREATE cart/src/lib/cart.tsx
 ```
 
-```{% command="npx nx g @nrwl/react:lib shared/ui" path="~/store" %}
+```{% command="npx nx g @nx/react:lib shared/ui" path="~/store" %}
 
->  NX  Generating @nrwl/react:library
+>  NX  Generating @nx/react:library
 
 ✔ Which bundler would you like to use to build the library? · vite
 UPDATE nx.json

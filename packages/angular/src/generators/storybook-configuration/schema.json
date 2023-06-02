@@ -86,13 +86,6 @@
     "configureTestRunner": {
       "type": "boolean",
       "description": "Add a Storybook Test-Runner target."
-    },
-    "storybook7Configuration": {
-      "description": "Configure your workspace using Storybook version 7.",
-      "type": "boolean",
-      "default": true,
-      "hidden": true,
-      "aliases": ["storybook7betaConfiguration"]
     }
   },
   "additionalProperties": false,

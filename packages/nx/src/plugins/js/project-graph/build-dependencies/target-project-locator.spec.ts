@@ -153,7 +153,6 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: '.',
-          files: [],
         },
       },
       proj3a: {
@@ -161,7 +160,6 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj3a',
-          files: [],
         },
       },
       proj2: {
@@ -169,7 +167,6 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj2',
-          files: [],
         },
       },
       proj: {
@@ -177,7 +174,6 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj',
-          files: [],
         },
       },
       proj1234: {
@@ -185,7 +181,6 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234',
-          files: [],
         },
       },
       proj123: {
@@ -193,7 +188,6 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj123',
-          files: [],
         },
       },
       proj4ab: {
@@ -201,7 +195,6 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj4ab',
-          files: [],
         },
       },
       proj5: {
@@ -209,7 +202,6 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj5',
-          files: [],
         },
       },
       proj6: {
@@ -217,7 +209,6 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj6',
-          files: [],
         },
       },
       proj7: {
@@ -225,7 +216,6 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj7',
-          files: [],
         },
       },
       'proj1234-child': {
@@ -233,7 +223,6 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234-child',
-          files: [],
         },
       },
     };
@@ -590,7 +579,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1',
-          files: [],
         },
       },
       proj3a: {
@@ -598,7 +586,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj3a',
-          files: [],
         },
       },
       proj2: {
@@ -606,7 +593,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj2',
-          files: [],
         },
       },
       proj: {
@@ -614,7 +600,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj',
-          files: [],
         },
       },
       proj1234: {
@@ -622,7 +607,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234',
-          files: [],
         },
       },
       proj123: {
@@ -630,7 +614,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj123',
-          files: [],
         },
       },
       proj4ab: {
@@ -638,7 +621,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj4ab',
-          files: [],
         },
       },
       proj5: {
@@ -646,7 +628,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj5',
-          files: [],
         },
       },
       proj6: {
@@ -654,7 +635,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj6',
-          files: [],
         },
       },
       proj7: {
@@ -662,7 +642,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj7',
-          files: [],
         },
       },
       'proj1234-child': {
@@ -670,7 +649,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234-child',
-          files: [],
         },
       },
     };

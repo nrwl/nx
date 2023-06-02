@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   generateFiles,
   joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Schema } from '../schema';
 
 import setupSsr from '../../setup-ssr/setup-ssr';
@@ -22,6 +22,7 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
 
   await setupSsr(tree, {
     project: appName,
+    standalone: options.standalone,
   });
 
   tree.rename(
@@ -33,30 +34,22 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
     "import('./src/main.server');"
   );
 
-  tree.rename(
-    joinPathFragments(project.sourceRoot, 'main.ts'),
-    joinPathFragments(project.sourceRoot, 'bootstrap.ts')
-  );
-  tree.write(
-    joinPathFragments(project.sourceRoot, 'main.ts'),
-    `import("./bootstrap")`
-  );
-
   generateFiles(tree, joinPathFragments(__dirname, '../files'), project.root, {
     appName,
+    standalone: options.standalone,
     tmpl: '',
   });
 
   // update project.json
   project = readProjectConfiguration(tree, appName);
 
-  project.targets.server.executor = '@nrwl/angular:webpack-server';
+  project.targets.server.executor = '@nx/angular:webpack-server';
   project.targets.server.options.customWebpackConfig = {
     path: joinPathFragments(project.root, 'webpack.server.config.js'),
   };
 
   project.targets['serve-ssr'].executor =
-    '@nrwl/angular:module-federation-dev-ssr';
+    '@nx/angular:module-federation-dev-ssr';
 
   updateProjectConfiguration(tree, appName, project);
 

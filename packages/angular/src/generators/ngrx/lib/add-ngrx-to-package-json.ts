@@ -1,5 +1,5 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { addDependenciesToPackageJson } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { addDependenciesToPackageJson } from '@nx/devkit';
 import { gte } from 'semver';
 import { versions } from '../../utils/version-utils';
 import { NormalizedNgRxGeneratorOptions } from './normalize-options';
@@ -12,6 +12,8 @@ export function addNgRxToPackageJson(
     ? '~0.9.1'
     : '~0.8.3';
   const ngrxVersion = versions(tree).ngrxVersion;
+
+  process.env.npm_config_legacy_peer_deps ??= 'true';
 
   return addDependenciesToPackageJson(
     tree,

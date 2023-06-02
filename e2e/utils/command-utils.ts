@@ -1,4 +1,4 @@
-import { output, PackageManager } from '@nrwl/devkit';
+import { output, PackageManager } from '@nx/devkit';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   detectPackageManager,
@@ -8,12 +8,12 @@ import {
   getStrippedEnvironmentVariables,
   isVerboseE2ERun,
 } from './get-env-info';
-import { TargetConfiguration } from '@nrwl/devkit';
+import { TargetConfiguration } from '@nx/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { join } from 'path';
 import * as isCI from 'is-ci';
 import { Workspaces } from '../../packages/nx/src/config/workspaces';
-import { exists, updateFile } from './file-utils';
+import { fileExists, readJson, updateFile } from './file-utils';
 import { logError, stripConsoleColors } from './log-utils';
 import { existsSync } from 'fs-extra';
 
@@ -48,9 +48,9 @@ export function setMaxWorkers() {
 
       const executor = build.executor as string;
       if (
-        executor.startsWith('@nrwl/node') ||
-        executor.startsWith('@nrwl/web') ||
-        executor.startsWith('@nrwl/jest')
+        executor.startsWith('@nx/node') ||
+        executor.startsWith('@nx/web') ||
+        executor.startsWith('@nx/jest')
       ) {
         build.options.maxWorkers = 4;
       }
@@ -119,6 +119,9 @@ export function getPackageManagerCommand({
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const publishedVersion = getPublishedVersion();
+  const isYarnWorkspace = fileExists(join(path, 'package.json'))
+    ? readJson('package.json').workspaces
+    : false;
   const isPnpmWorkspace = existsSync(join(path, 'pnpm-workspace.yaml'));
 
   return {
@@ -138,17 +141,18 @@ export function getPackageManagerCommand({
       runLerna: `npx lerna`,
     },
     yarn: {
-      // `yarn create nx-workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
+      createWorkspace: `npx ${
+        +npmMajorVersion >= 7 ? '--yes' : ''
+      } create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       runUninstalledPackage: 'npx --yes',
       install: 'yarn',
       ciInstall: 'yarn --frozen-lockfile',
-      addProd: `yarn add`,
-      addDev: `yarn add -D`,
-      list: 'npm ls --depth 10',
+      addProd: isYarnWorkspace ? 'yarn add -W' : 'yarn add',
+      addDev: isYarnWorkspace ? 'yarn add -DW' : 'yarn add -D',
+      list: 'yarn list --pattern',
       runLerna: `yarn --silent lerna`,
     },
     // Pnpm 3.5+ adds nx to
@@ -162,7 +166,7 @@ export function getPackageManagerCommand({
       ciInstall: 'pnpm install --frozen-lockfile',
       addProd: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
       addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
-      list: 'npm ls --depth 10',
+      list: 'pnpm ls --depth 10',
       runLerna: `pnpm exec lerna`,
     },
   }[packageManager.trim() as PackageManager];
@@ -243,15 +247,13 @@ export function runCommandUntil(
     p.stderr?.on('data', checkCriteria);
     p.on('exit', (code) => {
       if (!complete) {
-        if (isVerboseE2ERun()) {
-          logError(
-            `Original output:`,
-            output
-              .split('\n')
-              .map((l) => `    ${l}`)
-              .join('\n')
-          );
-        }
+        logError(
+          `Original output:`,
+          output
+            .split('\n')
+            .map((l) => `    ${l}`)
+            .join('\n')
+        );
         rej(`Exited with ${code}`);
       } else {
         res(p);

@@ -1,6 +1,6 @@
-import type { Tree } from '@nrwl/devkit';
-import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../utils/testing';
 import { webWorkerGenerator } from './web-worker';
 
@@ -88,7 +88,7 @@ describe('webWorker generator', () => {
     `);
     expect(tree.read(`apps/${appName}/src/app/test-worker.worker.ts`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "/// <reference lib=\\"webworker\\" />
+      "/// <reference lib="webworker" />
 
       addEventListener('message', ({ data }) => {
         const response = \`worker response to \${data}\`;

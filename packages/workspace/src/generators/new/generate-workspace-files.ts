@@ -8,7 +8,7 @@ import {
   Tree,
   updateJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { join, join as pathJoin } from 'path';
 import { Preset } from '../utils/presets';
@@ -49,9 +49,7 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
       delete json.implicitDependencies;
       delete json.targetDefaults;
-      delete json.targetDependencies;
       delete json.workspaceLayout;
-      delete json.npmScope;
     }
     return json;
   });
@@ -68,6 +66,7 @@ function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
     options.preset === Preset.NodeStandalone ||
+    options.preset === Preset.NextJsStandalone ||
     options.isCustomPreset
   ) {
     // don't generate any folders
@@ -79,11 +78,10 @@ function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
 
 function createNxJson(
   tree: Tree,
-  { directory, npmScope, packageManager, defaultBase, preset }: NormalizedSchema
+  { directory, defaultBase, preset }: NormalizedSchema
 ) {
   const nxJson: NxJsonConfiguration & { $schema: string } = {
     $schema: './node_modules/nx/schemas/nx-schema.json',
-    npmScope: npmScope,
     affected: {
       defaultBase,
     },
@@ -127,7 +125,8 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
   const filesDirName =
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
-    options.preset === Preset.NodeStandalone
+    options.preset === Preset.NodeStandalone ||
+    options.preset === Preset.NextJsStandalone
       ? './files-root-app'
       : options.preset === Preset.NPM || options.preset === Preset.Core
       ? './files-package-based-repo'
@@ -178,7 +177,8 @@ function addNpmScripts(tree: Tree, options: NormalizedSchema) {
   if (
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
-    options.preset === Preset.NodeStandalone
+    options.preset === Preset.NodeStandalone ||
+    options.preset === Preset.NextJsStandalone
   ) {
     updateJson(tree, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {
@@ -204,8 +204,9 @@ function addPropertyWithStableKeys(obj: any, key: string, value: string) {
 
 function normalizeOptions(options: NormalizedSchema) {
   let defaultBase = options.defaultBase || deduceDefaultBase();
+  const name = names(options.name).fileName;
   return {
-    npmScope: options.name,
+    name,
     ...options,
     defaultBase,
   };

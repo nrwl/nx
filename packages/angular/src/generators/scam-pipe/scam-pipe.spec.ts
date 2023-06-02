@@ -1,5 +1,5 @@
-import { addProjectConfiguration, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { scamPipeGenerator } from './scam-pipe';
 
 describe('SCAM Pipe Generator', () => {

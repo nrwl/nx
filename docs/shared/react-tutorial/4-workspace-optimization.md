@@ -7,7 +7,7 @@
 Run the command:
 
 ```shell
-git add . && git commit -m "commiting to test affected"
+git add . ; git commit -m "commiting to test affected"
 ```
 
 Then make a change to the styles of your `common-ui` project:
@@ -31,12 +31,12 @@ The change made to the `common-ui` project is also affecting the `admin` and `st
 To run the `test` targets only for affected projects, run the command:
 
 ```shell
-npx nx affected --target=test
+npx nx affected -t test
 ```
 
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.
 
-{% card title="Affected Documentation" description="Checkout Affected documentation for more details" url="/nx/affected" /%}
+{% card title="Affected Documentation" description="Checkout Affected documentation for more details" url="/packages/nx/documents/affected" /%}
 
 ## Task Caching
 
@@ -64,7 +64,7 @@ Outputs are defined for every target in your workspace:
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/products",
@@ -74,14 +74,14 @@ Outputs are defined for every target in your workspace:
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["libs/products/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/libs/products"],
       "options": {
         "jestConfig": "libs/products/jest.config.ts",

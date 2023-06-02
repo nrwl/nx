@@ -1,8 +1,8 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { readJson, Tree } from '@nx/devkit';
 import applicationGenerator from '../application/application';
 import setupSsrGenerator from './setup-ssr';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 describe('setupSsrGenerator', () => {
   let tree: Tree;

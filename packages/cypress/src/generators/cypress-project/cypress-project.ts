@@ -19,10 +19,10 @@ import {
   toJS,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { Linter } from '@nx/linter';
 
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 
 import { join } from 'path';
 import { installedCypressVersion } from '../../utils/cypress-version';
@@ -32,6 +32,8 @@ import { cypressInitGenerator } from '../init/init';
 // app
 import { Schema } from './schema';
 import { addLinterToCyProject } from '../../utils/add-linter';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
+import { major } from 'semver';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
@@ -84,7 +86,9 @@ function createFiles(tree: Tree, options: CypressProjectSchema) {
 function addProject(tree: Tree, options: CypressProjectSchema) {
   let e2eProjectConfig: ProjectConfiguration;
 
-  const detectedCypressVersion = installedCypressVersion() ?? cypressVersion;
+  const detectedCypressVersion =
+    installedCypressVersion() ??
+    major(checkAndCleanWithSemver('cypress', cypressVersion));
 
   const cypressConfig =
     detectedCypressVersion < 10 ? 'cypress.json' : 'cypress.config.ts';
@@ -96,7 +100,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
       projectType: 'application',
       targets: {
         e2e: {
-          executor: '@nrwl/cypress:cypress',
+          executor: '@nx/cypress:cypress',
           options: {
             cypressConfig: joinPathFragments(
               options.projectRoot,
@@ -129,7 +133,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
       projectType: 'application',
       targets: {
         e2e: {
-          executor: '@nrwl/cypress:cypress',
+          executor: '@nx/cypress:cypress',
           options: {
             cypressConfig: joinPathFragments(
               options.projectRoot,

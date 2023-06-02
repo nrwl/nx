@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 export interface ApplicationGeneratorOptions {
   name: string;
@@ -13,6 +13,7 @@ export interface ApplicationGeneratorOptions {
   e2eTestRunner?: 'jest' | 'none';
   setParserOptionsProject?: boolean;
   rootProject?: boolean;
+  strict?: boolean;
 }
 
 interface NormalizedOptions extends ApplicationGeneratorOptions {

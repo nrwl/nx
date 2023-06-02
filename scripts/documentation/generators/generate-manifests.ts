@@ -5,12 +5,12 @@ import {
   convertToDocumentMetadata,
   createDocumentMetadata,
   DocumentMetadata,
-} from '@nrwl/nx-dev/models-document';
-import { MenuItem } from '@nrwl/nx-dev/models-menu';
+} from '@nx/nx-dev/models-document';
+import { MenuItem } from '@nx/nx-dev/models-menu';
 import {
   PackageMetadata,
   ProcessedPackageMetadata,
-} from '@nrwl/nx-dev/models-package';
+} from '@nx/nx-dev/models-package';
 import { generateJsonFile } from '../utils';
 import { convertToDictionary } from './utils-generator/convert-to-dictionary';
 
@@ -356,6 +356,12 @@ function createDocumentSections(
       content: documents.find((x) => x.id === 'nx-recipes')!
         .itemList as Partial<DocumentMetadata>[],
       prefix: 'recipes',
+    },
+    {
+      name: 'plugins',
+      content: documents.find((x) => x.id === 'plugins')!
+        .itemList as Partial<DocumentMetadata>[],
+      prefix: 'plugins',
     },
     {
       name: 'cloud',

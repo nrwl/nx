@@ -54,6 +54,11 @@
       "x-completion-glob": "tsconfig.*.json",
       "x-priority": "important"
     },
+    "allowJs": {
+      "type": "boolean",
+      "description": "Allow JavaScript files to be compiled.",
+      "default": false
+    },
     "format": {
       "type": "array",
       "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
@@ -65,10 +70,19 @@
     },
     "external": {
       "type": "array",
-      "description": "A list of external modules that will not be bundled (`react`, `react-dom`, etc.).",
-      "items": {
-        "type": "string"
-      }
+      "description": "A list of external modules that will not be bundled (`react`, `react-dom`, etc.). Can also be set to `all` (bundle nothing) or `none` (bundle everything).",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["all", "none"]
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
     },
     "watch": {
       "type": "boolean",
@@ -133,9 +147,9 @@
       "description": "Generate package.json with 'exports' field. This field defines entry points in the package and is used by Node and the TypeScript compiler.",
       "default": false
     },
-    "skipTypeField": {
+    "skipTypeCheck": {
       "type": "boolean",
-      "description": "Prevents 'type' field from being added to compiled package.json file. Only use this if you are having an issue with this field.",
+      "description": "Whether to skip TypeScript type checking.",
       "default": false
     }
   },

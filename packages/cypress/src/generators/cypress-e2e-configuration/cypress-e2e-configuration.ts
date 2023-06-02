@@ -13,14 +13,16 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
+import { Linter } from '@nx/linter';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
+import { addDefaultE2EConfig } from '../../utils/config';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import { viteVersion } from '../../utils/versions';
 import cypressInitGenerator from '../init/init';
+import { addBaseCypressSetup } from '../base-setup/base-setup';
 
 export interface CypressE2EConfigSchema {
   project: string;
@@ -42,14 +44,16 @@ export async function cypressE2EConfigurationGenerator(
   options: CypressE2EConfigSchema
 ) {
   const opts = normalizeOptions(tree, options);
+
   const tasks: GeneratorCallback[] = [];
+
   if (!installedCypressVersion()) {
     tasks.push(await cypressInitGenerator(tree, opts));
   }
   if (opts.bundler === 'vite') {
     tasks.push(addDependenciesToPackageJson(tree, {}, { vite: viteVersion }));
   }
-  addFiles(tree, opts);
+  await addFiles(tree, opts);
   addTarget(tree, opts);
   addLinterToCyProject(tree, {
     ...opts,
@@ -81,27 +85,6 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
 
   options.directory ??= 'src';
 
-  if (tree.exists(joinPathFragments(projectConfig.root, options.directory))) {
-    throw new Error(`The project, ${options.project}, already has a '${options.directory}' directory.
-This most likely means you already have Cypress setup in this project.
-Make sure Cypress is not already setup in this project and try again.`);
-  }
-
-  const cyVersion = installedCypressVersion();
-  const cyFile =
-    cyVersion && cyVersion < 10 ? 'cypress.json' : 'cypress.config.ts';
-
-  if (tree.exists(joinPathFragments(projectConfig.root, cyFile))) {
-    throw new Error(`The project, ${
-      options.project
-    }, already has a '${cyFile}' file.
-This means that Cypress is already setup in this project.
-If you want to re-add Cypress to this project, remove the '${joinPathFragments(
-      projectConfig.root,
-      cyFile
-    )}' file and try again.`);
-  }
-
   return {
     ...options,
     bundler: options.bundler ?? 'webpack',
@@ -113,47 +96,64 @@ If you want to re-add Cypress to this project, remove the '${joinPathFragments(
   };
 }
 
-function addFiles(tree: Tree, options: NormalizedSchema) {
+async function addFiles(tree: Tree, options: NormalizedSchema) {
   const projectConfig = readProjectConfiguration(tree, options.project);
   const cyVersion = installedCypressVersion();
   const filesToUse = cyVersion && cyVersion < 10 ? 'v9' : 'v10';
+
   const hasTsConfig = tree.exists(
     joinPathFragments(projectConfig.root, 'tsconfig.json')
   );
+  const offsetFromProjectRoot = options.directory
+    .split('/')
+    .map((_) => '..')
+    .join('/');
+
+  const fileOpts = {
+    ...options,
+    dir: options.directory ?? 'src',
+    ext: options.js ? 'js' : 'ts',
+    offsetFromRoot: offsetFromRoot(projectConfig.root),
+    offsetFromProjectRoot,
+    tsConfigPath: hasTsConfig
+      ? `${offsetFromProjectRoot}/tsconfig.json`
+      : getRelativePathToRootTsConfig(tree, projectConfig.root),
+    tmpl: '',
+  };
 
   generateFiles(
     tree,
     join(__dirname, 'files', filesToUse),
     projectConfig.root,
-    {
-      ...options,
-      dir: options.directory ?? 'src',
-      // create a tsconfig.cy.json if there is an existing tsconfig. aka being added to a new project
-      ext: options.js ? 'js' : 'ts',
-      offsetFromRoot: offsetFromRoot(projectConfig.root),
-      tsFileExt: hasTsConfig ? '.cy.json' : '.json',
-      tsConfigPath: hasTsConfig
-        ? './tsconfig.json'
-        : getRelativePathToRootTsConfig(tree, projectConfig.root),
-      tmpl: '',
-    }
+    fileOpts
   );
 
-  if (hasTsConfig) {
-    updateJson(
-      tree,
-      joinPathFragments(projectConfig.root, 'tsconfig.json'),
-      (json) => {
-        json.references = json.references || [];
-        json.references.push({
-          path: './tsconfig.cy.json',
-        });
-        return json;
+  if (filesToUse === 'v10') {
+    addBaseCypressSetup(tree, {
+      project: options.project,
+      directory: options.directory,
+    });
+
+    const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
+
+    const updatedCyConfig = await addDefaultE2EConfig(
+      tree.read(cyFile, 'utf-8'),
+      {
+        directory: options.directory,
+        bundler: options.bundler,
       }
     );
+
+    tree.write(cyFile, updatedCyConfig);
   }
 
-  if (cyVersion && cyVersion < 7) {
+  if (
+    cyVersion &&
+    cyVersion < 7 &&
+    tree.exists(
+      joinPathFragments(projectConfig.root, 'src', 'plugins', 'index.js')
+    )
+  ) {
     updateJson(tree, join(projectConfig.root, 'cypress.json'), (json) => {
       json.pluginsFile = './src/plugins/index';
       return json;
@@ -174,7 +174,7 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
   const projectConfig = readProjectConfiguration(tree, opts.project);
   const cyVersion = installedCypressVersion();
   projectConfig.targets.e2e = {
-    executor: '@nrwl/cypress:cypress',
+    executor: '@nx/cypress:cypress',
     options: {
       cypressConfig: joinPathFragments(
         projectConfig.root,

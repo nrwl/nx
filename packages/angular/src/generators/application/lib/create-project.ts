@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { addProjectConfiguration } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { addProjectConfiguration } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';

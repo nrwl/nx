@@ -8,8 +8,8 @@ import {
   Tree,
   updateProjectConfiguration,
   workspaceRoot,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import ts = require('typescript');
 import * as fs from 'fs';
@@ -30,21 +30,21 @@ export function onlyShowGuide(storybookProjects: {
       `You can run the following commands manually to upgrade your Storybook projects to Storybook 7:`,
       ``,
       `1. Call the Storybook upgrade script:`,
-      `npx storybook@next upgrade --prerelease`,
+      `npx storybook@latest upgrade`,
       ``,
       `2. Call the Nx generator to prepare your files for migration:`,
-      `nx g @nrwl/storybook:migrate-7 --onlyPrepare`,
+      `nx g @nx/storybook:migrate-7 --onlyPrepare`,
       ``,
       `3. Call the Storybook automigrate scripts:`,
       `Run the following commands for each Storybook project:`,
       ...Object.entries(storybookProjects).map(
         ([_projectName, storybookProjectInfo]) => {
-          return `npx sb@next automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
+          return `npx storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
         }
       ),
       ``,
       `4. Call the Nx generator to finish the migration:`,
-      `nx g @nrwl/storybook:migrate-7 --afterMigration`,
+      `nx g @nx/storybook:migrate-7 --afterMigration`,
     ],
   });
 }
@@ -336,7 +336,7 @@ export function removeTypecastFromMainTs(
 export function removeUiFrameworkFromProjectJson(tree: Tree) {
   forEachExecutorOptions(
     tree,
-    '@nrwl/storybook:build',
+    '@nx/storybook:build',
     (options, projectName, targetName) => {
       if (projectName && options?.['uiFramework']) {
         const projectConfiguration = readProjectConfiguration(
@@ -351,7 +351,7 @@ export function removeUiFrameworkFromProjectJson(tree: Tree) {
 
   forEachExecutorOptions(
     tree,
-    '@nrwl/storybook:storybook',
+    '@nx/storybook:storybook',
     (options, projectName, targetName) => {
       if (projectName && options?.['uiFramework']) {
         const projectConfiguration = readProjectConfiguration(
@@ -438,7 +438,7 @@ export function getAllStorybookInfo(tree: Tree): {
   const allStorybookDirs = {};
   forEachExecutorOptions(
     tree,
-    '@nrwl/storybook:build',
+    '@nx/storybook:build',
     (options, projectName) => {
       if (projectName && options?.['configDir']) {
         const projectConfiguration = readProjectConfiguration(
@@ -616,7 +616,9 @@ export function checkStorybookInstalled(packageJson): boolean {
   return (
     (packageJson.dependencies['@storybook/core-server'] ||
       packageJson.devDependencies['@storybook/core-server']) &&
-    (packageJson.dependencies['@nrwl/storybook'] ||
+    (packageJson.dependencies['@nx/storybook'] ||
+      packageJson.devDependencies['@nx/storybook'] ||
+      packageJson.dependencies['@nrwl/storybook'] ||
       packageJson.devDependencies['@nrwl/storybook'])
   );
 }

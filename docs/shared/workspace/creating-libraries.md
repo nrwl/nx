@@ -8,7 +8,7 @@ There are three main benefits to breaking your code up into more libraries.
 
 ### 1. Faster Commands
 
-The more granular your libraries are, the more effective `nx affected` and Nx's computation cache will be. For example, if `libraryA` contains 10 tests, but only 5 of them were affected by a particular code change, all 10 tests will be run by `nx affected --target=test`. If you can predict which 5 tests are usually run together, you can split all the related code into a separate library to allow the two groups of 5 tests to be executed independently.
+The more granular your libraries are, the more effective `nx affected` and Nx's computation cache will be. For example, if `libraryA` contains 10 tests, but only 5 of them were affected by a particular code change, all 10 tests will be run by `nx affected -t test`. If you can predict which 5 tests are usually run together, you can split all the related code into a separate library to allow the two groups of 5 tests to be executed independently.
 
 ### 2. Visualizing Architecture
 

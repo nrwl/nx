@@ -1,6 +1,6 @@
 ---
-title: Examples for the @nrwl/webpack:webpack build executor
-description: Examples and a short guide on how to use the @nrwl/webpack:webpack build executor
+title: Examples for the @nx/webpack:webpack build executor
+description: Examples and a short guide on how to use the @nx/webpack:webpack build executor
 ---
 
 `project.json`:
@@ -11,7 +11,7 @@ description: Examples and a short guide on how to use the @nrwl/webpack:webpack 
     "targets": {
         //...
         "build": {
-            "executor": "@nrwl/webpack:webpack",
+            "executor": "@nx/webpack:webpack",
             //...
             //...
             "options": {
@@ -48,7 +48,7 @@ Setting `babelUpwardRootMode` to `true` will cause issues in the case where you 
     "targets": {
         //...
         "build": {
-            "executor": "@nrwl/webpack:webpack",
+            "executor": "@nx/webpack:webpack",
             //...
             "options": {
                 //...
@@ -74,7 +74,7 @@ If you have not set `babelUpwardRootMode` to `true` in your `project.json` file,
     "targets": {
         //...
         "build": {
-            "executor": "@nrwl/webpack:webpack",
+            "executor": "@nx/webpack:webpack",
             //...
             "options": {
                 //...
@@ -102,7 +102,7 @@ You can configure Webpack using a `webpack.config.js` file. If you do so, you ca
     "targets": {
         //...
         "build": {
-            "executor": "@nrwl/webpack:webpack",
+            "executor": "@nx/webpack:webpack",
             //...
             "options": {
                 //...
@@ -136,7 +136,7 @@ Set `isolatedConfig` to `true` in your `project.json` file in the `build` target
     "targets": {
         //...
         "build": {
-            "executor": "@nrwl/webpack:webpack",
+            "executor": "@nx/webpack:webpack",
             //...
             "options": {
                 //...

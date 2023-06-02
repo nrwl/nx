@@ -1,6 +1,7 @@
 import {
   addProjectConfiguration,
   convertNxGenerator,
+  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -13,12 +14,13 @@ import {
   toJS,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import { getRelativePathToRootTsConfig, updateRootTsConfig } from '@nrwl/js';
+import { addTsConfigPath, getRelativePathToRootTsConfig } from '@nx/js';
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
+import { nxVersion } from '../../utils/versions';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 
@@ -33,13 +35,20 @@ export async function reactNativeLibraryGenerator(
     );
   }
 
+  const tasks: GeneratorCallback[] = [];
+
   const initTask = await init(host, {
     ...options,
     skipFormat: true,
     e2eTestRunner: 'none',
   });
+  tasks.push(initTask);
 
-  addProject(host, options);
+  const addProjectTask = await addProject(host, options);
+  if (addProjectTask) {
+    tasks.push(addProjectTask);
+  }
+
   createFiles(host, options);
 
   const lintTask = await addLinting(host, {
@@ -49,6 +58,7 @@ export async function reactNativeLibraryGenerator(
       joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
     ],
   });
+  tasks.push(lintTask);
 
   const jestTask = await addJest(
     host,
@@ -58,31 +68,49 @@ export async function reactNativeLibraryGenerator(
     options.js,
     options.skipPackageJson
   );
+  tasks.push(jestTask);
 
   if (options.publishable || options.buildable) {
     updateLibPackageNpmScope(host, options);
   }
 
   if (!options.skipTsConfig) {
-    updateRootTsConfig(host, { ...options, js: false });
+    addTsConfigPath(host, options.importPath, [
+      joinPathFragments(
+        options.projectRoot,
+        './src',
+        'index.' + (options.js ? 'js' : 'ts')
+      ),
+    ]);
   }
 
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
-  return runTasksInSerial(initTask, lintTask, jestTask);
+  return runTasksInSerial(...tasks);
 }
 
-function addProject(host: Tree, options: NormalizedSchema) {
+async function addProject(host: Tree, options: NormalizedSchema) {
   const targets: { [key: string]: TargetConfiguration } = {};
 
+  let task: GeneratorCallback;
   if (options.publishable || options.buildable) {
+    const { rollupInitGenerator } = ensurePackage<typeof import('@nx/rollup')>(
+      '@nx/rollup',
+      nxVersion
+    );
+
     const { libsDir } = getWorkspaceLayout(host);
-    const external = ['react/jsx-runtime', 'react-native'];
+    const external = [
+      'react/jsx-runtime',
+      'react-native',
+      'react',
+      'react-dom',
+    ];
 
     targets.build = {
-      executor: '@nrwl/web:rollup',
+      executor: '@nx/rollup:rollup',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,
@@ -90,7 +118,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
         project: `${options.projectRoot}/package.json`,
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
         external,
-        rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
+        rollupConfig: `@nx/react/plugins/bundle-rollup`,
         assets: [
           {
             glob: `${options.projectRoot}/README.md`,
@@ -100,6 +128,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
         ],
       },
     };
+    task = await rollupInitGenerator(host, { ...options, skipFormat: true });
   }
 
   addProjectConfiguration(host, options.name, {
@@ -109,6 +138,8 @@ function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
     targets,
   });
+
+  return task;
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {

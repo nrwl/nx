@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/devkit';
+import { Tree } from '@nx/devkit';
 
 export function updateDecorateAngularCLI(host: Tree) {
   const decorate = host.read('decorate-angular-cli.js')?.toString();

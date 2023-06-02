@@ -1,4 +1,4 @@
-import { cleanupProject, newProject, runCLI, uniq } from '@nrwl/e2e/utils';
+import { cleanupProject, newProject, runCLI, uniq } from '@nx/e2e/utils';
 import { checkApp } from './utils';
 
 describe('Next.js apps', () => {
@@ -18,11 +18,12 @@ describe('Next.js apps', () => {
     process.env.NODE_ENV = originalEnv;
   });
 
-  // TODO (meeroslav): enable when this flaky test is fixed
-  xit('should support different --style options', async () => {
+  it('should support different --style options', async () => {
     const lessApp = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${lessApp} --no-interactive --style=less`);
+    runCLI(
+      `generate @nx/next:app ${lessApp} --no-interactive --style=less --appDir=false`
+    );
 
     await checkApp(lessApp, {
       checkUnitTest: false,
@@ -34,7 +35,7 @@ describe('Next.js apps', () => {
     const stylusApp = uniq('app');
 
     runCLI(
-      `generate @nrwl/next:app ${stylusApp} --no-interactive --style=styl`
+      `generate @nx/next:app ${stylusApp} --no-interactive --style=styl --appDir=false`
     );
 
     await checkApp(stylusApp, {
@@ -47,7 +48,7 @@ describe('Next.js apps', () => {
     const scApp = uniq('app');
 
     runCLI(
-      `generate @nrwl/next:app ${scApp} --no-interactive --style=styled-components`
+      `generate @nx/next:app ${scApp} --no-interactive --style=styled-components --appDir=false`
     );
 
     await checkApp(scApp, {
@@ -57,10 +58,23 @@ describe('Next.js apps', () => {
       checkExport: false,
     });
 
+    const scAppWithAppRouter = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${scAppWithAppRouter} --no-interactive --style=styled-components --appDir=true`
+    );
+
+    await checkApp(scAppWithAppRouter, {
+      checkUnitTest: false, // No unit tests for app router
+      checkLint: false,
+      checkE2E: false,
+      checkExport: false,
+    });
+
     const emotionApp = uniq('app');
 
     runCLI(
-      `generate @nrwl/next:app ${emotionApp} --no-interactive --style=@emotion/styled`
+      `generate @nx/next:app ${emotionApp} --no-interactive --style=@emotion/styled --appDir=false`
     );
 
     await checkApp(emotionApp, {
@@ -69,5 +83,5 @@ describe('Next.js apps', () => {
       checkE2E: false,
       checkExport: false,
     });
-  }, 300_000);
+  }, 600_000);
 });

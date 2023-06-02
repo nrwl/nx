@@ -128,16 +128,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "billing",
-        "name": "Billing and Utilization",
-        "description": "",
-        "file": "nx-cloud/account/billing",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/account/billing",
-        "tags": []
-      },
-      {
         "id": "users",
         "name": "Users",
         "description": "",
@@ -190,16 +180,6 @@
     ],
     "isExternal": false,
     "path": "/nx-cloud/account",
-    "tags": []
-  },
-  "/nx-cloud/account/billing": {
-    "id": "billing",
-    "name": "Billing and Utilization",
-    "description": "",
-    "file": "nx-cloud/account/billing",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/account/billing",
     "tags": []
   },
   "/nx-cloud/account/users": {

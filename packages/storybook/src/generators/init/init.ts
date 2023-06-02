@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  detectPackageManager,
   GeneratorCallback,
   readJson,
   readNxJson,
@@ -8,28 +9,23 @@ import {
   Tree,
   updateJson,
   updateNxJson,
-} from '@nrwl/devkit';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
+} from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
-  babelCoreVersion,
-  babelLoaderVersion,
-  babelPresetTypescriptVersion,
-  htmlWebpackPluginVersion,
-  litHtmlVersion,
   litVersion,
   nxVersion,
-  reactNativeStorybookLoader,
   reactVersion,
-  storybook7Version,
-  storybookReactNativeVersion,
   storybookVersion,
-  svgrVersion,
-  urlLoaderVersion,
-  viteBuilderVersion,
-  webpack5Version,
+  storybookReactNativeVersion,
+  viteVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
+import {
+  getInstalledStorybookVersion,
+  storybookMajorVersion,
+} from '../../utils/utilities';
+import { gte } from 'semver';
 
 function checkDependenciesInstalled(host: Tree, schema: Schema) {
   const packageJson = readJson(host, 'package.json');
@@ -40,31 +36,52 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   packageJson.devDependencices = packageJson.devDependencices || {};
 
   // base deps
-  devDependencies['@nrwl/storybook'] = nxVersion;
+  devDependencies['@nx/storybook'] = nxVersion;
 
-  if (schema.storybook7Configuration) {
-    // Needed for Storybook 7
-    // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
-    if (
-      !packageJson.dependencies['react'] &&
-      !packageJson.devDependencies['react']
-    ) {
-      dependencies['react'] = reactVersion;
-    }
-    if (
-      !packageJson.dependencies['react-dom'] &&
-      !packageJson.devDependencies['react-dom']
-    ) {
-      dependencies['react-dom'] = reactVersion;
-    }
+  let storybook7VersionToInstall = storybookVersion;
+  if (
+    storybookMajorVersion() === 7 &&
+    getInstalledStorybookVersion() &&
+    gte(getInstalledStorybookVersion(), '7.0.0')
+  ) {
+    storybook7VersionToInstall = getInstalledStorybookVersion();
+  }
 
+  // Needed for Storybook 7
+  // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
+  if (
+    !packageJson.dependencies['react'] &&
+    !packageJson.devDependencies['react']
+  ) {
+    dependencies['react'] = reactVersion;
+  }
+  if (
+    !packageJson.dependencies['react-dom'] &&
+    !packageJson.devDependencies['react-dom']
+  ) {
+    dependencies['react-dom'] = reactVersion;
+  }
+
+  devDependencies['@storybook/core-server'] = storybook7VersionToInstall;
+  devDependencies['@storybook/addon-essentials'] = storybook7VersionToInstall;
+
+  if (schema.uiFramework) {
     if (schema.uiFramework === '@storybook/react-native') {
       devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
     } else {
-      devDependencies[schema.uiFramework] = storybook7Version;
+      devDependencies[schema.uiFramework] = storybook7VersionToInstall;
+      const isPnpm = detectPackageManager(host.root) === 'pnpm';
+      if (isPnpm) {
+        // If it's pnpm, it needs the framework without the builder
+        // as a dependency too (eg. @storybook/react)
+        const matchResult = schema.uiFramework?.match(/^@storybook\/(\w+)/);
+        const uiFrameworkWithoutBuilder = matchResult ? matchResult[0] : null;
+        if (uiFrameworkWithoutBuilder) {
+          devDependencies[uiFrameworkWithoutBuilder] =
+            storybook7VersionToInstall;
+        }
+      }
     }
-    devDependencies['@storybook/core-server'] = storybook7Version;
-    devDependencies['@storybook/addon-essentials'] = storybook7Version;
 
     if (schema.uiFramework === '@storybook/angular') {
       if (
@@ -91,67 +108,15 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
         storybookReactNativeVersion;
       devDependencies['@storybook/addon-ondevice-notes'] =
         storybookReactNativeVersion;
-      devDependencies['react-native-storybook-loader'] =
-        reactNativeStorybookLoader;
-    }
-  } else {
-    // TODO(katerina): Remove when Storybook v7
-    if (schema.uiFramework === '@storybook/react-native') {
-      devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
-    } else if (schema.uiFramework !== undefined) {
-      devDependencies[schema.uiFramework] = storybookVersion;
     }
 
-    devDependencies['@storybook/core-server'] = storybookVersion;
-    devDependencies['@storybook/addon-essentials'] = storybookVersion;
-
-    if (schema.bundler === 'vite') {
-      devDependencies['@storybook/builder-vite'] = viteBuilderVersion;
-    } else {
-      devDependencies['@storybook/builder-webpack5'] = storybookVersion;
-      devDependencies['@storybook/manager-webpack5'] = storybookVersion;
-    }
-
-    devDependencies['html-webpack-plugin'] = htmlWebpackPluginVersion;
-
-    if (schema.uiFramework === '@storybook/angular') {
-      devDependencies['webpack'] = webpack5Version;
-
+    if (schema.uiFramework.endsWith('-vite')) {
       if (
-        !packageJson.dependencies['@angular/forms'] &&
-        !packageJson.devDependencies['@angular/forms']
+        !packageJson.dependencies['vite'] &&
+        !packageJson.devDependencies['vite']
       ) {
-        devDependencies['@angular/forms'] = '*';
+        devDependencies['vite'] = viteVersion;
       }
-    }
-
-    if (schema.uiFramework === '@storybook/react') {
-      devDependencies['@svgr/webpack'] = svgrVersion;
-      devDependencies['url-loader'] = urlLoaderVersion;
-      devDependencies['babel-loader'] = babelLoaderVersion;
-      devDependencies['@babel/core'] = babelCoreVersion;
-      devDependencies['@babel/preset-typescript'] =
-        babelPresetTypescriptVersion;
-      if (schema.bundler === 'webpack') {
-        devDependencies['@nrwl/webpack'] = nxVersion;
-      }
-    }
-
-    if (schema.uiFramework === '@storybook/web-components') {
-      devDependencies['lit-html'] = litHtmlVersion;
-    }
-
-    if (schema.uiFramework === '@storybook/react-native') {
-      devDependencies['@storybook/addon-ondevice-actions'] =
-        storybookReactNativeVersion;
-      devDependencies['@storybook/addon-ondevice-backgrounds'] =
-        storybookReactNativeVersion;
-      devDependencies['@storybook/addon-ondevice-controls'] =
-        storybookReactNativeVersion;
-      devDependencies['@storybook/addon-ondevice-notes'] =
-        storybookReactNativeVersion;
-      devDependencies['react-native-storybook-loader'] =
-        reactNativeStorybookLoader;
     }
   }
 
@@ -164,7 +129,7 @@ function addCacheableOperation(tree: Tree) {
     !nxJson.tasksRunnerOptions ||
     !nxJson.tasksRunnerOptions.default ||
     (nxJson.tasksRunnerOptions.default.runner !==
-      '@nrwl/workspace/tasks-runners/default' &&
+      '@nx/workspace/tasks-runners/default' &&
       nxJson.tasksRunnerOptions.default.runner !== 'nx/tasks-runners/default')
   ) {
     return;
@@ -192,10 +157,10 @@ function moveToDevDependencies(tree: Tree) {
     packageJson.dependencies = packageJson.dependencies || {};
     packageJson.devDependencies = packageJson.devDependencies || {};
 
-    if (packageJson.dependencies['@nrwl/storybook']) {
-      packageJson.devDependencies['@nrwl/storybook'] =
-        packageJson.dependencies['@nrwl/storybook'];
-      delete packageJson.dependencies['@nrwl/storybook'];
+    if (packageJson.dependencies['@nx/storybook']) {
+      packageJson.devDependencies['@nx/storybook'] =
+        packageJson.dependencies['@nx/storybook'];
+      delete packageJson.dependencies['@nx/storybook'];
     }
     return packageJson;
   });

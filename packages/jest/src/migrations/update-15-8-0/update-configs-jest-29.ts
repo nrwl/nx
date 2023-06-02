@@ -4,8 +4,8 @@ import {
   logger,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
-import { forEachExecutorOptionsInGraph } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptionsInGraph } from '@nx/devkit/src/generators/executor-options-utils';
 import { TS_QUERY_JEST_CONFIG_PREFIX } from '../../utils/ast-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';

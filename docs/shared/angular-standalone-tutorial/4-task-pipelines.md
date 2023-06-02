@@ -138,7 +138,7 @@ Here are the outputs defined for the `shared-ui` project:
   "prefix": "store",
   "targets": {
     "build": {
-      "executor": "@nrwl/angular:ng-packagr-lite",
+      "executor": "@nx/angular:ng-packagr-lite",
       "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
         "project": "shared/ui/ng-package.json"
@@ -154,7 +154,7 @@ Here are the outputs defined for the `shared-ui` project:
       "defaultConfiguration": "production"
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "shared/ui/jest.config.ts",
@@ -162,7 +162,7 @@ Here are the outputs defined for the `shared-ui` project:
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": ["shared/ui/**/*.ts", "shared/ui/**/*.html"]
       }
@@ -181,7 +181,7 @@ Another way that Nx saves you from unnecessary work is the `affected` command. `
 Run the command:
 
 ```shell
-git add . && git commit -m "commiting to test affected"
+git add . ; git commit -m "commiting to test affected"
 ```
 
 Then make a change to the styles of your `cart` project:
@@ -238,7 +238,7 @@ npx nx affected:graph
     "shared-ui": [],
     "e2e": [{ "source": "e2e", "target": "store", "type": "implicit" }],
     "store": [
-      { "source": "store", "target": "cart", "type": "static" },
+      { "source": "store", "target": "cart", "type": "dynamic" },
       { "source": "store", "target": "shared-ui", "type": "static" }
     ]
   },
@@ -257,12 +257,12 @@ The change made to the `cart` project is also affecting the `store` project. Thi
 To run the `test` targets only for affected projects, run the command:
 
 ```shell
-npx nx affected --target=test
+npx nx affected -t test
 ```
 
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.
 
-{% card title="Affected Documentation" description="Checkout Affected documentation for more details" url="/nx/affected" /%}
+{% card title="Affected Documentation" description="Checkout Affected documentation for more details" url="/packages/nx/documents/affected" /%}
 
 ## What's Next
 

@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 export interface StorybookConfigureSchema {
   name: string;
@@ -9,10 +9,7 @@ export interface StorybookConfigureSchema {
   tsConfiguration?: boolean;
   linter?: Linter;
   cypressDirectory?: string;
-  standaloneConfig?: boolean;
   ignorePaths?: string[];
-  bundler?: 'webpack' | 'vite';
   configureTestRunner?: boolean;
   configureStaticServe?: boolean;
-  storybook7Configuration?: boolean;
 }

@@ -4,8 +4,10 @@ import {
   FlagIcon,
   MapPinIcon,
 } from '@heroicons/react/24/outline';
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphNode } from '@nrwl/devkit';
+import type { ProjectGraphNode } from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import {
   allProjectsSelector,

@@ -5,16 +5,18 @@ import {
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
-} from 'nx/src/command-line/dep-graph';
+} from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { getGraphService } from '../machines/graph.service';
 import { useEffect, useMemo } from 'react';
 import { CheckboxPanel } from '../ui-components/checkbox-panel';
 
-import { Dropdown } from '@nrwl/graph/ui-components';
+import { Dropdown } from '@nx/graph/ui-components';
 import { ShowHideAll } from '../ui-components/show-hide-all';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { createTaskName, useRouteConstructor } from '../util';

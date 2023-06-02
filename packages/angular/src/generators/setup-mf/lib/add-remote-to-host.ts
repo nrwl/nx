@@ -5,12 +5,12 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Schema } from '../schema';
 import { ArrayLiteralExpression } from 'typescript';
-import { insertImport } from '@nrwl/js';
+import { insertImport } from '@nx/js';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -146,7 +146,7 @@ function addLazyLoadedRouteToHostAppModule(
       sourceFile,
       pathToHostRootRouting,
       'loadRemoteModule',
-      '@nrwl/angular/mf'
+      '@nx/angular/mf'
     );
   }
 

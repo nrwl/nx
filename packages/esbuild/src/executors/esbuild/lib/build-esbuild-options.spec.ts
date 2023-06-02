@@ -18,7 +18,7 @@ describe('buildEsbuildOptions', () => {
         myapp: {
           type: 'app',
           name: 'myapp',
-          data: { root: 'apps/myapp', files: [] },
+          data: { root: 'apps/myapp' },
         },
       },
       dependencies: { myapp: [] },
@@ -28,7 +28,7 @@ describe('buildEsbuildOptions', () => {
     root: path.join(__dirname, 'fixtures'),
     cwd: path.join(__dirname, 'fixtures'),
     target: {
-      executor: '@nrwl/esbuild:esbuild',
+      executor: '@nx/esbuild:esbuild',
       options: {
         outputPath: 'dist/apps/myapp',
       },

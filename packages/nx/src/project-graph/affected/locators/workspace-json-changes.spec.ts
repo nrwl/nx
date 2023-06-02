@@ -35,7 +35,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           type: 'lib',
           data: {
             root: 'proj1',
-            files: [],
             tags: [],
           },
         },
@@ -44,7 +43,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           type: 'lib',
           data: {
             root: 'proj2',
-            files: [],
             tags: [],
           },
         },
@@ -76,7 +74,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           name: 'proj1',
           type: 'lib',
           data: {
-            files: [],
             root: 'proj1',
             tags: [],
           },
@@ -85,7 +82,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           name: 'proj2',
           type: 'lib',
           data: {
-            files: [],
             root: 'proj2',
             tags: [],
           },
@@ -129,7 +125,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           name: 'proj1',
           type: 'lib',
           data: {
-            files: [],
             root: 'proj1',
             tags: [],
           },
@@ -164,7 +159,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           name: 'proj1',
           type: 'lib',
           data: {
-            files: [],
             root: 'proj1',
             tags: [],
           },
@@ -173,7 +167,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           name: 'proj2',
           type: 'lib',
           data: {
-            files: [],
             root: 'proj2',
             tags: [],
           },
@@ -218,7 +211,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           name: 'proj1',
           type: 'lib',
           data: {
-            files: [],
             root: 'proj1',
             tags: [],
           },
@@ -227,7 +219,6 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           name: 'proj2',
           type: 'lib',
           data: {
-            files: [],
             root: 'proj2',
             tags: [],
           },

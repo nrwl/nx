@@ -6,6 +6,9 @@ import {
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencies } from '../config/nx-json';
+import { TargetDependencyConfig } from '../devkit-exports';
+import { findMatchingProjects } from '../utils/find-matching-projects';
+import { output } from '../utils/output';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
@@ -104,92 +107,199 @@ export class ProcessTasks {
         dependencyConfig.params === 'forward'
           ? overrides
           : { __overrides_unparsed__: [] };
+      if (dependencyConfig.projects) {
+        this.processTasksForMatchingProjects(
+          dependencyConfig,
+          projectUsedToDeriveDependencies,
+          configuration,
+          task,
+          taskOverrides,
+          overrides
+        );
+      } else if (dependencyConfig.dependencies) {
+        this.processTasksForDependencies(
+          projectUsedToDeriveDependencies,
+          dependencyConfig,
+          configuration,
+          task,
+          taskOverrides,
+          overrides
+        );
+      } else {
+        this.processTasksForSingleProject(
+          task,
+          task.target.project,
+          dependencyConfig,
+          configuration,
+          taskOverrides,
+          overrides
+        );
+      }
+    }
+  }
 
-      if (dependencyConfig.projects === 'dependencies') {
-        for (const dep of this.projectGraph.dependencies[
-          projectUsedToDeriveDependencies
-        ]) {
-          const depProject = this.projectGraph.nodes[
-            dep.target
-          ] as ProjectGraphProjectNode;
+  private processTasksForMatchingProjects(
+    dependencyConfig: TargetDependencyConfig,
+    projectUsedToDeriveDependencies: string,
+    configuration: string,
+    task: Task,
+    taskOverrides: Object | { __overrides_unparsed__: any[] },
+    overrides: Object
+  ) {
+    const targetProjectSpecifiers =
+      typeof dependencyConfig.projects === 'string'
+        ? [dependencyConfig.projects]
+        : dependencyConfig.projects;
+    for (const projectSpecifier of targetProjectSpecifiers) {
+      // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
+      // support for it until lerna can be updated to use the syntax.
+      // TODO(@agentender): Remove this part in v17
+      if (
+        projectSpecifier === 'dependencies' &&
+        !this.projectGraph.nodes[projectSpecifier]
+      ) {
+        this.processTasksForDependencies(
+          projectUsedToDeriveDependencies,
+          dependencyConfig,
+          configuration,
+          task,
+          taskOverrides,
+          overrides
+        );
+      } else {
+        // Since we need to maintain support for dependencies, it is more coherent
+        // that we also support self.
+        // TODO(@agentender): Remove this part in v17
+        const matchingProjects =
+          /** LERNA SUPPORT START - Remove in v17 */
+          projectSpecifier === 'self' &&
+          !this.projectGraph.nodes[projectSpecifier]
+            ? [task.target.project]
+            : /** LERNA SUPPORT END */
+              findMatchingProjects([projectSpecifier], this.projectGraph.nodes);
 
-          // this is to handle external dependencies
-          if (!depProject) continue;
+        if (matchingProjects.length === 0) {
+          output.warn({
+            title: `\`dependsOn\` is misconfigured for ${task.target.project}:${task.target.target}`,
+            bodyLines: [
+              `Project pattern "${projectSpecifier}" does not match any projects.`,
+            ],
+          });
+        }
 
-          if (projectHasTarget(depProject, dependencyConfig.target)) {
-            const resolvedConfiguration = this.resolveConfiguration(
-              depProject,
-              dependencyConfig.target,
-              configuration
-            );
-            const depTargetId = this.getId(
-              depProject.name,
-              dependencyConfig.target,
-              resolvedConfiguration
-            );
+        for (const projectName of matchingProjects) {
+          this.processTasksForSingleProject(
+            task,
+            projectName,
+            dependencyConfig,
+            configuration,
+            taskOverrides,
+            overrides
+          );
+        }
+      }
+    }
+  }
 
-            if (task.id !== depTargetId) {
-              this.dependencies[task.id].push(depTargetId);
-            }
-            if (!this.tasks[depTargetId]) {
-              const newTask = this.createTask(
-                depTargetId,
-                depProject,
-                dependencyConfig.target,
-                resolvedConfiguration,
-                taskOverrides
-              );
-              this.tasks[depTargetId] = newTask;
-              this.dependencies[depTargetId] = [];
+  private processTasksForSingleProject(
+    task: Task,
+    projectName: string,
+    dependencyConfig: TargetDependencyConfig,
+    configuration: string,
+    taskOverrides: Object | { __overrides_unparsed__: any[] },
+    overrides: Object
+  ) {
+    const selfProject = this.projectGraph.nodes[
+      projectName
+    ] as ProjectGraphProjectNode;
 
-              this.processTask(
-                newTask,
-                newTask.target.project,
-                configuration,
-                overrides
-              );
-            }
-          } else {
-            this.processTask(task, depProject.name, configuration, overrides);
-          }
+    if (projectHasTarget(selfProject, dependencyConfig.target)) {
+      const resolvedConfiguration = this.resolveConfiguration(
+        selfProject,
+        dependencyConfig.target,
+        configuration
+      );
+      const selfTaskId = this.getId(
+        selfProject.name,
+        dependencyConfig.target,
+        resolvedConfiguration
+      );
+      if (task.id !== selfTaskId) {
+        this.dependencies[task.id].push(selfTaskId);
+      }
+      if (!this.tasks[selfTaskId]) {
+        const newTask = this.createTask(
+          selfTaskId,
+          selfProject,
+          dependencyConfig.target,
+          resolvedConfiguration,
+          taskOverrides
+        );
+        this.tasks[selfTaskId] = newTask;
+        this.dependencies[selfTaskId] = [];
+        this.processTask(
+          newTask,
+          newTask.target.project,
+          configuration,
+          overrides
+        );
+      }
+    }
+  }
+
+  private processTasksForDependencies(
+    projectUsedToDeriveDependencies: string,
+    dependencyConfig: TargetDependencyConfig,
+    configuration: string,
+    task: Task,
+    taskOverrides: Object | { __overrides_unparsed__: any[] },
+    overrides: Object
+  ) {
+    for (const dep of this.projectGraph.dependencies[
+      projectUsedToDeriveDependencies
+    ]) {
+      const depProject = this.projectGraph.nodes[
+        dep.target
+      ] as ProjectGraphProjectNode;
+
+      // this is to handle external dependencies
+      if (!depProject) continue;
+
+      if (projectHasTarget(depProject, dependencyConfig.target)) {
+        const resolvedConfiguration = this.resolveConfiguration(
+          depProject,
+          dependencyConfig.target,
+          configuration
+        );
+        const depTargetId = this.getId(
+          depProject.name,
+          dependencyConfig.target,
+          resolvedConfiguration
+        );
+
+        if (task.id !== depTargetId) {
+          this.dependencies[task.id].push(depTargetId);
+        }
+        if (!this.tasks[depTargetId]) {
+          const newTask = this.createTask(
+            depTargetId,
+            depProject,
+            dependencyConfig.target,
+            resolvedConfiguration,
+            taskOverrides
+          );
+          this.tasks[depTargetId] = newTask;
+          this.dependencies[depTargetId] = [];
+
+          this.processTask(
+            newTask,
+            newTask.target.project,
+            configuration,
+            overrides
+          );
         }
       } else {
-        const selfProject = this.projectGraph.nodes[
-          task.target.project
-        ] as ProjectGraphProjectNode;
-
-        if (projectHasTarget(selfProject, dependencyConfig.target)) {
-          const resolvedConfiguration = this.resolveConfiguration(
-            selfProject,
-            dependencyConfig.target,
-            configuration
-          );
-          const selfTaskId = this.getId(
-            selfProject.name,
-            dependencyConfig.target,
-            resolvedConfiguration
-          );
-          if (task.id !== selfTaskId) {
-            this.dependencies[task.id].push(selfTaskId);
-          }
-          if (!this.tasks[selfTaskId]) {
-            const newTask = this.createTask(
-              selfTaskId,
-              selfProject,
-              dependencyConfig.target,
-              resolvedConfiguration,
-              taskOverrides
-            );
-            this.tasks[selfTaskId] = newTask;
-            this.dependencies[selfTaskId] = [];
-            this.processTask(
-              newTask,
-              newTask.target.project,
-              configuration,
-              overrides
-            );
-          }
-        }
+        this.processTask(task, depProject.name, configuration, overrides);
       }
     }
   }

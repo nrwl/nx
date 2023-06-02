@@ -27,14 +27,7 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
   nxJson
 ): string[] => {
   const implicits = {};
-  const globalFiles = [
-    ...extractGlobalFilesFromInputs(nxJson),
-    'nx.json',
-    'package-lock.json',
-    'yarn.lock',
-    'pnpm-lock.yaml',
-    'pnpm-lock.yml',
-  ];
+  const globalFiles = [...extractGlobalFilesFromInputs(nxJson), 'nx.json'];
   globalFiles.forEach((file) => {
     implicits[file] = '*' as any;
   });

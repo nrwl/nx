@@ -14,19 +14,18 @@ import {
   Tree,
   updateProjectConfiguration,
   updateTsConfigsToJs,
-} from '@nrwl/devkit';
-import { getImportPath } from 'nx/src/utils/path';
+} from '@nx/devkit';
 import { Schema } from './schema';
-import { libraryGenerator as workspaceLibraryGenerator } from '@nrwl/workspace/generators';
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 
 import { join } from 'path';
-import { addSwcDependencies } from '@nrwl/js/src/utils/swc/add-swc-dependencies';
-import { addSwcConfig } from '@nrwl/js/src/utils/swc/add-swc-config';
+import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { initGenerator } from '../init/init';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends Schema {
   name: string;
-  prefix: string;
   fileName: string;
   projectRoot: string;
   projectDirectory: string;
@@ -49,8 +48,10 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     );
   }
 
-  const libraryInstall = await workspaceLibraryGenerator(tree, {
+  const libraryInstall = await jsLibraryGenerator(tree, {
     ...schema,
+    bundler: schema.buildable ? 'tsc' : 'none',
+    includeBabelRc: schema.babelJest,
     importPath: options.importPath,
     testEnvironment: 'node',
     skipFormat: true,
@@ -97,11 +98,10 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
     : [];
 
   const importPath =
-    options.importPath || getImportPath(npmScope, fullProjectDirectory);
+    options.importPath || getImportPath(tree, fullProjectDirectory);
 
   return {
     ...options,
-    prefix: npmScope, // we could also allow customizing this
     fileName,
     name: projectName,
     projectRoot,
@@ -157,7 +157,7 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
 
   project.targets = project.targets || {};
   project.targets.build = {
-    executor: `@nrwl/js:${options.compiler}`,
+    executor: `@nx/js:${options.compiler}`,
     outputs: ['{options.outputPath}'],
     options: {
       outputPath: joinPathFragments(

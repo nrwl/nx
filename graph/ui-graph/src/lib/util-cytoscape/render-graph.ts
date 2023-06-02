@@ -5,7 +5,7 @@ import cytoscape, {
   EdgeSingular,
 } from 'cytoscape';
 import { edgeStyles, nodeStyles } from '../styles-graph';
-import { GraphInteractionEvents } from '@nrwl/graph/ui-graph';
+import { GraphInteractionEvents } from '../graph-interaction-events';
 import { VirtualElement } from '@floating-ui/react';
 import {
   darkModeScratchKey,
@@ -282,8 +282,11 @@ export class RenderGraph {
               .data('files')
               ?.filter(
                 (file) =>
-                  file.dependencies &&
-                  file.dependencies.find((d) => d.target === edge.target().id())
+                  file.deps &&
+                  file.deps.find(
+                    (d) =>
+                      (typeof d === 'string' ? d : d[0]) === edge.target().id()
+                  )
               )
               .map((file) => {
                 return {

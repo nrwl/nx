@@ -9,7 +9,7 @@ import {
   updateFile,
   updateJson,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('cache', () => {
   beforeEach(() => newProject());
@@ -19,8 +19,8 @@ describe('cache', () => {
   it('should cache command execution', async () => {
     const myapp1 = uniq('myapp1');
     const myapp2 = uniq('myapp2');
-    runCLI(`generate @nrwl/web:app ${myapp1}`);
-    runCLI(`generate @nrwl/web:app ${myapp2}`);
+    runCLI(`generate @nx/web:app ${myapp1}`);
+    runCLI(`generate @nx/web:app ${myapp2}`);
     const files = `--files="apps/${myapp1}/src/main.ts,apps/${myapp2}/src/main.ts"`;
 
     // run build with caching
@@ -144,7 +144,7 @@ describe('cache', () => {
 
   it('should support using globs as outputs', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nrwl/workspace:library ${mylib}`);
+    runCLI(`generate @nx/js:library ${mylib}`);
     updateProjectConfig(mylib, (c) => {
       c.targets.build = {
         executor: 'nx:run-commands',
@@ -216,9 +216,9 @@ describe('cache', () => {
     const parent = uniq('parent');
     const child1 = uniq('child1');
     const child2 = uniq('child2');
-    runCLI(`generate @nrwl/js:lib ${parent}`);
-    runCLI(`generate @nrwl/js:lib ${child1}`);
-    runCLI(`generate @nrwl/js:lib ${child2}`);
+    runCLI(`generate @nx/js:lib ${parent}`);
+    runCLI(`generate @nx/js:lib ${child1}`);
+    runCLI(`generate @nx/js:lib ${child2}`);
     updateJson(`nx.json`, (c) => {
       c.namedInputs = {
         default: ['{projectRoot}/**/*'],

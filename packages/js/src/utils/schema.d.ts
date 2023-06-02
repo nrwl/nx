@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-const { Linter } = require('@nrwl/linter'); // use require to import to avoid circular dependency
+const { Linter } = require('@nx/linter'); // use require to import to avoid circular dependency
 import type { AssetGlob, FileInputOutput } from './assets/assets';
 import { TransformerEntry } from './typescript/types';
 
@@ -11,7 +11,6 @@ export interface LibraryGeneratorSchema {
   directory?: string;
   skipFormat?: boolean;
   tags?: string;
-  simpleModuleName?: boolean;
   skipTsConfig?: boolean;
   includeBabelRc?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
@@ -30,6 +29,7 @@ export interface LibraryGeneratorSchema {
   skipTypeCheck?: boolean;
   minimal?: boolean;
   rootProject?: boolean;
+  simpleName?: boolean;
 }
 
 export interface ExecutorOptions {

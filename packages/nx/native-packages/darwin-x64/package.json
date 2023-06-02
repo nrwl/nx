@@ -1,6 +1,11 @@
 {
-  "name": "@nrwl/nx-darwin-x64",
+  "name": "@nx/nx-darwin-x64",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx/native-packages/darwin-x64"
+  },
   "os": [
     "darwin"
   ],

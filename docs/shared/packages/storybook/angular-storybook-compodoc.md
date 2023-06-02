@@ -43,9 +43,11 @@ When you run Compodoc, it will generate a `documentation.json` file. Storybook w
 
 The main things that you need to do are:
 
-1. Include the component files in the TypeScript compilation for Compodoc (or any other files that contain your Compodoc documentation).
-2. Use `compodoc` to generate a `documentation.json` file.
-3. Tell Storybook to use the `documentation.json` file to display the documentation.
+1. Install the necessary packages for `compodoc`.
+2. Include the component files in the TypeScript compilation for Compodoc (or any other files that contain your Compodoc documentation).
+3. Use `compodoc` to generate a `documentation.json` file.
+4. Tell Storybook to use the `documentation.json` file to display the documentation.
+5. Do not forget to enable [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs) in your Storybook configuration.
 
 Let's see how you can do that.
 
@@ -141,7 +143,7 @@ Make sure you are on Nx version `>=14.1.8` and your `storybook` target is using 
 
 If you are using an older version of Nx, you can use [`nx migrate`](/packages/nx/documents/migrate) to migrate your codebase to a later version. Using `nx migrate` will also make sure to update your `storybook` and `build-storybook` targets to match the new format.
 
-If you **are** on Nx `>=14.1.8` and you are still using the old executor (`@nrwl/storybook:storybook`), you can read our documentation about the [Angular Storybook targets](/packages/storybook/documents/angular-storybook-targets) to help you change your `storybook` and `build-storybook` targets across your workspace for your Angular projects using Storybook.
+If you **are** on Nx `>=14.1.8` and you are still using the old executor (`@nx/storybook:storybook`), you can read our documentation about the [Angular Storybook targets](/deprecated/storybook/angular-storybook-targets) to help you change your `storybook` and `build-storybook` targets across your workspace for your Angular projects using Storybook.
 {% /callout %}
 
 ### 4. Let Storybook know of the `documentation.json` file
@@ -152,6 +154,27 @@ In your project's `.storybook/preview.js` file (for example for your `web` app t
 import { setCompodocJson } from '@storybook/addon-docs/angular';
 import docJson from '../documentation.json';
 setCompodocJson(docJson);
+```
+
+### 5. Set up Autodocs
+
+In your project's `.storybook/main.js` file you have to enable autodocs:
+
+```js {% fileName="apps/web/.storybook/main.js" %}
+const config = {
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
+  framework: {
+    name: '@storybook/angular',
+    options: {},
+  },
+  docs: {
+    autodocs: true,
+    defaultName: 'Docs',
+  },
+};
+
+export default config;
 ```
 
 ### Now run Storybook and see the results!

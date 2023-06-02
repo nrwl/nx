@@ -6,7 +6,7 @@ import {
   runCLI,
   runCommand,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('nx init (Monorepo)', () => {
   const pmc = getPackageManagerCommand({
@@ -40,7 +40,7 @@ describe('nx init (Monorepo)', () => {
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init -y --cacheable=build`
+      } nx@${getPublishedVersion()} init --cacheable=build --no-interactive`
     );
 
     expect(output).toContain('🎉 Done!');

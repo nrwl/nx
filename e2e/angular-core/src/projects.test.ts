@@ -1,4 +1,4 @@
-import { names } from '@nrwl/devkit';
+import { names } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -15,7 +15,7 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { normalize } from 'path';
 
 describe('Angular Projects', () => {
@@ -27,9 +27,9 @@ describe('Angular Projects', () => {
 
   beforeAll(() => {
     proj = newProject();
-    runCLI(`generate @nrwl/angular:app ${app1} --no-interactive`);
+    runCLI(`generate @nx/angular:app ${app1} --no-interactive`);
     runCLI(
-      `generate @nrwl/angular:lib ${lib1} --add-module-spec --no-interactive`
+      `generate @nx/angular:lib ${lib1} --add-module-spec --no-interactive`
     );
     app1DefaultModule = readFile(`apps/${app1}/src/app/app.module.ts`);
     app1DefaultComponentTemplate = readFile(
@@ -50,7 +50,7 @@ describe('Angular Projects', () => {
   it('should successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');
     runCLI(
-      `generate @nrwl/angular:app ${standaloneApp} --directory=myDir --standalone=true --no-interactive`
+      `generate @nx/angular:app ${standaloneApp} --directory=myDir --standalone=true --no-interactive`
     );
 
     updateFile(
@@ -162,10 +162,10 @@ describe('Angular Projects', () => {
     const buildableChildLib = uniq('buildlib2');
 
     runCLI(
-      `generate @nrwl/angular:library ${buildableLib} --buildable=true --no-interactive`
+      `generate @nx/angular:library ${buildableLib} --buildable=true --no-interactive`
     );
     runCLI(
-      `generate @nrwl/angular:library ${buildableChildLib} --buildable=true --no-interactive`
+      `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-interactive`
     );
 
     // update the app module to include a ref to the buildable lib
@@ -211,7 +211,7 @@ describe('Angular Projects', () => {
 
     // update the angular.json
     updateProjectConfig(app1, (config) => {
-      config.targets.build.executor = '@nrwl/angular:webpack-browser';
+      config.targets.build.executor = '@nx/angular:webpack-browser';
       config.targets.build.options = {
         ...config.targets.build.options,
         buildLibsFromSource: false,
@@ -241,17 +241,17 @@ describe('Angular Projects', () => {
     const entryPoint = uniq('entrypoint');
 
     runCLI(
-      `generate @nrwl/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --no-interactive`
+      `generate @nx/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --no-interactive`
     );
     runCLI(
-      `generate @nrwl/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
+      `generate @nx/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
     );
 
     runCLI(
-      `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-interactive`
+      `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-interactive`
     );
     runCLI(
-      `generate @nrwl/angular:secondary-entry-point --name=sub --library=${childLib} --no-interactive`
+      `generate @nx/angular:secondary-entry-point --name=sub --library=${childLib} --no-interactive`
     );
 
     const moduleContent = `

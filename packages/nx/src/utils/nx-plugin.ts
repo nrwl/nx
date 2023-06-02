@@ -10,7 +10,10 @@ import {
   PackageJson,
   readModulePackageJsonWithoutFallbacks,
 } from './package-json';
-import { registerTranspiler, registerTsConfigPaths } from './register';
+import {
+  registerTranspiler,
+  registerTsConfigPaths,
+} from '../plugins/js/utils/register';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
@@ -24,7 +27,7 @@ import {
 import { normalizePath } from './path';
 import { join } from 'path';
 import { getNxRequirePaths } from './installation-directory';
-import { readTsConfig } from './typescript';
+import { readTsConfig } from '../plugins/js/utils/typescript';
 
 import type * as ts from 'typescript';
 
@@ -80,11 +83,12 @@ function getPluginPathAndName(
     }
   }
   const packageJsonPath = path.join(pluginPath, 'package.json');
+
   const { name } =
     !['.ts', '.js'].some((x) => x === path.extname(pluginPath)) && // Not trying to point to a ts or js file
     existsSync(packageJsonPath) // plugin has a package.json
       ? readJsonFile(packageJsonPath) // read name from package.json
-      : { name: path.basename(pluginPath) }; // use the name of the file we point to
+      : { name: moduleName };
   return { pluginPath, name };
 }
 
@@ -256,16 +260,18 @@ export function registerPluginTSTranspiler() {
   if (!tsNodeAndPathsRegistered) {
     // nx-ignore-next-line
     const ts: typeof import('typescript') = require('typescript');
-    const tsConfigName = existsSync('tsconfig.base.json')
-      ? 'tsconfig.base.json'
-      : existsSync('tsconfig.json')
-      ? 'tsconfig.json'
-      : null;
+
+    // Get the first tsconfig that matches the allowed set
+    const tsConfigName = [
+      join(workspaceRoot, 'tsconfig.base.json'),
+      join(workspaceRoot, 'tsconfig.json'),
+    ].find((x) => existsSync(x));
+
     const tsConfig: Partial<ts.ParsedCommandLine> = tsConfigName
       ? readTsConfig(tsConfigName)
       : {};
 
-    registerTsConfigPaths(join(workspaceRoot, 'tsconfig.base.json'));
+    registerTsConfigPaths(tsConfigName);
     registerTranspiler({
       experimentalDecorators: true,
       emitDecoratorMetadata: true,
@@ -348,9 +354,14 @@ function readPluginMainFromProjectConfiguration(
 ): string | null {
   const { main } =
     Object.values(plugin.targets).find((x) =>
-      ['@nrwl/js:tsc', '@nrwl/js:swc', '@nrwl/node:package'].includes(
-        x.executor
-      )
+      [
+        '@nx/js:tsc',
+        '@nrwl/js:tsc',
+        '@nx/js:swc',
+        '@nrwl/js:swc',
+        '@nx/node:package',
+        '@nrwl/node:package',
+      ].includes(x.executor)
     )?.options ||
     plugin.targets?.build?.options ||
     {};

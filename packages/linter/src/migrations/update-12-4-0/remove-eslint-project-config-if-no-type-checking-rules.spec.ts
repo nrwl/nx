@@ -1,10 +1,5 @@
-import {
-  addProjectConfiguration,
-  readJson,
-  Tree,
-  writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, readJson, Tree, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import removeESLintProjectConfigIfNoTypeCheckingRules from './remove-eslint-project-config-if-no-type-checking-rules';
 import type { Linter } from 'eslint';
 const KNOWN_RULE_REQUIRING_TYPE_CHECKING = '@typescript-eslint/await-thenable';
@@ -190,18 +185,18 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
     // Updated - no more parserOptions.project
     expect(readJson(tree, 'libs/workspace-lib/.eslintrc.json'))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "extends": "../../../.eslintrc.json",
-        "ignorePatterns": Array [
+        "ignorePatterns": [
           "!**/*",
         ],
-        "overrides": Array [
-          Object {
-            "files": Array [
+        "overrides": [
+          {
+            "files": [
               "*.ts",
               "*.tsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
         ],
       }
@@ -210,18 +205,18 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
     // Updated - no more parserOptions.project
     expect(readJson(tree, 'libs/another-lib/.eslintrc.json'))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "extends": "../../../.eslintrc.json",
-        "ignorePatterns": Array [
+        "ignorePatterns": [
           "!**/*",
         ],
-        "overrides": Array [
-          Object {
-            "files": Array [
+        "overrides": [
+          {
+            "files": [
               "*.ts",
               "*.tsx",
             ],
-            "rules": Object {
+            "rules": {
               "@typescript-eslint/await-thenable": "off",
             },
           },

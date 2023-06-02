@@ -4,8 +4,8 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { storybookVersion } from '../../../utils/versions';
 import configurationGenerator from '../../../generators/configuration/configuration';
 import {
@@ -46,7 +46,7 @@ describe('migrate-defaults-5-to-6 Generator', () => {
 
     await configurationGenerator(appTree, {
       name: 'test-ui-lib1',
-      uiFramework: '@storybook/react',
+      uiFramework: '@storybook/react' as any,
     });
 
     const lib1Configuration = readProjectConfiguration(appTree, 'test-ui-lib1');
@@ -75,7 +75,7 @@ describe('migrate-defaults-5-to-6 Generator', () => {
 
     await configurationGenerator(appTree, {
       name: 'test-ui-lib2',
-      uiFramework: '@storybook/react',
+      uiFramework: '@storybook/react' as any,
     });
 
     const lib2Configuration = readProjectConfiguration(appTree, 'test-ui-lib2');

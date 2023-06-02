@@ -3,9 +3,9 @@ import {
   getProjects,
   readJson,
   readProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { reactNativeApplicationGenerator } from './application';
 
 describe('app', () => {

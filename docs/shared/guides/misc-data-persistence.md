@@ -10,7 +10,7 @@ For a better user experience, the `optimisticUpdate` operator updates the state 
 
 ```typescript
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { optimisticUpdate } from '@nrwl/angular';
+import { optimisticUpdate } from '@nx/angular';
 
 @Injectable()
 class TodoEffects {
@@ -47,7 +47,7 @@ To achieve a more reliable data synchronization, the `pessimisticUpdate` operato
 
 ```typescript
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { pessimisticUpdate } from '@nrwl/angular';
+import { pessimisticUpdate } from '@nx/angular';
 
 @Injectable()
 class TodoEffects {
@@ -85,7 +85,7 @@ The `fetch` operator provides consistency when fetching data. If there are multi
 
 ```typescript
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { fetch } from '@nrwl/angular';
+import { fetch } from '@nx/angular';
 
 @Injectable()
 class TodoEffects {
@@ -119,7 +119,7 @@ This is correct, but we can improve the performance by supplying an id of the da
 
 ```typescript
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { fetch } from '@nrwl/angular';
+import { fetch } from '@nx/angular';
 
 @Injectable()
 class TodoEffects {
@@ -163,7 +163,7 @@ When our state depends on navigation, we can not assume the route change happene
 
 ```typescript
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { navigation } from '@nrwl/angular';
+import { navigation } from '@nx/angular';
 
 @Injectable()
 class TodoEffects {

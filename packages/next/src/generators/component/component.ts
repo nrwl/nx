@@ -2,11 +2,13 @@ import {
   convertNxGenerator,
   formatFiles,
   getProjects,
+  joinPathFragments,
+  readProjectConfiguration,
   runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import type { SupportedStyles } from '@nrwl/react';
-import { componentGenerator as reactComponentGenerator } from '@nrwl/react';
+} from '@nx/devkit';
+import type { SupportedStyles } from '@nx/react';
+import { componentGenerator as reactComponentGenerator } from '@nx/react';
 
 import { addStyleDependencies } from '../../utils/styles';
 
@@ -37,6 +39,7 @@ function getDirectory(host: Tree, options: Schema) {
  * extra dependencies for css, sass, less, styl style options.
  */
 export async function componentGenerator(host: Tree, options: Schema) {
+  const project = readProjectConfiguration(host, options.project);
   const componentInstall = await reactComponentGenerator(host, {
     ...options,
     directory: getDirectory(host, options),
@@ -45,7 +48,10 @@ export async function componentGenerator(host: Tree, options: Schema) {
     skipFormat: true,
   });
 
-  const styledInstall = addStyleDependencies(host, options.style);
+  const styledInstall = addStyleDependencies(host, {
+    style: options.style,
+    swc: !host.exists(joinPathFragments(project.root, '.babelrc')),
+  });
 
   if (!options.skipFormat) {
     await formatFiles(host);

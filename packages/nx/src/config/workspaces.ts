@@ -4,7 +4,7 @@ import * as path from 'path';
 import { basename, dirname, extname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { workspaceRoot } from '../utils/workspace-root';
-import { readJsonFile } from '../utils/fileutils';
+import { readJsonFile, readYamlFile } from '../utils/fileutils';
 import { logger, NX_PREFIX } from '../utils/logger';
 import {
   loadNxPlugins,
@@ -12,7 +12,6 @@ import {
   readPluginPackageJson,
   registerPluginTSTranspiler,
 } from '../utils/nx-plugin';
-import * as yaml from 'js-yaml';
 
 import type { NxJsonConfiguration, TargetDefaults } from './nx-json';
 import {
@@ -118,7 +117,8 @@ export class Workspaces {
       )
     ) {
       projectsConfigurations.projects = mergeAngularJsonAndGlobProjects(
-        projectsConfigurations.projects
+        projectsConfigurations.projects,
+        this.root
       );
     }
     this.cachedProjectsConfig = this.mergeTargetDefaultsIntoProjectDescriptions(
@@ -301,47 +301,22 @@ export class Workspaces {
         );
         const baseNxJson =
           readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
-        return this.mergeTargetDefaultsAndTargetDependencies({
+        return {
           ...baseNxJson,
           ...nxJsonConfiguration,
-        });
+        };
       } else {
-        return this.mergeTargetDefaultsAndTargetDependencies(
-          nxJsonConfiguration
-        );
+        return nxJsonConfiguration;
       }
     } else {
       try {
-        return this.mergeTargetDefaultsAndTargetDependencies(
-          readJsonFile(join(__dirname, '..', '..', 'presets', 'core.json'))
+        return readJsonFile(
+          join(__dirname, '..', '..', 'presets', 'core.json')
         );
       } catch (e) {
         return {};
       }
     }
-  }
-
-  private mergeTargetDefaultsAndTargetDependencies(
-    nxJson: NxJsonConfiguration
-  ) {
-    if (!nxJson.targetDefaults) {
-      nxJson.targetDefaults = {};
-    }
-    if (nxJson.targetDependencies) {
-      for (const targetName of Object.keys(nxJson.targetDependencies)) {
-        if (!nxJson.targetDefaults[targetName]) {
-          nxJson.targetDefaults[targetName] = {};
-        }
-        if (!nxJson.targetDefaults[targetName].dependsOn) {
-          nxJson.targetDefaults[targetName].dependsOn = [];
-        }
-        nxJson.targetDefaults[targetName].dependsOn = [
-          ...nxJson.targetDefaults[targetName].dependsOn,
-          ...nxJson.targetDependencies[targetName],
-        ];
-      }
-    }
-    return nxJson;
   }
 
   private getImplementationFactory<T>(
@@ -507,7 +482,7 @@ function findMatchingProjectInCwd(
   return matchingProject;
 }
 
-function normalizeExecutorSchema(
+export function normalizeExecutorSchema(
   schema: Partial<ExecutorConfig['schema']>
 ): ExecutorConfig['schema'] {
   const version = (schema.version ??= 1);
@@ -544,7 +519,7 @@ function findFullGeneratorName(
 }
 
 /**
- * Pulled from toFileName in names from @nrwl/devkit.
+ * Pulled from toFileName in names from @nx/devkit.
  * Todo: Should refactor, not duplicate.
  */
 export function toProjectName(fileName: string): string {
@@ -618,10 +593,10 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
 
     if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
       try {
-        const obj = yaml.load(
-          readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf-8')
-        ) as { packages: string[] };
-        patterns.push(...normalizePatterns(obj.packages || []));
+        const { packages } = readYamlFile<{ packages: string[] }>(
+          join(root, 'pnpm-workspace.yaml')
+        );
+        patterns.push(...normalizePatterns(packages || []));
       } catch (e: unknown) {
         output.warn({
           title: `${NX_PREFIX} Unable to parse pnpm-workspace.yaml`,
@@ -787,6 +762,13 @@ function buildProjectConfigurationFromPackageJson(
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = path.split('\\').join('/');
   const directory = dirname(normalizedPath);
+
+  if (!packageJson.name && directory === '.') {
+    throw new Error(
+      'Nx requires the root package.json to specify a name if it is being used as an Nx project.'
+    );
+  }
+
   let name = packageJson.name ?? toProjectName(normalizedPath);
   if (nxJson?.npmScope) {
     const npmPrefix = `@${nxJson.npmScope}/`;
@@ -983,8 +965,8 @@ function resolvePathTokensInOptions<T extends Object | Array<unknown>>(
           `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`
         );
       }
-      value = value.replace('{projectRoot}', project.root);
-      result[opt] = value.replace('{projectName}', project.name);
+      value = value.replace(/\{projectRoot\}/g, project.root);
+      result[opt] = value.replace(/\{projectName\}/g, project.name);
     } else if (typeof value === 'object' && value) {
       result[opt] = resolvePathTokensInOptions(
         value,

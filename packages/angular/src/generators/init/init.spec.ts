@@ -1,5 +1,5 @@
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
   // need to mock so it doesn't resolve what the workspace has installed
   // and be able to test with different versions
   ensurePackage: jest.fn(),
@@ -11,9 +11,9 @@ import {
   Tree,
   updateJson,
   updateNxJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import { angularDevkitVersion, angularVersion } from '../../utils/versions';
@@ -130,7 +130,7 @@ describe('init', () => {
         const { devDependencies } = readJson(tree, 'package.json');
 
         // ASSERT
-        expect(devDependencies['@nrwl/jest']).toBeDefined();
+        expect(devDependencies['@nx/jest']).toBeDefined();
         expect(devDependencies['jest']).toBeDefined();
         expect(devDependencies['jest-preset-angular']).toBeDefined();
       });
@@ -160,10 +160,10 @@ describe('init', () => {
         const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
         // ASSERT
-        expect(generators['@nrwl/angular:application'].unitTestRunner).toEqual(
+        expect(generators['@nx/angular:application'].unitTestRunner).toEqual(
           'jest'
         );
-        expect(generators['@nrwl/angular:library'].unitTestRunner).toEqual(
+        expect(generators['@nx/angular:library'].unitTestRunner).toEqual(
           'jest'
         );
       });
@@ -184,7 +184,7 @@ describe('init', () => {
         const { devDependencies } = readJson(tree, 'package.json');
 
         // ASSERT
-        expect(devDependencies['@nrwl/cypress']).toBeDefined();
+        expect(devDependencies['@nx/cypress']).toBeDefined();
         expect(devDependencies['cypress']).toBeDefined();
       });
 
@@ -200,7 +200,7 @@ describe('init', () => {
         const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
         // ASSERT
-        expect(generators['@nrwl/angular:application'].e2eTestRunner).toEqual(
+        expect(generators['@nx/angular:application'].e2eTestRunner).toEqual(
           'cypress'
         );
       });
@@ -220,10 +220,8 @@ describe('init', () => {
         const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
         // ASSERT
-        expect(generators['@nrwl/angular:application'].linter).toEqual(
-          'eslint'
-        );
-        expect(generators['@nrwl/angular:library'].linter).toEqual('eslint');
+        expect(generators['@nx/angular:application'].linter).toEqual('eslint');
+        expect(generators['@nx/angular:library'].linter).toEqual('eslint');
       });
     });
 
@@ -239,8 +237,8 @@ describe('init', () => {
         const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
         // ASSERT
-        expect(generators['@nrwl/angular:application'].linter).toEqual('none');
-        expect(generators['@nrwl/angular:library'].linter).toEqual('none');
+        expect(generators['@nx/angular:application'].linter).toEqual('none');
+        expect(generators['@nx/angular:library'].linter).toEqual('none');
       });
     });
   });
@@ -482,7 +480,7 @@ bar
           const { devDependencies } = readJson(tree, 'package.json');
 
           // ASSERT
-          expect(devDependencies['@nrwl/jest']).toBeDefined();
+          expect(devDependencies['@nx/jest']).toBeDefined();
           expect(devDependencies['jest']).toBeDefined();
           expect(devDependencies['jest-preset-angular']).toEqual(
             backwardCompatibleVersions.angularV14.jestPresetAngularVersion
@@ -514,10 +512,10 @@ bar
           const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
           // ASSERT
-          expect(
-            generators['@nrwl/angular:application'].unitTestRunner
-          ).toEqual('jest');
-          expect(generators['@nrwl/angular:library'].unitTestRunner).toEqual(
+          expect(generators['@nx/angular:application'].unitTestRunner).toEqual(
+            'jest'
+          );
+          expect(generators['@nx/angular:library'].unitTestRunner).toEqual(
             'jest'
           );
         });
@@ -538,7 +536,7 @@ bar
           const { devDependencies } = readJson(tree, 'package.json');
 
           // ASSERT
-          expect(devDependencies['@nrwl/cypress']).toBeDefined();
+          expect(devDependencies['@nx/cypress']).toBeDefined();
           expect(devDependencies['cypress']).toBeDefined();
         });
 
@@ -554,7 +552,7 @@ bar
           const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
           // ASSERT
-          expect(generators['@nrwl/angular:application'].e2eTestRunner).toEqual(
+          expect(generators['@nx/angular:application'].e2eTestRunner).toEqual(
             'cypress'
           );
         });
@@ -574,10 +572,10 @@ bar
           const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
           // ASSERT
-          expect(generators['@nrwl/angular:application'].linter).toEqual(
+          expect(generators['@nx/angular:application'].linter).toEqual(
             'eslint'
           );
-          expect(generators['@nrwl/angular:library'].linter).toEqual('eslint');
+          expect(generators['@nx/angular:library'].linter).toEqual('eslint');
         });
       });
 
@@ -593,10 +591,8 @@ bar
           const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
           // ASSERT
-          expect(generators['@nrwl/angular:application'].linter).toEqual(
-            'none'
-          );
-          expect(generators['@nrwl/angular:library'].linter).toEqual('none');
+          expect(generators['@nx/angular:application'].linter).toEqual('none');
+          expect(generators['@nx/angular:library'].linter).toEqual('none');
         });
       });
     });

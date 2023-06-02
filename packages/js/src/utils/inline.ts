@@ -1,5 +1,5 @@
-import type { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
-import { normalizePath, readJsonFile } from '@nrwl/devkit';
+import type { ExecutorContext, ProjectGraphProjectNode } from '@nx/devkit';
+import { normalizePath, readJsonFile } from '@nx/devkit';
 import {
   copySync,
   readdirSync,
@@ -36,7 +36,7 @@ export function handleInliningBuild(
 ): InlineProjectGraph {
   const tsConfigJson = readJsonFile(tsConfigPath);
   const pathAliases =
-    tsConfigJson['compilerOptions']['paths'] || readBasePathAliases(context);
+    tsConfigJson['compilerOptions']?.['paths'] || readBasePathAliases(context);
   const inlineGraph = createInlineGraph(context, options, pathAliases);
 
   if (isInlineGraphEmpty(inlineGraph)) {
@@ -58,9 +58,11 @@ export function postProcessInlinedDependencies(
   }
 
   const parentDistPath = join(outputPath, parentOutputPath);
+  const markedForDeletion = new Set<string>();
 
   // move parentOutput
   movePackage(parentDistPath, outputPath);
+  markedForDeletion.add(parentDistPath);
 
   const inlinedDepsDestOutputRecord: Record<string, string> = {};
   // move inlined outputs
@@ -80,6 +82,7 @@ export function postProcessInlinedDependencies(
         copySync(depOutputPath, destDepOutputPath, { overwrite: true });
       } else {
         movePackage(depOutputPath, destDepOutputPath);
+        markedForDeletion.add(depOutputPath);
       }
 
       // TODO: hard-coded "src"
@@ -88,6 +91,7 @@ export function postProcessInlinedDependencies(
     }
   }
 
+  markedForDeletion.forEach((path) => removeSync(path));
   updateImports(outputPath, inlinedDepsDestOutputRecord);
 }
 
@@ -262,7 +266,6 @@ function buildInlineGraphExternals(
 function movePackage(from: string, to: string) {
   if (from === to) return;
   copySync(from, to, { overwrite: true });
-  removeSync(from);
 }
 
 function updateImports(

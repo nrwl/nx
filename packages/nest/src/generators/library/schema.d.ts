@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 import { UnitTestRunner } from '../utils';
 
 export interface LibraryGeneratorOptions {
@@ -30,6 +30,7 @@ export interface LibraryGeneratorOptions {
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
+  simpleName?: boolean;
 }
 
 export interface NormalizedOptions extends LibraryGeneratorOptions {

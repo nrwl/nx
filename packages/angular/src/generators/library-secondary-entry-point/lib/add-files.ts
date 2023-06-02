@@ -1,4 +1,4 @@
-import { generateFiles, joinPathFragments, names, Tree } from '@nrwl/devkit';
+import { generateFiles, joinPathFragments, names, Tree } from '@nx/devkit';
 import { NormalizedGeneratorOptions } from '../schema';
 
 export function addFiles(

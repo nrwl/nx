@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { formatFiles, generateFiles, joinPathFragments } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { formatFiles, generateFiles, joinPathFragments } from '@nx/devkit';
 import { getComponentProps } from '../utils/storybook-ast/storybook-inputs';
 import type { ComponentStoryGeneratorOptions } from './schema';
 

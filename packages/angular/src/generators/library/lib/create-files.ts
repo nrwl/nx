@@ -1,14 +1,15 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   generateFiles,
-  getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,
-} from '@nrwl/devkit';
-import { getRootTsConfigFileName } from '@nrwl/js';
+} from '@nx/devkit';
+import { getRootTsConfigFileName } from '@nx/js';
+import { parse } from 'semver';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import type { AngularProjectConfiguration } from '../../../utils/types';
+import { getInstalledAngularVersion } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function createFiles(
@@ -16,7 +17,6 @@ export function createFiles(
   options: NormalizedSchema,
   project: AngularProjectConfiguration
 ) {
-  const { npmScope } = getWorkspaceLayout(tree);
   const rootOffset = offsetFromRoot(options.libraryOptions.projectRoot);
   const libNames = names(options.libraryOptions.fileName);
   const pathToComponent = options.componentOptions.flat
@@ -25,6 +25,9 @@ export function createFiles(
         options.libraryOptions.fileName,
         options.libraryOptions.fileName
       );
+
+  const version = getInstalledAngularVersion(tree);
+  const { major, minor } = parse(version);
 
   const substitutions = {
     libName: options.libraryOptions.name,
@@ -37,8 +40,9 @@ export function createFiles(
     projectRoot: options.libraryOptions.projectRoot,
     routing: options.libraryOptions.routing,
     pathToComponent,
-    npmScope,
+    importPath: options.libraryOptions.importPath,
     rootOffset,
+    angularPeerDepVersion: `^${major}.${minor}.0`,
     tpl: '',
   };
 

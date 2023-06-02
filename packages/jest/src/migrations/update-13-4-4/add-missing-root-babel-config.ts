@@ -4,8 +4,8 @@ import {
   joinPathFragments,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/devkit/src/generators/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { JestExecutorOptions } from '../../executors/jest/schema';
 import { jestConfigObject } from '../../utils/config/functions';
 import { nxVersion } from '../../utils/versions';

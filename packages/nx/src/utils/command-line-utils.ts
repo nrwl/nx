@@ -29,7 +29,7 @@ export interface NxArgs {
   plain?: boolean;
   projects?: string[];
   select?: string;
-  graph?: boolean;
+  graph?: string | boolean;
   skipNxCache?: boolean;
   outputStyle?: string;
   nxBail?: boolean;
@@ -111,21 +111,6 @@ export function splitArgsIntoNxArgsAndOverrides(
       });
     }
 
-    if (
-      !nxArgs.files &&
-      !nxArgs.uncommitted &&
-      !nxArgs.untracked &&
-      !nxArgs.base &&
-      !nxArgs.head &&
-      !nxArgs.all &&
-      overrides._ &&
-      overrides._.length >= 2
-    ) {
-      throw new Error(
-        `Nx no longer supports using positional arguments for base and head. Please use --base and --head instead.`
-      );
-    }
-
     // Allow setting base and head via environment variables (lower priority then direct command arguments)
     if (!nxArgs.base && process.env.NX_BASE) {
       nxArgs.base = process.env.NX_BASE;
@@ -181,24 +166,14 @@ export function splitArgsIntoNxArgsAndOverrides(
     nxArgs.skipNxCache = process.env.NX_SKIP_NX_CACHE === 'true';
   }
 
-  if (!nxArgs.runner && process.env.NX_RUNNER) {
-    nxArgs.runner = process.env.NX_RUNNER;
-    if (options.printWarnings) {
-      output.note({
-        title: `No explicit --runner argument provided, but found environment variable NX_RUNNER so using its value: ${output.bold(
-          `${nxArgs.runner}`
-        )}`,
-      });
-    }
-  }
+  normalizeNxArgsRunner(nxArgs, nxJson, options);
 
   if (args['parallel'] === 'false' || args['parallel'] === false) {
     nxArgs['parallel'] = 1;
   } else if (
     args['parallel'] === 'true' ||
     args['parallel'] === true ||
-    args['parallel'] === '' ||
-    args['parallel'] === undefined
+    args['parallel'] === ''
   ) {
     nxArgs['parallel'] = Number(
       nxArgs['maxParallel'] || nxArgs['max-parallel'] || 3
@@ -208,6 +183,58 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   return { nxArgs, overrides } as any;
+}
+
+function normalizeNxArgsRunner(
+  nxArgs: RawNxArgs,
+  nxJson: NxJsonConfiguration<string[] | '*'>,
+  options: { printWarnings: boolean }
+) {
+  if (!nxArgs.runner) {
+    // TODO: Remove NX_RUNNER environment variable support in Nx v17
+    for (const envKey of ['NX_TASKS_RUNNER', 'NX_RUNNER']) {
+      const runner = process.env[envKey];
+      if (runner) {
+        const runnerExists = nxJson.tasksRunnerOptions?.[runner];
+        if (options.printWarnings) {
+          if (runnerExists) {
+            output.note({
+              title: `No explicit --runner argument provided, but found environment variable ${envKey} so using its value: ${output.bold(
+                `${runner}`
+              )}`,
+            });
+          } else if (
+            nxArgs.verbose ||
+            process.env.NX_VERBOSE_LOGGING === 'true'
+          ) {
+            output.warn({
+              title: `Could not find ${output.bold(
+                `${runner}`
+              )} within \`nx.json\` tasksRunnerOptions.`,
+              bodyLines: [
+                `${output.bold(`${runner}`)} was set by ${envKey}`,
+                ``,
+                `To suppress this message, either:`,
+                `  - provide a valid task runner with --runner`,
+                `  - ensure NX_TASKS_RUNNER matches a task runner defined in nx.json`,
+              ],
+            });
+          }
+        }
+        if (runnerExists) {
+          // TODO: Remove in v17
+          if (envKey === 'NX_RUNNER' && options.printWarnings) {
+            output.warn({
+              title:
+                'NX_RUNNER is deprecated, please use NX_TASKS_RUNNER instead.',
+            });
+          }
+          nxArgs.runner = runner;
+        }
+        break;
+      }
+    }
+  }
 }
 
 export function parseFiles(options: NxArgs): { files: string[] } {
@@ -245,8 +272,6 @@ export function parseFiles(options: NxArgs): { files: string[] } {
 function getUncommittedFiles(): string[] {
   return parseGitOutput(`git diff --name-only --no-renames --relative HEAD .`);
 }
-
-``;
 
 function getUntrackedFiles(): string[] {
   return parseGitOutput(`git ls-files --others --exclude-standard`);
@@ -295,4 +320,10 @@ export function getProjectRoots(
   { nodes }: ProjectGraph
 ): string[] {
   return projectNames.map((name) => nodes[name].data.root);
+}
+
+export function readGraphFileFromGraphArg({ graph }: NxArgs) {
+  return typeof graph === 'string' && graph !== 'true' && graph !== ''
+    ? graph
+    : undefined;
 }

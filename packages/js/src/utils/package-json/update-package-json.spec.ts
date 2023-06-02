@@ -6,7 +6,7 @@ import {
   UpdatePackageJsonOption,
 } from './update-package-json';
 import { vol } from 'memfs';
-import { DependencyType, ExecutorContext, ProjectGraph } from '@nrwl/devkit';
+import { DependencyType, ExecutorContext, ProjectGraph } from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
@@ -286,6 +286,16 @@ describe('updatePackageJson', () => {
     dependencies: { external1: '~1.0.0', external2: '^4.0.0' },
     devDependencies: { jest: '27' },
   };
+
+  const fileMap = {
+    '@org/lib1': [
+      {
+        file: 'test.ts',
+        hash: '',
+        deps: ['npm:external1', 'npm:external2'],
+      },
+    ],
+  };
   const projectGraph: ProjectGraph = {
     nodes: {
       '@org/lib1': {
@@ -298,24 +308,6 @@ describe('updatePackageJson', () => {
               outputs: ['{workspaceRoot}/dist/libs/lib1'],
             },
           },
-          files: [
-            {
-              file: 'test.ts',
-              hash: '',
-              dependencies: [
-                {
-                  type: DependencyType.static,
-                  target: 'npm:external1',
-                  source: '@org/lib1',
-                },
-                {
-                  type: DependencyType.static,
-                  target: 'npm:external2',
-                  source: '@org/lib1',
-                },
-              ],
-            },
-          ],
         },
       },
     },
@@ -378,14 +370,14 @@ describe('updatePackageJson', () => {
       main: 'libs/lib1/main.ts',
     };
     const dependencies: DependentBuildableProjectNode[] = [];
-    updatePackageJson(options, context, undefined, dependencies);
+    updatePackageJson(options, context, undefined, dependencies, fileMap);
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson).toMatchInlineSnapshot(`
-      Object {
+      {
         "main": "./main.js",
         "name": "@org/lib1",
         "types": "./main.d.ts",
@@ -431,17 +423,17 @@ describe('updatePackageJson', () => {
       updateBuildableProjectDepsInPackageJson: true,
     };
     const dependencies: DependentBuildableProjectNode[] = [];
-    updatePackageJson(options, context, undefined, dependencies);
+    updatePackageJson(options, context, undefined, dependencies, fileMap);
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson).toMatchInlineSnapshot(`
-      Object {
-        "dependencies": Object {
-          "external1": "1.0.0",
-          "external2": "4.5.6",
+      {
+        "dependencies": {
+          "external1": "~1.0.0",
+          "external2": "^4.0.0",
         },
         "main": "./main.js",
         "name": "@org/lib1",

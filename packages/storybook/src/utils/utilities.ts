@@ -1,15 +1,9 @@
-import {
-  readJson,
-  readJsonFile,
-  TargetConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import { TargetConfiguration, Tree } from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
-import { storybookVersion } from './versions';
 import { statSync } from 'fs';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nx/js';
 import ts = require('typescript');
-import { gte, lt, major } from 'semver';
+import { major } from 'semver';
 import { join } from 'path';
 
 export const Constants = {
@@ -20,16 +14,6 @@ export const Constants = {
   },
   jsonIndentLevel: 2,
   coreAddonPrefix: '@storybook/addon-',
-  uiFrameworks: {
-    angular: '@storybook/angular',
-    react: '@storybook/react',
-    html: '@storybook/html',
-    'web-components': '@storybook/web-components',
-    vue: '@storybook/vue',
-    vue3: '@storybook/vue3',
-    svelte: '@storybook/svelte',
-    'react-native': '@storybook/react-native',
-  } as const,
   uiFrameworks7: [
     '@storybook/angular',
     '@storybook/html-webpack5',
@@ -51,26 +35,25 @@ export const Constants = {
 };
 type Constants = typeof Constants;
 
-type Framework = {
-  type: keyof Constants['uiFrameworks'];
-  uiFramework: Constants['uiFrameworks'][keyof Constants['uiFrameworks']];
-};
-
-export function isStorybookV7() {
-  const storybookPackageVersion = require(join(
-    '@storybook/core-server',
-    'package.json'
-  )).version;
-  return gte(storybookPackageVersion, '7.0.0-alpha.0');
-}
-
-export function storybookMajorVersion() {
+export function storybookMajorVersion(): number | undefined {
   try {
     const storybookPackageVersion = require(join(
       '@storybook/core-server',
       'package.json'
     )).version;
     return major(storybookPackageVersion);
+  } catch {
+    return undefined;
+  }
+}
+
+export function getInstalledStorybookVersion(): string | undefined {
+  try {
+    const storybookPackageVersion = require(join(
+      '@storybook/core-server',
+      'package.json'
+    )).version;
+    return storybookPackageVersion;
   } catch {
     return undefined;
   }
@@ -83,62 +66,6 @@ export function safeFileDelete(tree: Tree, path: string): boolean {
   } else {
     return false;
   }
-}
-
-export function readCurrentWorkspaceStorybookVersionFromGenerator(
-  tree: Tree
-): string {
-  const packageJsonContents = readJson(tree, 'package.json');
-  return determineStorybookWorkspaceVersion(packageJsonContents);
-}
-
-export function readCurrentWorkspaceStorybookVersionFromExecutor() {
-  const packageJsonContents = readJsonFile('package.json');
-  return determineStorybookWorkspaceVersion(packageJsonContents);
-}
-
-function determineStorybookWorkspaceVersion(packageJsonContents) {
-  let workspaceStorybookVersion = storybookVersion;
-
-  if (packageJsonContents && packageJsonContents['devDependencies']) {
-    if (packageJsonContents['devDependencies']['@storybook/angular']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/angular'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/react']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/react'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/core']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/core'];
-    }
-    if (packageJsonContents['devDependencies']['@storybook/react-native']) {
-      workspaceStorybookVersion =
-        packageJsonContents['devDependencies']['@storybook/react-native'];
-    }
-  }
-
-  if (packageJsonContents && packageJsonContents['dependencies']) {
-    if (packageJsonContents['dependencies']['@storybook/angular']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/angular'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/react']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/react'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/core']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/core'];
-    }
-    if (packageJsonContents['dependencies']['@storybook/react-native']) {
-      workspaceStorybookVersion =
-        packageJsonContents['dependencies']['@storybook/react-native'];
-    }
-  }
-
-  return workspaceStorybookVersion;
 }
 
 export type TsConfig = {
@@ -161,7 +88,7 @@ export function storybookConfigExistsCheck(
       `Could not find Storybook configuration for project ${projectName}.
       Please generate Storybook configuration using the following command:
 
-      nx g @nrwl/storybook:configuration --name=${projectName}
+      nx g @nx/storybook:configuration --name=${projectName}
       `
     );
   }
@@ -193,7 +120,20 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
   } = {};
 
   const arrayOfBuilders = [
-    '@nxext/vite:build',
+    '@nx/js:babel',
+    '@nx/js:swc',
+    '@nx/js:tsc',
+    '@nx/webpack:webpack',
+    '@nx/rollup:rollup',
+    '@nx/vite:build',
+    '@nx/angular:ng-packagr-lite',
+    '@nx/angular:package',
+    '@nx/angular:webpack-browser',
+    '@nx/esbuild:esbuild',
+    '@nx/next:build',
+    '@nx/react-native:bundle',
+    '@nx/react-native:build-android',
+    '@nx/react-native:bundle',
     '@nrwl/js:babel',
     '@nrwl/js:swc',
     '@nrwl/js:tsc',
@@ -204,12 +144,13 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     '@nrwl/angular:ng-packagr-lite',
     '@nrwl/angular:package',
     '@nrwl/angular:webpack-browser',
-    '@angular-devkit/build-angular:browser',
     '@nrwl/esbuild:esbuild',
     '@nrwl/next:build',
     '@nrwl/react-native:bundle',
     '@nrwl/react-native:build-android',
     '@nrwl/react-native:bundle',
+    '@nxext/vite:build',
+    '@angular-devkit/build-angular:browser',
   ];
 
   for (const target in targets) {
@@ -218,10 +159,10 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
         targets[target].executor === '@angular-devkit/build-angular:browser'
       ) {
         /**
-         * Not looking for '@nrwl/angular:ng-packagr-lite' or any other
-         * @nrwl/angular:* executors.
+         * Not looking for '@nx/angular:ng-packagr-lite' or any other
+         * @nx/angular:* executors.
          * Only looking for '@angular-devkit/build-angular:browser'
-         * because the '@nrwl/angular:ng-packagr-lite' executor
+         * because the '@nx/angular:ng-packagr-lite' executor
          * (and maybe the other custom executors)
          * does not support styles and extra options, so the user
          * will be forced to switch to build-storybook to add extra options.
@@ -240,11 +181,13 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
       returnObject.compiler = targets[target].options?.compiler;
     } else if (
       targets[target].executor === '@storybook/angular:start-storybook' ||
-      targets[target].executor === '@nrwl/storybook:storybook'
+      targets[target].executor === '@nrwl/storybook:storybook' ||
+      targets[target].executor === '@nx/storybook:storybook'
     ) {
       returnObject.storybookTarget = target;
     } else if (
       targets[target].executor === '@storybook/angular:build-storybook' ||
+      targets[target].executor === '@nx/storybook:build' ||
       targets[target].executor === '@nrwl/storybook:build'
     ) {
       returnObject.storybookBuildTarget = target;
@@ -314,4 +257,13 @@ export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
   );
 
   return source;
+}
+
+export function pleaseUpgrade(): string {
+  return `
+    Storybook 6 is no longer maintained. Please upgrade to Storybook 7.
+
+    Here is a guide on how to upgrade:
+    https://nx.dev/packages/storybook/generators/migrate-7
+    `;
 }

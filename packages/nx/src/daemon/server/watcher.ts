@@ -18,13 +18,14 @@ import {
   getIgnoreObject,
 } from '../../utils/ignore';
 import { platform } from 'os';
-import { serverProcessJsonPath } from '../cache';
+import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
+import type { WatchEvent } from '../../native';
 
 const ALWAYS_IGNORE = [...getAlwaysIgnore(workspaceRoot), FULL_OS_SOCKET_PATH];
 
 export type FileWatcherCallback = (
-  err: Error | null,
-  changeEvents: Event[] | null
+  err: Error | string | null,
+  changeEvents: Event[] | WatchEvent[] | null
 ) => Promise<void>;
 
 export async function subscribeToOutputsChanges(
@@ -52,12 +53,75 @@ export async function subscribeToOutputsChanges(
   );
 }
 
+export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
+  const { Watcher } = await import('../../native');
+
+  let relativeServerProcess = normalizePath(
+    relative(workspaceRoot, serverProcessJsonPath)
+  );
+
+  let watcher = new Watcher(workspaceRoot, [`!${relativeServerProcess}`]);
+  watcher.watch((err, events) => {
+    if (err) {
+      return cb(err, null);
+    }
+
+    for (const event of events) {
+      if (
+        event.path == relativeServerProcess &&
+        getDaemonProcessIdSync() !== process.pid
+      ) {
+        handleServerProcessTermination({
+          server,
+          reason: 'this process is no longer the current daemon (native)',
+        });
+      }
+
+      if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
+        // If the ignore files themselves have changed we need to dynamically update our cached ignoreGlobs
+        handleServerProcessTermination({
+          server,
+          reason:
+            'Stopping the daemon the set of ignored files changed (native)',
+        });
+      }
+    }
+
+    cb(null, events);
+  });
+
+  return watcher;
+}
+
+export async function watchOutputFiles(cb: FileWatcherCallback) {
+  const { Watcher } = await import('../../native');
+
+  let watcher = new Watcher(workspaceRoot, null, false);
+  watcher.watch((err, events) => {
+    if (err) {
+      return cb(err, null);
+    }
+
+    for (const event of events) {
+      if (
+        event.path.startsWith('.git') ||
+        event.path.includes('node_modules')
+      ) {
+        return;
+      }
+    }
+
+    cb(null, events);
+  });
+  return watcher;
+}
+
 export async function subscribeToWorkspaceChanges(
   server: Server,
   cb: FileWatcherCallback
 ): Promise<AsyncSubscription> {
   /**
-   * The imports and exports of @nrwl/workspace are somewhat messy and far reaching across the repo (and beyond),
+   * The imports and exports of @nx/workspace are somewhat messy and far reaching across the repo (and beyond),
    * and so it is much safer for us to lazily load here `@parcel/watcher` so that its inclusion is not inadvertently
    * executed by packages which do not have its necessary native binaries available.
    */
@@ -81,7 +145,7 @@ export async function subscribeToWorkspaceChanges(
           path: normalizePath(relative(workspaceRoot, event.path)),
         };
         if (
-          workspaceRelativeEvent.path === '.gitignore' ||
+          workspaceRelativeEvent.path.endsWith('.gitignore') ||
           workspaceRelativeEvent.path === '.nxignore'
         ) {
           hasIgnoreFileUpdate = true;
@@ -123,7 +187,8 @@ export async function subscribeToServerProcessJsonChanges(
           cb();
         }
       }
-    }
+    },
+    watcherOptions([])
   );
 }
 

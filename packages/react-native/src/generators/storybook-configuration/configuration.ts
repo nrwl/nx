@@ -1,13 +1,19 @@
 import {
+  addDependenciesToPackageJson,
   convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { nxVersion } from '../../utils/versions';
+} from '@nx/devkit';
+import {
+  nxVersion,
+  reactNativeAsyncStorageVersion,
+  reactNativeSafeAreaContextVersion,
+} from '../../utils/versions';
 
 import storiesGenerator from '../stories/stories';
 import { addResolverMainFieldsToMetroConfig } from './lib/add-resolver-main-fields-to-metro-config';
@@ -29,8 +35,8 @@ export async function storybookConfigurationGenerator(
   schema: StorybookConfigureSchema
 ): Promise<GeneratorCallback> {
   const { configurationGenerator } = ensurePackage<
-    typeof import('@nrwl/storybook')
-  >('@nrwl/storybook', nxVersion);
+    typeof import('@nx/storybook')
+  >('@nx/storybook', nxVersion);
 
   const installTask = await configurationGenerator(host, {
     name: schema.name,
@@ -43,6 +49,16 @@ export async function storybookConfigurationGenerator(
     skipFormat: true,
   });
 
+  const installRequiredPackagesTask = await addDependenciesToPackageJson(
+    host,
+    {},
+    {
+      '@react-native-async-storage/async-storage':
+        reactNativeAsyncStorageVersion,
+      'react-native-safe-area-context': reactNativeSafeAreaContextVersion,
+    }
+  );
+
   addStorybookTask(host, schema.name);
   createStorybookFiles(host, schema);
   replaceAppImportWithStorybookToggle(host, schema);
@@ -53,18 +69,17 @@ export async function storybookConfigurationGenerator(
   }
 
   await formatFiles(host);
-  return installTask;
+  return runTasksInSerial(installTask, installRequiredPackagesTask);
 }
 
 function addStorybookTask(host: Tree, projectName: string) {
   const projectConfig = readProjectConfiguration(host, projectName);
   projectConfig.targets['storybook'] = {
-    executor: '@nrwl/react-native:storybook',
+    executor: '@nx/react-native:storybook',
     options: {
-      searchDir: [projectConfig.root],
+      searchDir: [projectConfig.sourceRoot],
       outputFile: './.storybook/story-loader.js',
       pattern: '**/*.stories.@(js|jsx|ts|tsx|md)',
-      silent: false,
     },
   };
 

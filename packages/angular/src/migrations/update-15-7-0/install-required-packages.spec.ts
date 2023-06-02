@@ -1,13 +1,13 @@
 // mock stuff that relies or make changes to the filesystem
 jest.mock('child_process');
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
   getPackageManagerCommand: jest.fn(() => ({ install: '' })),
   writeJsonFile: jest.fn(),
 }));
 
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, updateJson } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { readJson, updateJson } from '@nx/devkit';
 import installRequiredPackages from './install-required-packages';
 
 describe('installed-required-packages', () => {
@@ -30,12 +30,12 @@ describe('installed-required-packages', () => {
     // ASSERT
     const pkgJson = readJson(tree, 'package.json');
     expect(pkgJson.dependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular/core": "~15.0.0",
       }
     `);
     expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular-devkit/build-angular": "~15.0.0",
         "@angular-devkit/core": "~15.0.0",
         "@angular-devkit/schematics": "~15.0.0",
@@ -63,12 +63,12 @@ describe('installed-required-packages', () => {
     // ASSERT
     const pkgJson = readJson(tree, 'package.json');
     expect(pkgJson.dependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular/core": "~14.0.0",
       }
     `);
     expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular-devkit/build-angular": "~14.0.0",
         "@angular-devkit/core": "~14.0.0",
         "@angular-devkit/schematics": "~14.0.0",
@@ -99,12 +99,12 @@ describe('installed-required-packages', () => {
     // ASSERT
     const pkgJson = readJson(tree, 'package.json');
     expect(pkgJson.dependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular/core": "~15.0.0",
       }
     `);
     expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular-devkit/build-angular": "~15.0.0",
         "@angular-devkit/core": "~15.0.0",
         "@angular-devkit/schematics": "~15.0.0",
@@ -135,12 +135,12 @@ describe('installed-required-packages', () => {
     // ASSERT
     const pkgJson = readJson(tree, 'package.json');
     expect(pkgJson.dependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular/core": "~14.0.0",
       }
     `);
     expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular-devkit/build-angular": "~14.0.0",
         "@angular-devkit/core": "~14.0.0",
         "@angular-devkit/schematics": "~14.0.0",
@@ -170,12 +170,12 @@ describe('installed-required-packages', () => {
     // ASSERT
     const pkgJson = readJson(tree, 'package.json');
     expect(pkgJson.dependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular/core": "~15.0.0",
       }
     `);
     expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular-devkit/build-angular": "~15.0.0",
         "@angular-devkit/core": "~15.0.0",
         "@angular-devkit/schematics": "~15.0.0",
@@ -205,12 +205,12 @@ describe('installed-required-packages', () => {
     // ASSERT
     const pkgJson = readJson(tree, 'package.json');
     expect(pkgJson.dependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular/core": "~14.0.0",
       }
     `);
     expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
-      Object {
+      {
         "@angular-devkit/build-angular": "~14.0.0",
         "@angular-devkit/core": "~14.0.0",
         "@angular-devkit/schematics": "~14.0.0",

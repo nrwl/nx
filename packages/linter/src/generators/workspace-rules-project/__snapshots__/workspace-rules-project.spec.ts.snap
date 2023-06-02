@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nrwl/linter:workspace-rules-project should generate the required files 1`] = `
+exports[`@nx/linter:workspace-rules-project should generate the required files 1`] = `
 "/**
  * Import your custom workspace rules at the top of this file.
  *
@@ -12,7 +12,7 @@ exports[`@nrwl/linter:workspace-rules-project should generate the required files
  * following generator command and provide your desired rule name:
  *
  * \`\`\`sh
- * npx nx g @nrwl/linter:workspace-rule {{ NEW_RULE_NAME }}
+ * npx nx g @nx/linter:workspace-rule {{ NEW_RULE_NAME }}
  * \`\`\`
  */
 
@@ -31,59 +31,59 @@ module.exports = {
 "
 `;
 
-exports[`@nrwl/linter:workspace-rules-project should generate the required files 2`] = `
+exports[`@nx/linter:workspace-rules-project should generate the required files 2`] = `
 "{
-  \\"extends\\": \\"../../tsconfig.base.json\\",
-  \\"compilerOptions\\": {
-    \\"module\\": \\"commonjs\\"
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs"
   },
-  \\"files\\": [],
-  \\"include\\": [],
-  \\"references\\": [
+  "files": [],
+  "include": [],
+  "references": [
     {
-      \\"path\\": \\"./tsconfig.lint.json\\"
+      "path": "./tsconfig.lint.json"
     },
     {
-      \\"path\\": \\"./tsconfig.spec.json\\"
+      "path": "./tsconfig.spec.json"
     }
   ]
 }
 "
 `;
 
-exports[`@nrwl/linter:workspace-rules-project should generate the required files 3`] = `
+exports[`@nx/linter:workspace-rules-project should generate the required files 3`] = `
 "{
-  \\"extends\\": \\"./tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"outDir\\": \\"../../dist/out-tsc\\",
-    \\"types\\": [\\"node\\"]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": ["node"]
   },
-  \\"exclude\\": [\\"**/*.spec.ts\\"],
-  \\"include\\": [\\"**/*.ts\\"]
+  "exclude": ["**/*.spec.ts"],
+  "include": ["**/*.ts"]
 }
 "
 `;
 
-exports[`@nrwl/linter:workspace-rules-project should generate the required files 4`] = `
+exports[`@nx/linter:workspace-rules-project should generate the required files 4`] = `
 "{
-  \\"extends\\": \\"./tsconfig.json\\",
-  \\"compilerOptions\\": {
-    \\"outDir\\": \\"../../dist/out-tsc\\",
-    \\"module\\": \\"commonjs\\",
-    \\"types\\": [\\"jest\\", \\"node\\"]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "module": "commonjs",
+    "types": ["jest", "node"]
   },
-  \\"include\\": [\\"jest.config.ts\\", \\"**/*.test.ts\\", \\"**/*.spec.ts\\", \\"**/*.d.ts\\"]
+  "include": ["jest.config.ts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"]
 }
 "
 `;
 
-exports[`@nrwl/linter:workspace-rules-project should generate the required files 5`] = `
+exports[`@nx/linter:workspace-rules-project should generate the required files 5`] = `
 "/* eslint-disable */
 export default {
   displayName: 'eslint-rules',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/tools/eslint-rules',

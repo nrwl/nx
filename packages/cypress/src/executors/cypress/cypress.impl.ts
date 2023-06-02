@@ -9,7 +9,7 @@ import {
   Target,
   targetToTargetString,
   output,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import 'dotenv/config';
 import { existsSync, readdirSync, unlinkSync, writeFileSync } from 'fs';
 import { basename, dirname, join } from 'path';
@@ -47,11 +47,12 @@ export interface CypressExecutorOptions extends Json {
   group?: string;
   ignoreTestFiles?: string;
   reporter?: string;
-  reporterOptions?: string;
+  reporterOptions?: string | Json;
   skipServe?: boolean;
   testingType?: 'component' | 'e2e';
   tag?: string;
   port?: number | 'cypress-auto';
+  quiet?: boolean;
 }
 
 interface NormalizedCypressExecutorOptions extends CypressExecutorOptions {
@@ -291,6 +292,9 @@ async function runCypress(
   if (opts.reporterOptions) {
     options.reporterOptions = opts.reporterOptions;
   }
+  if (opts.quiet) {
+    options.quiet = opts.quiet;
+  }
 
   options.testingType = opts.testingType;
 
@@ -417,7 +421,7 @@ ${e.message || e}`);
   let targetHasOpt = Object.keys(targetOpts).includes(property);
 
   if (!targetHasOpt) {
-    // NOTE: readTargetOptions doesn't apply non defaulted values, i.e. @nrwl/vite has a port options but is optional
+    // NOTE: readTargetOptions doesn't apply non defaulted values, i.e. @nx/vite has a port options but is optional
     // so we double check the schema if readTargetOptions didn't return a value for the property
     const projectConfig =
       context.projectsConfigurations?.projects?.[target.project];

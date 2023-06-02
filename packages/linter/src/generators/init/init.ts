@@ -1,4 +1,4 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   readNxJson,
@@ -6,7 +6,7 @@ import {
   updateJson,
   updateNxJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   eslintConfigPrettierVersion,
   eslintVersion,
@@ -53,7 +53,7 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
   }
 
   if (!options.skipPackageJson) {
-    removeDependenciesFromPackageJson(tree, ['@nrwl/linter'], []);
+    removeDependenciesFromPackageJson(tree, ['@nx/linter'], []);
   }
 
   writeJson(
@@ -80,8 +80,8 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
         tree,
         {},
         {
-          '@nrwl/linter': nxVersion,
-          '@nrwl/eslint-plugin-nx': nxVersion,
+          '@nx/linter': nxVersion,
+          '@nx/eslint-plugin': nxVersion,
           '@typescript-eslint/parser': typescriptESLintVersion,
           '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
           eslint: eslintVersion,

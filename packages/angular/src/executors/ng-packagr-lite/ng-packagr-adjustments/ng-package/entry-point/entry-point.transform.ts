@@ -5,7 +5,7 @@
  * - Removed writing bundles as we don't generate them for incremental builds.
  */
 
-import { logger } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
 import { STATE_DONE } from 'ng-packagr/lib/graph/node';
 import { isInProgress } from 'ng-packagr/lib/graph/select';
 import type { Transform } from 'ng-packagr/lib/graph/transform';
@@ -32,8 +32,8 @@ import { pipe } from 'rxjs';
  * The transformation pipeline is pluggable through the dependency injection system.
  * Sub-transformations are passed to this factory function as arguments.
  *
- * @param compileTs Transformation compiling typescript sources to ES2020 modules.
- * @param writePackage Transformation writing a distribution-ready `package.json` (for publishing to npm registry).
+ * @param compileTs Transformation compiling typescript sources to ES2022 modules.
+ * @param writeBundles Transformation flattening ES2022 modules to ESM2022, UMD, and minified UMD.
  */
 export const nxEntryPointTransformFactory = (
   compileTs: Transform,

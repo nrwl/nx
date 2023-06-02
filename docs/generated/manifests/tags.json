@@ -162,13 +162,6 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/plugins/project-graph-plugins",
-      "id": "project-graph-plugins",
-      "name": "Project Graph Plugins",
-      "path": "/recipes/advanced-plugins/project-graph-plugins"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/analyze-source-files",
       "id": "analyze-source-files",
       "name": "Disable Graph Links Created from Analyzing Source Files",
@@ -187,6 +180,13 @@
       "id": "resolve-circular-dependencies",
       "name": "Resolve Circular Dependencies",
       "path": "/recipes/other/resolve-circular-dependencies"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/project-graph-plugins",
+      "id": "project-graph-plugins",
+      "name": "Modify the Project Graph",
+      "path": "/plugins/recipes/project-graph-plugins"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -473,20 +473,6 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/plugins/local-executors",
-      "id": "creating-custom-executors",
-      "name": "Local Executors",
-      "path": "/recipes/executors/creating-custom-executors"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/compose-executors",
-      "id": "compose-executors",
-      "name": "Compose Executors",
-      "path": "/recipes/executors/compose-executors"
-    },
-    {
-      "description": "",
       "file": "shared/guides/module-federation/faster-builds",
       "id": "faster-builds",
       "name": "Faster Builds with Module Federation",
@@ -512,6 +498,20 @@
       "id": "performance-profiling",
       "name": "Profiling Build Performance",
       "path": "/recipes/other/performance-profiling"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/local-executors",
+      "id": "local-executors",
+      "name": "Write a Simple Executor",
+      "path": "/plugins/recipes/local-executors"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/compose-executors",
+      "id": "compose-executors",
+      "name": "Compose Executors",
+      "path": "/plugins/recipes/compose-executors"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -561,36 +561,36 @@
       "description": "",
       "file": "shared/recipes/generators/local-generators",
       "id": "local-generators",
-      "name": "Local Generators",
-      "path": "/recipes/generators/local-generators"
+      "name": "Write a Simple Generator",
+      "path": "/plugins/recipes/local-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/composing-generators",
       "id": "composing-generators",
-      "name": "Composing Generators",
-      "path": "/recipes/generators/composing-generators"
+      "name": "Compose Generators",
+      "path": "/plugins/recipes/composing-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/generator-options",
       "id": "generator-options",
-      "name": "Generator Options",
-      "path": "/recipes/generators/generator-options"
+      "name": "Provide Options for Generators",
+      "path": "/plugins/recipes/generator-options"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/creating-files",
       "id": "creating-files",
-      "name": "Creating Files",
-      "path": "/recipes/generators/creating-files"
+      "name": "Create Files",
+      "path": "/plugins/recipes/creating-files"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/modifying-files",
       "id": "modifying-files",
-      "name": "Modifying Files",
-      "path": "/recipes/generators/modifying-files"
+      "name": "Modify Files",
+      "path": "/plugins/recipes/modifying-files"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -598,78 +598,6 @@
       "id": "generate",
       "name": "generate",
       "path": "/packages/nx/documents/generate"
-    }
-  ],
-  "create-your-own-plugin": [
-    {
-      "description": "",
-      "file": "shared/plugin-features/create-your-own-plugin",
-      "id": "create-your-own-plugin",
-      "name": "Create Your Own Plugin",
-      "path": "/plugin-features/create-your-own-plugin"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/nx-devkit-angular-devkit",
-      "id": "nx-devkit-angular-devkit",
-      "name": "Nx Devkit and Angular Devkit",
-      "path": "/more-concepts/nx-devkit-angular-devkit"
-    },
-    {
-      "description": "",
-      "file": "",
-      "id": "packages-devkit",
-      "name": "Nx Devkit",
-      "path": "/packages/devkit/documents/nrwl_devkit"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/local-executors",
-      "id": "creating-custom-executors",
-      "name": "Local Executors",
-      "path": "/recipes/executors/creating-custom-executors"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/generators/local-generators",
-      "id": "local-generators",
-      "name": "Local Generators",
-      "path": "/recipes/generators/local-generators"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/share-your-plugin",
-      "id": "share-your-plugin",
-      "name": "Share Your Plugin",
-      "path": "/recipes/advanced-plugins/share-your-plugin"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/create-preset",
-      "id": "create-preset",
-      "name": "Create a Preset",
-      "path": "/recipes/advanced-plugins/create-preset"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/migration-generators",
-      "id": "migration-generators",
-      "name": "Migration Generators",
-      "path": "/recipes/advanced-plugins/migration-generators"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/project-graph-plugins",
-      "id": "project-graph-plugins",
-      "name": "Project Graph Plugins",
-      "path": "/recipes/advanced-plugins/project-graph-plugins"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/project-inference-plugins",
-      "id": "project-inference-plugins",
-      "name": "Project Inference Plugins",
-      "path": "/recipes/advanced-plugins/project-inference-plugins"
     }
   ],
   "intro": [
@@ -686,6 +614,50 @@
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
+    }
+  ],
+  "create-your-own-plugin": [
+    {
+      "description": "",
+      "file": "shared/guides/nx-devkit-angular-devkit",
+      "id": "nx-devkit-angular-devkit",
+      "name": "Nx Devkit and Angular Devkit",
+      "path": "/more-concepts/nx-devkit-angular-devkit"
+    },
+    {
+      "description": "",
+      "file": "",
+      "id": "packages-devkit",
+      "name": "Nx Devkit",
+      "path": "/packages/devkit/documents/nx_devkit"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/migration-generators",
+      "id": "migration-generators",
+      "name": "Write a Migration",
+      "path": "/plugins/recipes/migration-generators"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/create-preset",
+      "id": "create-preset",
+      "name": "Create a Preset",
+      "path": "/plugins/recipes/create-preset"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/project-graph-plugins",
+      "id": "project-graph-plugins",
+      "name": "Modify the Project Graph",
+      "path": "/plugins/recipes/project-graph-plugins"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/project-inference-plugins",
+      "id": "project-inference-plugins",
+      "name": "Identify Custom Projects",
+      "path": "/plugins/recipes/project-inference-plugins"
     }
   ],
   "environment-variables": [
@@ -833,14 +805,14 @@
       "description": "",
       "file": "shared/recipes/deployment/node-server-fly-io",
       "id": "node-server-fly-io",
-      "name": "Deploying a Node.js server to Fly.io",
+      "name": "Deploying a Node App to Fly.io",
       "path": "/recipes/deployment/node-server-fly-io"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-serverless-functions-netlify",
       "id": "node-serverless-functions-netlify",
-      "name": "Deploying Node.js serverless functions to Netlify",
+      "name": "Add and Deploy Netlify Edge Functions with Node",
       "path": "/recipes/deployment/node-serverless-functions-netlify"
     },
     {
@@ -859,10 +831,10 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/deployment/deno-netlify",
-      "id": "deno-netlify",
-      "name": "Serverless deployment with Deno and Netlify",
-      "path": "/recipes/deployment/deno-netlify"
+      "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+      "id": "deno-netlify-functions",
+      "name": "Add and Deploy Netlify Edge Functions with Deno",
+      "path": "/recipes/deployment/deno-netlify-functions"
     }
   ],
   "node": [
@@ -870,14 +842,14 @@
       "description": "",
       "file": "shared/recipes/deployment/node-server-fly-io",
       "id": "node-server-fly-io",
-      "name": "Deploying a Node.js server to Fly.io",
+      "name": "Deploying a Node App to Fly.io",
       "path": "/recipes/deployment/node-server-fly-io"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-serverless-functions-netlify",
       "id": "node-serverless-functions-netlify",
-      "name": "Deploying Node.js serverless functions to Netlify",
+      "name": "Add and Deploy Netlify Edge Functions with Node",
       "path": "/recipes/deployment/node-serverless-functions-netlify"
     },
     {
@@ -898,10 +870,10 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/deployment/deno-netlify",
-      "id": "deno-netlify",
-      "name": "Serverless deployment with Deno and Netlify",
-      "path": "/recipes/deployment/deno-netlify"
+      "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+      "id": "deno-netlify-functions",
+      "name": "Add and Deploy Netlify Edge Functions with Deno",
+      "path": "/recipes/deployment/deno-netlify-functions"
     }
   ],
   "workspace-watching": [

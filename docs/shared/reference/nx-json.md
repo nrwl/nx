@@ -34,7 +34,7 @@ The following is an expanded version showing all options. Your `nx.json` will li
     }
   },
   "generators": {
-    "@nrwl/js:library": {
+    "@nx/js:library": {
       "buildable": true
     }
   },
@@ -166,7 +166,7 @@ When defining any options or configurations inside of a target default, you may 
 ```json {% fileName="nx.json" %}
 {
   "targetDefaults": {
-    "@nrwl/js:tsc": {
+    "@nx/js:tsc": {
       "options": {
         "main": "{projectRoot}/src/index.ts"
       },
@@ -187,7 +187,7 @@ When defining any options or configurations inside of a target default, you may 
 ```
 
 {% callout type="note" title="Target Default Priority" %}
-Note that the inputs and outputs are respecified on the @nrwl/js:tsc default configuration. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nrwl/js:tsc]` if the target configuration for build uses the @nrwl/js:tsc executor. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
+Note that the inputs and outputs are respecified on the @nx/js:tsc default configuration. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for build uses the @nx/js:tsc executor. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
 {% /callout %}
 
 ### Generators
@@ -198,7 +198,7 @@ pass `--buildable=true` when creating new libraries.
 ```json {% fileName="nx.json" %}
 {
   "generators": {
-    "@nrwl/js:library": {
+    "@nx/js:library": {
       "buildable": true
     }
   }
@@ -210,20 +210,20 @@ pass `--buildable=true` when creating new libraries.
 > A task is an invocation of a target.
 
 Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx affected`, and so on. The tasks runner
-named "default" is used by default. Specify a different one like this `nx run-many --target=build --all --runner=another`.
+named "default" is used by default. Specify a different one like this `nx run-many -t build --all --runner=another`.
 
 Tasks runners can accept different options. The following are the options supported
-by `"nx/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
+by `"nx/tasks-runners/default"` and `"nx-cloud"`.
 
-| Property                | Description                                                                                                                                                                                                                                                                                                                                   |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| cacheableOperations     | defines the list of targets/operations that are cached by Nx                                                                                                                                                                                                                                                                                  |
-| parallel                | defines the max number of targets ran in parallel (in older versions of Nx you had to pass `--parallel --maxParallel=3` instead of `--parallel=3`)                                                                                                                                                                                            |
-| captureStderr           | defines whether the cache captures stderr or just stdout                                                                                                                                                                                                                                                                                      |
-| skipNxCache             | defines whether the Nx Cache should be skipped (defaults to `false`)                                                                                                                                                                                                                                                                          |
-| cacheDirectory          | defines where the local cache is stored (defaults to `node_modules/.cache/nx`)                                                                                                                                                                                                                                                                |
-| encryptionKey           | (when using `"@nrwl/nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
-| selectivelyHashTsConfig | only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                                                                              |
+| Property                | Description                                                                                                                                                                                                                                                                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cacheableOperations     | defines the list of targets/operations that are cached by Nx                                                                                                                                                                                                                                                                            |
+| parallel                | defines the max number of targets ran in parallel (in older versions of Nx you had to pass `--parallel --maxParallel=3` instead of `--parallel=3`)                                                                                                                                                                                      |
+| captureStderr           | defines whether the cache captures stderr or just stdout                                                                                                                                                                                                                                                                                |
+| skipNxCache             | defines whether the Nx Cache should be skipped (defaults to `false`)                                                                                                                                                                                                                                                                    |
+| cacheDirectory          | defines where the local cache is stored (defaults to `node_modules/.cache/nx`)                                                                                                                                                                                                                                                          |
+| encryptionKey           | (when using `"nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
+| selectivelyHashTsConfig | only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                                                                        |
 
 You can configure `parallel` in `nx.json`, but you can also pass them in the
-terminal `nx run-many --target=test --parallel=5`.
+terminal `nx run-many -t test --parallel=5`.

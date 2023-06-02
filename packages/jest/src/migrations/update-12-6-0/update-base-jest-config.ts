@@ -1,4 +1,4 @@
-import { formatFiles, Tree } from '@nrwl/devkit';
+import { formatFiles, Tree } from '@nx/devkit';
 import { jestConfigObject } from '../../utils/config/functions';
 import { getJestProjects } from '../../utils/config/get-jest-projects';
 import {
@@ -51,7 +51,7 @@ function updateBaseJestConfig(
   addImportStatementToJestConfig(
     tree,
     baseJestConfigPath,
-    `const { getJestProjects } = require('@nrwl/jest');`
+    `const { getJestProjects } = require('@nx/jest');`
   );
   return;
 }

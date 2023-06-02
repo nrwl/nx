@@ -10,7 +10,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Node Applications + webpack', () => {
   let proj: string;
@@ -64,21 +64,19 @@ describe('Node Applications + webpack', () => {
     const expressApp = uniq('expressapp');
     const fastifyApp = uniq('fastifyapp');
     const koaApp = uniq('koaapp');
-    const nestApp = uniq('koaapp');
+    const nestApp = uniq('nest');
 
-    runCLI(`generate @nrwl/node:lib ${testLib1}`);
-    runCLI(`generate @nrwl/node:lib ${testLib2} --importPath=@acme/test2`);
+    runCLI(`generate @nx/node:lib ${testLib1}`);
+    runCLI(`generate @nx/node:lib ${testLib2} --importPath=@acme/test2`);
     runCLI(
-      `generate @nrwl/node:app ${expressApp} --framework=express --no-interactive`
+      `generate @nx/node:app ${expressApp} --framework=express --no-interactive`
     );
     runCLI(
-      `generate @nrwl/node:app ${fastifyApp} --framework=fastify --no-interactive`
+      `generate @nx/node:app ${fastifyApp} --framework=fastify --no-interactive`
     );
+    runCLI(`generate @nx/node:app ${koaApp} --framework=koa --no-interactive`);
     runCLI(
-      `generate @nrwl/node:app ${koaApp} --framework=koa --no-interactive`
-    );
-    runCLI(
-      `generate @nrwl/node:app ${nestApp} --framework=nest --bundler=webpack --no-interactive`
+      `generate @nx/node:app ${nestApp} --framework=nest --bundler=webpack --no-interactive`
     );
 
     // Use esbuild by default
@@ -100,7 +98,22 @@ describe('Node Applications + webpack', () => {
     expect(() => runCLI(`lint ${nestApp}-e2e`)).not.toThrow();
 
     // Only Fastify generates with unit tests since it supports them without additional libraries.
-    expect(() => runCLI(`lint ${fastifyApp}`)).not.toThrow();
+    expect(() => runCLI(`test ${fastifyApp}`)).not.toThrow();
+
+    // https://github.com/nrwl/nx/issues/16601
+    const nestMainContent = readFile(`apps/${nestApp}/src/main.ts`);
+    updateFile(
+      `apps/${nestApp}/src/main.ts`,
+      `
+      ${nestMainContent}
+      // Make sure this is not replaced during build time
+      console.log('env: ' + process.env['NODE_ENV']);
+      `
+    );
+    runCLI(`build ${nestApp}`);
+    expect(readFile(`dist/apps/${nestApp}/main.js`)).toContain(
+      `'env: ' + process.env['NODE_ENV']`
+    );
 
     addLibImport(expressApp, testLib1);
     addLibImport(expressApp, testLib2, '@acme/test2');
@@ -122,7 +135,7 @@ describe('Node Applications + webpack', () => {
     const expressApp = uniq('expressapp');
 
     runCLI(
-      `generate @nrwl/node:app  ${expressApp} --framework=express --docker --no-interactive`
+      `generate @nx/node:app  ${expressApp} --framework=express --docker --no-interactive`
     );
 
     checkFilesExist(`apps/${expressApp}/Dockerfile`);

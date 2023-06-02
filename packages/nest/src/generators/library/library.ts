@@ -1,6 +1,6 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { convertNxGenerator, formatFiles } from '@nrwl/devkit';
-import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { convertNxGenerator, formatFiles } from '@nx/devkit';
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addDependencies } from '../init/lib';
 import {
   addExportsToBarrelFile,

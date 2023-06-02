@@ -1,11 +1,11 @@
-import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import libraryGenerator from '../library/library';
 import { componentTestGenerator } from './component-test';
 
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
 describe(componentTestGenerator.name, () => {
   let tree: Tree;
   let mockedAssertMinimumCypressVersion: jest.Mock<

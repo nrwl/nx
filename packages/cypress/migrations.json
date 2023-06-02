@@ -1,5 +1,5 @@
 {
-  "schematics": {
+  "generators": {
     "remove-typescript-plugin": {
       "cli": "nx",
       "version": "12.8.0-beta.0",
@@ -41,7 +41,32 @@
       "version": "15.5.0-beta.0",
       "description": "Update to Cypress v12. Cypress 12 contains a handful of breaking changes that might causes tests to start failing that nx cannot directly fix. Read more Cypress 12 changes: https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-12-0.This migration will only run if you are already using Cypress v11.",
       "factory": "./src/migrations/update-15-5-0/update-to-cypress-12"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/cypress with @nx/cypress",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-2-0-normalize-tsconfigs": {
+      "cli": "nx",
+      "version": "16.2.0-beta.0",
+      "description": "Normalize tsconfig.cy.json files to be located at '<projectRoot>/cypress/tsconfig.json'",
+      "implementation": "./src/migrations/update-16-2-0/update-cy-tsconfig"
     }
   },
-  "packageJsonUpdates": {}
+  "packageJsonUpdates": {
+    "16.1.0": {
+      "version": "16.1.0-beta.0",
+      "requires": {
+        "cypress": ">=12.0.0 <12.11.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^12.11.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
 }

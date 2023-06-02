@@ -1,4 +1,4 @@
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nx/linter';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -6,11 +6,11 @@ import {
   runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   extendReactEslintJson,
   extraEslintDependencies,
-} from '@nrwl/react/src/utils/lint';
+} from '@nx/react/src/utils/lint';
 import type { Linter as ESLintLinter } from 'eslint';
 
 interface NormalizedSchema {

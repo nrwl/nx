@@ -3,15 +3,15 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addMountCommand,
   updateCyFile,
   updateCyMountUsage,
 } from './update-cy-mount-usage';
-import { libraryGenerator } from '@nrwl/workspace';
-import { cypressComponentProject } from '../../generators/cypress-component-project/cypress-component-project';
+import { libraryGenerator } from '@nx/js';
+import { cypressComponentConfiguration } from '../../generators/cypress-component-configuration/cypress-component-configuration';
 
 jest.mock('../../utils/cypress-version');
 // nested code imports graph from the repo, which might have innacurate graph version
@@ -179,11 +179,11 @@ Cypress.Commands.add('login', (email, password) => {
 async function setup(tree: Tree) {
   await libraryGenerator(tree, { name: 'my-lib' });
   await libraryGenerator(tree, { name: 'another-lib' });
-  await cypressComponentProject(tree, {
+  await cypressComponentConfiguration(tree, {
     project: 'my-lib',
     skipFormat: false,
   });
-  await cypressComponentProject(tree, {
+  await cypressComponentConfiguration(tree, {
     project: 'another-lib',
     skipFormat: false,
   });
@@ -192,6 +192,7 @@ async function setup(tree: Tree) {
     executor: '@nrwl/angular:webpack-browser',
     options: {},
   };
+  myLib.targets['component-test'].executor = '@nrwl/cypress:cypress';
   myLib.targets['component-test'].options.devServerTarget = 'my-lib:build';
   updateProjectConfiguration(tree, 'my-lib', myLib);
   const anotherLib = readProjectConfiguration(tree, 'another-lib');
@@ -199,6 +200,7 @@ async function setup(tree: Tree) {
     executor: '@nrwl/webpack:webpack',
     options: {},
   };
+  anotherLib.targets['component-test'].executor = '@nrwl/cypress:cypress';
   anotherLib.targets['component-test'].options.devServerTarget =
     'another-lib:build';
   updateProjectConfiguration(tree, 'another-lib', anotherLib);

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 import * as yargs from 'yargs';
 import { execSync } from 'child_process';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { URL } from 'url';
 import { join } from 'path';
 
 import { parse } from 'semver';
 
-import * as version from '@lerna/version/index';
-import * as publish from '@lerna/publish/index';
+const version = require('lerna/commands/version');
+const publish = require('lerna/commands/publish');
 
 const lernaJsonPath = join(__dirname, '../lerna.json');
 const originalLernaJson = readFileSync(lernaJsonPath);
@@ -26,7 +26,10 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
   const options = parseArgs();
 
   if (options.clearLocalRegistry) {
-    execSync('yarn local-registry clear');
+    rmSync(join(__dirname, '../build/local-registry/storage'), {
+      recursive: true,
+      force: true,
+    });
   }
 
   const currentLatestVersion = execSync('npm view nx version')
@@ -43,7 +46,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
       ? 'previous'
       : 'latest';
 
-  const buildCommand = 'yarn build';
+  const buildCommand = 'pnpm build';
   console.log(`> ${buildCommand}`);
   execSync(buildCommand, {
     stdio: [0, 1, 2],
@@ -150,7 +153,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
 
 function parseArgs() {
   const parsedArgs = yargs
-    .scriptName('yarn nx-release')
+    .scriptName('pnpm nx-release')
     .wrap(144)
     .strictOptions()
     .version(false)
@@ -228,7 +231,7 @@ function parseArgs() {
         }
         if (!args.force && registryIsLocalhost) {
           throw new Error(
-            'Registry is still set to localhost! Run "yarn local-registry disable" or pass --force'
+            'Registry is still set to localhost! Run "pnpm local-registry disable" or pass --force'
           );
         }
       } else {

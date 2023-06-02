@@ -1,5 +1,5 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { installPackagesTask, readJson, updateJson } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { installPackagesTask, readJson, updateJson } from '@nx/devkit';
 import type { ProjectMigrator } from './migrators';
 import { AppMigrator, LibMigrator } from './migrators';
 import type { GeneratorOptions } from './schema';
@@ -14,7 +14,6 @@ import {
   formatFilesTask,
   getAllProjects,
   getWorkspaceRootFileTypesInfo,
-  normalizeOptions,
   updatePackageJson,
   updateRootEsLintConfig,
   updateRootTsConfig,
@@ -24,11 +23,10 @@ import {
 
 export async function migrateFromAngularCli(
   tree: Tree,
-  rawOptions: GeneratorOptions
+  options: GeneratorOptions
 ): Promise<GeneratorCallback> {
   validateWorkspace(tree);
   const projects = getAllProjects(tree);
-  const options = normalizeOptions(tree, rawOptions, projects);
 
   const angularJson = readJson(tree, 'angular.json') as any;
   ensureAngularDevKitPeerDependenciesAreInstalled(tree);
