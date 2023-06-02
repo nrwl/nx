@@ -147,6 +147,13 @@ NxCloud uses MongoDB internally as its data store. While we've always used Mongo
 While you can still upgrade to this new image even if you are on Mongo 4.2 (nothing will break), **we strongly recommend you upgrade your Database to Mongo 6.0 to make sure nothing breaks in the future.** [We wrote a full guide on how you can approach the upgrade here](https://github.com/nrwl/nx-cloud-helm/blob/main/MONGO-OPERATOR-GUIDE.md#upgrading-to-mongo-6).
 If you need assistance, please get in touch at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io).
 
+##### Migration from Community Edition to Enterprise
+
+A few weeks ago we announced our plans to sunset the Community Edition of NxCloud On-Prem to align with our new pricing plans. If you are on the Community Edition, please follow these steps to migrate:
+1. Upgrade to this new image
+2. Switch to private Enterprise by setting `NX_CLOUD_MODE=private-enterprise` (or `mode: 'private-community'` if using Helm).
+3. Reach out to us at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io). You will get a FREE, unlimited-use coupon for the next 3 months so you can trial Nx Enterprise.
+
 #### New release process
 
 With this update, we are also changing our release process:
