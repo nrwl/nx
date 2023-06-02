@@ -53,7 +53,7 @@ export async function* vitestExecutor(
 ) {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  registerTsConfigPaths(resolve(projectRoot, 'tsconfig.json'));
+  registerTsConfigPaths(resolve(workspaceRoot, projectRoot, 'tsconfig.json'));
 
   const { startVitest } = await (Function(
     'return import("vitest/node")'
@@ -111,15 +111,23 @@ async function getSettings(
     : ({} as CoverageOptions);
 
   const viteConfigPath = options.config
-    ? joinPathFragments(context.root, options.config)
+    ? options.config // config is expected to be from the workspace root
     : findViteConfig(joinPathFragments(context.root, projectRoot));
+
+  const resolvedProjectRoot = resolve(workspaceRoot, projectRoot);
+  const resolvedViteConfigPath = resolve(
+    workspaceRoot,
+    projectRoot,
+    relative(resolvedProjectRoot, viteConfigPath)
+  );
 
   const resolved = await loadConfigFromFile(
     {
       mode: options.mode,
       command: 'serve',
     },
-    viteConfigPath
+    resolvedViteConfigPath,
+    resolvedProjectRoot
   );
 
   if (!viteConfigPath || !resolved?.config?.['test']) {
@@ -138,7 +146,8 @@ You can manually set the config in the project, ${
     // when running nx from the project root, the root will get appended to the cwd.
     // creating an invalid path and no tests will be found.
     // instead if we are not at the root, let the cwd be root.
-    root: offset === '' ? projectRoot : '',
+    root: offset === '' ? resolvedProjectRoot : workspaceRoot,
+    config: resolvedViteConfigPath,
     reporters: [
       ...(options.reporters ?? []),
       ...((resolved?.config?.['test']?.reporters as string[]) ?? []),
