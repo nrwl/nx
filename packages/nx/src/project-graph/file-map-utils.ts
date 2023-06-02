@@ -10,7 +10,7 @@ import {
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { readProjectsConfigurationFromProjectGraph } from './project-graph';
-import { fileHasher } from '../hasher/impl';
+import { fileHasher } from '../hasher/file-hasher';
 
 export async function createProjectFileMapUsingProjectGraph(
   graph: ProjectGraph
