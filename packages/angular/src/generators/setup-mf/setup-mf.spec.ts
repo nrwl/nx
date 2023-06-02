@@ -135,6 +135,20 @@ describe('Init MF', () => {
     }
   );
 
+  it('should not generate a webpack prod file for dynamic host', async () => {
+    // ACT
+    await setupMf(tree, {
+      appName: 'app1',
+      mfType: 'host',
+      federationType: 'dynamic',
+    });
+
+    // ASSERT
+    const { build } = readProjectConfiguration(tree, 'app1').targets;
+    expect(tree.exists('apps/app1/webpack.prod.config.js')).toBeFalsy();
+    expect(build.configurations.production.customWebpackConfig).toBeUndefined();
+  });
+
   it('should generate the remote entry module and component correctly', async () => {
     // ACT
     await setupMf(tree, {
