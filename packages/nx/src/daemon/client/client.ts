@@ -14,7 +14,7 @@ import {
   isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
-import { ProjectGraph } from '../../config/project-graph';
+import { FileData, ProjectGraph } from '../../config/project-graph';
 import { isCI } from '../../utils/is-ci';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
@@ -22,6 +22,8 @@ import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { Workspaces } from '../../config/workspaces';
 import { Message, SocketMessenger } from './socket-messenger';
 import { safelyCleanUpExistingProcess } from '../cache';
+import { Hash } from '../../hasher/task-hasher';
+import { Task } from '../../config/task-graph';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
@@ -112,6 +114,18 @@ export class DaemonClient {
   async getProjectGraph(): Promise<ProjectGraph> {
     return (await this.sendToDaemonViaQueue({ type: 'REQUEST_PROJECT_GRAPH' }))
       .projectGraph;
+  }
+
+  async getAllFileData(): Promise<FileData[]> {
+    return await this.sendToDaemonViaQueue({ type: 'REQUEST_FILE_DATA' });
+  }
+
+  hashTasks(runnerOptions: any, tasks: Task[]): Promise<Hash[]> {
+    return this.sendToDaemonViaQueue({
+      type: 'HASH_TASKS',
+      runnerOptions,
+      tasks,
+    });
   }
 
   async registerFileWatcher(
@@ -325,6 +339,10 @@ export class DaemonClient {
     this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
     this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
 
+    if (this.nxJson.tasksRunnerOptions.default?.nativeWatcher) {
+      DAEMON_ENV_SETTINGS['NX_NATIVE_WATCHER'] = true;
+    }
+
     const backgroundProcess = spawn(
       process.execPath,
       [join(__dirname, '../server/start.js')],
@@ -338,7 +356,6 @@ export class DaemonClient {
       }
     );
     backgroundProcess.unref();
-    //
 
     /**
      * Ensure the server is actually available to connect to via IPC before resolving

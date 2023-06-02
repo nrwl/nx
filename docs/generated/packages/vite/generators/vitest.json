@@ -38,7 +38,7 @@
       },
       "testTarget": {
         "type": "string",
-        "description": "The test target of the project to be transformed to use the @nrwl/vite:test executor.",
+        "description": "The test target of the project to be transformed to use the @nx/vite:test executor.",
         "hidden": true
       },
       "skipFormat": {

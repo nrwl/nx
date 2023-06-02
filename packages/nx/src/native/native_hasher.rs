@@ -16,6 +16,13 @@ pub struct FileData {
 }
 
 #[napi]
+fn hash_array(input: Vec<String>) -> String {
+    let joined = input.join(",");
+    let content = joined.as_bytes();
+    xxh3::xxh3_64(content).to_string()
+}
+
+#[napi]
 fn hash_file(file: String) -> Option<FileData> {
     let Ok(content) = std::fs::read(&file) else {
         return None;
@@ -33,7 +40,7 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
     let git_folder = workspace_root.join(".git");
     let node_folder = workspace_root.join("node_modules");
 
-    let mut walker = WalkBuilder::new(&workspace_root);
+    let mut walker = WalkBuilder::new(workspace_root);
     walker.hidden(false);
     walker.add_custom_ignore_filename(&nx_ignore);
 
@@ -60,8 +67,8 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
             use ignore::WalkState::*;
 
             #[rustfmt::skip]
-            let Ok(dir_entry) = entry else {
-              return Continue;
+                let Ok(dir_entry) = entry else {
+                return Continue;
             };
 
             let Ok(content) = std::fs::read(dir_entry.path()) else {

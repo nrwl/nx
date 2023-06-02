@@ -63,7 +63,7 @@ export default async function (tree: Tree) {
     }
   }
 
-  formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFilesWithPrettierIfAvailable(tree);
 }
 function updateDependsOnAndInputsInsideNxJson(tree: Tree) {
   const nxJson = readNxJson(tree);

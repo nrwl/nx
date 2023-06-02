@@ -69,6 +69,13 @@ export function expandDependencyConfigSyntaxSugar(
 
   // Support for both `project:target` and `target:with:colons` syntax
   const [maybeProject, ...segments] = splitByColons(targetString);
+
+  // if no additional segments are provided, then the string references
+  // a target of the same project
+  if (!segments.length) {
+    return { target: maybeProject };
+  }
+
   return {
     // Only the first segment could be a project. If it is, the rest is a target.
     // If its not, then the whole targetString was a target with colons in its name.
@@ -228,21 +235,9 @@ export function interpolate(template: string, data: any): string {
 
 export async function getExecutorNameForTask(
   task: Task,
-  nxJson: NxJsonConfiguration,
   projectGraph: ProjectGraph
 ) {
   const project = projectGraph.nodes[task.target.project].data;
-
-  const projectRoot = join(workspaceRoot, project.root);
-  if (existsSync(join(projectRoot, 'package.json'))) {
-    project.targets = mergeNpmScriptsWithTargets(projectRoot, project.targets);
-  }
-  project.targets = mergePluginTargetsWithNxTargets(
-    project.root,
-    project.targets,
-    await loadNxPlugins(nxJson.plugins)
-  );
-
   return project.targets[task.target.target].executor;
 }
 
@@ -252,7 +247,7 @@ export async function getExecutorForTask(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration
 ) {
-  const executor = await getExecutorNameForTask(task, nxJson, projectGraph);
+  const executor = await getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
 
   return workspace.readExecutor(nodeModule, executorName);

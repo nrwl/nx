@@ -75,14 +75,14 @@ function addBuildTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
     buildOptions.babelUpwardRootMode = true;
   }
 
-  if (options.target === 'node') {
+  if (options.target === 'web') {
     tree.write(
       joinPathFragments(project.root, 'webpack.config.js'),
       `
-const { composePlugins, withNx } = require('@nx/webpack');
+const { composePlugins, withNx, withWeb } = require('@nx/webpack');
 
 // Nx plugins for webpack.
-module.exports = composePlugins(withNx(), (config) => {
+module.exports = composePlugins(withNx(), withWeb(), (config) => {
   // Update the webpack config as needed here.
   // e.g. \`config.plugins.push(new MyPlugin())\`
   return config;
@@ -93,10 +93,10 @@ module.exports = composePlugins(withNx(), (config) => {
     tree.write(
       joinPathFragments(project.root, 'webpack.config.js'),
       `
-const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+const { composePlugins, withNx } = require('@nx/webpack');
 
 // Nx plugins for webpack.
-module.exports = composePlugins(withNx(), withWeb(), (config) => {
+module.exports = composePlugins(withNx(), (config) => {
   // Update the webpack config as needed here.
   // e.g. \`config.plugins.push(new MyPlugin())\`
   return config;

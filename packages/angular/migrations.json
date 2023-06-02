@@ -236,6 +236,15 @@
       },
       "description": "Update the @angular/cli package version to ~16.0.0.",
       "factory": "./src/migrations/update-16-1-0/update-angular-cli"
+    },
+    "switch-data-persistence-operators-imports-to-ngrx-router-store": {
+      "cli": "nx",
+      "version": "16.2.0-beta.0",
+      "requires": {
+        "@ngrx/store": ">=16.0.0"
+      },
+      "description": "Switch the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
+      "factory": "./src/migrations/update-16-2-0/switch-data-persistence-operators-imports-to-ngrx-router-store"
     }
   },
   "packageJsonUpdates": {
@@ -700,8 +709,7 @@
       "version": "15.2.0-beta.0",
       "x-prompt": "Do you want to update the Angular version to v15?",
       "requires": {
-        "@angular/core": "^14.2.0",
-        "typescript": ">=4.8.2 <5.0"
+        "@angular/core": "^14.2.0"
       },
       "packages": {
         "@angular-devkit/architect": {
@@ -833,8 +841,7 @@
       "version": "15.5.0-beta.0",
       "x-prompt": "Do you want to update the Angular version to v15.1?",
       "requires": {
-        "@angular/core": ">=15.0.0 <15.1.0",
-        "typescript": ">=4.8.2 <5.0"
+        "@angular/core": ">=15.0.0 <15.1.0"
       },
       "packages": {
         "@angular-devkit/architect": {
@@ -899,8 +906,7 @@
       "version": "15.8.0-beta.4",
       "x-prompt": "Do you want to update the Angular version to v15.2?",
       "requires": {
-        "@angular/core": ">=15.1.0 <15.2.0",
-        "typescript": ">=4.8.2 <5.0"
+        "@angular/core": ">=15.1.0 <15.2.0"
       },
       "packages": {
         "@angular-devkit/architect": {
@@ -1025,8 +1031,7 @@
       "version": "16.1.0-beta.1",
       "x-prompt": "Do you want to update the Angular version to v16?",
       "requires": {
-        "@angular/core": ">=15.2.0 <16.0.0",
-        "typescript": ">=4.9.3 <5.1"
+        "@angular/core": ">=15.2.0 <16.0.0"
       },
       "packages": {
         "@angular/core": {
@@ -1123,6 +1128,18 @@
       "packages": {
         "jest-preset-angular": {
           "version": "~13.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.2.0-ngrx": {
+      "version": "16.2.0-beta.0",
+      "requires": {
+        "@angular/core": "^16.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "~16.0.0",
           "alwaysAddToPackageJson": false
         }
       }

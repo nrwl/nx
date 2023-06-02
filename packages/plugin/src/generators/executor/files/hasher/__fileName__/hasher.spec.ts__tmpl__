@@ -1,12 +1,12 @@
-import { Hasher, HasherContext } from '@nx/devkit';
+import { TaskHasher, HasherContext } from '@nx/devkit';
 
 import { <%=propertyName%>Hasher } from './hasher';
 
 describe('<%=propertyName%>Hasher', () => {
     it('should generate hash', async () => {
-        const mockHasher: Hasher = {
+        const mockHasher: TaskHasher = {
             hashTask: jest.fn().mockReturnValue({value: 'hashed-task'})
-        } as unknown as Hasher
+        } as unknown as TaskHasher
         const hash = await <%=propertyName%>Hasher({
             id: 'my-task-id',
             target: {

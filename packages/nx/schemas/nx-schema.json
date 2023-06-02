@@ -21,7 +21,8 @@
     },
     "npmScope": {
       "type": "string",
-      "description": "NPM Scope that the workspace uses."
+      "description": "NPM Scope that the workspace uses.",
+      "deprecated": "This is inferred from the package.json in the workspace root instead."
     },
     "tasksRunnerOptions": {
       "type": "object",
@@ -154,6 +155,16 @@
               "env": {
                 "type": "string",
                 "description": "The name of the env var which value is added to the hash"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "externalDependencies": {
+                "type": "string",
+                "description": "The list of external dependencies that our target depends on for `nx:run-commands` and community plugins."
               }
             },
             "additionalProperties": false

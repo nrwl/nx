@@ -65,6 +65,10 @@ export const examples: Record<string, Example[]> = {
         'Run tests for all the projects affected by the last commit on main',
     },
     {
+      command: "affected -t build --exclude '*,!tag:dotnet'",
+      description: 'Run build for only projects with the tag `dotnet`',
+    },
+    {
       command: 'affected -t build --tag=$NX_TASK_TARGET_PROJECT:latest',
       description: 'Use the currently executing project name in your command.',
     },
@@ -335,6 +339,45 @@ export const examples: Record<string, Example[]> = {
         'Create a dedicated commit for each successfully completed migration. You can customize the prefix used for each commit by additionally setting --commit-prefix="PREFIX_HERE "',
     },
   ],
+  show: [
+    {
+      command: 'show projects',
+      description: 'Show all projects in the workspace',
+    },
+
+    {
+      command: 'show projects --pattern=api-*',
+      description:
+        'Show all projects with names starting with "api-". The pattern option is useful to see which projects would be selected by run-many.',
+    },
+
+    {
+      command: 'show projects --with-target serve',
+      description: 'Show all projects with a serve target',
+    },
+
+    {
+      command: 'show projects --affected',
+      description: 'Show affected projects in the workspace',
+    },
+
+    {
+      command: 'show projects --affected --exclude *-e2e',
+      description:
+        'Show affected projects in the workspace, excluding end-to-end projects',
+    },
+
+    {
+      command: 'show project my-app',
+      description: 'Show detailed information about "my-app" in a json format.',
+    },
+
+    {
+      command: 'show project my-app --json false',
+      description:
+        'Show information about "my-app" in a human readable format.',
+    },
+  ],
   watch: [
     {
       command:
@@ -344,7 +387,7 @@ export const examples: Record<string, Example[]> = {
     },
     {
       command:
-        'watch --projects=app1,app2 --includeDependencies -- echo \\$NX_PROJECT_NAME',
+        'watch --projects=app1,app2 --includeDependentProjects -- echo \\$NX_PROJECT_NAME',
       description:
         'Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change',
     },

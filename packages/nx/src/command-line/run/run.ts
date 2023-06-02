@@ -20,6 +20,7 @@ import {
   ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
 import { Executor, ExecutorContext } from '../../config/misc-interfaces';
+import { TaskGraph } from '../../config/task-graph';
 import { serializeOverridesIntoCommandLine } from '../../utils/serialize-overrides-into-command-line';
 import {
   readCachedProjectGraph,
@@ -123,28 +124,13 @@ function createImplicitTargetConfig(
   return buildTargetFromScript(targetName, nx);
 }
 
-async function runExecutorInternal<T extends { success: boolean }>(
-  {
-    project,
-    target,
-    configuration,
-  }: {
-    project: string;
-    target: string;
-    configuration?: string;
-  },
-  overrides: { [k: string]: any },
+async function parseExecutorAndTarget(
+  ws: Workspaces,
+  { project, target, configuration }: Target,
   root: string,
-  cwd: string,
   projectsConfigurations: ProjectsConfigurations,
-  nxJsonConfiguration: NxJsonConfiguration,
-  projectGraph: ProjectGraph,
-  isVerbose: boolean,
-  printHelp: boolean
-): Promise<AsyncIterableIterator<T>> {
-  validateProject(projectsConfigurations, project);
-
-  const ws = new Workspaces(root);
+  nxJsonConfiguration: NxJsonConfiguration
+) {
   const proj = projectsConfigurations.projects[project];
   const targetConfig =
     proj.targets?.[target] ||
@@ -159,21 +145,60 @@ async function runExecutorInternal<T extends { success: boolean }>(
     throw new Error(`Cannot find target '${target}' for project '${project}'`);
   }
 
-  configuration = configuration ?? targetConfig.defaultConfiguration;
-
   const [nodeModule, executor] = targetConfig.executor.split(':');
   const { schema, implementationFactory } = ws.readExecutor(
     nodeModule,
     executor
   );
 
-  if (printHelp) {
-    printRunHelp({ project, target }, schema, {
-      plugin: nodeModule,
-      entity: executor,
-    });
-    process.exit(0);
-  }
+  return { executor, implementationFactory, nodeModule, schema, targetConfig };
+}
+
+async function printTargetRunHelpInternal(
+  { project, target, configuration }: Target,
+  root: string,
+  projectsConfigurations: ProjectsConfigurations,
+  nxJsonConfiguration: NxJsonConfiguration
+) {
+  const ws = new Workspaces(root);
+  const { executor, nodeModule, schema } = await parseExecutorAndTarget(
+    ws,
+    { project, target, configuration },
+    root,
+    projectsConfigurations,
+    nxJsonConfiguration
+  );
+
+  printRunHelp({ project, target }, schema, {
+    plugin: nodeModule,
+    entity: executor,
+  });
+  process.exit(0);
+}
+
+async function runExecutorInternal<T extends { success: boolean }>(
+  { project, target, configuration }: Target,
+  overrides: { [k: string]: any },
+  root: string,
+  cwd: string,
+  projectsConfigurations: ProjectsConfigurations,
+  nxJsonConfiguration: NxJsonConfiguration,
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
+  isVerbose: boolean
+): Promise<AsyncIterableIterator<T>> {
+  validateProject(projectsConfigurations, project);
+
+  const ws = new Workspaces(root);
+  const { executor, implementationFactory, nodeModule, schema, targetConfig } =
+    await parseExecutorAndTarget(
+      ws,
+      { project, target, configuration },
+      root,
+      projectsConfigurations,
+      nxJsonConfiguration
+    );
+  configuration ??= targetConfig.defaultConfiguration;
 
   const combinedOptions = combineOptionsForExecutor(
     overrides,
@@ -190,13 +215,14 @@ async function runExecutorInternal<T extends { success: boolean }>(
     const r = implementation(combinedOptions, {
       root,
       target: targetConfig,
-      workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
       projectsConfigurations,
       nxJsonConfiguration,
+      workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
       projectName: project,
       targetName: target,
       configurationName: configuration,
       projectGraph,
+      taskGraph,
       cwd,
       isVerbose,
     }) as Promise<T> | AsyncIterableIterator<T>;
@@ -254,11 +280,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
  * Note that the return value is a promise of an iterator, so you need to await before iterating over it.
  */
 export async function runExecutor<T extends { success: boolean }>(
-  targetDescription: {
-    project: string;
-    target: string;
-    configuration?: string;
-  },
+  targetDescription: Target,
   overrides: { [k: string]: any },
   context: ExecutorContext
 ): Promise<AsyncIterableIterator<T>> {
@@ -273,22 +295,34 @@ export async function runExecutor<T extends { success: boolean }>(
     context.projectsConfigurations,
     context.nxJsonConfiguration,
     context.projectGraph,
-    context.isVerbose,
-    false
+    context.taskGraph,
+    context.isVerbose
   );
+}
+
+export function printTargetRunHelp(targetDescription: Target, root: string) {
+  const projectGraph = readCachedProjectGraph();
+  return handleErrors(false, async () => {
+    const projectsConfigurations =
+      readProjectsConfigurationFromProjectGraph(projectGraph);
+    const nxJsonConfiguration = readNxJson();
+
+    printTargetRunHelpInternal(
+      targetDescription,
+      root,
+      projectsConfigurations,
+      nxJsonConfiguration
+    );
+  });
 }
 
 export function run(
   cwd: string,
   root: string,
-  targetDescription: {
-    project: string;
-    target: string;
-    configuration?: string;
-  },
+  targetDescription: Target,
   overrides: { [k: string]: any },
   isVerbose: boolean,
-  isHelp: boolean
+  taskGraph: TaskGraph
 ) {
   const projectGraph = readCachedProjectGraph();
   return handleErrors(isVerbose, async () => {
@@ -303,8 +337,8 @@ export function run(
         projectsConfigurations,
         readNxJson(),
         projectGraph,
-        isVerbose,
-        isHelp
+        taskGraph,
+        isVerbose
       )
     );
   });

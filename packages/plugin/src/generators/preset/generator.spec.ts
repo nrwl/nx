@@ -1,10 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import {
-  Tree,
-  readProjectConfiguration,
-  readJson,
-  readNxJson,
-} from '@nx/devkit';
+import { Tree, readProjectConfiguration, readJson } from '@nx/devkit';
 
 import generator from './generator';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -24,6 +19,6 @@ describe('preset generator', () => {
     expect(config).toBeDefined();
     const packageJson = readJson<PackageJson>(tree, 'package.json');
     expect(packageJson.dependencies).toHaveProperty('@nx/devkit');
-    expect(readNxJson(tree).npmScope).not.toBeDefined();
+    expect(readJson(tree, 'nx.json').npmScope).not.toBeDefined();
   });
 });

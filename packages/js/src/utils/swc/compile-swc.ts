@@ -10,7 +10,11 @@ function getSwcCmd(
   { swcrcPath, srcPath, destPath }: SwcCliOptions,
   watch = false
 ) {
-  let swcCmd = `npx swc ${srcPath} -d ${destPath} --config-file=${swcrcPath}`;
+  let swcCmd = `npx swc ${
+    // TODO(jack): clean this up when we remove inline module support
+    // Handle root project
+    srcPath === '.' ? 'src' : srcPath
+  } -d ${destPath} --config-file=${swcrcPath}`;
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 
@@ -38,6 +42,8 @@ export async function compileSwc(
   normalizedOptions: NormalizedSwcExecutorOptions,
   postCompilationCallback: () => Promise<void>
 ) {
+  const isRootProject =
+    context.projectGraph.nodes[context.projectName].data.root === '.';
   logger.log(`Compiling with SWC for ${context.projectName}...`);
 
   if (normalizedOptions.clean) {

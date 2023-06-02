@@ -11,7 +11,7 @@
     "react-native-web": "*"
   },
   "scripts": {
-    <% if (packageManager === 'npm') { %>"eas-build-pre-install": "cd <%= offsetFromRoot %> && cp <%= packageLockFile %> ./<%= appProjectRoot %>/", <% } %>
-    "postinstall": "rm -r node_modules && cd <%= offsetFromRoot %> && <%= packageManager %> install && npx nx sync-deps <%= projectName %> && npx nx ensure-symlink <%= projectName %>"
+    "eas-build-pre-install": "cd <%= offsetFromRoot %> && node tools/scripts/eas-build-pre-install.mjs . <%= appProjectRoot %> && cp <%= packageLockFile %> <%= appProjectRoot %>",
+    "eas-build-post-install": "cd <%= offsetFromRoot %> && node tools/scripts/eas-build-post-install.mjs . <%= appProjectRoot %>"
   }
 }

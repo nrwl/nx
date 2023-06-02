@@ -8,10 +8,11 @@ import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { readNxJson, workspaceLayout } from '../../config/configuration';
-import { defaultFileHasher } from '../../hasher/file-hasher';
+import { fileHasher } from '../../hasher/impl';
 import { output } from '../../utils/output';
 import { writeJsonFile } from '../../utils/fileutils';
 import {
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
@@ -23,11 +24,15 @@ import { TargetDefaults, TargetDependencies } from '../../config/nx-json';
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
 import { Server } from 'net';
+import { readProjectFileMapCache } from '../../project-graph/nx-deps-cache';
+import { getAffectedGraphNodes } from '../affected/affected';
+import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 
 export interface ProjectGraphClientResponse {
   hash: string;
   projects: ProjectGraphProjectNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
+  fileMap: ProjectFileMap;
   layout: { appsDir: string; libsDir: string };
   affected: string[];
   focus: string;
@@ -184,10 +189,16 @@ export async function generateGraph(
     targets?: string[];
     focus?: string;
     exclude?: string[];
+    affected?: boolean;
   },
   affectedProjects: string[]
 ): Promise<void> {
-  if (Array.isArray(args.targets) && args.targets.length > 1) {
+  if (
+    Array.isArray(args.targets) &&
+    args.targets.length > 1 &&
+    args.file &&
+    !(args.file === 'stdout' || args.file.endsWith('.json'))
+  ) {
     output.warn({
       title: 'Showing Multiple Targets is not supported yet',
       bodyLines: [
@@ -220,6 +231,20 @@ export async function generateGraph(
     }
   }
 
+  if (args.affected) {
+    affectedProjects = (
+      await getAffectedGraphNodes(
+        splitArgsIntoNxArgsAndOverrides(
+          args,
+          'affected',
+          { printWarnings: true },
+          readNxJson()
+        ).nxArgs,
+        graph
+      )
+    ).map((n) => n.name);
+  }
+
   if (args.exclude) {
     const invalidExcludes: string[] = [];
 
@@ -246,6 +271,18 @@ export async function generateGraph(
   graph = filterGraph(graph, args.focus || null, args.exclude || []);
 
   if (args.file) {
+    // stdout is a magical constant that doesn't actually write a file
+    if (args.file === 'stdout') {
+      console.log(
+        JSON.stringify(
+          createJsonOutput(graph, args.projects, args.targets),
+          null,
+          2
+        )
+      );
+      process.exit(0);
+    }
+
     const workspaceFolder = workspaceRoot;
     const ext = extname(args.file);
     const fullFilePath = isAbsolute(args.file)
@@ -294,10 +331,20 @@ export async function generateGraph(
     } else if (ext === '.json') {
       ensureDirSync(dirname(fullFilePath));
 
-      writeJsonFile(fullFilePath, {
-        graph,
-        affectedProjects,
-        criticalPath: affectedProjects,
+      const json = createJsonOutput(graph, args.projects, args.targets);
+      json.affectedProjects = affectedProjects;
+      json.criticalPath = affectedProjects;
+
+      writeJsonFile(fullFilePath, json);
+
+      output.warn({
+        title: 'JSON output contains deprecated fields:',
+        bodyLines: [
+          '- affectedProjects',
+          '- criticalPath',
+          '',
+          'These fields will be removed in Nx 18. If you need to see which projects were affected, use `nx show projects --affected`.',
+        ],
       });
 
       output.success({
@@ -349,6 +396,8 @@ export async function generateGraph(
           .map((projectName) => encodeURIComponent(projectName))
           .join(' ')
       );
+    } else if (args.affected) {
+      url.pathname += '/affected';
     }
     if (args.groupByFolder) {
       url.searchParams.append('groupByFolder', 'true');
@@ -464,6 +513,7 @@ let currentDepGraphClientResponse: ProjectGraphClientResponse = {
   hash: null,
   projects: [],
   dependencies: {},
+  fileMap: {},
   layout: {
     appsDir: '',
     libsDir: '',
@@ -489,13 +539,13 @@ function debounce(fn: (...args) => void, time: number) {
 function createFileWatcher() {
   return daemonClient.registerFileWatcher(
     { watchProjects: 'all', includeGlobalWorkspaceFiles: true },
-    debounce(async (error, { changedFiles }) => {
+    debounce(async (error, changes) => {
       if (error === 'closed') {
         output.error({ title: `Watch error: Daemon closed the connection` });
         process.exit(1);
       } else if (error) {
         output.error({ title: `Watch error: ${error?.message ?? 'Unknown'}` });
-      } else if (changedFiles.length > 0) {
+      } else if (changes !== null && changes.changedFiles.length > 0) {
         output.note({ title: 'Recalculating project graph...' });
 
         const newGraphClientResponse = await createDepGraphClientResponse();
@@ -518,29 +568,17 @@ async function createDepGraphClientResponse(
   affected: string[] = []
 ): Promise<ProjectGraphClientResponse> {
   performance.mark('project graph watch calculation:start');
-  await defaultFileHasher.init();
+  await fileHasher.init();
 
   let graph = pruneExternalNodes(
     await createProjectGraphAsync({ exitOnError: true })
   );
+  let fileMap = readProjectFileMapCache().projectFileMap;
   performance.mark('project graph watch calculation:end');
   performance.mark('project graph response generation:start');
 
   const layout = workspaceLayout();
-  const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes).map(
-    (project: any) =>
-      ({
-        name: project.name,
-        type: project.type,
-        data: {
-          tags: project.data.tags,
-          root: project.data.root,
-          files: project.data.files,
-          targets: project.data.targets,
-        },
-      } as ProjectGraphProjectNode)
-  );
-
+  const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes);
   const dependencies = graph.dependencies;
 
   const hasher = createHash('sha256');
@@ -569,6 +607,7 @@ async function createDepGraphClientResponse(
     projects,
     dependencies,
     affected,
+    fileMap,
   };
 }
 
@@ -684,4 +723,48 @@ function createTaskId(
   } else {
     return `${projectId}:${targetId}`;
   }
+}
+
+interface GraphJsonResponse {
+  tasks?: TaskGraph;
+  graph: ProjectGraph;
+
+  /**
+   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 18.
+   */
+  affectedProjects?: string[];
+
+  /**
+   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 18.
+   */
+  criticalPath?: string[];
+}
+
+function createJsonOutput(
+  graph: ProjectGraph,
+  projects: string[],
+  targets?: string[]
+): GraphJsonResponse {
+  const response: GraphJsonResponse = {
+    graph,
+  };
+
+  if (targets?.length) {
+    const nxJson = readNxJson();
+
+    const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
+      nxJson.targetDefaults
+    );
+
+    response.tasks = createTaskGraph(
+      graph,
+      defaultDependencyConfigs,
+      projects,
+      targets,
+      undefined,
+      {}
+    );
+  }
+
+  return response;
 }

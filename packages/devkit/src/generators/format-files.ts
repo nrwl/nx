@@ -29,28 +29,28 @@ export async function formatFiles(tree: Tree): Promise<void> {
 
   await Promise.all(
     Array.from(files).map(async (file) => {
-      const systemPath = path.join(tree.root, file.path);
-
-      const resolvedOptions = await prettier.resolveConfig(systemPath, {
-        editorconfig: true,
-      });
-
-      const options: Prettier.Options = {
-        ...resolvedOptions,
-        ...changedPrettierInTree,
-        filepath: systemPath,
-      };
-
-      if (file.path.endsWith('.swcrc')) {
-        options.parser = 'json';
-      }
-
-      const support = await prettier.getFileInfo(systemPath, options as any);
-      if (support.ignored || !support.inferredParser) {
-        return;
-      }
-
       try {
+        const systemPath = path.join(tree.root, file.path);
+
+        const resolvedOptions = await prettier.resolveConfig(systemPath, {
+          editorconfig: true,
+        });
+
+        const options: Prettier.Options = {
+          ...resolvedOptions,
+          ...changedPrettierInTree,
+          filepath: systemPath,
+        };
+
+        if (file.path.endsWith('.swcrc')) {
+          options.parser = 'json';
+        }
+
+        const support = await prettier.getFileInfo(systemPath, options as any);
+        if (support.ignored || !support.inferredParser) {
+          return;
+        }
+
         tree.write(
           file.path,
           prettier.format(file.content.toString('utf-8'), options)

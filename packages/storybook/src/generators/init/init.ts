@@ -15,10 +15,10 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   litVersion,
   nxVersion,
-  reactNativeStorybookLoader,
   reactVersion,
   storybookVersion,
   storybookReactNativeVersion,
+  viteVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 import {
@@ -108,6 +108,15 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
         storybookReactNativeVersion;
       devDependencies['@storybook/addon-ondevice-notes'] =
         storybookReactNativeVersion;
+    }
+
+    if (schema.uiFramework.endsWith('-vite')) {
+      if (
+        !packageJson.dependencies['vite'] &&
+        !packageJson.devDependencies['vite']
+      ) {
+        devDependencies['vite'] = viteVersion;
+      }
     }
   }
 

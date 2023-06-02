@@ -148,7 +148,7 @@ function rehoistNodes(
   });
   // invert dependencies for easier traversal back
   const invertedGraph = reverse(builder.graph);
-  const invBuilder = new ProjectGraphBuilder(invertedGraph);
+  const invBuilder = new ProjectGraphBuilder(invertedGraph, {});
 
   // find new hoisted version
   packagesToRehoist.forEach((nestedNodes) => {

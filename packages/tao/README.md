@@ -1,6 +1,8 @@
-## @nrwl/tao has been deprecated!
+## @nrwl/tao has been merged with nx!
 
 @nrwl/tao has been deprecated in favor of [nx](https://www.npmjs.com/package/nx). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/tao will no longer be published in Nx v17.
 

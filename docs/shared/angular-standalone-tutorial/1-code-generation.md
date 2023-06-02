@@ -12,7 +12,7 @@ src="https://www.youtube.com/embed/LYPVrWQNnEc"
 title="Tutorial: Standalone Angular Application"
 width="100%" /%}
 
-{% github-repository url="https://github.nx/nx-recipes/tree/main/standalone-angular-app" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/standalone-angular-app" /%}
 
 # Angular Standalone Tutorial - Part 1: Code Generation
 
@@ -32,11 +32,12 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Choose what to create                 · angular
-✔ Application name                      · store
+✔ Where would you like to create your workspace? · store
+✔ Which stack do you want to use? · angular
+✔ Standalone project or integrated monorepo? · standalone
+✔ Default stylesheet format             · css
 ✔ Would you like to use Standalone Components in your application? · No
 ✔ Would you like to add routing? · Yes
-✔ Default stylesheet format             · css
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 

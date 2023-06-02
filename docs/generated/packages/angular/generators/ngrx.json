@@ -6,23 +6,24 @@
     "$id": "NxNgrxGenerator",
     "title": "Add NgRx support to an application or library.",
     "description": "Adds NgRx support to an application or library.",
+    "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead.",
     "cli": "nx",
     "type": "object",
     "examples": [
       {
-        "command": "nx g @nrwl/angular:ngrx --root --parent=apps/my-app/src/app/app.module.ts --facade=false placeholder",
+        "command": "nx g @nx/angular:ngrx --root --parent=apps/my-app/src/app/app.module.ts --facade=false placeholder",
         "description": "Add root ngrx configration to the `my-app` application"
       },
       {
-        "command": "nx g @nrwl/angular:ngrx --parent=libs/my-lib/src/lib/my-lib.module.ts --facade=true --root=false users",
+        "command": "nx g @nx/angular:ngrx --parent=libs/my-lib/src/lib/my-lib.module.ts --facade=true --root=false users",
         "description": "Add a `users` state with a facade to the `my-lib` library. It will be tracked under the default `+state` folder in the lib"
       },
       {
-        "command": "nx g @nrwl/angular:ngrx --parent=apps/my-app/src/app/app.config.ts --root",
+        "command": "nx g @nx/angular:ngrx --parent=apps/my-app/src/app/app.config.ts --root",
         "description": "Add a root state configuration to `my-app` when `my-app` uses Standalone APIs"
       },
       {
-        "command": "nx g @nrwl/angular:ngrx --parent=libs/my-lib/src/lib.routes.ts users",
+        "command": "nx g @nx/angular:ngrx --parent=libs/my-lib/src/lib.routes.ts users",
         "description": "Add a `users` feature state to the Route definition of a library using Standalone APIs"
       }
     ],
@@ -101,6 +102,7 @@
     "presets": []
   },
   "description": "Adds NgRx support to an application or library.",
+  "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead.",
   "implementation": "/packages/angular/src/generators/ngrx/ngrx.ts",
   "aliases": [],
   "hidden": false,

@@ -1,6 +1,8 @@
 import { readJsonFile } from '../../../utils/fileutils';
 import { sortObjectByKeys } from '../../../utils/object-sort';
 import {
+  fileDataDepTarget,
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
@@ -10,8 +12,9 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import {
   filterUsingGlobPatterns,
   getTargetInputs,
-} from '../../../hasher/hasher';
+} from '../../../hasher/task-hasher';
 import { readNxJson } from '../../../config/configuration';
+import { readProjectFileMapCache } from '../../../project-graph/nx-deps-cache';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -33,8 +36,13 @@ export function createPackageJson(
     root?: string;
     isProduction?: boolean;
     helperDependencies?: string[];
-  } = {}
+  } = {},
+  fileMap: ProjectFileMap = null
 ): PackageJson {
+  if (fileMap == null) {
+    fileMap = readProjectFileMapCache()?.projectFileMap || {};
+  }
+
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
 
@@ -58,6 +66,7 @@ export function createPackageJson(
   });
 
   findAllNpmDeps(
+    fileMap,
     projectNode,
     graph,
     npmDeps,
@@ -188,6 +197,7 @@ export function createPackageJson(
 }
 
 function findAllNpmDeps(
+  projectFileMap: ProjectFileMap,
   projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,
   npmDeps: NpmDeps,
@@ -201,14 +211,16 @@ function findAllNpmDeps(
 
   const projectFiles = filterUsingGlobPatterns(
     projectNode.data.root,
-    projectNode.data.files,
+    projectFileMap[projectNode.name] || [],
     rootPatterns ?? dependencyPatterns
   );
 
   const projectDependencies = new Set<string>();
 
   projectFiles.forEach((fileData) =>
-    fileData.dependencies?.forEach((dep) => projectDependencies.add(dep.target))
+    fileData.deps?.forEach((dep) =>
+      projectDependencies.add(fileDataDepTarget(dep))
+    )
   );
 
   for (const dep of projectDependencies) {
@@ -228,14 +240,13 @@ function findAllNpmDeps(
         recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
       } else if (graph.nodes[dep]) {
         findAllNpmDeps(
+          projectFileMap,
           graph.nodes[dep],
           graph,
           npmDeps,
           seen,
           dependencyPatterns
         );
-      } else {
-        throw new Error(`Could not find ${dep} in the project graph.`);
       }
     }
   }

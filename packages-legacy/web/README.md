@@ -1,6 +1,8 @@
-## @nrwl/web has been deprecated!
+## @nrwl/web has been renamed to @nx/web!
 
-@nrwl/web has been deprecated in favor of [@nx/web](https://www.npmjs.com/package/@nx/web). Please use that instead.
+@nrwl/web has been renamed to [@nx/web](https://www.npmjs.com/package/@nx/web). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/web will no longer be published in Nx v17.
 

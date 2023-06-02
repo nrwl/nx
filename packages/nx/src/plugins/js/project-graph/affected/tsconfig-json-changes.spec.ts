@@ -14,7 +14,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
           type: 'app',
           data: {
             root: 'proj1',
-            files: [],
           },
         },
         proj2: {
@@ -22,7 +21,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
           type: 'lib',
           data: {
             root: 'proj2',
-            files: [],
           },
         },
       },

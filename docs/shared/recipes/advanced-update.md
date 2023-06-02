@@ -1,6 +1,37 @@
 # Advanced update process
 
-This is an advanced version of the [standard update process](/core-features/automate-updating-dependencies).
+This guide describes advanced scenarios when it comes to updating Nx and the workspaces dependencies. It starts with a summary of the [standard update process](/core-features/automate-updating-dependencies) and continues with those advanced use cases.
+
+## Updating to the latest Nx version
+
+The following steps are a summary of the [standard update process](/core-features/automate-updating-dependencies). For more information on each step, please visit that page.
+
+### Step 1: Updating dependencies and generating migrations
+
+First, run the `migrate` command:
+
+```shell
+nx migrate latest # same as nx migrate nx@latest
+```
+
+This performs the following changes:
+
+- Updates the versions of the relevant packages in the `package.json` file.
+- Generates a `migrations.json` if there are pending migrations.
+
+### Step 2: Running migrations
+
+The next step in the process involves using the `migrate` command to apply the migrations that were generated in the `migrations.json` file in the previous step. You can do so by running:
+
+```shell
+nx migrate --run-migrations
+```
+
+All changes to your source code will be unstaged and ready for you to review and commit yourself.
+
+### Step 3: Cleaning up
+
+After you run all the migrations, you can remove `migrations.json` and commit any outstanding changes.
 
 ## Managing migration steps
 

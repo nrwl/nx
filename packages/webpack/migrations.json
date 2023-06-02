@@ -30,5 +30,16 @@
       "description": "Replace @nrwl/webpack with @nx/webpack",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     }
+  },
+  "packageJsonUpdates": {
+    "16.3.0": {
+      "version": "16.3.0-beta.8",
+      "packages": {
+        "@svgr/webpack": {
+          "version": "^8.0.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
   }
 }

@@ -15,7 +15,6 @@ import {
   updateProjectConfiguration,
   updateTsConfigsToJs,
 } from '@nx/devkit';
-import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from './schema';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 
@@ -23,10 +22,10 @@ import { join } from 'path';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { initGenerator } from '../init/init';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends Schema {
   name: string;
-  prefix: string;
   fileName: string;
   projectRoot: string;
   projectDirectory: string;
@@ -99,11 +98,10 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
     : [];
 
   const importPath =
-    options.importPath || getImportPath(npmScope, fullProjectDirectory);
+    options.importPath || getImportPath(tree, fullProjectDirectory);
 
   return {
     ...options,
-    prefix: npmScope, // we could also allow customizing this
     fileName,
     name: projectName,
     projectRoot,

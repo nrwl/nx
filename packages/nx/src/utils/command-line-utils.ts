@@ -29,7 +29,7 @@ export interface NxArgs {
   plain?: boolean;
   projects?: string[];
   select?: string;
-  graph?: boolean;
+  graph?: string | boolean;
   skipNxCache?: boolean;
   outputStyle?: string;
   nxBail?: boolean;
@@ -109,21 +109,6 @@ export function splitArgsIntoNxArgsAndOverrides(
           )}`,
         ],
       });
-    }
-
-    if (
-      !nxArgs.files &&
-      !nxArgs.uncommitted &&
-      !nxArgs.untracked &&
-      !nxArgs.base &&
-      !nxArgs.head &&
-      !nxArgs.all &&
-      overrides._ &&
-      overrides._.length >= 2
-    ) {
-      throw new Error(
-        `Nx no longer supports using positional arguments for base and head. Please use --base and --head instead.`
-      );
     }
 
     // Allow setting base and head via environment variables (lower priority then direct command arguments)
@@ -288,8 +273,6 @@ function getUncommittedFiles(): string[] {
   return parseGitOutput(`git diff --name-only --no-renames --relative HEAD .`);
 }
 
-``;
-
 function getUntrackedFiles(): string[] {
   return parseGitOutput(`git ls-files --others --exclude-standard`);
 }
@@ -337,4 +320,10 @@ export function getProjectRoots(
   { nodes }: ProjectGraph
 ): string[] {
   return projectNames.map((name) => nodes[name].data.root);
+}
+
+export function readGraphFileFromGraphArg({ graph }: NxArgs) {
+  return typeof graph === 'string' && graph !== 'true' && graph !== ''
+    ? graph
+    : undefined;
 }

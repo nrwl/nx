@@ -1,12 +1,12 @@
 import { calculateFileChanges } from '../../project-graph/file-utils';
 import { runCommand } from '../../tasks-runner/run-command';
 import { output } from '../../utils/output';
-import { generateGraph } from '../graph/graph';
 import { printAffected } from './print-affected';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
 import type { NxArgs } from '../../utils/command-line-utils';
 import {
   parseFiles,
+  readGraphFileFromGraphArg,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
 import { performance } from 'perf_hooks';
@@ -21,6 +21,10 @@ import { TargetDependencyConfig } from '../../config/workspace-json-project-json
 import { readNxJson } from '../../config/configuration';
 import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
+import { generateGraph } from '../graph/graph';
+import { allFileData } from '../../utils/all-file-data';
+import { NX_PREFIX, logger } from '../../utils/logger';
+import { affectedGraphDeprecationMessage } from './command-object';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -30,7 +34,8 @@ export async function affected(
     (TargetDependencyConfig | string)[]
   > = {}
 ): Promise<void> {
-  performance.mark('command-execution-begins');
+  performance.mark('code-loading:end');
+  performance.measure('code-loading', 'init-local', 'code-loading:end');
   workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
@@ -38,7 +43,8 @@ export async function affected(
     args,
     'affected',
     {
-      printWarnings: command !== 'print-affected' && !args.plain,
+      printWarnings:
+        command !== 'print-affected' && !args.plain && args.graph !== 'stdout',
     },
     nxJson
   );
@@ -50,11 +56,12 @@ export async function affected(
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const projects = await projectsToRun(nxArgs, projectGraph);
+  const projects = await getAffectedGraphNodes(nxArgs, projectGraph);
 
   try {
     switch (command) {
       case 'graph':
+        logger.warn([NX_PREFIX, affectedGraphDeprecationMessage].join(' '));
         const projectNames = projects.map((p) => p.name);
         await generateGraph(args as any, projectNames);
         break;
@@ -83,6 +90,7 @@ export async function affected(
         const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
         if (nxArgs.graph) {
           const projectNames = projectsWithTarget.map((t) => t.name);
+          const file = readGraphFileFromGraphArg(nxArgs);
 
           return await generateGraph(
             {
@@ -91,6 +99,7 @@ export async function affected(
               view: 'tasks',
               targets: nxArgs.targets,
               projects: projectNames,
+              file,
             },
             projectNames
           );
@@ -116,7 +125,7 @@ export async function affected(
   }
 }
 
-async function projectsToRun(
+export async function getAffectedGraphNodes(
   nxArgs: NxArgs,
   projectGraph: ProjectGraph
 ): Promise<ProjectGraphProjectNode[]> {
@@ -126,7 +135,7 @@ async function projectsToRun(
         projectGraph,
         calculateFileChanges(
           parseFiles(nxArgs).files,
-          projectGraph.allWorkspaceFiles,
+          await allFileData(),
           nxArgs
         )
       );

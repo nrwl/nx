@@ -27,8 +27,15 @@ export function parseTargetString(
 ): Target;
 export function parseTargetString(
   targetString: string,
-  projectGraph = readCachedProjectGraph()
+  projectGraph?: ProjectGraph
 ): Target {
+  if (!projectGraph) {
+    try {
+      projectGraph = readCachedProjectGraph();
+    } catch (e) {
+      projectGraph = { nodes: {} } as any;
+    }
+  }
   const [project, target, configuration] = splitTarget(
     targetString,
     projectGraph

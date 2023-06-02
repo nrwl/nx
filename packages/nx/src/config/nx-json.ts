@@ -68,6 +68,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   targetDefaults?: TargetDefaults;
   /**
+   * @deprecated This is inferred from the package.json in the workspace root. Please use {@link getNpmScope} instead.
    * NPM Scope that the workspace uses
    */
   npmScope?: string;
@@ -95,6 +96,10 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
        * Default options for the runner
        */
       options?: any;
+      /**
+       * Enables the Rust watcher within the daemon
+       */
+      nativeWatcher?: boolean;
     };
   };
   /**

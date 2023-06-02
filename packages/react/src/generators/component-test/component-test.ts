@@ -26,6 +26,8 @@ export async function componentTestGenerator(
     '@nx/cypress/src/utils/cypress-version'
   );
   assertMinimumCypressVersion(10);
+  // normalize any windows paths
+  options.componentPath = options.componentPath.replace(/\\/g, '/');
 
   const projectConfig = readProjectConfiguration(tree, options.project);
 

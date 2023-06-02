@@ -1,3 +1,3 @@
-import '../../client/.storybook/tailwind-imports.css';
+import 'graph-client/.storybook/tailwind-imports.css';
 
 export const parameters = {};

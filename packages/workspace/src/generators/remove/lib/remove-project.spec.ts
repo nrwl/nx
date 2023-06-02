@@ -1,7 +1,7 @@
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Schema } from '../schema';
-import { removeProject } from '@nx/workspace/src/generators/remove/lib/remove-project';
+import { removeProject } from './remove-project';
 
 // nx-ignore-next-line
 const { libraryGenerator } = require('@nx/js');

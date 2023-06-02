@@ -8,7 +8,7 @@ exports[`new --preset should generate necessary npm dependencies for empty prese
     "nx": "0.0.1",
   },
   "license": "MIT",
-  "name": "my-workspace",
+  "name": "@my-workspace/source",
   "private": true,
   "scripts": {},
   "version": "0.0.0",
@@ -28,7 +28,6 @@ exports[`new should generate an empty nx.json 1`] = `
     ],
     "sharedGlobals": [],
   },
-  "npmScope": "npmScope",
   "targetDefaults": {
     "build": {
       "dependsOn": [

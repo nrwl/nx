@@ -9,11 +9,11 @@
     "type": "object",
     "examples": [
       {
-        "command": "g @nrwl/expo:component my-component --project=mylib",
+        "command": "g @nx/expo:component my-component --project=mylib",
         "description": "Generate a component in the mylib library"
       },
       {
-        "command": "g @nrwl/expo:component my-component --project=mylib --classComponent",
+        "command": "g @nx/expo:component my-component --project=mylib --classComponent",
         "description": "Generate a class component in the mylib library"
       }
     ],

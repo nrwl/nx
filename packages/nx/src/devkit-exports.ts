@@ -177,12 +177,7 @@ export { stripIndents } from './utils/strip-indents';
 /**
  * @category Utils
  */
-export {
-  joinPathFragments,
-  normalizePath,
-  getImportPath,
-  detectWorkspaceScope,
-} from './utils/path';
+export { joinPathFragments, normalizePath } from './utils/path';
 
 // TODO(v16): Change this to export from './utils/workspace-root'
 /**
@@ -219,9 +214,15 @@ export {
 /**
  * @category Utils
  */
-export { Hash, Hasher } from './hasher/hasher';
+export { Hash, TaskHasher, Hasher } from './hasher/task-hasher';
+export { hashArray } from './hasher/impl';
 
 /**
  * @category Utils
  */
 export { cacheDir } from './utils/cache-directory';
+
+/**
+ * @category Utils
+ */
+export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';

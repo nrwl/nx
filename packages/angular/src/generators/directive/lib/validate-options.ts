@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import { checkPathUnderProjectRoot } from '../../utils/path';
 import {
+  validatePathIsUnderProjectRoot,
   validateProject,
   validateStandaloneOption,
 } from '../../utils/validations';
@@ -8,6 +8,6 @@ import type { Schema } from '../schema';
 
 export function validateOptions(tree: Tree, options: Schema): void {
   validateProject(tree, options.project);
-  checkPathUnderProjectRoot(tree, options.project, options.path);
+  validatePathIsUnderProjectRoot(tree, options.project, options.path);
   validateStandaloneOption(tree, options.standalone);
 }

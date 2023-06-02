@@ -1,5 +1,8 @@
 import { runCommand } from '../../tasks-runner/run-command';
-import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
+import {
+  readGraphFileFromGraphArg,
+  splitArgsIntoNxArgsAndOverrides,
+} from '../../utils/command-line-utils';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import {
@@ -31,8 +34,8 @@ export async function runOne(
     loadDotEnvFiles: boolean;
   }
 ): Promise<void> {
-  performance.mark('command-execution-begins');
-  performance.measure('code-loading', 'init-local', 'command-execution-begins');
+  performance.mark('code-loading:end');
+  performance.measure('code-loading', 'init-local', 'code-loading:end');
   workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
@@ -47,16 +50,14 @@ export async function runOne(
       targets: [opts.target],
     },
     'run-one',
-    { printWarnings: true },
+    { printWarnings: args.graph !== 'stdout' },
     nxJson
   );
   if (nxArgs.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
   if (nxArgs.help) {
-    await (
-      await import('./run')
-    ).run(cwd, workspaceRoot, opts, {}, false, true);
+    await (await import('./run')).printTargetRunHelp(opts, workspaceRoot);
     process.exit(0);
   }
 
@@ -66,6 +67,7 @@ export async function runOne(
 
   if (nxArgs.graph) {
     const projectNames = projects.map((t) => t.name);
+    const file = readGraphFileFromGraphArg(nxArgs);
 
     return await generateGraph(
       {
@@ -74,6 +76,7 @@ export async function runOne(
         view: 'tasks',
         targets: nxArgs.targets,
         projects: projectNames,
+        file,
       },
       projectNames
     );

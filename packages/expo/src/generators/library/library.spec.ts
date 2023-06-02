@@ -235,7 +235,7 @@ describe('lib', () => {
         executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         options: {
-          external: ['react/jsx-runtime', 'react-native'],
+          external: ['react/jsx-runtime', 'react-native', 'react', 'react-dom'],
           entryFile: 'libs/my-lib/src/index.ts',
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',

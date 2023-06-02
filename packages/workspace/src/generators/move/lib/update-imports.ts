@@ -10,7 +10,6 @@ import {
   visitNotIgnoredFiles,
   writeJson,
   readJson,
-  getImportPath,
 } from '@nx/devkit';
 import type * as ts from 'typescript';
 import {
@@ -21,6 +20,7 @@ import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
 import { relative } from 'path';
 import { ensureTypescript } from '../../../utilities/typescript';
+import { getImportPath } from '../../../utilities/get-import-path';
 
 let tsModule: typeof import('typescript');
 
@@ -62,7 +62,7 @@ export function updateImports(
       fromPath ||
       normalizeSlashes(
         getImportPath(
-          npmScope,
+          tree,
           project.root.slice(libsDir.length).replace(/^\/|\\/, '')
         )
       ),

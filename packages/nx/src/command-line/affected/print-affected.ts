@@ -8,11 +8,17 @@ import {
 import { ProcessTasks } from '../../tasks-runner/create-task-graph';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { Workspaces } from '../../config/workspaces';
-import { Hasher } from '../../hasher/hasher';
+import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { hashTask } from '../../hasher/hash-task';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getPackageManagerCommand } from '../../utils/package-manager';
+import { fileHasher } from '../../hasher/impl';
+import { printAffectedDeprecationMessage } from './command-object';
+import { logger, NX_PREFIX } from '../../utils/logger';
 
+/**
+ * @deprecated Use showProjectsHandler, generateGraph, or affected (without the print-affected mode) instead.
+ */
 export async function printAffected(
   affectedProjects: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
@@ -20,6 +26,7 @@ export async function printAffected(
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
+  logger.warn([NX_PREFIX, printAffectedDeprecationMessage].join(' '));
   const projectsForType = affectedProjects.filter((p) =>
     nxArgs.type ? p.type === nxArgs.type : true
   );
@@ -54,7 +61,14 @@ async function createTasks(
   overrides: yargs.Arguments
 ) {
   const workspaces = new Workspaces(workspaceRoot);
-  const hasher = new Hasher(projectGraph, nxJson, {});
+  const hasher = new InProcessTaskHasher(
+    {},
+    [],
+    projectGraph,
+    nxJson,
+    {},
+    fileHasher
+  );
   const execCommand = getPackageManagerCommand().exec;
   const p = new ProcessTasks({}, projectGraph);
   const tasks = [];

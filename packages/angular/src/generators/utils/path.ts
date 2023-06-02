@@ -31,30 +31,6 @@ export function getRelativeImportToFile(
   )}`;
 }
 
-export function checkPathUnderProjectRoot(
-  tree: Tree,
-  projectName: string,
-  path: string
-): void {
-  if (!path) {
-    return;
-  }
-
-  const { root } = readProjectConfiguration(tree, projectName);
-
-  let pathToComponent = normalizePath(path);
-  pathToComponent = pathToComponent.startsWith('/')
-    ? pathToComponent.slice(1)
-    : pathToComponent;
-
-  if (!pathStartsWith(pathToComponent, root)) {
-    throw new Error(
-      `The path provided (${path}) does not exist under the project root (${root}). ` +
-        `Please make sure to provide a path that exists under the project root.`
-    );
-  }
-}
-
 export type PathGenerationOptions = {
   name: string;
   project: string;

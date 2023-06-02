@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "@svgr/webpack": "^6.1.2",
+    "@svgr/webpack": "^8.0.1",
     "chalk": "^4.1.0",
     "file-loader": "^6.2.0",
     "minimatch": "3.0.5",

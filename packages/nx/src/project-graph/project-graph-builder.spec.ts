@@ -1,29 +1,37 @@
 import { ProjectGraphBuilder } from './project-graph-builder';
+import { ProjectFileMap } from '../config/project-graph';
 
 describe('ProjectGraphBuilder', () => {
+  let fileMap: ProjectFileMap;
   let builder: ProjectGraphBuilder;
 
   beforeEach(() => {
-    builder = new ProjectGraphBuilder();
+    fileMap = {
+      source: [
+        {
+          file: 'source/index.ts',
+        },
+        {
+          file: 'source/second.ts',
+        },
+      ] as any,
+      target: [],
+    };
+    builder = new ProjectGraphBuilder(undefined, fileMap);
     builder.addNode({
       name: 'source',
       type: 'lib',
       data: {
-        files: [
-          {
-            file: 'source/index.ts',
-          },
-          {
-            file: 'source/second.ts',
-          },
-        ],
-      } as any,
-    });
+        root: 'source',
+      },
+    } as any);
     builder.addNode({
       name: 'target',
       type: 'lib',
-      data: {} as any,
-    });
+      data: {
+        root: 'target',
+      },
+    } as any);
   });
 
   it(`should add a dependency`, () => {
@@ -33,6 +41,8 @@ describe('ProjectGraphBuilder', () => {
     expect(() =>
       builder.addImplicitDependency('source', 'invalid-target')
     ).toThrowError();
+    // this should not break, but should not exist in resulting dependencies either
+    builder.addStaticDependency('source', 'invalid-target', 'source/index.ts');
 
     // ignore the self deps
     builder.addDynamicDependency('source', 'source', 'source/index.ts');
@@ -89,13 +99,6 @@ describe('ProjectGraphBuilder', () => {
         'invalid-source',
         'source/index.ts',
         'target'
-      )
-    ).toThrowError();
-    expect(() =>
-      builder.addExplicitDependency(
-        'source',
-        'source/index.ts',
-        'invalid-target'
       )
     ).toThrowError();
     expect(() =>
@@ -164,25 +167,13 @@ describe('ProjectGraphBuilder', () => {
       ],
       target: [],
     });
-    expect(graph.nodes.source.data.files[0]).toMatchObject({
+    expect(fileMap['source'][0]).toMatchObject({
       file: 'source/index.ts',
-      dependencies: [
-        {
-          source: 'source',
-          target: 'target',
-          type: 'static',
-        },
-      ],
+      deps: ['target'],
     });
-    expect(graph.nodes.source.data.files[1]).toMatchObject({
+    expect(fileMap['source'][1]).toMatchObject({
       file: 'source/second.ts',
-      dependencies: [
-        {
-          source: 'source',
-          target: 'target',
-          type: 'static',
-        },
-      ],
+      deps: ['target'],
     });
   });
 
@@ -263,34 +254,29 @@ describe('ProjectGraphBuilder', () => {
         "target": [],
       }
     `);
-    expect(graph.nodes['source'].data.files).toMatchInlineSnapshot(`
+    expect(fileMap['source']).toMatchInlineSnapshot(`
       [
         {
-          "dependencies": [
-            {
-              "source": "source",
-              "target": "npm:external",
-              "type": "static",
-            },
+          "deps": [
+            "npm:external",
           ],
           "file": "source/index.ts",
         },
         {
-          "dependencies": [
-            {
-              "source": "source",
-              "target": "npm:external2",
-              "type": "dynamic",
-            },
+          "deps": [
+            [
+              "npm:external2",
+              "dynamic",
+            ],
           ],
           "file": "source/second.ts",
         },
       ]
     `);
 
-    const newBuilder = new ProjectGraphBuilder(graph);
+    const newBuilder = new ProjectGraphBuilder(graph, fileMap);
     // remove static dependency from the file
-    delete newBuilder.graph.nodes['source'].data.files[0].dependencies;
+    delete fileMap['source'][0].deps;
 
     const updatedGraph = newBuilder.getUpdatedProjectGraph();
 

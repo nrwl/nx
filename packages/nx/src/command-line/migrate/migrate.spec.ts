@@ -426,6 +426,7 @@ describe('Migration', () => {
           },
           '@my-company/lib-4': { version: '2.0.1', addToPackageJson: false },
         },
+        minVersionWithSkippedUpdates: undefined,
       });
     });
 
@@ -503,6 +504,7 @@ describe('Migration', () => {
           '@my-company/lib-1': { version: '3.0.0', addToPackageJson: false },
           '@my-company/lib-2': { version: '3.0.0', addToPackageJson: false },
         },
+        minVersionWithSkippedUpdates: undefined,
       });
     });
 
@@ -635,6 +637,7 @@ describe('Migration', () => {
             child2: { version: '3.0.0', addToPackageJson: false },
             child3: { version: '3.0.0', addToPackageJson: false },
           },
+          minVersionWithSkippedUpdates: undefined,
         });
         expect(enquirer.prompt).toHaveBeenCalledWith(
           expect.arrayContaining([
@@ -693,6 +696,7 @@ describe('Migration', () => {
             mypackage: { version: '2.0.0', addToPackageJson: false },
             child1: { version: '3.0.0', addToPackageJson: false },
           },
+          minVersionWithSkippedUpdates: '2.0.0',
         });
         expect(enquirer.prompt).toHaveBeenCalled();
       });
@@ -749,6 +753,7 @@ describe('Migration', () => {
             child2: { version: '3.0.0', addToPackageJson: false },
             child3: { version: '3.0.0', addToPackageJson: false },
           },
+          minVersionWithSkippedUpdates: undefined,
         });
         expect(enquirer.prompt).not.toHaveBeenCalled();
       });
@@ -831,6 +836,7 @@ describe('Migration', () => {
             child2: { version: '3.0.0', addToPackageJson: false },
             child3: { version: '3.0.0', addToPackageJson: false },
           },
+          minVersionWithSkippedUpdates: undefined,
         });
       });
 
@@ -913,6 +919,7 @@ describe('Migration', () => {
             pkg1: { version: '2.0.0', addToPackageJson: false },
             pkg2: { version: '2.0.0', addToPackageJson: false },
           },
+          minVersionWithSkippedUpdates: undefined,
         });
       });
 
@@ -961,6 +968,7 @@ describe('Migration', () => {
             mypackage: { version: '2.0.0', addToPackageJson: false },
             child1: { version: '3.0.0', addToPackageJson: false },
           },
+          minVersionWithSkippedUpdates: undefined,
         });
         expect(enquirer.prompt).toHaveBeenCalledWith(
           expect.arrayContaining([
@@ -1013,6 +1021,7 @@ describe('Migration', () => {
           packageUpdates: {
             mypackage: { version: '2.0.0', addToPackageJson: false },
           },
+          minVersionWithSkippedUpdates: undefined,
         });
         expect(enquirer.prompt).not.toHaveBeenCalled();
       });
@@ -1257,6 +1266,7 @@ describe('Migration', () => {
         packageUpdates: {
           parent: { version: '2.0.0', addToPackageJson: false },
         },
+        minVersionWithSkippedUpdates: '2.0.0',
       });
       expect(enquirer.prompt).toHaveBeenCalled();
     });

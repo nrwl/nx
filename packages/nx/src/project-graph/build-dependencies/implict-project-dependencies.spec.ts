@@ -12,11 +12,11 @@ describe('explicit project dependencies', () => {
     const builder = new ProjectGraphBuilder();
     builder.addNode({
       name: 'proj1',
-      data: { files: [] },
+      data: {},
     } as any);
     builder.addNode({
       name: 'proj2',
-      data: { files: [] },
+      data: {},
     } as any);
 
     buildImplicitProjectDependencies(
@@ -46,11 +46,11 @@ describe('explicit project dependencies', () => {
     const builder = new ProjectGraphBuilder();
     builder.addNode({
       name: 'proj1',
-      data: { files: [] },
+      data: {},
     } as any);
     builder.addNode({
       name: 'proj2',
-      data: { files: [] },
+      data: {},
     } as any);
     builder.addImplicitDependency('proj1', 'proj2');
 

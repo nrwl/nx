@@ -1,5 +1,7 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { TaskGraphRecord } from '../interfaces';
 import { TaskNode } from './task-node';
 import { TaskEdge } from './task-edge';

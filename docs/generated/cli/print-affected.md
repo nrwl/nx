@@ -5,6 +5,8 @@ description: 'Prints information about the projects and targets affected by chan
 
 # print-affected
 
+**Deprecated:** Use `nx show --affected`, `nx affected --graph` or `nx graph --affected` depending on which best suits your use case. The `print-affected` command will be removed in Nx 18.
+
 Prints information about the projects and targets affected by changes
 
 ## Usage
@@ -48,12 +50,6 @@ Prints the tasks.target.project property from the print-affected output:
 ```
 
 ## Options
-
-### all
-
-Type: `boolean`
-
-All projects
 
 ### base
 

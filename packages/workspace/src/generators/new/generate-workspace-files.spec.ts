@@ -4,7 +4,7 @@ import Ajv from 'ajv';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { createTree } from '@nx/devkit/testing';
 import { Preset } from '../utils/presets';
-import * as nxSchema from '../../../../nx/schemas/nx-schema.json';
+import * as nxSchema from 'nx/schemas/nx-schema.json';
 
 describe('@nx/workspace:generateWorkspaceFiles', () => {
   let tree: Tree;
@@ -85,7 +85,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     expect(nxJson).toMatchInlineSnapshot(`
       {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
-        "npmScope": "proj",
         "targetDefaults": {
           "build": {
             "dependsOn": [
@@ -134,7 +133,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
           ],
           "sharedGlobals": [],
         },
-        "npmScope": "proj",
         "targetDefaults": {
           "build": {
             "dependsOn": [

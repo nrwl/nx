@@ -16,7 +16,7 @@ import {
   NextBuildBuilderOptions,
   NextExportBuilderOptions,
 } from '../../utils/types';
-import { PHASE_EXPORT } from '../../utils/constants';
+
 import nextTrace = require('next/dist/trace');
 import { platform } from 'os';
 import { execFileSync } from 'child_process';
@@ -25,6 +25,18 @@ import * as chalk from 'chalk';
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
 
+/**
+ * @deprecated use output inside of your next.config.js
+ * Example
+ * const nextConfig = {
+  nx: {
+    svgr: false,
+  },
+
+  output: 'export'
+};
+ * Read https://nextjs.org/docs/pages/building-your-application/deploying/static-exports
+ **/
 export default async function exportExecutor(
   options: NextExportBuilderOptions,
   context: ExecutorContext
@@ -41,7 +53,6 @@ export default async function exportExecutor(
     dependencies = result.dependencies;
   }
 
-  const libsDir = join(context.root, workspaceLayout().libsDir);
   const buildTarget = parseTargetString(
     options.buildTarget,
     context.projectGraph
@@ -60,14 +71,14 @@ export default async function exportExecutor(
     buildTarget,
     context
   );
-  const root = resolve(context.root, buildOptions.root);
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
   // Taken from:
   // https://github.com/vercel/next.js/blob/ead56eaab68409e96c19f7d9139747bac1197aa9/packages/next/cli/next-export.ts#L13
   const nextExportCliSpan = nextTrace.trace('next-export-cli');
 
   await exportApp(
-    root,
+    projectRoot,
     {
       statusMessage: 'Exporting',
       silent: options.silent,

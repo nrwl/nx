@@ -52,17 +52,17 @@ export function createNxJsonFile(
     // eslint-disable-next-line no-empty
   } catch {}
 
-  nxJson.tasksRunnerOptions ||= {};
-  nxJson.tasksRunnerOptions.default ||= {};
-  nxJson.tasksRunnerOptions.default.runner ||= 'nx/tasks-runners/default';
-  nxJson.tasksRunnerOptions.default.options ||= {};
+  nxJson.tasksRunnerOptions ??= {};
+  nxJson.tasksRunnerOptions.default ??= {};
+  nxJson.tasksRunnerOptions.default.runner ??= 'nx/tasks-runners/default';
+  nxJson.tasksRunnerOptions.default.options ??= {};
   nxJson.tasksRunnerOptions.default.options.cacheableOperations =
     cacheableOperations;
 
   if (targetDefaults.length > 0) {
-    nxJson.targetDefaults ||= {};
+    nxJson.targetDefaults ??= {};
     for (const scriptName of targetDefaults) {
-      nxJson.targetDefaults[scriptName] ||= {};
+      nxJson.targetDefaults[scriptName] ??= {};
       nxJson.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
     }
     for (const [scriptName, output] of Object.entries(scriptOutputs)) {
@@ -70,11 +70,12 @@ export function createNxJsonFile(
         // eslint-disable-next-line no-continue
         continue;
       }
-      nxJson.targetDefaults[scriptName] ||= {};
+      nxJson.targetDefaults[scriptName] ??= {};
       nxJson.targetDefaults[scriptName].outputs = [`{projectRoot}/${output}`];
     }
   }
-  nxJson.defaultBase = deduceDefaultBase();
+  nxJson.affected ??= {};
+  nxJson.affected.defaultBase ??= deduceDefaultBase();
   writeJsonFile(nxJsonPath, nxJson);
 }
 

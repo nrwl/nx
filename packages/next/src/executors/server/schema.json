@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "outputCapture": "direct-nodejs",
+  "outputCapture": "pipe",
   "cli": "nx",
   "title": "Next Serve",
   "description": "Serve a Next.js app.",
@@ -50,6 +50,14 @@
       "type": "boolean",
       "description": "Read buildable libraries from source instead of building them separately.",
       "default": true
+    },
+    "keepAliveTimeout": {
+      "type": "number",
+      "description": "Max milliseconds to wait before closing inactive connection."
+    },
+    "turbo": {
+      "type": "boolean",
+      "description": "Activate the incremental bundler for Next.js, which is implemented in Rust. Please note, this feature is exclusively available in development mode."
     }
   },
   "required": ["buildTarget"]

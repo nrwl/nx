@@ -31,10 +31,14 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
 
-✔ Choose your style                     · integrated
-✔ What to create in the new workspace   · react
-✔ Repository name                       · myorg
-✔ Application name                      · store
+ >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
+✔ Where would you like to create your workspace? · myorg
+✔ Which stack do you want to use? · react
+✔ What framework would you like to use? · none
+✔ Standalone project or integrated monorepo? · integrated
+✔ Application name · store
+✔ Which bundler would you like to use? · vite
 ✔ Default stylesheet format             · css
 ✔ Enable distributed caching to make your CI faster · Yes
 ```

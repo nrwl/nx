@@ -131,6 +131,7 @@ export async function applicationGenerator(
       newProject: true,
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
+      compiler: options.compiler,
       skipFormat: true,
     });
     tasks.push(viteTask);
@@ -145,7 +146,7 @@ export async function applicationGenerator(
     tasks.push(webpackInitTask);
   } else if (options.bundler === 'rspack') {
     const { configurationGenerator } = ensurePackage(
-      '@nrwl/rspack',
+      '@nx/rspack',
       nxRspackVersion
     );
     const rspackTask = await configurationGenerator(host, {
@@ -205,7 +206,7 @@ export async function applicationGenerator(
   updateSpecConfig(host, options);
   const stylePreprocessorTask = installCommonDependencies(host, options);
   tasks.push(stylePreprocessorTask);
-  const styledTask = addStyledModuleDependencies(host, options.styledModule);
+  const styledTask = addStyledModuleDependencies(host, options);
   tasks.push(styledTask);
   const routingTask = addRouting(host, options);
   tasks.push(routingTask);
@@ -231,7 +232,7 @@ export async function applicationGenerator(
     host.write(
       joinPathFragments(options.appProjectRoot, 'rspack.config.js'),
       stripIndents`
-        const { composePlugins, withNx, withWeb } = require('@nrwl/rspack');
+        const { composePlugins, withNx, withWeb } = require('@nx/rspack');
         module.exports = composePlugins(withNx(), withWeb(), (config) => {
           config.module.rules.push({
             test: /\\.[jt]sx$/i,

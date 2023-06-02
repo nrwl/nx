@@ -6,6 +6,7 @@
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx-cloud",
+      "nativeWatcher": true,
       "options": {
         "accessToken": "NDg1NTA3MTAtOGFmZC00YmIwLTk2Y2MtOTkzNzc4ZTczYTlkfHJlYWQtb25seQ==",
         "cacheableOperations": [
@@ -20,7 +21,8 @@
           "test",
           "test-native",
           "sitemap",
-          "build-storybook"
+          "build-storybook",
+          "copy-docs"
         ],
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1,
@@ -175,7 +177,12 @@
       "inputs": ["default", "^production"]
     },
     "run-e2e-tests": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js",
+        "{workspaceRoot}/.verdaccio/config.yml"
+      ],
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",

@@ -1,10 +1,8 @@
 import {
-  addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
-  removeDependenciesFromPackageJson,
   Tree,
 } from '@nx/devkit';
 import { jestProjectGenerator } from '@nx/jest';
@@ -16,6 +14,7 @@ import { E2eTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
 import {
+  addDependenciesToPackageJsonIfDontExist,
   getInstalledAngularVersionInfo,
   versions,
 } from '../utils/version-utils';
@@ -97,8 +96,7 @@ export async function libraryGenerator(
   }
 
   if (libraryOptions.buildable || libraryOptions.publishable) {
-    removeDependenciesFromPackageJson(tree, [], ['ng-packagr']);
-    addDependenciesToPackageJson(
+    addDependenciesToPackageJsonIfDontExist(
       tree,
       {},
       {
@@ -134,6 +132,25 @@ async function addUnitTestRunner(
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
     });
+    const setupFile = joinPathFragments(
+      options.projectRoot,
+      'src',
+      'test-setup.ts'
+    );
+    if (options.strict && host.exists(setupFile)) {
+      const contents = host.read(setupFile, 'utf-8');
+      host.write(
+        setupFile,
+        `// @ts-expect-error https://thymikee.github.io/jest-preset-angular/docs/getting-started/test-environment
+globalThis.ngJest = {
+  testEnvironmentOptions: {
+    errorOnUnknownElements: true,
+    errorOnUnknownProperties: true,
+  },
+};
+${contents}`
+      );
+    }
   }
 }
 

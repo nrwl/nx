@@ -45,12 +45,9 @@ export function createNxJson(
   options: GeneratorOptions,
   defaultProject: string | undefined
 ): void {
-  const { npmScope } = options;
-
   const targets = getWorkspaceCommonTargets(tree);
 
   writeJson<NxJsonConfiguration>(tree, 'nx.json', {
-    ...(npmScope ? { npmScope } : {}),
     affected: {
       defaultBase: options.defaultBase ?? deduceDefaultBase(),
     },

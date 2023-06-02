@@ -1,3 +1,4 @@
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { getWorkspaceLayout } from './get-workspace-layout';
 

@@ -81,7 +81,7 @@ export default {
 "
 `;
 
-exports[`jestProject should generate files 1`] = `
+exports[`jestProject should generate files 2`] = `
 "/* eslint-disable */
 export default {
   displayName: 'lib1',
