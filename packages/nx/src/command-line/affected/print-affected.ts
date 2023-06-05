@@ -5,12 +5,11 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import {
-  NxJsonConfiguration,
-  TargetDefaults,
-  TargetDependencies,
-} from '../../config/nx-json';
+  createTaskGraph,
+  mapTargetDefaultsToDependencies,
+} from '../../tasks-runner/create-task-graph';
+import { NxJsonConfiguration } from '../../config/nx-json';
 import { Workspaces } from '../../config/workspaces';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { hashTask } from '../../hasher/hash-task';
@@ -55,17 +54,6 @@ export async function printAffected(
   } else {
     console.log(JSON.stringify(selectPrintAffected(result, null), null, 2));
   }
-}
-
-function mapTargetDefaultsToDependencies(
-  defaults: TargetDefaults
-): TargetDependencies {
-  const res = {};
-  Object.keys(defaults).forEach((k) => {
-    res[k] = defaults[k].dependsOn;
-  });
-
-  return res;
 }
 
 async function createTasks(

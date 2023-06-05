@@ -18,7 +18,10 @@ import {
 } from '../../config/project-graph';
 import { pruneExternalNodes } from '../../project-graph/operators';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { createTaskGraph } from '../../tasks-runner/create-task-graph';
+import {
+  createTaskGraph,
+  mapTargetDefaultsToDependencies,
+} from '../../tasks-runner/create-task-graph';
 import { TargetDefaults, TargetDependencies } from '../../config/nx-json';
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
@@ -700,17 +703,6 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
   }
 
   return { taskGraphs, errors: taskGraphErrors };
-}
-
-function mapTargetDefaultsToDependencies(
-  defaults: TargetDefaults
-): TargetDependencies {
-  const res = {};
-  Object.keys(defaults).forEach((k) => {
-    res[k] = defaults[k].dependsOn;
-  });
-
-  return res;
 }
 
 function createTaskId(

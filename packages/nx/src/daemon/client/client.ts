@@ -23,7 +23,7 @@ import { Workspaces } from '../../config/workspaces';
 import { Message, SocketMessenger } from './socket-messenger';
 import { safelyCleanUpExistingProcess } from '../cache';
 import { Hash } from '../../hasher/task-hasher';
-import { Task } from '../../config/task-graph';
+import { Task, TaskGraph } from '../../config/task-graph';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
@@ -120,11 +120,16 @@ export class DaemonClient {
     return await this.sendToDaemonViaQueue({ type: 'REQUEST_FILE_DATA' });
   }
 
-  hashTasks(runnerOptions: any, tasks: Task[]): Promise<Hash[]> {
+  hashTasks(
+    runnerOptions: any,
+    tasks: Task[],
+    taskGraph: TaskGraph
+  ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
       tasks,
+      taskGraph,
     });
   }
 

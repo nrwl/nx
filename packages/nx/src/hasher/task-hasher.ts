@@ -65,15 +65,26 @@ export type Hasher = TaskHasher;
 export class DaemonBasedTaskHasher implements TaskHasher {
   constructor(
     private readonly daemonClient: DaemonClient,
+    private readonly taskGraph: TaskGraph,
     private readonly runnerOptions: any
   ) {}
 
   async hashTasks(tasks: Task[]): Promise<Hash[]> {
-    return this.daemonClient.hashTasks(this.runnerOptions, tasks);
+    return this.daemonClient.hashTasks(
+      this.runnerOptions,
+      tasks,
+      this.taskGraph
+    );
   }
 
   async hashTask(task: Task): Promise<Hash> {
-    return (await this.daemonClient.hashTasks(this.runnerOptions, [task]))[0];
+    return (
+      await this.daemonClient.hashTasks(
+        this.runnerOptions,
+        [task],
+        this.taskGraph
+      )
+    )[0];
   }
 }
 

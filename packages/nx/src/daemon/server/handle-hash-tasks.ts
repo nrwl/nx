@@ -1,4 +1,4 @@
-import { Task } from '../../config/task-graph';
+import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
@@ -9,22 +9,29 @@ import { fileHasher } from '../../hasher/file-hasher';
  * TaskHasher has a cache inside, so keeping it around results in faster performance
  */
 let storedProjectGraph: any = null;
+let storedTaskGraph: any = null;
 let storedHasher: InProcessTaskHasher | null = null;
 
 export async function handleHashTasks(payload: {
   runnerOptions: any;
   tasks: Task[];
+  taskGraph: TaskGraph;
 }) {
   const { projectGraph, allWorkspaceFiles, projectFileMap } =
     await getCachedSerializedProjectGraphPromise();
   const nxJson = readNxJson();
 
-  if (projectGraph !== storedProjectGraph) {
+  if (
+    projectGraph !== storedProjectGraph ||
+    payload.taskGraph !== storedTaskGraph
+  ) {
     storedProjectGraph = projectGraph;
+    storedTaskGraph = payload.taskGraph;
     storedHasher = new InProcessTaskHasher(
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
+      payload.taskGraph,
       nxJson,
       payload.runnerOptions,
       fileHasher
