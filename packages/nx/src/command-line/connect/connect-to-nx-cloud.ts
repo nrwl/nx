@@ -33,10 +33,26 @@ export async function connectToNxCloudIfExplicitlyAsked(opts: {
 }
 
 export async function connectToNxCloudCommand(
-  promptOverride?: string
+  promptOverride?: string,
+  promptForConfirmation = true
 ): Promise<boolean> {
-  const res = await connectToNxCloudPrompt(promptOverride);
-  if (!res) return false;
+  if (promptForConfirmation && isNxCloudUsed()) {
+    output.log({
+      title: '✅ This workspace is already connected to Nx Cloud.',
+      bodyLines: [
+        'This means your workspace can use computation caching, distributed task execution, and show you run analytics.',
+        'Go to https://nx.app to learn more.',
+        ' ',
+        'If you have not done so already, please claim this workspace:',
+        `${getNxCloudUrl()}/orgs/workspace-setup?accessToken=${getNxCloudToken()}`,
+      ],
+    });
+    return false;
+  }
+  if(promptForConfirmation) {
+    const res = await connectToNxCloudPrompt(promptOverride);
+    if (!res) return false;
+  }
   const pmc = getPackageManagerCommand();
   if (pmc) {
     execSync(`${pmc.addDev} nx-cloud@latest`);
