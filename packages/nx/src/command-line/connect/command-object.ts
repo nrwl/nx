@@ -7,7 +7,9 @@ export const yargsConnectCommand: CommandModule = {
   describe: `Connect workspace to Nx Cloud`,
   builder: (yargs) => linkToNxDevAndExamples(yargs, 'connect-to-nx-cloud'),
   handler: async () => {
-    await (await import('./connect-to-nx-cloud')).connectToNxCloudCommand(null, false);
+    await (
+      await import('./connect-to-nx-cloud')
+    ).connectToNxCloudCommand(null, false);
     process.exit(0);
   },
 };

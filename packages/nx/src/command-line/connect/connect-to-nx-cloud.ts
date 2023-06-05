@@ -49,7 +49,7 @@ export async function connectToNxCloudCommand(
     });
     return false;
   }
-  if(promptForConfirmation) {
+  if (promptForConfirmation) {
     const res = await connectToNxCloudPrompt(promptOverride);
     if (!res) return false;
   }
