@@ -34,8 +34,8 @@ interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
 }
 
-interface MinimalArguments extends BaseArguments {
-  stack: 'minimal';
+interface NoneArguments extends BaseArguments {
+  stack: 'none';
   workspaceType: 'package-based' | 'integrated';
 }
 
@@ -71,7 +71,7 @@ interface UnknownStackArguments extends BaseArguments {
 }
 
 type Arguments =
-  | MinimalArguments
+  | NoneArguments
   | ReactArguments
   | AngularArguments
   | NodeArguments
@@ -309,7 +309,7 @@ async function determineFolder(
 
 async function determineStack(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'minimal' | 'react' | 'angular' | 'node' | 'unknown'> {
+): Promise<'none' | 'react' | 'angular' | 'node' | 'unknown'> {
   if (parsedArgs.preset) {
     switch (parsedArgs.preset) {
       case Preset.Angular:
@@ -331,7 +331,7 @@ async function determineStack(
       case Preset.Empty:
       case Preset.Apps:
       case Preset.NPM:
-        return 'minimal';
+        return 'none';
       case Preset.TS:
       case Preset.WebComponents:
       case Preset.ReactNative:
@@ -342,7 +342,7 @@ async function determineStack(
   }
 
   const { stack } = await enquirer.prompt<{
-    stack: 'minimal' | 'react' | 'angular' | 'node';
+    stack: 'none' | 'react' | 'angular' | 'node';
   }>([
     {
       name: 'stack',
@@ -350,7 +350,7 @@ async function determineStack(
       type: 'autocomplete',
       choices: [
         {
-          name: `minimal`,
+          name: `none`,
           message: `None:          Configures a minimal structure without specific frameworks or technologies.`,
         },
         {
@@ -369,10 +369,6 @@ async function determineStack(
     },
   ]);
 
-  invariant(stack, {
-    title: 'Invalid stack selection',
-  });
-
   return stack;
 }
 
@@ -380,8 +376,8 @@ async function determinePresetOptions(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<Partial<Arguments>> {
   switch (parsedArgs.stack) {
-    case 'minimal':
-      return determineMinimalOptions(parsedArgs);
+    case 'none':
+      return determineNoneptions(parsedArgs);
     case 'react':
       return determineReactOptions(parsedArgs);
     case 'angular':
@@ -393,7 +389,7 @@ async function determinePresetOptions(
   }
 }
 
-async function determineMinimalOptions(
+async function determineNoneptions(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<Partial<Arguments>> {
   if (parsedArgs.preset) return parsedArgs;
@@ -503,7 +499,7 @@ async function determineReactOptions(
     const reply = await enquirer.prompt<{ style: string }>([
       {
         name: 'style',
-        message: `Default stylesheet format            `,
+        message: `Default stylesheet format`,
         initial: 'css' as any,
         type: 'autocomplete',
         choices: [
@@ -578,7 +574,7 @@ async function determineAngularOptions(
     const reply = await enquirer.prompt<{ style: string }>([
       {
         name: 'style',
-        message: `Default stylesheet format            `,
+        message: `Default stylesheet format`,
         initial: 'css' as any,
         type: 'autocomplete',
         choices: [
@@ -681,7 +677,6 @@ async function determineNodeOptions(
     const workspaceType = await determineStandAloneOrMonorepo();
     if (workspaceType === 'standalone') {
       preset = Preset.NodeStandalone;
-      appName = await determineAppName(parsedArgs);
       appName = parsedArgs.name;
     } else {
       preset = Preset.NodeMonorepo;

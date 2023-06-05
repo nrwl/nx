@@ -81,6 +81,11 @@ function createBuildOptions(options: ExpoEasBuildOptions) {
   return Object.keys(options).reduce((acc, k) => {
     const v = options[k];
     if (typeof v === 'boolean') {
+      if (k === 'interactive') {
+        if (v === false) {
+          acc.push('--non-interactive'); // when is false, the flag is --non-interactive
+        }
+      }
       if (v === true) {
         // when true, does not need to pass the value true, just need to pass the flag in kebob case
         acc.push(`--${names(k).fileName}`);

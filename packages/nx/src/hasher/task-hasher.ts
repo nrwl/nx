@@ -12,10 +12,9 @@ import { Task } from '../config/task-graph';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { hashTsConfig } from '../plugins/js/hasher/hasher';
 import { DaemonClient } from '../daemon/client/client';
-import { FileHasher } from './impl/file-hasher-base';
-import { hashArray } from './impl';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 import { findMatchingProjects } from '../utils/find-matching-projects';
+import { FileHasher, hashArray } from './file-hasher';
 
 type ExpandedSelfInput =
   | { fileset: string }
@@ -579,19 +578,27 @@ class TaskHasherImpl {
     const mapKey = `runtime:${runtime}`;
     if (!this.runtimeHashes[mapKey]) {
       this.runtimeHashes[mapKey] = new Promise((res, rej) => {
-        exec(runtime, (err, stdout, stderr) => {
-          if (err) {
-            rej(
-              new Error(`Nx failed to execute {runtime: '${runtime}'}. ${err}.`)
-            );
-          } else {
-            const value = `${stdout}${stderr}`.trim();
-            res({
-              details: { [`runtime:${runtime}`]: value },
-              value,
-            });
+        exec(
+          runtime,
+          {
+            windowsHide: true,
+          },
+          (err, stdout, stderr) => {
+            if (err) {
+              rej(
+                new Error(
+                  `Nx failed to execute {runtime: '${runtime}'}. ${err}.`
+                )
+              );
+            } else {
+              const value = `${stdout}${stderr}`.trim();
+              res({
+                details: { [`runtime:${runtime}`]: value },
+                value,
+              });
+            }
           }
-        });
+        );
       });
     }
     return this.runtimeHashes[mapKey];

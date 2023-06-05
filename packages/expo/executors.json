@@ -54,6 +54,11 @@
       "implementation": "./src/executors/export/export.impl",
       "schema": "./src/executors/export/schema.json",
       "description": "Export the JavaScript and assets for your app using Metro/webpack bundler"
+    },
+    "submit": {
+      "implementation": "./src/executors/submit/submit.impl",
+      "schema": "./src/executors/submit/schema.json",
+      "description": "Submit app binary to App Store and/or Play Store"
     }
   },
   "builders": {
@@ -111,6 +116,11 @@
       "implementation": "./src/executors/export/compat",
       "schema": "./src/executors/export/schema.json",
       "description": "Export the JavaScript and assets for your app using Metro/webpack bundler"
+    },
+    "submit": {
+      "implementation": "./src/executors/submit/compat",
+      "schema": "./src/executors/submit/schema.json",
+      "description": "Submit app binary to App Store and/or Play Store"
     }
   }
 }

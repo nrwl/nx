@@ -4,7 +4,7 @@ import {
 } from './nx-deps-cache';
 import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
 import { output } from '../utils/output';
-import { fileHasher } from '../hasher/impl';
+import { fileHasher } from '../hasher/file-hasher';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
 import { ProjectGraph } from '../config/project-graph';
 import { stripIndents } from '../utils/strip-indents';

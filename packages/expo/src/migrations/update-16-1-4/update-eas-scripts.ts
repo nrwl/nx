@@ -22,7 +22,10 @@ export default function update(tree: Tree) {
   };
 
   for (const [name, config] of projects.entries()) {
-    if (config.targets?.['start']?.executor === '@nrwl/expo:start') {
+    if (
+      config.targets?.['start']?.executor === '@nrwl/expo:start' ||
+      config.targets?.['start']?.executor === '@nx/expo:start'
+    ) {
       try {
         addEasScripts(tree);
         updateJson(tree, join(config.root, 'package.json'), (packageJson) => {

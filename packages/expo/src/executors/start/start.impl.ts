@@ -5,6 +5,10 @@ import { join } from 'path';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { ExpoStartOptions } from './schema';
+import {
+  displayNewlyAddedDepsMessage,
+  syncDeps,
+} from '../sync-deps/sync-deps.impl';
 
 export interface ExpoStartOutput {
   baseUrl?: string;
@@ -20,6 +24,17 @@ export default async function* startExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
+  if (options.sync) {
+    displayNewlyAddedDepsMessage(
+      context.projectName,
+      await syncDeps(
+        context.projectName,
+        projectRoot,
+        context.root,
+        context.projectGraph
+      )
+    );
+  }
 
   try {
     const baseUrl = `http://localhost:${options.port}`;
@@ -68,12 +83,16 @@ function startAsync(
 }
 
 // options from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/start/index.ts
+const nxOptions = ['sync'];
 function createStartOptions(options: ExpoStartOptions) {
   return Object.keys(options).reduce((acc, k) => {
+    if (nxOptions.includes(k)) {
+      return acc;
+    }
     const v = options[k];
     if (k === 'dev') {
       if (v === false) {
-        acc.push(`--no-dev`);
+        acc.push(`--no-dev`); // only no-dev flag is supported
       }
     } else {
       if (typeof v === 'boolean') {

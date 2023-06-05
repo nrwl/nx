@@ -1,6 +1,7 @@
-import { writeJson, readJson, Tree } from '@nx/devkit';
+import { writeJson, readJson, Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import init from './init';
+import { typescriptVersion } from '../../utils/versions';
 
 describe('js init generator', () => {
   let tree: Tree;
@@ -80,5 +81,39 @@ describe('js init generator', () => {
     await init(tree, {});
 
     expect(tree.exists('.vscode/extensions.json')).toBeFalsy();
+  });
+
+  it('should install typescript package when it is not already installed', async () => {
+    await init(tree, {});
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['typescript']).toBeDefined();
+  });
+
+  it('should overwrite installed typescript version when is not a supported version', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, typescript: '~4.5.0' };
+      return json;
+    });
+
+    await init(tree, {});
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['typescript']).toBe(typescriptVersion);
+  });
+
+  it('should not overwrite installed typescript version when is a supported version', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, typescript: '~4.7.0' };
+      return json;
+    });
+
+    await init(tree, {});
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['typescript']).toBe('~4.7.0');
+    expect(packageJson.devDependencies['typescript']).not.toBe(
+      typescriptVersion
+    );
   });
 });

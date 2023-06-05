@@ -10,7 +10,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as enquirer from 'enquirer';
 
 import { Linter } from '@nx/linter';
 import { libraryGenerator } from '@nx/js';
@@ -26,9 +25,6 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
-jest.mock('enquirer');
-// @ts-ignore
-enquirer.prompt = jest.fn();
 
 describe('@nx/storybook:configuration for Storybook v7', () => {
   describe('basic functionalities', () => {

@@ -14,7 +14,7 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { ProjectGraph } from '../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { PackageJson } from '../../../utils/package-json';
-import { fileHasher, hashArray } from '../../../hasher/impl';
+import { fileHasher, hashArray } from '../../../hasher/file-hasher';
 import { output } from '../../../utils/output';
 
 import { parseNpmLockfile, stringifyNpmLockfile } from './npm-parser';
