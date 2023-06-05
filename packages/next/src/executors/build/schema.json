@@ -71,5 +71,6 @@
       "description": "Only build 'app' routes"
     }
   },
-  "required": ["outputPath"]
+  "required": ["outputPath"],
+  "examplesFile": "../../../docs/build-next-executor-examples.md"
 }
