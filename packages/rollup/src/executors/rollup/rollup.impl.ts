@@ -255,7 +255,7 @@ export function createRollupOptions(
             isModern: true,
           },
           cwd: join(context.root, sourceRoot),
-          rootMode: options.babelUpwardRootMode ? 'upward' : undefined,
+          rootMode: 'upward',
           babelrc: true,
           extensions: fileExtensions,
           babelHelpers: 'bundled',
