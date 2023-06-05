@@ -12,7 +12,10 @@ export default async function update(tree: Tree) {
   const projects = getProjects(tree);
 
   for (const [name, config] of projects.entries()) {
-    if (config.targets?.['start']?.executor === '@nrwl/expo:start') {
+    if (
+      config.targets?.['start']?.executor === '@nrwl/expo:start' ||
+      config.targets?.['start']?.executor === '@nx/expo:start'
+    ) {
       const jestConfigPath = config.targets?.test?.options?.jestConfig;
       if (!jestConfigPath || !tree.exists(jestConfigPath)) return;
       try {

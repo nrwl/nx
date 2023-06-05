@@ -1,42 +1,28 @@
 import { ExecutorContext, names } from '@nx/devkit';
-import { join, normalize, sep } from 'path';
+import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
-import { unzipBuild } from '../download/download.impl';
 
-import { ExpoEasBuildOptions } from './schema';
-import { removeSync } from 'fs-extra';
+import { SubmitExecutorSchema } from './schema';
 
-export interface ReactNativeBuildOutput {
+export interface ReactNativeSubmitOutput {
   success: boolean;
 }
 
 let childProcess: ChildProcess;
 
-export default async function* buildExecutor(
-  options: ExpoEasBuildOptions,
+export default async function* submitExecutor(
+  options: SubmitExecutorSchema,
   context: ExecutorContext
-): AsyncGenerator<ReactNativeBuildOutput> {
+): AsyncGenerator<ReactNativeSubmitOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
-    // remove the output app if it already existed
-    if (options.local && options.output) {
-      removeSync(options.output);
-    }
+    await runCliSubmit(context.root, projectRoot, options);
 
-    await runCliBuild(context.root, projectRoot, options);
-
-    // unzip the build if it's a tar.gz
-    if (options.local && options.output && options.output.endsWith('.tar.gz')) {
-      const directoryPath = normalize(options.output).split(sep);
-      directoryPath.pop();
-      const outputDirectory = directoryPath.join(sep);
-      await unzipBuild(options.output, outputDirectory);
-    }
     yield { success: true };
   } finally {
     if (childProcess) {
@@ -45,15 +31,15 @@ export default async function* buildExecutor(
   }
 }
 
-function runCliBuild(
+function runCliSubmit(
   workspaceRoot: string,
   projectRoot: string,
-  options: ExpoEasBuildOptions
+  options: SubmitExecutorSchema
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
       join(workspaceRoot, './node_modules/eas-cli/bin/run'),
-      ['build', ...createBuildOptions(options)],
+      ['submit', ...createSubmitOptions(options)],
       {
         cwd: join(workspaceRoot, projectRoot),
         env: process.env,
@@ -77,7 +63,7 @@ function runCliBuild(
   });
 }
 
-function createBuildOptions(options: ExpoEasBuildOptions) {
+function createSubmitOptions(options: SubmitExecutorSchema) {
   return Object.keys(options).reduce((acc, k) => {
     const v = options[k];
     if (typeof v === 'boolean') {
@@ -85,13 +71,15 @@ function createBuildOptions(options: ExpoEasBuildOptions) {
         if (v === false) {
           acc.push('--non-interactive'); // when is false, the flag is --non-interactive
         }
-      }
-      if (v === true) {
+      } else if (k === 'wait') {
+        if (v === false) {
+          acc.push('--no-wait'); // when is false, the flag is --no-wait
+        } else {
+          acc.push('--wait');
+        }
+      } else if (v === true) {
         // when true, does not need to pass the value true, just need to pass the flag in kebob case
         acc.push(`--${names(k).fileName}`);
-      }
-      if (v === false && k === 'wait') {
-        acc.push('--no-wait');
       }
     } else {
       acc.push(`--${names(k).fileName}`, v);

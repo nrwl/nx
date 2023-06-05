@@ -60,6 +60,11 @@ function getTargets(options: NormalizedSchema) {
     options: {},
   };
 
+  architect['submit'] = {
+    executor: '@nx/expo:submit',
+    options: {},
+  };
+
   architect['build-list'] = {
     executor: '@nx/expo:build-list',
     options: {},

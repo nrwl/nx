@@ -10,6 +10,12 @@
     "title": "Expo EAS Build executor",
     "description": "Start an EAS build for your expo project.",
     "type": "object",
+    "presets": [
+      { "name": "Build for a specific platform", "keys": ["platform"] },
+      { "name": "Build using a specific profile", "keys": ["profile"] },
+      { "name": "Run build locally", "keys": ["local"] },
+      { "name": "Clear cache before the build", "keys": ["clearCache"] }
+    ],
     "properties": {
       "platform": {
         "enum": ["ios", "android", "all"],
@@ -28,10 +34,10 @@
         "examples": ["production", "development", "preview"],
         "x-priority": "important"
       },
-      "nonInteractive": {
+      "interactive": {
         "type": "boolean",
-        "description": "Run command in non-interactive mode",
-        "default": false
+        "description": "Run command in interactive mode",
+        "default": true
       },
       "local": {
         "type": "boolean",
@@ -63,8 +69,7 @@
         "examples": ["production", "development", "preview"]
       }
     },
-    "required": [],
-    "presets": []
+    "required": []
   },
   "description": "Start an EAS build for your expo project",
   "aliases": [],

@@ -804,6 +804,15 @@
         "originalFilePath": "/packages/expo/src/executors/export/schema.json",
         "path": "expo/executors/export",
         "type": "executor"
+      },
+      {
+        "description": "Submit app binary to App Store and/or Play Store",
+        "file": "generated/packages/expo/executors/submit.json",
+        "hidden": false,
+        "name": "submit",
+        "originalFilePath": "/packages/expo/src/executors/submit/schema.json",
+        "path": "expo/executors/submit",
+        "type": "executor"
       }
     ],
     "generators": [
