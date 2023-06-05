@@ -32,5 +32,4 @@ export interface RollupExecutorOptions {
   javascriptEnabled?: boolean;
   generateExportsField?: boolean;
   skipTypeCheck?: boolean;
-  babelUpwardRootMode?: boolean;
 }

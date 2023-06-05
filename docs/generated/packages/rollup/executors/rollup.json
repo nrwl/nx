@@ -150,11 +150,6 @@
         "default": "babel",
         "description": "Which compiler to use."
       },
-      "babelUpwardRootMode": {
-        "type": "boolean",
-        "description": "Whether to set rootmode to upward. See https://babeljs.io/docs/en/options#rootmode",
-        "default": false
-      },
       "javascriptEnabled": {
         "type": "boolean",
         "description": "Sets `javascriptEnabled` option for less loader",
