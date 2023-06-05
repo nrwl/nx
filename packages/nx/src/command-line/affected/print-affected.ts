@@ -5,8 +5,12 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { ProcessTasks } from '../../tasks-runner/create-task-graph';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { createTaskGraph } from '../../tasks-runner/create-task-graph';
+import {
+  NxJsonConfiguration,
+  TargetDefaults,
+  TargetDependencies,
+} from '../../config/nx-json';
 import { Workspaces } from '../../config/workspaces';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { hashTask } from '../../hasher/hash-task';
@@ -53,6 +57,17 @@ export async function printAffected(
   }
 }
 
+function mapTargetDefaultsToDependencies(
+  defaults: TargetDefaults
+): TargetDependencies {
+  const res = {};
+  Object.keys(defaults).forEach((k) => {
+    res[k] = defaults[k].dependsOn;
+  });
+
+  return res;
+}
+
 async function createTasks(
   affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
@@ -61,43 +76,34 @@ async function createTasks(
   overrides: yargs.Arguments
 ) {
   const workspaces = new Workspaces(workspaceRoot);
+  const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
+    nxJson.targetDefaults
+  );
+  const taskGraph = createTaskGraph(
+    projectGraph,
+    defaultDependencyConfigs,
+    affectedProjectsWithTargetAndConfig.map((p) => p.name),
+    nxArgs.targets,
+    nxArgs.configuration,
+    {}
+  );
   const hasher = new InProcessTaskHasher(
     {},
     [],
     projectGraph,
+    taskGraph,
     nxJson,
     {},
     fileHasher
   );
   const execCommand = getPackageManagerCommand().exec;
-  const p = new ProcessTasks({}, projectGraph);
-  const tasks = [];
-  for (let target of nxArgs.targets) {
-    for (const affectedProject of affectedProjectsWithTargetAndConfig) {
-      const resolvedConfiguration = p.resolveConfiguration(
-        affectedProject,
-        target,
-        nxArgs.configuration
-      );
-      try {
-        tasks.push(
-          p.createTask(
-            p.getId(affectedProject.name, target, resolvedConfiguration),
-            affectedProject,
-            target,
-            resolvedConfiguration,
-            overrides
-          )
-        );
-      } catch (e) {}
-    }
-  }
+  const tasks = Object.values(taskGraph.tasks);
 
   await Promise.all(
     tasks.map((t) => hashTask(workspaces, hasher, projectGraph, {} as any, t))
   );
 
-  return tasks.map((task, index) => ({
+  return tasks.map((task) => ({
     id: task.id,
     overrides,
     target: task.target,
