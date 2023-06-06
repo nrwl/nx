@@ -181,7 +181,7 @@ describe('Nx Affected and Graph Tests', () => {
       runCommand(`git config commit.gpgsign false`);
       try {
         runCommand(
-          `git add . && git commit -am "initial commit" && git checkout -b main`
+          `git add . && git commit -am "initial commit" && git checkout -B main`
         );
       } catch (e) {}
     });
