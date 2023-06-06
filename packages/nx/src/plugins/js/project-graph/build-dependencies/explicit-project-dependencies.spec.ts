@@ -4,7 +4,7 @@ const tempFs = new TempFs('explicit-project-deps');
 import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
-import { fileHasher } from '../../../../hasher/impl';
+import { fileHasher } from '../../../../hasher/file-hasher';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {

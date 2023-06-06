@@ -9,7 +9,6 @@ import type {
   ProjectSnapshotV6,
   ResolvedDependencies,
 } from '@pnpm/lockfile-types';
-import { dump, load } from '@zkochan/js-yaml';
 import { existsSync, readFileSync } from 'fs';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import { valid } from 'semver';
@@ -23,6 +22,7 @@ export function loadPnpmHoistedDepsDefinition() {
 
   if (existsSync(fullPath)) {
     const content = readFileSync(fullPath, 'utf-8');
+    const { load } = require('@zkochan/js-yaml');
     return load(content)?.hoistedDependencies ?? {};
   } else {
     throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
@@ -38,6 +38,7 @@ export function loadPnpmHoistedDepsDefinition() {
  * https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/read.ts#L91
  */
 export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
+  const { load } = require('@zkochan/js-yaml');
   const lockFileData = load(content);
   return revertFromInlineSpecifiersFormatIfNecessary(
     convertFromLockfileFileMutable(lockFileData)
@@ -86,6 +87,7 @@ export function stringifyToPnpmYaml(lockfile: Lockfile): string {
   const adaptedLockfile = isLockfileV6
     ? convertToInlineSpecifiersFormat(lockfile)
     : lockfile;
+  const { dump } = require('@zkochan/js-yaml');
   return dump(
     sortLockfileKeys(
       normalizeLockfile(adaptedLockfile as Lockfile, isLockfileV6)

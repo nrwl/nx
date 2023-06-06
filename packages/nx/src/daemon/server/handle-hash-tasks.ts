@@ -2,7 +2,7 @@ import { Task } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
-import { fileHasher } from '../../hasher/impl';
+import { fileHasher } from '../../hasher/file-hasher';
 
 /**
  * We use this not to recreated hasher for every hash operation

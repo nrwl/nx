@@ -7,7 +7,7 @@ jest.mock('../utils/workspace-root', () => {
   };
 });
 
-jest.mock('./impl', () => {
+jest.mock('./file-hasher', () => {
   return {
     hashArray: (values: string[]) => values.join('|'),
   };
@@ -27,7 +27,7 @@ import {
   Hash,
   InProcessTaskHasher,
 } from './task-hasher';
-import { fileHasher } from './impl';
+import { fileHasher } from './file-hasher';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 
 describe('TaskHasher', () => {

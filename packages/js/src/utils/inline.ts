@@ -32,12 +32,18 @@ export function isInlineGraphEmpty(inlineGraph: InlineProjectGraph): boolean {
 export function handleInliningBuild(
   context: ExecutorContext,
   options: NormalizedExecutorOptions,
-  tsConfigPath: string
+  tsConfigPath: string,
+  projectName: string = context.projectName
 ): InlineProjectGraph {
   const tsConfigJson = readJsonFile(tsConfigPath);
   const pathAliases =
     tsConfigJson['compilerOptions']?.['paths'] || readBasePathAliases(context);
-  const inlineGraph = createInlineGraph(context, options, pathAliases);
+  const inlineGraph = createInlineGraph(
+    context,
+    options,
+    pathAliases,
+    projectName
+  );
 
   if (isInlineGraphEmpty(inlineGraph)) {
     return inlineGraph;
@@ -136,7 +142,7 @@ function createInlineGraph(
   context: ExecutorContext,
   options: NormalizedExecutorOptions,
   pathAliases: Record<string, string[]>,
-  projectName: string = context.projectName,
+  projectName: string,
   inlineGraph: InlineProjectGraph = emptyInlineGraph()
 ) {
   if (options.external == null) return inlineGraph;

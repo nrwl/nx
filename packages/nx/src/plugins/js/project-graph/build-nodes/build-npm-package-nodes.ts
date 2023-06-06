@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { hashArray } from '../../../../hasher/impl';
+import { hashArray } from '../../../../hasher/file-hasher';
 import { join } from 'path';
 
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';

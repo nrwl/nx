@@ -1,21 +1,22 @@
 import {
   formatFiles,
-  getProjects,
+  readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 
-export default async function update(host: Tree) {
-  const projects = getProjects(host);
+export default async function update(tree: Tree) {
+  const migrateProject = (options, projectName, targetName) => {
+    const projectConfig = readProjectConfiguration(tree, projectName);
+    projectConfig.targets[targetName].executor = '@nx/webpack:webpack';
+    projectConfig.targets[targetName].options.compiler = 'tsc';
+    projectConfig.targets[targetName].options.target = 'node';
+    updateProjectConfiguration(tree, projectName, projectConfig);
+  };
 
-  for (const [name, config] of projects.entries()) {
-    if (config?.targets?.build?.executor === '@nrwl/node:webpack') {
-      config.targets.build.executor = '@nx/webpack:webpack';
-      config.targets.build.options.target = 'node';
-      config.targets.build.options.compiler = 'tsc';
-      updateProjectConfiguration(host, name, config);
-    }
-  }
+  forEachExecutorOptions(tree, '@nx/node:webpack', migrateProject);
+  forEachExecutorOptions(tree, '@nrwl/node:webpack', migrateProject);
 
-  await formatFiles(host);
+  await formatFiles(tree);
 }

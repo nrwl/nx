@@ -50,11 +50,12 @@ export interface ExecutorOptions {
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {
-  root?: string;
-  sourceRoot?: string;
+  rootDir: string;
   projectRoot: string;
   mainOutputPath: string;
   files: Array<FileInputOutput>;
+  root?: string;
+  sourceRoot?: string;
 }
 
 export interface SwcExecutorOptions extends ExecutorOptions {

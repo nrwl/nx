@@ -1,5 +1,3 @@
-import { parseSyml, stringifySyml } from '@yarnpkg/parsers';
-import { stringify } from '@yarnpkg/lockfile';
 import { getHoistedPackageVersion } from './utils/package-json';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { satisfies, Range } from 'semver';
@@ -8,7 +6,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
-import { hashArray } from '../../../hasher/impl';
+import { hashArray } from '../../../hasher/file-hasher';
 import { sortObjectByKeys } from '../../../utils/object-sort';
 
 /**
@@ -41,6 +39,7 @@ export function parseYarnLockfile(
   lockFileContent: string,
   builder: ProjectGraphBuilder
 ) {
+  const { parseSyml } = require('@yarnpkg/parsers');
   const data = parseSyml(lockFileContent);
 
   // we use key => node map to avoid duplicate work when parsing keys
@@ -200,6 +199,7 @@ export function stringifyYarnLockfile(
   rootLockFileContent: string,
   packageJson: NormalizedPackageJson
 ): string {
+  const { parseSyml, stringifySyml } = require('@yarnpkg/parsers');
   const { __metadata, ...dependencies } = parseSyml(rootLockFileContent);
   const isBerry = !!__metadata;
 
@@ -223,6 +223,7 @@ export function stringifyYarnLockfile(
       })
     );
   } else {
+    const { stringify } = require('@yarnpkg/lockfile');
     return stringify(sortObjectByKeys(snapshots));
   }
 }

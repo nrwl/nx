@@ -56,7 +56,7 @@ import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import { handleHashTasks } from './handle-hash-tasks';
-import { fileHasher, hashArray } from '../../hasher/impl';
+import { fileHasher, hashArray } from '../../hasher/file-hasher';
 import { handleRequestFileData } from './handle-request-file-data';
 
 let performanceObserver: PerformanceObserver | undefined;

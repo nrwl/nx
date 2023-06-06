@@ -17,6 +17,22 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 
 function main() {
+  if (
+    process.argv[2] !== 'report' &&
+    process.argv[2] !== '--version' &&
+    process.argv[2] !== '--help' &&
+    !_supportedPlatform()
+  ) {
+    output.error({
+      title: 'Platform not supported',
+      bodyLines: [
+        `This platform (${process.platform}-${process.arch}) is currently not supported by Nx.`,
+        'For a list of supported platforms, please see https://nx.dev/recipes/ci/troubleshoot-nx-install-issues#supported-native-module-platform',
+      ],
+    });
+    process.exit(1);
+  }
+
   const workspace = findWorkspaceRoot(process.cwd());
   // new is a special case because there is no local workspace to load
   if (
@@ -237,6 +253,15 @@ function _getLatestVersionOfNx(): string {
     } catch {
       return null;
     }
+  }
+}
+
+function _supportedPlatform(): boolean {
+  try {
+    require('../src/native');
+    return true;
+  } catch {
+    return false;
   }
 }
 

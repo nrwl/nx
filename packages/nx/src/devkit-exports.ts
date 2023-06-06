@@ -215,7 +215,7 @@ export {
  * @category Utils
  */
 export { Hash, TaskHasher, Hasher } from './hasher/task-hasher';
-export { hashArray } from './hasher/impl';
+export { hashArray } from './hasher/file-hasher';
 
 /**
  * @category Utils

@@ -1,8 +1,8 @@
-import { exec } from 'child_process';
+import { execSync } from 'child_process';
 import { platform } from 'os';
 import * as chalk from 'chalk';
 import { GeneratorCallback, logger } from '@nx/devkit';
-import { rmdirSync, existsSync } from 'fs-extra';
+import { existsSync } from 'fs-extra';
 import { join } from 'path';
 
 const podInstallErrorMessage = `
@@ -43,32 +43,14 @@ export function runPodInstall(
   };
 }
 
-export function podInstall(
-  iosDirectory: string,
-  buildFolder?: string
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    exec(
-      'pod install',
-      {
-        cwd: iosDirectory,
-      },
-      (error, stdout, stderr) => {
-        if (error) {
-          logger.error(error.message);
-          reject(new Error(podInstallErrorMessage));
-        }
-        if (stderr) {
-          logger.error(stderr);
-          reject(new Error(podInstallErrorMessage));
-        }
-        logger.info(stdout);
-        if (stdout.includes('Pod installation complete')) {
-          resolve();
-        } else {
-          reject(new Error(podInstallErrorMessage));
-        }
-      }
-    );
-  });
+export function podInstall(iosDirectory: string, buildFolder?: string) {
+  try {
+    execSync('pod install', {
+      cwd: iosDirectory,
+      stdio: 'inherit',
+    });
+  } catch (e) {
+    logger.error(podInstallErrorMessage);
+    throw e;
+  }
 }

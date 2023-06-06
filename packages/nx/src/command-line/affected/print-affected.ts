@@ -12,7 +12,7 @@ import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { hashTask } from '../../hasher/hash-task';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getPackageManagerCommand } from '../../utils/package-manager';
-import { fileHasher } from '../../hasher/impl';
+import { fileHasher } from '../../hasher/file-hasher';
 import { printAffectedDeprecationMessage } from './command-object';
 import { logger, NX_PREFIX } from '../../utils/logger';
 

@@ -104,12 +104,7 @@ export class CopyAssetsHandler {
   async processAllAssetsOnce(): Promise<void> {
     await Promise.all(
       this.assetGlobs.map(async (ag) => {
-        let pattern: string;
-        if (typeof ag === 'string') {
-          pattern = ag;
-        } else {
-          pattern = ag.pattern;
-        }
+        const pattern = this.normalizeAssetPattern(ag);
 
         // fast-glob only supports Unix paths
         const files = await fg(pattern.replace(/\\/g, '/'), {
@@ -117,25 +112,23 @@ export class CopyAssetsHandler {
           dot: true, // enable hidden files
         });
 
-        this.callback(
-          files.reduce((acc, src) => {
-            if (
-              !ag.ignore?.some((ig) => minimatch(src, ig)) &&
-              !this.ignore.ignores(src)
-            ) {
-              const relPath = path.relative(ag.input, src);
-              const dest = relPath.startsWith('..') ? src : relPath;
-              acc.push({
-                type: 'create',
-                src: path.join(this.rootDir, src),
-                dest: path.join(this.rootDir, ag.output, dest),
-              });
-            }
-            return acc;
-          }, [])
-        );
+        this.callback(this.filesToEvent(files, ag));
       })
     );
+  }
+
+  processAllAssetsOnceSync(): void {
+    this.assetGlobs.forEach((ag) => {
+      const pattern = this.normalizeAssetPattern(ag);
+
+      // fast-glob only supports Unix paths
+      const files = fg.sync(pattern.replace(/\\/g, '/'), {
+        cwd: this.rootDir,
+        dot: true, // enable hidden files
+      });
+
+      this.callback(this.filesToEvent(files, ag));
+    });
   }
 
   async watchAndProcessOnAssetChange(): Promise<() => void> {
@@ -151,7 +144,7 @@ export class CopyAssetsHandler {
         } else if (err) {
           logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
         } else {
-          this.processEvents(data.changedFiles);
+          this.processWatchEvents(data.changedFiles);
         }
       }
     );
@@ -159,7 +152,7 @@ export class CopyAssetsHandler {
     return () => unregisterFileWatcher();
   }
 
-  private async processEvents(events: ChangedFile[]): Promise<void> {
+  async processWatchEvents(events: ChangedFile[]): Promise<void> {
     const fileEvents: FileEvent[] = [];
     for (const event of events) {
       const pathFromRoot = path.relative(this.rootDir, event.path);
@@ -183,5 +176,27 @@ export class CopyAssetsHandler {
     }
 
     if (fileEvents.length > 0) this.callback(fileEvents);
+  }
+
+  private filesToEvent(files: string[], assetGlob: AssetEntry): FileEvent[] {
+    return files.reduce((acc, src) => {
+      if (
+        !assetGlob.ignore?.some((ig) => minimatch(src, ig)) &&
+        !this.ignore.ignores(src)
+      ) {
+        const relPath = path.relative(assetGlob.input, src);
+        const dest = relPath.startsWith('..') ? src : relPath;
+        acc.push({
+          type: 'create',
+          src: path.join(this.rootDir, src),
+          dest: path.join(this.rootDir, assetGlob.output, dest),
+        });
+      }
+      return acc;
+    }, []);
+  }
+
+  private normalizeAssetPattern(assetEntry: AssetEntry): string {
+    return typeof assetEntry === 'string' ? assetEntry : assetEntry.pattern;
   }
 }
