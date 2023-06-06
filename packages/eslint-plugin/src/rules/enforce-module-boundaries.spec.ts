@@ -1,11 +1,6 @@
 import 'nx/src/utils/testing/mock-fs';
 
-import type {
-  FileData,
-  ProjectFileMap,
-  ProjectGraph,
-  ProjectGraphDependency,
-} from '@nx/devkit';
+import type { FileData, ProjectFileMap, ProjectGraph } from '@nx/devkit';
 import { DependencyType } from '@nx/devkit';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';

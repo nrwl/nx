@@ -67,3 +67,15 @@ export function readProjectGraph(ruleName: string): {
     targetProjectLocator: (global as any).targetProjectLocator,
   };
 }
+
+export function removePackageJsonFromFileMap(
+  projectFileMap: ProjectFileMap
+): ProjectFileMap {
+  const newFileMap = {};
+  Object.keys(projectFileMap).forEach((key) => {
+    newFileMap[key] = projectFileMap[key].filter(
+      (f) => !f.file.endsWith('/package.json')
+    );
+  });
+  return newFileMap;
+}
