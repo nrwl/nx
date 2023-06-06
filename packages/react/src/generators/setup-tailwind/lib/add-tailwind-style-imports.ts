@@ -21,6 +21,13 @@ const knownLocations = [
   'pages/styles.scss',
   'pages/styles.styl',
   'pages/styles.less',
+  
+  // Next.js App Router
+  'app/global.css',
+  'app/global.scss',
+  'app/global.styl',
+  'app/global.less',
+  
 ];
 
 export function addTailwindStyleImports(
