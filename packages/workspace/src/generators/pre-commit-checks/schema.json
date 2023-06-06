@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "PreCommitChecks",
+  "title": "Generate a lint-staged configuration.",
+  "description": "Generate a configuration to run pre-commit checks using lint-staged.",
+  "type": "object",
+  "properties": {
+    "enableCommitlint": {
+      "type": "boolean",
+      "description": "Enable commitlint",
+      "default": true,
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files.",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "required": []
+}

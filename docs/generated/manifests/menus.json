@@ -6921,6 +6921,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "pre-commit-checks",
+                "path": "/packages/workspace/generators/pre-commit-checks",
+                "name": "pre-commit-checks",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

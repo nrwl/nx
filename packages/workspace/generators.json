@@ -87,6 +87,11 @@
       "factory": "./src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator",
       "schema": "./src/generators/ci-workflow/schema.json",
       "description": "Generate a CI workflow."
+    },
+    "pre-commit-checks": {
+      "factory": "./src/generators/pre-commit-checks/generator",
+      "schema": "./src/generators/pre-commit-checks/schema.json",
+      "description": "Generate a configuration to run pre-commit checks using lint-staged."
     }
   }
 }

@@ -1,0 +1,33 @@
+{
+  "name": "pre-commit-checks",
+  "factory": "./src/generators/pre-commit-checks/generator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "PreCommitChecks",
+    "title": "Generate a lint-staged configuration.",
+    "description": "Generate a configuration to run pre-commit checks using lint-staged.",
+    "type": "object",
+    "properties": {
+      "enableCommitlint": {
+        "type": "boolean",
+        "description": "Enable commitlint",
+        "default": true,
+        "x-priority": "important"
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files.",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description":  "Generate a configuration to run pre-commit checks using lint-staged.",
+  "implementation": "/packages/workspace/src/generators/pre-commit-checks/generator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/workspace/src/generators/pre-commit-checks/schema.json",
+  "type": "generator"
+}

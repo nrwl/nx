@@ -2898,6 +2898,15 @@
         "originalFilePath": "/packages/workspace/src/generators/ci-workflow/schema.json",
         "path": "/packages/workspace/generators/ci-workflow",
         "type": "generator"
+      },
+      "/packages/workspace/generators/pre-commit-checks": {
+        "description": "Generate a configuration to run pre-commit checks using lint-staged.",
+        "file": "generated/packages/workspace/generators/pre-commit-checks.json",
+        "hidden": false,
+        "name": "pre-commit-checks",
+        "originalFilePath": "/packages/workspace/src/generators/pre-commit-checks/schema.json",
+        "path": "/packages/workspace/generators/pre-commit-checks",
+        "type": "generator"
       }
     },
     "path": "/packages/workspace"
