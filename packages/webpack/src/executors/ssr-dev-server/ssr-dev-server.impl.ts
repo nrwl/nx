@@ -58,7 +58,7 @@ export async function* ssrDevServerExecutor(
 
   for await (const output of combined) {
     if (!output.success) throw new Error('Could not build application');
-    if (output.options.target === 'node') {
+    if (output.options?.target === 'node') {
       nodeStarted = true;
     } else if (output.options?.target === 'web') {
       browserBuilt = true;
