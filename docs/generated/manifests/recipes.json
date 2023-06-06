@@ -1009,6 +1009,188 @@
     "path": "/recipes/deployment/deno-netlify-functions",
     "tags": ["deployment", "deno"]
   },
+  "/recipes/enforce-module-boundaries": {
+    "id": "enforce-module-boundaries",
+    "name": "Enforce Module Boundaries",
+    "description": "Configuring the enforce module boundaries rule",
+    "file": "",
+    "itemList": [
+      {
+        "id": "ban-dependencies-with-tags",
+        "name": "Ban Dependencies with Certain Tags",
+        "description": "",
+        "file": "shared/recipes/ban-dependencies-with-tags",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "tag-multiple-dimensions",
+        "name": "Tag in Multiple Dimensions",
+        "description": "",
+        "file": "shared/recipes/tag-multiple-dimensions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "ban-external-imports",
+        "name": "Ban External Imports",
+        "description": "",
+        "file": "shared/recipes/ban-external-imports",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/ban-external-imports",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "tags-allow-list",
+        "name": "Tags Allow List",
+        "description": "",
+        "file": "shared/recipes/tags-allow-list",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/tags-allow-list",
+        "tags": ["enforce-project-boundaries"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries",
+    "tags": []
+  },
+  "/recipes/enforce-module-boundaries/ban-dependencies-with-tags": {
+    "id": "ban-dependencies-with-tags",
+    "name": "Ban Dependencies with Certain Tags",
+    "description": "",
+    "file": "shared/recipes/ban-dependencies-with-tags",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/recipes/enforce-module-boundaries/tag-multiple-dimensions": {
+    "id": "tag-multiple-dimensions",
+    "name": "Tag in Multiple Dimensions",
+    "description": "",
+    "file": "shared/recipes/tag-multiple-dimensions",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/recipes/enforce-module-boundaries/ban-external-imports": {
+    "id": "ban-external-imports",
+    "name": "Ban External Imports",
+    "description": "",
+    "file": "shared/recipes/ban-external-imports",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/ban-external-imports",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/recipes/enforce-module-boundaries/tags-allow-list": {
+    "id": "tags-allow-list",
+    "name": "Tags Allow List",
+    "description": "",
+    "file": "shared/recipes/tags-allow-list",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/tags-allow-list",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/recipes/example-repos": {
+    "id": "example-repos",
+    "name": "Example Repos",
+    "description": "Examples of different ways to use Nx",
+    "file": "",
+    "itemList": [
+      {
+        "id": "react-nx",
+        "name": "Powering Up React Development With Nx",
+        "description": "",
+        "file": "shared/examples/react-nx",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/react-nx",
+        "tags": []
+      },
+      {
+        "id": "apollo-react",
+        "name": "Using Apollo GraphQL",
+        "description": "",
+        "file": "shared/examples/apollo-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/apollo-react",
+        "tags": []
+      },
+      {
+        "id": "caching",
+        "name": "Large Repo and Caching",
+        "description": "",
+        "file": "shared/examples/caching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/caching",
+        "tags": []
+      },
+      {
+        "id": "dte",
+        "name": "Large Repo and DTE",
+        "description": "",
+        "file": "shared/examples/dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/dte",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/example-repos",
+    "tags": []
+  },
+  "/recipes/example-repos/react-nx": {
+    "id": "react-nx",
+    "name": "Powering Up React Development With Nx",
+    "description": "",
+    "file": "shared/examples/react-nx",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/example-repos/react-nx",
+    "tags": []
+  },
+  "/recipes/example-repos/apollo-react": {
+    "id": "apollo-react",
+    "name": "Using Apollo GraphQL",
+    "description": "",
+    "file": "shared/examples/apollo-react",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/example-repos/apollo-react",
+    "tags": []
+  },
+  "/recipes/example-repos/caching": {
+    "id": "caching",
+    "name": "Large Repo and Caching",
+    "description": "",
+    "file": "shared/examples/caching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/example-repos/caching",
+    "tags": []
+  },
+  "/recipes/example-repos/dte": {
+    "id": "dte",
+    "name": "Large Repo and DTE",
+    "description": "",
+    "file": "shared/examples/dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/example-repos/dte",
+    "tags": []
+  },
   "/recipes/other": {
     "id": "other",
     "name": "Other",
@@ -1186,46 +1368,6 @@
         "tags": []
       },
       {
-        "id": "react-nx",
-        "name": "Powering Up React Development With Nx",
-        "description": "",
-        "file": "shared/examples/react-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/react-nx",
-        "tags": []
-      },
-      {
-        "id": "apollo-react",
-        "name": "Using Apollo GraphQL",
-        "description": "",
-        "file": "shared/examples/apollo-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/apollo-react",
-        "tags": []
-      },
-      {
-        "id": "caching",
-        "name": "Large Repo and Caching",
-        "description": "",
-        "file": "shared/examples/caching",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/caching",
-        "tags": []
-      },
-      {
-        "id": "dte",
-        "name": "Large Repo and DTE",
-        "description": "",
-        "file": "shared/examples/dte",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/dte",
-        "tags": []
-      },
-      {
         "id": "azure-last-successful-commit",
         "name": "Find the Last Successful Commit in Azure Pipelines",
         "description": "",
@@ -1244,46 +1386,6 @@
         "isExternal": false,
         "path": "/recipes/other/troubleshoot-cache-misses",
         "tags": ["cache-task-results"]
-      },
-      {
-        "id": "ban-dependencies-with-tags",
-        "name": "Ban Dependencies with Certain Tags",
-        "description": "",
-        "file": "shared/recipes/ban-dependencies-with-tags",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/ban-dependencies-with-tags",
-        "tags": ["enforce-project-boundaries"]
-      },
-      {
-        "id": "tag-multiple-dimensions",
-        "name": "Tag in Multiple Dimensions",
-        "description": "",
-        "file": "shared/recipes/tag-multiple-dimensions",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/tag-multiple-dimensions",
-        "tags": ["enforce-project-boundaries"]
-      },
-      {
-        "id": "ban-external-imports",
-        "name": "Ban External Imports",
-        "description": "",
-        "file": "shared/recipes/ban-external-imports",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/ban-external-imports",
-        "tags": ["enforce-project-boundaries"]
-      },
-      {
-        "id": "tags-allow-list",
-        "name": "Tags Allow List",
-        "description": "",
-        "file": "shared/recipes/tags-allow-list",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/tags-allow-list",
-        "tags": ["enforce-project-boundaries"]
       },
       {
         "id": "export-project-graph",
@@ -1530,46 +1632,6 @@
     "path": "/recipes/other/misc-data-persistence",
     "tags": []
   },
-  "/recipes/other/react-nx": {
-    "id": "react-nx",
-    "name": "Powering Up React Development With Nx",
-    "description": "",
-    "file": "shared/examples/react-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/react-nx",
-    "tags": []
-  },
-  "/recipes/other/apollo-react": {
-    "id": "apollo-react",
-    "name": "Using Apollo GraphQL",
-    "description": "",
-    "file": "shared/examples/apollo-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/apollo-react",
-    "tags": []
-  },
-  "/recipes/other/caching": {
-    "id": "caching",
-    "name": "Large Repo and Caching",
-    "description": "",
-    "file": "shared/examples/caching",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/caching",
-    "tags": []
-  },
-  "/recipes/other/dte": {
-    "id": "dte",
-    "name": "Large Repo and DTE",
-    "description": "",
-    "file": "shared/examples/dte",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/dte",
-    "tags": []
-  },
   "/recipes/other/azure-last-successful-commit": {
     "id": "azure-last-successful-commit",
     "name": "Find the Last Successful Commit in Azure Pipelines",
@@ -1589,46 +1651,6 @@
     "isExternal": false,
     "path": "/recipes/other/troubleshoot-cache-misses",
     "tags": ["cache-task-results"]
-  },
-  "/recipes/other/ban-dependencies-with-tags": {
-    "id": "ban-dependencies-with-tags",
-    "name": "Ban Dependencies with Certain Tags",
-    "description": "",
-    "file": "shared/recipes/ban-dependencies-with-tags",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/ban-dependencies-with-tags",
-    "tags": ["enforce-project-boundaries"]
-  },
-  "/recipes/other/tag-multiple-dimensions": {
-    "id": "tag-multiple-dimensions",
-    "name": "Tag in Multiple Dimensions",
-    "description": "",
-    "file": "shared/recipes/tag-multiple-dimensions",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/tag-multiple-dimensions",
-    "tags": ["enforce-project-boundaries"]
-  },
-  "/recipes/other/ban-external-imports": {
-    "id": "ban-external-imports",
-    "name": "Ban External Imports",
-    "description": "",
-    "file": "shared/recipes/ban-external-imports",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/ban-external-imports",
-    "tags": ["enforce-project-boundaries"]
-  },
-  "/recipes/other/tags-allow-list": {
-    "id": "tags-allow-list",
-    "name": "Tags Allow List",
-    "description": "",
-    "file": "shared/recipes/tags-allow-list",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/tags-allow-list",
-    "tags": ["enforce-project-boundaries"]
   },
   "/recipes/other/export-project-graph": {
     "id": "export-project-graph",
