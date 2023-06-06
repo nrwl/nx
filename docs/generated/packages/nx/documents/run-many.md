@@ -53,6 +53,18 @@ Test all projects with tags starting with `api-`. Note: your shell may require y
  nx run-many -t test --projects=tag:api-*
 ```
 
+Test all projects with a `type:ui` tag:
+
+```shell
+ nx run-many -t test --projects=tag:type:ui
+```
+
+Test all projects with a `type:feature` or `type:ui` tag:
+
+```shell
+ nx run-many -t test --projects=tag:type:feature,tag:type:ui
+```
+
 Run lint, test, and build targets for all projects. Requires Nx v15.4+:
 
 ```shell
