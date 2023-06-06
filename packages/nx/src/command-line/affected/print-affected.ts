@@ -73,7 +73,7 @@ async function createTasks(
     affectedProjectsWithTargetAndConfig.map((p) => p.name),
     nxArgs.targets,
     nxArgs.configuration,
-    {}
+    overrides
   );
   const hasher = new InProcessTaskHasher(
     {},
