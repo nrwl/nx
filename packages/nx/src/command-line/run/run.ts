@@ -28,6 +28,10 @@ import {
 } from '../../project-graph/project-graph';
 import { ProjectGraph } from '../../config/project-graph';
 import { readNxJson } from '../../config/configuration';
+import {
+  getLastValueFromAsyncIterableIterator,
+  isAsyncIterator,
+} from '../../utils/async-iterator';
 
 export interface Target {
   project: string;
@@ -62,12 +66,6 @@ function isPromise<T extends { success: boolean }>(
   return typeof (v as any)?.then === 'function';
 }
 
-function isAsyncIterator<T extends { success: boolean }>(
-  v: Promise<{ success: boolean }> | AsyncIterableIterator<T>
-): v is AsyncIterableIterator<T> {
-  return typeof (v as any)?.[Symbol.asyncIterator] === 'function';
-}
-
 async function* promiseToIterator<T extends { success: boolean }>(
   v: Promise<T>
 ): AsyncIterableIterator<T> {
@@ -77,8 +75,6 @@ async function* promiseToIterator<T extends { success: boolean }>(
 async function iteratorToProcessStatusCode(
   i: AsyncIterableIterator<{ success: boolean }>
 ): Promise<number> {
-  let success: boolean;
-
   // This is a workaround to fix an issue that only happens with
   // the @angular-devkit/build-angular:browser builder. Starting
   // on version 12.0.1, a SASS compilation implementation was
@@ -87,18 +83,7 @@ async function iteratorToProcessStatusCode(
   // like CI or when running Docker builds.
   const keepProcessAliveInterval = setInterval(() => {}, 1000);
   try {
-    let prev: IteratorResult<{ success: boolean }>;
-    let current: IteratorResult<{ success: boolean }>;
-    do {
-      prev = current;
-      current = await i.next();
-    } while (!current.done);
-
-    success =
-      current.value !== undefined || !prev
-        ? current.value.success
-        : prev.value.success;
-
+    const { success } = await getLastValueFromAsyncIterableIterator(i);
     return success ? 0 : 1;
   } finally {
     clearInterval(keepProcessAliveInterval);
