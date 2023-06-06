@@ -22,9 +22,6 @@ import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
 
 export async function webpackInitGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
-  if (schema.compiler === 'babel') {
-    addBabelInputs(tree);
-  }
   const devDependencies = {
     '@nx/webpack': nxVersion,
   };

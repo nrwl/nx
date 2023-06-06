@@ -21,7 +21,7 @@
       "type": "string",
       "enum": ["babel", "swc", "tsc"],
       "description": "The compiler to use to build source.",
-      "default": "babel"
+      "default": "swc"
     },
     "main": {
       "type": "string",

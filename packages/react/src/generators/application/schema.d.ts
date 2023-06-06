@@ -14,7 +14,7 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
   routing?: boolean;
-  skipWorkspaceJson?: boolean;
+  skipNxJson?: boolean;
   js?: boolean;
   globalCss?: boolean;
   strict?: boolean;

@@ -1,4 +1,10 @@
-import { ExecutorContext, logger, workspaceRoot } from '@nx/devkit';
+import {
+  createProjectGraphAsync,
+  ExecutorContext,
+  logger,
+  ProjectGraphProjectNode,
+  workspaceRoot,
+} from '@nx/devkit';
 import { composePluginsSync } from '@nx/webpack/src/utils/config';
 import { NormalizedWebpackExecutorOptions } from '@nx/webpack/src/executors/webpack/schema';
 import { join } from 'path';
@@ -10,6 +16,7 @@ import {
 } from 'webpack';
 import { mergePlugins } from './merge-plugins';
 import { withReact } from '../with-react';
+import { existsSync } from 'fs';
 
 // This is shamelessly taken from CRA and modified for NX use
 // https://github.com/facebook/create-react-app/blob/4784997f0682e75eb32a897b4ffe34d735912e6c/packages/react-scripts/config/env.js#L71
@@ -58,6 +65,90 @@ export const core = (prev, options) => ({
   disableWebpackDefaults: true,
 });
 
+interface NxProjectData {
+  workspaceRoot: string;
+  projectRoot: string;
+  sourceRoot: string;
+  projectNode?: ProjectGraphProjectNode;
+}
+
+const getProjectData = async (
+  storybookOptions: any
+): Promise<NxProjectData> => {
+  const fallbackData = {
+    workspaceRoot: storybookOptions.configDir,
+    projectRoot: '',
+    sourceRoot: '',
+  };
+  // Edge-case: not running from Nx
+  if (!process.env.NX_WORKSPACE_ROOT) return fallbackData;
+
+  const projectGraph = await createProjectGraphAsync();
+  const projectNode = projectGraph.nodes[process.env.NX_TASK_TARGET_PROJECT];
+
+  return projectNode
+    ? {
+        workspaceRoot: process.env.NX_WORKSPACE_ROOT,
+        projectRoot: projectNode.data.root,
+        sourceRoot: projectNode.data.sourceRoot,
+        projectNode,
+      }
+    : // Edge-case: missing project node
+      fallbackData;
+};
+
+const fixBabelConfigurationIfNeeded = (
+  webpackConfig: Configuration,
+  projectData: NxProjectData
+): void => {
+  if (!projectData.projectNode) return;
+
+  const isUsingBabelUpwardRootMode = Object.keys(
+    projectData.projectNode.data.targets
+  ).find((k) => {
+    const targetConfig = projectData.projectNode.data.targets[k];
+    return (
+      (targetConfig.executor === '@nx/webpack:webpack' ||
+        targetConfig.executor === '@nrwl/webpack:webpack') &&
+      targetConfig.options?.babelUpwardRootMode
+    );
+  });
+
+  if (isUsingBabelUpwardRootMode) return;
+
+  let babelrcPath: string;
+  for (const ext of ['', '.json', '.js', '.cjs', '.mjs', '.cts']) {
+    const candidate = join(
+      projectData.workspaceRoot,
+      projectData.projectRoot,
+      `.babelrc${ext}`
+    );
+    if (existsSync(candidate)) {
+      babelrcPath = candidate;
+      break;
+    }
+  }
+
+  // Unexpected setup, skip.
+  if (!babelrcPath) return;
+
+  let babelRuleItem;
+  for (const rule of webpackConfig.module.rules) {
+    if (typeof rule === 'string') continue;
+    if (!Array.isArray(rule.use)) continue;
+    for (const item of rule.use) {
+      if (typeof item !== 'string' && item['loader'].includes('babel-loader')) {
+        babelRuleItem = item;
+        break;
+      }
+    }
+  }
+
+  if (babelRuleItem) {
+    babelRuleItem.options.configFile = babelrcPath;
+  }
+};
+
 export const webpack = async (
   storybookWebpackConfig: Configuration = {},
   options: any
@@ -78,12 +169,15 @@ export const webpack = async (
   const { withNx, withWeb } = require('@nx/webpack');
   const tsconfigPath = join(options.configDir, 'tsconfig.json');
 
+  const projectData = await getProjectData(options);
+
+  fixBabelConfigurationIfNeeded(storybookWebpackConfig, projectData);
+
   const builderOptions: NormalizedWebpackExecutorOptions = {
     ...options,
-    root: options.configDir,
-    // These are blank because root is the absolute path to .storybook folder
-    projectRoot: '',
-    sourceRoot: '',
+    root: projectData.workspaceRoot,
+    projectRoot: projectData.projectRoot,
+    sourceRoot: projectData.sourceRoot,
     fileReplacements: [],
     sourceMap: true,
     styles: options.styles ?? [],
