@@ -15,6 +15,7 @@ import {
 } from '../../../hasher/task-hasher';
 import { readNxJson } from '../../../config/configuration';
 import { readProjectFileMapCache } from '../../../project-graph/nx-deps-cache';
+import { join } from 'path';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -80,11 +81,14 @@ export function createPackageJson(
     name: projectName,
     version: '0.0.1',
   };
-  if (existsSync(`${graph.nodes[projectName].data.root}/package.json`)) {
+  const projectPackageJsonPath = join(
+    options.root || workspaceRoot,
+    projectNode.data.root,
+    'package.json'
+  );
+  if (existsSync(projectPackageJsonPath)) {
     try {
-      packageJson = readJsonFile(
-        `${graph.nodes[projectName].data.root}/package.json`
-      );
+      packageJson = readJsonFile(projectPackageJsonPath);
       // for standalone projects we don't want to include all the root dependencies
       if (graph.nodes[projectName].data.root === '.') {
         // TODO: We should probably think more on this - Nx can't always
