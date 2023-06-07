@@ -83,29 +83,31 @@ export async function createRunManyDynamicOutputRenderer({
   let currentFrame = 0;
   let renderIntervalId: NodeJS.Timeout | undefined;
 
-  const clearPinnedFooter = () => {
-    for (let i = 0; i < pinnedFooterNumLines; i++) {
-      readline.moveCursor(process.stdout, 0, -1);
-      readline.clearLine(process.stdout, 0);
-    }
+  const moveCursorToStartOfPinnedFooter = () => {
+    readline.moveCursor(process.stdout, 0, -pinnedFooterNumLines);
   };
 
   const renderPinnedFooter = (lines: string[], dividerColor = 'cyan') => {
     let additionalLines = 0;
     if (hasTaskOutput) {
-      output.addVerticalSeparator(dividerColor);
-      additionalLines += 3;
+      const dividerLines = output.getVerticalSeparatorLines(dividerColor);
+      for (const line of dividerLines) {
+        output.overwriteLine(line);
+      }
+      additionalLines += dividerLines.length;
     }
     // Create vertical breathing room for cursor position under the pinned footer
     lines.push('');
     for (const line of lines) {
-      process.stdout.write(output.X_PADDING + line + EOL);
+      output.overwriteLine(output.X_PADDING + line);
     }
     pinnedFooterNumLines = lines.length + additionalLines;
+    // clear any possible text below the cursor's position
+    readline.clearScreenDown(process.stdout);
   };
 
   const printTaskResult = (task: Task, status: TaskStatus) => {
-    clearPinnedFooter();
+    moveCursorToStartOfPinnedFooter();
     // If this is the very first output, add some vertical breathing room
     if (!hasTaskOutput) {
       output.addNewline();
@@ -114,7 +116,7 @@ export async function createRunManyDynamicOutputRenderer({
 
     switch (status) {
       case 'local-cache':
-        writeLine(
+        writeCompletedTaskResultLine(
           `${
             output.colors.green(figures.tick) +
             '  ' +
@@ -126,7 +128,7 @@ export async function createRunManyDynamicOutputRenderer({
         }
         break;
       case 'local-cache-kept-existing':
-        writeLine(
+        writeCompletedTaskResultLine(
           `${
             output.colors.green(figures.tick) +
             '  ' +
@@ -138,7 +140,7 @@ export async function createRunManyDynamicOutputRenderer({
         }
         break;
       case 'remote-cache':
-        writeLine(
+        writeCompletedTaskResultLine(
           `${
             output.colors.green(figures.tick) +
             '  ' +
@@ -153,7 +155,7 @@ export async function createRunManyDynamicOutputRenderer({
         const timeTakenText = prettyTime(
           process.hrtime(tasksToProcessStartTimes[task.id])
         );
-        writeLine(
+        writeCompletedTaskResultLine(
           output.colors.green(figures.tick) +
             '  ' +
             output.formatCommand(task.id) +
@@ -166,7 +168,7 @@ export async function createRunManyDynamicOutputRenderer({
       }
       case 'failure':
         output.addNewline();
-        writeLine(
+        writeCompletedTaskResultLine(
           output.colors.red(figures.cross) +
             '  ' +
             output.formatCommand(output.colors.red(task.id))
@@ -250,7 +252,7 @@ export async function createRunManyDynamicOutputRenderer({
       );
     }
 
-    clearPinnedFooter();
+    moveCursorToStartOfPinnedFooter();
 
     if (additionalFooterRows.length > 1) {
       const text = `Running ${formatTargetsAndProjects(
@@ -312,7 +314,7 @@ export async function createRunManyDynamicOutputRenderer({
     clearRenderInterval();
     const timeTakenText = prettyTime(process.hrtime(start));
 
-    clearPinnedFooter();
+    moveCursorToStartOfPinnedFooter();
     if (totalSuccessfulTasks === totalTasks) {
       const text = `Successfully ran ${formatTargetsAndProjects(
         projectNames,
@@ -464,9 +466,9 @@ export async function createRunManyDynamicOutputRenderer({
   return { lifeCycle, renderIsDone };
 }
 
-function writeLine(line: string) {
+function writeCompletedTaskResultLine(line: string) {
   const additionalXPadding = '   ';
-  process.stdout.write(output.X_PADDING + additionalXPadding + line + EOL);
+  output.overwriteLine(output.X_PADDING + additionalXPadding + line);
 }
 
 /**
@@ -491,9 +493,9 @@ function writeCommandOutputBlock(commandOutput: string) {
     const linesToRemove = totalTrailingEmptyLines - 1;
     lines.splice(lines.length - linesToRemove, linesToRemove);
   }
+  lines.push('');
   // Indent the command output to make it look more "designed" in the context of the dynamic output
-  process.stdout.write(
-    lines.map((l) => `${output.X_PADDING}${additionalXPadding}${l}`).join(EOL) +
-      EOL
+  lines.forEach((l) =>
+    output.overwriteLine(`${output.X_PADDING}${additionalXPadding}${l}`)
   );
 }
