@@ -1,6 +1,5 @@
 import * as yargs from 'yargs';
 import { messages } from '../utils/nx/ab-testing';
-import enquirer = require('enquirer');
 import { CI } from '../utils/ci/ci-list';
 import { output } from '../utils/output';
 import { deduceDefaultBase } from '../utils/git/default-base';
@@ -9,7 +8,9 @@ import {
   PackageManager,
   packageManagerList,
 } from '../utils/package-manager';
+import { Preset } from '../utils/preset/preset';
 import { stringifyCollection } from '../utils/string-utils';
+import enquirer = require('enquirer');
 
 export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: boolean }>
@@ -98,7 +99,7 @@ export async function determineDefaultBase(
       .prompt<{ DefaultBase: string }>([
         {
           name: 'DefaultBase',
-          message: `Main branch name                   `,
+          message: `Main branch name`,
           initial: `main`,
           type: 'input',
         },
@@ -142,7 +143,7 @@ export async function determinePackageManager(
       .prompt<{ packageManager: PackageManager }>([
         {
           name: 'packageManager',
-          message: `Which package manager to use         `,
+          message: `Which package manager to use`,
           initial: 'npm' as any,
           type: 'autocomplete',
           choices: [

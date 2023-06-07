@@ -23,6 +23,7 @@ interface Schema {
   defaultBase: string;
   framework?: string;
   docker?: boolean;
+  js?: boolean;
   nextAppDir?: boolean;
   linter?: Linter;
   bundler?: 'vite' | 'webpack';

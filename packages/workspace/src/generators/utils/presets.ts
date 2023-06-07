@@ -17,4 +17,5 @@ export enum Preset {
   Express = 'express',
   NodeStandalone = 'node-standalone',
   NodeMonorepo = 'node-monorepo',
+  TsStandalone = 'ts-standalone',
 }
