@@ -107,7 +107,7 @@ export async function configurationGenerator(
     projectIsRootProjectInStandaloneWorkspace(root),
     !!nextBuildTarget,
     compiler === 'swc',
-    !!viteBuildTarget,
+    !!viteBuildTarget || schema.uiFramework.endsWith('-vite'),
     viteConfigFilePath
   );
 
