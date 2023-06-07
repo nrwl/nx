@@ -4,6 +4,7 @@ import { build, InlineConfig, mergeConfig } from 'vite';
 import {
   getViteBuildOptions,
   getViteSharedConfig,
+  registerPaths,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
 import {
@@ -15,32 +16,15 @@ import {
 import { existsSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
-import { registerTsConfigPaths } from '@nx/js/src/internal';
-import { calculateProjectDependencies, createTmpTsConfig } from '@nx/js/src/utils/buildable-libs-utils';
 
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
-  const metadata = context.projectsConfigurations.projects[context.projectName];
-  const projectRoot = metadata.root;
-  const tsConfig = resolve(projectRoot, 'tsconfig.json');
-  options.buildLibsFromSource ??= true;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
 
-  if (!options.buildLibsFromSource) {
-    const { dependencies } = calculateProjectDependencies(
-      context.projectGraph,
-      context.root,
-      context.projectName,
-      context.targetName,
-      context.configurationName,
-    );
-    const tmpTsConfig = createTmpTsConfig(tsConfig, context.root, projectRoot, dependencies);
-
-    registerTsConfigPaths(tmpTsConfig);
-  } else {
-    registerTsConfigPaths(tsConfig);
-  }
+  registerPaths(projectRoot, options, context);
 
   const normalizedOptions = normalizeOptions(options);
 
