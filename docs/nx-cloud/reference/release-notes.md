@@ -100,7 +100,7 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 ## 2306.01.2.patch1
 
-- Fixes an issue where admin users were not being created on new installations. 
+- Fixes an issue where admin users were not being created on new installations.
 
 ## 2306.01.2
 
