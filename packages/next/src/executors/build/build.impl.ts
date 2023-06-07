@@ -76,6 +76,12 @@ export default async function buildExecutor(
       isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
     }
   );
+
+  // Update `package.json` to reflect how users should run the build artifacts
+  builtPackageJson.scripts = {
+    start: 'next start',
+  };
+
   updatePackageJson(builtPackageJson, context);
   writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
 

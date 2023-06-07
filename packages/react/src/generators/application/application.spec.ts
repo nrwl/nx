@@ -849,12 +849,12 @@ describe('app', () => {
     ).toBeUndefined();
   });
 
-  describe('--skipWorkspaceJson', () => {
+  describe('--skipNxJson', () => {
     it('should update workspace with defaults when --skipprojectsConfigurations=false', async () => {
       await applicationGenerator(appTree, {
         ...schema,
         style: 'styled-components',
-        skipWorkspaceJson: false,
+        skipNxJson: false,
       });
 
       const nxJson = readNxJson(appTree);

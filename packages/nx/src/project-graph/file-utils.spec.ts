@@ -6,7 +6,7 @@ import {
 import * as fs from 'fs';
 import { JsonDiffType } from '../utils/json-diff';
 import ignore from 'ignore';
-import { fileHasher } from '../hasher/impl';
+import { fileHasher } from '../hasher/file-hasher';
 
 describe('calculateFileChanges', () => {
   beforeEach(() => {

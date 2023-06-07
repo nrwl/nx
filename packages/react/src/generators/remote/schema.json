@@ -84,7 +84,7 @@
       "default": false,
       "x-priority": "internal"
     },
-    "skipWorkspaceJson": {
+    "skipNxJson": {
       "description": "Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style).",
       "type": "boolean",
       "default": false,

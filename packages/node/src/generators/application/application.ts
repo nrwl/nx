@@ -398,7 +398,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       skipSerializers: true,
       supportTsx: options.js,
       testEnvironment: 'node',
-      compiler: 'tsc',
+      compiler: options.swcJest ? 'swc' : 'tsc',
       skipFormat: true,
     });
     tasks.push(jestTask);

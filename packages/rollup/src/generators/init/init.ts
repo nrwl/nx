@@ -17,10 +17,6 @@ import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   let task: GeneratorCallback;
 
-  if (schema.compiler === 'babel') {
-    addBabelInputs(tree);
-  }
-
   if (schema.compiler === 'swc') {
     task = addDependenciesToPackageJson(
       tree,

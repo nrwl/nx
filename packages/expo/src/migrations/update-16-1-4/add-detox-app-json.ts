@@ -7,7 +7,10 @@ export default async function update(tree: Tree) {
   const projects = getProjects(tree);
 
   projects.forEach((config) => {
-    if (config.targets?.['start']?.executor === '@nrwl/expo:start') {
+    if (
+      config.targets?.['start']?.executor === '@nrwl/expo:start' ||
+      config.targets?.['start']?.executor === '@nx/expo:start'
+    ) {
       updateJson(tree, `${config.root}/app.json`, (json) => {
         if (!json.expo.plugins) {
           json.expo.plugins = [];

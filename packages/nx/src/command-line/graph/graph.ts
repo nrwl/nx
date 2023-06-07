@@ -8,7 +8,6 @@ import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { readNxJson, workspaceLayout } from '../../config/configuration';
-import { fileHasher } from '../../hasher/impl';
 import { output } from '../../utils/output';
 import { writeJsonFile } from '../../utils/fileutils';
 import {
@@ -25,6 +24,9 @@ import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
 import { Server } from 'net';
 import { readProjectFileMapCache } from '../../project-graph/nx-deps-cache';
+import { fileHasher } from '../../hasher/file-hasher';
+import { getAffectedGraphNodes } from '../affected/affected';
+import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 
 export interface ProjectGraphClientResponse {
   hash: string;
@@ -187,6 +189,7 @@ export async function generateGraph(
     targets?: string[];
     focus?: string;
     exclude?: string[];
+    affected?: boolean;
   },
   affectedProjects: string[]
 ): Promise<void> {
@@ -226,6 +229,20 @@ export async function generateGraph(
       });
       process.exit(1);
     }
+  }
+
+  if (args.affected) {
+    affectedProjects = (
+      await getAffectedGraphNodes(
+        splitArgsIntoNxArgsAndOverrides(
+          args,
+          'affected',
+          { printWarnings: true },
+          readNxJson()
+        ).nxArgs,
+        graph
+      )
+    ).map((n) => n.name);
   }
 
   if (args.exclude) {
@@ -379,6 +396,8 @@ export async function generateGraph(
           .map((projectName) => encodeURIComponent(projectName))
           .join(' ')
       );
+    } else if (args.affected) {
+      url.pathname += '/affected';
     }
     if (args.groupByFolder) {
       url.searchParams.append('groupByFolder', 'true');

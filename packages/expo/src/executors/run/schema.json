@@ -53,7 +53,7 @@
     },
     "install": {
       "type": "boolean",
-      "description": "Should install missing dependencies before building.",
+      "description": "Installing npm packages and CocoaPods before building.",
       "default": true
     },
     "buildCache": {

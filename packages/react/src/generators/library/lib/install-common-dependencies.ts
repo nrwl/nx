@@ -6,6 +6,7 @@ import {
 } from '@nx/devkit';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import {
+  babelPresetReactVersion,
   lessVersion,
   reactDomVersion,
   reactVersion,
@@ -50,6 +51,14 @@ export function installCommonDependencies(
 
   if (options.compiler === 'swc') {
     tasks.push(addSwcDependencies(host));
+  } else if (options.compiler === 'babel') {
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {},
+        { '@babel/preset-react': babelPresetReactVersion }
+      )
+    );
   }
 
   return runTasksInSerial(...tasks);

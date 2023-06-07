@@ -1,4 +1,4 @@
-import { ExecutorContext, logger, names } from '@nx/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 import { platform } from 'os';

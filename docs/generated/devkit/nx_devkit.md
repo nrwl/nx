@@ -102,6 +102,7 @@ It only uses language primitives and immutable objects
 - [applySharedFunction](../../devkit/documents/nx_devkit#applysharedfunction)
 - [convertNxExecutor](../../devkit/documents/nx_devkit#convertnxexecutor)
 - [convertNxGenerator](../../devkit/documents/nx_devkit#convertnxgenerator)
+- [createProjectFileMapUsingProjectGraph](../../devkit/documents/nx_devkit#createprojectfilemapusingprojectgraph)
 - [createProjectGraphAsync](../../devkit/documents/nx_devkit#createprojectgraphasync)
 - [defaultTasksRunner](../../devkit/documents/nx_devkit#defaulttasksrunner)
 - [detectPackageManager](../../devkit/documents/nx_devkit#detectpackagemanager)
@@ -705,7 +706,7 @@ A change to be made to a string
 
 ### TaskGraphExecutor
 
-Ƭ **TaskGraphExecutor**<`T`\>: (`taskGraph`: [`TaskGraph`](../../devkit/documents/nx_devkit#taskgraph), `options`: `Record`<`string`, `T`\>, `overrides`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/nx_devkit#executorcontext)) => `Promise`<`Record`<`string`, { `success`: `boolean` ; `terminalOutput`: `string` }\>\>
+Ƭ **TaskGraphExecutor**<`T`\>: (`taskGraph`: [`TaskGraph`](../../devkit/documents/nx_devkit#taskgraph), `options`: `Record`<`string`, `T`\>, `overrides`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/nx_devkit#executorcontext)) => `Promise`<`Record`<`string`, `ExecutorTaskResult`\> \| `AsyncIterableIterator`<`Record`<`string`, `ExecutorTaskResult`\>\>\>
 
 #### Type parameters
 
@@ -715,7 +716,7 @@ A change to be made to a string
 
 #### Type declaration
 
-▸ (`taskGraph`, `options`, `overrides`, `context`): `Promise`<`Record`<`string`, { `success`: `boolean` ; `terminalOutput`: `string` }\>\>
+▸ (`taskGraph`, `options`, `overrides`, `context`): `Promise`<`Record`<`string`, `ExecutorTaskResult`\> \| `AsyncIterableIterator`<`Record`<`string`, `ExecutorTaskResult`\>\>\>
 
 Implementation of a target of a project that handles multiple projects to be batched
 
@@ -730,7 +731,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ##### Returns
 
-`Promise`<`Record`<`string`, { `success`: `boolean` ; `terminalOutput`: `string` }\>\>
+`Promise`<`Record`<`string`, `ExecutorTaskResult`\> \| `AsyncIterableIterator`<`Record`<`string`, `ExecutorTaskResult`\>\>\>
 
 ---
 
@@ -1053,6 +1054,22 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 ##### Returns
 
 `Promise`<`any`\>
+
+---
+
+### createProjectFileMapUsingProjectGraph
+
+▸ **createProjectFileMapUsingProjectGraph**(`graph`): `Promise`<[`ProjectFileMap`](../../devkit/documents/nx_devkit#projectfilemap)\>
+
+#### Parameters
+
+| Name    | Type                                                            |
+| :------ | :-------------------------------------------------------------- |
+| `graph` | [`ProjectGraph`](../../devkit/documents/nx_devkit#projectgraph) |
+
+#### Returns
+
+`Promise`<[`ProjectFileMap`](../../devkit/documents/nx_devkit#projectfilemap)\>
 
 ---
 

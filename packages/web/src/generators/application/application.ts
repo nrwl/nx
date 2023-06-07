@@ -184,8 +184,6 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   const webTask = await webInitGenerator(host, {
     ...options,
     skipFormat: true,
-    // Vite does not use babel by default
-    skipBabelConfig: options.bundler === 'vite',
   });
   tasks.push(webTask);
 

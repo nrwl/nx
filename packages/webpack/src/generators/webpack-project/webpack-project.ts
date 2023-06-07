@@ -1,10 +1,11 @@
-import type { ProjectConfiguration, Tree } from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   convertNxGenerator,
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 
 import { webpackInitGenerator } from '../init/init';
@@ -58,7 +59,7 @@ function addBuildTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
   const buildOptions: WebpackExecutorOptions = {
     target: options.target,
     outputPath: joinPathFragments('dist', project.root),
-    compiler: options.compiler ?? 'babel',
+    compiler: options.compiler ?? 'swc',
     main: options.main ?? joinPathFragments(project.root, 'src/main.ts'),
     tsConfig:
       options.tsConfig ?? joinPathFragments(project.root, 'tsconfig.app.json'),
@@ -71,18 +72,21 @@ function addBuildTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
 
   if (options.babelConfig) {
     buildOptions.babelConfig = options.babelConfig;
-  } else {
-    buildOptions.babelUpwardRootMode = true;
+  } else if (options.compiler === 'babel') {
+    // If no babel config file is provided then write a default one, otherwise build will fail.
+    writeJson(tree, joinPathFragments(project.root, '.babelrc'), {
+      presets: ['@nx/js/babel'],
+    });
   }
 
-  if (options.target === 'node') {
+  if (options.target === 'web') {
     tree.write(
       joinPathFragments(project.root, 'webpack.config.js'),
       `
-const { composePlugins, withNx } = require('@nx/webpack');
+const { composePlugins, withNx, withWeb } = require('@nx/webpack');
 
 // Nx plugins for webpack.
-module.exports = composePlugins(withNx(), (config) => {
+module.exports = composePlugins(withNx(), withWeb(), (config) => {
   // Update the webpack config as needed here.
   // e.g. \`config.plugins.push(new MyPlugin())\`
   return config;
@@ -93,10 +97,10 @@ module.exports = composePlugins(withNx(), (config) => {
     tree.write(
       joinPathFragments(project.root, 'webpack.config.js'),
       `
-const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+const { composePlugins, withNx } = require('@nx/webpack');
 
 // Nx plugins for webpack.
-module.exports = composePlugins(withNx(), withWeb(), (config) => {
+module.exports = composePlugins(withNx(), (config) => {
   // Update the webpack config as needed here.
   // e.g. \`config.plugins.push(new MyPlugin())\`
   return config;

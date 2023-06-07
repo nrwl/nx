@@ -6,6 +6,7 @@
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx-cloud",
+      "nativeWatcher": true,
       "options": {
         "accessToken": "NDg1NTA3MTAtOGFmZC00YmIwLTk2Y2MtOTkzNzc4ZTczYTlkfHJlYWQtb25seQ==",
         "cacheableOperations": [
@@ -193,5 +194,6 @@
     "build-storybook": {
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
     }
-  }
+  },
+  "plugins": ["@monodon/rust"]
 }

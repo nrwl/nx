@@ -10,7 +10,6 @@ import {
 } from '@nx/devkit';
 import { Schema } from './schema';
 
-import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
 import { jestInitGenerator } from '@nx/jest';
 import { detoxInitGenerator } from '@nx/detox';
 import { babelPresetReactVersion } from '@nx/react/src/utils/versions';
@@ -41,7 +40,6 @@ import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
-  await addBabelInputs(host);
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(

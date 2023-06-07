@@ -10,6 +10,8 @@ export interface Schema {
   linter?: Linter;
   tags?: string;
   frontendProject?: string;
+  swcJest?: boolean;
+  /** @deprecated use `swcJest` instead */
   babelJest?: boolean;
   js?: boolean;
   pascalCaseFiles?: boolean;

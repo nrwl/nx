@@ -36,11 +36,6 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
   const options = normalizeOptions(tree, rawOptions);
   const projectConfig = readProjectConfiguration(tree, options.appName);
 
-  if (options.mfType === 'host') {
-    setupHostIfDynamic(tree, options);
-    updateHostAppRoutes(tree, options);
-  }
-
   let installTask = () => {};
   if (options.mfType === 'remote') {
     addRemoteToHost(tree, options);
@@ -62,6 +57,11 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
   setupServeTarget(tree, options);
 
   fixBootstrap(tree, projectConfig.root, options);
+
+  if (options.mfType === 'host') {
+    setupHostIfDynamic(tree, options);
+    updateHostAppRoutes(tree, options);
+  }
 
   if (!options.skipE2E) {
     addCypressOnErrorWorkaround(tree, options);

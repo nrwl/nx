@@ -43,8 +43,8 @@
       "compiler": {
         "type": "string",
         "description": "The compiler to use",
-        "enum": ["babel", "swc"],
-        "default": "babel",
+        "enum": ["swc", "babel"],
+        "default": "swc",
         "x-priority": "important"
       },
       "bundler": {

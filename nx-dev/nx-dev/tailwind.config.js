@@ -1,4 +1,6 @@
 const path = require('path');
+// Ignore @nx/next dependency since it is the installed version not the one in the workspace
+// nx-ignore-next-line
 const { createGlobPatternsForDependencies } = require('@nx/next/tailwind');
 
 if (!createGlobPatternsForDependencies(__dirname).length)

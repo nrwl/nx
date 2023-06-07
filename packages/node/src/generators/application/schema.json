@@ -54,10 +54,16 @@
       "description": "Frontend project that needs to access this application. This sets up proxy configuration.",
       "x-priority": "important"
     },
+    "swcJest": {
+      "type": "boolean",
+      "description": "Use `@swc/jest` instead `ts-jest` for faster test compilation.",
+      "default": false
+    },
     "babelJest": {
       "type": "boolean",
-      "description": "Use `babel` instead of `ts-jest`.",
-      "default": false
+      "description": "Use `babel` instead `ts-jest`.",
+      "default": false,
+      "x-deprecated": "Use --swcJest instead for faster compilation"
     },
     "pascalCaseFiles": {
       "type": "boolean",

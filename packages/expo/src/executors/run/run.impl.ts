@@ -49,17 +49,12 @@ export default async function* runExecutor(
       clean: options.clean,
     });
   }
+
   if (options.install) {
-    await installAsync(context.root, {
-      fix: true,
-    });
+    await installAsync(context.root, {});
     if (options.platform === 'ios') {
       await podInstall(join(context.root, projectRoot, 'ios'));
     }
-  } else {
-    await installAsync(context.root, {
-      check: true,
-    });
   }
 
   try {

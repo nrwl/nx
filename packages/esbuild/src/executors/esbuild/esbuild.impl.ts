@@ -41,7 +41,7 @@ export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
   context: ExecutorContext
 ) {
-  process.env.NODE_ENV ??= context.configurationName;
+  process.env.NODE_ENV ??= context.configurationName ?? 'production';
 
   const options = normalizeOptions(_options, context);
   if (options.deleteOutputPath) removeSync(options.outputPath);

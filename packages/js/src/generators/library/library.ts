@@ -91,10 +91,6 @@ export async function projectGenerator(
     });
     tasks.push(viteTask);
   }
-  if (options.bundler === 'rollup') {
-    ensureBabelRootConfigExists(tree);
-  }
-
   if (options.linter !== 'none') {
     const lintCallback = await addLint(tree, options);
     tasks.push(lintCallback);
@@ -581,14 +577,6 @@ function getBuildExecutor(bundler: Bundler) {
     default:
       return undefined;
   }
-}
-
-function ensureBabelRootConfigExists(tree: Tree) {
-  if (tree.exists('babel.config.json')) return;
-
-  writeJson(tree, 'babel.config.json', {
-    babelrcRoots: ['*'],
-  });
 }
 
 function getOutputPath(options: NormalizedSchema, destinationDir?: string) {

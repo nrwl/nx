@@ -1,5 +1,4 @@
 import {
-  formatFiles,
   joinPathFragments,
   readNxJson,
   Tree,
@@ -7,6 +6,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 
+/** @deprecated Do not use this function as the root babel.config.json file is no longer needed */
+// TODO(jack): Remove This in Nx 17 once we don't need to support Nx 15 anymore. Currently this function is used in v15 migrations.
 export function addBabelInputs(tree: Tree) {
   const nxJson = readNxJson(tree);
   let globalBabelFile = ['babel.config.js', 'babel.config.json'].find((file) =>
