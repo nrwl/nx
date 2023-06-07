@@ -12,8 +12,6 @@
     "check-lock-files": "node ./scripts/check-lock-files.js",
     "check-documentation-map": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/map-link-checker.ts",
     "check-codeowners": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/check-codeowners.ts",
-    "e2e-start-local-registry": "node ./scripts/e2e-start-local-registry.js",
-    "e2e-build-package-publish": "ts-node -P ./scripts/tsconfig.e2e.json ./scripts/e2e-build-package-publish.ts",
     "nx-release": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release",
     "prepublishOnly": "node ./scripts/update-package-group.js",
     "version": "pnpm prettier lerna.json --write",

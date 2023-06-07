@@ -44,6 +44,7 @@
     "babel-plugin-macros": "^2.8.0",
     "babel-plugin-transform-typescript-metadata": "^0.3.1",
     "chalk": "^4.1.0",
+    "detect-port": "^1.5.1",
     "fast-glob": "3.2.7",
     "fs-extra": "^11.1.0",
     "ignore": "^5.0.4",
