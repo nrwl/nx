@@ -26,7 +26,7 @@ To have dependencies in the be listed in the final `package.json` of your projec
 }
 ```
 
-{% /tab}
+{% /tab %}
 
 {% tab label="Using `babelUpwardRootMode`" %}
 
