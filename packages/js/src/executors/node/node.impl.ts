@@ -43,8 +43,13 @@ export async function* nodeExecutor(
     context.projectGraph
   );
 
-  const buildOptions = project.data.targets[buildTarget.target]?.options;
-  if (!buildOptions) {
+  let buildOptions: Record<string, any>;
+  if (project.data.targets[buildTarget.target]) {
+    buildOptions = {
+      ...project.data.targets[buildTarget.target]?.options,
+      ...options.buildTargetOptions,
+    };
+  } else {
     throw new Error(
       `Cannot find build target ${chalk.bold(
         options.buildTarget
