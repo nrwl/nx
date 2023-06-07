@@ -13,11 +13,19 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
-import { fileExists } from '../utils/fileutils';
+import { fileExists, readJsonFile } from '../utils/fileutils';
 import { workspaceRoot } from '../utils/workspace-root';
-import { Workspaces } from '../config/workspaces';
+import {
+  buildProjectsConfigurationsFromProjectPaths,
+  getGlobPatternsFromPackageManagerWorkspaces,
+  getGlobPatternsFromPluginsAsync,
+  Workspaces,
+} from '../config/workspaces';
 import { createProjectFileMap } from './file-map-utils';
 import { performance } from 'perf_hooks';
+import { getNxRequirePaths } from '../utils/installation-directory';
+import { getNxWorkspaceFiles } from '../native';
+import { join } from 'path';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -70,15 +78,58 @@ export function readProjectsConfigurationFromProjectGraph(
 }
 
 export async function buildProjectGraphWithoutDaemon() {
-  await fileHasher.ensureInitialized();
-
-  const projectConfigurations = new Workspaces(
+  performance.mark('no-daemon-build-project-graph:start');
+  performance.mark('no-daemon-native-file-deps:start');
+  let nxJson = new Workspaces(workspaceRoot).readNxJson();
+  //
+  let pluginGlobs = await getGlobPatternsFromPluginsAsync(
+    nxJson,
+    getNxRequirePaths(workspaceRoot),
     workspaceRoot
-  ).readProjectsConfigurations();
+  );
 
-  const { projectFileMap, allWorkspaceFiles } = createProjectFileMap(
-    projectConfigurations,
-    fileHasher.allFileData()
+  let globs = [
+    'project.json',
+    '**/project.json',
+    ...pluginGlobs,
+    ...getGlobPatternsFromPackageManagerWorkspaces(workspaceRoot),
+  ];
+  performance.mark('no-daemon-native-file-deps:end');
+  performance.measure(
+    'no-daemon-native-file-deps',
+    'no-daemon-native-file-deps:start',
+    'no-daemon-native-file-deps:end'
+  );
+
+  performance.mark('no-daemon-native-file:start');
+  let { projectFileMap, allWorkspaceFiles, configFiles } = getNxWorkspaceFiles(
+    workspaceRoot,
+    globs
+  );
+  performance.mark('no-daemon-native-file:end');
+  performance.measure(
+    'no-daemon-native-file',
+    'no-daemon-native-file:start',
+    'no-daemon-native-file:end'
+  );
+
+  performance.mark('no-daemon-build-configs:start');
+  let projectConfigurations = buildProjectsConfigurationsFromProjectPaths(
+    nxJson,
+    configFiles,
+    (path) => readJsonFile(join(workspaceRoot, path))
+  );
+  performance.mark('no-daemon-build-configs:end');
+  performance.measure(
+    'no-daemon-build-configs',
+    'no-daemon-build-configs:start',
+    'no-daemon-build-configs:end'
+  );
+  performance.mark('no-daemon-build-project-graph:end');
+  performance.measure(
+    'no-daemon-build-project-graph',
+    'no-daemon-build-project-graph:start',
+    'no-daemon-build-project-graph:end'
   );
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';

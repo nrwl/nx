@@ -95,7 +95,7 @@ export class Workspaces {
       return this.cachedProjectsConfig;
     }
     const nxJson = this.readNxJson();
-    const projectsConfigurations = buildProjectsConfigurationsFromGlobs(
+    const projectsConfigurations = buildProjectsConfigurationsFromProjectPaths(
       nxJson,
       globForProjectFiles(
         this.root,
@@ -801,7 +801,7 @@ export function inferProjectFromNonStandardFile(
   };
 }
 
-export function buildProjectsConfigurationsFromGlobs(
+export function buildProjectsConfigurationsFromProjectPaths(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   readJson: <T extends Object>(string) => T = <T extends Object>(string) =>

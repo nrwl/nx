@@ -254,3 +254,4 @@ module.exports.hashFiles = hashFiles
 module.exports.hashFilesMatchingGlobs = hashFilesMatchingGlobs
 module.exports.EventType = EventType
 module.exports.Watcher = Watcher
+module.exports.getNxWorkspaceFiles = getNxWorkspaceFiles

@@ -4,7 +4,7 @@ import {
   ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
 import {
-  buildProjectsConfigurationsFromGlobs,
+  buildProjectsConfigurationsFromProjectPaths,
   deduplicateProjectFiles,
   getGlobPatternsFromPlugins,
   globForProjectFiles,
@@ -194,8 +194,10 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     (r) => deletedFiles.indexOf(r) === -1
   );
 
-  return buildProjectsConfigurationsFromGlobs(nxJson, projectFiles, (file) =>
-    readJson(tree, file)
+  return buildProjectsConfigurationsFromProjectPaths(
+    nxJson,
+    projectFiles,
+    (file) => readJson(tree, file)
   ).projects;
 }
 
