@@ -39,6 +39,12 @@ interface NoneArguments extends BaseArguments {
   workspaceType: 'package-based' | 'integrated';
 }
 
+interface TsArguments extends BaseArguments {
+  stack: 'ts';
+  workspaceType: 'standalone' | 'integrated';
+  js: boolean;
+}
+
 interface ReactArguments extends BaseArguments {
   stack: 'react';
   workspaceType: 'standalone' | 'integrated';
@@ -72,6 +78,7 @@ interface UnknownStackArguments extends BaseArguments {
 
 type Arguments =
   | NoneArguments
+  | TsArguments
   | ReactArguments
   | AngularArguments
   | NodeArguments
@@ -309,7 +316,7 @@ async function determineFolder(
 
 async function determineStack(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'none' | 'react' | 'angular' | 'node' | 'unknown'> {
+): Promise<'none' | 'ts' | 'react' | 'angular' | 'node' | 'unknown'> {
   if (parsedArgs.preset) {
     switch (parsedArgs.preset) {
       case Preset.Angular:
@@ -333,6 +340,8 @@ async function determineStack(
       case Preset.NPM:
         return 'none';
       case Preset.TS:
+      case Preset.TsStandalone:
+        return 'ts';
       case Preset.WebComponents:
       case Preset.ReactNative:
       case Preset.Expo:
@@ -342,7 +351,7 @@ async function determineStack(
   }
 
   const { stack } = await enquirer.prompt<{
-    stack: 'none' | 'react' | 'angular' | 'node';
+    stack: 'none' | 'ts' | 'react' | 'angular' | 'node';
   }>([
     {
       name: 'stack',
@@ -352,6 +361,10 @@ async function determineStack(
         {
           name: `none`,
           message: `None:          Configures a minimal structure without specific frameworks or technologies.`,
+        },
+        {
+          name: `ts`,
+          message: `TS/JS:         Configures a TypeScript/JavaScript package without specific frameworks or platforms.`,
         },
         {
           name: `react`,
@@ -377,7 +390,9 @@ async function determinePresetOptions(
 ): Promise<Partial<Arguments>> {
   switch (parsedArgs.stack) {
     case 'none':
-      return determineNoneptions(parsedArgs);
+      return determineNoneOptions(parsedArgs);
+    case 'ts':
+      return determineTsOptions(parsedArgs);
     case 'react':
       return determineReactOptions(parsedArgs);
     case 'angular':
@@ -389,7 +404,7 @@ async function determinePresetOptions(
   }
 }
 
-async function determineNoneptions(
+async function determineNoneOptions(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<Partial<Arguments>> {
   if (parsedArgs.preset) return parsedArgs;
@@ -426,6 +441,48 @@ async function determineNoneptions(
       preset: Preset.NPM,
     };
   }
+}
+
+async function determineTsOptions(
+  parsedArgs: yargs.Arguments<TsArguments>
+): Promise<Partial<Arguments>> {
+  let preset: Preset;
+  let workspaceType: 'standalone' | 'integrated' | undefined = undefined;
+  let appName: string | undefined = undefined;
+  let js = false;
+
+  if (parsedArgs.preset) {
+    preset = parsedArgs.preset;
+  } else {
+    workspaceType = await determineStandAloneOrMonorepo();
+    preset = workspaceType === 'standalone' ? Preset.TsStandalone : Preset.TS;
+  }
+
+  if (parsedArgs.js !== undefined) {
+    js = parsedArgs.js;
+  } else if (preset === Preset.TsStandalone) {
+    // Only standalone TS preset generates a default package, so we need to provide --js and --appName options.
+    appName = parsedArgs.name;
+    const reply = await enquirer.prompt<{ ts: 'Yes' | 'No' }>([
+      {
+        name: 'ts',
+        message: `Would you like to use TypeScript with this project?`,
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'Yes',
+          },
+          {
+            name: 'No',
+          },
+        ],
+        initial: 'Yes' as any,
+      },
+    ]);
+    js = reply.ts === 'No';
+  }
+
+  return { preset, js, appName };
 }
 
 async function determineReactOptions(
