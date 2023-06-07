@@ -141,7 +141,7 @@ export async function* nodeExecutor(
             task.promise = new Promise<void>((resolve, reject) => {
               task.childProcess = fork(
                 joinPathFragments(__dirname, 'node-with-require-overrides'),
-                options.runtimeArgs ?? [],
+                options.args ?? [],
                 {
                   execArgv: getExecArgv(options),
                   stdio: [0, 1, 'pipe', 'ipc'],
