@@ -1,4 +1,4 @@
-import { getNxWorkspaceFiles } from '../index';
+import { getWorkspaceFilesNative } from '../index';
 import {
   getGlobPatternsFromPackageManagerWorkspaces,
   getGlobPatternsFromPluginsAsync,
@@ -48,8 +48,7 @@ describe('project graph', () => {
       ...pluginGlobs,
       ...getGlobPatternsFromPackageManagerWorkspaces(root),
     ];
-    let { projectFileMap, configFiles, allWorkspaceFiles } =
-      getNxWorkspaceFiles(root, globs);
+    let { projectFileMap, configFiles } = getWorkspaceFilesNative(root, globs);
     console.log(projectFileMap);
   });
 });
