@@ -144,7 +144,7 @@ export class TaskOrchestrator {
     task: Task;
     status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
   }> {
-    const startTime = new Date().getTime();
+    task.startTime = Date.now();
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
@@ -155,6 +155,7 @@ export class TaskOrchestrator {
     if (shouldCopyOutputsFromCache) {
       await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);
     }
+    task.endTime = Date.now();
     const status = cachedResult.remote
       ? 'remote-cache'
       : shouldCopyOutputsFromCache
@@ -166,11 +167,7 @@ export class TaskOrchestrator {
       cachedResult.terminalOutput
     );
     return {
-      task: {
-        ...task,
-        startTime,
-        endTime: Date.now(),
-      },
+      task,
       status,
     };
   }
