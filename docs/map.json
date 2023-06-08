@@ -53,7 +53,7 @@
             {
               "name": "Angular Standalone",
               "id": "angular-standalone-tutorial",
-              "file": "shared/angular-standalone-tutorial/1-code-generation"
+              "file": "shared/angular-standalone-tutorial/angular-standalone"
             },
             {
               "name": "Node Standalone",
@@ -1161,13 +1161,13 @@
           "description": "Deployment recipes for Node.js and Deno server applications.",
           "itemList": [
             {
-              "name": "Deploying a Node.js server to Fly.io",
+              "name": "Deploying a Node App to Fly.io",
               "id": "node-server-fly-io",
               "tags": ["deployment", "node"],
               "file": "shared/recipes/deployment/node-server-fly-io"
             },
             {
-              "name": "Deploying Node.js serverless functions to Netlify",
+              "name": "Add and Deploy Netlify Edge Functions with Node",
               "id": "node-serverless-functions-netlify",
               "tags": ["deployment", "node"],
               "file": "shared/recipes/deployment/node-serverless-functions-netlify"
@@ -1185,10 +1185,10 @@
               "file": "shared/recipes/deployment/deno-deploy"
             },
             {
-              "name": "Serverless deployment with Deno and Netlify",
-              "id": "deno-netlify",
+              "name": "Add and Deploy Netlify Edge Functions with Deno",
+              "id": "deno-netlify-functions",
               "tags": ["deployment", "deno"],
-              "file": "shared/recipes/deployment/deno-netlify"
+              "file": "shared/recipes/deployment/deno-netlify-edge-functions"
             }
           ]
         },

@@ -13,11 +13,6 @@
           "packages/react-native/*.md",
           {
             "input": "packages/react-native",
-            "glob": "**/files/**/.babelrc__tmpl__",
-            "output": "/"
-          },
-          {
-            "input": "packages/react-native",
             "glob": "**/files/**/.babelrc.template",
             "output": "/"
           },
@@ -25,11 +20,6 @@
             "input": "packages/react-native/src",
             "glob": "**/*.!(ts)",
             "output": "/src"
-          },
-          {
-            "input": "packages/react-native",
-            "glob": "*.rb",
-            "output": "/"
           },
           {
             "input": "packages/react-native",

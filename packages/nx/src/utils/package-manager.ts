@@ -1,10 +1,10 @@
 import { exec, execSync } from 'child_process';
-import { copyFileSync, existsSync } from 'fs';
+import { copyFileSync, existsSync, writeFileSync } from 'fs';
 import { remove } from 'fs-extra';
 import { dirname, join, relative } from 'path';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
-import { writeJsonFile } from './fileutils';
+import { readFileIfExisting, writeJsonFile } from './fileutils';
 import { readModulePackageJson } from './package-json';
 import { gte, lt } from 'semver';
 import { workspaceRoot } from './workspace-root';
@@ -50,9 +50,13 @@ export function detectPackageManager(dir: string = ''): PackageManager {
  * ```javascript
  * execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
  * ```
+ *
+ * @param packageManager The package manager to use. If not provided, it will be detected based on the lock file.
+ * @param root The directory the commands will be ran inside of. Defaults to the current workspace's root.
  */
 export function getPackageManagerCommand(
-  packageManager: PackageManager = detectPackageManager()
+  packageManager: PackageManager = detectPackageManager(),
+  root: string = workspaceRoot
 ): PackageManagerCommands {
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => {
@@ -76,7 +80,7 @@ export function getPackageManagerCommand(
       const pnpmVersion = getPackageManagerVersion('pnpm');
       const useExec = gte(pnpmVersion, '6.13.0');
       const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
-      const isPnpmWorkspace = existsSync('pnpm-workspace.yaml');
+      const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
 
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
@@ -138,6 +142,55 @@ export function findFileInPackageJsonDirectory(
   return existsSync(path) ? path : null;
 }
 
+/**
+ * We copy yarnrc.yml to the temporary directory to ensure things like the specified
+ * package registry are still used. However, there are a few relative paths that can
+ * cause issues, so we modify them to fit the new directory.
+ *
+ * Exported for testing - not meant to be used outside of this file.
+ *
+ * @param contents The string contents of the yarnrc.yml file
+ * @returns Updated string contents of the yarnrc.yml file
+ */
+export function modifyYarnRcYmlToFitNewDirectory(contents: string): string {
+  const { parseSyml, stringifySyml } = require('@yarnpkg/parsers');
+  const parsed: {
+    yarnPath?: string;
+    plugins?: (string | { path: string; spec: string })[];
+  } = parseSyml(contents);
+
+  if (parsed.yarnPath) {
+    // yarnPath is relative to the workspace root, so we need to make it relative
+    // to the new directory s.t. it still points to the same yarn binary.
+    delete parsed.yarnPath;
+  }
+  if (parsed.plugins) {
+    // Plugins specified by a string are relative paths from workspace root.
+    // ex: https://yarnpkg.com/advanced/plugin-tutorial#writing-our-first-plugin
+    delete parsed.plugins;
+  }
+  return stringifySyml(parsed);
+}
+
+/**
+ * We copy .yarnrc to the temporary directory to ensure things like the specified
+ * package registry are still used. However, there are a few relative paths that can
+ * cause issues, so we modify them to fit the new directory.
+ *
+ * Exported for testing - not meant to be used outside of this file.
+ *
+ * @param contents The string contents of the yarnrc.yml file
+ * @returns Updated string contents of the yarnrc.yml file
+ */
+export function modifyYarnRcToFitNewDirectory(contents: string): string {
+  const lines = contents.split('\n');
+  const yarnPathIndex = lines.findIndex((line) => line.startsWith('yarn-path'));
+  if (yarnPathIndex !== -1) {
+    lines.splice(yarnPathIndex, 1);
+  }
+  return lines.join('\n');
+}
+
 export function copyPackageManagerConfigurationFiles(
   root: string,
   destination: string
@@ -150,8 +203,24 @@ export function copyPackageManagerConfigurationFiles(
       // but now relative to the destination. `relative` makes `{workspaceRoot}/some/path`
       // look like `./some/path`, and joining that gets us `{destination}/some/path
       const destinationPath = join(destination, relative(root, f));
-      // Copy config file if it exists, so that the package manager still follows it.
-      copyFileSync(f, destinationPath);
+      switch (packageManagerConfigFile) {
+        case '.npmrc': {
+          copyFileSync(f, destinationPath);
+          break;
+        }
+        case '.yarnrc': {
+          const updated = modifyYarnRcToFitNewDirectory(readFileIfExisting(f));
+          writeFileSync(destinationPath, updated);
+          break;
+        }
+        case '.yarnrc.yml': {
+          const updated = modifyYarnRcYmlToFitNewDirectory(
+            readFileIfExisting(f)
+          );
+          writeFileSync(destinationPath, updated);
+          break;
+        }
+      }
     }
   }
 }

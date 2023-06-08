@@ -10,15 +10,19 @@ import {
 import { serverLogger } from './logger';
 import {
   getOutputsWatcherSubscription,
+  getOutputWatcherInstance,
   getSourceWatcherSubscription,
+  getWatcherInstance,
   handleServerProcessTermination,
   resetInactivityTimeout,
   respondToClient,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
   storeOutputsWatcherSubscription,
+  storeOutputWatcherInstance,
   storeProcessJsonSubscription,
   storeSourceWatcherSubscription,
+  storeWatcherInstance,
 } from './shutdown-utils';
 import {
   convertChangeEventsToLogMessage,
@@ -26,11 +30,11 @@ import {
   subscribeToWorkspaceChanges,
   FileWatcherCallback,
   subscribeToServerProcessJsonChanges,
+  watchWorkspace,
+  watchOutputFiles,
 } from './watcher';
 import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
 import { existsSync, statSync } from 'fs';
-import { HashingImpl } from '../../hasher/hashing-impl';
-import { defaultFileHasher } from '../../hasher/file-hasher';
 import { handleRequestProjectGraph } from './handle-request-project-graph';
 import { handleProcessInBackground } from './handle-process-in-background';
 import {
@@ -51,6 +55,9 @@ import { nxVersion } from '../../utils/versions';
 import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
+import { handleHashTasks } from './handle-hash-tasks';
+import { fileHasher, hashArray } from '../../hasher/file-hasher';
+import { handleRequestFileData } from './handle-request-file-data';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -133,22 +140,34 @@ async function handleMessage(socket, data: string) {
   }
 
   if (payload.type === 'PING') {
-    await handleResult(socket, {
-      response: JSON.stringify(true),
-      description: 'ping',
-    });
+    await handleResult(socket, 'PING', () =>
+      Promise.resolve({ response: JSON.stringify(true), description: 'ping' })
+    );
   } else if (payload.type === 'REQUEST_PROJECT_GRAPH') {
-    await handleResult(socket, await handleRequestProjectGraph());
+    await handleResult(socket, 'REQUEST_PROJECT_GRAPH', () =>
+      handleRequestProjectGraph()
+    );
+  } else if (payload.type === 'HASH_TASKS') {
+    await handleResult(socket, 'HASH_TASKS', () => handleHashTasks(payload));
+  } else if (payload.type === 'REQUEST_FILE_DATA') {
+    await handleResult(socket, 'REQUEST_FILE_DATA', () =>
+      handleRequestFileData()
+    );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
-    await handleResult(socket, await handleProcessInBackground(payload));
+    await handleResult(socket, 'PROCESS_IN_BACKGROUND', () =>
+      handleProcessInBackground(payload)
+    );
   } else if (payload.type === 'RECORD_OUTPUTS_HASH') {
-    await handleResult(socket, await handleRecordOutputsHash(payload));
+    await handleResult(socket, 'RECORD_OUTPUTS_HASH', () =>
+      handleRecordOutputsHash(payload)
+    );
   } else if (payload.type === 'OUTPUTS_HASHES_MATCH') {
-    await handleResult(socket, await handleOutputsHashesMatch(payload));
+    await handleResult(socket, 'OUTPUTS_HASHES_MATCH', () =>
+      handleOutputsHashesMatch(payload)
+    );
   } else if (payload.type === 'REQUEST_SHUTDOWN') {
-    await handleResult(
-      socket,
-      await handleRequestShutdown(server, numberOfOpenConnections)
+    await handleResult(socket, 'REQUEST_SHUTDOWN', () =>
+      handleRequestShutdown(server, numberOfOpenConnections)
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
@@ -161,12 +180,25 @@ async function handleMessage(socket, data: string) {
   }
 }
 
-export async function handleResult(socket: Socket, hr: HandlerResult) {
+export async function handleResult(
+  socket: Socket,
+  type: string,
+  hrFn: () => Promise<HandlerResult>
+) {
+  const startMark = new Date();
+  const hr = await hrFn();
+  const doneHandlingMark = new Date();
   if (hr.error) {
     await respondWithErrorAndExit(socket, hr.description, hr.error);
   } else {
     await respondToClient(socket, hr.response, hr.description);
   }
+  const endMark = new Date();
+  serverLogger.log(
+    `Handled ${type}. Handling time: ${
+      doneHandlingMark.getTime() - startMark.getTime()
+    }. Response time: ${endMark.getTime() - doneHandlingMark.getTime()}.`
+  );
 }
 
 function handleInactivityTimeout() {
@@ -206,6 +238,10 @@ function registerProcessTerminationListeners() {
 }
 
 async function registerProcessServerJsonTracking() {
+  if (useNativeWatcher()) {
+    return;
+  }
+
   storeProcessJsonSubscription(
     await subscribeToServerProcessJsonChanges(async () => {
       if (getDaemonProcessIdSync() !== process.pid) {
@@ -219,7 +255,6 @@ async function registerProcessServerJsonTracking() {
 }
 
 let existingLockHash: string | undefined;
-const hasher = new HashingImpl();
 
 function daemonIsOutdated(): boolean {
   return nxVersionChanged() || lockFileHashChanged();
@@ -230,9 +265,15 @@ function nxVersionChanged(): boolean {
 }
 
 const nxPackageJsonPath = require.resolve('nx/package.json');
+
 function getInstalledNxVersion() {
-  const { version } = readJsonFile<PackageJson>(nxPackageJsonPath);
-  return version;
+  try {
+    const { version } = readJsonFile<PackageJson>(nxPackageJsonPath);
+    return version;
+  } catch (e) {
+    // node modules are absent, so we can return null, which would shut down the daemon
+    return null;
+  }
 }
 
 function lockFileHashChanged(): boolean {
@@ -242,8 +283,8 @@ function lockFileHashChanged(): boolean {
     join(workspaceRoot, 'pnpm-lock.yaml'),
   ]
     .filter((file) => existsSync(file))
-    .map((file) => hasher.hashFile(file));
-  const newHash = hasher.hashArray(lockHashes);
+    .map((file) => fileHasher.hashFile(file));
+  const newHash = hashArray(lockHashes);
   if (existingLockHash && newHash != existingLockHash) {
     existingLockHash = newHash;
     return true;
@@ -281,12 +322,13 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
     }
 
     if (err || !changeEvents || !changeEvents.length) {
+      let error = typeof err === 'string' ? new Error(err) : err;
       serverLogger.watcherLog(
         'Unexpected workspace watcher error',
-        err.message
+        error.message
       );
-      console.error(err);
-      workspaceWatcherError = err;
+      console.error(error);
+      workspaceWatcherError = error;
       return;
     }
 
@@ -330,15 +372,21 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
   try {
     if (err || !changeEvents || !changeEvents.length) {
-      serverLogger.watcherLog('Unexpected outputs watcher error', err.message);
-      console.error(err);
-      outputsWatcherError = err;
+      let error = typeof err === 'string' ? new Error(err) : err;
+      serverLogger.watcherLog(
+        'Unexpected outputs watcher error',
+        error.message
+      );
+      console.error(error);
+      outputsWatcherError = error;
       disableOutputsTracking();
       return;
     }
     if (outputsWatcherError) {
       return;
     }
+
+    serverLogger.watcherLog('Processing file changes in outputs');
     processFileChangesInOutputs(changeEvents);
   } catch (err) {
     serverLogger.watcherLog(`Unexpected outputs watcher error`, err.message);
@@ -358,7 +406,7 @@ export async function startServer(): Promise<Server> {
   if (!isWindows) {
     killSocketOrPath();
   }
-  await defaultFileHasher.ensureInitialized();
+  await fileHasher.ensureInitialized();
   return new Promise((resolve, reject) => {
     try {
       server.listen(FULL_OS_SOCKET_PATH, async () => {
@@ -367,25 +415,46 @@ export async function startServer(): Promise<Server> {
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 
-          if (!getSourceWatcherSubscription()) {
-            storeSourceWatcherSubscription(
-              await subscribeToWorkspaceChanges(server, handleWorkspaceChanges)
-            );
-            serverLogger.watcherLog(
-              `Subscribed to changes within: ${workspaceRoot}`
-            );
-          }
+          if (useNativeWatcher()) {
+            if (!getWatcherInstance()) {
+              storeWatcherInstance(
+                await watchWorkspace(server, handleWorkspaceChanges)
+              );
 
-          // temporary disable outputs tracking on linux
-          const outputsTrackingIsEnabled = process.platform != 'linux';
-          if (outputsTrackingIsEnabled) {
-            if (!getOutputsWatcherSubscription()) {
-              storeOutputsWatcherSubscription(
-                await subscribeToOutputsChanges(handleOutputsChanges)
+              serverLogger.watcherLog(
+                `Subscribed to changes within: ${workspaceRoot} (native)`
+              );
+            }
+
+            if (!getOutputWatcherInstance()) {
+              storeOutputWatcherInstance(
+                await watchOutputFiles(handleOutputsChanges)
               );
             }
           } else {
-            disableOutputsTracking();
+            if (!getSourceWatcherSubscription()) {
+              storeSourceWatcherSubscription(
+                await subscribeToWorkspaceChanges(
+                  server,
+                  handleWorkspaceChanges
+                )
+              );
+              serverLogger.watcherLog(
+                `Subscribed to changes within: ${workspaceRoot}`
+              );
+            }
+
+            // temporary disable outputs tracking on linux
+            const outputsTrackingIsEnabled = process.platform != 'linux';
+            if (outputsTrackingIsEnabled) {
+              if (!getOutputsWatcherSubscription()) {
+                storeOutputsWatcherSubscription(
+                  await subscribeToOutputsChanges(handleOutputsChanges)
+                );
+              }
+            } else {
+              disableOutputsTracking();
+            }
           }
 
           return resolve(server);
@@ -397,4 +466,8 @@ export async function startServer(): Promise<Server> {
       reject(err);
     }
   });
+}
+
+function useNativeWatcher() {
+  return process.env.NX_NATIVE_WATCHER === 'true';
 }

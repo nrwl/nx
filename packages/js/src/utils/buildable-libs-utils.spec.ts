@@ -42,7 +42,6 @@ describe('calculateProjectDependencies', () => {
           type: 'lib',
           name: 'example',
           data: {
-            files: [],
             root: '/root/example',
           },
         },
@@ -91,7 +90,6 @@ describe('calculateProjectDependencies', () => {
           type: 'lib',
           name: 'example',
           data: {
-            files: [],
             root: '/root/example',
           },
         },
@@ -172,7 +170,6 @@ describe('missingDependencies', () => {
           type: 'lib',
           name: 'example',
           data: {
-            files: [],
             root: '/root/example',
           },
         },

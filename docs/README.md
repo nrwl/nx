@@ -106,6 +106,14 @@ We can display a special button inviting the reader to go to a GitHub repository
 {% github-repository url="https://github.com/nrwl/nx-examples" /%}
 ```
 
+#### Stackblitz Buttons
+
+You can add an "open in stackblitz" button as follows:
+
+```markdown
+{% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/standalone-angular-app?file=README.md" /%}
+```
+
 #### Install Nx Console
 
 We can display a special button inviting the reader to go to a VSCode marketplace to install the official Nx plugin.

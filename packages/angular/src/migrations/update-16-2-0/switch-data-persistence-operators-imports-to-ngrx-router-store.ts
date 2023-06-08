@@ -9,6 +9,8 @@ import type { ImportDeclaration, ImportSpecifier, Node } from 'typescript';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { ngrxVersion } from '../../utils/versions';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
+import { readProjectFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+import { fileDataDepTarget } from 'nx/src/config/project-graph';
 
 let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
 
@@ -33,10 +35,13 @@ export default async function (tree: Tree): Promise<void> {
 
   ensureTypescript();
   tsquery = require('@phenomnomnominal/tsquery').tsquery;
+  const cachedFileMap = readProjectFileMapCache().projectFileMap;
 
   const filesWithNxAngularImports: FileData[] = [];
   for (const { graphNode } of projects) {
-    const files = filterFilesWithNxAngularDep(graphNode.data.files);
+    const files = filterFilesWithNxAngularDep(
+      cachedFileMap[graphNode.name] || []
+    );
     filesWithNxAngularImports.push(...files);
   }
 
@@ -172,8 +177,8 @@ function filterFilesWithNxAngularDep(files: FileData[]): FileData[] {
 
   for (const file of files) {
     if (
-      file.dependencies?.some((dep) =>
-        angularPluginTargetNames.includes(dep.target)
+      file.deps?.some((dep) =>
+        angularPluginTargetNames.includes(fileDataDepTarget(dep))
       )
     ) {
       filteredFiles.push(file);

@@ -1,5 +1,6 @@
 import {
   ExecutorContext,
+  joinPathFragments,
   logger,
   stripIndents,
   workspaceRoot,
@@ -7,8 +8,9 @@ import {
 import { CoverageOptions, File, Reporter } from 'vitest';
 import { loadConfigFromFile } from 'vite';
 import { VitestExecutorOptions } from './schema';
-import { join, relative } from 'path';
+import { relative, resolve } from 'path';
 import { existsSync } from 'fs';
+import { registerTsConfigPaths } from '@nx/js/src/internal';
 
 class NxReporter implements Reporter {
   deferred: {
@@ -49,6 +51,10 @@ export async function* vitestExecutor(
   options: VitestExecutorOptions,
   context: ExecutorContext
 ) {
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
+  registerTsConfigPaths(resolve(workspaceRoot, projectRoot, 'tsconfig.json'));
+
   const { startVitest } = await (Function(
     'return import("vitest/node")'
   )() as Promise<typeof import('vitest/node')>);
@@ -105,15 +111,23 @@ async function getSettings(
     : ({} as CoverageOptions);
 
   const viteConfigPath = options.config
-    ? join(context.root, options.config)
-    : findViteConfig(join(context.root, projectRoot));
+    ? options.config // config is expected to be from the workspace root
+    : findViteConfig(joinPathFragments(context.root, projectRoot));
+
+  const resolvedProjectRoot = resolve(workspaceRoot, projectRoot);
+  const resolvedViteConfigPath = resolve(
+    workspaceRoot,
+    projectRoot,
+    relative(resolvedProjectRoot, viteConfigPath)
+  );
 
   const resolved = await loadConfigFromFile(
     {
       mode: options.mode,
       command: 'serve',
     },
-    viteConfigPath
+    resolvedViteConfigPath,
+    resolvedProjectRoot
   );
 
   if (!viteConfigPath || !resolved?.config?.['test']) {
@@ -132,7 +146,8 @@ You can manually set the config in the project, ${
     // when running nx from the project root, the root will get appended to the cwd.
     // creating an invalid path and no tests will be found.
     // instead if we are not at the root, let the cwd be root.
-    root: offset === '' ? projectRoot : '',
+    root: offset === '' ? resolvedProjectRoot : workspaceRoot,
+    config: resolvedViteConfigPath,
     reporters: [
       ...(options.reporters ?? []),
       ...((resolved?.config?.['test']?.reporters as string[]) ?? []),
@@ -148,8 +163,10 @@ function findViteConfig(projectRootFullPath: string): string {
   const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
 
   for (const ext of allowsExt) {
-    if (existsSync(join(projectRootFullPath, `vite.config.${ext}`))) {
-      return join(projectRootFullPath, `vite.config.${ext}`);
+    if (
+      existsSync(joinPathFragments(projectRootFullPath, `vite.config.${ext}`))
+    ) {
+      return joinPathFragments(projectRootFullPath, `vite.config.${ext}`);
     }
   }
 }

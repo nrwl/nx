@@ -20,10 +20,6 @@ import {
 import { gt, valid } from 'semver';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getNxRequirePaths } from '../../utils/installation-directory';
-import {
-  getHashingImplementation,
-  HasherImplementation,
-} from '../../utils/get-hashing-implementation';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -63,14 +59,12 @@ export async function reportHandler() {
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
     projectGraphError,
-    currentHasherImplementation,
   } = await getReportData();
 
   const bodyLines = [
     `Node   : ${process.versions.node}`,
-    `OS     : ${process.platform} ${process.arch}`,
+    `OS     : ${process.platform}-${process.arch}`,
     `${pm.padEnd(7)}: ${pmVersion}`,
-    `Hasher : ${currentHasherImplementation}`,
     ``,
   ];
 
@@ -148,7 +142,6 @@ export interface ReportData {
     migrateTarget: string;
   };
   projectGraphError?: Error | null;
-  currentHasherImplementation: HasherImplementation;
 }
 
 export async function getReportData(): Promise<ReportData> {
@@ -179,8 +172,6 @@ export async function getReportData(): Promise<ReportData> {
 
   const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
 
-  const currentHasherImplementation = getHashingImplementation();
-
   return {
     pm,
     pmVersion,
@@ -189,7 +180,6 @@ export async function getReportData(): Promise<ReportData> {
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
     projectGraphError,
-    currentHasherImplementation,
   };
 }
 

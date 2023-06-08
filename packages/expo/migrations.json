@@ -800,6 +800,44 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.1.5": {
+      "version": "16.1.5-beta.0",
+      "packages": {
+        "expo": {
+          "version": "^48.0.16",
+          "alwaysAddToPackageJson": false
+        },
+        "eas-cli": {
+          "version": "~3.12.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "12.1.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.2.2": {
+      "version": "16.2.2-beta.0",
+      "packages": {
+        "expo": {
+          "version": "^48.0.17",
+          "alwaysAddToPackageJson": false
+        },
+        "eas-cli": {
+          "version": "~3.13.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.71.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.71.7",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

@@ -9,16 +9,12 @@ export interface Schema {
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   inSourceTests?: boolean;
-  /**
-   * @deprecated
-   */
-  babelJest?: boolean;
   e2eTestRunner: 'cypress' | 'none';
   linter: Linter;
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
   routing?: boolean;
-  skipWorkspaceJson?: boolean;
+  skipNxJson?: boolean;
   js?: boolean;
   globalCss?: boolean;
   strict?: boolean;

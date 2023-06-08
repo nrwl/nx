@@ -1,6 +1,7 @@
 {
   "name": "tsc",
   "implementation": "/packages/js/src/executors/tsc/tsc.impl.ts",
+  "batchImplementation": "./src/executors/tsc/tsc.batch-impl",
   "schema": {
     "version": 2,
     "outputCapture": "direct-nodejs",

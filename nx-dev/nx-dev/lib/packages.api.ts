@@ -7,6 +7,6 @@ export const nxPackagesApi = new PackagesApi({
   id: 'packages',
   manifest: packages as Record<string, ProcessedPackageMetadata>,
   prefix: '',
-  publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+  publicDocsRoot: 'public/documentation',
   tagsApi,
 });

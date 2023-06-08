@@ -1,13 +1,5 @@
 import { ExecutorContext } from '@nx/devkit';
-import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
 import type { TypeScriptCompilationOptions } from '@nx/workspace/src/utilities/typescript/compilation';
-import { join, resolve } from 'path';
-import {
-  CustomTransformers,
-  Program,
-  SourceFile,
-  TransformerFactory,
-} from 'typescript';
 import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
 import { checkDependencies } from '../../utils/check-dependencies';
 import {
@@ -22,79 +14,13 @@ import {
 import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
-import { loadTsTransformers } from '../../utils/typescript/load-ts-transformers';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
-
-export function normalizeOptions(
-  options: ExecutorOptions,
-  contextRoot: string,
-  sourceRoot: string,
-  projectRoot: string
-): NormalizedExecutorOptions {
-  const outputPath = join(contextRoot, options.outputPath);
-  const rootDir = options.rootDir
-    ? join(contextRoot, options.rootDir)
-    : projectRoot;
-
-  if (options.watch == null) {
-    options.watch = false;
-  }
-
-  // TODO: put back when inlining story is more stable
-  // if (options.external == null) {
-  //   options.external = 'all';
-  // } else if (Array.isArray(options.external) && options.external.length === 0) {
-  //   options.external = 'none';
-  // }
-
-  if (Array.isArray(options.external) && options.external.length > 0) {
-    const firstItem = options.external[0];
-    if (firstItem === 'all' || firstItem === 'none') {
-      options.external = firstItem;
-    }
-  }
-
-  const files: FileInputOutput[] = assetGlobsToFiles(
-    options.assets,
-    contextRoot,
-    outputPath
-  );
-
-  return {
-    ...options,
-    root: contextRoot,
-    sourceRoot,
-    projectRoot,
-    files,
-    outputPath,
-    tsConfig: join(contextRoot, options.tsConfig),
-    rootDir,
-    mainOutputPath: resolve(
-      outputPath,
-      options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
-    ),
-  };
-}
+import { getCustomTrasformersFactory, normalizeOptions } from './lib';
 
 export function createTypeScriptCompilationOptions(
   normalizedOptions: NormalizedExecutorOptions,
   context: ExecutorContext
 ): TypeScriptCompilationOptions {
-  const { compilerPluginHooks } = loadTsTransformers(
-    normalizedOptions.transformers
-  );
-  const getCustomTransformers = (program: Program): CustomTransformers => ({
-    before: compilerPluginHooks.beforeHooks.map(
-      (hook) => hook(program) as TransformerFactory<SourceFile>
-    ),
-    after: compilerPluginHooks.afterHooks.map(
-      (hook) => hook(program) as TransformerFactory<SourceFile>
-    ),
-    afterDeclarations: compilerPluginHooks.afterDeclarationsHooks.map(
-      (hook) => hook(program) as TransformerFactory<SourceFile>
-    ),
-  });
-
   return {
     outputPath: normalizedOptions.outputPath,
     projectName: context.projectName,
@@ -103,7 +29,9 @@ export function createTypeScriptCompilationOptions(
     tsConfig: normalizedOptions.tsConfig,
     watch: normalizedOptions.watch,
     deleteOutputPath: normalizedOptions.clean,
-    getCustomTransformers,
+    getCustomTransformers: getCustomTrasformersFactory(
+      normalizedOptions.transformers
+    ),
   };
 }
 

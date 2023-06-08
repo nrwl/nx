@@ -12,13 +12,13 @@
       ],
       "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/nx-dev/nx-dev",
         "commands": [
           "nx run nx-dev:sitemap",
           "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
         ],
         "parallel": false
-      }
+      },
+      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
     },
     "sitemap": {
       "executor": "nx:run-commands",
@@ -44,6 +44,7 @@
     },
     "build-base": {
       "executor": "@nx/next:build",
+      "dependsOn": ["copy-docs"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "root": "nx-dev/nx-dev",
@@ -56,8 +57,27 @@
         "production": {}
       }
     },
+    "copy-docs": {
+      "inputs": ["{workspaceRoot}/docs/**/*"],
+      "outputs": ["{projectRoot}/public/documentation"],
+      "command": "node ./copy-docs.js",
+      "options": {
+        "cwd": "nx-dev/nx-dev"
+      }
+    },
+    "serve-docs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx watch --projects=docs -- nx run nx-dev:copy-docs",
+          "nx run nx-dev:serve"
+        ],
+        "parallel": true
+      }
+    },
     "serve": {
       "executor": "@nx/next:server",
+      "dependsOn": ["copy-docs"],
       "options": {
         "buildTarget": "nx-dev:build-base",
         "dev": true

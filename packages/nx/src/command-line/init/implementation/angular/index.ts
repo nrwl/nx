@@ -80,7 +80,7 @@ async function collectCacheableOperations(options: Options): Promise<string[]> {
     (t) => workspaceTargets.includes(t)
   );
 
-  if (options.interactive) {
+  if (options.interactive && workspaceTargets.length > 0) {
     output.log({
       title:
         '🧑‍🔧 Please answer the following questions about the targets found in your angular.json in order to generate task runner configuration',

@@ -1,6 +1,8 @@
-## @nrwl/esbuild has been deprecated!
+## @nrwl/esbuild has been renamed to @nx/esbuild!
 
-@nrwl/esbuild has been deprecated in favor of [@nx/esbuild](https://www.npmjs.com/package/@nx/esbuild). Please use that instead.
+@nrwl/esbuild has been renamed to [@nx/esbuild](https://www.npmjs.com/package/@nx/esbuild). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/esbuild will no longer be published in Nx v17.
 

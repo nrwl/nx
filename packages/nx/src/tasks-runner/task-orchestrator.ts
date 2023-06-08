@@ -1,6 +1,7 @@
-import { Workspaces } from '../config/workspaces';
+import { defaultMaxListeners } from 'events';
 import { performance } from 'perf_hooks';
-import { Hasher } from '../hasher/hasher';
+import { Workspaces } from '../config/workspaces';
+import { TaskHasher } from '../hasher/task-hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { workspaceRoot } from '../utils/workspace-root';
 import { Cache } from './cache';
@@ -49,7 +50,7 @@ export class TaskOrchestrator {
   // endregion internal state
 
   constructor(
-    private readonly hasher: Hasher,
+    private readonly hasher: TaskHasher,
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
@@ -61,9 +62,12 @@ export class TaskOrchestrator {
   async run() {
     // initial scheduling
     await this.tasksSchedule.scheduleNextTasks();
-    performance.mark('task-execution-begins');
+    performance.mark('task-execution:start');
 
     const threads = [];
+
+    process.stdout.setMaxListeners(this.options.parallel + defaultMaxListeners);
+    process.stderr.setMaxListeners(this.options.parallel + defaultMaxListeners);
 
     // initial seeding of the queue
     for (let i = 0; i < this.options.parallel; ++i) {
@@ -71,11 +75,11 @@ export class TaskOrchestrator {
     }
     await Promise.all(threads);
 
-    performance.mark('task-execution-ends');
+    performance.mark('task-execution:end');
     performance.measure(
-      'command-execution',
-      'task-execution-begins',
-      'task-execution-ends'
+      'task-execution',
+      'task-execution:start',
+      'task-execution:end'
     );
     this.cache.removeOldCacheRecords();
 
@@ -140,6 +144,7 @@ export class TaskOrchestrator {
     task: Task;
     status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
   }> {
+    task.startTime = Date.now();
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
@@ -150,6 +155,7 @@ export class TaskOrchestrator {
     if (shouldCopyOutputsFromCache) {
       await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);
     }
+    task.endTime = Date.now();
     const status = cachedResult.remote
       ? 'remote-cache'
       : shouldCopyOutputsFromCache
@@ -225,12 +231,17 @@ export class TaskOrchestrator {
   private async runBatch(batch: Batch) {
     try {
       const results = await this.forkedProcessTaskRunner.forkProcessForBatch(
-        batch
+        batch,
+        this.taskGraph
       );
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
         ...result,
-        task: this.taskGraph.tasks[taskId],
+        task: {
+          ...this.taskGraph.tasks[taskId],
+          startTime: result.startTime,
+          endTime: result.endTime,
+        },
         status: (result.success ? 'success' : 'failure') as TaskStatus,
         terminalOutput: result.terminalOutput,
       }));
@@ -292,6 +303,7 @@ export class TaskOrchestrator {
             {
               temporaryOutputPath,
               streamOutput,
+              taskGraph: this.taskGraph,
             }
           )
         : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
@@ -299,6 +311,7 @@ export class TaskOrchestrator {
             {
               temporaryOutputPath,
               streamOutput,
+              taskGraph: this.taskGraph,
             }
           );
 

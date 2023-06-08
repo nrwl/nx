@@ -6,7 +6,7 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { join, relative } from 'path';
+import { relative } from 'path';
 import {
   BuildOptions,
   InlineConfig,
@@ -19,7 +19,6 @@ import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import replaceFiles from '../../plugins/rollup-replace-files.plugin';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
-import * as path from 'path';
 
 /**
  * Returns the path to the vite config file or undefined when not found.
@@ -37,10 +36,22 @@ export function normalizeViteConfigFilePath(
     }
     return normalized;
   }
-  return existsSync(joinPathFragments(`${projectRoot}/vite.config.ts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
-    : existsSync(joinPathFragments(`${projectRoot}/vite.config.js`))
-    ? joinPathFragments(`${projectRoot}/vite.config.js`)
+  return existsSync(joinPathFragments(projectRoot, 'vite.config.ts'))
+    ? joinPathFragments(projectRoot, 'vite.config.ts')
+    : existsSync(joinPathFragments(projectRoot, 'vite.config.js'))
+    ? joinPathFragments(projectRoot, 'vite.config.js')
+    : undefined;
+}
+
+export function getProjectTsConfigPath(
+  projectRoot: string
+): string | undefined {
+  return existsSync(joinPathFragments(projectRoot, 'tsconfig.app.json'))
+    ? joinPathFragments(projectRoot, 'tsconfig.app.json')
+    : existsSync(joinPathFragments(projectRoot, 'tsconfig.lib.json'))
+    ? joinPathFragments(projectRoot, 'tsconfig.lib.json')
+    : existsSync(joinPathFragments(projectRoot, 'tsconfig.json'))
+    ? joinPathFragments(projectRoot, 'tsconfig.json')
     : undefined;
 }
 
@@ -56,8 +67,8 @@ export function getViteServerProxyConfigPath(
       context.projectsConfigurations.projects[context.projectName].root;
 
     const proxyConfigPath = nxProxyConfig
-      ? join(context.root, nxProxyConfig)
-      : join(projectRoot, 'proxy.conf.json');
+      ? joinPathFragments(context.root, nxProxyConfig)
+      : joinPathFragments(projectRoot, 'proxy.conf.json');
 
     if (existsSync(proxyConfigPath)) {
       return proxyConfigPath;
@@ -78,7 +89,7 @@ export function getViteSharedConfig(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  const root = path.relative(
+  const root = relative(
     context.cwd,
     joinPathFragments(context.root, projectRoot)
   );
@@ -145,7 +156,7 @@ export function getViteBuildOptions(
     outDir: relative(projectRoot, options.outputPath),
     emptyOutDir: options.emptyOutDir,
     reportCompressedSize: true,
-    cssCodeSplit: true,
+    cssCodeSplit: options.cssCodeSplit,
     target: options.target ?? 'esnext',
     commonjsOptions: {
       transformMixedEsModules: true,

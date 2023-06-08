@@ -3,6 +3,7 @@
   "executors": {
     "tsc": {
       "implementation": "./src/executors/tsc/tsc.impl",
+      "batchImplementation": "./src/executors/tsc/tsc.batch-impl",
       "schema": "./src/executors/tsc/schema.json",
       "description": "Build a project using TypeScript."
     },
@@ -15,6 +16,11 @@
       "implementation": "./src/executors/node/node.impl",
       "schema": "./src/executors/node/schema.json",
       "description": "Execute a Node application."
+    },
+    "verdaccio": {
+      "implementation": "./src/executors/verdaccio/verdaccio.impl",
+      "schema": "./src/executors/verdaccio/schema.json",
+      "description": "Start local registry with verdaccio"
     }
   },
   "builders": {
@@ -32,6 +38,11 @@
       "implementation": "./src/executors/node/compat",
       "schema": "./src/executors/node/schema.json",
       "description": "Execute a Node application."
+    },
+    "verdaccio": {
+      "implementation": "./src/executors/verdaccio/compat",
+      "schema": "./src/executors/verdaccio/schema.json",
+      "description": "Start local registry with verdaccio"
     }
   }
 }

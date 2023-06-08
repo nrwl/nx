@@ -138,7 +138,11 @@ export class FsTree implements Tree {
    */
   private locked = false;
 
-  constructor(readonly root: string, private readonly isVerbose: boolean) {}
+  constructor(
+    readonly root: string,
+    private readonly isVerbose: boolean,
+    private readonly logOperationId?: string
+  ) {}
 
   read(filePath: string): Buffer | null;
   read(filePath: string, encoding: BufferEncoding): string | null;
@@ -223,8 +227,11 @@ export class FsTree implements Tree {
       isDeleted: true,
     };
 
-    // Delete directories when
-    if (this.children(dirname(this.rp(filePath))).length < 1) {
+    // Delete directory when is not root and there are no children
+    if (
+      filePath !== '' &&
+      this.children(dirname(this.rp(filePath))).length < 1
+    ) {
       this.delete(dirname(this.rp(filePath)));
     }
   }
@@ -282,7 +289,7 @@ export class FsTree implements Tree {
 
     res = [...res, ...this.directChildrenOfDir(this.rp(dirPath))];
     res = res.filter((q) => {
-      const r = this.recordedChanges[join(this.rp(dirPath), q)];
+      const r = this.recordedChanges[this.normalize(join(this.rp(dirPath), q))];
       return !r?.isDeleted;
     });
     // Dedupe
@@ -354,20 +361,15 @@ export class FsTree implements Tree {
 
   private assertUnlocked() {
     if (this.locked) {
-      // TODO (v17): Remove condition
-      if (gt(nxVersion, '17.0.0')) {
-        throw new Error(
-          'The tree has already been committed to disk. It can no longer be modified. Do not modify the tree during a GeneratorCallback and ensure that Promises have resolved before the generator returns or resolves.'
-        );
-      } else {
-        output.warn({
-          title: 'Tree modified after commit to disk.',
-          bodyLines: [
-            'The tree has already been committed to disk. It can no longer be modified. Do not modify the tree during a GeneratorCallback and ensure that Promises have resolved before the generator returns or resolves.',
-            `This will be an error in version 16. Please open an issue on the Nx repo if experiencing this with a first-party plugin, or the plugin's repo if using a community plugin.`,
-          ],
-        });
-      }
+      output.error({
+        title: `File changes have already been written to disk. Further changes were attempted ${
+          this.logOperationId ? ` while running ${this.logOperationId}.` : '.'
+        }`,
+        bodyLines: [
+          'The file system can no longer be modified. This commonly happens when a generator attempts to make further changes in its callback, or an asynchronous operation is still running after the generator completes.',
+        ],
+      });
+      throw new Error('Tree changed after commit to disk.');
     }
   }
 

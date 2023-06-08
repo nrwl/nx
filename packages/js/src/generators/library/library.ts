@@ -18,7 +18,6 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { getImportPath } from 'nx/src/utils/path';
 
 import {
   addTsConfigPath,
@@ -29,6 +28,7 @@ import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
 import { Bundler, LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import { getImportPath } from '../../utils/get-import-path';
 import {
   esbuildVersion,
   nxVersion,
@@ -36,6 +36,8 @@ import {
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
 import { PackageJson } from 'nx/src/utils/package-json';
+import setupVerdaccio from '../setup-verdaccio/generator';
+import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -62,6 +64,7 @@ export async function projectGenerator(
     await jsInitGenerator(tree, {
       ...schema,
       skipFormat: true,
+      tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     })
   );
   const options = normalizeOptions(tree, schema, destinationDir);
@@ -71,6 +74,10 @@ export async function projectGenerator(
   addProject(tree, options, destinationDir);
 
   tasks.push(addProjectDependencies(tree, options));
+
+  if (options.publishable) {
+    tasks.push(await setupVerdaccio(tree, { ...options, skipFormat: true }));
+  }
 
   if (options.bundler === 'vite') {
     const { viteConfigurationGenerator } = ensurePackage('@nx/vite', nxVersion);
@@ -84,10 +91,6 @@ export async function projectGenerator(
     });
     tasks.push(viteTask);
   }
-  if (options.bundler === 'rollup') {
-    ensureBabelRootConfigExists(tree);
-  }
-
   if (options.linter !== 'none') {
     const lintCallback = await addLint(tree, options);
     tasks.push(lintCallback);
@@ -270,6 +273,9 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
 
 function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
   const { className, name, propertyName } = names(options.name);
+
+  createProjectTsConfigJson(tree, options);
+
   generateFiles(tree, filesDir, options.projectRoot, {
     ...options,
     dot: '.',
@@ -281,7 +287,6 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     strict: undefined,
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
-    rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
     buildable: options.bundler && options.bundler !== 'none',
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
@@ -398,6 +403,7 @@ function replaceJestConfig(
     project: options.name,
     offsetFromRoot: offsetFromRoot(options.projectRoot),
     projectRoot: options.projectRoot,
+    testEnvironment: options.testEnvironment,
   });
 }
 
@@ -491,8 +497,6 @@ function normalizeOptions(
     pascalCaseFiles: options.pascalCaseFiles,
   });
 
-  const { npmScope } = getWorkspaceLayout(tree);
-
   const projectRoot = joinPathFragments(destinationDir, projectDirectory);
 
   const parsedTags = options.tags
@@ -500,7 +504,7 @@ function normalizeOptions(
     : [];
 
   const importPath =
-    options.importPath || getImportPath(npmScope, projectDirectory);
+    options.importPath || getImportPath(tree, projectDirectory);
 
   options.minimal ??= false;
 
@@ -538,13 +542,17 @@ function addProjectDependencies(
         esbuild: esbuildVersion,
       }
     );
-  }
-
-  if (options.bundler == 'rollup') {
+  } else if (options.bundler == 'rollup') {
     return addDependenciesToPackageJson(
       tree,
       {},
       { '@nx/rollup': nxVersion, '@types/node': typesNodeVersion }
+    );
+  } else {
+    return addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@types/node': typesNodeVersion }
     );
   }
 
@@ -571,14 +579,6 @@ function getBuildExecutor(bundler: Bundler) {
   }
 }
 
-function ensureBabelRootConfigExists(tree: Tree) {
-  if (tree.exists('babel.config.json')) return;
-
-  writeJson(tree, 'babel.config.json', {
-    babelrcRoots: ['*'],
-  });
-}
-
 function getOutputPath(options: NormalizedSchema, destinationDir?: string) {
   const parts = ['dist'];
   if (destinationDir) {
@@ -590,6 +590,31 @@ function getOutputPath(options: NormalizedSchema, destinationDir?: string) {
     parts.push(options.projectDirectory);
   }
   return joinPathFragments(...parts);
+}
+
+function createProjectTsConfigJson(tree: Tree, options: NormalizedSchema) {
+  const tsconfig = {
+    extends: options.rootProject
+      ? undefined
+      : getRelativePathToRootTsConfig(tree, options.projectRoot),
+    compilerOptions: {
+      ...(options.rootProject ? tsConfigBaseOptions : {}),
+      module: 'commonjs',
+      allowJs: options.js ? true : undefined,
+    },
+    files: [],
+    include: [],
+    references: [
+      {
+        path: './tsconfig.lib.json',
+      },
+    ],
+  };
+  writeJson(
+    tree,
+    joinPathFragments(options.projectRoot, 'tsconfig.json'),
+    tsconfig
+  );
 }
 
 export default libraryGenerator;

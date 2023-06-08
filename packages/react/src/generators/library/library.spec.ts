@@ -29,6 +29,7 @@ describe('lib', () => {
     style: 'css',
     component: true,
     strict: true,
+    simpleName: false,
   };
 
   beforeEach(() => {
@@ -46,152 +47,148 @@ describe('lib', () => {
     });
   });
 
-  describe('not nested', () => {
-    it('should update project configuration', async () => {
-      await libraryGenerator(tree, defaultSchema);
-      const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.root).toEqual('libs/my-lib');
-      expect(project.targets.build).toBeUndefined();
-      expect(project.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['libs/my-lib/**/*.{ts,tsx,js,jsx}'],
-        },
-      });
+  it('should update project configuration', async () => {
+    await libraryGenerator(tree, defaultSchema);
+    const project = readProjectConfiguration(tree, 'my-lib');
+    expect(project.root).toEqual('libs/my-lib');
+    expect(project.targets.build).toBeUndefined();
+    expect(project.targets.lint).toEqual({
+      executor: '@nx/linter:eslint',
+      outputs: ['{options.outputFile}'],
+      options: {
+        lintFilePatterns: ['libs/my-lib/**/*.{ts,tsx,js,jsx}'],
+      },
+    });
+  });
+
+  it('should add vite types to tsconfigs', async () => {
+    await libraryGenerator(tree, {
+      ...defaultSchema,
+      bundler: 'vite',
+      unitTestRunner: 'vitest',
+    });
+    const tsconfigApp = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
+    expect(tsconfigApp.compilerOptions.types).toEqual(['node', 'vite/client']);
+    const tsconfigSpec = readJson(tree, 'libs/my-lib/tsconfig.spec.json');
+    expect(tsconfigSpec.compilerOptions.types).toEqual([
+      'vitest/globals',
+      'vitest/importMeta',
+      'vite/client',
+      'node',
+    ]);
+  });
+
+  it('should update tags', async () => {
+    await libraryGenerator(tree, { ...defaultSchema, tags: 'one,two' });
+    const project = readProjectConfiguration(tree, 'my-lib');
+    expect(project).toEqual(
+      expect.objectContaining({
+        tags: ['one', 'two'],
+      })
+    );
+  });
+
+  it('should add react and react-dom packages to package.json if not already present', async () => {
+    await libraryGenerator(tree, defaultSchema);
+
+    const packageJson = readJson(tree, '/package.json');
+
+    expect(packageJson).toMatchObject({
+      dependencies: {
+        react: expect.anything(),
+        'react-dom': expect.anything(),
+      },
+    });
+  });
+
+  it('should update root tsconfig.base.json', async () => {
+    await libraryGenerator(tree, defaultSchema);
+    const tsconfigJson = readJson(tree, '/tsconfig.base.json');
+    expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+      'libs/my-lib/src/index.ts',
+    ]);
+  });
+
+  it('should create tsconfig.base.json out of tsconfig.json', async () => {
+    tree.rename('tsconfig.base.json', 'tsconfig.json');
+
+    await libraryGenerator(tree, defaultSchema);
+
+    expect(tree.exists('tsconfig.base.json')).toEqual(true);
+    const tsconfigJson = readJson(tree, 'tsconfig.base.json');
+    expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+      'libs/my-lib/src/index.ts',
+    ]);
+  });
+
+  it('should update root tsconfig.base.json (no existing path mappings)', async () => {
+    updateJson(tree, 'tsconfig.base.json', (json) => {
+      json.compilerOptions.paths = undefined;
+      return json;
     });
 
-    it('should add vite types to tsconfigs', async () => {
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        bundler: 'vite',
-        unitTestRunner: 'vitest',
-      });
-      const tsconfigApp = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
-      expect(tsconfigApp.compilerOptions.types).toEqual([
-        'node',
-        'vite/client',
-      ]);
-      const tsconfigSpec = readJson(tree, 'libs/my-lib/tsconfig.spec.json');
-      expect(tsconfigSpec.compilerOptions.types).toEqual([
-        'vitest/globals',
-        'vitest/importMeta',
-        'vite/client',
-        'node',
-      ]);
-    });
+    await libraryGenerator(tree, defaultSchema);
+    const tsconfigJson = readJson(tree, '/tsconfig.base.json');
+    expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+      'libs/my-lib/src/index.ts',
+    ]);
+  });
 
-    it('should update tags', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, tags: 'one,two' });
-      const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project).toEqual(
-        expect.objectContaining({
-          tags: ['one', 'two'],
-        })
-      );
-    });
+  it('should create a local tsconfig.json', async () => {
+    await libraryGenerator(tree, defaultSchema);
 
-    it('should add react and react-dom packages to package.json if not already present', async () => {
-      await libraryGenerator(tree, defaultSchema);
+    const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
+    expect(tsconfigJson.extends).toBe('../../tsconfig.base.json');
+    expect(tsconfigJson.references).toEqual([
+      {
+        path: './tsconfig.lib.json',
+      },
+      {
+        path: './tsconfig.spec.json',
+      },
+    ]);
+    expect(tsconfigJson.compilerOptions.strict).toEqual(true);
+  });
 
-      const packageJson = readJson(tree, '/package.json');
+  it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
+    await libraryGenerator(tree, defaultSchema);
+    const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.spec.json');
+    expect(tsconfigJson.extends).toEqual('./tsconfig.json');
+  });
 
-      expect(packageJson).toMatchObject({
-        dependencies: {
-          react: expect.anything(),
-          'react-dom': expect.anything(),
-        },
-      });
-    });
+  it('should extend the local tsconfig.json with tsconfig.lib.json', async () => {
+    await libraryGenerator(tree, defaultSchema);
+    const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
+    expect(tsconfigJson.extends).toEqual('./tsconfig.json');
+  });
 
-    it('should update root tsconfig.base.json', async () => {
-      await libraryGenerator(tree, defaultSchema);
-      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
-      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'libs/my-lib/src/index.ts',
-      ]);
-    });
+  it('should ignore test files in tsconfig.lib.json', async () => {
+    await libraryGenerator(tree, defaultSchema);
+    const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
+    expect(tsconfigJson.exclude).toEqual([
+      'jest.config.ts',
+      'src/**/*.spec.ts',
+      'src/**/*.test.ts',
+      'src/**/*.spec.tsx',
+      'src/**/*.test.tsx',
+      'src/**/*.spec.js',
+      'src/**/*.test.js',
+      'src/**/*.spec.jsx',
+      'src/**/*.test.jsx',
+    ]);
+  });
 
-    it('should create tsconfig.base.json out of tsconfig.json', async () => {
-      tree.rename('tsconfig.base.json', 'tsconfig.json');
+  it('should generate files', async () => {
+    await libraryGenerator(tree, defaultSchema);
+    expect(tree.exists('libs/my-lib/package.json')).toBeFalsy();
+    expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
+    expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+    expect(tree.exists('libs/my-lib/src/lib/my-lib.tsx')).toBeTruthy();
+    expect(tree.exists('libs/my-lib/src/lib/my-lib.module.css')).toBeTruthy();
+    expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
 
-      await libraryGenerator(tree, defaultSchema);
-
-      expect(tree.exists('tsconfig.base.json')).toEqual(true);
-      const tsconfigJson = readJson(tree, 'tsconfig.base.json');
-      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'libs/my-lib/src/index.ts',
-      ]);
-    });
-
-    it('should update root tsconfig.base.json (no existing path mappings)', async () => {
-      updateJson(tree, 'tsconfig.base.json', (json) => {
-        json.compilerOptions.paths = undefined;
-        return json;
-      });
-
-      await libraryGenerator(tree, defaultSchema);
-      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
-      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'libs/my-lib/src/index.ts',
-      ]);
-    });
-
-    it('should create a local tsconfig.json', async () => {
-      await libraryGenerator(tree, defaultSchema);
-
-      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
-      expect(tsconfigJson.extends).toBe('../../tsconfig.base.json');
-      expect(tsconfigJson.references).toEqual([
-        {
-          path: './tsconfig.lib.json',
-        },
-        {
-          path: './tsconfig.spec.json',
-        },
-      ]);
-      expect(tsconfigJson.compilerOptions.strict).toEqual(true);
-    });
-
-    it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
-      await libraryGenerator(tree, defaultSchema);
-      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.spec.json');
-      expect(tsconfigJson.extends).toEqual('./tsconfig.json');
-    });
-
-    it('should extend the local tsconfig.json with tsconfig.lib.json', async () => {
-      await libraryGenerator(tree, defaultSchema);
-      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
-      expect(tsconfigJson.extends).toEqual('./tsconfig.json');
-    });
-
-    it('should ignore test files in tsconfig.lib.json', async () => {
-      await libraryGenerator(tree, defaultSchema);
-      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
-      expect(tsconfigJson.exclude).toEqual([
-        'jest.config.ts',
-        'src/**/*.spec.ts',
-        'src/**/*.test.ts',
-        'src/**/*.spec.tsx',
-        'src/**/*.test.tsx',
-        'src/**/*.spec.js',
-        'src/**/*.test.js',
-        'src/**/*.spec.jsx',
-        'src/**/*.test.jsx',
-      ]);
-    });
-
-    it('should generate files', async () => {
-      await libraryGenerator(tree, defaultSchema);
-      expect(tree.exists('libs/my-lib/package.json')).toBeFalsy();
-      expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/my-lib.tsx')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.css')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
-
-      const eslintJson = readJson(tree, 'libs/my-lib/.eslintrc.json');
-      expect(eslintJson).toMatchInlineSnapshot(`
+    const eslintJson = readJson(tree, 'libs/my-lib/.eslintrc.json');
+    expect(eslintJson).toMatchInlineSnapshot(`
         {
           "extends": [
             "plugin:@nx/react",
@@ -227,17 +224,28 @@ describe('lib', () => {
           ],
         }
       `);
+  });
+  it('should update jest.config.ts for babel', async () => {
+    await libraryGenerator(tree, {
+      ...defaultSchema,
+      buildable: true,
+      compiler: 'babel',
     });
-    it('should update jest.config.ts for babel', async () => {
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        buildable: true,
-        compiler: 'babel',
-      });
-      expect(tree.read('libs/my-lib/jest.config.ts', 'utf-8')).toContain(
-        "['babel-jest', { presets: ['@nx/react/babel'] }]"
-      );
+    expect(tree.read('libs/my-lib/jest.config.ts', 'utf-8')).toContain(
+      "['babel-jest', { presets: ['@nx/react/babel'] }]"
+    );
+  });
+
+  it('should add @babel/preset-react when using babel compiler', async () => {
+    await libraryGenerator(tree, {
+      ...defaultSchema,
+      compiler: 'babel',
+      directory: 'myDir',
+      tags: 'one',
     });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['@babel/preset-react']).toBeDefined();
   });
 
   describe('nested', () => {
@@ -733,6 +741,30 @@ describe('lib', () => {
       expect(eslintConfig.overrides[0].parserOptions.project).toEqual([
         'libs/my-lib/tsconfig.*?.json',
       ]);
+    });
+  });
+
+  describe('--simpleName', () => {
+    it('should generate a library with a simple name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        simpleName: true,
+        directory: 'myDir',
+      });
+
+      const indexFile = tree.read('libs/my-dir/my-lib/src/index.ts', 'utf-8');
+
+      expect(indexFile).toContain(`export * from './lib/my-lib';`);
+
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.module.css')
+      ).toBeTruthy();
+
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.spec.tsx')
+      ).toBeTruthy();
+
+      expect(tree.exists('libs/my-dir/my-lib/src/lib/my-lib.tsx')).toBeTruthy();
     });
   });
 

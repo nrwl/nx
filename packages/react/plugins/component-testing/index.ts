@@ -20,7 +20,7 @@ import {
   getProjectConfigByPath,
 } from '@nx/cypress/src/utils/ct-helpers';
 
-import { existsSync, lstatSync } from 'fs';
+import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 type ViteDevServer = {
   framework: 'react';
@@ -62,6 +62,12 @@ export function nxComponentTestingPreset(
   video: boolean;
   chromeWebSecurity: boolean;
 } {
+  const normalizedProjectRootPath = ['.ts', '.js'].some((ext) =>
+    pathToConfig.endsWith(ext)
+  )
+    ? pathToConfig
+    : dirname(pathToConfig);
+
   if (options?.bundler === 'vite') {
     return {
       ...nxBaseCypressPreset(pathToConfig),
@@ -69,12 +75,7 @@ export function nxComponentTestingPreset(
       devServer: {
         ...({ framework: 'react', bundler: 'vite' } as const),
         viteConfig: async () => {
-          const normalizedPath = ['.ts', '.js'].some((ext) =>
-            pathToConfig.endsWith(ext)
-          )
-            ? pathToConfig
-            : dirname(pathToConfig);
-          const viteConfigPath = findViteConfig(normalizedPath);
+          const viteConfigPath = findViteConfig(normalizedProjectRootPath);
 
           const { mergeConfig, loadConfigFromFile, searchForWorkspaceRoot } =
             (await import('vite')) as typeof import('vite');
@@ -90,7 +91,7 @@ export function nxComponentTestingPreset(
             server: {
               fs: {
                 allow: [
-                  searchForWorkspaceRoot(normalizedPath),
+                  searchForWorkspaceRoot(normalizedProjectRootPath),
                   workspaceRoot,
                   joinPathFragments(workspaceRoot, 'node_modules/vite'),
                 ],
@@ -147,7 +148,7 @@ export function nxComponentTestingPreset(
 
     const { buildBaseWebpackConfig } = require('./webpack-fallback');
     webpackConfig = buildBaseWebpackConfig({
-      tsConfigPath: 'cypress/tsconfig.cy.json',
+      tsConfigPath: findTsConfig(normalizedProjectRootPath),
       compiler: 'babel',
     });
   }
@@ -235,41 +236,56 @@ function buildTargetWebpack(
     buildableProjectConfig.sourceRoot!
   );
 
-  if (options.webpackConfig) {
-    let customWebpack: any;
+  let customWebpack: any;
 
+  if (options.webpackConfig) {
     customWebpack = resolveCustomWebpackConfig(
       options.webpackConfig,
       options.tsConfig
     );
-
-    return async () => {
-      customWebpack = await customWebpack;
-      // TODO(jack): Once webpackConfig is always set in @nx/webpack:webpack, we no longer need this default.
-      const defaultWebpack = getWebpackConfig(context, {
-        ...options,
-        root: workspaceRoot,
-        projectRoot: ctProjectConfig.root,
-        sourceRoot: ctProjectConfig.sourceRoot,
-      });
-
-      if (customWebpack) {
-        return await customWebpack(defaultWebpack, {
-          options,
-          context,
-          configuration: parsed.configuration,
-        });
-      }
-      return defaultWebpack;
-    };
   }
+
+  return async () => {
+    customWebpack = await customWebpack;
+    // TODO(jack): Once webpackConfig is always set in @nx/webpack:webpack, we no longer need this default.
+    const defaultWebpack = getWebpackConfig(context, {
+      ...options,
+      root: workspaceRoot,
+      projectRoot: ctProjectConfig.root,
+      sourceRoot: ctProjectConfig.sourceRoot,
+    });
+
+    if (customWebpack) {
+      return await customWebpack(defaultWebpack, {
+        options,
+        context,
+        configuration: parsed.configuration,
+      });
+    }
+    return defaultWebpack;
+  };
 }
+
 function findViteConfig(projectRootFullPath: string): string {
   const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
 
   for (const ext of allowsExt) {
     if (existsSync(join(projectRootFullPath, `vite.config.${ext}`))) {
       return join(projectRootFullPath, `vite.config.${ext}`);
+    }
+  }
+}
+
+function findTsConfig(projectRoot: string) {
+  const potentialConfigs = [
+    'cypress/tsconfig.json',
+    'cypress/tsconfig.cy.json',
+    'tsconfig.cy.json',
+  ];
+
+  for (const config of potentialConfigs) {
+    if (existsSync(join(projectRoot, config))) {
+      return config;
     }
   }
 }

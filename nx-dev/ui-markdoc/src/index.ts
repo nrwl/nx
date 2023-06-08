@@ -21,6 +21,8 @@ import { Card, Cards, TitleCard } from './lib/tags/cards.component';
 import { card, cards, titleCard } from './lib/tags/cards.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
 import { githubRepository } from './lib/tags/github-repository.schema';
+import { StackblitzButton } from './lib/tags/stackblitz-button.component';
+import { stackblitzButton } from './lib/tags/stackblitz-button.schema';
 import { Graph } from './lib/tags/graph.component';
 import { graph } from './lib/tags/graph.schema';
 import { Iframe } from './lib/tags/iframe.component';
@@ -38,6 +40,9 @@ import { tab, tabs } from './lib/tags/tabs.schema';
 import { YouTube } from './lib/tags/youtube.components';
 import { youtube } from './lib/tags/youtube.schema';
 
+// TODO fix this export
+export { GithubRepository } from './lib/tags/github-repository.component';
+
 export const getMarkdocCustomConfig = (
   documentFilePath: string
 ): { config: any; components: any } => ({
@@ -53,6 +58,7 @@ export const getMarkdocCustomConfig = (
       card,
       cards,
       'github-repository': githubRepository,
+      'stackblitz-button': stackblitzButton,
       graph,
       iframe,
       'install-nx-console': installNxConsole,
@@ -73,6 +79,7 @@ export const getMarkdocCustomConfig = (
     CustomLink,
     Fence,
     GithubRepository,
+    StackblitzButton,
     Graph,
     Heading,
     Iframe,

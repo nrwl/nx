@@ -78,7 +78,7 @@ function addStorybookTask(host: Tree, projectName: string) {
     executor: '@nx/react-native:storybook',
     options: {
       searchDir: [projectConfig.sourceRoot],
-      outputFile: './.storybook/story-loader.ts',
+      outputFile: './.storybook/story-loader.js',
       pattern: '**/*.stories.@(js|jsx|ts|tsx|md)',
     },
   };

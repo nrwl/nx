@@ -73,27 +73,33 @@ pnpm list --global nx
 {% /tab %}
 {% /tabs %}
 
+{% callout type="note" title="Older Global Installations" %}
+
+In prior versions, Nx could be installed globally via `@nrwl/cli` or `@nrwl/tao`. If you are seeing these warnings but cannot find other global installations of Nx via the above commands, you should look for these packages as well. In general, you should remove these and install the latest version of `nx` instead.
+
+{% /callout %}
+
 You can then remove the extra global installations by running the following commands for the duplicate installations:
 
 {% tabs %}
 {% tab label="npm" %}
 
 ```shell
-npm rm --global nx
+npm rm --global nx @nrwl/cli @nrwl/tao
 ```
 
 {% /tab %}
 {% tab label="yarn" %}
 
 ```shell
-yarn global remove nx
+yarn global remove nx @nrwl/cli @nrwl/tao
 ```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
 ```shell
-pnpm rm --global nx
+pnpm rm --global nx @nrwl/cli @nrwl/tao
 ```
 
 {% /tab %}

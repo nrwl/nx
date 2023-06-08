@@ -60,7 +60,7 @@ To improve the performance of the worst case CI time, you have to implement some
 ```
 
 Here's a visualization of how this approach works:
-![CI using binning](../images/dte/binning.svg)
+![CI using binning](/shared/images/dte/binning.svg)
 
 ### 🎉 Pro: Faster
 
@@ -90,7 +90,7 @@ The setup looks like this:
 # Coordinate the agents to run the tasks
 - npx nx-cloud start-ci-run
 # Run any commands you want here
-- nx affected -t lint & nx affected -t test & nx affected -t build
+- nx affected -t lint test build
 # Stop any run away agents
 - npx nx-cloud stop-all-agents
 ```
@@ -101,7 +101,7 @@ The setup looks like this:
 ```
 
 The visualization for distributed task execution looks like this:
-![CI using DTE](../images/dte/3agents.svg)
+![CI using DTE](/shared/images/dte/3agents.svg)
 
 ### 🎉 Pro: Fastest
 

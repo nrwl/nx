@@ -36,9 +36,13 @@ For this tutorial, you'll create an Express API application, a library that the 
 Run the command `npx create-nx-workspace@latest` and when prompted, provide the following responses:
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
-✔ Choose what to create                 · node-standalone
-✔ Application name                      · products-api
+
+ >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
+✔ Where would you like to create your workspace? · products-api
+✔ Which stack do you want to use? · node
 ✔ What framework should be used? · express
+✔ Standalone project or integrated monorepo? · standalone
 ✔ Would you like to generate a Dockerfile? [https://docs.docker.com/] · Yes
 ✔ Enable distributed caching to make your CI faster · Yes
 ```

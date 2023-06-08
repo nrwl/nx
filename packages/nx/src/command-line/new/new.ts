@@ -33,7 +33,7 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
         false
       );
 
-      const host = new FsTree(cwd, false);
+      const host = new FsTree(cwd, false, 'nx new');
       const implementation = implementationFactory();
       const task = await implementation(host, combinedOpts);
       flushChanges(cwd, host.listChanges());

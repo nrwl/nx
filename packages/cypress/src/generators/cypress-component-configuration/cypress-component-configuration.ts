@@ -21,28 +21,26 @@ import {
   htmlWebpackPluginVersion,
 } from '../../utils/versions';
 import { CypressComponentConfigurationSchema } from './schema';
+import { addBaseCypressSetup } from '../base-setup/base-setup';
+
+type NormalizeCTOptions = ReturnType<typeof normalizeOptions>;
 
 export async function cypressComponentConfiguration(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  const cyVersion = installedCypressVersion();
-  if (cyVersion && cyVersion < 10) {
-    throw new Error(
-      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v10-migration-guide'
-    );
-  }
+  const opts = normalizeOptions(options);
 
-  const projectConfig = readProjectConfiguration(tree, options.project);
+  const projectConfig = readProjectConfiguration(tree, opts.project);
 
-  const installDepsTask = updateDeps(tree, options);
+  const installDepsTask = updateDeps(tree, opts);
 
-  addProjectFiles(tree, projectConfig, options);
-  addTargetToProject(tree, projectConfig, options);
+  addProjectFiles(tree, projectConfig, opts);
+  addTargetToProject(tree, projectConfig, opts);
   updateNxJsonConfiguration(tree);
   updateTsConfigForComponentTesting(tree, projectConfig);
 
-  if (!options.skipFormat) {
+  if (!opts.skipFormat) {
     await formatFiles(tree);
   }
   return () => {
@@ -50,12 +48,26 @@ export async function cypressComponentConfiguration(
   };
 }
 
-function updateDeps(tree: Tree, options: CypressComponentConfigurationSchema) {
+function normalizeOptions(options: CypressComponentConfigurationSchema) {
+  const cyVersion = installedCypressVersion();
+  if (cyVersion && cyVersion < 10) {
+    throw new Error(
+      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v11-migration-guide'
+    );
+  }
+
+  return {
+    ...options,
+    directory: options.directory ?? 'cypress',
+  };
+}
+
+function updateDeps(tree: Tree, opts: NormalizeCTOptions) {
   const devDeps = {
     cypress: cypressVersion,
   };
 
-  if (options.bundler === 'vite') {
+  if (opts.bundler === 'vite') {
     devDeps['@cypress/vite-dev-server'] = cypressViteDevServerVersion;
   } else {
     devDeps['@cypress/webpack-dev-server'] = cypressWebpackVersion;
@@ -68,14 +80,19 @@ function updateDeps(tree: Tree, options: CypressComponentConfigurationSchema) {
 function addProjectFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  options: CypressComponentConfigurationSchema
+  opts: NormalizeCTOptions
 ) {
+  addBaseCypressSetup(tree, {
+    project: opts.project,
+    directory: opts.directory,
+  });
+
   generateFiles(
     tree,
     joinPathFragments(__dirname, 'files'),
     projectConfig.root,
     {
-      ...options,
+      ...opts,
       projectRoot: projectConfig.root,
       offsetFromRoot: offsetFromRoot(projectConfig.root),
       ext: '',
@@ -86,7 +103,7 @@ function addProjectFiles(
 function addTargetToProject(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  options: CypressComponentConfigurationSchema
+  opts: NormalizeCTOptions
 ) {
   projectConfig.targets['component-test'] = {
     executor: '@nx/cypress:cypress',
@@ -96,7 +113,7 @@ function addTargetToProject(
     },
   };
 
-  updateProjectConfiguration(tree, options.project, projectConfig);
+  updateProjectConfiguration(tree, opts.project, projectConfig);
 }
 
 function updateNxJsonConfiguration(tree: Tree) {
@@ -150,6 +167,7 @@ export function updateTsConfigForComponentTesting(
       ? 'tsconfig.lib.json'
       : 'tsconfig.app.json'
   );
+
   if (tree.exists(tsConfigPath)) {
     updateJson(tree, tsConfigPath, (json) => {
       const excluded = new Set([
@@ -174,11 +192,11 @@ export function updateTsConfigForComponentTesting(
   if (tree.exists(projectBaseTsConfig)) {
     updateJson(tree, projectBaseTsConfig, (json) => {
       if (json.references) {
-        const hasCyTsConfig = json.references.some(
-          (r) => r.path === './cypress/tsconfig.cy.json'
+        const hasCyTsConfig = json.references.some((r) =>
+          r.path.includes('./cypress/tsconfig.json')
         );
         if (!hasCyTsConfig) {
-          json.references.push({ path: './cypress/tsconfig.cy.json' });
+          json.references.push({ path: './cypress/tsconfig.json' });
         }
       } else {
         const excluded = new Set([
@@ -197,3 +215,5 @@ export function updateTsConfigForComponentTesting(
     });
   }
 }
+
+export default cypressComponentConfiguration;

@@ -7,7 +7,7 @@ import {
   removeTasksFromTaskGraph,
 } from './utils';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { Hasher } from '../hasher/hasher';
+import { TaskHasher } from '../hasher/task-hasher';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -31,7 +31,7 @@ export class TasksSchedule {
   private completedTasks = new Set<string>();
 
   constructor(
-    private readonly hasher: Hasher,
+    private readonly hasher: TaskHasher,
     private readonly nxJson: NxJsonConfiguration,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
@@ -134,7 +134,6 @@ export class TasksSchedule {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
       const executorName = await getExecutorNameForTask(
         rootTask,
-        this.nxJson,
         this.projectGraph
       );
       await this.processTaskForBatches(batchMap, rootTask, executorName, true);
@@ -166,11 +165,7 @@ export class TasksSchedule {
       this.projectGraph,
       this.nxJson
     );
-    const executorName = await getExecutorNameForTask(
-      task,
-      this.nxJson,
-      this.projectGraph
-    );
+    const executorName = await getExecutorNameForTask(task, this.projectGraph);
     if (rootExecutorName !== executorName) {
       return;
     }
@@ -196,7 +191,12 @@ export class TasksSchedule {
 
     for (const dep of this.reverseTaskDeps[task.id]) {
       const depTask = this.taskGraph.tasks[dep];
-      this.processTaskForBatches(batches, depTask, rootExecutorName, false);
+      await this.processTaskForBatches(
+        batches,
+        depTask,
+        rootExecutorName,
+        false
+      );
     }
   }
 

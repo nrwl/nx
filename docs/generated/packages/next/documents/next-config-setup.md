@@ -22,11 +22,31 @@ module.exports = withNx({
 });
 ```
 
-This guide contains information on how to compose the Nx plugin with other plugins, such as `@next/mdx`. Note that Nx prior to version 16 is missing the compose utility from the `@nx/next` package, and a workaround will be provided for Nx 15 and prior.
+This guide contains information on how to configure and compose the Nx plugin with other plugins, such as `@next/mdx`. Note that Nx prior to version 16 is missing the compose utility from the `@nx/next` package, and a workaround will be provided for Nx 15 and prior.
 
 {% callout type="warning" title="Avoid next-compose-plugins" %}
 There is a popular package called `next-compose-plugins` that has not been maintained for over two years. This package does not correctly combine plugins in all situations. If you do use it, replace the package with Nx 16's `composePlugins` utility (see below).
 {% /callout %}
+
+## `withNx` plugin
+
+The `withNx` Next.js plugin provides integration with Nx, including support for [workspace libraries](/packages/next/generators/library), SVGR, and more. It is included by default when you generate a Next.js [application](/packages/next/generators/application) with Nx. When you customize your `next.config.js` file, make sure to include the `withNx` plugin.
+
+### Options
+
+#### svgr
+
+Type: `boolean`
+
+Set this to true if you would like to to use SVGR. See: https://react-svgr.com/
+
+#### babelUpwardRootMode
+
+Type: `boolean`
+
+For a monorepo, set to `true` to incorporate `.babelrc` files from individual libraries into the build. Note, however, that doing so will prevent the application's `.babelrc` settings from being applied to its libraries. It is generally recommended not to enable this option, as it can lead to a lack of consistency throughout the workspace. Instead, the application's `.babelrc` file should include the presets and plugins needed by its libraries directly. For more information on babel root-mode, see here: https://babeljs.io/docs/en/options#rootmode
+
+Set this to `true` if you want `.babelrc` from libraries to be used in a monorepo. Note that setting this to `true` means the application's `.babelrc` will not apply to libraries, and it is recommended not to use this option as it may lead to inconsistency in the workspace. Instead, add babel presets/plugins required by libraries directly to the application's `.babelrc` file. See: https://babeljs.io/docs/en/options#rootmode
 
 ## Composing plugins using `composePlugins` utility (Nx 16 and later)
 

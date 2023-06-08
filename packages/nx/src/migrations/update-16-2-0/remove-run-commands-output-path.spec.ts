@@ -5,6 +5,7 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
 } from '../../generators/utils/project-configuration';
+import { assertRunsAgainstNxRepo } from '../../../internal-testing-utils/run-migration-against-this-workspace';
 import removeRunCommandsOutputPath from './remove-run-commands-output-path';
 
 describe('removeRunCommandsOutputPath', () => {
@@ -35,11 +36,29 @@ describe('removeRunCommandsOutputPath', () => {
     expect(migratedTargets.build).not.toEqual(startingTargets.build);
     expect(migratedTargets.build).toEqual({
       executor: 'nx:run-commands',
-      outputs: ['dist/apps/my-app'],
+      outputs: ['{workspaceRoot}/dist/apps/my-app'],
       options: {
         commands: [],
       },
     });
+    expect(migratedTargets.other).toEqual(startingTargets.other);
+  });
+
+  it('should handle null options correctly', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const startingTargets: Record<string, TargetConfiguration> = {
+      build: {
+        executor: 'nx:run-commands',
+        outputs: ['dist/some/path'],
+      },
+    };
+    addProjectConfiguration(tree, 'my-app', {
+      root: 'apps/my-app',
+      targets: startingTargets,
+    });
+    expect(() => removeRunCommandsOutputPath(tree)).not.toThrow();
+    const migratedTargets = readProjectConfiguration(tree, 'my-app').targets;
+    expect(migratedTargets.build).toEqual(startingTargets.build);
     expect(migratedTargets.other).toEqual(startingTargets.other);
   });
 
@@ -71,11 +90,13 @@ describe('removeRunCommandsOutputPath', () => {
     );
     expect(migratedTargetDefaults.build).toEqual({
       executor: 'nx:run-commands',
-      outputs: ['dist/apps/my-app'],
+      outputs: ['{workspaceRoot}/dist/apps/my-app'],
       options: {
         commands: [],
       },
     });
     expect(migratedTargetDefaults.other).toEqual(startingTargetDefaults.other);
   });
+
+  assertRunsAgainstNxRepo(removeRunCommandsOutputPath);
 });

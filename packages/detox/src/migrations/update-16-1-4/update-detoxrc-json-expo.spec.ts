@@ -62,11 +62,11 @@ describe('Update detoxrc for expo projects', () => {
         },
         'ios.local': {
           build:
-            'npx nx run products:build --platform ios --configuration=debug --output=../../apps/products/dist/Products.tar.gz',
+            'npx nx run products:build --platform ios --profile preview --wait --local --no-interactive --output=../../apps/products/dist/Products.tar.gz',
         },
         'android.local': {
           build:
-            'npx nx run products:build --platform android --configuration=debug --output=../../apps/products/dist/Products.apk',
+            'npx nx run products:build --platform android --profile preview --wait --local --no-interactive --output=../../apps/products/dist/Products.apk',
           type: 'android.apk',
         },
       },

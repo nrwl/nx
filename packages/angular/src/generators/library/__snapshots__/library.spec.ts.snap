@@ -502,6 +502,32 @@ describe('MyLibComponent', () => {
 "
 `;
 
+exports[`lib router lazy should add RouterModule.forChild 1`] = `
+"import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { myDirMyLibRoutes } from './lib.routes';
+
+@NgModule({
+  imports: [CommonModule, RouterModule.forChild(myDirMyLibRoutes)],
+})
+export class MyDirMyLibModule {}
+"
+`;
+
+exports[`lib router lazy should add RouterModule.forChild 2`] = `
+"import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { myLib2Routes } from './lib.routes';
+
+@NgModule({
+  imports: [CommonModule, RouterModule.forChild(myLib2Routes)],
+})
+export class MyLib2Module {}
+"
+`;
+
 exports[`lib router lazy should update the parent module 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';

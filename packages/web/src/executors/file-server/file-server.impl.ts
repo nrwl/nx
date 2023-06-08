@@ -5,7 +5,6 @@ import {
   joinPathFragments,
   parseTargetString,
   readTargetOptions,
-  workspaceLayout,
 } from '@nx/devkit';
 import ignore from 'ignore';
 import { copyFileSync, readFileSync, unlinkSync } from 'fs';
@@ -14,6 +13,7 @@ import { watch } from 'chokidar';
 import { platform } from 'os';
 import { join, resolve } from 'path';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
+import * as detectPort from 'detect-port';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -23,10 +23,6 @@ function getHttpServerArgs(options: Schema) {
 
   if (options.cors) {
     args.push(`--cors`);
-  }
-
-  if (options.port) {
-    args.push(`-p=${options.port}`);
   }
   if (options.host) {
     args.push(`-a=${options.host}`);
@@ -106,21 +102,15 @@ function getIgnoredGlobs(root: string) {
 
 function createFileWatcher(
   root: string,
+  projectRoot: string,
   changeHandler: () => void
 ): () => void {
   const ignoredGlobs = getIgnoredGlobs(root);
-  const layout = workspaceLayout();
 
-  const watcher = watch(
-    [
-      joinPathFragments(layout.appsDir, '**'),
-      joinPathFragments(layout.libsDir, '**'),
-    ],
-    {
-      cwd: root,
-      ignoreInitial: true,
-    }
-  );
+  const watcher = watch([joinPathFragments(projectRoot, '**')], {
+    cwd: root,
+    ignoreInitial: true,
+  });
   watcher.on('all', (_event: string, path: string) => {
     if (ignoredGlobs.ignores(path)) return;
     changeHandler();
@@ -154,7 +144,9 @@ export default async function* fileServerExecutor(
 
   let disposeWatch: () => void;
   if (options.watch) {
-    disposeWatch = createFileWatcher(context.root, run);
+    const projectRoot =
+      context.projectsConfigurations.projects[context.projectName].root;
+    disposeWatch = createFileWatcher(context.root, projectRoot, run);
   }
 
   // perform initial run
@@ -182,6 +174,11 @@ export default async function* fileServerExecutor(
     pathToHttpServerBin
   );
 
+  // detect port as close to when used to prevent port being used by another process
+  // when running in  parallel
+  const port = await detectPort(options.port || 8080);
+  args.push(`-p=${port}`);
+
   const serve = fork(pathToHttpServer, [outputPath, ...args], {
     stdio: 'pipe',
     cwd: context.root,
@@ -203,6 +200,7 @@ export default async function* fileServerExecutor(
   };
   process.on('exit', processExitListener);
   process.on('SIGTERM', processExitListener);
+
   serve.stdout.on('data', (chunk) => {
     if (chunk.toString().indexOf('GET') === -1) {
       process.stdout.write(chunk);
@@ -214,9 +212,7 @@ export default async function* fileServerExecutor(
 
   yield {
     success: true,
-    baseUrl: `${options.ssl ? 'https' : 'http'}://${options.host}:${
-      options.port
-    }`,
+    baseUrl: `${options.ssl ? 'https' : 'http'}://${options.host}:${port}`,
   };
 
   return new Promise<{ success: boolean }>((res) => {

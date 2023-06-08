@@ -1,6 +1,6 @@
 # Adding Nx to your Existing Project
 
-Nx can be added to any type of project, not just monorepos. The main benefit is to get caching abilties for the package scripts. Each project usually has a set of scripts in the `package.json`:
+Nx can be added to any type of project, not just monorepos. The main benefit is to get caching abilities for the package scripts. Each project usually has a set of scripts in the `package.json`:
 
 ```json {% fileName="package.json" %}
 {

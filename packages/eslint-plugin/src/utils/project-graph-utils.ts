@@ -1,4 +1,8 @@
-import { ProjectGraph, readCachedProjectGraph } from '@nx/devkit';
+import {
+  ProjectFileMap,
+  ProjectGraph,
+  readCachedProjectGraph,
+} from '@nx/devkit';
 import { isTerminalRun } from './runtime-lint-utils';
 import * as chalk from 'chalk';
 import {
@@ -7,6 +11,7 @@ import {
 } from 'nx/src/project-graph/utils/find-project-for-path';
 import { readNxJson } from 'nx/src/project-graph/file-utils';
 import { TargetProjectLocator } from '@nx/js/src/internal';
+import { readProjectFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
 export function ensureGlobalProjectGraph(ruleName: string) {
   /**
@@ -16,6 +21,7 @@ export function ensureGlobalProjectGraph(ruleName: string) {
   if (
     !(global as any).projectGraph ||
     !(global as any).projectRootMappings ||
+    !(global as any).projectFileMap ||
     !isTerminalRun()
   ) {
     const nxJson = readNxJson();
@@ -31,6 +37,7 @@ export function ensureGlobalProjectGraph(ruleName: string) {
       (global as any).projectRootMappings = createProjectRootMappings(
         projectGraph.nodes
       );
+      (global as any).projectFileMap = readProjectFileMapCache().projectFileMap;
       (global as any).targetProjectLocator = new TargetProjectLocator(
         projectGraph.nodes,
         projectGraph.externalNodes
@@ -48,12 +55,14 @@ export function ensureGlobalProjectGraph(ruleName: string) {
 
 export function readProjectGraph(ruleName: string): {
   projectGraph: ProjectGraph;
+  projectFileMap: ProjectFileMap;
   projectRootMappings: ProjectRootMappings;
   targetProjectLocator: TargetProjectLocator;
 } {
   ensureGlobalProjectGraph(ruleName);
   return {
     projectGraph: (global as any).projectGraph,
+    projectFileMap: (global as any).projectFileMap,
     projectRootMappings: (global as any).projectRootMappings,
     targetProjectLocator: (global as any).targetProjectLocator,
   };

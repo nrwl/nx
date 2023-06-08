@@ -199,6 +199,22 @@ describe('app', () => {
       });
     });
 
+    it("should generate correct directory for window's style paths", async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'myOuterDir\\myInnerDir',
+      });
+
+      const projectsConfigurations = getProjects(appTree);
+
+      expect(
+        projectsConfigurations.get('my-outer-dir-my-inner-dir-my-app').root
+      ).toEqual('apps/my-outer-dir/my-inner-dir/my-app');
+      expect(
+        projectsConfigurations.get('my-outer-dir-my-inner-dir-my-app-e2e').root
+      ).toEqual('apps/my-outer-dir/my-inner-dir/my-app-e2e');
+    });
+
     it('should generate files', async () => {
       const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
         const config = readJson(appTree, path);
@@ -833,12 +849,12 @@ describe('app', () => {
     ).toBeUndefined();
   });
 
-  describe('--skipWorkspaceJson', () => {
+  describe('--skipNxJson', () => {
     it('should update workspace with defaults when --skipprojectsConfigurations=false', async () => {
       await applicationGenerator(appTree, {
         ...schema,
         style: 'styled-components',
-        skipWorkspaceJson: false,
+        skipNxJson: false,
       });
 
       const nxJson = readNxJson(appTree);

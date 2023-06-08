@@ -85,7 +85,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     expect(nxJson).toMatchInlineSnapshot(`
       {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
-        "npmScope": "proj",
         "targetDefaults": {
           "build": {
             "dependsOn": [
@@ -134,7 +133,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
           ],
           "sharedGlobals": [],
         },
-        "npmScope": "proj",
         "targetDefaults": {
           "build": {
             "dependsOn": [

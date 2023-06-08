@@ -1,6 +1,8 @@
-## @nrwl/rollup has been deprecated!
+## @nrwl/rollup has been renamed to @nx/rollup!
 
-@nrwl/rollup has been deprecated in favor of [@nx/rollup](https://www.npmjs.com/package/@nx/rollup). Please use that instead.
+@nrwl/rollup has been renamed to [@nx/rollup](https://www.npmjs.com/package/@nx/rollup). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/rollup will no longer be published in Nx v17.
 

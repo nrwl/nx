@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import viteTsConfigPaths from 'vite-tsconfig-paths';
 import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import * as path from 'path';
 
 export default defineConfig({
   cacheDir: '../node_modules/.vite/my-lib',
@@ -14,7 +14,7 @@ export default defineConfig({
   plugins: [
     dts({
       entryRoot: 'src',
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
     react(),
@@ -41,7 +41,7 @@ export default defineConfig({
       name: 'my-lib',
       fileName: 'index',
       // Change this to the formats you want to support.
-      // Don't forgot to update your package.json as well.
+      // Don't forget to update your package.json as well.
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
@@ -59,7 +59,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import viteTsConfigPaths from 'vite-tsconfig-paths';
 import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import * as path from 'path';
 
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/react-lib-nonb-jest',
@@ -67,7 +67,7 @@ export default defineConfig({
   plugins: [
     dts({
       entryRoot: 'src',
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
     react(),
@@ -94,7 +94,7 @@ export default defineConfig({
       name: 'react-lib-nonb-jest',
       fileName: 'index',
       // Change this to the formats you want to support.
-      // Don't forgot to update your package.json as well.
+      // Don't forget to update your package.json as well.
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
@@ -152,7 +152,7 @@ exports[`@nx/vite:configuration library mode should set up non buildable library
 
 exports[`@nx/vite:configuration library mode should set up non buildable library which already has vite.config.ts correctly 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import * as path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -168,7 +168,7 @@ export default defineConfig({
       name: 'react-lib-nonb-vitest',
       fileName: 'index',
       // Change this to the formats you want to support.
-      // Don't forgot to update your package.json as well.
+      // Don't forget to update your package.json as well.
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
@@ -185,7 +185,7 @@ export default defineConfig({
     ],
     dts({
       entryRoot: 'src',
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
   ],

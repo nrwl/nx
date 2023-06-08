@@ -8,8 +8,6 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-
-import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   nxVersion,
@@ -65,7 +63,6 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
     const installTask = updateDependencies(tree, schema);
     tasks.push(installTask);
   }
-  addBabelInputs(tree);
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

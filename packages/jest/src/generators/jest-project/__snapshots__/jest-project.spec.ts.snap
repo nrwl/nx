@@ -8,7 +8,12 @@ export default {
   transform: {
     '^.+\\\\.[tj]sx?$': [
       '@swc/jest',
-      { jsc: { transform: { react: { runtime: 'automatic' } } } },
+      {
+        jsc: {
+          parser: { syntax: 'typescript', tsx: true },
+          transform: { react: { runtime: 'automatic' } },
+        },
+      },
     ],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],

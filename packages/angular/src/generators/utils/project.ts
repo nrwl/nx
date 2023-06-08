@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { names, readNxJson, readProjectConfiguration } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../utils/types';
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 
 export function normalizeDirectory(
   appName: string,
@@ -60,6 +61,6 @@ export function getProjectPrefix(
 ): string | undefined {
   return (
     (readProjectConfiguration(tree, project) as AngularProjectConfiguration)
-      .prefix ?? readNxJson(tree).npmScope
+      .prefix ?? getNpmScope(tree)
   );
 }

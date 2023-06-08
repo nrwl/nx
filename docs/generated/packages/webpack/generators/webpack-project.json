@@ -21,7 +21,7 @@
         "type": "string",
         "enum": ["babel", "swc", "tsc"],
         "description": "The compiler to use to build source.",
-        "default": "babel"
+        "default": "swc"
       },
       "main": {
         "type": "string",
@@ -36,7 +36,7 @@
       "target": {
         "type": "string",
         "description": "Target platform for the build, same as the Webpack config option.",
-        "enum": ["node", "web"],
+        "enum": ["node", "web", "webworker"],
         "default": "web"
       },
       "skipFormat": {

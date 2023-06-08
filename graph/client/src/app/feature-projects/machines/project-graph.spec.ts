@@ -106,6 +106,7 @@ describe('dep-graph machine', () => {
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
+          fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
         }
       );
@@ -125,6 +126,7 @@ describe('dep-graph machine', () => {
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
+          fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
         }
       );
@@ -153,6 +155,7 @@ describe('dep-graph machine', () => {
         projects: mockProjects,
         dependencies: mockDependencies,
         affectedProjects: [],
+        fileMap: {},
         workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
       });
 
@@ -187,6 +190,7 @@ describe('dep-graph machine', () => {
         projects: mockProjects,
         dependencies: mockDependencies,
         affectedProjects: [],
+        fileMap: {},
         workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
       });
 
@@ -214,6 +218,7 @@ describe('dep-graph machine', () => {
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
+          fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
         }
       );
@@ -252,6 +257,7 @@ describe('dep-graph machine', () => {
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
+          fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
         }
       );
@@ -285,6 +291,7 @@ describe('dep-graph machine', () => {
         projects: mockProjects,
         dependencies: mockDependencies,
         affectedProjects: [],
+        fileMap: {},
         workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
       });
       service.send({
@@ -302,6 +309,7 @@ describe('dep-graph machine', () => {
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
+          fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
         }
       );
@@ -329,6 +337,7 @@ describe('dep-graph machine', () => {
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
+          fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
         }
       );
@@ -393,6 +402,7 @@ describe('dep-graph machine', () => {
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
+          fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
         }
       );

@@ -21,6 +21,7 @@ import { filterAffected } from '../../project-graph/affected/affected-project-gr
 import { readNxJson } from '../../config/configuration';
 import { ProjectGraph } from '../../config/project-graph';
 import { chunkify } from '../../utils/chunkify';
+import { allFileData } from '../../utils/all-file-data';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -92,7 +93,7 @@ async function getPatterns(
     );
 
     return args.libsAndApps
-      ? await getPatternsFromApps(patterns, graph.allWorkspaceFiles, graph)
+      ? await getPatternsFromApps(patterns, await allFileData(), graph)
       : patterns;
   } catch {
     return allFilesPattern;

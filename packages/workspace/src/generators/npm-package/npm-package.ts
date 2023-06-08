@@ -9,7 +9,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { join } from 'path';
-import { getImportPath } from 'nx/src/utils/path';
+import { getImportPath } from '../../utilities/get-import-path';
 
 export interface ProjectOptions {
   name: string;
@@ -20,15 +20,10 @@ function normalizeOptions(options: ProjectOptions): ProjectOptions {
   return options;
 }
 
-function addFiles(
-  projectRoot: string,
-  tree: Tree,
-  npmScope: string,
-  options: ProjectOptions
-) {
+function addFiles(projectRoot: string, tree: Tree, options: ProjectOptions) {
   const packageJsonPath = join(projectRoot, 'package.json');
   writeJson(tree, packageJsonPath, {
-    name: getImportPath(npmScope, options.name),
+    name: getImportPath(tree, options.name),
     version: '0.0.0',
     scripts: {
       test: 'node index.js',
@@ -41,7 +36,7 @@ function addFiles(
 export async function npmPackageGenerator(tree: Tree, options: ProjectOptions) {
   options = normalizeOptions(options);
 
-  const { libsDir, npmScope } = getWorkspaceLayout(tree);
+  const { libsDir } = getWorkspaceLayout(tree);
   const projectRoot = join(libsDir, options.name);
 
   addProjectConfiguration(tree, options.name, {
@@ -53,7 +48,7 @@ export async function npmPackageGenerator(tree: Tree, options: ProjectOptions) {
   const isEmpty = fileCount === 0 || (fileCount === 1 && projectJsonExists);
 
   if (isEmpty) {
-    addFiles(projectRoot, tree, npmScope, options);
+    addFiles(projectRoot, tree, options);
   }
 
   await formatFiles(tree);

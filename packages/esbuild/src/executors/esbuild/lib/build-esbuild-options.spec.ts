@@ -18,7 +18,7 @@ describe('buildEsbuildOptions', () => {
         myapp: {
           type: 'app',
           name: 'myapp',
-          data: { root: 'apps/myapp', files: [] },
+          data: { root: 'apps/myapp' },
         },
       },
       dependencies: { myapp: [] },

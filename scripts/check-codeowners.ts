@@ -1,7 +1,9 @@
 import * as fg from 'fast-glob';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as octokit from 'octokit';
 import { output } from '@nx/devkit';
+import { Octokit } from 'octokit';
 
 async function main() {
   const codeowners = fs.readFileSync(
@@ -12,13 +14,19 @@ async function main() {
     .split('\n')
     .filter((line) => line.trim().length > 0 && !line.startsWith('#'));
 
-  const errors: string[] = [];
+  const mismatchedPatterns: string[] = [];
+  const mismatchedOwners: string[] = [];
+
+  const gh = new octokit.Octokit({
+    auth: process.env.GITHUB_TOKEN,
+  }).rest;
+  const cache: Map<string, boolean> = new Map();
 
   for (const line of codeownersLines) {
     // This is perhaps a bit naive, but it should
     // work for all paths and patterns that do not
     // contain spaces.
-    const specifiedPattern = line.split(' ')[0];
+    const [specifiedPattern, ...owners] = line.split(' ');
     let foundMatchingFiles = false;
 
     const patternsToCheck = specifiedPattern.startsWith('/')
@@ -34,16 +42,85 @@ async function main() {
         }).length > 0;
     }
     if (!foundMatchingFiles) {
-      errors.push(specifiedPattern);
+      mismatchedPatterns.push(specifiedPattern);
+    }
+
+    if (process.env.GITHUB_TOKEN) {
+      for (let owner of owners) {
+        owner = owner.substring(1); // Remove the @
+        if (owner.includes('/')) {
+          // Its a team.
+          const [org, team] = owner.split('/');
+          let res = cache.get(owner);
+          if (res === undefined) {
+            res = await validateTeam(gh, org, team);
+            cache.set(owner, res);
+          }
+          if (res === false) {
+            mismatchedOwners.push(`${specifiedPattern}: ${owner}`);
+          }
+        } else {
+          let res = cache.get(owner);
+          if (res === undefined) {
+            res = await validateUser(gh, owner);
+            cache.set(owner, res);
+          }
+          if (res === false) {
+            mismatchedOwners.push(`${specifiedPattern}: ${owner}`);
+          }
+        }
+      }
+    } else {
+      output.warn({
+        title: `Skipping owner validation because GITHUB_TOKEN is not set.`,
+      });
     }
   }
-  if (errors.length > 0) {
+  if (mismatchedPatterns.length > 0) {
     output.error({
       title: `The following patterns in CODEOWNERS do not match any files:`,
-      bodyLines: errors.map((e) => `- ${e}`),
+      bodyLines: mismatchedPatterns.map((e) => `- ${e}`),
     });
-    process.exit(1);
   }
+
+  if (mismatchedOwners.length > 0) {
+    output.error({
+      title: `The following owners in CODEOWNERS do not exist:`,
+      bodyLines: mismatchedOwners.map((e) => `- ${e}`),
+    });
+  }
+
+  process.exit(mismatchedPatterns.length + mismatchedOwners.length > 0 ? 1 : 0);
 }
 
 main();
+
+async function validateTeam(
+  gh: Octokit['rest'],
+  org: string,
+  team: string
+): Promise<boolean> {
+  try {
+    await gh.teams.getByName({
+      org,
+      team_slug: team,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function validateUser(
+  gh: Octokit['rest'],
+  username: string
+): Promise<boolean> {
+  try {
+    await gh.users.getByUsername({
+      username,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}

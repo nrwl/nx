@@ -16,7 +16,6 @@ interface Schema {
   directory: string;
   name: string;
   appName?: string;
-  npmScope?: string;
   skipInstall?: boolean;
   style?: string;
   nxCloud?: boolean;
@@ -77,7 +76,11 @@ function validateOptions(options: Schema, host: Tree) {
     throw new Error(`Cannot select nxCloud when skipInstall is set to true.`);
   }
 
-  if (options.preset === Preset.NodeStandalone && !options.framework) {
+  if (
+    (options.preset === Preset.NodeStandalone ||
+      options.preset === Preset.NodeMonorepo) &&
+    !options.framework
+  ) {
     throw new Error(
       `Cannot generate ${options.preset} without selecting a framework`
     );

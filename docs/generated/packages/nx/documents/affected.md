@@ -59,6 +59,12 @@ Run tests for all the projects affected by the last commit on main:
  nx affected -t test --base=main~1 --head=main
 ```
 
+Run build for only projects with the tag `dotnet`:
+
+```shell
+ nx affected -t build --exclude '*,!tag:dotnet'
+```
+
 Use the currently executing project name in your command.:
 
 ```shell
@@ -67,11 +73,11 @@ Use the currently executing project name in your command.:
 
 ## Options
 
-### all
+### ~~all~~
 
 Type: `boolean`
 
-All projects
+**Deprecated:** Use `nx run-many` instead
 
 ### base
 
@@ -99,11 +105,11 @@ Change the way Nx is calculating the affected command by providing directly chan
 
 ### graph
 
-Type: `boolean`
+Type: `string`
 
 Default: `false`
 
-Show the task graph of the command
+Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
 
 ### head
 

@@ -1,5 +1,7 @@
 import type { Tree } from '@nx/devkit';
-import { names, readNxJson } from '@nx/devkit';
+import { names } from '@nx/devkit';
+
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 
 export function buildSelector(
   tree: Tree,
@@ -9,7 +11,7 @@ export function buildSelector(
   casing: keyof Pick<ReturnType<typeof names>, 'fileName' | 'propertyName'>
 ): string {
   let selector = name;
-  prefix ??= projectPrefix ?? readNxJson(tree)?.npmScope;
+  prefix ??= projectPrefix ?? getNpmScope(tree);
   if (prefix) {
     selector = `${prefix}-${selector}`;
   }

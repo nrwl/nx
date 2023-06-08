@@ -5,14 +5,23 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { ProcessTasks } from '../../tasks-runner/create-task-graph';
+import {
+  createTaskGraph,
+  mapTargetDefaultsToDependencies,
+} from '../../tasks-runner/create-task-graph';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { Workspaces } from '../../config/workspaces';
-import { Hasher } from '../../hasher/hasher';
+import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { hashTask } from '../../hasher/hash-task';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getPackageManagerCommand } from '../../utils/package-manager';
+import { fileHasher } from '../../hasher/file-hasher';
+import { printAffectedDeprecationMessage } from './command-object';
+import { logger, NX_PREFIX } from '../../utils/logger';
 
+/**
+ * @deprecated Use showProjectsHandler, generateGraph, or affected (without the print-affected mode) instead.
+ */
 export async function printAffected(
   affectedProjects: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
@@ -20,6 +29,7 @@ export async function printAffected(
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
+  logger.warn([NX_PREFIX, printAffectedDeprecationMessage].join(' '));
   const projectsForType = affectedProjects.filter((p) =>
     nxArgs.type ? p.type === nxArgs.type : true
   );
@@ -54,36 +64,34 @@ async function createTasks(
   overrides: yargs.Arguments
 ) {
   const workspaces = new Workspaces(workspaceRoot);
-  const hasher = new Hasher(projectGraph, nxJson, {});
+  const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
+    nxJson.targetDefaults
+  );
+  const taskGraph = createTaskGraph(
+    projectGraph,
+    defaultDependencyConfigs,
+    affectedProjectsWithTargetAndConfig.map((p) => p.name),
+    nxArgs.targets,
+    nxArgs.configuration,
+    overrides
+  );
+  const hasher = new InProcessTaskHasher(
+    {},
+    [],
+    projectGraph,
+    taskGraph,
+    nxJson,
+    {},
+    fileHasher
+  );
   const execCommand = getPackageManagerCommand().exec;
-  const p = new ProcessTasks({}, projectGraph);
-  const tasks = [];
-  for (let target of nxArgs.targets) {
-    for (const affectedProject of affectedProjectsWithTargetAndConfig) {
-      const resolvedConfiguration = p.resolveConfiguration(
-        affectedProject,
-        target,
-        nxArgs.configuration
-      );
-      try {
-        tasks.push(
-          p.createTask(
-            p.getId(affectedProject.name, target, resolvedConfiguration),
-            affectedProject,
-            target,
-            resolvedConfiguration,
-            overrides
-          )
-        );
-      } catch (e) {}
-    }
-  }
+  const tasks = Object.values(taskGraph.tasks);
 
   await Promise.all(
     tasks.map((t) => hashTask(workspaces, hasher, projectGraph, {} as any, t))
   );
 
-  return tasks.map((task, index) => ({
+  return tasks.map((task) => ({
     id: task.id,
     overrides,
     target: task.target,

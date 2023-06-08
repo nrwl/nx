@@ -44,16 +44,25 @@
     "babel-plugin-macros": "^2.8.0",
     "babel-plugin-transform-typescript-metadata": "^0.3.1",
     "chalk": "^4.1.0",
+    "detect-port": "^1.5.1",
     "fast-glob": "3.2.7",
     "fs-extra": "^11.1.0",
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",
     "minimatch": "3.0.5",
+    "semver": "7.3.4",
     "source-map-support": "0.5.19",
-    "tree-kill": "1.2.2",
     "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
     "@nx/workspace": "file:../workspace"
+  },
+  "peerDependencies": {
+    "verdaccio": "^5.0.4"
+  },
+  "peerDependenciesMeta": {
+    "verdaccio": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

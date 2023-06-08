@@ -82,7 +82,7 @@ function runCliBuildIOS(
      */
     childProcess = fork(
       join(workspaceRoot, './node_modules/react-native/cli.js'),
-      ['build-ios', ...createBuildIOSOptions(options), '--no-packager'],
+      ['build-ios', ...createBuildIOSOptions(options)],
       {
         cwd: join(workspaceRoot, projectRoot),
         env: { ...process.env, RCT_METRO_PORT: options.port.toString() },

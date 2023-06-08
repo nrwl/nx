@@ -65,6 +65,12 @@
       "version": "16.0.0-beta.1",
       "description": "Replace @nrwl/next with @nx/next",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-3-0-remove-root-build-option": {
+      "cli": "nx",
+      "version": "16.3.0-beta.9",
+      "description": "Remove root build option from project configurations since it is not needed.",
+      "implementation": "./src/migrations/update-16-3-0/remove-root-build-option"
     }
   },
   "packageJsonUpdates": {

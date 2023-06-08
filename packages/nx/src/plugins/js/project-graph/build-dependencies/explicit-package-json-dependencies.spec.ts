@@ -3,13 +3,13 @@ const tempFs = new TempFs('explicit-package-json');
 
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 
-import { defaultFileHasher } from '../../../../hasher/file-hasher';
 import {
   ProjectGraphProcessorContext,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
+import { fileHasher } from '../../../../hasher/file-hasher';
 
 describe('explicit package json dependencies', () => {
   let ctx: ProjectGraphProcessorContext;
@@ -53,14 +53,14 @@ describe('explicit package json dependencies', () => {
       }),
     });
 
-    await defaultFileHasher.init();
+    await fileHasher.init();
 
     ctx = {
       projectsConfigurations,
       nxJsonConfiguration,
       filesToProcess: createProjectFileMap(
         projectsConfigurations as any,
-        defaultFileHasher.allFileData()
+        fileHasher.allFileData()
       ).projectFileMap,
     } as any;
 
@@ -70,18 +70,17 @@ describe('explicit package json dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj',
-          files: [{ file: 'libs/proj/package.json' } as any],
         },
       },
       proj2: {
         name: 'proj2',
         type: 'lib',
-        data: { root: 'libs/proj2', files: [] },
+        data: { root: 'libs/proj2' },
       },
       proj3: {
         name: 'proj3',
         type: 'lib',
-        data: { root: 'libs/proj4', files: [] },
+        data: { root: 'libs/proj4' },
       },
     };
   });
@@ -91,7 +90,7 @@ describe('explicit package json dependencies', () => {
   });
 
   it(`should add dependencies for projects based on deps in package.json`, () => {
-    const builder = new ProjectGraphBuilder();
+    const builder = new ProjectGraphBuilder(undefined, ctx.fileMap);
     Object.values(projects).forEach((p) => {
       builder.addNode(p);
     });

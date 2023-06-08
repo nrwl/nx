@@ -804,6 +804,15 @@
         "originalFilePath": "/packages/expo/src/executors/export/schema.json",
         "path": "expo/executors/export",
         "type": "executor"
+      },
+      {
+        "description": "Submit app binary to App Store and/or Play Store",
+        "file": "generated/packages/expo/executors/submit.json",
+        "hidden": false,
+        "name": "submit",
+        "originalFilePath": "/packages/expo/src/executors/submit/schema.json",
+        "path": "expo/executors/submit",
+        "type": "executor"
       }
     ],
     "generators": [
@@ -986,6 +995,15 @@
         "originalFilePath": "/packages/js/src/executors/node/schema.json",
         "path": "js/executors/node",
         "type": "executor"
+      },
+      {
+        "description": "Start local registry with verdaccio",
+        "file": "generated/packages/js/executors/verdaccio.json",
+        "hidden": false,
+        "name": "verdaccio",
+        "originalFilePath": "/packages/js/src/executors/verdaccio/schema.json",
+        "path": "js/executors/verdaccio",
+        "type": "executor"
       }
     ],
     "generators": [
@@ -1014,6 +1032,15 @@
         "name": "convert-to-swc",
         "originalFilePath": "/packages/js/src/generators/convert-to-swc/schema.json",
         "path": "js/generators/convert-to-swc",
+        "type": "generator"
+      },
+      {
+        "description": "Setup Verdaccio for local package management.",
+        "file": "generated/packages/js/generators/setup-verdaccio.json",
+        "hidden": false,
+        "name": "setup-verdaccio",
+        "originalFilePath": "/packages/js/src/generators/setup-verdaccio/schema.json",
+        "path": "js/generators/setup-verdaccio",
         "type": "generator"
       }
     ],

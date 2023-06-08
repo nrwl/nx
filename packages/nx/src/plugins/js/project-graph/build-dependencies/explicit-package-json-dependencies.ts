@@ -4,15 +4,14 @@ import {
   DependencyType,
   ProjectFileMap,
   ProjectGraph,
+  ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
 import { parseJson } from '../../../../utils/json';
-import { getImportPath, joinPathFragments } from '../../../../utils/path';
+import { joinPathFragments } from '../../../../utils/path';
 import { ProjectsConfigurations } from '../../../../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../../../../config/nx-json';
 import { ExplicitDependency } from './explicit-project-dependencies';
 import { PackageJson } from '../../../../utils/package-json';
-
-class ProjectGraphNodeRecords {}
 
 export function buildExplicitPackageJsonDependencies(
   nxJsonConfiguration: NxJsonConfiguration,
@@ -22,14 +21,10 @@ export function buildExplicitPackageJsonDependencies(
 ) {
   const res = [] as any;
   let packageNameMap = undefined;
+  const nodes = Object.values(graph.nodes);
   Object.keys(filesToProcess).forEach((source) => {
     Object.values(filesToProcess[source]).forEach((f) => {
-      if (
-        isPackageJsonAtProjectRoot(
-          graph.nodes as ProjectGraphNodeRecords,
-          f.file
-        )
-      ) {
+      if (isPackageJsonAtProjectRoot(nodes, f.file)) {
         // we only create the package name map once and only if a package.json file changes
         packageNameMap =
           packageNameMap ||
@@ -56,9 +51,13 @@ function createPackageNameMap(
           )
         )
       );
+      // TODO(v17): Stop reading nx.json for the npmScope
+      const npmScope = nxJsonConfiguration.npmScope;
       res[
         packageJson.name ??
-          getImportPath(nxJsonConfiguration.npmScope, projectName)
+          (npmScope
+            ? `${npmScope === '@' ? '' : '@'}${npmScope}/${projectName}`
+            : projectName)
       ] = projectName;
     } catch (e) {}
   }
@@ -66,13 +65,16 @@ function createPackageNameMap(
 }
 
 function isPackageJsonAtProjectRoot(
-  nodes: ProjectGraphNodeRecords,
+  nodes: ProjectGraphProjectNode[],
   fileName: string
 ) {
-  return Object.values(nodes).find(
-    (projectNode) =>
-      (projectNode.type === 'lib' || projectNode.type === 'app') &&
-      joinPathFragments(projectNode.data.root, 'package.json') === fileName
+  return (
+    fileName.endsWith('package.json') &&
+    nodes.find(
+      (projectNode) =>
+        (projectNode.type === 'lib' || projectNode.type === 'app') &&
+        joinPathFragments(projectNode.data.root, 'package.json') === fileName
+    )
   );
 }
 

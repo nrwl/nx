@@ -91,11 +91,8 @@ export async function createRunOneDynamicOutputRenderer({
   let dependentTargetsCurrentFrame = 0;
   let renderDependentTargetsIntervalId: NodeJS.Timeout | undefined;
 
-  const clearDependentTargets = () => {
-    for (let i = 0; i < dependentTargetsNumLines; i++) {
-      readline.moveCursor(process.stdout, 0, -1);
-      readline.clearLine(process.stdout, 0);
-    }
+  const moveCursorToStartOfDependentTargetLines = () => {
+    readline.moveCursor(process.stdout, 0, -dependentTargetsNumLines);
   };
 
   const renderLines = (
@@ -106,16 +103,19 @@ export async function createRunOneDynamicOutputRenderer({
   ) => {
     let additionalLines = 0;
     if (renderDivider) {
-      output.addVerticalSeparator(dividerColor);
-      additionalLines += 3;
-    }
-    if (renderDivider) {
+      const dividerLines = output.getVerticalSeparatorLines(dividerColor);
+      for (const line of dividerLines) {
+        output.overwriteLine(line);
+      }
+      additionalLines += dividerLines.length;
       lines.push('');
     }
     for (const line of lines) {
-      process.stdout.write((skipPadding ? '' : output.X_PADDING) + line + EOL);
+      output.overwriteLine((skipPadding ? '' : output.X_PADDING) + line);
     }
     dependentTargetsNumLines = lines.length + additionalLines;
+    // clear any possible text below the cursor's position
+    readline.clearScreenDown(process.stdout);
   };
 
   const renderDependentTargets = (renderDivider = true) => {
@@ -169,7 +169,7 @@ export async function createRunOneDynamicOutputRenderer({
       );
     }
 
-    clearDependentTargets();
+    moveCursorToStartOfDependentTargetLines();
 
     if (linesToRender.length > 1) {
       renderLines(

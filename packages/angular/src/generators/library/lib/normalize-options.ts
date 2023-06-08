@@ -5,10 +5,14 @@ import {
   names,
   Tree,
 } from '@nx/devkit';
-import { getImportPath } from 'nx/src/utils/path';
+
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
+
+import { Linter } from '@nx/linter';
+
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
-import { Linter } from '@nx/linter';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { normalizeNewProjectPrefix } from '../../utils/project';
 
@@ -37,11 +41,9 @@ export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
     ? `${names(projectDirectory).fileName}/${name}`.replace(/\/+/g, '/')
     : name;
 
-  const {
-    libsDir: defaultLibsDirectory,
-    npmScope,
-    standaloneAsDefault,
-  } = getWorkspaceLayout(host);
+  const { libsDir: defaultLibsDirectory, standaloneAsDefault } =
+    getWorkspaceLayout(host);
+  const npmScope = getNpmScope(host);
   const libsDir = layoutDirectory ?? defaultLibsDirectory;
 
   const projectName = fullProjectDirectory
@@ -60,7 +62,7 @@ export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
   options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
   const importPath =
-    options.importPath || getImportPath(npmScope, fullProjectDirectory);
+    options.importPath || getImportPath(host, fullProjectDirectory);
 
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {

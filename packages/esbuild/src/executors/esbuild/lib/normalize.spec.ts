@@ -14,7 +14,6 @@ describe('normalizeOptions', () => {
           name: 'myapp',
           data: {
             root: 'apps/myapp',
-            files: [],
           },
         },
       },

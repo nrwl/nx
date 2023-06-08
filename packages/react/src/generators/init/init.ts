@@ -8,7 +8,6 @@ import {
   runTasksInSerial,
   Tree,
   updateNxJson,
-  writeJson,
 } from '@nx/devkit';
 
 import { initGenerator as jsInitGenerator } from '@nx/js';
@@ -65,25 +64,6 @@ function updateDependencies(host: Tree, schema: InitSchema) {
   });
 }
 
-function initRootBabelConfig(tree: Tree, schema: InitSchema) {
-  if (tree.exists('/babel.config.json') || tree.exists('/babel.config.js')) {
-    return;
-  }
-
-  if (!schema.skipBabelConfig) {
-    writeJson(tree, '/babel.config.json', {
-      babelrcRoots: ['*'], // Make sure .babelrc files other than root can be loaded in a monorepo
-    });
-  }
-
-  const nxJson = readNxJson(tree);
-
-  if (nxJson.namedInputs?.sharedGlobals) {
-    nxJson.namedInputs.sharedGlobals.push('{workspaceRoot}/babel.config.json');
-  }
-  updateNxJson(tree, nxJson);
-}
-
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];
 
@@ -104,21 +84,6 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
     );
     const cypressTask = await cypressInitGenerator(host, {});
     tasks.push(cypressTask);
-  }
-
-  if (!schema.skipPackageJson && !schema.skipBabelConfig) {
-    const installBabelTask = addDependenciesToPackageJson(
-      host,
-      {},
-      {
-        '@babel/preset-react': babelPresetReactVersion,
-      }
-    );
-    tasks.push(installBabelTask);
-  }
-
-  if (!schema.skipBabelConfig) {
-    initRootBabelConfig(host, schema);
   }
 
   if (!schema.skipPackageJson) {

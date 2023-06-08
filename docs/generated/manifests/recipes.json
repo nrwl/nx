@@ -906,7 +906,7 @@
     "itemList": [
       {
         "id": "node-server-fly-io",
-        "name": "Deploying a Node.js server to Fly.io",
+        "name": "Deploying a Node App to Fly.io",
         "description": "",
         "file": "shared/recipes/deployment/node-server-fly-io",
         "itemList": [],
@@ -916,7 +916,7 @@
       },
       {
         "id": "node-serverless-functions-netlify",
-        "name": "Deploying Node.js serverless functions to Netlify",
+        "name": "Add and Deploy Netlify Edge Functions with Node",
         "description": "",
         "file": "shared/recipes/deployment/node-serverless-functions-netlify",
         "itemList": [],
@@ -945,13 +945,13 @@
         "tags": ["deployment", "deno"]
       },
       {
-        "id": "deno-netlify",
-        "name": "Serverless deployment with Deno and Netlify",
+        "id": "deno-netlify-functions",
+        "name": "Add and Deploy Netlify Edge Functions with Deno",
         "description": "",
-        "file": "shared/recipes/deployment/deno-netlify",
+        "file": "shared/recipes/deployment/deno-netlify-edge-functions",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/deployment/deno-netlify",
+        "path": "/recipes/deployment/deno-netlify-functions",
         "tags": ["deployment", "deno"]
       }
     ],
@@ -961,7 +961,7 @@
   },
   "/recipes/deployment/node-server-fly-io": {
     "id": "node-server-fly-io",
-    "name": "Deploying a Node.js server to Fly.io",
+    "name": "Deploying a Node App to Fly.io",
     "description": "",
     "file": "shared/recipes/deployment/node-server-fly-io",
     "itemList": [],
@@ -971,7 +971,7 @@
   },
   "/recipes/deployment/node-serverless-functions-netlify": {
     "id": "node-serverless-functions-netlify",
-    "name": "Deploying Node.js serverless functions to Netlify",
+    "name": "Add and Deploy Netlify Edge Functions with Node",
     "description": "",
     "file": "shared/recipes/deployment/node-serverless-functions-netlify",
     "itemList": [],
@@ -999,14 +999,14 @@
     "path": "/recipes/deployment/deno-deploy",
     "tags": ["deployment", "deno"]
   },
-  "/recipes/deployment/deno-netlify": {
-    "id": "deno-netlify",
-    "name": "Serverless deployment with Deno and Netlify",
+  "/recipes/deployment/deno-netlify-functions": {
+    "id": "deno-netlify-functions",
+    "name": "Add and Deploy Netlify Edge Functions with Deno",
     "description": "",
-    "file": "shared/recipes/deployment/deno-netlify",
+    "file": "shared/recipes/deployment/deno-netlify-edge-functions",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/deployment/deno-netlify",
+    "path": "/recipes/deployment/deno-netlify-functions",
     "tags": ["deployment", "deno"]
   },
   "/recipes/other": {

@@ -1,3 +1,4 @@
+import { joinPathFragments } from '../../utils/path';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { TargetConfiguration } from '../../config/workspace-json-project-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
@@ -32,13 +33,15 @@ export default async function removeRunCommandsOutputPath(tree: Tree) {
 
 function updateTargetBlock(target: TargetConfiguration): boolean {
   let changed = false;
-  if (target.executor === 'nx:run-commands' && target.options.outputPath) {
+  if (target.executor === 'nx:run-commands' && target.options?.outputPath) {
     changed = true;
     const outputs = new Set(target.outputs ?? []);
     outputs.delete('{options.outputPath}');
     const newOutputs = Array.isArray(target.options.outputPath)
-      ? target.options.outputPath
-      : [target.options.outputPath];
+      ? target.options.outputPath.map((p) =>
+          joinPathFragments('{workspaceRoot}', p)
+        )
+      : [joinPathFragments('{workspaceRoot}', target.options.outputPath)];
     for (const outputPath of newOutputs) {
       outputs.add(outputPath);
     }

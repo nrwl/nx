@@ -1,6 +1,8 @@
-## @nrwl/vite has been deprecated!
+## @nrwl/vite has been renamed to @nx/vite!
 
-@nrwl/vite has been deprecated in favor of [@nx/vite](https://www.npmjs.com/package/@nx/vite). Please use that instead.
+@nrwl/vite has been renamed to [@nx/vite](https://www.npmjs.com/package/@nx/vite). Please use that instead.
+
+[Read more here](https://nx.dev/recipes/other/rescope)
 
 @nrwl/vite will no longer be published in Nx v17.
 

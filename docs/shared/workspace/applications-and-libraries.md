@@ -1,6 +1,6 @@
 # Applications and libraries
 
-A typical Nx workspace is structured into _"apps"_ and _"libs"_. This distinction allows us to have a more modular architecture by following a separation of concerns methodology, incentivising the organization of our source code and logic into smaller, more focused and highly cohesive units.
+A typical Nx workspace is structured into _"apps"_ and _"libs"_. This distinction allows us to have a more modular architecture by following a separation of concerns methodology, incentivizing the organization of our source code and logic into smaller, more focused and highly cohesive units.
 
 Nx automatically creates TypeScript path mappings in the `tsconfig.base.json` file, such that they can be easily consumed by other apps or libs.
 
@@ -14,7 +14,7 @@ Therefore, consuming libraries is very straightforward, and similar to what you 
 
 Having a dedicated library project is a much stronger boundary compared to just separating code into folders, though. Each Nx library has a so-called _"public API"_, represented by an `index.ts` barrel file. This forces developers into an _"API thinking"_ of what should be exposed and thus be made available for others to consume, and what on the others side should remain private within the library itself.
 
-{% callout type="caution" title="Library !== published artefact" %}
+{% callout type="caution" title="Library !== published artifact" %}
 [This is a common misconception, moving code into libraries can be done from a pure code organization perspective](#misconception).
 {% /callout %}
 
@@ -31,7 +31,7 @@ Note, these libraries don’t necessarily need to be built separately, but are r
 That said, it is totally possible to create so-called _"[buildable libraries](/more-concepts/buildable-and-publishable-libraries#buildable-libraries)"_ for enabling incremental builds as
 well as _"[publishable libraries](/more-concepts/buildable-and-publishable-libraries#publishable-libraries)"_ for those scenarios where not only you want to
 use a specific library within the current Nx workspace, but also to publish it
-to some package repository (e.g NPM).
+to some package repository (e.g. NPM).
 
 ### Misconception
 
@@ -47,4 +47,4 @@ Most often teams are aligned with those domains and thus a similar organization 
 
 - [Learn more about when you need to create a new library or using an existing one](/more-concepts/creating-libraries)
 - [Learn more about the different types of libraries we think you should follow](/more-concepts/library-types)
-- [Learn more about how to group libraries between each others](/more-concepts/grouping-libraries)
+- [Learn more about how to group libraries between each other](/more-concepts/grouping-libraries)

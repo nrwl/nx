@@ -1,4 +1,4 @@
-import { Hash, Hasher } from '../hasher/hasher';
+import { Hash, TaskHasher } from '../hasher/task-hasher';
 import { ProjectGraph } from './project-graph';
 import { Task, TaskGraph } from './task-graph';
 import {
@@ -76,7 +76,7 @@ export interface MigrationsJsonEntry {
 
 export interface MigrationsJson {
   name?: string;
-  version: string;
+  version?: string;
   collection?: string;
   generators?: { [name: string]: MigrationsJsonEntry };
   schematics?: { [name: string]: MigrationsJsonEntry };
@@ -118,7 +118,7 @@ export type Executor<T = any> = (
   | AsyncIterableIterator<{ success: boolean }>;
 
 export interface HasherContext {
-  hasher: Hasher;
+  hasher: TaskHasher;
   projectGraph: ProjectGraph;
   taskGraph: TaskGraph;
   projectsConfigurations: ProjectsConfigurations;
@@ -129,6 +129,13 @@ export type CustomHasher = (
   task: Task,
   context: HasherContext
 ) => Promise<Hash>;
+
+export type ExecutorTaskResult = {
+  success: boolean;
+  terminalOutput: string;
+  startTime?: number;
+  endTime?: number;
+};
 
 /**
  * Implementation of a target of a project that handles multiple projects to be batched
@@ -147,7 +154,10 @@ export type TaskGraphExecutor<T = any> = (
    */
   overrides: T,
   context: ExecutorContext
-) => Promise<Record<string, { success: boolean; terminalOutput: string }>>;
+) => Promise<
+  | Record<string, ExecutorTaskResult>
+  | AsyncIterableIterator<Record<string, ExecutorTaskResult>>
+>;
 
 /**
  * Context that is passed into an executor
@@ -177,13 +187,6 @@ export interface ExecutorContext {
    * The configuration of the target being executed
    */
   target?: TargetConfiguration;
-
-  /**
-   * Deprecated. Use projectsConfigurations or nxJsonConfiguration
-   * The full workspace configuration
-   * @todo(vsavkin): remove after v17
-   */
-  workspace?: ProjectsConfigurations & NxJsonConfiguration;
 
   /**
    * Projects config
@@ -216,4 +219,17 @@ export interface ExecutorContext {
    * @todo(vsavkin) mark this required for v17
    */
   projectGraph?: ProjectGraph;
+
+  /**
+   * A snapshot of the task graph as
+   * it existed when the Nx command was kicked off
+   */
+  taskGraph?: TaskGraph;
+
+  /**
+   * Deprecated. Use projectsConfigurations or nxJsonConfiguration
+   * The full workspace configuration
+   * @todo(vsavkin): remove after v17
+   */
+  workspace?: ProjectsConfigurations & NxJsonConfiguration;
 }

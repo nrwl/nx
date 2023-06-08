@@ -98,6 +98,74 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Docker Containers
 
+## 2306.01.2.patch1
+
+- Fixes an issue where admin users were not being created on new installations.
+
+## 2306.01.2
+
+This is one of our biggest NxCloud On-Prem releases. It also marks a change in our release process which will be explained at the end.
+
+#### Brand new UI
+
+A few months ago we announced a complete re-design of the NxCloud UI! It's faster, easier to use and pleasant to look at! We're now bringing this to On-Prem users as well:
+
+You can read more about it in our [announcement blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
+
+#### Pricing updates
+
+While before we provided you with a separate coupon for each workspace, we have now changed to "organization-wide licenses": you receive a single coupon for your whole organization, that gives you unlimited access for the agreed number of workspaces. You are then free to delete, create and re-shuffle your workspaces as often as you want without requiring new coupons for us (as long as you stay within your limit of workspaces).
+
+You will see some updates in the UI to reflect this, however, **you don't need to do anything once you update your images!** We'll automatically migrate you to this, based on your current number of enabled workspaces!
+
+#### Proxy updates
+
+One of the features of NxCloud is its integrations with your repository hosting solution. When you open up a Pull Request, you can configure NxCloud to post a comment to it once your CI has finished running, with a summary of all the tasks that succeeded and failed on that code change, and a link to your branch on NxCloud so you can further analyse your run. Your developers save time, and allows them to skip digging through long CI logs.
+
+Before, if you had a self-hosted instance of Github, Gitlab or Bitbucket, calls from NxCloud to your code-hosting provider would fail, because they'd be using a self-signed certificate, which NxCloud wouldn't recognise.
+
+[We now support self-signed SVN certificates, via a simple k8s configMap.](https://github.com/nrwl/nx-cloud-helm/blob/main/PROXY-GUIDE.md#supporting-self-signed-ssl-certificates)
+
+[We've also made updates to the runner, to support any internal proxies you might have within your intranet.](https://github.com/nrwl/nx-cloud-helm/blob/main/PROXY-GUIDE.md#supporting-self-signed-ssl-certificates)
+
+#### DTE performance
+
+We completely re-wrote our Task Distribution engine, which should result in much fewer errors due to agent timeouts, increased performance and more deterministic task distribution.
+
+We've also added a new internal task queueing system, which should further improve the performance of DTE. While this is an implementation detail which will be automatically enabled in future releases, you can test it out today by setting [`enableMessageQueue: true`](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-cloud/values.yaml#L18) in your Helm config.
+
+You can read more about the recent DTE improvements in our [NxCloud 3.0 blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
+
+#### Misc updates
+
+- We have fixed issues related to OpenShift deployments. [Special thanks to minijus](https://github.com/nrwl/nx-cloud-helm/pull/32) for his work on the Helm charts and helping us test the changes.
+
+#### Breaking changes
+
+NxCloud uses MongoDB internally as its data store. While we've always used Mongo 4.2, in the latest release we started targetting Mongo 6.0. It's a much lighter process, with improved performance, and quicker reads and writes.
+
+While you can still upgrade to this new image even if you are on Mongo 4.2 (nothing will break), **we strongly recommend you upgrade your Database to Mongo 6.0 to make sure nothing breaks in the future.** [We wrote a full guide on how you can approach the upgrade here](https://github.com/nrwl/nx-cloud-helm/blob/main/MONGO-OPERATOR-GUIDE.md#upgrading-to-mongo-6).
+If you need assistance, please get in touch at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io).
+
+##### Migration from Community Edition to Enterprise
+
+On May 16th, 2023 we announced our plans to sunset the Community Edition of NxCloud On-Prem to align with our new pricing plans. If you are on the Community Edition, please follow these steps to migrate:
+
+1. Use this image: `2306.01.2`
+2. Switch to private Enterprise by setting `NX_CLOUD_MODE=private-enterprise` (or `mode: 'private-enterprise'` if using Helm).
+3. Reach out to us at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io). You will get a FREE, unlimited-use coupon for the next 3 months so you can trial Nx Enterprise.
+
+#### New release process
+
+With this update, we are also changing our release process:
+
+1. We'll start adding release notes with every new version published
+2. We switch to using [calver](https://calver.org/) versioning for our images
+3. We stopped publishing the `latest` tag.
+4. We will be emailing Enterprise admins with every new release. If you do not get these emails, please send us an email at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io) to get added
+
+Any questions at all or to report issues with the new release [please get in touch!](mailto:cloud-support@nrwl.io)
+
 ## 13-02-2023T23-45-24
 
 - Feat: Targettable agents for DTE. You can now ask specific agents to pick up specific tasks (via `--targets

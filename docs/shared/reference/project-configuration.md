@@ -158,6 +158,81 @@ Examples:
 
 Note the result value is hashed, so it is never displayed.
 
+_External Dependencies_
+
+For official plugins, Nx intelligently finds a set of external dependencies which it hashes for the target. `nx:run-commands` is an exception to this.
+Because you may specify any command to be run, it is not possible to determine which, if any, external dependencies are used by the target.
+To be safe, Nx assumes that updating any external dependency invalidates the cache for the target.
+
+> Note: Community plugins are also treated like `nx:run-commands`
+
+This input type allows you to override this cautious behavior by specifying a set of external dependencies to hash for the target.
+
+Examples:
+
+Targets that only use commands natively available in the terminal will not depend on any external dependencies. Specify an empty array to not hash any external dependencies.
+
+```json
+{
+  "targets": {
+    "copyFiles": {
+      "inputs": [
+        {
+          "externalDependencies": []
+        }
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cp src/assets dist"
+      }
+    }
+  }
+}
+```
+
+If a target uses a command from an npm package, that package should be listed.
+
+```json
+{
+  "targets": {
+    "copyFiles": {
+      "inputs": [
+        {
+          "externalDependencies": ["lerna"]
+        }
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx lerna publish"
+      }
+    }
+  }
+}
+```
+
+_Dependent tasks output_
+
+This input allows us to depend on the output, rather than the input of the dependent tasks. We can specify the glob pattern to match only the subset of the output files.
+The parameter `transitive` defines whether the check and the pattern should be recursively applied to the dependent tasks of the child tasks.
+
+Examples:
+
+```json
+{
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": ["default", "!{projectRoot}/**/*.spec.ts"],
+    "deps": [{ "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["production", "deps"]
+    }
+  }
+}
+```
+
 _Named Inputs_
 
 Examples:
@@ -179,9 +254,13 @@ Examples:
 Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
 an example.
 
-```
-"test": {
-  "inputs": [ "default", "^production" ]
+```json
+{
+  "targets": {
+    "test": {
+      "inputs": ["default", "^production"]
+    }
+  }
 }
 ```
 
@@ -212,11 +291,13 @@ Usually, a target writes to a specific directory or a file. The following instru
 
 ```json
 {
-  "build": {
-    "outputs": [
-      "{workspaceRoot}/dist/libs/mylib",
-      "{workspaceRoot}/build/libs/mylib/main.js"
-    ]
+  "targets": {
+    "build": {
+      "outputs": [
+        "{workspaceRoot}/dist/libs/mylib",
+        "{workspaceRoot}/build/libs/mylib/main.js"
+      ]
+    }
   }
 }
 ```
@@ -227,11 +308,13 @@ Sometimes, multiple targets might write to the same directory. When possible it 
 
 ```json
 {
-  "build-js": {
-    "outputs": ["{workspaceRoot}/dist/libs/mylib/js"]
-  },
-  "build-css": {
-    "outputs": ["{workspaceRoot}/dist/libs/mylib/css"]
+  "targets": {
+    "build-js": {
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/js"]
+    },
+    "build-css": {
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/css"]
+    }
   }
 }
 ```
@@ -240,11 +323,13 @@ But if the above is not possible, globs (parsed with the [minimatch](https://git
 
 ```json
 {
-  "build-js": {
-    "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.js"]
-  },
-  "build-css": {
-    "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.css"]
+  "targets": {
+    "build-js": {
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.js"]
+    },
+    "build-css": {
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.css"]
+    }
   }
 }
 ```
@@ -254,11 +339,15 @@ But if the above is not possible, globs (parsed with the [minimatch](https://git
 Targets can depend on other targets. This is the relevant portion of the configuration file:
 
 ```json
-"build": {
-  "dependsOn": ["^build"]
-},
-"test": {
-  "dependsOn": ["build"]
+{
+  "targets": {
+    "build": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["build"]
+    }
+  }
 }
 ```
 
@@ -280,12 +369,18 @@ You can also express task dependencies with an object syntax:
 {% tab label="Version < 16" %}
 
 ```json
-"build": {
-  "dependsOn": [{
-    "projects": "dependencies", // "dependencies" or "self"
-    "target": "build", // target name
-    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-  }]
+{
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "projects": "dependencies", // "dependencies" or "self"
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        }
+      ]
+    }
+  }
 }
 ```
 
@@ -293,11 +388,17 @@ You can also express task dependencies with an object syntax:
 {% tab label="Version 16+ (self)" %}
 
 ```json
-"build": {
-  "dependsOn": [{
-    "target": "build", // target name
-    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-  }]
+{
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        }
+      ]
+    }
+  }
 }
 ```
 
@@ -305,12 +406,18 @@ You can also express task dependencies with an object syntax:
 {% tab label="Version 16+ (dependencies)" %}
 
 ```json
-"build": {
-  "dependsOn": [{
-    "dependencies": true, // Run this target on all dependencies first
-    "target": "build", // target name
-    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-  }]
+{
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "dependencies": true, // Run this target on all dependencies first
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        }
+      ]
+    }
+  }
 }
 ```
 
@@ -318,12 +425,18 @@ You can also express task dependencies with an object syntax:
 {% tab label="Version 16+ (specific projects)" %}
 
 ```json
-"build": {
-  "dependsOn": [{
-    "projects": ["my-app"], // Run build on "my-app" first
-    "target": "build", // target name
-    "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-  }]
+{
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "projects": ["my-app"], // Run build on "my-app" first
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        }
+      ]
+    }
+  }
 }
 ```
 
@@ -338,11 +451,15 @@ You can write the shorthand configuration above in the object syntax like this:
 {% tab label="Version < 16" %}
 
 ```json
-"build": {
-  "dependsOn": [{ "projects": "dependencies", "target": "build" }]
-},
-"test": {
-  "dependsOn": [{ "projects": "self", "target": "build" }]
+{
+  "targets": {
+    "build": {
+      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+    },
+    "test": {
+      "dependsOn": [{ "projects": "self", "target": "build" }]
+    }
+  }
 }
 ```
 
@@ -350,11 +467,15 @@ You can write the shorthand configuration above in the object syntax like this:
 {% tab label="Version 16+" %}
 
 ```json
-"build": {
-  "dependsOn": [{ "dependencies": true, "target": "build" }] // Run build on my dependencies first
-},
-"test": {
-  "dependsOn": [{ "target": "build" }] // Run build on myself first
+{
+  "targets": {
+    "build": {
+      "dependsOn": [{ "dependencies": true, "target": "build" }] // Run build on my dependencies first
+    },
+    "test": {
+      "dependsOn": [{ "target": "build" }] // Run build on myself first
+    }
+  }
 }
 ```
 
@@ -367,17 +488,25 @@ With the expanded syntax, you also have a third option available to configure ho
 {% tab label="Version < 16" %}
 
 ```json
-"build": {
-   // forward params passed to this target to the dependency targets
-  "dependsOn": [{ "projects": "dependencies", "target": "build", "params": "forward" }]
-},
-"test": {
-  // ignore params passed to this target, won't be forwarded to the dependency targets
-  "dependsOn": [{ "projects": "dependencies", "target": "build", "params": "ignore" }]
-}
-"lint": {
-  // ignore params passed to this target, won't be forwarded to the dependency targets
-  "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the dependency targets
+      "dependsOn": [
+        { "projects": "dependencies", "target": "build", "params": "forward" }
+      ]
+    },
+    "test": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [
+        { "projects": "dependencies", "target": "build", "params": "ignore" }
+      ]
+    },
+    "lint": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+    }
+  }
 }
 ```
 
@@ -385,17 +514,25 @@ With the expanded syntax, you also have a third option available to configure ho
 {% tab label="Version 16+" %}
 
 ```json
-"build": {
-   // forward params passed to this target to the dependency targets
-  "dependsOn": [{ "projects": "{dependencies}", "target": "build", "params": "forward" }]
-},
-"test": {
-  // ignore params passed to this target, won't be forwarded to the dependency targets
-  "dependsOn": [{ "projects": "{dependencies}", "target": "build", "params": "ignore" }]
-}
-"lint": {
-  // ignore params passed to this target, won't be forwarded to the dependency targets
-  "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the dependency targets
+      "dependsOn": [
+        { "projects": "{dependencies}", "target": "build", "params": "forward" }
+      ]
+    },
+    "test": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [
+        { "projects": "{dependencies}", "target": "build", "params": "ignore" }
+      ]
+    },
+    "lint": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
+    }
+  }
 }
 ```
 
@@ -408,9 +545,15 @@ This also works when defining a relation for the target of the project itself us
 {% tab label="Version < 16" %}
 
 ```json
-"build": {
-   // forward params passed to this target to the project target
-  "dependsOn": [{ "projects": "self", "target": "pre-build", "params": "forward" }]
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the project target
+      "dependsOn": [
+        { "projects": "self", "target": "pre-build", "params": "forward" }
+      ]
+    }
+  }
 }
 ```
 
@@ -418,9 +561,13 @@ This also works when defining a relation for the target of the project itself us
 {% tab label="Version 16+" %}
 
 ```json
-"build": {
-   // forward params passed to this target to the project target
-  "dependsOn": [{ "target": "pre-build", "params": "forward" }]
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the project target
+      "dependsOn": [{ "target": "pre-build", "params": "forward" }]
+    }
+  }
 }
 ```
 
@@ -433,9 +580,15 @@ Additionally, when using the expanded object syntax, you can specify individual 
 {% tab label="Version 16+" %}
 
 ```json
-"build": {
-   // Run is-even:pre-build and is-odd:pre-build before this target
-  "dependsOn": [{ "projects": ["is-even", "is-odd"], "target": "pre-build" }]
+{
+  "targets": {
+    "build": {
+      // Run is-even:pre-build and is-odd:pre-build before this target
+      "dependsOn": [
+        { "projects": ["is-even", "is-odd"], "target": "pre-build" }
+      ]
+    }
+  }
 }
 ```
 

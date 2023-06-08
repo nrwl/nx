@@ -21,7 +21,8 @@
     },
     "npmScope": {
       "type": "string",
-      "description": "NPM Scope that the workspace uses."
+      "description": "NPM Scope that the workspace uses.",
+      "deprecated": "This is inferred from the package.json in the workspace root instead."
     },
     "tasksRunnerOptions": {
       "type": "object",
@@ -156,6 +157,31 @@
                 "description": "The name of the env var which value is added to the hash"
               }
             },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "externalDependencies": {
+                "type": "string",
+                "description": "The list of external dependencies that our target depends on for `nx:run-commands` and community plugins."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "dependentTasksOutputFiles": {
+                "type": "string",
+                "description": "The glob list of output files that project depends on."
+              },
+              "transitive": {
+                "type": "boolean",
+                "description": "Whether the check for outputs should be recursive or stop at the first level of dependencies."
+              }
+            },
+            "required": ["dependentTasksOutputFiles"],
             "additionalProperties": false
           }
         ]

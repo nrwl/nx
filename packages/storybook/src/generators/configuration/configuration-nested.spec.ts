@@ -6,7 +6,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as enquirer from 'enquirer';
 
 import configurationGenerator from './configuration';
 import * as workspaceConfiguration from './test-configs/root-workspace-configuration.json';
@@ -19,9 +18,6 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
 
-jest.mock('enquirer');
-// @ts-ignore
-enquirer.prompt = jest.fn();
 describe('@nx/storybook:configuration for workspaces with Root project', () => {
   beforeAll(() => {
     process.env.NX_INTERACTIVE = 'true';
@@ -32,10 +28,6 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
   });
   describe('basic functionalities', () => {
     let tree: Tree;
-    // @ts-ignore
-    enquirer.prompt = jest
-      .fn()
-      .mockReturnValue(Promise.resolve({ bundler: 'webpack' }));
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {

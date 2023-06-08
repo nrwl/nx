@@ -246,7 +246,10 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { hashFile, hashFiles } = nativeBinding
+const { hashArray, hashFile, hashFiles, EventType, Watcher } = nativeBinding
 
+module.exports.hashArray = hashArray
 module.exports.hashFile = hashFile
 module.exports.hashFiles = hashFiles
+module.exports.EventType = EventType
+module.exports.Watcher = Watcher

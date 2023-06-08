@@ -28,8 +28,7 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z].*$",
-      "x-priority": "important"
+      "pattern": "^[a-zA-Z].*$"
     },
     "directory": {
       "description": "The directory of the new application.",
@@ -99,8 +98,8 @@
       "default": false,
       "x-priority": "internal"
     },
-    "skipWorkspaceJson": {
-      "description": "Skip updating `workspace.json` with default options based on values provided to this app (e.g. babel, style).",
+    "skipNxJson": {
+      "description": "Skip updating `nx.json` with default options based on values provided to this app.",
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
@@ -191,6 +190,6 @@
       "default": false
     }
   },
-  "required": [],
+  "required": ["name"],
   "examplesFile": "../../../docs/application-examples.md"
 }

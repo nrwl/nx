@@ -32,7 +32,7 @@ describe('findConstraintsFor', () => {
       findConstraintsFor(constriants, {
         type: 'lib',
         name: 'someLib',
-        data: { root: '.', files: [], tags: ['b'] },
+        data: { root: '.', tags: ['b'] },
       })
     ).toEqual([{ sourceTag: 'b', onlyDependOnLibsWithTags: ['c'] }]);
   });
@@ -48,7 +48,7 @@ describe('findConstraintsFor', () => {
       findConstraintsFor(constriants, {
         type: 'lib',
         name: 'someLib',
-        data: { root: '.', files: [], tags: ['b'] },
+        data: { root: '.', tags: ['b'] },
       })
     ).toEqual([
       { sourceTag: 'b', onlyDependOnLibsWithTags: ['c'] },
@@ -66,7 +66,7 @@ describe('findConstraintsFor', () => {
       findConstraintsFor(constriants, {
         type: 'lib',
         name: 'someLib',
-        data: { root: '.', files: [], tags: ['b'] },
+        data: { root: '.', tags: ['b'] },
       })
     ).toEqual([
       { sourceTag: '/^b$/', onlyDependOnLibsWithTags: ['c'] },
@@ -76,7 +76,7 @@ describe('findConstraintsFor', () => {
       findConstraintsFor(constriants, {
         type: 'lib',
         name: 'someLib',
-        data: { root: '.', files: [], tags: ['baz'] },
+        data: { root: '.', tags: ['baz'] },
       })
     ).toEqual([{ sourceTag: '/a|b/', onlyDependOnLibsWithTags: ['c'] }]);
   });

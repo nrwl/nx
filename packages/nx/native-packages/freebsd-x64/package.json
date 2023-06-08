@@ -1,0 +1,25 @@
+{
+  "name": "@nx/nx-freebsd-x64",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx/native-packages/freebsd-x64"
+  },
+  "os": [
+    "freebsd"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "nx.freebsd-x64.node",
+  "files": [
+    "nx.freebsd-x64.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

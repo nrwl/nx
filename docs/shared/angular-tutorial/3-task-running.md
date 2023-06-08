@@ -54,7 +54,7 @@ The properties inside each of these targets is defined as follows:
 
 ## Running Tasks
 
-![Syntax for Running Tasks in Nx](/shared/angular-tutorial/run-target-syntax.svg)
+![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
 Run the `test` target for your `common-ui` project:
 

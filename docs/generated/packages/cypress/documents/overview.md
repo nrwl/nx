@@ -51,7 +51,7 @@ Replace `your-app-name` with the app's name as defined in your `tsconfig.base.js
 
 Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
-You can run your e2e test against a production build by using the `production` [configuration](https://nx.dev/recipe/use-executor-configurations#use-executor-configurations)
+You can run your e2e test against a production build by using the `production` [configuration](https://nx.dev/recipes/executors/use-executor-configurations#use-executor-configurations)
 
 ```shell
 nx e2e frontend-e2e --configuration=production

@@ -1,10 +1,10 @@
 import { TempFs } from '../../../../utils/testing/temp-fs';
 const tempFs = new TempFs('explicit-project-deps');
 
-import { defaultFileHasher } from '../../../../hasher/file-hasher';
 import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
+import { fileHasher } from '../../../../hasher/file-hasher';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -674,7 +674,6 @@ async function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
       type: 'lib',
       data: {
         root: `libs/${projectName}`,
-        files: [{ file: `libs/${projectName}/index.ts` }] as any,
       },
     });
   }
@@ -683,7 +682,7 @@ async function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
 
   await tempFs.createFiles(fsJson);
 
-  await defaultFileHasher.init();
+  await fileHasher.init();
 
   return {
     ctx: {
@@ -691,7 +690,7 @@ async function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
       nxJsonConfiguration: nxJson,
       filesToProcess: createProjectFileMap(
         projects as any,
-        defaultFileHasher.allFileData()
+        fileHasher.allFileData()
       ).projectFileMap,
     },
     builder,

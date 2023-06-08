@@ -52,7 +52,9 @@ describe('Next.js Applications', () => {
     const jsLib = uniq('tslib');
     const buildableLib = uniq('buildablelib');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+    );
     runCLI(`generate @nx/next:lib ${nextLib} --no-interactive`);
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
     runCLI(
@@ -231,7 +233,7 @@ describe('Next.js Applications', () => {
 
     const port = 4200;
 
-    runCLI(`generate @nx/next:app ${appName}`);
+    runCLI(`generate @nx/next:app ${appName} --appDir=false`);
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
 
     const proxyConf = {
@@ -297,7 +299,9 @@ describe('Next.js Applications', () => {
   it('should support custom next.config.js and output it in dist', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+    );
 
     updateFile(
       `apps/${appName}/next.config.js`,
@@ -354,7 +358,9 @@ describe('Next.js Applications', () => {
   it('should support --js flag', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --js`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --js --appDir=false`
+    );
 
     checkFilesExist(`apps/${appName}/pages/index.js`);
 
@@ -437,25 +443,43 @@ describe('Next.js Applications', () => {
     });
   }, 300_000);
 
-  it('should create a generate a next.js app with app layout enabled', async () => {
+  it('should copy relative modules needed by the next.config.js file', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nx/next:app ${appName} --style=css --no-interactive`);
+
+    updateFile(`apps/${appName}/redirects.js`, 'module.exports = [];');
+    updateFile(
+      `apps/${appName}/nested/headers.js`,
+      `module.exports = require('./headers-2');`
+    );
+    updateFile(`apps/${appName}/nested/headers-2.js`, 'module.exports = [];');
+    updateFile(`apps/${appName}/next.config.js`, (content) => {
+      return `const redirects = require('./redirects');\nconst headers = require('./nested/headers.js');\n${content}`;
+    });
+
+    runCLI(`build ${appName}`);
+    checkFilesExist(`dist/apps/${appName}/redirects.js`);
+    checkFilesExist(`dist/apps/${appName}/nested/headers.js`);
+    checkFilesExist(`dist/apps/${appName}/nested/headers-2.js`);
+  }, 120_000);
+
+  it('should support --turbo to enable Turbopack', async () => {
     const appName = uniq('app');
 
     runCLI(
       `generate @nx/next:app ${appName} --style=css --appDir --no-interactive`
     );
 
-    checkFilesExist(`apps/${appName}/app/api/hello/route.ts`);
-    checkFilesExist(`apps/${appName}/app/page.tsx`);
-    checkFilesExist(`apps/${appName}/app/layout.tsx`);
-    checkFilesExist(`apps/${appName}/app/global.css`);
-    checkFilesExist(`apps/${appName}/app/page.module.css`);
-
-    await checkApp(appName, {
-      checkUnitTest: false,
-      checkLint: false,
-      checkE2E: false,
-      checkExport: false,
-    });
+    const port = 4000;
+    const selfContainedProcess = await runCommandUntil(
+      `run ${appName}:serve --port=${port} --turbo`,
+      (output) => {
+        return output.includes(`TURBOPACK`);
+      }
+    );
+    selfContainedProcess.kill();
+    await killPorts();
   }, 300_000);
 });
 

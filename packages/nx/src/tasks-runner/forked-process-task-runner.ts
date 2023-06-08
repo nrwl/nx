@@ -19,7 +19,7 @@ import {
   BatchResults,
 } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
-import { Task } from '../config/task-graph';
+import { Task, TaskGraph } from '../config/task-graph';
 import { Transform } from 'stream';
 
 const workerPath = join(__dirname, './batch/run-batch.js');
@@ -36,10 +36,13 @@ export class ForkedProcessTaskRunner {
   }
 
   // TODO: vsavkin delegate terminal output printing
-  public forkProcessForBatch({ executorName, taskGraph }: Batch) {
+  public forkProcessForBatch(
+    { executorName, taskGraph: batchTaskGraph }: Batch,
+    fullTaskGraph: TaskGraph
+  ) {
     return new Promise<BatchResults>((res, rej) => {
       try {
-        const count = Object.keys(taskGraph.tasks).length;
+        const count = Object.keys(batchTaskGraph.tasks).length;
         if (count > 1) {
           output.logSingleLine(
             `Running ${output.bold(count)} ${output.bold(
@@ -48,7 +51,7 @@ export class ForkedProcessTaskRunner {
           );
         } else {
           const args = getPrintableCommandArgsForTask(
-            Object.values(taskGraph.tasks)[0]
+            Object.values(batchTaskGraph.tasks)[0]
           );
           output.logCommand(args.join(' '));
           output.addNewline();
@@ -65,9 +68,10 @@ export class ForkedProcessTaskRunner {
           if (code === null) code = this.signalToCode(signal);
           if (code !== 0) {
             const results: BatchResults = {};
-            for (const rootTaskId of taskGraph.roots) {
+            for (const rootTaskId of batchTaskGraph.roots) {
               results[rootTaskId] = {
                 success: false,
+                terminalOutput: '',
               };
             }
             rej(
@@ -81,6 +85,14 @@ export class ForkedProcessTaskRunner {
         p.on('message', (message: BatchMessage) => {
           switch (message.type) {
             case BatchMessageType.Complete: {
+              Object.entries(message.results).forEach(([taskName, result]) => {
+                this.options.lifeCycle.printTaskTerminalOutput(
+                  batchTaskGraph.tasks[taskName],
+                  result.success ? 'success' : 'failure',
+                  result.terminalOutput
+                );
+              });
+
               res(message.results);
               break;
             }
@@ -99,8 +111,9 @@ export class ForkedProcessTaskRunner {
         // Start the tasks
         p.send({
           type: BatchMessageType.Tasks,
-          taskGraph,
           executorName,
+          batchTaskGraph,
+          fullTaskGraph,
         });
       } catch (e) {
         rej(e);
@@ -113,21 +126,22 @@ export class ForkedProcessTaskRunner {
     {
       streamOutput,
       temporaryOutputPath,
+      taskGraph,
     }: {
       streamOutput: boolean;
       temporaryOutputPath: string;
+      taskGraph: TaskGraph;
     }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
         const args = getPrintableCommandArgsForTask(task);
-        const serializedArgs = getSerializedArgsForTask(task, this.verbose);
         if (streamOutput) {
           output.logCommand(args.join(' '));
           output.addNewline();
         }
 
-        const p = fork(this.cliPath, serializedArgs, {
+        const p = fork(this.cliPath, {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
           env: this.getEnvVariablesForTask(
             task,
@@ -145,6 +159,14 @@ export class ForkedProcessTaskRunner {
           if (process.send) {
             process.send(message);
           }
+        });
+
+        // Send message to run the executor
+        p.send({
+          targetDescription: task.target,
+          overrides: task.overrides,
+          taskGraph,
+          isVerbose: this.verbose,
         });
 
         if (streamOutput) {
@@ -205,20 +227,21 @@ export class ForkedProcessTaskRunner {
     {
       streamOutput,
       temporaryOutputPath,
+      taskGraph,
     }: {
       streamOutput: boolean;
       temporaryOutputPath: string;
+      taskGraph: TaskGraph;
     }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
         const args = getPrintableCommandArgsForTask(task);
-        const serializedArgs = getSerializedArgsForTask(task, this.verbose);
         if (streamOutput) {
           output.logCommand(args.join(' '));
           output.addNewline();
         }
-        const p = fork(this.cliPath, serializedArgs, {
+        const p = fork(this.cliPath, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env: this.getEnvVariablesForTask(
             task,
@@ -234,6 +257,14 @@ export class ForkedProcessTaskRunner {
           if (process.send) {
             process.send(message);
           }
+        });
+
+        // Send message to run the executor
+        p.send({
+          targetDescription: task.target,
+          overrides: task.overrides,
+          taskGraph,
+          isVerbose: this.verbose,
         });
 
         p.on('exit', (code, signal) => {

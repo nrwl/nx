@@ -131,6 +131,8 @@ export type InputDefinition =
   | { input: string }
   | { fileset: string }
   | { runtime: string }
+  | { externalDependencies: string[] }
+  | { dependentTasksOutputFiles: string; transitive?: boolean }
   | { env: string };
 
 /**

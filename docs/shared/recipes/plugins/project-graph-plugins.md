@@ -29,7 +29,7 @@ Plugins should export a function named `processProjectGraph` that handles updati
 
 - A `ProjectGraph`
 
-  - `graph.nodes` lists all the projects currently known to Nx. `node.data.files` lists the files belonging to a particular project.
+  - `graph.nodes` lists all the projects currently known to Nx.
   - `graph.dependencies` lists the dependencies between projects.
 
 - A `Context`

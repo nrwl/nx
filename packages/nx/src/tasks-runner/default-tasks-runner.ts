@@ -1,7 +1,7 @@
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { TaskOrchestrator } from './task-orchestrator';
 import { performance } from 'perf_hooks';
-import { Hasher } from '../hasher/hasher';
+import { TaskHasher } from '../hasher/task-hasher';
 import { LifeCycle } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -38,7 +38,7 @@ export const defaultTasksRunner: TasksRunner<
     nxJson: NxJsonConfiguration;
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
-    hasher: Hasher;
+    hasher: TaskHasher;
     daemon: DaemonClient;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
@@ -73,20 +73,10 @@ async function runAllTasks(
     nxJson: NxJsonConfiguration;
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
-    hasher: Hasher;
+    hasher: TaskHasher;
     daemon: DaemonClient;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
-  // TODO: vsavkin: remove this after Nx 16
-  performance.mark('task-graph-created');
-
-  performance.measure('nx-prep-work', 'init-local', 'task-graph-created');
-  performance.measure(
-    'graph-creation',
-    'command-execution-begins',
-    'task-graph-created'
-  );
-
   const orchestrator = new TaskOrchestrator(
     context.hasher,
     context.initiatingProject,
