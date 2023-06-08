@@ -26,6 +26,19 @@
     }
   },
   "packageJsonUpdates": {
+    "16.4.0-beta.7": {
+      "version": "16.4.0-beta.7",
+      "packages": {
+        "vite": {
+          "version": "^4.3.9",
+          "alwaysAddToPackageJson": false
+        },
+        "vite-tsconfig-paths": {
+          "version": "^4.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "16.4.0-beta.4": {
       "version": "16.4.0-beta.4",
       "packages": {
