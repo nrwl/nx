@@ -47,7 +47,7 @@ export async function verdaccioExecutor(
 
   try {
     const port = await detectPort(options.port);
-    if (port === options.port) {
+    if (port !== options.port) {
       logger.info(`Port ${options.port} was occupied. Using port ${port}.`);
       options.port = port;
     }
