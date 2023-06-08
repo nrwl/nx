@@ -519,7 +519,7 @@ export function createOrEditViteConfig(
     : options.includeLib
     ? `dts({
       entryRoot: 'src',
-      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
+      tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),`
     : '';
@@ -527,7 +527,7 @@ export function createOrEditViteConfig(
   const dtsImportLine = onlyVitest
     ? ''
     : options.includeLib
-    ? `import dts from 'vite-plugin-dts';\nimport { joinPathFragments } from '@nx/devkit';`
+    ? `import dts from 'vite-plugin-dts';\nimport * as path from 'path';`
     : '';
 
   let viteConfigContent = '';

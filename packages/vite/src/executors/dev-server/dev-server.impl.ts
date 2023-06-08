@@ -7,18 +7,11 @@ import {
   getNxTargetOptions,
   getViteServerOptions,
   getViteBuildOptions,
-  registerPaths,
 } from '../../utils/options-utils';
 
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
-import { registerTsConfigPaths } from '@nx/js/src/internal';
-import { resolve } from 'path';
-
-import {
-  calculateProjectDependencies,
-  createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
+import { registerPaths } from '../../utils/executor-utils';
 
 export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,

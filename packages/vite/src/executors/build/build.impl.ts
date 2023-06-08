@@ -2,9 +2,9 @@ import 'dotenv/config';
 import { ExecutorContext, writeJsonFile } from '@nx/devkit';
 import { build, InlineConfig, mergeConfig } from 'vite';
 import {
+  getProjectTsConfigPath,
   getViteBuildOptions,
   getViteSharedConfig,
-  registerPaths,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
 import {
@@ -16,6 +16,7 @@ import {
 import { existsSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import { registerPaths, validateTypes } from '../../utils/executor-utils';
 
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
@@ -34,6 +35,14 @@ export async function* viteBuildExecutor(
       build: getViteBuildOptions(normalizedOptions, context),
     }
   );
+
+  if (!options.skipTypeCheck) {
+    await validateTypes({
+      workspaceRoot: context.root,
+      projectRoot: projectRoot,
+      tsconfig: getProjectTsConfigPath(projectRoot),
+    });
+  }
 
   const watcherOrOutput = await runInstance(buildConfig);
 
