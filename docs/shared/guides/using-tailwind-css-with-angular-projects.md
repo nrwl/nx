@@ -6,8 +6,25 @@ or new projects, and it also contains a set of our recommended setups for using 
 can be found on an Nx workspace.
 
 For an in-depth look on this topic, be sure to check out our blog
-post [Set up Tailwind CSS with Angular in an Nx workspace](https://medium.com/nrwl/set-up-tailwind-css-with-angular-in-an-nx-workspace-6f039a0f4479)
-.
+post [Set up Tailwind CSS with Angular in an Nx workspace](https://medium.com/nrwl/set-up-tailwind-css-with-angular-in-an-nx-workspace-6f039a0f4479).
+
+## Get Started
+
+To generate an Angular application or library with Tailwind CSS configured, add the `--add-tailwind` flag to the generate command:
+
+```shell
+npx nx g @nx/angular:app my-app --add-tailwind
+```
+
+```shell
+npx nx g @nx/angular:lib my-lib --buildable --add-tailwind
+```
+
+To add Tailwind to an existing project, run the [setup-tailwind](/packages/angular/generators/setup-tailwind) generator:
+
+```shell
+npx nx g @nx/angular:setup-tailwind my-project
+```
 
 ## Tailwind CSS support by the Nx Angular plugin
 
