@@ -1,37 +1,18 @@
 # Nx and the Angular CLI
 
-{% callout type="check" title="Nx and AngularCLI commands are interchangeable" %}
-If you add Nx to an Angular CLI project, `ng` and `nx` are interchangeable (they invoke the same command, which is `nx`). So anywhere you see `"nx build"` or `"nx affected"`, you can also use `"ng build"` or `"ng affected"`.
-{% /callout %}
+It is easy to switch from using the Angular CLI to using Nx.
 
-Nx integrates well with the Angular CLI:
+- Nx supports all Angular Devkit builders and schematics.
+- Nx automatically splits the `angular.json` file into separate `project.json` files for each project.
+- No need to change your existing folder structure.
 
-- It decorates the Angular CLI. After adding Nx to your workspace, running `ng` will run the wrapped Angular CLI that goes through Nx. Almost everything will work the same way but a lot faster. There are some differences and they are explained below.
-- It supports all Angular Devkit builders and schematics.
-- It supports using `angular.json` to configure projects and their targets.
-- Nx Console works with Angular CLI projects.
+## angular.json vs. project.json
 
-This works so well that often folks don't even know they use Nx.
+Nx configures projects and their targets in a format similar to `angular.json`. However, instead of storing the configuration for every project in a single large `angular.json` file at the root, the configuration is split into multiple `project.json` files that are located in each project folder. This conversion is done for you automatically when you run `nx init`.
 
-## Angular CLI has some limitations, and Nx addresses them.
+Note that even though the configuration is split, everything works the same way. Migrations and schematics written with the Angular devkit that expect a single `angular.json` file, will receive a single file. Nx is smart, so it merges all the files in memory to make those migrations and schematics work.
 
-### angular.json
-
-Nx supports using `angular.json` to configure projects and their targets, but it comes with a few limitations. For instance, `angular.json` can be many thousands of lines long for large workspaces.
-
-What we recommend instead is to split `angular.json` into multiple `project.json` files (one for each project). This is how you do it:
-
-- Change the version number in `angular.json` to `2`
-- Run `nx format`
-- Run `nx generate @nx/workspace:convert-to-nx-project --all=true`
-
-{% callout type="check" title="Nx and AngularCLI are compatible" %}
-But regardless of whether you use `angular.json` or `project.json`, the configuration remains the same. So anything written about `project.json` applies to `angular.json` in the same way. For instance, everything in [project.json](/reference/project-configuration) and [nx.json](/reference/nx-json) applies to `angular.json` in the same way.
-{% /callout %}
-
-Note that even though the configuration is split, everything works the same way. All migrations and schematics that expect a single `angular.json` file, will receive a single file. Nx is smart, so it merges all the files in memory to make those migrations and schematics work.
-
-### 'ng update' and 'nx migrate'
+## 'ng update' vs. 'nx migrate'
 
 If you haven't used Nx before and used the Angular CLI, you probably ran `ng update`. What is the difference?
 
@@ -43,25 +24,13 @@ If you haven't used Nx before and used the Angular CLI, you probably ran `ng upd
 - Fix migrations that "almost work".
 - Commit a partially migrated state.
 - Change versions of packages to match org requirements.
+- [Opt out of Angular updates when updating Nx versions](/recipes/other/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/packages/angular/documents/angular-nx-version-matrix)
 
-And, in general, it is a lot more reliable for non-trivial workspaces. Why?
+`nx migrate` does this by splitting the process into two steps. `nx migrate latest` creates a `migrations.json` file with a list of all the migrations that are needed by Nx, Angular and other packages. You then have a chance to modify that file before running `nx migrate --run-migrations` to actually execute those migrations.
 
-`ng update` tries to perform migration in a single go, automatically. This doesn't work for most non-trivial workspaces.
+To reiterate: `nx migrate` runs the migrations written by the Angular team the same way `ng update` runs them. So everything should still work. You just get more control over how it works.
 
-- `ng update` doesn't separate updating `package.json` from updating the source code of the repo. It all happens in a single go. This often fails for non-trivial workspaces or for organizations that have a custom npm registry, where you might want to use a different version of a package.
-- `ng update` relies on `peerDependencies` to figure out what needs to be updated. Many third-party plugin don't have `peerDependencies` set correctly.
-- When using `ng update` it is difficult to execute one migration at a time. Sometimes you want to patch things up after executing a migration.
-- When using `ng update` it's not possible to fix almost-working migrations. We do our best but sometimes we don't account for the specifics of a particular workspace.
-- When using `ng update` it's not possible to commit a partially-migrated repo. Migration can take days for a large repo.
-- When using `ng update` it's not possible to rerun some of the migrations multiple times. This is required because you can rebase the branch multiple times while migrating.
-
-The Nx core team have gained a lot of experience migrating large workspaces over the last 5 years, and `nx migrate` has been consistently a lot more reliable and easier to use. It has also been a lot easier to implement migrations that work with `nx migrate` comparing to `ng update`. As a result, folks building React and Node applications with Nx have had better experience migrating because Angular folks use `ng update` out of habit, instead of using the command that works better.
-
-**Starting with Nx 11, you can migrate workspaces only using `nx migrate`**. To reiterate: `nx migrate` runs the migrations written by the Angular CLI team the same way `ng update` runs them. So everything should still work. You just get more control over how it works.
-
-If you still want to run `ng update`, you can do it as follows: `FORCE_NG_UPDATE=true nx update mypackage`.
-
-### 'ng add'
+## 'ng add'
 
 `ng add` is not natively supported by Nx. We want to have a consistent package install experience for developers who are working with Angular or non-Angular packages.
 
@@ -72,6 +41,12 @@ npm install [package] && nx g [package]:ng-add
 ```
 
 Replace `[package]` with the name of the package you're trying to add.
+
+## Misconception: Nx is Just for Monorepos
+
+Nx can improve your developer experience without rearranging folders in your workspace and without the need to have multiple apps in the same repo. The changes outlined in the previous sections are the only modifications to your existing workflow that are needed, then Nx opens the door to many more DX improvements.
+
+Without any additional changes, Nx provides task caching, automated architecture diagrams and IDE integrations. Then, with some minor configuration, you can add task pipelines, distributed caching and CI improvements. To take full advantage of these features, you can begin to separate your large application into self-contained libraries. For an introduction to this process, complete the [Angular Standalone Tutorial](/tutorials/angular-standalone-tutorial).
 
 ## More Info
 
