@@ -10,6 +10,7 @@ export interface FileData {
 export function hashArray(input: Array<string>): string
 export function hashFile(file: string): FileData | null
 export function hashFiles(workspaceRoot: string): Record<string, string>
+export function hashFilesMatchingGlobs(directory: string, globPatterns: Array<string>): string | null
 /**
  * Newly created files will have the `update` EventType as well.
  * This simplifies logic between OS's, IDEs and git operations

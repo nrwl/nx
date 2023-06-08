@@ -28,11 +28,10 @@ export class FileHasher {
     return hashFile(path).hash;
   }
 
-  hashFolder(path: string): Map<string, string> {
+  hashFilesMatchingGlobs(path: string, globs: string[]): string {
     // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
-    const { hashFiles } = require('../native');
-    const filesObject = hashFiles(path) as Record<string, string>;
-    return new Map(Object.entries(filesObject));
+    const { hashFilesMatchingGlobs } = require('../native');
+    return hashFilesMatchingGlobs(path, globs);
   }
 
   clear(): void {

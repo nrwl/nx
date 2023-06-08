@@ -1090,6 +1090,7 @@ dependencies = [
  "anyhow",
  "assert_fs",
  "crossbeam-channel",
+ "globset",
  "ignore",
  "ignore-files",
  "itertools",

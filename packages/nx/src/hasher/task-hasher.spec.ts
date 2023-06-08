@@ -1499,10 +1499,19 @@ describe('TaskHasher', () => {
         } as any,
         {},
         {
-          // allFileData: () => allWorkspaceFiles,
-          hashFolder: (path: string) => {
-            const files = distFolder.filter((f) => f[0].startsWith(path));
-            return new Map(files.map((f) => [f[0], f[1]]));
+          hashFilesMatchingGlobs: (path: string, globs: string[]) => {
+            const hashes = [];
+            for (const [file, hash] of distFolder) {
+              if (!file.startsWith(path)) {
+                continue;
+              }
+              for (const glob of globs) {
+                if (file.endsWith(glob.split('**/*')[1])) {
+                  hashes.push(hash);
+                }
+              }
+            }
+            return hashes.join('|');
           },
         } as any
       );
@@ -1519,8 +1528,8 @@ describe('TaskHasher', () => {
       expect(hash.value).toContain('c.d.ts.hash');
 
       assertFilesets(hash, {
-        'child:output': { contains: '**/*.d.ts' },
-        'grandchild:output': { contains: '**/*.d.ts' },
+        'dist/libs/child/**/*.d.ts': { contains: 'b.d.ts.hash' },
+        'dist/libs/grandchild/**/*.d.ts': { contains: 'c.d.ts.hash' },
       });
     });
   });
