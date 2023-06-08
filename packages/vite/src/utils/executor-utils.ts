@@ -55,3 +55,33 @@ export function registerPaths(
     registerTsConfigPaths(tsConfig);
   }
 }
+
+/**
+ * This function makes sure that the behaviour of Vite in replacing variables
+ * that reference other variables is maintained in Nx.
+ */
+export function replaceEnvVarsWithinEnv() {
+  const envVariablePattern = /(?<!\\)\$\{?(\w+)\}?/;
+
+  for (const key in process.env) {
+    if (
+      Object.hasOwnProperty.call(process.env, key) &&
+      key.startsWith('VITE_')
+    ) {
+      let value = process.env[key];
+
+      let match: any;
+      while ((match = envVariablePattern.exec(value))) {
+        const fullMatch = match[0];
+        const referencedKey = match[1];
+
+        const replacement = process.env[referencedKey] || '';
+        value = value.replace(fullMatch, replacement);
+      }
+
+      value = value.replace(/\\\$/g, '$');
+
+      process.env[key] = value;
+    }
+  }
+}

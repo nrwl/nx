@@ -16,7 +16,11 @@ import {
 import { existsSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
-import { registerPaths, validateTypes } from '../../utils/executor-utils';
+import {
+  registerPaths,
+  validateTypes,
+  replaceEnvVarsWithinEnv,
+} from '../../utils/executor-utils';
 
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
@@ -26,6 +30,7 @@ export async function* viteBuildExecutor(
     context.projectsConfigurations.projects[context.projectName].root;
 
   registerPaths(projectRoot, options, context);
+  replaceEnvVarsWithinEnv();
 
   const normalizedOptions = normalizeOptions(options);
 
