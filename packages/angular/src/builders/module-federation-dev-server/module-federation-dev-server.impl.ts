@@ -1,5 +1,10 @@
 import type { Schema } from './schema';
-import { readCachedProjectGraph, workspaceRoot, Workspaces } from '@nx/devkit';
+import {
+  logger,
+  readCachedProjectGraph,
+  workspaceRoot,
+  Workspaces,
+} from '@nx/devkit';
 import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
 import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
@@ -51,6 +56,12 @@ export function executeModuleFederationDevServerBuilder(
   const remotesToSkip = new Set(
     findMatchingProjects(options.skipRemotes, projectGraph.nodes) ?? []
   );
+
+  if (remotesToSkip.size > 0) {
+    logger.info(
+      `Remotes not served automatically: ${[...remotesToSkip].join(', ')}`
+    );
+  }
   const staticRemotes = getStaticRemotes(
     project,
     context,

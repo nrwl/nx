@@ -39,12 +39,39 @@ export default async function* moduleFederationDevServer(
   }
 
   const remotesToSkip = new Set(
-    findMatchingProjects(options.skipRemotes ?? [], context.projectGraph.nodes)
+    findMatchingProjects(options.skipRemotes, context.projectGraph.nodes) ?? []
   );
+
+  if (remotesToSkip.size > 0) {
+    logger.info(
+      `Remotes not served automatically: ${[...remotesToSkip.values()].join(
+        ', '
+      )}`
+    );
+  }
+  const remotesNotInWorkspace: string[] = [];
+
   const knownRemotes = (moduleFederationConfig.remotes ?? []).filter((r) => {
     const validRemote = Array.isArray(r) ? r[0] : r;
-    return !remotesToSkip.has(validRemote);
+
+    if (remotesToSkip.has(validRemote)) {
+      return false;
+    } else if (!context.projectGraph.nodes[validRemote]) {
+      remotesNotInWorkspace.push(validRemote);
+      return false;
+    } else {
+      return true;
+    }
   });
+
+  if (remotesNotInWorkspace.length > 0) {
+    logger.warn(
+      `Skipping serving ${remotesNotInWorkspace.join(
+        ', '
+      )} as they could not be found in the workspace. Ensure they are served correctly.`
+    );
+  }
+
   const remotePorts = knownRemotes.map(
     (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
   );
