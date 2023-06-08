@@ -223,58 +223,56 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                 >
                   <div className="w-px bg-slate-200 dark:bg-slate-700" />
                 </div>
-                <>
-                  <div className="mt-1 hidden relative sm:flex h-6 w-6 flex-none items-center justify-center">
-                    <div className="h-2 w-2 rounded-full bg-slate-100 ring-1 ring-slate-300 dark:ring-slate-500 dark:bg-slate-600" />
+                <div className="mt-1 hidden relative sm:flex h-6 w-6 flex-none items-center justify-center">
+                  <div className="h-2 w-2 rounded-full bg-slate-100 ring-1 ring-slate-300 dark:ring-slate-500 dark:bg-slate-600" />
+                </div>
+                <div className="flex flex-col w-36 shrink-0">
+                  <p className="py-0.5">
+                    <a
+                      title="See release tag on GitHub"
+                      href={`https://github.com/nrwl/nx/releases/tag/${changelog.version}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xl leading-5 font-medium text-slate-900 dark:text-slate-100 hover:underline"
+                    >
+                      <TagIcon
+                        className="inline-flex h-4 w-4"
+                        aria-hidden="true"
+                      />{' '}
+                      v{changelog.version}
+                    </a>
+                  </p>
+                  <p className="py-0.5 text-xs leading-5 text-slate-400 dark:text-slate-500">
+                    <time
+                      dateTime={convertToDate(
+                        changelog.date
+                      ).toLocaleDateString()}
+                    >
+                      {changelog.date}
+                    </time>
+                  </p>
+                </div>
+                {/* CONTAINER */}
+                <div className="md:ml-12 flex flex-grow flex-col gap-8">
+                  <div className="prose prose-slate dark:prose-invert max-w-none">
+                    {changelog.content}
                   </div>
-                  <div className="flex flex-col w-36 shrink-0">
-                    <p className="py-0.5">
-                      <a
-                        title="See release tag on GitHub"
-                        href={`https://github.com/nrwl/nx/releases/tag/${changelog.version}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xl leading-5 font-medium text-slate-900 dark:text-slate-100 hover:underline"
-                      >
-                        <TagIcon
-                          className="inline-flex h-4 w-4"
-                          aria-hidden="true"
-                        />{' '}
-                        v{changelog.version}
-                      </a>
-                    </p>
-                    <p className="py-0.5 text-xs leading-5 text-slate-400 dark:text-slate-500">
-                      <time
-                        dateTime={convertToDate(
-                          changelog.date
-                        ).toLocaleDateString()}
-                      >
-                        {changelog.date}
-                      </time>
-                    </p>
-                  </div>
-                  {/* CONTAINER */}
-                  <div className="md:ml-12 flex flex-grow flex-col gap-8">
-                    <div className="prose prose-slate dark:prose-invert max-w-none">
-                      {changelog.content}
+                  {changelog.patches.length > 0 && (
+                    <div className="text-right space-x-2">
+                      {changelog.patches.map((version) => (
+                        <a
+                          key={version}
+                          href={`https://github.com/nrwl/nx/releases/tag/${version}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center rounded-md bg-slate-50 dark:bg-slate-600/30 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:text-slate-500 dark:ring-slate-700 hover:underline"
+                        >
+                          {version}
+                        </a>
+                      ))}
                     </div>
-                    {changelog.patches.length > 0 && (
-                      <div className="text-right space-x-2">
-                        {changelog.patches.map((version) => (
-                          <a
-                            key={version}
-                            href={`https://github.com/nrwl/nx/releases/tag/${version}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center rounded-md bg-slate-50 dark:bg-slate-600/30 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:text-slate-500 dark:ring-slate-700 hover:underline"
-                          >
-                            {version}
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
