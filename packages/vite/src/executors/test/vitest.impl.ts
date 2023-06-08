@@ -62,7 +62,7 @@ export async function* vitestExecutor(
   const nxReporter = new NxReporter(options.watch);
   const settings = await getSettings(options, context, projectRoot);
   settings.reporters.push(nxReporter);
-  const cliFilters = options.testFile ? [options.testFile] : [];
+  const cliFilters = options.testFile ?? [];
 
   const ctx = await startVitest(options.mode, cliFilters, settings);
 

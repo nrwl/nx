@@ -8,5 +8,5 @@ export interface VitestExecutorOptions {
   update?: boolean;
   reportsDirectory?: string;
   coverage?: boolean;
-  testFile?: string;
+  testFile?: string[];
 }
