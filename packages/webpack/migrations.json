@@ -40,6 +40,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.4.0": {
+      "version": "16.4.0-beta.3",
+      "packages": {
+        "css-minimizer-webpack-plugin": {
+          "version": "^5.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
