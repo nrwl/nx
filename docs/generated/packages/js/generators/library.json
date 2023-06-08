@@ -59,10 +59,6 @@
         "description": "The test environment to use if unitTestRunner is set to jest.",
         "default": "jsdom"
       },
-      "importPath": {
-        "type": "string",
-        "description": "The library name used to import it, like @myorg/my-awesome-lib."
-      },
       "pascalCaseFiles": {
         "type": "boolean",
         "description": "Use pascal case file names.",
@@ -83,6 +79,11 @@
         "type": "boolean",
         "default": false,
         "description": "Generate a publishable library.",
+        "x-priority": "important"
+      },
+      "importPath": {
+        "type": "string",
+        "description": "The library name used to import it, like @myorg/my-awesome-lib. Required for publishable library.",
         "x-priority": "important"
       },
       "buildable": {
