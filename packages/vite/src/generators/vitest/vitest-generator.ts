@@ -24,6 +24,8 @@ import {
   vitestCoverageIstanbulVersion,
 } from '../../utils/versions';
 
+import { addTsLibDependencies } from '@nx/js';
+
 export async function vitestGenerator(
   tree: Tree,
   schema: VitestGeneratorSchema
@@ -129,6 +131,8 @@ function updateTsConfig(
         }
       );
     }
+
+    addTsLibDependencies(tree);
   }
 }
 
