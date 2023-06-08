@@ -18,6 +18,11 @@
       "x-completion-type": "directory",
       "x-priority": "important"
     },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": true
+    },
     "base": {
       "type": "string",
       "description": "Base public path when served in development or production.",

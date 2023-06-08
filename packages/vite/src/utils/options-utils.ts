@@ -6,7 +6,7 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { relative } from 'path';
+import { relative, resolve } from 'path';
 import {
   BuildOptions,
   InlineConfig,
@@ -19,6 +19,11 @@ import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import replaceFiles from '../../plugins/rollup-replace-files.plugin';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
+import { registerTsConfigPaths } from '@nx/js/src/internal';
+import {
+  calculateProjectDependencies,
+  createTmpTsConfig,
+} from '@nx/js/src/utils/buildable-libs-utils';
 
 /**
  * Returns the path to the vite config file or undefined when not found.
@@ -187,4 +192,33 @@ export function getVitePreviewOptions(
 export function getNxTargetOptions(target: string, context: ExecutorContext) {
   const targetObj = parseTargetString(target, context.projectGraph);
   return readTargetOptions(targetObj, context);
+}
+
+export function registerPaths(
+  projectRoot: string,
+  options: ViteBuildExecutorOptions | ViteDevServerExecutorOptions,
+  context: ExecutorContext
+) {
+  const tsConfig = resolve(projectRoot, 'tsconfig.json');
+  options.buildLibsFromSource ??= true;
+
+  if (!options.buildLibsFromSource) {
+    const { dependencies } = calculateProjectDependencies(
+      context.projectGraph,
+      context.root,
+      context.projectName,
+      context.targetName,
+      context.configurationName
+    );
+    const tmpTsConfig = createTmpTsConfig(
+      tsConfig,
+      context.root,
+      projectRoot,
+      dependencies
+    );
+
+    registerTsConfigPaths(tmpTsConfig);
+  } else {
+    registerTsConfigPaths(tsConfig);
+  }
 }

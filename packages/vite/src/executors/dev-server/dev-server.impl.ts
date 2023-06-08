@@ -7,12 +7,18 @@ import {
   getNxTargetOptions,
   getViteServerOptions,
   getViteBuildOptions,
+  registerPaths,
 } from '../../utils/options-utils';
 
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
 import { registerTsConfigPaths } from '@nx/js/src/internal';
 import { resolve } from 'path';
+
+import {
+  calculateProjectDependencies,
+  createTmpTsConfig,
+} from '@nx/js/src/utils/buildable-libs-utils';
 
 export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
@@ -21,7 +27,7 @@ export async function* viteDevServerExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  registerTsConfigPaths(resolve(projectRoot, 'tsconfig.json'));
+  registerPaths(projectRoot, options, context);
 
   // Retrieve the option for the configured buildTarget.
   const buildTargetOptions: ViteBuildExecutorOptions = getNxTargetOptions(

@@ -4,6 +4,7 @@ import { build, InlineConfig, mergeConfig } from 'vite';
 import {
   getViteBuildOptions,
   getViteSharedConfig,
+  registerPaths,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
 import {
@@ -16,8 +17,6 @@ import { existsSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 
-import { registerTsConfigPaths } from '@nx/js/src/internal';
-
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
   context: ExecutorContext
@@ -25,7 +24,7 @@ export async function* viteBuildExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  registerTsConfigPaths(resolve(projectRoot, 'tsconfig.json'));
+  registerPaths(projectRoot, options, context);
 
   const normalizedOptions = normalizeOptions(options);
 

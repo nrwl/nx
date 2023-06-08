@@ -18,6 +18,11 @@
         "description": "Target which builds the application. Only used to retrieve the configuration as the dev-server does not build the code.",
         "x-priority": "important"
       },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately.",
+        "default": true
+      },
       "proxyConfig": {
         "type": "string",
         "description": "Path to the proxy configuration file.",
