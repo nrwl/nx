@@ -216,6 +216,21 @@
               }
             },
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "dependentTasksOutputFiles": {
+                "type": "string",
+                "description": "The glob list of output files that project depends on."
+              },
+              "transitive": {
+                "type": "boolean",
+                "description": "Whether the check for outputs should be recursive or stop at the first level of dependencies."
+              }
+            },
+            "required": ["dependentTasksOutputFiles"],
+            "additionalProperties": false
           }
         ]
       }

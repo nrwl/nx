@@ -235,13 +235,14 @@ export async function invokeTasksRunner({
 
   let hasher;
   if (daemonClient.enabled()) {
-    hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
+    hasher = new DaemonBasedTaskHasher(daemonClient, taskGraph, runnerOptions);
   } else {
     const { projectFileMap, allWorkspaceFiles } = getProjectFileMap();
     hasher = new InProcessTaskHasher(
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
+      taskGraph,
       nxJson,
       runnerOptions,
       fileHasher
