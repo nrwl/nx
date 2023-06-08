@@ -9,4 +9,5 @@ export interface EsBuildProjectSchema {
   importPath?: string;
   esbuildConfig?: string;
   platform?: 'node' | 'browser' | 'neutral';
+  buildTarget?: string;
 }

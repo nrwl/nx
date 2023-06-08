@@ -5102,6 +5102,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "setup-build",
+                "path": "/packages/js/generators/setup-build",
+                "name": "setup-build",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

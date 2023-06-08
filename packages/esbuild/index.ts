@@ -1,6 +1,3 @@
-export type {
-  EsBuildExecutorOptions,
-  NormalizedEsBuildExecutorOptions,
-} from './src/executors/esbuild/schema';
-export * from './src/executors/esbuild/esbuild.impl';
+export * from './src/generators/init/init';
+export * from './src/generators/esbuild-project/esbuild-project';
 export * from './src/utils/versions';
