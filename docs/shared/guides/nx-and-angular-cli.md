@@ -8,7 +8,7 @@ It is easy to switch from using the Angular CLI to using Nx.
 
 ## angular.json vs. project.json
 
-Nx configures projects and their targets in a format similar to `angular.json`. However, instead of storing the configuration for every project in a single large `angular.json` file at the root, the configuration is split into multiple `project.json` files that are located in each project folder. This conversion is done for you automatically when you run `nx init`.
+Nx configures projects and their targets in a format similar to `angular.json`. However, instead of storing the configuration for every project in a single large `angular.json` file at the root, the configuration is split into multiple `project.json` files that are located in each project folder. Smaller, focused config files allow you to quickly find the configuration that is relevant for the project you are working on and editing a single project configuration does not cause the `nx affected` command to re-run all the tests in the repo. This conversion is done for you automatically when you run `nx init`.
 
 Note that even though the configuration is split, everything works the same way. Migrations and schematics written with the Angular devkit that expect a single `angular.json` file, will receive a single file. Nx is smart, so it merges all the files in memory to make those migrations and schematics work.
 
