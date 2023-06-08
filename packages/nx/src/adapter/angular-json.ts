@@ -46,8 +46,8 @@ function readAngularJson(angularCliWorkspaceRoot: string) {
   ).projects;
 }
 
-export function mergeAngularJsonAndGlobProjects(
-  globProjects: {
+export function mergeAngularJsonAndProjects(
+  projects: {
     [name: string]: ProjectConfiguration;
   },
   angularCliWorkspaceRoot: string
@@ -57,9 +57,9 @@ export function mergeAngularJsonAndGlobProjects(
   for (let k of Object.keys(res)) {
     folders.add(res[k].root);
   }
-  for (let k of Object.keys(globProjects)) {
-    if (!folders.has(globProjects[k].root)) {
-      res[k] = globProjects[k];
+  for (let k of Object.keys(projects)) {
+    if (!folders.has(projects[k].root)) {
+      res[k] = projects[k];
     }
   }
   return res;

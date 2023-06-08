@@ -22,6 +22,11 @@ import { Workspaces } from '../../config/workspaces';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { execSync } from 'child_process';
 import { fileHasher, hashArray } from '../../hasher/file-hasher';
+import {
+  createProjectConfigurations,
+  getAllWorkspaceFiles,
+  getWorkspaceFiles,
+} from '../../project-graph/utils/get-workspace-files';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -122,6 +127,8 @@ function computeWorkspaceConfigHash(projectsConfigurations: any) {
 /**
  * Temporary work around to handle nested gitignores. The parcel file watcher doesn't handle them well,
  * so we need to filter them out here.
+ *
+ * TODO(Cammisuli): remove after 16.4 - Rust watcher handles nested gitignores
  */
 function filterUpdatedFiles(files: string[]) {
   try {
@@ -152,11 +159,18 @@ async function processCollectedUpdatedAndDeletedFiles() {
       'hash-watched-changes-end'
     );
     fileHasher.incrementalUpdate(updatedFiles, deletedFiles);
-    const projectsConfiguration = new Workspaces(
-      workspaceRoot
-    ).readProjectsConfigurations();
+
+    let nxJson = new Workspaces(workspaceRoot).readNxJson();
+
+    const { configFiles } = await getWorkspaceFiles(nxJson);
+
+    let projectConfigurations = createProjectConfigurations(
+      nxJson,
+      configFiles
+    );
+
     const workspaceConfigHash = computeWorkspaceConfigHash(
-      projectsConfiguration
+      projectConfigurations
     );
     serverLogger.requestLog(
       `Updated file-hasher based on watched changes, recomputing project graph...`
@@ -167,20 +181,45 @@ async function processCollectedUpdatedAndDeletedFiles() {
     // when workspace config changes we cannot incrementally update project file map
     if (workspaceConfigHash !== storedWorkspaceConfigHash) {
       storedWorkspaceConfigHash = workspaceConfigHash;
-      projectFileMapWithFiles = createProjectFileMap(
-        projectsConfiguration,
-        fileHasher.allFileData()
+      const { projectFileMap, globalFiles } = await getWorkspaceFiles(
+        nxJson,
+        true
       );
+
+      const allWorkspaceFiles = getAllWorkspaceFiles(
+        projectFileMap,
+        globalFiles
+      );
+
+      projectFileMapWithFiles = {
+        projectFileMap,
+        allWorkspaceFiles,
+      };
     } else {
-      projectFileMapWithFiles = projectFileMapWithFiles
-        ? updateProjectFileMap(
-            projectsConfiguration,
-            projectFileMapWithFiles.projectFileMap,
-            projectFileMapWithFiles.allWorkspaceFiles,
-            updatedFiles,
-            deletedFiles
-          )
-        : createProjectFileMap(projectsConfiguration, fileHasher.allFileData());
+      if (projectFileMapWithFiles) {
+        projectFileMapWithFiles = updateProjectFileMap(
+          projectConfigurations,
+          projectFileMapWithFiles.projectFileMap,
+          projectFileMapWithFiles.allWorkspaceFiles,
+          updatedFiles,
+          deletedFiles
+        );
+      } else {
+      }
+      const { projectFileMap, globalFiles } = await getWorkspaceFiles(
+        nxJson,
+        true
+      );
+
+      const allWorkspaceFiles = getAllWorkspaceFiles(
+        projectFileMap,
+        globalFiles
+      );
+
+      projectFileMapWithFiles = {
+        projectFileMap,
+        allWorkspaceFiles,
+      };
     }
 
     collectedUpdatedFiles.clear();

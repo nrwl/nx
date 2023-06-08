@@ -27,16 +27,6 @@ fn hash_file(file: String) -> Option<FileData> {
     Some(FileData { hash, file })
 }
 
-#[napi]
-fn hash_files(workspace_root: String) -> HashMap<String, String> {
-    nx_workspace_walker(workspace_root, |rec| {
-        let mut collection: HashMap<String, String> = HashMap::new();
-        for (path, content) in rec {
-            collection.insert(path, xxh3::xxh3_64(&content).to_string());
-        }
-        collection
-    })
-}
 
 #[napi]
 fn hash_files_matching_globs(
@@ -158,26 +148,61 @@ mod tests {
         assert_eq!(content.unwrap().hash, "6193209363630369380");
     }
 
-    #[test]
-    fn it_hashes_a_directory() {
-        // handle empty workspaces
-        let content = hash_files("/does/not/exist".into());
-        assert!(content.is_empty());
+    // #[test]
+    // fn it_hashes_a_directory() {
+    //     // handle empty workspaces
+    //     let content = hash_files("/does/not/exist".into());
+    //     assert!(content.is_empty());
+    //
+    //     let temp_dir = setup_fs();
+    //
+    //     let content = hash_files(temp_dir.display().to_string());
+    //     // println!("{:?}", content);
+    //     assert_eq!(
+    //         content,
+    //         HashMap::from([
+    //             ("baz/qux.txt".into(), "8039819779822413286".into()),
+    //             ("foo.txt".into(), "8455857314690418558".into()),
+    //             ("test.txt".into(), "6193209363630369380".into()),
+    //             ("bar.txt".into(), "1707056588989152788".into()),
+    //         ])
+    //     );
+    // }
 
-        let temp_dir = setup_fs();
+    //     #[test]
+    //     fn handles_nx_ignore() {
+    //         let temp_dir = setup_fs();
+    //
+    //         temp_dir
+    //             .child("nested")
+    //             .child("child.txt")
+    //             .write_str("data");
+    //         temp_dir
+    //             .child("nested")
+    //             .child("child-two")
+    //             .child("grand_child.txt")
+    //             .write_str("data");
+    //
+    //         // add nxignore file with baz/
+    //         temp_dir
+    //             .child(".nxignore")
+    //             .write_str(
+    //                 r"baz/
+    // nested/child.txt
+    // nested/child-two/
+    // ",
+    //             )
+    //             .unwrap();
+    //
+    //         let content = hash_files(temp_dir.display().to_string());
+    //         let mut file_names = content.iter().map(|c| c.0).collect::<Vec<_>>();
+    //         file_names.sort();
+    //         assert_eq!(
+    //             file_names,
+    //             vec!(".nxignore", "bar.txt", "foo.txt", "test.txt")
+    //         );
+    //     }
 
-        let content = hash_files(temp_dir.display().to_string());
-        // println!("{:?}", content);
-        assert_eq!(
-            content,
-            HashMap::from([
-                ("baz/qux.txt".into(), "8039819779822413286".into()),
-                ("foo.txt".into(), "8455857314690418558".into()),
-                ("test.txt".into(), "6193209363630369380".into()),
-                ("bar.txt".into(), "1707056588989152788".into()),
-            ])
-        );
-    }
 
     #[test]
     fn it_hashes_files_matching_globs() -> anyhow::Result<()> {
@@ -198,37 +223,37 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn handles_nx_ignore() {
-        let temp_dir = setup_fs();
-
-        temp_dir
-            .child("nested")
-            .child("child.txt")
-            .write_str("data");
-        temp_dir
-            .child("nested")
-            .child("child-two")
-            .child("grand_child.txt")
-            .write_str("data");
-
-        // add nxignore file with baz/
-        temp_dir
-            .child(".nxignore")
-            .write_str(
-                r"baz/
-nested/child.txt
-nested/child-two/
-",
-            )
-            .unwrap();
-
-        let content = hash_files(temp_dir.display().to_string());
-        let mut file_names = content.iter().map(|c| c.0).collect::<Vec<_>>();
-        file_names.sort();
-        assert_eq!(
-            file_names,
-            vec!(".nxignore", "bar.txt", "foo.txt", "test.txt")
-        );
-    }
+//     #[test]
+//     fn handles_nx_ignore() {
+//         let temp_dir = setup_fs();
+//
+//         temp_dir
+//             .child("nested")
+//             .child("child.txt")
+//             .write_str("data");
+//         temp_dir
+//             .child("nested")
+//             .child("child-two")
+//             .child("grand_child.txt")
+//             .write_str("data");
+//
+//         // add nxignore file with baz/
+//         temp_dir
+//             .child(".nxignore")
+//             .write_str(
+//                 r"baz/
+// nested/child.txt
+// nested/child-two/
+// ",
+//             )
+//             .unwrap();
+//
+//         let content = hash_files(temp_dir.display().to_string());
+//         let mut file_names = content.iter().map(|c| c.0).collect::<Vec<_>>();
+//         file_names.sort();
+//         assert_eq!(
+//             file_names,
+//             vec!(".nxignore", "bar.txt", "foo.txt", "test.txt")
+//         );
+//     }
 }

@@ -1,6 +1,11 @@
 import { performance } from 'perf_hooks';
 import { workspaceRoot } from '../utils/workspace-root';
 import { FileData } from '../config/project-graph';
+import {
+  getAllWorkspaceFiles,
+  getWorkspaceFiles,
+} from '../project-graph/utils/get-workspace-files';
+import { Workspaces } from '../config/workspaces';
 
 export class FileHasher {
   private fileHashes: Map<string, string>;
@@ -9,10 +14,17 @@ export class FileHasher {
   async init(): Promise<void> {
     performance.mark('init hashing:start');
     // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
-    const { hashFiles } = require('../native');
     this.clear();
-    const filesObject = hashFiles(workspaceRoot);
-    this.fileHashes = new Map(Object.entries(filesObject));
+
+    let nxJson = new Workspaces(workspaceRoot).readNxJson();
+    const { projectFileMap, globalFiles } = await getWorkspaceFiles(nxJson);
+
+    const allWorkspaceFiles = getAllWorkspaceFiles(projectFileMap, globalFiles);
+
+    this.fileHashes = new Map();
+    for (const fileData of allWorkspaceFiles) {
+      this.fileHashes.set(fileData.file, fileData.hash);
+    }
 
     performance.mark('init hashing:end');
     performance.measure(

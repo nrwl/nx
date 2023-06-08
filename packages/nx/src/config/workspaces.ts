@@ -33,7 +33,7 @@ import { PackageJson } from '../utils/package-json';
 import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
 import {
-  mergeAngularJsonAndGlobProjects,
+  mergeAngularJsonAndProjects,
   shouldMergeAngularProjects,
 } from '../adapter/angular-json';
 import { getNxRequirePaths } from '../utils/installation-directory';
@@ -83,6 +83,8 @@ export class Workspaces {
 
   /**
    * @deprecated
+   *
+   * TODO(cammisuli) - remove this and expose `readProjectsConfigurationFromProjectGraph` via the devkit
    */
   readProjectsConfigurations(opts?: {
     _ignorePluginInference?: boolean;
@@ -116,7 +118,7 @@ export class Workspaces {
         opts?._includeProjectsFromAngularJson
       )
     ) {
-      projectsConfigurations.projects = mergeAngularJsonAndGlobProjects(
+      projectsConfigurations.projects = mergeAngularJsonAndProjects(
         projectsConfigurations.projects,
         this.root
       );

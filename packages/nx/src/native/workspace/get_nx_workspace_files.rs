@@ -11,17 +11,17 @@ use xxhash_rust::xxh3;
 use crate::native::logger::enable_logger;
 use crate::native::parallel_walker::nx_workspace_walker;
 use crate::native::types::FileData;
-use crate::native::workspace::types::ProjectConfiguration;
+use crate::native::workspace::types::{FileLocation, ProjectConfiguration};
 
 #[napi(object)]
 pub struct NxWorkspaceFiles {
     pub project_file_map: HashMap<String, Vec<FileData>>,
-    pub all_workspace_files: Vec<FileData>,
+    pub global_files: Vec<FileData>,
     pub config_files: Vec<String>,
 }
 
 #[napi]
-pub fn get_nx_workspace_files(
+pub fn get_workspace_files_native(
     workspace_root: String,
     globs: Vec<String>,
 ) -> anyhow::Result<NxWorkspaceFiles> {
@@ -38,9 +38,9 @@ pub fn get_nx_workspace_files(
     // Files need to be sorted each time because when we do hashArray in the TaskHasher.js, the order of the files should be deterministic
     file_data.sort();
 
-    let projects_with_data = file_data
+    let file_locations = file_data
         .par_iter()
-        .filter_map(|file_data| {
+        .map(|file_data| {
             let file_path = Path::new(&file_data.file);
             trace!(?file_path);
             let mut parent = file_path.parent().unwrap_or_else(|| Path::new(""));
@@ -49,29 +49,43 @@ pub fn get_nx_workspace_files(
                 parent = parent.parent().unwrap_or_else(|| Path::new(""));
 
                 if parent == Path::new("") {
-                    return None;
+                    return (FileLocation::Global, file_data);
                 }
             }
 
             let project_name = root_map.get(parent).unwrap();
 
-            Some((*project_name, file_data))
+            (FileLocation::Project(*project_name), file_data)
         })
-        .collect::<Vec<(&str, &FileData)>>();
-    let mut project_file_map: HashMap<String, Vec<FileData>> =
-        HashMap::with_capacity(projects_with_data.len());
-    for (project_name, file_data) in projects_with_data {
-        match project_file_map.get_mut(project_name) {
-            None => {
-                project_file_map.insert(project_name.to_string(), vec![file_data.clone()]);
-            }
-            Some(project_files) => project_files.push(file_data.clone()),
+        .collect::<Vec<(FileLocation, &FileData)>>();
+
+    let mut project_file_map: HashMap<String, Vec<FileData>> = HashMap::with_capacity(
+        file_locations
+            .iter()
+            .filter(|&f| f.0 != FileLocation::Global)
+            .count(),
+    );
+    let mut global_files: Vec<FileData> = Vec::with_capacity(
+        file_locations
+            .iter()
+            .filter(|&f| f.0 == FileLocation::Global)
+            .count(),
+    );
+    for (file_location, file_data) in file_locations {
+        match file_location {
+            FileLocation::Global => global_files.push(file_data.clone()),
+            FileLocation::Project(project_name) => match project_file_map.get_mut(project_name) {
+                None => {
+                    project_file_map.insert(project_name.to_string(), vec![file_data.clone()]);
+                }
+                Some(project_files) => project_files.push(file_data.clone()),
+            },
         }
     }
 
     Ok(NxWorkspaceFiles {
         project_file_map,
-        all_workspace_files: file_data,
+        global_files,
         config_files: projects.into_iter().map(|(path, _)| path).collect(),
     })
 }
