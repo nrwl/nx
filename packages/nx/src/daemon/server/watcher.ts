@@ -145,7 +145,9 @@ export async function subscribeToWorkspaceChanges(
           path: normalizePath(relative(workspaceRoot, event.path)),
         };
         if (
-          workspaceRelativeEvent.path.endsWith('.gitignore') ||
+          (workspaceRelativeEvent.path &&
+            !ignoreObj.ignores(workspaceRelativeEvent.path) &&
+            workspaceRelativeEvent.path.endsWith('.gitignore')) ||
           workspaceRelativeEvent.path === '.nxignore'
         ) {
           hasIgnoreFileUpdate = true;
