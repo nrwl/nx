@@ -16,7 +16,6 @@ import { createProjectRootMappings } from '../project-graph/utils/find-project-f
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { FileHasher, hashArray } from './file-hasher';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
-import { workspaceRoot } from '../devkit-exports';
 import { join } from 'path';
 
 type ExpandedSelfInput =
@@ -203,19 +202,11 @@ class TaskHasherImpl {
 
   async hashTask(task: Task, visited: string[]): Promise<PartialHash> {
     return Promise.resolve().then(async () => {
-      const projectNode = this.projectGraph.nodes[task.target.project];
-      const namedInputs = getNamedInputs(this.nxJson, projectNode);
-      const targetData = projectNode.data.targets[task.target.target];
-      const targetDefaults = (this.nxJson.targetDefaults || {})[
-        task.target.target
-      ];
-      const { selfInputs, depsInputs, depsOutputs, projectInputs } =
-        splitInputsIntoSelfAndDependencies(
-          targetData.inputs ||
-            targetDefaults?.inputs ||
-            (DEFAULT_INPUTS as any),
-          namedInputs
-        );
+      const { selfInputs, depsInputs, depsOutputs, projectInputs } = getInputs(
+        task,
+        this.projectGraph,
+        this.nxJson
+      );
 
       const selfAndInputs = await this.hashSelfAndDepsInputs(
         task.target.project,
@@ -391,24 +382,18 @@ class TaskHasherImpl {
         childTask,
         this.projectGraph.nodes[childTask.target.project]
       );
-      const files: FileData[] = [];
-      const patterns: string[] = [];
+      const hashes = {};
       for (const outputDir of outputDirs) {
-        const fileHashes = this.fileHasher.hashFolder(outputDir);
-        for (const [file, hash] of fileHashes) {
-          files.push({ file, hash });
-        }
-        patterns.push(join(outputDir, dependentTasksOutputFiles));
+        hashes[join(outputDir, dependentTasksOutputFiles)] =
+          this.fileHasher.hashFilesMatchingGlobs(outputDir, [
+            dependentTasksOutputFiles,
+          ]);
       }
-      const filtered = filterUsingGlobPatterns(workspaceRoot, files, patterns);
-      if (filtered.length > 0) {
-        partialHashes.push({
-          value: hashArray(filtered.map((f) => f.hash)),
-          details: {
-            [`${childTask.target.project}:output`]: dependentTasksOutputFiles,
-          },
-        });
-      }
+
+      partialHashes.push({
+        value: hashArray(Object.values(hashes)),
+        details: hashes,
+      });
       if (transitive) {
         partialHashes.push(
           ...this.hashDepOuputs(
@@ -761,7 +746,24 @@ export function extractPatternsFromFileSets(
     .map((c) => c['fileset']);
 }
 
-export function splitInputsIntoSelfAndDependencies(
+export function getInputs(
+  task: Task,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+) {
+  const projectNode = projectGraph.nodes[task.target.project];
+  const namedInputs = getNamedInputs(nxJson, projectNode);
+  const targetData = projectNode.data.targets[task.target.target];
+  const targetDefaults = (nxJson.targetDefaults || {})[task.target.target];
+  const { selfInputs, depsInputs, depsOutputs, projectInputs } =
+    splitInputsIntoSelfAndDependencies(
+      targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),
+      namedInputs
+    );
+  return { selfInputs, depsInputs, depsOutputs, projectInputs };
+}
+
+function splitInputsIntoSelfAndDependencies(
   inputs: ReadonlyArray<InputDefinition | string>,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): {
