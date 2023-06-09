@@ -66,3 +66,105 @@ where
     drop(sender);
     receiver_thread.join().unwrap()
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use assert_fs::prelude::*;
+    use assert_fs::TempDir;
+    use std::collections::HashMap;
+
+    ///
+    /// Setup a temporary directory to do testing in
+    ///
+    fn setup_fs() -> TempDir {
+        let temp = TempDir::new().unwrap();
+        temp.child("test.txt").write_str("content").unwrap();
+        temp.child("foo.txt").write_str("content1").unwrap();
+        temp.child("bar.txt").write_str("content2").unwrap();
+        temp.child("baz")
+            .child("qux.txt")
+            .write_str("content@qux")
+            .unwrap();
+        temp.child("node_modules")
+            .child("node-module-dep")
+            .write_str("content")
+            .unwrap();
+        temp
+    }
+
+    #[test]
+    fn it_walks_a_directory() {
+        // handle empty workspaces
+        let content = nx_workspace_walker("/does/not/exist", |rec| {
+            let mut paths = vec![];
+            for (path, _) in rec {
+                paths.push(path);
+            }
+            paths
+        });
+        assert!(content.is_empty());
+
+        let temp_dir = setup_fs();
+
+        let content = nx_workspace_walker(temp_dir, |rec| {
+            let mut paths = HashMap::new();
+            for (path, content) in rec {
+                paths.insert(path, content);
+            }
+            paths
+        });
+        assert_eq!(
+            content,
+            HashMap::from([
+                ("baz/qux.txt".into(), "content@qux".into()),
+                ("foo.txt".into(), "content1".into()),
+                ("test.txt".into(), "content".into()),
+                ("bar.txt".into(), "content2".into()),
+            ])
+        );
+    }
+
+    #[test]
+    fn handles_nx_ignore() {
+        let temp_dir = setup_fs();
+
+        temp_dir
+            .child("nested")
+            .child("child.txt")
+            .write_str("data")
+            .unwrap();
+        temp_dir
+            .child("nested")
+            .child("child-two")
+            .child("grand_child.txt")
+            .write_str("data")
+            .unwrap();
+
+        // add nxignore file
+        temp_dir
+            .child(".nxignore")
+            .write_str(
+                r"baz/
+nested/child.txt
+nested/child-two/
+    ",
+            )
+            .unwrap();
+
+        let mut file_names = nx_workspace_walker(temp_dir, |rec| {
+            let mut file_names = vec![];
+            for (path, _) in rec {
+                file_names.push(path);
+            }
+            file_names
+        });
+
+        file_names.sort();
+
+        assert_eq!(
+            file_names,
+            vec!(".nxignore", "bar.txt", "foo.txt", "test.txt")
+        );
+    }
+}
