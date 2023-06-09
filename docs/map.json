@@ -382,7 +382,7 @@
             {
               "name": "More Concept Guides »",
               "id": "more-concept-guides",
-              "file": "shared/concepts/more-concepts"
+              "path": "/more-concepts"
             }
           ]
         },
