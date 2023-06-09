@@ -60,7 +60,7 @@ export async function* vitestExecutor(
   )() as Promise<typeof import('vitest/node')>);
 
   const nxReporter = new NxReporter(options.watch);
-  const settings = await getSettings(options, context);
+  const settings = await getSettings(options, context, projectRoot);
   settings.reporters.push(nxReporter);
   const cliFilters = options.testFile ? [options.testFile] : [];
 
@@ -96,9 +96,9 @@ export async function* vitestExecutor(
 
 async function getSettings(
   options: VitestExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
+  projectRoot: string
 ) {
-  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
   const offset = relative(workspaceRoot, context.cwd);
   // if reportsDirectory is not provided vitest will remove all files in the project root
   // when coverage is enabled in the vite.config.ts
