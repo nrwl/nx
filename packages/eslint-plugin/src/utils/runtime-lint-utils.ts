@@ -103,6 +103,12 @@ function hasTag(proj: ProjectGraphProjectNode, tag: string): boolean {
     return (proj.data.tags || []).some((t) => regex.test(t));
   }
 
+  // if the tag is a glob, check if the project matches the glob prefix
+  if (tag.endsWith('*')) {
+    const prefix = tag.substring(0, tag.length - 1);
+    return (proj.data.tags || []).some((t) => t.startsWith(prefix));
+  }
+
   return (proj.data.tags || []).indexOf(tag) > -1;
 }
 
