@@ -237,7 +237,8 @@ export async function* nodeExecutor(
 }
 
 function getExecArgv(options: NodeExecutorOptions) {
-  const args = ['-r', require.resolve('source-map-support/register')];
+  const args = (options.runtimeArgs ??= []);
+  args.push('-r', require.resolve('source-map-support/register'));
 
   if (options.inspect === true) {
     options.inspect = InspectType.Inspect;
