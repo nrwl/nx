@@ -245,7 +245,7 @@
     "storybook-dark-mode": "^3.0.0",
     "style-loader": "^3.3.0",
     "styled-components": "5.3.6",
-    "stylus": "^0.55.0",
+    "stylus": "^0.59.0",
     "stylus-loader": "7.1.0",
     "tar-fs": "^2.1.1",
     "tar-stream": "~2.2.0",
