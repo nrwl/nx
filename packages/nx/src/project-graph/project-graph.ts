@@ -78,10 +78,12 @@ export async function buildProjectGraphWithoutDaemon() {
   let nxJson = new Workspaces(workspaceRoot).readNxJson();
 
   const { configFiles, projectFileMap, globalFiles } = await getWorkspaceFiles(
+    workspaceRoot,
     nxJson
   );
 
   const projectConfigurations = createProjectConfigurations(
+    workspaceRoot,
     nxJson,
     configFiles
   );

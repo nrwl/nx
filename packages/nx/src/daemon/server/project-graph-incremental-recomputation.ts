@@ -162,9 +162,10 @@ async function processCollectedUpdatedAndDeletedFiles() {
 
     let nxJson = new Workspaces(workspaceRoot).readNxJson();
 
-    const { configFiles } = await getWorkspaceFiles(nxJson);
+    const { configFiles } = await getWorkspaceFiles(workspaceRoot, nxJson);
 
     let projectConfigurations = createProjectConfigurations(
+      workspaceRoot,
       nxJson,
       configFiles
     );
@@ -182,6 +183,7 @@ async function processCollectedUpdatedAndDeletedFiles() {
     if (workspaceConfigHash !== storedWorkspaceConfigHash) {
       storedWorkspaceConfigHash = workspaceConfigHash;
       const { projectFileMap, globalFiles } = await getWorkspaceFiles(
+        workspaceRoot,
         nxJson,
         true
       );
@@ -207,6 +209,7 @@ async function processCollectedUpdatedAndDeletedFiles() {
       } else {
       }
       const { projectFileMap, globalFiles } = await getWorkspaceFiles(
+        workspaceRoot,
         nxJson,
         true
       );

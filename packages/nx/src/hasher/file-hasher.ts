@@ -17,7 +17,10 @@ export class FileHasher {
     this.clear();
 
     let nxJson = new Workspaces(workspaceRoot).readNxJson();
-    const { projectFileMap, globalFiles } = await getWorkspaceFiles(nxJson);
+    const { projectFileMap, globalFiles } = await getWorkspaceFiles(
+      workspaceRoot,
+      nxJson
+    );
 
     const allWorkspaceFiles = getAllWorkspaceFiles(projectFileMap, globalFiles);
 

@@ -21,6 +21,8 @@ pub struct NxWorkspaceFiles {
 }
 
 #[napi]
+// usually this attribute wouldn't be allowed, but we keep getting warnings about this function not being used.
+#[allow(dead_code)]
 pub fn get_workspace_files_native(
     workspace_root: String,
     globs: Vec<String>,
@@ -120,7 +122,7 @@ fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> HashMap<&Path, &str> {
             }
         })
         .map(|config| {
-            (config.root.expect("should have a root"), config.name.expect("should have a name"))
+            (config.root.expect("config should have a root"), config.name.expect("config should have a name"))
         })
         .collect()
 }

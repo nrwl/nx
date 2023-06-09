@@ -7,7 +7,6 @@ import {
   readTargetDefaultsForTarget,
   Workspaces,
 } from '../../config/workspaces';
-import { workspaceRoot } from '../../utils/workspace-root';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import type { NxWorkspaceFiles } from '../../native';
 import { readJsonFile } from '../../utils/fileutils';
@@ -23,6 +22,7 @@ import { FileData, ProjectFileMap } from '../../config/project-graph';
 let workspaceFilesCache: NxWorkspaceFiles | undefined = undefined;
 
 export async function getWorkspaceFiles(
+  workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   skipCache: boolean = false
 ) {
@@ -85,6 +85,7 @@ export function getAllWorkspaceFiles(
 }
 
 export function createProjectConfigurations(
+  workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   configFiles: string[]
 ): ProjectsConfigurations {
