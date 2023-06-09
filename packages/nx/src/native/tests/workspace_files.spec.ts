@@ -42,6 +42,8 @@ describe('workspace files', () => {
       globs
     );
 
+    let sortedConfigs = configFiles.sort();
+
     expect(projectFileMap).toMatchInlineSnapshot(`
       {
         "nested-project": [
@@ -96,13 +98,13 @@ describe('workspace files', () => {
         ],
       }
     `);
-    expect(configFiles).toMatchInlineSnapshot(`
+    expect(sortedConfigs).toMatchInlineSnapshot(`
       [
-        "libs/project2/project.json",
         "libs/nested/project/project.json",
-        "libs/project3/project.json",
-        "libs/project1/project.json",
         "libs/package-project/package.json",
+        "libs/project1/project.json",
+        "libs/project2/project.json",
+        "libs/project3/project.json",
       ]
     `);
     expect(globalFiles).toMatchInlineSnapshot(`
