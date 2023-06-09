@@ -4,7 +4,6 @@ import {
 } from './nx-deps-cache';
 import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
 import { output } from '../utils/output';
-import { fileHasher } from '../hasher/file-hasher';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
 import { ProjectGraph } from '../config/project-graph';
 import { stripIndents } from '../utils/strip-indents';
@@ -16,13 +15,8 @@ import { daemonClient } from '../daemon/client/client';
 import { fileExists, readJsonFile } from '../utils/fileutils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { Workspaces } from '../config/workspaces';
-import { createProjectFileMap } from './file-map-utils';
 import { performance } from 'perf_hooks';
-import {
-  createProjectConfigurations,
-  getAllWorkspaceFiles,
-  getWorkspaceFiles,
-} from './utils/get-workspace-files';
+import { retrieveWorkspaceFiles } from './utils/retrieve-workspace-files';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -77,18 +71,8 @@ export function readProjectsConfigurationFromProjectGraph(
 export async function buildProjectGraphWithoutDaemon() {
   let nxJson = new Workspaces(workspaceRoot).readNxJson();
 
-  const { configFiles, projectFileMap, globalFiles } = await getWorkspaceFiles(
-    workspaceRoot,
-    nxJson
-  );
-
-  const projectConfigurations = createProjectConfigurations(
-    workspaceRoot,
-    nxJson,
-    configFiles
-  );
-
-  const allWorkspaceFiles = getAllWorkspaceFiles(projectFileMap, globalFiles);
+  const { allWorkspaceFiles, projectFileMap, projectConfigurations } =
+    await retrieveWorkspaceFiles(workspaceRoot, nxJson);
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   return (

@@ -5,18 +5,18 @@ use std::thread::available_parallelism;
 use crossbeam_channel::{unbounded, Receiver};
 use ignore::WalkBuilder;
 
-pub fn nx_workspace_walker<P, Fn, Re>(workspace_root: P, f: Fn) -> Re
+pub fn nx_walker<P, Fn, Re>(directory: P, f: Fn) -> Re
 where
     P: AsRef<Path>,
     Fn: FnOnce(Receiver<(String, Vec<u8>)>) -> Re + Send + 'static,
     Re: Send + 'static,
 {
-    let workspace_root = workspace_root.as_ref();
-    let nx_ignore = workspace_root.join(".nxignore");
-    let git_folder = workspace_root.join(".git");
-    let node_folder = workspace_root.join("node_modules");
+    let directory = directory.as_ref();
+    let nx_ignore = directory.join(".nxignore");
+    let git_folder = directory.join(".git");
+    let node_folder = directory.join("node_modules");
 
-    let mut walker = WalkBuilder::new(workspace_root);
+    let mut walker = WalkBuilder::new(directory);
     walker.hidden(false);
     walker.add_custom_ignore_filename(&nx_ignore);
 
@@ -45,7 +45,7 @@ where
                 return Continue;
             };
 
-            let Ok(file_path) = dir_entry.path().strip_prefix(workspace_root) else {
+            let Ok(file_path) = dir_entry.path().strip_prefix(directory) else {
                 return Continue;
             };
 
@@ -96,7 +96,7 @@ mod test {
     #[test]
     fn it_walks_a_directory() {
         // handle empty workspaces
-        let content = nx_workspace_walker("/does/not/exist", |rec| {
+        let content = nx_walker("/does/not/exist", |rec| {
             let mut paths = vec![];
             for (path, _) in rec {
                 paths.push(path);
@@ -107,7 +107,7 @@ mod test {
 
         let temp_dir = setup_fs();
 
-        let content = nx_workspace_walker(temp_dir, |rec| {
+        let content = nx_walker(temp_dir, |rec| {
             let mut paths = HashMap::new();
             for (path, content) in rec {
                 paths.insert(path, content);
@@ -152,7 +152,7 @@ nested/child-two/
             )
             .unwrap();
 
-        let mut file_names = nx_workspace_walker(temp_dir, |rec| {
+        let mut file_names = nx_walker(temp_dir, |rec| {
             let mut file_names = vec![];
             for (path, _) in rec {
                 file_names.push(path);

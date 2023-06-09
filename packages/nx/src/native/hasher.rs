@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use crate::native::parallel_walker::nx_workspace_walker;
+use crate::native::parallel_walker::nx_walker;
 use crate::native::types::FileData;
 use std::cmp::Ordering;
 use std::collections::HashMap;

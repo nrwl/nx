@@ -23,6 +23,8 @@ export interface WatchEvent {
   path: string
   type: EventType
 }
+/** Get workspace config files based on provided globs */
+export function getConfigFiles(workspaceRoot: string, globs: Array<string>): Array<string>
 export interface NxWorkspaceFiles {
   projectFileMap: Record<string, Array<FileData>>
   allWorkspaceFiles: Array<FileData>

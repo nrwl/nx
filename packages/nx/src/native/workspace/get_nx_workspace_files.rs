@@ -3,14 +3,14 @@ use std::ffi::OsStr;
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 
-use globset::{Glob, GlobSetBuilder};
 use rayon::prelude::*;
 use tracing::{info, trace};
 use xxhash_rust::xxh3;
 
 use crate::native::logger::enable_logger;
-use crate::native::parallel_walker::nx_workspace_walker;
+use crate::native::parallel_walker::nx_walker;
 use crate::native::types::FileData;
+use crate::native::utils::glob::build_glob_set;
 use crate::native::workspace::types::{FileLocation, ProjectConfiguration};
 
 #[napi(object)]
@@ -21,8 +21,6 @@ pub struct NxWorkspaceFiles {
 }
 
 #[napi]
-// usually this attribute wouldn't be allowed, but we keep getting warnings about this function not being used.
-#[allow(dead_code)]
 pub fn get_workspace_files_native(
     workspace_root: String,
     globs: Vec<String>,
@@ -129,13 +127,8 @@ fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> HashMap<&Path, &str> {
 
 type WorkspaceData = (Vec<(String, Vec<u8>)>, Vec<FileData>);
 fn get_file_data(workspace_root: &String, globs: Vec<String>) -> anyhow::Result<WorkspaceData> {
-    let mut glob_builder = GlobSetBuilder::new();
-    for glob in globs {
-        glob_builder.add(Glob::new(&glob).map_err(anyhow::Error::from)?);
-    }
-    let set = glob_builder.build().map_err(anyhow::Error::from)?;
-
-    let (projects, file_data) = nx_workspace_walker(&workspace_root, move |rec| {
+    let globs = build_glob_set(globs)?;
+    let (projects, file_data) = nx_walker(&workspace_root, move |rec| {
         let mut projects: Vec<(String, Vec<u8>)> = vec![];
         let mut file_hashes: Vec<FileData> = vec![];
         for (path, content) in rec {
@@ -143,7 +136,7 @@ fn get_file_data(workspace_root: &String, globs: Vec<String>) -> anyhow::Result<
                 file: path.clone(),
                 hash: xxh3::xxh3_64(&content).to_string(),
             });
-            if set.is_match(&path) {
+            if globs.is_match(&path) {
                 projects.push((path, content));
             }
         }

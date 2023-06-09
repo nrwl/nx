@@ -1,10 +1,7 @@
 import { performance } from 'perf_hooks';
 import { workspaceRoot } from '../utils/workspace-root';
 import { FileData } from '../config/project-graph';
-import {
-  getAllWorkspaceFiles,
-  getWorkspaceFiles,
-} from '../project-graph/utils/get-workspace-files';
+import { retrieveWorkspaceFiles } from '../project-graph/utils/retrieve-workspace-files';
 import { Workspaces } from '../config/workspaces';
 
 export class FileHasher {
@@ -17,12 +14,10 @@ export class FileHasher {
     this.clear();
 
     let nxJson = new Workspaces(workspaceRoot).readNxJson();
-    const { projectFileMap, globalFiles } = await getWorkspaceFiles(
+    const { allWorkspaceFiles } = await retrieveWorkspaceFiles(
       workspaceRoot,
       nxJson
     );
-
-    const allWorkspaceFiles = getAllWorkspaceFiles(projectFileMap, globalFiles);
 
     this.fileHashes = new Map();
     for (const fileData of allWorkspaceFiles) {

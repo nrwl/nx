@@ -83,8 +83,6 @@ export class Workspaces {
 
   /**
    * @deprecated
-   *
-   * TODO(cammisuli) - remove this and expose `readProjectsConfigurationFromProjectGraph` via the devkit
    */
   readProjectsConfigurations(opts?: {
     _ignorePluginInference?: boolean;
@@ -625,7 +623,9 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
     // TODO(@AgentEnder): update logic after better way to determine root project inclusion
     // Include the root project
     return packageJson.nx ? patterns.concat('package.json') : patterns;
-  } catch {}
+  } catch {
+    return [];
+  }
 }
 
 function normalizePatterns(patterns: string[]): string[] {
@@ -860,10 +860,9 @@ export function buildProjectsConfigurationsFromProjectPaths(
         if (!projects[name]) {
           projects[name] = config;
         } else {
-          logger.error(
+          logger.warn(
             `Skipping project inferred from ${file} since project ${name} already exists.`
           );
-          throw new Error();
         }
       }
     }

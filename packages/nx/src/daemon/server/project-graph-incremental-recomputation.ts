@@ -5,15 +5,11 @@ import {
   ProjectGraph,
 } from '../../config/project-graph';
 import { buildProjectGraphUsingProjectFileMap } from '../../project-graph/build-project-graph';
-import {
-  createProjectFileMap,
-  updateProjectFileMap,
-} from '../../project-graph/file-map-utils';
+import { updateProjectFileMap } from '../../project-graph/file-map-utils';
 import {
   nxProjectGraph,
   ProjectFileMapCache,
   readProjectFileMapCache,
-  readProjectGraphCache,
 } from '../../project-graph/nx-deps-cache';
 import { fileExists } from '../../utils/fileutils';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
@@ -23,10 +19,9 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { execSync } from 'child_process';
 import { fileHasher, hashArray } from '../../hasher/file-hasher';
 import {
-  createProjectConfigurations,
-  getAllWorkspaceFiles,
-  getWorkspaceFiles,
-} from '../../project-graph/utils/get-workspace-files';
+  retrieveWorkspaceFiles,
+  retrieveProjectConfigurations,
+} from '../../project-graph/utils/retrieve-workspace-files';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -162,12 +157,9 @@ async function processCollectedUpdatedAndDeletedFiles() {
 
     let nxJson = new Workspaces(workspaceRoot).readNxJson();
 
-    const { configFiles } = await getWorkspaceFiles(workspaceRoot, nxJson);
-
-    let projectConfigurations = createProjectConfigurations(
+    const projectConfigurations = await retrieveProjectConfigurations(
       workspaceRoot,
-      nxJson,
-      configFiles
+      nxJson
     );
 
     const workspaceConfigHash = computeWorkspaceConfigHash(
@@ -182,21 +174,11 @@ async function processCollectedUpdatedAndDeletedFiles() {
     // when workspace config changes we cannot incrementally update project file map
     if (workspaceConfigHash !== storedWorkspaceConfigHash) {
       storedWorkspaceConfigHash = workspaceConfigHash;
-      const { projectFileMap, globalFiles } = await getWorkspaceFiles(
+
+      projectFileMapWithFiles = await retrieveWorkspaceFiles(
         workspaceRoot,
-        nxJson,
-        true
+        nxJson
       );
-
-      const allWorkspaceFiles = getAllWorkspaceFiles(
-        projectFileMap,
-        globalFiles
-      );
-
-      projectFileMapWithFiles = {
-        projectFileMap,
-        allWorkspaceFiles,
-      };
     } else {
       if (projectFileMapWithFiles) {
         projectFileMapWithFiles = updateProjectFileMap(
@@ -207,22 +189,11 @@ async function processCollectedUpdatedAndDeletedFiles() {
           deletedFiles
         );
       } else {
+        projectFileMapWithFiles = await retrieveWorkspaceFiles(
+          workspaceRoot,
+          nxJson
+        );
       }
-      const { projectFileMap, globalFiles } = await getWorkspaceFiles(
-        workspaceRoot,
-        nxJson,
-        true
-      );
-
-      const allWorkspaceFiles = getAllWorkspaceFiles(
-        projectFileMap,
-        globalFiles
-      );
-
-      projectFileMapWithFiles = {
-        projectFileMap,
-        allWorkspaceFiles,
-      };
     }
 
     collectedUpdatedFiles.clear();
