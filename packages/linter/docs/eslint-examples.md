@@ -86,9 +86,9 @@ We can also set this via project configuration as a default option.
 ```
 
 {% /tab %}
-{% tab label="ESLint config file" %}
+{% tab label="Flat Config file" %}
 
-`ESLint` provides several ways of specifying the configuration. The default one is using `.eslintrc.json` but you can override it by setting the `eslintConfig` flag:
+`ESLint` provides several ways of specifying the configuration. The default one is using `.eslintrc.json` but you can override it by setting the `eslintConfig` flag. The new `Flat Config` is now also supported:
 
 ```json
 "lint": {
@@ -96,7 +96,7 @@ We can also set this via project configuration as a default option.
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"],
-    "eslintConfig": ".eslintrc.js"
+    "eslintConfig": "eslint.config.js"
   }
 }
 ```
