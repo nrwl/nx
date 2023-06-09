@@ -1179,10 +1179,10 @@
         "id": "more-concept-guides",
         "name": "More Concept Guides »",
         "description": "",
-        "file": "shared/concepts/more-concepts",
+        "file": "",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/more-concept-guides",
+        "path": "/more-concepts",
         "tags": []
       }
     ],
@@ -1249,16 +1249,6 @@
     "isExternal": false,
     "path": "/concepts/affected",
     "tags": ["run-tasks"]
-  },
-  "/concepts/more-concept-guides": {
-    "id": "more-concept-guides",
-    "name": "More Concept Guides »",
-    "description": "",
-    "file": "shared/concepts/more-concepts",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concept-guides",
-    "tags": []
   },
   "/more-concepts": {
     "id": "more-concepts",

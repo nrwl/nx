@@ -948,7 +948,7 @@
           },
           {
             "name": "More Concept Guides »",
-            "path": "/concepts/more-concept-guides",
+            "path": "/more-concepts",
             "id": "more-concept-guides",
             "isExternal": false,
             "children": [],
@@ -1001,14 +1001,6 @@
         "name": "Affected",
         "path": "/concepts/affected",
         "id": "affected",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "More Concept Guides »",
-        "path": "/concepts/more-concept-guides",
-        "id": "more-concept-guides",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
