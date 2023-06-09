@@ -72,9 +72,9 @@ export function readProjectsConfigurationFromProjectGraph(
 export async function buildProjectGraphWithoutDaemon() {
   await fileHasher.ensureInitialized();
 
-  const projectConfigurations = new Workspaces(
+  const projectConfigurations = await new Workspaces(
     workspaceRoot
-  ).readProjectsConfigurations();
+  ).readProjectsConfigurationsAsync();
 
   const { projectFileMap, allWorkspaceFiles } = createProjectFileMap(
     projectConfigurations,

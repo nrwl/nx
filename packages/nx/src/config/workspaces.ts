@@ -81,13 +81,45 @@ export class Workspaces {
     return process.env.NX_DEFAULT_PROJECT ?? nxJson?.defaultProject;
   }
 
+  async readProjectsConfigurationsAsync(opts?: {
+    _ignorePluginInference?: boolean;
+    _includeProjectsFromAngularJson?: boolean;
+  }): Promise<ProjectsConfigurations> {
+    const nxJson = this.readNxJson();
+    const globs = opts?._ignorePluginInference
+      ? []
+      : await getGlobPatternsFromPluginsAsync(
+          nxJson,
+          getNxRequirePaths(this.root),
+          this.root
+        );
+    return this.readProjectsConfigurationsFromGlobs(globs, opts);
+  }
+
   /**
-   * @deprecated
+   * @deprecated Use {@link readProjectsConfigurationsAsync} instead. This method will be removed in Nx 18.
    */
   readProjectsConfigurations(opts?: {
     _ignorePluginInference?: boolean;
     _includeProjectsFromAngularJson?: boolean;
   }): ProjectsConfigurations {
+    const nxJson = this.readNxJson();
+    const globs = opts?._ignorePluginInference
+      ? []
+      : getGlobPatternsFromPlugins(
+          nxJson,
+          getNxRequirePaths(this.root),
+          this.root
+        );
+    return this.readProjectsConfigurationsFromGlobs(globs, opts);
+  }
+
+  private readProjectsConfigurationsFromGlobs(
+    globs: string[],
+    opts: {
+      _includeProjectsFromAngularJson?: boolean;
+    }
+  ) {
     if (
       this.cachedProjectsConfig &&
       process.env.NX_CACHE_PROJECTS_CONFIG !== 'false'
@@ -97,17 +129,7 @@ export class Workspaces {
     const nxJson = this.readNxJson();
     const projectsConfigurations = buildProjectsConfigurationsFromGlobs(
       nxJson,
-      globForProjectFiles(
-        this.root,
-        opts?._ignorePluginInference
-          ? []
-          : getGlobPatternsFromPlugins(
-              nxJson,
-              getNxRequirePaths(this.root),
-              this.root
-            ),
-        nxJson
-      ),
+      globForProjectFiles(this.root, globs, nxJson),
       (path) => readJsonFile(join(this.root, path))
     );
     if (

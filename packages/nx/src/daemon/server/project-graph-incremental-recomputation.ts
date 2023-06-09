@@ -152,9 +152,9 @@ async function processCollectedUpdatedAndDeletedFiles() {
       'hash-watched-changes-end'
     );
     fileHasher.incrementalUpdate(updatedFiles, deletedFiles);
-    const projectsConfiguration = new Workspaces(
+    const projectsConfiguration = await new Workspaces(
       workspaceRoot
-    ).readProjectsConfigurations();
+    ).readProjectsConfigurationsAsync();
     const workspaceConfigHash = computeWorkspaceConfigHash(
       projectsConfiguration
     );
@@ -237,9 +237,9 @@ async function createAndSerializeProjectGraph(): Promise<{
 }> {
   try {
     performance.mark('create-project-graph-start');
-    const projectsConfigurations = new Workspaces(
+    const projectsConfigurations = await new Workspaces(
       workspaceRoot
-    ).readProjectsConfigurations();
+    ).readProjectsConfigurationsAsync();
     const projectFileMap = copyFileMap(projectFileMapWithFiles.projectFileMap);
     const allWorkspaceFiles = copyFileData(
       projectFileMapWithFiles.allWorkspaceFiles
