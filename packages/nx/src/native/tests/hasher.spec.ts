@@ -1,9 +1,8 @@
-import { hashArray, hashFile, Watcher } from '../index';
+import { hashArray, hashFile } from '../index';
 
 import { tmpdir } from 'os';
-import { mkdtemp, realpathSync, writeFile } from 'fs-extra';
+import { mkdtemp, writeFile } from 'fs-extra';
 import { join } from 'path';
-import { TempFs } from '../../utils/testing/temp-fs';
 
 describe('hasher', () => {
   it('should hash files', async () => {
@@ -20,10 +19,5 @@ describe('hasher', () => {
     expect(hashArray).toBeDefined();
 
     expect(hashArray(['one', 'two'])).toEqual('10960201262927338690');
-  });
-
-  it('should create an instance of NativeHasher', () => {
-    // const nativeHasher = new NativeFileHasher('/root');
-    // expect(nativeHasher instanceof NativeFileHasher).toBe(true);
   });
 });

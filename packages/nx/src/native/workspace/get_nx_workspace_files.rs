@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::os::unix::ffi::OsStrExt;
@@ -21,6 +22,7 @@ pub struct NxWorkspaceFiles {
 }
 
 #[napi]
+/// Throws exceptions
 pub fn get_workspace_files_native(
     workspace_root: String,
     globs: Vec<String>,
@@ -31,7 +33,7 @@ pub fn get_workspace_files_native(
 
     let (projects, mut file_data) = get_file_data(&workspace_root, globs)?;
 
-    let root_map = create_root_map(&projects);
+    let root_map = create_root_map(&projects)?;
 
     trace!(?root_map);
 
@@ -90,37 +92,40 @@ pub fn get_workspace_files_native(
     })
 }
 
-fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> HashMap<&Path, &str> {
+fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> anyhow::Result<HashMap<&Path, &str>> {
     projects
         .par_iter()
-        .filter_map(|(path, content)| {
+        .map(|(path, content)| {
             let path = Path::new(path);
             let file_name = path
                 .file_name()
                 .expect("path should always have a filename");
             return if file_name == "project.json" || file_name == "package.json" {
-                let Ok(mut project_configuration) = serde_json::from_slice::<ProjectConfiguration>(content) else {
-                    info!("Cannot create configuration from {path:?}");
-                    return None
+                let Ok(project_configuration) = serde_json::from_slice::<ProjectConfiguration>(content) else {
+                    anyhow::bail!("Cannot create configuration from {path:?}")
                 };
 
-                project_configuration.root = path.parent();
 
-                Some(project_configuration)
+                let Some(parent_path) = path.parent() else {
+                    anyhow::bail!("{path:?} does not have a parent")
+                };
+                let Some(name)  = project_configuration.name else {
+                    anyhow::bail!("{path:?} does not have a name")
+                };
+                Ok((parent_path, name))
             } else {
                 let name = path.parent().and_then(|p| {
                     let bytes = p.file_name().unwrap_or_else(|| OsStr::new("")).as_bytes();
                     std::str::from_utf8(bytes).ok()
                 });
-
-                Some(ProjectConfiguration {
-                    name,
-                    root: path.parent()
-                })
+                let Some(parent_path) = path.parent() else {
+                    anyhow::bail!("{path:?} does not have a parent")
+                };
+                let Some(name)  = name else {
+                    anyhow::bail!("{path:?} does not have a name")
+                };
+                Ok((parent_path, name))
             }
-        })
-        .map(|config| {
-            (config.root.expect("config should have a root"), config.name.expect("config should have a name"))
         })
         .collect()
 }

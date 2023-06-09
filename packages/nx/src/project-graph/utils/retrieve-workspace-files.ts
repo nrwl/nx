@@ -2,7 +2,6 @@ import { performance } from 'perf_hooks';
 import {
   buildProjectsConfigurationsFromProjectPaths,
   getGlobPatternsFromPackageManagerWorkspaces,
-  getGlobPatternsFromPlugins,
   getGlobPatternsFromPluginsAsync,
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
@@ -20,6 +19,7 @@ import { FileData, ProjectFileMap } from '../../config/project-graph';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
+ * @throws
  * @param workspaceRoot
  * @param nxJson
  */
@@ -46,7 +46,6 @@ export async function retrieveWorkspaceFiles(
     'get-workspace-files:start',
     'get-workspace-files:end'
   );
-  debugger;
 
   return {
     allWorkspaceFiles: buildAllWorkspaceFiles(
@@ -163,23 +162,6 @@ async function configurationGlobs(
     workspaceRoot
   );
 
-  return [
-    'project.json',
-    '**/project.json',
-    ...pluginGlobs,
-    ...getGlobPatternsFromPackageManagerWorkspaces(workspaceRoot),
-  ];
-}
-
-function configurationGlobsSync(
-  workspaceRoot: string,
-  nxJson: NxJsonConfiguration
-) {
-  let pluginGlobs = getGlobPatternsFromPlugins(
-    nxJson,
-    getNxRequirePaths(workspaceRoot),
-    workspaceRoot
-  );
   return [
     'project.json',
     '**/project.json',

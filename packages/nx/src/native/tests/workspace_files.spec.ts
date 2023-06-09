@@ -124,4 +124,29 @@ describe('workspace files', () => {
       ]
     `);
   });
+
+  it('throws errors when projects are misconfigured', async () => {
+    const fs = new TempFs('workspace-files');
+    const nxJson: NxJsonConfiguration = {};
+    await fs.createFiles({
+      './nx.json': JSON.stringify(nxJson),
+      './package.json': JSON.stringify({
+        name: 'repo-name',
+        version: '0.0.0',
+        dependencies: {},
+      }),
+      './libs/project1/project.json': JSON.stringify({
+        name: 'project1',
+      }),
+      './libs/project1/index.js': '',
+      './libs/project2/project.json': JSON.stringify({}),
+    });
+
+    let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
+    expect(() =>
+      getWorkspaceFilesNative(fs.tempDir, globs)
+    ).toThrowErrorMatchingInlineSnapshot(
+      `""libs/project2/project.json" does not have a name"`
+    );
+  });
 });

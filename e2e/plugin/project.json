@@ -1,5 +1,4 @@
 {
-  "name": "e2e-plugin",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/plugin",
   "projectType": "application",
