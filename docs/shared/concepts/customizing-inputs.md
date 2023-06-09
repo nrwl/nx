@@ -159,3 +159,51 @@ This library's `production` definition should look like this:
 ```
 
 This ensures that the `.md` files are included in the `production` file set, but the `check-for-broken-links.ts` script is not. Now changes to a markdown file in `content` will force a re-build of `docs-site`, even though changes to markdown files in `docs-site` will not force a re-build.
+
+## Scenario 3: Deploying applications and publishing libraries
+
+We can use `nx:run-commands` and a custom `deploy` target for deploying our applications. Normally, we want to deploy only the applications that have been affected by recent changes. The hash for checking whether a certain project was affected consists of several parts:
+
+- The full command we are running (e.g. `nx run my-app:deploy`)
+- The hash of the project's files and files of the dependencies
+- The hash of the target executor's dependencies
+  Since `nx:run-commands` is a special executor we can't automatically say what packages this executor depends on, so any change in the installed packages will cause a cache miss. This is of course not ideal.
+
+We can therefore specify what external packages our executor should depend on (in this case none, we only depend on `fly` version)
+
+```jsonc
+{
+  "targets": {
+    "deploy": {
+      "inputs": [
+        "production",
+        { "externalDependencies": [] }, // this explicitly tells hasher to ignore all external packages for executor
+        { "runtime": "fly version" }
+      ],
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "cwd": "dist/{projectRoot}",
+      "command": "fly deploy"
+    }
+  }
+}
+```
+
+Similarly, we can specify dependencies for publishing libraries:
+
+```jsonc
+{
+  "targets": {
+    "publish": {
+      "inputs": [
+        "production",
+        { "externalDependencies": ["lerna"] } // we explicitly say that our run-commands depends on lerna only
+      ],
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "cwd": "dist/{projectRoot}",
+      "command": "lerna publish"
+    }
+  }
+}
+```
