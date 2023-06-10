@@ -14,11 +14,20 @@ Note, this tutorial sets up a repo with a single application at the root level t
 
 {% /callout %}
 
-Here's the source code of this tutorial if you want to follow along using the final example:
+## Warm Up
+
+Here's the source code of the final result for this tutorial.
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/standalone-angular-app" /%}
 
 {% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/standalone-angular-app?file=README.md" /%}
+
+Also, if you prefer learning with a video, join Juri and walk through the tutorial, step by step together.
+
+{% youtube
+src="https://www.youtube.com/embed/ZAO0yXupIIE"
+title="Tutorial: Standalone Angular Application"
+width="100%" /%}
 
 ## Creating a new Angular App
 
