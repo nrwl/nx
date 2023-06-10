@@ -260,7 +260,7 @@ function setupVsCodeLintingForJsonFiles(host: Tree) {
     existing = readJson<Record<string, unknown>>(host, '.vscode/settings.json');
   } else {
     logger.info(
-      `${NX_PREFIX} We've updated the vscode settings for this repository to ensure that plugin lint checks show up inside your IDE. This created .vscode/settings.json. To read more about this file, check vscode's documentation. It is frequently not commited, so other developers may need to add similar settings if they'd like to see the lint checks in the IDE rather than only during linting.`
+      `${NX_PREFIX} We've updated the vscode settings for this repository to ensure that plugin lint checks show up inside your IDE. This created .vscode/settings.json. To read more about this file, check vscode's documentation. It is frequently not committed, so other developers may need to add similar settings if they'd like to see the lint checks in the IDE rather than only during linting.`
     );
   }
 
