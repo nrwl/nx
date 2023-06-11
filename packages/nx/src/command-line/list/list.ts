@@ -53,7 +53,7 @@ export async function listHandler(args: ListArgs): Promise<void> {
       title: 'Community Plugins',
       bodyLines: [
         'Looking for a technology / framework not listed above?',
-        'There are many excellent plugins matintained by the Nx community.',
+        'There are many excellent plugins maintained by the Nx community.',
         'Search for the one you need here: https://nx.dev/plugins/registry.',
       ],
     });
