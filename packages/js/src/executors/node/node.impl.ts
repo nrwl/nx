@@ -5,6 +5,7 @@ import {
   joinPathFragments,
   logger,
   parseTargetString,
+  runExecutor,
 } from '@nx/devkit';
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { randomUUID } from 'crypto';
@@ -55,6 +56,17 @@ export async function* nodeExecutor(
         options.buildTarget
       )} for project ${chalk.bold(context.projectName)}`
     );
+  }
+
+  if (options.waitUntilTargets && options.waitUntilTargets.length > 0) {
+    const results = await runWaitUntilTargets(options, context);
+    for (const [i, result] of results.entries()) {
+      if (!result.success) {
+        throw new Error(
+          `Wait until target failed: ${options.waitUntilTargets[i]}.`
+        );
+      }
+    }
   }
 
   // Re-map buildable workspace projects to their output directory.
@@ -268,6 +280,27 @@ function calculateResolveMappings(
     }
     return m;
   }, {});
+}
+function runWaitUntilTargets(
+  options: NodeExecutorOptions,
+  context: ExecutorContext
+): Promise<{ success: boolean }[]> {
+  return Promise.all(
+    options.waitUntilTargets.map(async (waitUntilTarget) => {
+      const target = parseTargetString(waitUntilTarget, context.projectGraph);
+      const output = await runExecutor(target, {}, context);
+      return new Promise<{ success: boolean }>(async (resolve) => {
+        let event = await output.next();
+        // Resolve after first event
+        resolve(event.value as { success: boolean });
+
+        // Continue iterating
+        while (!event.done) {
+          event = await output.next();
+        }
+      });
+    })
+  );
 }
 
 export default nodeExecutor;
