@@ -2,9 +2,15 @@
 
 use crate::native::parallel_walker::nx_walker;
 use crate::native::types::FileData;
+use anyhow::anyhow;
+use crossbeam_channel::unbounded;
+use globset::{Glob, GlobSetBuilder};
+use ignore::WalkBuilder;
+use itertools::Itertools;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::path::Path;
+use std::thread::available_parallelism;
 use xxhash_rust::xxh3;
 
 type FileHashes = HashMap<String, String>;
@@ -27,7 +33,6 @@ fn hash_file(file: String) -> Option<FileData> {
     Some(FileData { hash, file })
 }
 
-
 #[napi]
 fn hash_files_matching_globs(
     directory: String,
@@ -42,14 +47,7 @@ fn hash_files_matching_globs(
         .build()
         .map_err(|_| anyhow!("Error building globset builder"))?;
 
-    let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
-
-    let mut walker = WalkBuilder::new(&directory);
-    walker.hidden(false);
-
-    let (sender, receiver) = unbounded::<(String, Vec<u8>)>();
-
-    let receiver_thread = thread::spawn(move || {
+    let mut hashes = nx_walker(directory, move |receiver| {
         let mut collection: Vec<FileData> = Vec::new();
         for (path, content) in receiver {
             if globset.is_match(&path) {
@@ -62,41 +60,6 @@ fn hash_files_matching_globs(
         collection
     });
 
-    walker.threads(cpus).build_parallel().run(|| {
-        let tx = sender.clone();
-        let directory = directory.clone();
-        Box::new(move |entry| {
-            use ignore::WalkState::*;
-
-            #[rustfmt::skip]
-                let Ok(dir_entry) = entry else {
-                return Continue;
-            };
-
-            let Ok(content) = std::fs::read(dir_entry.path()) else {
-                return Continue;
-            };
-
-            let Ok(file_path) = dir_entry.path().strip_prefix(&directory) else {
-                return Continue;
-            };
-
-            let Some(file_path) = file_path.to_str() else {
-                return Continue;
-            };
-
-            // convert back-slashes in Windows paths, since the js expects only forward-slash path separators
-            #[cfg(target_os = "windows")]
-            let file_path = file_path.replace('\\', "/");
-
-            tx.send((file_path.to_string(), content)).ok();
-
-            Continue
-        })
-    });
-    drop(sender);
-
-    let mut hashes = receiver_thread.join().unwrap();
     if hashes.is_empty() {
         return Ok(None);
     }
@@ -146,5 +109,24 @@ mod tests {
         let content = hash_file(test_file_path);
 
         assert_eq!(content.unwrap().hash, "6193209363630369380");
+    }
+
+    #[test]
+    fn it_hashes_files_matching_globs() -> anyhow::Result<()> {
+        // handle empty workspaces
+        let content =
+            hash_files_matching_globs("/does/not/exist".into(), Vec::from([String::from("**/*")]))?;
+        assert!(content.is_none());
+
+        let temp_dir = setup_fs();
+
+        let content = hash_files_matching_globs(
+            temp_dir.display().to_string(),
+            Vec::from([String::from("fo*.txt")]),
+        )?;
+        // println!("{:?}", content);
+        assert_eq!(content.unwrap(), String::from("12742692716897613184"),);
+
+        Ok(())
     }
 }
