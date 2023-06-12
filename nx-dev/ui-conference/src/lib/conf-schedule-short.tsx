@@ -8,44 +8,7 @@ interface ScheduleItem {
 }
 
 export function ConfScheduleShort(): JSX.Element {
-  const scheduleItemsForSunday16: ScheduleItem[] = [
-    {
-      type: 'event',
-      time: '8:00am - 9:00am (UTC-07:00)',
-      title: 'Workshop Registration',
-      description:
-        'Chime in to register for the workshop and get help with your environment setup',
-      speakers: [],
-      videoUrl: '',
-    },
-    {
-      type: 'event',
-      time: '9:00am - 5:00pm (UTC-07:00)',
-      title: 'Nx Workshop - Day 1',
-      description:
-        'Note, environment setup starts at 8am. This is the introductory part of the workshop which will give you all you need to get set up and running with your brand new Nx workspace. More details in the workshop section further down.',
-      speakers: ['Zack DeRose', 'Miroslav Jonas'],
-      videoUrl: '',
-    },
-    {
-      type: 'event',
-      time: '12:00pm - 1:30pm (UTC-07:00)',
-      title: 'Lunch',
-      description: '',
-      speakers: [],
-      videoUrl: '',
-    },
-    {
-      type: 'event',
-      time: '7:00pm (UTC-07:00)',
-      title: 'Speaker + VIP dinner (all attendees invited)',
-      description:
-        'All speakers as well as attendees are invited. Enjoy some food and good conversations!',
-      speakers: ['Speakers', 'Attendees'],
-      videoUrl: '',
-    },
-  ];
-  const scheduleItemsForTuesday18: ScheduleItem[] = [
+  const scheduleItemsDiscussions: ScheduleItem[] = [
     {
       type: 'event',
       time: '9:00am - 5:00pm (UTC-07:00)',
@@ -56,7 +19,7 @@ export function ConfScheduleShort(): JSX.Element {
       videoUrl: '',
     },
   ];
-  const scheduleItemsForMonday17: ScheduleItem[] = [
+  const scheduleItemsConference: ScheduleItem[] = [
     {
       type: 'event',
       time: '8:30 - 9:30am (UTC-07:00)',
@@ -238,44 +201,33 @@ export function ConfScheduleShort(): JSX.Element {
         <div className="date-container-l font-input-mono mt-16 grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
           <div className="p-8 text-center">
             <span className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
-              Sunday, October 16th
-            </span>
-          </div>
-        </div>
-      </div>
-      <section className="w-full divide-y divide-slate-200 border-t border-b dark:border-slate-700">
-        {scheduleItemsForSunday16.map((item) =>
-          item.type === 'event' ? scheduleRow(item) : breakRow(item)
-        )}
-      </section>
-      <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
-        <div className="date-container-l font-input-mono mt-16 grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
-          <div className="p-8 text-center">
-            <span className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
-              Monday, October 17th
+              Tuesday, September 26th
             </span>
           </div>
         </div>
       </div>
       <section className="w-full divide-y divide-slate-200 border-t border-b border-slate-200 dark:divide-slate-700 dark:border-slate-700">
-        {scheduleItemsForMonday17.map((item) =>
-          item.type === 'event' ? scheduleRow(item) : breakRow(item)
-        )}
-      </section>
-      <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
-        <div className="date-container-l font-input-mono mt-16 grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
-          <div className="p-8 text-center">
-            <span className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
-              Tuesday, October 18th
-            </span>
-          </div>
+        <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
+          <article className="md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
+            <div className="px-5 py-12 md:pr-12">
+              <p className="mb-4">
+                Main conference day with speakers from the Nx core team and
+                selected community speakers.
+              </p>
+              <p className="mb-4">
+                The detailed scheduled will be announced soon.
+              </p>
+            </div>
+          </article>
         </div>
-      </div>
-      <section className="w-full divide-y divide-slate-200 border-t border-b dark:border-slate-700">
-        {scheduleItemsForTuesday18.map((item) =>
+        {/* {scheduleItemsConference.map((item) =>
           item.type === 'event' ? scheduleRow(item) : breakRow(item)
-        )}
+        )} */}
       </section>
+
+      {/* {scheduleItemsDiscussions.map((item) =>
+          item.type === 'event' ? scheduleRow(item) : breakRow(item)
+        )} */}
     </div>
   );
 }

@@ -143,7 +143,19 @@ export function ConfSpeakers(): JSX.Element {
   const rows = chunkList(speakers, 2);
   return (
     <div className="border-t border-slate-200 dark:border-slate-700">
-      {rows.map((row, rowIndex) => (
+      <div className="border-t border-b border-slate-200 dark:border-slate-700">
+        <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
+          <article className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
+            <div className="px-5 py-12 md:pr-12">
+              <p className="mb-4">
+                Speakers will be announced soon. Stay tuned!
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      {/* {rows.map((row, rowIndex) => (
         <div
           key={'speaker-row--' + rowIndex}
           className="border-b border-slate-200 dark:border-slate-700"
@@ -168,7 +180,7 @@ export function ConfSpeakers(): JSX.Element {
             </div>
           </div>
         </div>
-      ))}
+      ))} */}
     </div>
   );
 }
