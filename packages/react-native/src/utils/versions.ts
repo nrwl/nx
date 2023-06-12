@@ -1,6 +1,6 @@
 export const nxVersion = require('../../package.json').version;
 
-export const reactNativeVersion = '0.71.8';
+export const reactNativeVersion = '0.71.10';
 export const typesReactNativeVersion = '0.71.7';
 
 export const typesNodeVersion = '18.14.4';
@@ -26,5 +26,5 @@ export const reactNativeSvgVersion = '13.9.0';
 
 export const babelRuntimeVersion = '7.21.0';
 
-export const reactNativeAsyncStorageVersion = '1.18.1';
-export const reactNativeSafeAreaContextVersion = '4.5.2';
+export const reactNativeAsyncStorageVersion = '1.18.2';
+export const reactNativeSafeAreaContextVersion = '4.5.3';

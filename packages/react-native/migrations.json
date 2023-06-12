@@ -1331,6 +1331,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.4.0": {
+      "version": "16.4.0-beta.5",
+      "packages": {
+        "react-native": {
+          "version": "0.71.10",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-async-storage/async-storage": {
+          "version": "1.18.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-safe-area-context": {
+          "version": "4.5.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

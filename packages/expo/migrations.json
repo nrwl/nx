@@ -838,6 +838,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.4.0": {
+      "version": "16.4.0-beta.5",
+      "packages": {
+        "expo": {
+          "version": "^48.0.19",
+          "alwaysAddToPackageJson": false
+        },
+        "eas-cli": {
+          "version": "~3.13.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/cli": {
+          "version": "~0.7.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

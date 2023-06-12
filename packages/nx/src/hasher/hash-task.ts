@@ -33,8 +33,8 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
         return false;
       }
 
-      return (
-        taskGraph.dependencies[task.id].length === 0 &&
+      return !(
+        taskGraph.dependencies[task.id].length > 0 &&
         !!getInputs(task, projectGraph, nxJson).depsOutputs
       );
     })
