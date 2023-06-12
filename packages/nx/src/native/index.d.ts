@@ -5,7 +5,6 @@
 
 export function hashArray(input: Array<string>): string
 export function hashFile(file: string): FileData | null
-export function hashFiles(workspaceRoot: string): Record<string, string>
 export function hashFilesMatchingGlobs(directory: string, globPatterns: Array<string>): string | null
 export interface FileData {
   file: string
@@ -27,10 +26,11 @@ export interface WatchEvent {
 export function getConfigFiles(workspaceRoot: string, globs: Array<string>): Array<string>
 export interface NxWorkspaceFiles {
   projectFileMap: Record<string, Array<FileData>>
-  allWorkspaceFiles: Array<FileData>
+  globalFiles: Array<FileData>
   configFiles: Array<string>
 }
-export function getNxWorkspaceFiles(workspaceRoot: string, globs: Array<string>): NxWorkspaceFiles
+/** Throws exceptions */
+export function getWorkspaceFilesNative(workspaceRoot: string, globs: Array<string>): NxWorkspaceFiles
 export class Watcher {
   origin: string
   /**
