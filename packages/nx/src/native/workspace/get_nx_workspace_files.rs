@@ -1,3 +1,5 @@
+use anyhow::anyhow;
+use jsonc_parser::ParseOptions;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::Path;
@@ -99,9 +101,24 @@ fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> anyhow::Result<HashMap<
                 .file_name()
                 .expect("path should always have a filename");
             return if file_name == "project.json" || file_name == "package.json" {
-                let stripped = json_comments::StripComments::new(&content[..]);
-                let project_configuration: ProjectConfiguration = serde_json::from_reader(stripped)
-                    .map_err(|err| anyhow::anyhow!("Unable to parse {path:?}: {err}"))?;
+                // get the project name from the json file
+                let project_configuration: ProjectConfiguration =
+                // match on serde_json::from_slice to see if the first pass is good. 
+                    match serde_json::from_slice(content) {
+                        Ok(config) => Ok(config),
+                        // if serde_json::from_slice fails, use the jsonc_parser to run it again
+                        // This will have a more lenient parser that will accept comments and trailing commas
+                        Err(_) => {
+                            let content_str =
+                                std::str::from_utf8(content).expect("content should be valid utf8");
+                            let parser_value = jsonc_parser::parse_to_serde_value(
+                                content_str,
+                                &ParseOptions::default(),
+                            )
+                            .map_err(|err| anyhow::anyhow!("Unable to parse {path:?}: {err}"))?;
+                            serde_json::from_value(parser_value.into())
+                        }
+                    }?;
 
                 let Some(parent_path) = path.parent() else {
                     anyhow::bail!("{path:?} does not have a parent")

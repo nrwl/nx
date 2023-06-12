@@ -150,6 +150,7 @@ describe('workspace files', () => {
         `""libs/project2/project.json" does not have a name"`
       );
     });
+
     it('handles comments', async () => {
       const fs = new TempFs('workspace-files');
       const nxJson: NxJsonConfiguration = {};
@@ -171,7 +172,7 @@ describe('workspace files', () => {
       expect(() => getWorkspaceFilesNative(fs.tempDir, globs)).not.toThrow();
     });
 
-    it('throws parsing errors: extra comma', async () => {
+    it('handles extra comma', async () => {
       const fs = new TempFs('workspace-files');
       const nxJson: NxJsonConfiguration = {};
       await fs.createFiles({
@@ -188,12 +189,9 @@ describe('workspace files', () => {
       });
 
       let globs = ['**/project.json'];
-      expect(() =>
-        getWorkspaceFilesNative(fs.tempDir, globs)
-      ).toThrowErrorMatchingInlineSnapshot(
-        `"Unable to parse "libs/project1/project.json": trailing comma at line 3 column 9"`
-      );
+      expect(() => getWorkspaceFilesNative(fs.tempDir, globs)).not.toThrow();
     });
+
     it('throws parsing errors: missing brackets', async () => {
       const fs = new TempFs('workspace-files');
       const nxJson: NxJsonConfiguration = {};
@@ -214,7 +212,7 @@ describe('workspace files', () => {
       expect(() =>
         getWorkspaceFilesNative(fs.tempDir, globs)
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Unable to parse "libs/project1/project.json": expected \`,\` or \`}\` at line 2 column 44"`
+        `"Unable to parse "libs/project1/project.json": Unexpected token in object on line 2 column 44."`
       );
     });
   });
