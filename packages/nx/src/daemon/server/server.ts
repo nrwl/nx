@@ -406,9 +406,10 @@ export async function startServer(): Promise<Server> {
   if (!isWindows) {
     killSocketOrPath();
   }
-  await fileHasher.ensureInitialized();
-  return new Promise((resolve, reject) => {
+
+  return new Promise(async (resolve, reject) => {
     try {
+      await fileHasher.ensureInitialized();
       server.listen(FULL_OS_SOCKET_PATH, async () => {
         try {
           serverLogger.log(`Started listening on: ${FULL_OS_SOCKET_PATH}`);
