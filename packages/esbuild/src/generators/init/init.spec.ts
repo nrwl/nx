@@ -16,6 +16,7 @@ describe('esbuildInitGenerator', () => {
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies).toEqual({
+      '@nx/esbuild': expect.any(String),
       esbuild: expect.any(String),
     });
   });

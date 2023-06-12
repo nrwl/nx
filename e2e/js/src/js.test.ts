@@ -149,12 +149,15 @@ export function ${lib}Wildcard() {
     runCLI(`test ${consumerLib}`);
   });
 
-  it('should not be able to be built when it has no bundler', () => {
-    const nonBuildable = uniq('buildable');
+  it('should be able to add build to non-buildable projects', () => {
+    const nonBuildable = uniq('nonbuildable');
+
     runCLI(`generate @nx/js:lib ${nonBuildable} --bundler=none`);
-
     expect(() => runCLI(`build ${nonBuildable}`)).toThrow();
+    checkFilesDoNotExist(`dist/libs/${nonBuildable}/src/index.js`);
 
-    checkFilesDoNotExist(`dist/libs/${nonBuildable}/README.md`);
+    runCLI(`generate @nx/js:setup-build ${nonBuildable} --bundler=tsc`);
+    runCLI(`build ${nonBuildable}`);
+    checkFilesExist(`dist/libs/${nonBuildable}/src/index.js`);
   });
 });

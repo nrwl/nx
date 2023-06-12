@@ -1042,6 +1042,15 @@
         "originalFilePath": "/packages/js/src/generators/setup-verdaccio/schema.json",
         "path": "js/generators/setup-verdaccio",
         "type": "generator"
+      },
+      {
+        "description": "setup-build generator",
+        "file": "generated/packages/js/generators/setup-build.json",
+        "hidden": false,
+        "name": "setup-build",
+        "originalFilePath": "/packages/js/src/generators/setup-build/schema.json",
+        "path": "js/generators/setup-build",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

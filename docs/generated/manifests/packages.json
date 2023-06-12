@@ -1058,6 +1058,15 @@
         "originalFilePath": "/packages/js/src/generators/setup-verdaccio/schema.json",
         "path": "/packages/js/generators/setup-verdaccio",
         "type": "generator"
+      },
+      "/packages/js/generators/setup-build": {
+        "description": "setup-build generator",
+        "file": "generated/packages/js/generators/setup-build.json",
+        "hidden": false,
+        "name": "setup-build",
+        "originalFilePath": "/packages/js/src/generators/setup-build/schema.json",
+        "path": "/packages/js/generators/setup-build",
+        "type": "generator"
       }
     },
     "path": "/packages/js"

@@ -9,4 +9,5 @@ export interface RollupProjectSchema {
   importPath?: string;
   external?: string[];
   rollupConfig?: string;
+  buildTarget?: string;
 }
