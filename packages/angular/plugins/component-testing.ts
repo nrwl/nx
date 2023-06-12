@@ -101,7 +101,7 @@ ${e.stack ? e.stack : e}`
   );
 
   return {
-    ...nxBaseCypressPreset(pathToConfig),
+    ...nxBaseCypressPreset(pathToConfig, { testingType: 'component' }),
     // NOTE: cannot use a glob pattern since it will break cypress generated tsconfig.
     specPattern: ['src/**/*.cy.ts', 'src/**/*.cy.js'],
     // cypress defaults to a relative path from the workspaceRoot instead of projectRoot
