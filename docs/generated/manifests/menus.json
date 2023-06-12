@@ -948,7 +948,7 @@
           },
           {
             "name": "More Concept Guides »",
-            "path": "/concepts/more-concept-guides",
+            "path": "/more-concepts",
             "id": "more-concept-guides",
             "isExternal": false,
             "children": [],
@@ -1001,14 +1001,6 @@
         "name": "Affected",
         "path": "/concepts/affected",
         "id": "affected",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "More Concept Guides »",
-        "path": "/concepts/more-concept-guides",
-        "id": "more-concept-guides",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2731,6 +2723,152 @@
         "disableCollapsible": false
       },
       {
+        "name": "Enforce Module Boundaries",
+        "path": "/recipes/enforce-module-boundaries",
+        "id": "enforce-module-boundaries",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Ban Dependencies with Certain Tags",
+            "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
+            "id": "ban-dependencies-with-tags",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Tag in Multiple Dimensions",
+            "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
+            "id": "tag-multiple-dimensions",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Ban External Imports",
+            "path": "/recipes/enforce-module-boundaries/ban-external-imports",
+            "id": "ban-external-imports",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Tags Allow List",
+            "path": "/recipes/enforce-module-boundaries/tags-allow-list",
+            "id": "tags-allow-list",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Ban Dependencies with Certain Tags",
+        "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
+        "id": "ban-dependencies-with-tags",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Tag in Multiple Dimensions",
+        "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
+        "id": "tag-multiple-dimensions",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Ban External Imports",
+        "path": "/recipes/enforce-module-boundaries/ban-external-imports",
+        "id": "ban-external-imports",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Tags Allow List",
+        "path": "/recipes/enforce-module-boundaries/tags-allow-list",
+        "id": "tags-allow-list",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Example Repos",
+        "path": "/recipes/example-repos",
+        "id": "example-repos",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Powering Up React Development With Nx",
+            "path": "/recipes/example-repos/react-nx",
+            "id": "react-nx",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Using Apollo GraphQL",
+            "path": "/recipes/example-repos/apollo-react",
+            "id": "apollo-react",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Large Repo and Caching",
+            "path": "/recipes/example-repos/caching",
+            "id": "caching",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Large Repo and DTE",
+            "path": "/recipes/example-repos/dte",
+            "id": "dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Powering Up React Development With Nx",
+        "path": "/recipes/example-repos/react-nx",
+        "id": "react-nx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using Apollo GraphQL",
+        "path": "/recipes/example-repos/apollo-react",
+        "id": "apollo-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Large Repo and Caching",
+        "path": "/recipes/example-repos/caching",
+        "id": "caching",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Large Repo and DTE",
+        "path": "/recipes/example-repos/dte",
+        "id": "dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Other",
         "path": "/recipes/other",
         "id": "other",
@@ -2873,38 +3011,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Powering Up React Development With Nx",
-            "path": "/recipes/other/react-nx",
-            "id": "react-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Using Apollo GraphQL",
-            "path": "/recipes/other/apollo-react",
-            "id": "apollo-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Large Repo and Caching",
-            "path": "/recipes/other/caching",
-            "id": "caching",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Large Repo and DTE",
-            "path": "/recipes/other/dte",
-            "id": "dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Find the Last Successful Commit in Azure Pipelines",
             "path": "/recipes/other/azure-last-successful-commit",
             "id": "azure-last-successful-commit",
@@ -2916,38 +3022,6 @@
             "name": "Troubleshoot Cache Misses",
             "path": "/recipes/other/troubleshoot-cache-misses",
             "id": "troubleshoot-cache-misses",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Ban Dependencies with Certain Tags",
-            "path": "/recipes/other/ban-dependencies-with-tags",
-            "id": "ban-dependencies-with-tags",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Tag in Multiple Dimensions",
-            "path": "/recipes/other/tag-multiple-dimensions",
-            "id": "tag-multiple-dimensions",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Ban External Imports",
-            "path": "/recipes/other/ban-external-imports",
-            "id": "ban-external-imports",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Tags Allow List",
-            "path": "/recipes/other/tags-allow-list",
-            "id": "tags-allow-list",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3148,38 +3222,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Powering Up React Development With Nx",
-        "path": "/recipes/other/react-nx",
-        "id": "react-nx",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Using Apollo GraphQL",
-        "path": "/recipes/other/apollo-react",
-        "id": "apollo-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Large Repo and Caching",
-        "path": "/recipes/other/caching",
-        "id": "caching",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Large Repo and DTE",
-        "path": "/recipes/other/dte",
-        "id": "dte",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Find the Last Successful Commit in Azure Pipelines",
         "path": "/recipes/other/azure-last-successful-commit",
         "id": "azure-last-successful-commit",
@@ -3191,38 +3233,6 @@
         "name": "Troubleshoot Cache Misses",
         "path": "/recipes/other/troubleshoot-cache-misses",
         "id": "troubleshoot-cache-misses",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Ban Dependencies with Certain Tags",
-        "path": "/recipes/other/ban-dependencies-with-tags",
-        "id": "ban-dependencies-with-tags",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Tag in Multiple Dimensions",
-        "path": "/recipes/other/tag-multiple-dimensions",
-        "id": "tag-multiple-dimensions",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Ban External Imports",
-        "path": "/recipes/other/ban-external-imports",
-        "id": "ban-external-imports",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Tags Allow List",
-        "path": "/recipes/other/tags-allow-list",
-        "id": "tags-allow-list",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

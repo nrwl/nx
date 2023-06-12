@@ -19,4 +19,6 @@ export interface ViteBuildExecutorOptions {
   includeDevDependenciesInPackageJson?: boolean;
   cssCodeSplit?: boolean;
   reportCompressedSize?: boolean;
+  buildLibsFromSource?: boolean;
+  skipTypeCheck?: boolean;
 }

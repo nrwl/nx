@@ -71,6 +71,12 @@
       "version": "16.3.0-beta.9",
       "description": "Remove root build option from project configurations since it is not needed.",
       "implementation": "./src/migrations/update-16-3-0/remove-root-build-option"
+    },
+    "update-16-4-0-update-next-dependency": {
+      "cli": "nx",
+      "version": "16.4.0-beta.3",
+      "description": "Update package.json moving @nx/next from dependency to devDependency",
+      "implementation": "./src/migrations/update-16-4-0/update-nx-next-dependency"
     }
   },
   "packageJsonUpdates": {
@@ -319,6 +325,15 @@
       "packages": {
         "next": {
           "version": "13.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.4.0-beta.4": {
+      "version": "16.4.0-beta.4",
+      "packages": {
+        "stylus": {
+          "version": "^0.59.0",
           "alwaysAddToPackageJson": false
         }
       }

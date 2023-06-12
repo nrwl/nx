@@ -5,7 +5,7 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
-import { TargetDependencies } from '../config/nx-json';
+import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { TargetDependencyConfig } from '../devkit-exports';
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { output } from '../utils/output';
@@ -385,6 +385,17 @@ export function createTaskGraph(
     tasks: p.tasks,
     dependencies: p.dependencies,
   };
+}
+
+export function mapTargetDefaultsToDependencies(
+  defaults: TargetDefaults
+): TargetDependencies {
+  const res = {};
+  Object.keys(defaults).forEach((k) => {
+    res[k] = defaults[k].dependsOn;
+  });
+
+  return res;
 }
 
 function interpolateOverrides<T = any>(

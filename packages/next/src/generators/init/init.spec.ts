@@ -14,7 +14,7 @@ describe('init', () => {
     await nextInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.dependencies['@nx/react']).toBeUndefined();
-    expect(packageJson.dependencies['@nx/next']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/next']).toBeDefined();
     expect(packageJson.dependencies['next']).toBeDefined();
   });
 

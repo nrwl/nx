@@ -337,6 +337,18 @@ const cliUrls = {
  */
 const recipesUrls = {
   '/recipe/adding-to-monorepo': '/recipes/adopting-nx/adding-to-monorepo',
+  '/recipes/other/ban-dependencies-with-tags':
+    '/recipes/enforce-module-boundaries/ban-dependencies-with-tags',
+  '/recipes/other/tag-multiple-dimensions':
+    '/recipes/enforce-module-boundaries/tag-multiple-dimensions',
+  '/recipes/other/ban-external-imports':
+    '/recipes/enforce-module-boundaries/ban-external-imports',
+  '/recipes/other/tags-allow-list':
+    '/recipes/enforce-module-boundaries/tags-allow-list',
+  '/recipes/other/react-nx': '/recipes/example-repos/react-nx',
+  '/recipes/other/apollo-react': '/recipes/example-repos/apollo-react',
+  '/recipes/other/caching': '/recipes/example-repos/caching',
+  '/recipes/other/dte': '/recipes/example-repos/dte',
 };
 
 /**

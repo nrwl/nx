@@ -29,7 +29,7 @@ import {
   DaemonBasedTaskHasher,
   InProcessTaskHasher,
 } from '../hasher/task-hasher';
-import { hashTasksThatDoNotDependOnOtherTasks } from '../hasher/hash-task';
+import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { fileHasher } from '../hasher/file-hasher';
@@ -235,13 +235,14 @@ export async function invokeTasksRunner({
 
   let hasher;
   if (daemonClient.enabled()) {
-    hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
+    hasher = new DaemonBasedTaskHasher(daemonClient, taskGraph, runnerOptions);
   } else {
     const { projectFileMap, allWorkspaceFiles } = getProjectFileMap();
     hasher = new InProcessTaskHasher(
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
+      taskGraph,
       nxJson,
       runnerOptions,
       fileHasher
@@ -252,11 +253,12 @@ export async function invokeTasksRunner({
   // to submit everything that is known in advance to Nx Cloud to run in
   // a distributed fashion
   performance.mark('hashing:start');
-  await hashTasksThatDoNotDependOnOtherTasks(
+  await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     new Workspaces(workspaceRoot),
     hasher,
     projectGraph,
-    taskGraph
+    taskGraph,
+    nxJson
   );
   performance.mark('hashing:end');
   performance.measure('hashing', 'hashing:start', 'hashing:end');

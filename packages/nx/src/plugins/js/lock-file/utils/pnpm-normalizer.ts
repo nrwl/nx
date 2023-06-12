@@ -458,7 +458,7 @@ function revertFromInlineSpecifiersFormat(
 
   let revertedImporters = mapValues(importers, revertProjectSnapshot);
   let packages = lockfile.packages;
-  if (originalVersion === 6) {
+  if (originalVersionStr.startsWith('6.')) {
     revertedImporters = Object.fromEntries(
       Object.entries(revertedImporters ?? {}).map(
         ([importerId, pkgSnapshot]: [string, ProjectSnapshot]) => {
@@ -514,7 +514,7 @@ function revertFromInlineSpecifiersFormat(
     packages,
     importers: revertedImporters,
   };
-  if (originalVersion === 6 && newLockfile.time) {
+  if (originalVersionStr.startsWith('6.') && newLockfile.time) {
     newLockfile.time = Object.fromEntries(
       Object.entries(newLockfile.time).map(([depPath, time]) => [
         convertNewDepPathToOldDepPath(depPath),

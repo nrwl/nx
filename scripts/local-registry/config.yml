@@ -1,7 +1,7 @@
 # path to a directory with all packages
 storage: ../../tmp/local-registry/storage
 
-listen: localhost:4872
+listen: 127.0.0.1:4872 # change to 127.0.0.1 to avoid IPv6 issue
 
 # a list of other known repositories we can talk to
 uplinks:
@@ -29,3 +29,6 @@ logs:
   type: stdout
   format: pretty
   level: warn
+
+publish:
+  allow_offline: true # set offline to true to allow publish offline

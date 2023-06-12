@@ -53,7 +53,7 @@
             {
               "name": "Angular Standalone",
               "id": "angular-standalone-tutorial",
-              "file": "shared/angular-standalone-tutorial/1-code-generation"
+              "file": "shared/angular-standalone-tutorial/angular-standalone"
             },
             {
               "name": "Node Standalone",
@@ -382,7 +382,7 @@
             {
               "name": "More Concept Guides »",
               "id": "more-concept-guides",
-              "file": "shared/concepts/more-concepts"
+              "path": "/more-concepts"
             }
           ]
         },
@@ -1193,6 +1193,64 @@
           ]
         },
         {
+          "name": "Enforce Module Boundaries",
+          "id": "enforce-module-boundaries",
+          "description": "Configuring the enforce module boundaries rule",
+          "itemList": [
+            {
+              "name": "Ban Dependencies with Certain Tags",
+              "id": "ban-dependencies-with-tags",
+              "tags": ["enforce-project-boundaries"],
+              "file": "shared/recipes/ban-dependencies-with-tags"
+            },
+            {
+              "name": "Tag in Multiple Dimensions",
+              "id": "tag-multiple-dimensions",
+              "tags": ["enforce-project-boundaries"],
+              "file": "shared/recipes/tag-multiple-dimensions"
+            },
+            {
+              "name": "Ban External Imports",
+              "id": "ban-external-imports",
+              "tags": ["enforce-project-boundaries"],
+              "file": "shared/recipes/ban-external-imports"
+            },
+            {
+              "name": "Tags Allow List",
+              "id": "tags-allow-list",
+              "tags": ["enforce-project-boundaries"],
+              "file": "shared/recipes/tags-allow-list"
+            }
+          ]
+        },
+        {
+          "name": "Example Repos",
+          "id": "example-repos",
+          "description": "Examples of different ways to use Nx",
+          "itemList": [
+            {
+              "name": "Powering Up React Development With Nx",
+              "id": "react-nx",
+              "file": "shared/examples/react-nx"
+            },
+            {
+              "name": "Using Apollo GraphQL",
+              "id": "apollo-react",
+              "file": "shared/examples/apollo-react"
+            },
+            {
+              "name": "Large Repo and Caching",
+              "id": "caching",
+              "file": "shared/examples/caching"
+            },
+            {
+              "name": "Large Repo and DTE",
+              "id": "dte",
+              "file": "shared/examples/dte"
+            }
+          ]
+        },
+        {
           "name": "Other",
           "id": "other",
           "description": "Other recipes you will find useful.",
@@ -1236,7 +1294,6 @@
               "id": "adding-assets-react",
               "file": "shared/guides/adding-assets"
             },
-
             {
               "name": "Setup incremental builds for Angular applications",
               "id": "setup-incremental-builds-angular",
@@ -1290,26 +1347,6 @@
               "file": "shared/guides/misc-data-persistence"
             },
             {
-              "name": "Powering Up React Development With Nx",
-              "id": "react-nx",
-              "file": "shared/examples/react-nx"
-            },
-            {
-              "name": "Using Apollo GraphQL",
-              "id": "apollo-react",
-              "file": "shared/examples/apollo-react"
-            },
-            {
-              "name": "Large Repo and Caching",
-              "id": "caching",
-              "file": "shared/examples/caching"
-            },
-            {
-              "name": "Large Repo and DTE",
-              "id": "dte",
-              "file": "shared/examples/dte"
-            },
-            {
               "name": "Find the Last Successful Commit in Azure Pipelines",
               "id": "azure-last-successful-commit",
               "file": "shared/recipes/azure-last-successful-commit"
@@ -1319,30 +1356,6 @@
               "id": "troubleshoot-cache-misses",
               "tags": ["cache-task-results"],
               "file": "shared/recipes/troubleshoot-cache-misses"
-            },
-            {
-              "name": "Ban Dependencies with Certain Tags",
-              "id": "ban-dependencies-with-tags",
-              "tags": ["enforce-project-boundaries"],
-              "file": "shared/recipes/ban-dependencies-with-tags"
-            },
-            {
-              "name": "Tag in Multiple Dimensions",
-              "id": "tag-multiple-dimensions",
-              "tags": ["enforce-project-boundaries"],
-              "file": "shared/recipes/tag-multiple-dimensions"
-            },
-            {
-              "name": "Ban External Imports",
-              "id": "ban-external-imports",
-              "tags": ["enforce-project-boundaries"],
-              "file": "shared/recipes/ban-external-imports"
-            },
-            {
-              "name": "Tags Allow List",
-              "id": "tags-allow-list",
-              "tags": ["enforce-project-boundaries"],
-              "file": "shared/recipes/tags-allow-list"
             },
             {
               "name": "Export Project Graph",

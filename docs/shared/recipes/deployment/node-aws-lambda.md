@@ -48,7 +48,7 @@ pnpm add -D @nx/aws-lambda
 Next, use the corresponding Nx generator to add the AWS Lambda configuration to an existing project:
 
 ```shell
-nx g @nx/aws-lambda:setup-serverless
+nx generate @nx/aws-lambda:setup-functions
 ```
 
 This will setup your project to use AWS Lambda functions:

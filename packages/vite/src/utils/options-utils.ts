@@ -36,10 +36,22 @@ export function normalizeViteConfigFilePath(
     }
     return normalized;
   }
-  return existsSync(joinPathFragments(`${projectRoot}/vite.config.ts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
-    : existsSync(joinPathFragments(`${projectRoot}/vite.config.js`))
-    ? joinPathFragments(`${projectRoot}/vite.config.js`)
+  return existsSync(joinPathFragments(projectRoot, 'vite.config.ts'))
+    ? joinPathFragments(projectRoot, 'vite.config.ts')
+    : existsSync(joinPathFragments(projectRoot, 'vite.config.js'))
+    ? joinPathFragments(projectRoot, 'vite.config.js')
+    : undefined;
+}
+
+export function getProjectTsConfigPath(
+  projectRoot: string
+): string | undefined {
+  return existsSync(joinPathFragments(projectRoot, 'tsconfig.app.json'))
+    ? joinPathFragments(projectRoot, 'tsconfig.app.json')
+    : existsSync(joinPathFragments(projectRoot, 'tsconfig.lib.json'))
+    ? joinPathFragments(projectRoot, 'tsconfig.lib.json')
+    : existsSync(joinPathFragments(projectRoot, 'tsconfig.json'))
+    ? joinPathFragments(projectRoot, 'tsconfig.json')
     : undefined;
 }
 

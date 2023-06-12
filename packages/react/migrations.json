@@ -890,6 +890,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.4.0-beta.4": {
+      "version": "16.4.0-beta.4",
+      "packages": {
+        "stylus": {
+          "version": "^0.59.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

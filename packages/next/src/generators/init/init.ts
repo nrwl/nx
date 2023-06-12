@@ -24,13 +24,13 @@ function updateDependencies(host: Tree) {
   return addDependenciesToPackageJson(
     host,
     {
-      '@nx/next': nxVersion,
       next: nextVersion,
       react: reactVersion,
       'react-dom': reactDomVersion,
       tslib: tsLibVersion,
     },
     {
+      '@nx/next': nxVersion,
       'eslint-config-next': eslintConfigNextVersion,
     }
   );
