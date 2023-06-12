@@ -54,7 +54,10 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
 
   const buildOptions: EsBuildExecutorOptions = {
     main: getMainFile(tree, options),
-    outputPath: joinPathFragments('dist', project.root),
+    outputPath: joinPathFragments(
+      'dist',
+      project.root === '.' ? options.project : project.root
+    ),
     outputFileName: 'main.js',
     tsConfig,
     assets: [],

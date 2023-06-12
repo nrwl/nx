@@ -11,10 +11,7 @@ describe('esbuildProjectGenerator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    addProjectConfiguration(tree, 'mypkg', {
-      root: 'libs/mypkg',
-    });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it.each`
@@ -22,8 +19,11 @@ describe('esbuildProjectGenerator', () => {
     ${'tsconfig.app.json'} | ${'main.ts'}
     ${'tsconfig.lib.json'} | ${'index.ts'}
   `('should detect main and tsconfig paths', async ({ tsConfig, main }) => {
-    tree.write(`libs/mypkg/src/${main}`, 'console.log("main");');
-    writeJson(tree, `libs/mypkg/${tsConfig}`, {});
+    addProjectConfiguration(tree, 'mypkg', {
+      root: 'mypkg',
+    });
+    tree.write(`mypkg/src/${main}`, 'console.log("main");');
+    writeJson(tree, `mypkg/${tsConfig}`, {});
 
     await esbuildProjectGenerator(tree, {
       project: 'mypkg',
@@ -33,10 +33,32 @@ describe('esbuildProjectGenerator', () => {
 
     expect(project.targets.build.options).toEqual({
       assets: [],
-      main: `libs/mypkg/src/${main}`,
+      main: `mypkg/src/${main}`,
       outputFileName: 'main.js',
-      outputPath: 'dist/libs/mypkg',
-      tsConfig: `libs/mypkg/${tsConfig}`,
+      outputPath: 'dist/mypkg',
+      tsConfig: `mypkg/${tsConfig}`,
+    });
+  });
+
+  it('should work for root projects', async () => {
+    addProjectConfiguration(tree, 'mypkg', {
+      root: '.',
+    });
+    tree.write(`src/main.ts`, 'console.log("main");');
+    writeJson(tree, `tsconfig.app.json`, {});
+
+    await esbuildProjectGenerator(tree, {
+      project: 'mypkg',
+    });
+
+    const project = readProjectConfiguration(tree, 'mypkg');
+
+    expect(project.targets.build.options).toEqual({
+      assets: [],
+      main: `src/main.ts`,
+      outputFileName: 'main.js',
+      outputPath: 'dist/mypkg',
+      tsConfig: `tsconfig.app.json`,
     });
   });
 });
