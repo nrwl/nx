@@ -85,13 +85,15 @@ function createBuildOptions(options: ExpoEasBuildOptions) {
         if (v === false) {
           acc.push('--non-interactive'); // when is false, the flag is --non-interactive
         }
-      }
-      if (v === true) {
+      } else if (k === 'wait') {
+        if (v === false) {
+          acc.push('--no-wait'); // when is false, the flag is --no-wait
+        } else {
+          acc.push('--wait');
+        }
+      } else if (v === true) {
         // when true, does not need to pass the value true, just need to pass the flag in kebob case
         acc.push(`--${names(k).fileName}`);
-      }
-      if (v === false && k === 'wait') {
-        acc.push('--no-wait');
       }
     } else {
       acc.push(`--${names(k).fileName}`, v);
