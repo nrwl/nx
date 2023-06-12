@@ -125,28 +125,97 @@ describe('workspace files', () => {
     `);
   });
 
-  it('throws errors when projects are misconfigured', async () => {
-    const fs = new TempFs('workspace-files');
-    const nxJson: NxJsonConfiguration = {};
-    await fs.createFiles({
-      './nx.json': JSON.stringify(nxJson),
-      './package.json': JSON.stringify({
-        name: 'repo-name',
-        version: '0.0.0',
-        dependencies: {},
-      }),
-      './libs/project1/project.json': JSON.stringify({
-        name: 'project1',
-      }),
-      './libs/project1/index.js': '',
-      './libs/project2/project.json': JSON.stringify({}),
+  describe('errors', () => {
+    it('throws errors when projects are misconfigured', async () => {
+      const fs = new TempFs('workspace-files');
+      const nxJson: NxJsonConfiguration = {};
+      await fs.createFiles({
+        './nx.json': JSON.stringify(nxJson),
+        './package.json': JSON.stringify({
+          name: 'repo-name',
+          version: '0.0.0',
+          dependencies: {},
+        }),
+        './libs/project1/project.json': JSON.stringify({
+          name: 'project1',
+        }),
+        './libs/project1/index.js': '',
+        './libs/project2/project.json': JSON.stringify({}),
+      });
+
+      let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
+      expect(() =>
+        getWorkspaceFilesNative(fs.tempDir, globs)
+      ).toThrowErrorMatchingInlineSnapshot(
+        `""libs/project2/project.json" does not have a name"`
+      );
+    });
+    it('handles comments', async () => {
+      const fs = new TempFs('workspace-files');
+      const nxJson: NxJsonConfiguration = {};
+      await fs.createFiles({
+        './nx.json': JSON.stringify(nxJson),
+        './package.json': JSON.stringify({
+          name: 'repo-name',
+          version: '0.0.0',
+          dependencies: {},
+        }),
+        './libs/project1/project.json': `{
+        "name": "temp"
+        // this should not fail
+        }`,
+        './libs/project1/index.js': '',
+      });
+
+      let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
+      expect(() => getWorkspaceFilesNative(fs.tempDir, globs)).not.toThrow();
     });
 
-    let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
-    expect(() =>
-      getWorkspaceFilesNative(fs.tempDir, globs)
-    ).toThrowErrorMatchingInlineSnapshot(
-      `""libs/project2/project.json" does not have a name"`
-    );
+    it('throws parsing errors: extra comma', async () => {
+      const fs = new TempFs('workspace-files');
+      const nxJson: NxJsonConfiguration = {};
+      await fs.createFiles({
+        './nx.json': JSON.stringify(nxJson),
+        './package.json': JSON.stringify({
+          name: 'repo-name',
+          version: '0.0.0',
+          dependencies: {},
+        }),
+        './libs/project1/project.json': `{
+        "name": "temp", 
+        }`,
+        './libs/project1/index.js': '',
+      });
+
+      let globs = ['**/project.json'];
+      expect(() =>
+        getWorkspaceFilesNative(fs.tempDir, globs)
+      ).toThrowErrorMatchingInlineSnapshot(
+        `"Unable to parse "libs/project1/project.json": trailing comma at line 3 column 9"`
+      );
+    });
+    it('throws parsing errors: missing brackets', async () => {
+      const fs = new TempFs('workspace-files');
+      const nxJson: NxJsonConfiguration = {};
+      await fs.createFiles({
+        './nx.json': JSON.stringify(nxJson),
+        './package.json': JSON.stringify({
+          name: 'repo-name',
+          version: '0.0.0',
+          dependencies: {},
+        }),
+        './libs/project1/project.json': `{
+        "name": "temp", "property": "child": 2 }
+        }`,
+        './libs/project1/index.js': '',
+      });
+
+      let globs = ['**/project.json'];
+      expect(() =>
+        getWorkspaceFilesNative(fs.tempDir, globs)
+      ).toThrowErrorMatchingInlineSnapshot(
+        `"Unable to parse "libs/project1/project.json": expected \`,\` or \`}\` at line 2 column 44"`
+      );
+    });
   });
 });

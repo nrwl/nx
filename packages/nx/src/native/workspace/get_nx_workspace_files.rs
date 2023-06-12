@@ -1,11 +1,9 @@
-use anyhow::anyhow;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 
 use rayon::prelude::*;
-use tracing::{info, trace};
+use tracing::trace;
 use xxhash_rust::xxh3;
 
 use crate::native::logger::enable_logger;
@@ -57,7 +55,7 @@ pub fn get_workspace_files_native(
 
             let project_name = root_map.get(parent).unwrap();
 
-            (FileLocation::Project(*project_name), file_data)
+            (FileLocation::Project(project_name.to_owned()), file_data)
         })
         .collect::<Vec<(FileLocation, &FileData)>>();
 
@@ -76,9 +74,9 @@ pub fn get_workspace_files_native(
     for (file_location, file_data) in file_locations {
         match file_location {
             FileLocation::Global => global_files.push(file_data.clone()),
-            FileLocation::Project(project_name) => match project_file_map.get_mut(project_name) {
+            FileLocation::Project(project_name) => match project_file_map.get_mut(&project_name) {
                 None => {
-                    project_file_map.insert(project_name.to_string(), vec![file_data.clone()]);
+                    project_file_map.insert(project_name, vec![file_data.clone()]);
                 }
                 Some(project_files) => project_files.push(file_data.clone()),
             },
@@ -92,7 +90,7 @@ pub fn get_workspace_files_native(
     })
 }
 
-fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> anyhow::Result<HashMap<&Path, &str>> {
+fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> anyhow::Result<HashMap<&Path, String>> {
     projects
         .par_iter()
         .map(|(path, content)| {
@@ -101,10 +99,9 @@ fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> anyhow::Result<HashMap<
                 .file_name()
                 .expect("path should always have a filename");
             return if file_name == "project.json" || file_name == "package.json" {
-                let Ok(project_configuration) = serde_json::from_slice::<ProjectConfiguration>(content) else {
-                    anyhow::bail!("Cannot create configuration from {path:?}")
-                };
-
+                let stripped = json_comments::StripComments::new(&content[..]);
+                let project_configuration: ProjectConfiguration = serde_json::from_reader(stripped)
+                    .map_err(|err| anyhow::anyhow!("Unable to parse {path:?}: {err}"))?;
 
                 let Some(parent_path) = path.parent() else {
                     anyhow::bail!("{path:?} does not have a parent")
@@ -115,8 +112,11 @@ fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> anyhow::Result<HashMap<
                 Ok((parent_path, name))
             } else {
                 let name = path.parent().and_then(|p| {
-                    let bytes = p.file_name().unwrap_or_else(|| OsStr::new("")).as_bytes();
-                    std::str::from_utf8(bytes).ok()
+                    p.file_name()
+                        .unwrap_or_else(|| OsStr::new(""))
+                        .to_os_string()
+                        .into_string()
+                        .ok()
                 });
                 let Some(parent_path) = path.parent() else {
                     anyhow::bail!("{path:?} does not have a parent")
@@ -125,7 +125,7 @@ fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> anyhow::Result<HashMap<
                     anyhow::bail!("{path:?} does not have a name")
                 };
                 Ok((parent_path, name))
-            }
+            };
         })
         .collect()
 }

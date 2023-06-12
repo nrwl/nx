@@ -1,13 +1,12 @@
 use serde::Deserialize;
-use std::path::Path;
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct ProjectConfiguration<'a> {
-    pub name: Option<&'a str>,
+pub(crate) struct ProjectConfiguration {
+    pub name: Option<String>,
 }
 
 #[derive(Debug, Eq, PartialEq)]
-pub enum FileLocation<'a> {
+pub enum FileLocation {
     Global,
-    Project(&'a str),
+    Project(String),
 }
