@@ -19,6 +19,7 @@ export enum Preset {
   Angular = 'angular',
   NodeStandalone = 'node-standalone',
   NodeMonorepo = 'node-monorepo',
+  TsStandalone = 'ts-standalone',
 }
 
 /**

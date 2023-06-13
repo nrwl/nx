@@ -3,9 +3,9 @@ import { PackageManager } from '@nx/devkit';
 
 export interface Schema {
   name: string;
+  preset: Preset;
   style?: string;
   linter?: string;
-  preset: Preset;
   standaloneConfig?: boolean;
   framework?: string;
   packageManager?: PackageManager;
@@ -15,4 +15,5 @@ export interface Schema {
   routing?: boolean;
   standaloneApi?: boolean;
   e2eTestRunner?: 'cypress' | 'jest' | 'detox' | 'none';
+  js?: boolean;
 }
