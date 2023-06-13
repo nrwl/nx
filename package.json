@@ -114,8 +114,8 @@
     "@types/marked": "^2.0.0",
     "@types/node": "18.16.9",
     "@types/prettier": "^2.6.2",
-    "@types/react": "18.0.25",
-    "@types/react-dom": "18.0.9",
+    "@types/react": "18.2.12",
+    "@types/react-dom": "18.2.5",
     "@types/semver": "^7.3.8",
     "@types/tar-stream": "^2.2.2",
     "@types/tmp": "^0.2.0",
@@ -349,4 +349,3 @@
     ]
   }
 }
-

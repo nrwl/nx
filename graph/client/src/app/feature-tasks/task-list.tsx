@@ -44,7 +44,7 @@ function ProjectListItem({
 
       {project.error ? (
         <Tooltip
-          content={<TaskGraphErrorTooltip error={project.error} />}
+          content={(<TaskGraphErrorTooltip error={project.error} />) as any}
           openAction="click"
           strategy="fixed"
         >
