@@ -43,6 +43,11 @@
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
+    },
+    "testEnvironment": {
+      "description": "The vitest environment to use. See https://vitest.dev/config/#environment.",
+      "type": "string",
+      "enum": ["node", "jsdom", "happy-dom", "edge-runtime"]
     }
   },
   "required": ["project"]

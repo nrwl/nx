@@ -11,6 +11,62 @@ exports[`@nx/vite:init dependencies for package.json should add vite packages an
     "@vitejs/plugin-react": "^4.0.0",
     "@vitest/ui": "^0.32.0",
     "existing": "1.0.0",
+    "prettier": "^2.6.2",
+    "typescript": "~5.0.2",
+    "vite": "^4.3.4",
+    "vite-plugin-eslint": "^1.8.1",
+    "vite-tsconfig-paths": "^4.2.0",
+    "vitest": "^0.32.0",
+  },
+  "name": "test-name",
+}
+`;
+
+exports[`@nx/vite:init dependencies for package.json should support --testEnvironment=edge-runtime 1`] = `
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@edge-runtime/vm": "~3.0.2",
+    "@nx/js": "0.0.1",
+    "@nx/vite": "0.0.1",
+    "@vitest/ui": "^0.32.0",
+    "prettier": "^2.6.2",
+    "typescript": "~5.0.2",
+    "vite": "^4.3.4",
+    "vite-plugin-eslint": "^1.8.1",
+    "vite-tsconfig-paths": "^4.2.0",
+    "vitest": "^0.32.0",
+  },
+  "name": "test-name",
+}
+`;
+
+exports[`@nx/vite:init dependencies for package.json should support --testEnvironment=happy-dom 1`] = `
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@nx/js": "0.0.1",
+    "@nx/vite": "0.0.1",
+    "@vitest/ui": "^0.32.0",
+    "happy-dom": "~9.20.3",
+    "prettier": "^2.6.2",
+    "typescript": "~5.0.2",
+    "vite": "^4.3.4",
+    "vite-plugin-eslint": "^1.8.1",
+    "vite-tsconfig-paths": "^4.2.0",
+    "vitest": "^0.32.0",
+  },
+  "name": "test-name",
+}
+`;
+
+exports[`@nx/vite:init dependencies for package.json should support --testEnvironment=jsdom 1`] = `
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@nx/js": "0.0.1",
+    "@nx/vite": "0.0.1",
+    "@vitest/ui": "^0.32.0",
     "jsdom": "~22.1.0",
     "prettier": "^2.6.2",
     "typescript": "~5.0.2",

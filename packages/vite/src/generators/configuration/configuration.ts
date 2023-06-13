@@ -42,6 +42,10 @@ export async function viteConfigurationGenerator(
 
   schema.includeLib ??= projectType === 'library';
 
+  // Setting default to jsdom since it is the most common use case (React, Web).
+  // The @nx/js:lib generator specifically sets this to node to be more generic.
+  schema.testEnvironment ??= 'jsdom';
+
   /**
    * This is for when we are converting an existing project
    * to use the vite executors.
@@ -153,6 +157,7 @@ export async function viteConfigurationGenerator(
     uiFramework: schema.uiFramework,
     includeLib: schema.includeLib,
     compiler: schema.compiler,
+    testEnvironment: schema.testEnvironment,
   });
   tasks.push(initTask);
 

@@ -10,4 +10,5 @@ export interface ViteConfigurationGeneratorSchema {
   serveTarget?: string;
   testTarget?: string;
   skipFormat?: boolean;
+  testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
 }

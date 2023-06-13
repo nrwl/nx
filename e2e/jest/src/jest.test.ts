@@ -24,8 +24,12 @@ describe('Jest', () => {
     const testGlobal = `'My Test Global'`;
     const mylib = uniq('mylib');
     const utilLib = uniq('util-lib');
-    runCLI(`generate @nx/js:lib ${mylib} --unit-test-runner jest`);
-    runCLI(`generate @nx/js:lib ${utilLib} --importPath=@global-fun/globals`);
+    runCLI(
+      `generate @nx/js:lib ${mylib} --unitTestRunner=jest --no-interactive`
+    );
+    runCLI(
+      `generate @nx/js:lib ${utilLib} --importPath=@global-fun/globals --unitTestRunner=jest --no-interactive`
+    );
     updateFile(
       `libs/${utilLib}/src/index.ts`,
       stripIndents`
@@ -74,6 +78,7 @@ describe('Jest', () => {
       `libs/${mylib}/jest.config.ts`,
       stripIndents`
         export default {
+          testEnvironment: 'node',
           displayName: "${mylib}",
           preset: "../../jest.preset.js",
           transform: {
@@ -87,7 +92,9 @@ describe('Jest', () => {
         };`
     );
 
-    const appResult = await runCLIAsync(`test ${mylib} --no-watch`);
+    const appResult = await runCLIAsync(`test ${mylib} --no-watch`, {
+      silenceError: true,
+    });
     expect(appResult.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
