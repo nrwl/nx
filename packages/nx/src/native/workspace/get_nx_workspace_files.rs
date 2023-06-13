@@ -40,7 +40,7 @@ pub fn get_workspace_files_native(
     file_data.sort();
 
     let file_locations = file_data
-        .par_iter()
+        .into_par_iter()
         .map(|file_data| {
             let file_path = Path::new(&file_data.file);
             trace!(?file_path);
@@ -56,9 +56,9 @@ pub fn get_workspace_files_native(
 
             let project_name = root_map.get(parent).unwrap();
 
-            (FileLocation::Project(project_name.to_owned()), file_data)
+            (FileLocation::Project(project_name.clone()), file_data)
         })
-        .collect::<Vec<(FileLocation, &FileData)>>();
+        .collect::<Vec<(FileLocation, FileData)>>();
 
     let mut project_file_map: HashMap<String, Vec<FileData>> = HashMap::with_capacity(
         file_locations
@@ -74,12 +74,12 @@ pub fn get_workspace_files_native(
     );
     for (file_location, file_data) in file_locations {
         match file_location {
-            FileLocation::Global => global_files.push(file_data.clone()),
+            FileLocation::Global => global_files.push(file_data),
             FileLocation::Project(project_name) => match project_file_map.get_mut(&project_name) {
                 None => {
-                    project_file_map.insert(project_name, vec![file_data.clone()]);
+                    project_file_map.insert(project_name, vec![file_data]);
                 }
-                Some(project_files) => project_files.push(file_data.clone()),
+                Some(project_files) => project_files.push(file_data),
             },
         }
     }
@@ -140,9 +140,9 @@ fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> anyhow::Result<HashMap<
 }
 
 type WorkspaceData = (Vec<(String, Vec<u8>)>, Vec<FileData>);
-fn get_file_data(workspace_root: &String, globs: Vec<String>) -> anyhow::Result<WorkspaceData> {
+fn get_file_data(workspace_root: &str, globs: Vec<String>) -> anyhow::Result<WorkspaceData> {
     let globs = build_glob_set(globs)?;
-    let (projects, file_data) = nx_walker(&workspace_root, move |rec| {
+    let (projects, file_data) = nx_walker(workspace_root, move |rec| {
         let mut projects: Vec<(String, Vec<u8>)> = vec![];
         let mut file_hashes: Vec<FileData> = vec![];
         for (path, content) in rec {
