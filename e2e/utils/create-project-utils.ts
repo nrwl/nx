@@ -42,23 +42,31 @@ export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
 } = {}): string {
+  console.log('Testing_B 1');
+  console.log('Testing_B packageManager', packageManager);
+
   try {
     const projScope = 'proj';
+    console.log('Testing_B 2');
 
     if (!directoryExists(tmpBackupProjPath())) {
+      console.log('Testing_B 3');
       runCreateWorkspace(projScope, {
         preset: 'empty',
         packageManager,
       });
+      console.log('Testing_B 4');
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
+        console.log('Testing_B 5');
         updateFile(
           '.npmrc',
           'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
         );
       }
 
+      console.log('Testing_B 6');
       // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
       const packages = [
         `@nx/angular`,
@@ -82,22 +90,32 @@ export function newProject({
         `@nx/expo`,
       ];
       packageInstall(packages.join(` `), projScope);
+      console.log('Testing_B 7');
 
       // stop the daemon
       execSync(`${getPackageManagerCommand().runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
+      console.log('Testing_B 8');
 
       moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
+      console.log('Testing_B 9');
     }
     projName = name;
+    console.log('Testing_B 10');
     copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
-
+    console.log('Testing_B 11');
     if (isVerbose()) {
+      console.log('Testing_B 12');
+
       logInfo(`NX`, `E2E created a project: ${tmpProjPath()}`);
     }
+    console.log('Testing_B 13');
+
     if (packageManager === 'pnpm') {
+      console.log('Testing_B 14');
+
       execSync(getPackageManagerCommand().install, {
         cwd: tmpProjPath(),
         stdio: 'pipe',
@@ -105,8 +123,10 @@ export function newProject({
         encoding: 'utf-8',
       });
     }
+    console.log('Testing_B 15');
     return projScope;
   } catch (e) {
+    console.log('Testing_B 16');
     logError(`Failed to set up project for e2e tests.`, e.message);
     throw e;
   }

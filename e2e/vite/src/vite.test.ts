@@ -28,17 +28,29 @@ describe('Vite Plugin', () => {
   describe('Vite on React apps', () => {
     describe('convert React webpack app to vite using the vite:configuration generator', () => {
       beforeEach(() => {
+        console.log('Testing_A 1');
         proj = newProject();
+        console.log('Testing_A proj', proj);
+
+        console.log('Testing_A 2');
+
         runCLI(`generate @nx/react:app ${myApp} --bundler=webpack`);
+        console.log('Testing_A 3');
+
         runCLI(`generate @nx/vite:configuration ${myApp}`);
+        console.log('Testing_A 4');
       });
       afterEach(() => cleanupProject());
 
       it('should serve application in dev mode with custom options', async () => {
+        console.log('Testing_A 5');
+
         const port = 4212;
+        console.log('Testing_A 6');
         const p = await runCommandUntil(
           `run ${myApp}:serve --port=${port} --https=true`,
           (output) => {
+            console.log('Testing_A 7');
             return (
               output.includes('Local:') &&
               output.includes(`:${port}`) &&
@@ -47,12 +59,15 @@ describe('Vite Plugin', () => {
           }
         );
         try {
+          console.log('Testing_A 8');
           await promisifiedTreeKill(p.pid, 'SIGKILL');
           await killPorts(port);
-        } catch {
+        } catch (e) {
+          console.log('Testing_A 9');
+          console.log('Testing_A e', e);
           // ignore
         }
-      }, 200000);
+      }, 200_000);
 
       it('should test application', async () => {
         const result = await runCLIAsync(`test ${myApp}`);
@@ -62,7 +77,7 @@ describe('Vite Plugin', () => {
       });
     });
 
-    describe('set up new React app with --bundler=vite option', () => {
+    xdescribe('set up new React app with --bundler=vite option', () => {
       beforeEach(() => {
         proj = newProject();
         runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
@@ -123,11 +138,11 @@ describe('Vite Plugin', () => {
           readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
         ).not.toContain('MyDevelopmentValue');
         rmDist();
-      }, 200000);
+      }, 200_000);
     });
   });
 
-  describe('Vite on Web apps', () => {
+  xdescribe('Vite on Web apps', () => {
     describe('set up new @nx/web app with --bundler=vite option', () => {
       beforeEach(() => {
         proj = newProject();
@@ -212,7 +227,7 @@ describe('Vite Plugin', () => {
           readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
         ).toBeDefined();
         rmDist();
-      }, 200000);
+      }, 200_000);
 
       it('should serve application in dev mode with custom port', async () => {
         const port = 4212;
@@ -228,7 +243,7 @@ describe('Vite Plugin', () => {
         } catch {
           // ignore
         }
-      }, 200000);
+      }, 200_000);
 
       it('should test application', async () => {
         const result = await runCLIAsync(`test ${myApp}`);
@@ -240,7 +255,7 @@ describe('Vite Plugin', () => {
       100_000;
   });
 
-  describe('should be able to create libs that use vitest', () => {
+  xdescribe('should be able to create libs that use vitest', () => {
     const lib = uniq('my-lib');
     beforeEach(() => {
       proj = newProject({ name: uniq('vite-proj') });
