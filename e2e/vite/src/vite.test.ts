@@ -28,29 +28,17 @@ describe('Vite Plugin', () => {
   describe('Vite on React apps', () => {
     describe('convert React webpack app to vite using the vite:configuration generator', () => {
       beforeEach(() => {
-        console.log('Testing_A 1');
         proj = newProject();
-        console.log('Testing_A proj', proj);
-
-        console.log('Testing_A 2');
-
         runCLI(`generate @nx/react:app ${myApp} --bundler=webpack`);
-        console.log('Testing_A 3');
-
         runCLI(`generate @nx/vite:configuration ${myApp}`);
-        console.log('Testing_A 4');
       });
       afterEach(() => cleanupProject());
 
       it('should serve application in dev mode with custom options', async () => {
-        console.log('Testing_A 5');
-
         const port = 4212;
-        console.log('Testing_A 6');
         const p = await runCommandUntil(
           `run ${myApp}:serve --port=${port} --https=true`,
           (output) => {
-            console.log('Testing_A 7');
             return (
               output.includes('Local:') &&
               output.includes(`:${port}`) &&
@@ -59,12 +47,9 @@ describe('Vite Plugin', () => {
           }
         );
         try {
-          console.log('Testing_A 8');
           await promisifiedTreeKill(p.pid, 'SIGKILL');
           await killPorts(port);
         } catch (e) {
-          console.log('Testing_A 9');
-          console.log('Testing_A e', e);
           // ignore
         }
       }, 200_000);
