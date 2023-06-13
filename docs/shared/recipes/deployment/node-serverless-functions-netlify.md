@@ -50,7 +50,7 @@ pnpm add -D @nx/netlify
 Next add the Netlify serverless configuration by running the following command:
 
 ```shell
-nx g @nx/netlify:setup-serverless
+nx g @nx/netlify:setup-functions
 ```
 
 This will do a few things:
