@@ -5,6 +5,7 @@
 
 export function hashArray(input: Array<string>): string
 export function hashFile(file: string): FileData | null
+export function hashFiles(workspaceRoot: string): Record<string, string>
 export function hashFilesMatchingGlobs(directory: string, globPatterns: Array<string>): string | null
 export interface FileData {
   file: string

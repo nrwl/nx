@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use jsonc_parser::ParseOptions;
 use std::collections::HashMap;
 use std::ffi::OsStr;

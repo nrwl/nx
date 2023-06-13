@@ -34,6 +34,17 @@ fn hash_file(file: String) -> Option<FileData> {
 }
 
 #[napi]
+fn hash_files(workspace_root: String) -> HashMap<String, String> {
+    nx_walker(workspace_root, |rec| {
+        let mut collection: HashMap<String, String> = HashMap::new();
+        for (path, content) in rec {
+            collection.insert(path, xxh3::xxh3_64(&content).to_string());
+        }
+        collection
+    })
+}
+
+#[napi]
 fn hash_files_matching_globs(
     directory: String,
     glob_patterns: Vec<String>,
