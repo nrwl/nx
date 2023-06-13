@@ -62,7 +62,7 @@ export class TaskOrchestrator {
   async run() {
     // initial scheduling
     await this.tasksSchedule.scheduleNextTasks();
-    performance.mark('task-execution-begins');
+    performance.mark('task-execution:start');
 
     const threads = [];
 
@@ -75,11 +75,11 @@ export class TaskOrchestrator {
     }
     await Promise.all(threads);
 
-    performance.mark('task-execution-ends');
+    performance.mark('task-execution:end');
     performance.measure(
-      'command-execution',
-      'task-execution-begins',
-      'task-execution-ends'
+      'task-execution',
+      'task-execution:start',
+      'task-execution:end'
     );
     this.cache.removeOldCacheRecords();
 
@@ -144,6 +144,7 @@ export class TaskOrchestrator {
     task: Task;
     status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
   }> {
+    task.startTime = Date.now();
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
@@ -154,6 +155,7 @@ export class TaskOrchestrator {
     if (shouldCopyOutputsFromCache) {
       await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);
     }
+    task.endTime = Date.now();
     const status = cachedResult.remote
       ? 'remote-cache'
       : shouldCopyOutputsFromCache
@@ -235,7 +237,11 @@ export class TaskOrchestrator {
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
         ...result,
-        task: this.taskGraph.tasks[taskId],
+        task: {
+          ...this.taskGraph.tasks[taskId],
+          startTime: result.startTime,
+          endTime: result.endTime,
+        },
         status: (result.success ? 'success' : 'failure') as TaskStatus,
         terminalOutput: result.terminalOutput,
       }));

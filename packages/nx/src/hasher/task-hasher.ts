@@ -8,20 +8,28 @@ import {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { Task } from '../config/task-graph';
+import { Task, TaskGraph } from '../config/task-graph';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { hashTsConfig } from '../plugins/js/hasher/hasher';
 import { DaemonClient } from '../daemon/client/client';
-import { FileHasher } from './impl/file-hasher-base';
-import { hashArray } from './impl';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
-import { registerPluginTSTranspiler } from '../utils/nx-plugin';
+import { findMatchingProjects } from '../utils/find-matching-projects';
+import { FileHasher, hashArray } from './file-hasher';
+import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
+import { join } from 'path';
 
 type ExpandedSelfInput =
   | { fileset: string }
   | { runtime: string }
   | { env: string }
   | { externalDependencies: string[] };
+
+type ExpandedDepsOutput = {
+  dependentTasksOutputFiles: string;
+  transitive?: boolean;
+};
+
+type ExpandedInput = ExpandedSelfInput | ExpandedDepsOutput;
 
 /**
  * A data structure returned by the default hasher.
@@ -56,15 +64,26 @@ export type Hasher = TaskHasher;
 export class DaemonBasedTaskHasher implements TaskHasher {
   constructor(
     private readonly daemonClient: DaemonClient,
+    private readonly taskGraph: TaskGraph,
     private readonly runnerOptions: any
   ) {}
 
   async hashTasks(tasks: Task[]): Promise<Hash[]> {
-    return this.daemonClient.hashTasks(this.runnerOptions, tasks);
+    return this.daemonClient.hashTasks(
+      this.runnerOptions,
+      tasks,
+      this.taskGraph
+    );
   }
 
   async hashTask(task: Task): Promise<Hash> {
-    return (await this.daemonClient.hashTasks(this.runnerOptions, [task]))[0];
+    return (
+      await this.daemonClient.hashTasks(
+        this.runnerOptions,
+        [task],
+        this.taskGraph
+      )
+    )[0];
   }
 }
 
@@ -76,6 +95,7 @@ export class InProcessTaskHasher implements TaskHasher {
     private readonly projectFileMap: ProjectFileMap,
     private readonly allWorkspaceFiles: FileData[],
     private readonly projectGraph: ProjectGraph,
+    private readonly taskGraph: TaskGraph,
     private readonly nxJson: NxJsonConfiguration,
     private readonly options: any,
     private readonly fileHasher: FileHasher
@@ -105,6 +125,7 @@ export class InProcessTaskHasher implements TaskHasher {
       this.projectFileMap,
       this.allWorkspaceFiles,
       this.projectGraph,
+      this.taskGraph,
       this.fileHasher,
       { selectivelyHashTsConfig: this.options.selectivelyHashTsConfig ?? false }
     );
@@ -174,30 +195,25 @@ class TaskHasherImpl {
     private readonly projectFileMap: ProjectFileMap,
     private readonly allWorkspaceFiles: FileData[],
     private readonly projectGraph: ProjectGraph,
+    private readonly taskGraph: TaskGraph,
     private readonly fileHasher: FileHasher,
     private readonly options: { selectivelyHashTsConfig: boolean }
   ) {}
 
   async hashTask(task: Task, visited: string[]): Promise<PartialHash> {
     return Promise.resolve().then(async () => {
-      const projectNode = this.projectGraph.nodes[task.target.project];
-      const namedInputs = getNamedInputs(this.nxJson, projectNode);
-      const targetData = projectNode.data.targets[task.target.target];
-      const targetDefaults = (this.nxJson.targetDefaults || {})[
-        task.target.target
-      ];
-      const { selfInputs, depsInputs, projectInputs } =
-        splitInputsIntoSelfAndDependencies(
-          targetData.inputs ||
-            targetDefaults?.inputs ||
-            (DEFAULT_INPUTS as any),
-          namedInputs
-        );
+      const { selfInputs, depsInputs, depsOutputs, projectInputs } = getInputs(
+        task,
+        this.projectGraph,
+        this.nxJson
+      );
 
       const selfAndInputs = await this.hashSelfAndDepsInputs(
         task.target.project,
+        task,
         selfInputs,
         depsInputs,
+        depsOutputs,
         projectInputs,
         visited
       );
@@ -219,6 +235,7 @@ class TaskHasherImpl {
 
   private async hashNamedInputForDependencies(
     projectName: string,
+    task: Task,
     namedInput: string,
     visited: string[]
   ): Promise<PartialHash> {
@@ -229,12 +246,16 @@ class TaskHasherImpl {
       ...projectNode.data.namedInputs,
     };
 
-    const selfInputs = expandNamedInput(namedInput, namedInputs);
+    const expandedInputs = expandNamedInput(namedInput, namedInputs);
+    const selfInputs = expandedInputs.filter(isSelfInput);
+    const depsOutputs = expandedInputs.filter(isDepsOutput);
     const depsInputs = [{ input: namedInput, dependencies: true as true }]; // true is boolean by default
     return this.hashSelfAndDepsInputs(
       projectName,
+      task,
       selfInputs,
       depsInputs,
+      depsOutputs,
       [],
       visited
     );
@@ -242,8 +263,10 @@ class TaskHasherImpl {
 
   private async hashSelfAndDepsInputs(
     projectName: string,
+    task: Task,
     selfInputs: ExpandedSelfInput[],
     depsInputs: { input: string; dependencies: true }[],
+    depsOutputs: ExpandedDepsOutput[],
     projectInputs: { input: string; projects: string[] }[],
     visited: string[]
   ) {
@@ -253,10 +276,12 @@ class TaskHasherImpl {
 
     const self = await this.hashSingleProjectInputs(projectName, selfInputs);
     const deps = await this.hashDepsInputs(
+      task,
       depsInputs,
       projectGraphDeps,
       visited
     );
+    const depsOut = this.hashDepsOutputs(task, depsOutputs);
     const projects = await this.hashProjectInputs(projectInputs, visited);
 
     let details = {};
@@ -269,10 +294,14 @@ class TaskHasherImpl {
     for (const s of projects) {
       details = { ...details, ...s.details };
     }
+    for (const s of depsOut) {
+      details = { ...details, ...s.details };
+    }
 
     const value = hashArray([
       ...self.map((d) => d.value),
       ...deps.map((d) => d.value),
+      ...depsOut.map((d) => d.value),
       ...projects.map((d) => d.value),
     ]);
 
@@ -280,6 +309,7 @@ class TaskHasherImpl {
   }
 
   private async hashDepsInputs(
+    task: Task,
     inputs: { input: string }[],
     projectGraphDeps: ProjectGraphDependency[],
     visited: string[]
@@ -296,6 +326,7 @@ class TaskHasherImpl {
                 if (this.projectGraph.nodes[d.target]) {
                   return await this.hashNamedInputForDependencies(
                     d.target,
+                    task,
                     input.input || 'default',
                     visited
                   );
@@ -316,6 +347,64 @@ class TaskHasherImpl {
     )
       .flat()
       .filter((r) => !!r);
+  }
+
+  private hashDepsOutputs(
+    task: Task,
+    depsOutputs: ExpandedDepsOutput[]
+  ): PartialHash[] {
+    if (depsOutputs.length === 0) {
+      return [];
+    }
+    const result: PartialHash[] = [];
+    for (const { dependentTasksOutputFiles, transitive } of depsOutputs) {
+      result.push(
+        ...this.hashDepOuputs(task, dependentTasksOutputFiles, transitive)
+      );
+    }
+    return result;
+  }
+
+  private hashDepOuputs(
+    task: Task,
+    dependentTasksOutputFiles: string,
+    transitive?: boolean
+  ): PartialHash[] {
+    // task has no dependencies
+    if (!this.taskGraph.dependencies[task.id]) {
+      return [];
+    }
+
+    const partialHashes: PartialHash[] = [];
+    for (const d of this.taskGraph.dependencies[task.id]) {
+      const childTask = this.taskGraph.tasks[d];
+      const outputDirs = getOutputsForTargetAndConfiguration(
+        childTask,
+        this.projectGraph.nodes[childTask.target.project]
+      );
+      const hashes = {};
+      for (const outputDir of outputDirs) {
+        hashes[join(outputDir, dependentTasksOutputFiles)] =
+          this.fileHasher.hashFilesMatchingGlobs(outputDir, [
+            dependentTasksOutputFiles,
+          ]);
+      }
+
+      partialHashes.push({
+        value: hashArray(Object.values(hashes)),
+        details: hashes,
+      });
+      if (transitive) {
+        partialHashes.push(
+          ...this.hashDepOuputs(
+            childTask,
+            dependentTasksOutputFiles,
+            transitive
+          )
+        );
+      }
+    }
+    return partialHashes;
   }
 
   private hashExternalDependency(
@@ -435,7 +524,7 @@ class TaskHasherImpl {
 
   private async hashSingleProjectInputs(
     projectName: string,
-    inputs: ExpandedSelfInput[]
+    inputs: ExpandedInput[]
   ): Promise<PartialHash[]> {
     const filesets = extractPatternsFromFileSets(inputs);
 
@@ -495,7 +584,11 @@ class TaskHasherImpl {
   ): Promise<PartialHash[]> {
     const partialHashes: Promise<PartialHash[]>[] = [];
     for (const input of projectInputs) {
-      for (const project of input.projects) {
+      const projects = findMatchingProjects(
+        input.projects,
+        this.projectGraph.nodes
+      );
+      for (const project of projects) {
         const namedInputs = getNamedInputs(
           this.nxJson,
           this.projectGraph.nodes[project]
@@ -575,19 +668,27 @@ class TaskHasherImpl {
     const mapKey = `runtime:${runtime}`;
     if (!this.runtimeHashes[mapKey]) {
       this.runtimeHashes[mapKey] = new Promise((res, rej) => {
-        exec(runtime, (err, stdout, stderr) => {
-          if (err) {
-            rej(
-              new Error(`Nx failed to execute {runtime: '${runtime}'}. ${err}.`)
-            );
-          } else {
-            const value = `${stdout}${stderr}`.trim();
-            res({
-              details: { [`runtime:${runtime}`]: value },
-              value,
-            });
+        exec(
+          runtime,
+          {
+            windowsHide: true,
+          },
+          (err, stdout, stderr) => {
+            if (err) {
+              rej(
+                new Error(
+                  `Nx failed to execute {runtime: '${runtime}'}. ${err}.`
+                )
+              );
+            } else {
+              const value = `${stdout}${stderr}`.trim();
+              res({
+                details: { [`runtime:${runtime}`]: value },
+                value,
+              });
+            }
           }
-        });
+        );
       });
     }
     return this.runtimeHashes[mapKey];
@@ -638,20 +739,38 @@ export function getTargetInputs(
 }
 
 export function extractPatternsFromFileSets(
-  inputs: readonly ExpandedSelfInput[]
+  inputs: readonly ExpandedInput[]
 ): string[] {
   return inputs
     .filter((c): c is { fileset: string } => !!c['fileset'])
     .map((c) => c['fileset']);
 }
 
-export function splitInputsIntoSelfAndDependencies(
+export function getInputs(
+  task: Task,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+) {
+  const projectNode = projectGraph.nodes[task.target.project];
+  const namedInputs = getNamedInputs(nxJson, projectNode);
+  const targetData = projectNode.data.targets[task.target.target];
+  const targetDefaults = (nxJson.targetDefaults || {})[task.target.target];
+  const { selfInputs, depsInputs, depsOutputs, projectInputs } =
+    splitInputsIntoSelfAndDependencies(
+      targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),
+      namedInputs
+    );
+  return { selfInputs, depsInputs, depsOutputs, projectInputs };
+}
+
+function splitInputsIntoSelfAndDependencies(
   inputs: ReadonlyArray<InputDefinition | string>,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): {
   depsInputs: { input: string; dependencies: true }[];
   projectInputs: { input: string; projects: string[] }[];
   selfInputs: ExpandedSelfInput[];
+  depsOutputs: ExpandedDepsOutput[];
 } {
   const depsInputs: { input: string; dependencies: true }[] = [];
   const projectInputs: { input: string; projects: string[] }[] = [];
@@ -690,17 +809,27 @@ export function splitInputsIntoSelfAndDependencies(
       }
     }
   }
+  const expandedInputs = expandSingleProjectInputs(selfInputs, namedInputs);
   return {
     depsInputs,
     projectInputs,
-    selfInputs: expandSingleProjectInputs(selfInputs, namedInputs),
+    selfInputs: expandedInputs.filter(isSelfInput),
+    depsOutputs: expandedInputs.filter(isDepsOutput),
   };
+}
+
+function isSelfInput(input: ExpandedInput): input is ExpandedSelfInput {
+  return !('dependentTasksOutputFiles' in input);
+}
+
+function isDepsOutput(input: ExpandedInput): input is ExpandedDepsOutput {
+  return 'dependentTasksOutputFiles' in input;
 }
 
 function expandSingleProjectInputs(
   inputs: ReadonlyArray<InputDefinition | string>,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
-): ExpandedSelfInput[] {
+): ExpandedInput[] {
   const expanded = [];
   for (const d of inputs) {
     if (typeof d === 'string') {
@@ -722,7 +851,8 @@ function expandSingleProjectInputs(
         (d as any).fileset ||
         (d as any).env ||
         (d as any).runtime ||
-        (d as any).externalDependencies
+        (d as any).externalDependencies ||
+        (d as any).dependentTasksOutputFiles
       ) {
         expanded.push(d);
       } else {
@@ -736,7 +866,7 @@ function expandSingleProjectInputs(
 export function expandNamedInput(
   input: string,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
-): ExpandedSelfInput[] {
+): ExpandedInput[] {
   namedInputs ||= {};
   if (!namedInputs[input]) throw new Error(`Input '${input}' is not defined`);
   return expandSingleProjectInputs(namedInputs[input], namedInputs);

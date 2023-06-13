@@ -39,7 +39,6 @@ import {
   storybookVersion,
   tsNodeVersion,
 } from '../../utils/versions';
-import { getGeneratorConfigurationOptions } from './lib/user-prompts';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -47,10 +46,6 @@ export async function configurationGenerator(
 ) {
   if (storybookMajorVersion() === 6) {
     throw new Error(pleaseUpgrade());
-  }
-
-  if (process.env.NX_INTERACTIVE === 'true') {
-    rawSchema = await getGeneratorConfigurationOptions(rawSchema);
   }
 
   const schema = normalizeSchema(rawSchema);
@@ -112,7 +107,7 @@ export async function configurationGenerator(
     projectIsRootProjectInStandaloneWorkspace(root),
     !!nextBuildTarget,
     compiler === 'swc',
-    !!viteBuildTarget,
+    !!viteBuildTarget || schema.uiFramework.endsWith('-vite'),
     viteConfigFilePath
   );
 

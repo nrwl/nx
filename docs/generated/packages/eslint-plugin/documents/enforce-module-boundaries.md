@@ -52,8 +52,8 @@ The `depConstraints` is an array of objects representing the constraints defined
 Read more about the proper usage of this rule:
 
 - [Enforce Project Boundaries](/core-features/enforce-project-boundaries)
-- [Ban Dependencies with Certain Tags](/recipes/other/ban-dependencies-with-tags)
-- [Tag in Multiple Dimensions](/recipes/other/tag-multiple-dimensions)
-- [Ban External Imports](/recipes/other/ban-external-imports)
-- [Tags Allow List](/recipes/other/tags-allow-list)
+- [Ban Dependencies with Certain Tags](/recipes/enforce-module-boundaries/ban-dependencies-with-tags)
+- [Tag in Multiple Dimensions](/recipes/enforce-module-boundaries/tag-multiple-dimensions)
+- [Ban External Imports](/recipes/enforce-module-boundaries/ban-external-imports)
+- [Tags Allow List](/recipes/enforce-module-boundaries/tags-allow-list)
 - [Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)

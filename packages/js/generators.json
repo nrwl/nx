@@ -29,6 +29,12 @@
       "schema": "./src/generators/setup-verdaccio/schema.json",
       "alias": ["verdaccio"],
       "description": "Setup Verdaccio for local package management."
+    },
+    "setup-build": {
+      "factory": "./src/generators/setup-build/generator#setupBuildSchematic",
+      "schema": "./src/generators/setup-build/schema.json",
+      "alias": ["build"],
+      "description": "setup-build generator"
     }
   },
   "generators": {
@@ -59,6 +65,12 @@
       "schema": "./src/generators/setup-verdaccio/schema.json",
       "alias": ["verdaccio"],
       "description": "Setup Verdaccio for local package management."
+    },
+    "setup-build": {
+      "factory": "./src/generators/setup-build/generator",
+      "schema": "./src/generators/setup-build/schema.json",
+      "alias": ["build"],
+      "description": "setup-build generator"
     }
   }
 }

@@ -60,15 +60,6 @@ describe('jestProject', () => {
     expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should generate files w/babel-jest', async () => {
-    await jestProjectGenerator(tree, {
-      ...defaultOptions,
-      project: 'lib1',
-      babelJest: true,
-    } as JestProjectSchema);
-    expect(tree.exists('babel.config.json')).toBeTruthy();
-  });
-
   it('should alter project configuration', async () => {
     await jestProjectGenerator(tree, {
       ...defaultOptions,

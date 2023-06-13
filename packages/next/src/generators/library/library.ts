@@ -73,36 +73,6 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
 
   updateJson(
     host,
-    joinPathFragments(options.projectRoot, '.babelrc'),
-    (json) => {
-      if (options.style === '@emotion/styled') {
-        json.presets = [
-          [
-            '@nx/next/babel',
-            {
-              'preset-react': {
-                runtime: 'automatic',
-                importSource: '@emotion/react',
-              },
-            },
-          ],
-        ];
-      } else if (options.style === 'styled-jsx') {
-        // next.js doesn't require the `styled-jsx/babel' plugin as it is already
-        // built-into the `next/babel` preset
-        json.presets = ['@nx/next/babel'];
-        json.plugins = (json.plugins || []).filter(
-          (x) => x !== 'styled-jsx/babel'
-        );
-      } else {
-        json.presets = ['@nx/next/babel'];
-      }
-      return json;
-    }
-  );
-
-  updateJson(
-    host,
     joinPathFragments(options.projectRoot, 'tsconfig.json'),
     (json) => {
       if (options.style === '@emotion/styled') {

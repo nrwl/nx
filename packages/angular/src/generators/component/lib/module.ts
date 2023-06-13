@@ -37,6 +37,7 @@ export function findModuleFromOptions(
     for (const c of candidatesDirs) {
       const candidateFiles = [
         '',
+        moduleBaseName,
         `${moduleBaseName}.ts`,
         `${moduleBaseName}${moduleExt}`,
       ].map((x) => joinPathFragments(c, x));

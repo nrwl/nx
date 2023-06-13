@@ -16,6 +16,16 @@
         "x-completion-type": "directory",
         "x-priority": "important"
       },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately.",
+        "default": true
+      },
+      "skipTypeCheck": {
+        "type": "boolean",
+        "description": "Skip type-checking via TypeScript. Skipping type-checking speeds up the build but type errors are not caught.",
+        "default": false
+      },
       "base": {
         "type": "string",
         "description": "Base public path when served in development or production.",

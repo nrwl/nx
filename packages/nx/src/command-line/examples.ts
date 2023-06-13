@@ -285,6 +285,14 @@ export const examples: Record<string, Example[]> = {
         'Test all projects with tags starting with `api-`.  Note: your shell may require you to escape the `*` like this: `\\*`',
     },
     {
+      command: 'run-many -t test --projects=tag:type:ui',
+      description: 'Test all projects with a `type:ui` tag',
+    },
+    {
+      command: 'run-many -t test --projects=tag:type:feature,tag:type:ui',
+      description: 'Test all projects with a `type:feature` or `type:ui` tag',
+    },
+    {
       command: 'run-many --targets=lint,test,build --all',
       description:
         'Run lint, test, and build targets for all projects. Requires Nx v15.4+',
@@ -387,7 +395,7 @@ export const examples: Record<string, Example[]> = {
     },
     {
       command:
-        'watch --projects=app1,app2 --includeDependencies -- echo \\$NX_PROJECT_NAME',
+        'watch --projects=app1,app2 --includeDependentProjects -- echo \\$NX_PROJECT_NAME',
       description:
         'Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change',
     },

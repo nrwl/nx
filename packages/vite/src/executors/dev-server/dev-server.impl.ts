@@ -11,8 +11,7 @@ import {
 
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
-import { registerTsConfigPaths } from '@nx/js/src/internal';
-import { resolve } from 'path';
+import { registerPaths } from '../../utils/executor-utils';
 
 export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
@@ -21,7 +20,7 @@ export async function* viteDevServerExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  registerTsConfigPaths(resolve(projectRoot, 'tsconfig.json'));
+  registerPaths(projectRoot, options, context);
 
   // Retrieve the option for the configured buildTarget.
   const buildTargetOptions: ViteBuildExecutorOptions = getNxTargetOptions(

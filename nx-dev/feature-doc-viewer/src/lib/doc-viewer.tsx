@@ -20,7 +20,9 @@ export function DocViewer({
   relatedDocuments: RelatedDocument[];
 }): JSX.Element {
   const router = useRouter();
-  const isIntro = router.asPath.includes('/getting-started/intro');
+  const isIntroPage =
+    router.asPath.includes('/getting-started/intro') ||
+    router.asPath.includes('/plugins/intro/getting-started');
   const ref = useRef<HTMLDivElement | null>(null);
 
   const { metadata, node, treeNode } = renderMarkdown(
@@ -90,12 +92,12 @@ export function DocViewer({
                 data-document="main"
                 className={cx(
                   'prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
-                  { 'xl:max-w-2xl': !isIntro }
+                  { 'xl:max-w-2xl': !isIntroPage }
                 )}
               >
                 {vm.content}
               </div>
-              {!isIntro && (
+              {!isIntroPage && (
                 <div
                   className={cx(
                     'fixed top-36 right-[max(2rem,calc(50%-55rem))] z-20 hidden w-60 overflow-y-auto bg-white py-10 text-sm dark:bg-slate-900 xl:block'

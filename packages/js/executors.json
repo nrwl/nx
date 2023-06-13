@@ -3,6 +3,7 @@
   "executors": {
     "tsc": {
       "implementation": "./src/executors/tsc/tsc.impl",
+      "batchImplementation": "./src/executors/tsc/tsc.batch-impl",
       "schema": "./src/executors/tsc/schema.json",
       "description": "Build a project using TypeScript."
     },

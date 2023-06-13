@@ -343,7 +343,33 @@ describe('app', () => {
     });
   });
 
-  describe('--babelJest', () => {
+  describe('--swcJest', () => {
+    it('should use @swc/jest for jest', async () => {
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        tags: 'one,two',
+        swcJest: true,
+      } as Schema);
+
+      expect(tree.read(`my-node-app/jest.config.ts`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        export default {
+          displayName: 'my-node-app',
+          preset: '../jest.preset.js',
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\\\.[tj]s$': '@swc/jest',
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../coverage/my-node-app',
+        };
+        "
+      `);
+    });
+  });
+
+  describe('--babelJest (deprecated)', () => {
     it('should use babel for jest', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
@@ -368,6 +394,7 @@ describe('app', () => {
       `);
     });
   });
+
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await applicationGenerator(tree, {

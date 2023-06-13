@@ -30,9 +30,4 @@ describe('init', () => {
     await reactInitGenerator(tree, { ...schema, unitTestRunner: 'none' });
     expect(tree.exists('jest.config.js')).toEqual(false);
   });
-
-  it('should not add babel.config.json if skipBabelConfig is true', async () => {
-    await reactInitGenerator(tree, { ...schema, skipBabelConfig: true });
-    expect(tree.exists('babel.config.json')).toEqual(false);
-  });
 });

@@ -4,6 +4,7 @@ export const vitePluginEslintVersion = '^1.8.1';
 export const vitestVersion = '^0.31.0';
 export const vitestUiVersion = '^0.31.0';
 export const vitePluginReactVersion = '^3.0.0';
+export const vitePluginReactSwcVersion = '^3.3.1';
 export const vitePluginVueVersion = '^3.2.0';
 export const vitePluginVueJsxVersion = '^2.1.1';
 export const viteTsConfigPathsVersion = '^4.0.2';

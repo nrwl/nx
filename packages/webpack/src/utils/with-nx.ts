@@ -365,7 +365,7 @@ export function createLoaderFromCompiler(
           cwd: path.join(options.root, options.sourceRoot),
           emitDecoratorMetadata: tsConfig.options.emitDecoratorMetadata,
           isModern: true,
-          envName: process.env.NODE_ENV,
+          envName: process.env.BABEL_ENV ?? process.env.NODE_ENV,
           cacheDirectory: true,
           cacheCompression: false,
         },

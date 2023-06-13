@@ -17,6 +17,22 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 
 function main() {
+  if (
+    process.argv[2] !== 'report' &&
+    process.argv[2] !== '--version' &&
+    process.argv[2] !== '--help' &&
+    !_supportedPlatform()
+  ) {
+    output.error({
+      title: 'Platform not supported',
+      bodyLines: [
+        `This platform (${process.platform}-${process.arch}) is currently not supported by Nx.`,
+        'For a list of supported platforms, please see https://nx.dev/recipes/ci/troubleshoot-nx-install-issues#supported-native-module-platform',
+      ],
+    });
+    process.exit(1);
+  }
+
   const workspace = findWorkspaceRoot(process.cwd());
   // new is a special case because there is no local workspace to load
   if (
@@ -56,7 +72,7 @@ function main() {
     }
 
     if (!workspace) {
-      handleNoWorkspace();
+      handleNoWorkspace(GLOBAL_NX_VERSION);
     }
 
     if (!localNx) {
@@ -79,7 +95,7 @@ function main() {
   }
 }
 
-function handleNoWorkspace() {
+function handleNoWorkspace(globalNxVersion?: string) {
   output.log({
     title: `The current directory isn't part of an Nx workspace.`,
     bodyLines: [
@@ -94,6 +110,9 @@ function handleNoWorkspace() {
   output.note({
     title: `For more information please visit https://nx.dev/`,
   });
+
+  warnIfUsingOutdatedGlobalInstall(globalNxVersion);
+
   process.exit(1);
 }
 
@@ -169,12 +188,10 @@ function warnIfUsingOutdatedGlobalInstall(
     return;
   }
 
-  const isOutdatedGlobalInstall =
-    globalNxVersion &&
-    ((localNxVersion && major(globalNxVersion) < major(localNxVersion)) ||
-      (!localNxVersion &&
-        getLatestVersionOfNx() &&
-        major(globalNxVersion) < major(getLatestVersionOfNx())));
+  const isOutdatedGlobalInstall = checkOutdatedGlobalInstallation(
+    globalNxVersion,
+    localNxVersion
+  );
 
   // Using a global Nx Install
   if (isOutdatedGlobalInstall) {
@@ -191,6 +208,29 @@ function warnIfUsingOutdatedGlobalInstall(
       title: `Its time to update Nx 🎉`,
       bodyLines,
     });
+  }
+}
+
+function checkOutdatedGlobalInstallation(
+  globalNxVersion?: string,
+  localNxVersion?: string
+) {
+  // We aren't running a global install, so we can't know if its outdated.
+  if (!globalNxVersion) {
+    return false;
+  }
+  if (localNxVersion) {
+    // If the global Nx install is at least a major version behind the local install, warn.
+    return major(globalNxVersion) < major(localNxVersion);
+  }
+  // No local installation was detected. This can happen if the user is running a global install
+  // that contains an older version of Nx, which is unable to detect the local installation. The most
+  // recent case where this would have happened would be when we stopped generating workspace.json by default,
+  // as older global installations used it to determine the workspace root. This only be hit in rare cases,
+  // but can provide valuable insights for troubleshooting.
+  const latestVersionOfNx = getLatestVersionOfNx();
+  if (latestVersionOfNx && major(globalNxVersion) < major(latestVersionOfNx)) {
+    return true;
   }
 }
 
@@ -213,6 +253,15 @@ function _getLatestVersionOfNx(): string {
     } catch {
       return null;
     }
+  }
+}
+
+function _supportedPlatform(): boolean {
+  try {
+    require('../src/native');
+    return true;
+  } catch {
+    return false;
   }
 }
 

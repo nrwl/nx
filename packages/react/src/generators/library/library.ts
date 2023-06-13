@@ -43,7 +43,6 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     ...options,
     e2eTestRunner: 'none',
     skipFormat: true,
-    skipBabelConfig: options.bundler === 'vite' || options.compiler === 'swc',
     skipHelperLibs: options.bundler === 'vite',
   });
   tasks.push(initTask);
@@ -73,6 +72,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       includeLib: true,
       inSourceTests: options.inSourceTests,
       includeVitest: options.unitTestRunner === 'vitest',
+      compiler: options.compiler,
       skipFormat: true,
     });
     tasks.push(viteTask);
@@ -128,7 +128,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   if (options.component) {
     const componentTask = await componentGenerator(host, {
-      name: options.name,
+      name: options.fileName,
       project: options.name,
       flat: true,
       style: options.style,

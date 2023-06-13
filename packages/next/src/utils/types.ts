@@ -28,7 +28,6 @@ export interface FileReplacement {
 }
 
 export interface NextBuildBuilderOptions {
-  root: string;
   outputPath: string;
   fileReplacements: FileReplacement[];
   assets?: any[];

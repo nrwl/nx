@@ -31,11 +31,6 @@
         "type": "boolean",
         "default": false
       },
-      "skipBabelConfig": {
-        "description": "Do not generate a root babel.config.json (if babel is not needed).",
-        "type": "boolean",
-        "default": false
-      },
       "skipHelperLibs": {
         "description": "Do not install  tslib.",
         "type": "boolean",

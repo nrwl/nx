@@ -1,8 +1,5 @@
 const nxPreset = require('@nx/jest/preset').default;
 
-process.env.npm_config_registry = `http://localhost:4872`;
-process.env.YARN_REGISTRY = `http://localhost:4872`;
-
 module.exports = {
   ...nxPreset,
   testTimeout: 30000,

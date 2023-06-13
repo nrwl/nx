@@ -7,7 +7,6 @@ import {
   killPorts,
   newProject,
   readFile,
-  removeFile,
   rmDist,
   runCLI,
   runCLIAsync,
@@ -100,10 +99,10 @@ describe('Web Components Applications', () => {
     checkFilesExist(`dist/libs/${libName}/_should_keep.txt`);
   }, 120000);
 
-  it('should emit decorator metadata when it is enabled in tsconfig', async () => {
+  it('should emit decorator metadata when --compiler=babel and it is enabled in tsconfig', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
@@ -152,6 +151,48 @@ describe('Web Components Applications', () => {
 
     expect(readFile(`dist/apps/${appName}/main.js`)).not.toMatch(
       /Reflect\.metadata/
+    );
+  }, 120000);
+
+  it('should emit decorator metadata when using --compiler=swc', async () => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nx/web:app ${appName} --bundler=webpack --compiler=swc --no-interactive`
+    );
+
+    updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
+      const newContent = `${content}
+        function enumerable(value: boolean) {
+          return function (
+            target: any,
+            propertyKey: string,
+            descriptor: PropertyDescriptor
+          ) {
+            descriptor.enumerable = value;
+          };
+        }
+        function sealed(target: any) {
+          return target;
+        }
+
+        @sealed
+        class Foo {
+          @enumerable(false) bar() {}
+        }
+      `;
+      return newContent;
+    });
+
+    updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
+      const newContent = `${content}
+        // bust babel and nx cache
+      `;
+      return newContent;
+    });
+    runCLI(`build ${appName} --outputHashing none`);
+
+    expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
+      /Foo=__decorate\(\[sealed\],Foo\)/
     );
   }, 120000);
 
@@ -257,7 +298,7 @@ describe('CLI - Environment Variables', () => {
       `;
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler=babel`
     );
 
     const content = readFile(main);
@@ -282,7 +323,7 @@ describe('CLI - Environment Variables', () => {
     const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];`;
 
     runCLI(
-      `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`
     );
 
     const content2 = readFile(main2);
@@ -401,16 +442,16 @@ describe('index.html interpolation', () => {
     const srcPath = `apps/${appName}/src`;
     const indexPath = `${srcPath}/index.html`;
     const indexContent = `<!DOCTYPE html>
-    <html lang="en">
+    <html lang='en'>
       <head>
-        <meta charset="utf-8" />
+        <meta charset='utf-8' />
         <title>BestReactApp</title>
-        <base href="/" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/x-icon" href="favicon.ico" />
+        <base href='/' />
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
+        <link rel='icon' type='image/x-icon' href='favicon.ico' />
       </head>
       <body>
-        <div id="root"></div>
+        <div id='root'></div>
         <div>Nx Variable: %NX_VARIABLE%</div>
         <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
         <div>Deploy Url: %DEPLOY_URL%</div>

@@ -9,6 +9,7 @@ import {
   packageManagerLockFile,
   readFile,
   readJson,
+  rmDist,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -148,6 +149,48 @@ describe('js e2e', () => {
 
     expect(readJson(`dist/libs/${lib}/package.json`)).not.toHaveProperty(
       'peerDependencies.tslib'
+    );
+
+    // check batch build
+    rmDist();
+    const batchBuildOutput = runCLI(`build ${parentLib} --skip-nx-cache`, {
+      env: { NX_BATCH_MODE: 'true' },
+    });
+
+    expect(batchBuildOutput).toContain(`Running 2 tasks with @nx/js:tsc`);
+    expect(batchBuildOutput).toContain(
+      `Compiling TypeScript files for project "${lib}"...`
+    );
+    expect(batchBuildOutput).toContain(
+      `Done compiling TypeScript files for project "${lib}".`
+    );
+    expect(batchBuildOutput).toContain(
+      `Compiling TypeScript files for project "${parentLib}"...`
+    );
+    expect(batchBuildOutput).toContain(
+      `Done compiling TypeScript files for project "${parentLib}".`
+    );
+    expect(batchBuildOutput).toContain(
+      `Successfully ran target build for project ${parentLib} and 1 task it depends on`
+    );
+
+    checkFilesExist(
+      // parent
+      `dist/libs/${parentLib}/package.json`,
+      `dist/libs/${parentLib}/README.md`,
+      `dist/libs/${parentLib}/tsconfig.tsbuildinfo`,
+      `dist/libs/${parentLib}/src/index.js`,
+      `dist/libs/${parentLib}/src/index.d.ts`,
+      `dist/libs/${parentLib}/src/lib/${parentLib}.js`,
+      `dist/libs/${parentLib}/src/lib/${parentLib}.d.ts`,
+      // child
+      `dist/libs/${lib}/package.json`,
+      `dist/libs/${lib}/README.md`,
+      `dist/libs/${lib}/tsconfig.tsbuildinfo`,
+      `dist/libs/${lib}/src/index.js`,
+      `dist/libs/${lib}/src/index.d.ts`,
+      `dist/libs/${lib}/src/lib/${lib}.js`,
+      `dist/libs/${lib}/src/lib/${lib}.d.ts`
     );
   }, 240_000);
 

@@ -53,14 +53,14 @@ export async function* vitestExecutor(
 ) {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  registerTsConfigPaths(resolve(projectRoot, 'tsconfig.json'));
+  registerTsConfigPaths(resolve(workspaceRoot, projectRoot, 'tsconfig.json'));
 
   const { startVitest } = await (Function(
     'return import("vitest/node")'
   )() as Promise<typeof import('vitest/node')>);
 
   const nxReporter = new NxReporter(options.watch);
-  const settings = await getSettings(options, context);
+  const settings = await getSettings(options, context, projectRoot);
   settings.reporters.push(nxReporter);
   const cliFilters = options.testFile ? [options.testFile] : [];
 
@@ -96,9 +96,9 @@ export async function* vitestExecutor(
 
 async function getSettings(
   options: VitestExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
+  projectRoot: string
 ) {
-  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
   const offset = relative(workspaceRoot, context.cwd);
   // if reportsDirectory is not provided vitest will remove all files in the project root
   // when coverage is enabled in the vite.config.ts
@@ -111,15 +111,23 @@ async function getSettings(
     : ({} as CoverageOptions);
 
   const viteConfigPath = options.config
-    ? joinPathFragments(context.root, options.config)
+    ? options.config // config is expected to be from the workspace root
     : findViteConfig(joinPathFragments(context.root, projectRoot));
+
+  const resolvedProjectRoot = resolve(workspaceRoot, projectRoot);
+  const resolvedViteConfigPath = resolve(
+    workspaceRoot,
+    projectRoot,
+    relative(resolvedProjectRoot, viteConfigPath)
+  );
 
   const resolved = await loadConfigFromFile(
     {
       mode: options.mode,
       command: 'serve',
     },
-    viteConfigPath
+    resolvedViteConfigPath,
+    resolvedProjectRoot
   );
 
   if (!viteConfigPath || !resolved?.config?.['test']) {
@@ -138,7 +146,8 @@ You can manually set the config in the project, ${
     // when running nx from the project root, the root will get appended to the cwd.
     // creating an invalid path and no tests will be found.
     // instead if we are not at the root, let the cwd be root.
-    root: offset === '' ? projectRoot : '',
+    root: offset === '' ? resolvedProjectRoot : workspaceRoot,
+    config: resolvedViteConfigPath,
     reporters: [
       ...(options.reporters ?? []),
       ...((resolved?.config?.['test']?.reporters as string[]) ?? []),

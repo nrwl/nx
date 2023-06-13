@@ -1,3 +1,4 @@
+export * from './utils/typescript/add-tslib-dependencies';
 export * from './utils/typescript/load-ts-transformers';
 export * from './utils/typescript/print-diagnostics';
 export * from './utils/typescript/run-type-check';

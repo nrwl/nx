@@ -9,6 +9,7 @@ import {
   runCLI,
   runCommandUntil,
   uniq,
+  updateProjectConfig,
   updateFile,
 } from '@nx/e2e/utils';
 
@@ -139,5 +140,25 @@ describe('Node Applications + webpack', () => {
     );
 
     checkFilesExist(`apps/${expressApp}/Dockerfile`);
+  }, 300_000);
+
+  it('should support waitUntilTargets for serve target', async () => {
+    const nodeApp1 = uniq('nodeapp1');
+    const nodeApp2 = uniq('nodeapp2');
+    runCLI(
+      `generate @nx/node:app ${nodeApp1} --framework=none --no-interactive`
+    );
+    runCLI(
+      `generate @nx/node:app ${nodeApp2} --framework=none --no-interactive`
+    );
+    updateProjectConfig(nodeApp1, (config) => {
+      config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];
+      return config;
+    });
+
+    runCLI(`serve ${nodeApp1} --watch=false`);
+
+    checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
+    checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
   }, 300_000);
 });

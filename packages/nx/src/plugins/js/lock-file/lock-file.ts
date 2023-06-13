@@ -14,7 +14,7 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { ProjectGraph } from '../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { PackageJson } from '../../../utils/package-json';
-import { fileHasher, hashArray } from '../../../hasher/impl';
+import { fileHasher, hashArray } from '../../../hasher/file-hasher';
 import { output } from '../../../utils/output';
 
 import { parseNpmLockfile, stringifyNpmLockfile } from './npm-parser';
@@ -80,9 +80,9 @@ export function lockFileHash(
  * Parses lock file and maps dependencies and metadata to {@link LockFileGraph}
  */
 export function parseLockFile(
-  builder: ProjectGraphBuilder,
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): ProjectGraph {
+  const builder = new ProjectGraphBuilder(null, null);
   try {
     if (packageManager === 'yarn') {
       const content = readFileSync(YARN_LOCK_PATH, 'utf8');

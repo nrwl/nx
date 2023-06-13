@@ -32,12 +32,18 @@ export function isInlineGraphEmpty(inlineGraph: InlineProjectGraph): boolean {
 export function handleInliningBuild(
   context: ExecutorContext,
   options: NormalizedExecutorOptions,
-  tsConfigPath: string
+  tsConfigPath: string,
+  projectName: string = context.projectName
 ): InlineProjectGraph {
   const tsConfigJson = readJsonFile(tsConfigPath);
   const pathAliases =
     tsConfigJson['compilerOptions']?.['paths'] || readBasePathAliases(context);
-  const inlineGraph = createInlineGraph(context, options, pathAliases);
+  const inlineGraph = createInlineGraph(
+    context,
+    options,
+    pathAliases,
+    projectName
+  );
 
   if (isInlineGraphEmpty(inlineGraph)) {
     return inlineGraph;
@@ -58,9 +64,11 @@ export function postProcessInlinedDependencies(
   }
 
   const parentDistPath = join(outputPath, parentOutputPath);
+  const markedForDeletion = new Set<string>();
 
   // move parentOutput
   movePackage(parentDistPath, outputPath);
+  markedForDeletion.add(parentDistPath);
 
   const inlinedDepsDestOutputRecord: Record<string, string> = {};
   // move inlined outputs
@@ -80,6 +88,7 @@ export function postProcessInlinedDependencies(
         copySync(depOutputPath, destDepOutputPath, { overwrite: true });
       } else {
         movePackage(depOutputPath, destDepOutputPath);
+        markedForDeletion.add(depOutputPath);
       }
 
       // TODO: hard-coded "src"
@@ -88,6 +97,7 @@ export function postProcessInlinedDependencies(
     }
   }
 
+  markedForDeletion.forEach((path) => removeSync(path));
   updateImports(outputPath, inlinedDepsDestOutputRecord);
 }
 
@@ -132,7 +142,7 @@ function createInlineGraph(
   context: ExecutorContext,
   options: NormalizedExecutorOptions,
   pathAliases: Record<string, string[]>,
-  projectName: string = context.projectName,
+  projectName: string,
   inlineGraph: InlineProjectGraph = emptyInlineGraph()
 ) {
   if (options.external == null) return inlineGraph;
@@ -262,7 +272,6 @@ function buildInlineGraphExternals(
 function movePackage(from: string, to: string) {
   if (from === to) return;
   copySync(from, to, { overwrite: true });
-  removeSync(from);
 }
 
 function updateImports(

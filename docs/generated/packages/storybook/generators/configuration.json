@@ -42,7 +42,7 @@
       "tsConfiguration": {
         "type": "boolean",
         "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
-        "default": false,
+        "default": true,
         "x-priority": "important"
       },
       "standaloneConfig": {
@@ -89,6 +89,7 @@
           "@storybook/web-components-vite"
         ],
         "aliases": ["storybook7UiFramework"],
+        "x-prompt": "Choose the Storybook framework that you need to use.",
         "x-priority": "important",
         "hidden": false
       },

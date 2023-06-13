@@ -130,6 +130,13 @@ export type CustomHasher = (
   context: HasherContext
 ) => Promise<Hash>;
 
+export type ExecutorTaskResult = {
+  success: boolean;
+  terminalOutput: string;
+  startTime?: number;
+  endTime?: number;
+};
+
 /**
  * Implementation of a target of a project that handles multiple projects to be batched
  */
@@ -147,7 +154,10 @@ export type TaskGraphExecutor<T = any> = (
    */
   overrides: T,
   context: ExecutorContext
-) => Promise<Record<string, { success: boolean; terminalOutput: string }>>;
+) => Promise<
+  | Record<string, ExecutorTaskResult>
+  | AsyncIterableIterator<Record<string, ExecutorTaskResult>>
+>;
 
 /**
  * Context that is passed into an executor

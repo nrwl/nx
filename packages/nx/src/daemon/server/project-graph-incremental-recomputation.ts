@@ -21,7 +21,7 @@ import { serverLogger } from './logger';
 import { Workspaces } from '../../config/workspaces';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { execSync } from 'child_process';
-import { fileHasher, hashArray } from '../../hasher/impl';
+import { fileHasher, hashArray } from '../../hasher/file-hasher';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -228,10 +228,6 @@ function copyFileMap(m: ProjectFileMap) {
   return c;
 }
 
-function copyProjectGraph(p: ProjectGraph | null): ProjectGraph | null {
-  return p ? { ...p } : null;
-}
-
 async function createAndSerializeProjectGraph(): Promise<{
   error: string | null;
   projectGraph: ProjectGraph | null;
@@ -253,12 +249,7 @@ async function createAndSerializeProjectGraph(): Promise<{
         projectsConfigurations,
         projectFileMap,
         allWorkspaceFiles,
-        {
-          fileMap: currentProjectFileMapCache || readProjectFileMapCache(),
-          projectGraph: copyProjectGraph(
-            currentProjectGraph || readProjectGraphCache()
-          ),
-        },
+        currentProjectFileMapCache || readProjectFileMapCache(),
         true
       );
     currentProjectFileMapCache = projectFileMapCache;

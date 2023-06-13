@@ -24,12 +24,13 @@ export function createNextConfigFile(
   options: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
   const configRelativeToProjectRoot = findNextConfigPath(
-    options.root,
+    projectRoot,
     // If user passed a config then it is relative to the workspace root, need to normalize it to be relative to the project root.
-    options.nextConfig ? relative(options.root, options.nextConfig) : undefined
+    options.nextConfig ? relative(projectRoot, options.nextConfig) : undefined
   );
-  const configAbsolutePath = join(options.root, configRelativeToProjectRoot);
+  const configAbsolutePath = join(projectRoot, configRelativeToProjectRoot);
 
   if (!existsSync(configAbsolutePath)) {
     throw new Error('next.config.js not found');
@@ -65,12 +66,12 @@ export function createNextConfigFile(
   // Find all relative imports needed by next.config.js and copy them to the dist folder.
   const moduleFilesToCopy = getRelativeFilesToCopy(
     configRelativeToProjectRoot,
-    options.root
+    projectRoot
   );
   for (const moduleFile of moduleFilesToCopy) {
     ensureDirSync(dirname(join(context.root, options.outputPath, moduleFile)));
     copyFileSync(
-      join(context.root, options.root, moduleFile),
+      join(context.root, projectRoot, moduleFile),
       join(context.root, options.outputPath, moduleFile)
     );
   }

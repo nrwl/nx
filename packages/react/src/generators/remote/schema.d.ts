@@ -17,7 +17,7 @@ export interface Schema {
   routing?: boolean;
   setParserOptionsProject?: boolean;
   skipFormat: boolean;
-  skipWorkspaceJson?: boolean;
+  skipNxJson?: boolean;
   ssr?: boolean;
   strict?: boolean;
   style: SupportedStyles;

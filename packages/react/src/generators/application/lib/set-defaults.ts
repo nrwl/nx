@@ -2,7 +2,7 @@ import { readNxJson, Tree, updateNxJson } from '@nx/devkit';
 import { NormalizedSchema } from '../schema';
 
 export function setDefaults(host: Tree, options: NormalizedSchema) {
-  if (options.skipWorkspaceJson) {
+  if (options.skipNxJson) {
     return;
   }
 

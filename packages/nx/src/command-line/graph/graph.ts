@@ -8,7 +8,6 @@ import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { readNxJson, workspaceLayout } from '../../config/configuration';
-import { fileHasher } from '../../hasher/impl';
 import { output } from '../../utils/output';
 import { writeJsonFile } from '../../utils/fileutils';
 import {
@@ -19,12 +18,18 @@ import {
 } from '../../config/project-graph';
 import { pruneExternalNodes } from '../../project-graph/operators';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { createTaskGraph } from '../../tasks-runner/create-task-graph';
+import {
+  createTaskGraph,
+  mapTargetDefaultsToDependencies,
+} from '../../tasks-runner/create-task-graph';
 import { TargetDefaults, TargetDependencies } from '../../config/nx-json';
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
 import { Server } from 'net';
 import { readProjectFileMapCache } from '../../project-graph/nx-deps-cache';
+import { fileHasher } from '../../hasher/file-hasher';
+import { getAffectedGraphNodes } from '../affected/affected';
+import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 
 export interface ProjectGraphClientResponse {
   hash: string;
@@ -187,6 +192,7 @@ export async function generateGraph(
     targets?: string[];
     focus?: string;
     exclude?: string[];
+    affected?: boolean;
   },
   affectedProjects: string[]
 ): Promise<void> {
@@ -226,6 +232,20 @@ export async function generateGraph(
       });
       process.exit(1);
     }
+  }
+
+  if (args.affected) {
+    affectedProjects = (
+      await getAffectedGraphNodes(
+        splitArgsIntoNxArgsAndOverrides(
+          args,
+          'affected',
+          { printWarnings: true },
+          readNxJson()
+        ).nxArgs,
+        graph
+      )
+    ).map((n) => n.name);
   }
 
   if (args.exclude) {
@@ -379,6 +399,8 @@ export async function generateGraph(
           .map((projectName) => encodeURIComponent(projectName))
           .join(' ')
       );
+    } else if (args.affected) {
+      url.pathname += '/affected';
     }
     if (args.groupByFolder) {
       url.searchParams.append('groupByFolder', 'true');
@@ -520,13 +542,13 @@ function debounce(fn: (...args) => void, time: number) {
 function createFileWatcher() {
   return daemonClient.registerFileWatcher(
     { watchProjects: 'all', includeGlobalWorkspaceFiles: true },
-    debounce(async (error, { changedFiles }) => {
+    debounce(async (error, changes) => {
       if (error === 'closed') {
         output.error({ title: `Watch error: Daemon closed the connection` });
         process.exit(1);
       } else if (error) {
         output.error({ title: `Watch error: ${error?.message ?? 'Unknown'}` });
-      } else if (changedFiles.length > 0) {
+      } else if (changes !== null && changes.changedFiles.length > 0) {
         output.note({ title: 'Recalculating project graph...' });
 
         const newGraphClientResponse = await createDepGraphClientResponse();
@@ -681,17 +703,6 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
   }
 
   return { taskGraphs, errors: taskGraphErrors };
-}
-
-function mapTargetDefaultsToDependencies(
-  defaults: TargetDefaults
-): TargetDependencies {
-  const res = {};
-  Object.keys(defaults).forEach((k) => {
-    res[k] = defaults[k].dependsOn;
-  });
-
-  return res;
 }
 
 function createTaskId(

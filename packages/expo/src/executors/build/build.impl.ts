@@ -3,7 +3,7 @@ import { join, normalize, sep } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
-import { copyBuildFile, unzipBuild } from '../download/download.impl';
+import { unzipBuild } from '../download/download.impl';
 
 import { ExpoEasBuildOptions } from './schema';
 import { removeSync } from 'fs-extra';
@@ -81,12 +81,19 @@ function createBuildOptions(options: ExpoEasBuildOptions) {
   return Object.keys(options).reduce((acc, k) => {
     const v = options[k];
     if (typeof v === 'boolean') {
-      if (v === true) {
+      if (k === 'interactive') {
+        if (v === false) {
+          acc.push('--non-interactive'); // when is false, the flag is --non-interactive
+        }
+      } else if (k === 'wait') {
+        if (v === false) {
+          acc.push('--no-wait'); // when is false, the flag is --no-wait
+        } else {
+          acc.push('--wait');
+        }
+      } else if (v === true) {
         // when true, does not need to pass the value true, just need to pass the flag in kebob case
         acc.push(`--${names(k).fileName}`);
-      }
-      if (v === false && k === 'wait') {
-        acc.push('--no-wait');
       }
     } else {
       acc.push(`--${names(k).fileName}`, v);

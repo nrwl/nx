@@ -58,8 +58,12 @@ export const moduleFederationNodeVersion = '~0.9.9';
 // style preprocessors
 export const lessVersion = '3.12.2';
 export const sassVersion = '^1.55.0';
-export const stylusVersion = '^0.55.0';
+export const stylusVersion = '^0.59.0';
 
 // rollup plugins (if needed)
 export const rollupPluginUrlVersion = '^7.0.0';
-export const svgrRollupVersion = '^6.1.2';
+export const svgrRollupVersion = '^8.0.1';
+
+export const swcPluginStyledJsxVersion = '^1.5.67';
+export const swcPluginEmotionVersion = '^2.5.67';
+export const swcPluginStyledComponentsVersion = '^1.5.67';

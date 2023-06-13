@@ -393,6 +393,44 @@ export class AppModule {}
 "
 `;
 
+exports[`NgRxRootStoreGenerator NgModule should instrument the store devtools when "addDevTools: true" 1`] = `
+"import { NgModule, isDevMode } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
+import { appRoutes } from './app.routes';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+    StoreModule.forRoot(
+      {},
+      {
+        metaReducers: [],
+        runtimeChecks: {
+          strictActionImmutability: true,
+          strictStateImmutability: true,
+        },
+      }
+    ),
+    EffectsModule.forRoot([]),
+    StoreRouterConnectingModule.forRoot(),
+    StoreDevtoolsModule.instrument({ logOnly: !isDevMode() }),
+  ],
+  providers: [],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+"
+`;
+
 exports[`NgRxRootStoreGenerator Standalone APIs should add a facade when --facade=true 1`] = `
 "import { ApplicationConfig } from '@angular/core';
 import {
@@ -731,6 +769,28 @@ import { provideEffects } from '@ngrx/effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideEffects(),
+    provideStore(),
+    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+  ],
+};
+"
+`;
+
+exports[`NgRxRootStoreGenerator Standalone APIs should instrument the store devtools when "addDevTools: true" 1`] = `
+"import { ApplicationConfig, isDevMode } from '@angular/core';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
+import { appRoutes } from './app.routes';
+import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideStoreDevtools({ logOnly: !isDevMode() }),
     provideEffects(),
     provideStore(),
     provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),

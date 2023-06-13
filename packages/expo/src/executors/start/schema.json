@@ -87,6 +87,11 @@
     "offline": {
       "type": "boolean",
       "description": "Allows this command to run while offline"
+    },
+    "sync": {
+      "type": "boolean",
+      "description": "Syncs npm dependencies to package.json (for React Native autolink).",
+      "default": true
     }
   },
   "examplesFile": "../../../docs/start-examples.md"

@@ -135,6 +135,7 @@ export function runCreateWorkspace(
     bundler,
     routing,
     standaloneApi,
+    docker,
     nextAppDir,
   }: {
     preset: string;
@@ -149,6 +150,7 @@ export function runCreateWorkspace(
     bundler?: 'webpack' | 'vite';
     standaloneApi?: boolean;
     routing?: boolean;
+    docker?: boolean;
     nextAppDir?: boolean;
   }
 ) {
@@ -171,8 +173,12 @@ export function runCreateWorkspace(
     command += ` --bundler=${bundler}`;
   }
 
-  if (nextAppDir) {
+  if (nextAppDir !== undefined) {
     command += ` --nextAppDir=${nextAppDir}`;
+  }
+
+  if (docker !== undefined) {
+    command += ` --docker=${docker}`;
   }
 
   if (standaloneApi !== undefined) {
@@ -443,11 +449,25 @@ export function newLernaWorkspace({
       encoding: 'utf-8',
     });
 
+    if (packageManager === 'pnpm') {
+      // pnpm doesn't use the normal package.json packages field so lerna needs to be told that pnpm is the client.
+      updateJson('lerna.json', (json) => {
+        json.npmClient = 'pnpm';
+        return json;
+      });
+    }
+
     execSync(pm.install, {
       cwd: tmpProjPath(),
       stdio: isVerbose() ? 'inherit' : 'pipe',
       env: { CI: 'true', ...process.env },
       encoding: 'utf-8',
+    });
+
+    // Format files to ensure no changes are made during lerna repair
+    execSync(`${pm.runUninstalledPackage} prettier . --write`, {
+      cwd: tmpProjPath(),
+      stdio: 'ignore',
     });
 
     return projScope;

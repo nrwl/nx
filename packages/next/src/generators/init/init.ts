@@ -24,13 +24,13 @@ function updateDependencies(host: Tree) {
   return addDependenciesToPackageJson(
     host,
     {
-      '@nx/next': nxVersion,
       next: nextVersion,
       react: reactVersion,
       'react-dom': reactDomVersion,
       tslib: tsLibVersion,
     },
     {
+      '@nx/next': nxVersion,
       'eslint-config-next': eslintConfigNextVersion,
     }
   );
@@ -65,7 +65,6 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   const reactTask = await reactInitGenerator(host, {
     ...schema,
     skipFormat: true,
-    skipBabelConfig: true,
   });
   tasks.push(reactTask);
 

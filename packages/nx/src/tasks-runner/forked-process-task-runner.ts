@@ -71,6 +71,7 @@ export class ForkedProcessTaskRunner {
             for (const rootTaskId of batchTaskGraph.roots) {
               results[rootTaskId] = {
                 success: false,
+                terminalOutput: '',
               };
             }
             rej(
@@ -84,6 +85,14 @@ export class ForkedProcessTaskRunner {
         p.on('message', (message: BatchMessage) => {
           switch (message.type) {
             case BatchMessageType.Complete: {
+              Object.entries(message.results).forEach(([taskName, result]) => {
+                this.options.lifeCycle.printTaskTerminalOutput(
+                  batchTaskGraph.tasks[taskName],
+                  result.success ? 'success' : 'failure',
+                  result.terminalOutput
+                );
+              });
+
               res(message.results);
               break;
             }

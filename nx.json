@@ -6,6 +6,7 @@
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx-cloud",
+      "nativeWatcher": true,
       "options": {
         "accessToken": "NDg1NTA3MTAtOGFmZC00YmIwLTk2Y2MtOTkzNzc4ZTczYTlkfHJlYWQtb25seQ==",
         "cacheableOperations": [
@@ -110,10 +111,11 @@
       "outputs": ["{options.outputFile}"]
     },
     "e2e": {
-      "executor": "nx:run-commands",
       "inputs": [
         "default",
         "^production",
+        "{workspaceRoot}/jest.preset.js",
+        "{workspaceRoot}/.verdaccio/config.yml",
         {
           "env": "SELECTED_CLI"
         },
@@ -127,26 +129,20 @@
           "env": "CI"
         }
       ],
+      "executor": "@nx/jest:jest",
       "options": {
-        "commands": [
-          {
-            "command": "pnpm e2e-start-local-registry"
-          },
-          {
-            "command": "pnpm e2e-build-package-publish"
-          },
-          {
-            "command": "nx run-e2e-tests {projectName}"
-          }
-        ],
-        "parallel": false
-      }
+        "jestConfig": "{projectRoot}/jest.config.ts",
+        "passWithNoTests": true,
+        "runInBand": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
     "e2e-macos": {
-      "executor": "nx:run-commands",
       "inputs": [
         "default",
         "^production",
+        "{workspaceRoot}/jest.preset.js",
+        "{workspaceRoot}/.verdaccio/config.yml",
         {
           "env": "SELECTED_CLI"
         },
@@ -157,31 +153,6 @@
           "env": "NX_E2E_CI_CACHE_KEY"
         }
       ],
-      "options": {
-        "commands": [
-          {
-            "command": "pnpm e2e-start-local-registry"
-          },
-          {
-            "command": "pnpm e2e-build-package-publish"
-          },
-          {
-            "command": "nx run-e2e-tests {projectName}"
-          }
-        ],
-        "parallel": false
-      }
-    },
-    "e2e-base": {
-      "inputs": ["default", "^production"]
-    },
-    "run-e2e-tests": {
-      "inputs": [
-        "default",
-        "^production",
-        "{workspaceRoot}/jest.preset.js",
-        "{workspaceRoot}/.verdaccio/config.yml"
-      ],
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",
@@ -190,8 +161,12 @@
       },
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
+    "e2e-base": {
+      "inputs": ["default", "^production"]
+    },
     "build-storybook": {
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
     }
-  }
+  },
+  "plugins": ["@monodon/rust"]
 }

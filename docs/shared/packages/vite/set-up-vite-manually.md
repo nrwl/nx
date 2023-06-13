@@ -189,7 +189,7 @@ export default defineConfig({
       name: 'pure-libs-rlv1',
       fileName: 'index',
       // Change this to the formats you want to support.
-      // Don't forgot to update your package.json as well.
+      // Don't forget to update your package.json as well.
       formats: ['es', 'cjs'],
     },
     rollupOptions: {

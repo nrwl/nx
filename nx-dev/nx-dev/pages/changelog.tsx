@@ -1,14 +1,16 @@
+import { TagIcon } from '@heroicons/react/24/outline';
 import { Footer, Header } from '@nx/nx-dev/ui-common';
-import { Octokit } from 'octokit';
+import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { cx } from '@nx/nx-dev/ui-primitives';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { GithubRepository, renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { Octokit } from 'octokit';
 import { compare, parse } from 'semver';
 import { changeLogApi } from '../lib/changelog.api';
 
 interface ChangelogEntry {
   version: string;
-  date: string | null;
+  date: string;
   content?: string;
   patches: string[];
   // used for markdown rendering in the component
@@ -96,7 +98,7 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
 
   // group all releases by minor and add patch versions in the "patches" array of the corresponding minor version entry
   githubReleases
-    .filter((data) => data.prerelease === false)
+    .filter((data) => !data.prerelease)
     .forEach((release) => {
       const semverVersion = parse(release.tag_name);
       if (!semverVersion) {
@@ -113,7 +115,7 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
           patches: releasesByMinorVersion[release.tag_name]?.patches || [],
         };
       } else {
-        // find corresponding minor version & add "release" to the patches array of it
+        // find a corresponding minor version & add "release" to the patches array of it
         const minorVersion = `${semverVersion.major}.${semverVersion.minor}.0`;
         const minorRelease = releasesByMinorVersion[minorVersion];
         if (minorRelease) {
@@ -174,6 +176,8 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
 
     return entry;
   });
+  const convertToDate = (invalidDate) =>
+    new Date(invalidDate.replace(/(nd|th|rd)/g, ''));
 
   return (
     <>
@@ -199,91 +203,79 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
       />
       <Header />
       <main id="main" role="main">
-        <div className="mx-auto flex max-w-7xl flex-col space-y-12 py-12 px-4 sm:px-6 lg:space-y-0 lg:space-x-20 lg:py-16 lg:px-8">
-          <header className="space-y-10 md:py-12">
-            <div className="">
-              <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-                Nx Changelog
-              </h1>
-              <p className="mt-4">
-                All the Nx goodies in one page, sorted by release
-              </p>
-            </div>
+        <div className="mx-auto flex max-w-7xl flex-col space-y-12 py-12 px-4 sm:px-6 lg:space-y-0 lg:py-16 lg:px-8">
+          <header className="space-y-4 md:py-12">
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+              Nx Changelog
+            </h1>
+            <p className="mt-4">
+              All the Nx goodies in one page, sorted by release.
+            </p>
           </header>
-          <div>
-            {renderedChangelog.map((changelog) => (
-              <div
-                key={changelog.version}
-                className="grid border-l pb-24 lg:grid-cols-12 lg:gap-8"
-              >
-                <div className="col-span-12 mb-8 self-start lg:sticky lg:top-0 lg:col-span-4 lg:-mt-32 lg:pt-32 ">
-                  <div className="flex w-full items-baseline gap-6">
-                    <div className="bg-slate-800 dark:bg-scale-500 border-scale-400 dark:border-scale-600 text-scale-900 -ml-2.5 flex h-5 w-5 items-center justify-center rounded border drop-shadow-sm">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="sbui-icon "
-                      >
-                        <circle cx="12" cy="12" r="4"></circle>
-                        <line x1="1.05" y1="12" x2="7" y2="12"></line>
-                        <line x1="17.01" y1="12" x2="22.96" y2="12"></line>
-                      </svg>
-                    </div>
-                    <div className="flex w-full flex-col gap-1">
-                      <h3 className="text-2xl font-bold">
-                        v{changelog.version}
-                      </h3>
-                      <p>{changelog.date}</p>
-                    </div>
-                  </div>
+          <ul role="list" className="m-0 space-y-6">
+            {renderedChangelog.map((changelog, idx) => (
+              <li key={changelog.version} className="relative sm:flex gap-x-4">
+                <div
+                  className={cx(
+                    idx === renderedChangelog.length - 1 ? 'h-6' : '-bottom-6',
+                    'absolute left-0 top-0 sm:flex w-6 justify-center hidden'
+                  )}
+                >
+                  <div className="w-px bg-slate-200 dark:bg-slate-700" />
                 </div>
-                <div className="col-span-8 ml-8 lg:ml-0">
-                  <article className="prose prose-slate dark:prose-invert max-w-none">
+                <div className="mt-1 hidden relative sm:flex h-6 w-6 flex-none items-center justify-center">
+                  <div className="h-2 w-2 rounded-full bg-slate-100 ring-1 ring-slate-300 dark:ring-slate-500 dark:bg-slate-600" />
+                </div>
+                <div className="flex flex-col w-36 shrink-0">
+                  <p className="py-0.5">
+                    <a
+                      title="See release tag on GitHub"
+                      href={`https://github.com/nrwl/nx/releases/tag/${changelog.version}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xl leading-5 font-medium text-slate-900 dark:text-slate-100 hover:underline"
+                    >
+                      <TagIcon
+                        className="inline-flex h-4 w-4"
+                        aria-hidden="true"
+                      />{' '}
+                      v{changelog.version}
+                    </a>
+                  </p>
+                  <p className="py-0.5 text-xs leading-5 text-slate-400 dark:text-slate-500">
+                    <time
+                      dateTime={convertToDate(
+                        changelog.date
+                      ).toLocaleDateString()}
+                    >
+                      {changelog.date}
+                    </time>
+                  </p>
+                </div>
+                {/* CONTAINER */}
+                <div className="md:ml-12 flex flex-grow flex-col gap-8">
+                  <div className="prose prose-slate dark:prose-invert max-w-none">
                     {changelog.content}
-
-                    <GithubRepository
-                      title="GitHub release"
-                      url={`https://github.com/nrwl/nx/releases/tag/${changelog.version}`}
-                    />
-
-                    {changelog.patches?.length > 0 && (
-                      <h2 className="text-white">Patches</h2>
-                    )}
-                    {changelog.patches?.length > 0 && (
-                      <div className="space-y-4">
-                        {changelog.patches?.map((version) => (
-                          <a
-                            href={`https://github.com/nrwl/nx/releases/tag/${version}`}
-                            className="inline-flex items-center justify-center px-4 py-2 mr-2 space-x-2 font-medium text-white bg-gray-800 rounded-md hover:bg-gray-700"
-                            key={version}
-                          >
-                            <svg
-                              className="h-8 w-8 rounded-full object-cover"
-                              viewBox="0 0 16 16"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
-                              ></path>
-                            </svg>
-                            <span>{version}</span>
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </article>
+                  </div>
+                  {changelog.patches.length > 0 && (
+                    <div className="text-right space-x-2">
+                      {changelog.patches.map((version) => (
+                        <a
+                          key={version}
+                          href={`https://github.com/nrwl/nx/releases/tag/${version}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center rounded-md bg-slate-50 dark:bg-slate-600/30 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:text-slate-500 dark:ring-slate-700 hover:underline"
+                        >
+                          {version}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </main>
       <Footer />
