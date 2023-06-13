@@ -98,6 +98,15 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
         }
         return path;
       });
+      if (!json.compilerOptions) {
+        json.compilerOptions = {
+          types: [],
+        };
+      }
+      if (!json.compilerOptions.types) {
+        json.compilerOptions.types = [];
+      }
+      json.compilerOptions.types.push('next');
       return json;
     }
   );
