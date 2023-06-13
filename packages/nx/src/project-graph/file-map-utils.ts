@@ -16,9 +16,15 @@ export async function createProjectFileMapUsingProjectGraph(
   graph: ProjectGraph
 ): Promise<ProjectFileMap> {
   const configs = readProjectsConfigurationFromProjectGraph(graph);
-  const files = daemonClient.enabled()
-    ? await daemonClient.getAllFileData()
-    : fileHasher.allFileData();
+
+  let files;
+  if (daemonClient.enabled()) {
+    files = await daemonClient.getAllFileData();
+  } else {
+    await fileHasher.ensureInitialized();
+    files = fileHasher.allFileData();
+  }
+
   return createProjectFileMap(configs, files).projectFileMap;
 }
 
