@@ -33,6 +33,39 @@ describe('@nx/vite:init', () => {
 
       expect(packageJson).toMatchSnapshot();
     });
+
+    it('should support --testEnvironment=jsdom', async () => {
+      await initGenerator(tree, {
+        testEnvironment: 'jsdom',
+        uiFramework: 'none',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+
+      expect(packageJson).toMatchSnapshot();
+    });
+
+    it('should support --testEnvironment=happy-dom', async () => {
+      await initGenerator(tree, {
+        testEnvironment: 'happy-dom',
+        uiFramework: 'none',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+
+      expect(packageJson).toMatchSnapshot();
+    });
+
+    it('should support --testEnvironment=edge-runtime', async () => {
+      await initGenerator(tree, {
+        testEnvironment: 'edge-runtime',
+        uiFramework: 'none',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+
+      expect(packageJson).toMatchSnapshot();
+    });
   });
 
   describe('vitest targets', () => {

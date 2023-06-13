@@ -74,6 +74,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       includeVitest: options.unitTestRunner === 'vitest',
       compiler: options.compiler,
       skipFormat: true,
+      testEnvironment: 'jsdom',
     });
     tasks.push(viteTask);
   } else if (options.buildable && options.bundler === 'rollup') {
@@ -122,6 +123,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       coverageProvider: 'c8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      testEnvironment: 'jsdom',
     });
     tasks.push(vitestTask);
   }

@@ -10,6 +10,8 @@ export const vitePluginVueJsxVersion = '^2.1.1';
 export const viteTsConfigPathsVersion = '^4.2.0';
 export const jsdomVersion = '~22.1.0';
 export const vitePluginDtsVersion = '~2.3.0';
+export const happyDomVersion = '~9.20.3';
+export const edgeRuntimeVmVersion = '~3.0.2';
 
 // Coverage providers
 export const vitestCoverageC8Version = '^0.31.0';

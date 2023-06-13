@@ -37,6 +37,7 @@ describe('@nx/vite:configuration', () => {
         project: 'my-test-react-app',
       });
     });
+
     it('should add vite packages and react-related dependencies for vite', async () => {
       const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies).toMatchObject({

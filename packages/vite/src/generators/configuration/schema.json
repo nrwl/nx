@@ -50,7 +50,7 @@
     },
     "serveTarget": {
       "type": "string",
-      "description": "The serve target of the project to be transformed to use the @nx/vite:dev-server and @nrwl/vite:preview-server executors."
+      "description": "The serve target of the project to be transformed to use the @nx/vite:dev-server and @nx/vite:preview-server executors."
     },
     "testTarget": {
       "type": "string",
@@ -61,6 +61,12 @@
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
+    },
+    "testEnvironment": {
+      "description": "The vitest environment to use. See https://vitest.dev/config/#environment.",
+      "type": "string",
+      "enum": ["node", "jsdom", "happy-dom", "edge-runtime"],
+      "default": "jsdom"
     }
   },
   "examplesFile": "../../../docs/configuration-examples.md"

@@ -22,6 +22,12 @@
       "type": "boolean",
       "description": "Add dependencies needed to build libraries.",
       "default": false
+    },
+    "testEnvironment": {
+      "description": "The vitest environment to use. See https://vitest.dev/config/#environment.",
+      "type": "string",
+      "enum": ["node", "jsdom", "happy-dom", "edge-runtime"],
+      "default": "jsdom"
     }
   },
   "examplesFile": "../../../docs/init-examples.md"

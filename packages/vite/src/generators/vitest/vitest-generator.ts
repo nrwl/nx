@@ -45,6 +45,7 @@ export async function vitestGenerator(
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
+    testEnvironment: schema.testEnvironment,
   });
   tasks.push(initTask);
 

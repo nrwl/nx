@@ -88,6 +88,7 @@ export async function projectGenerator(
       includeVitest: options.unitTestRunner === 'vitest',
       includeLib: true,
       skipFormat: true,
+      testEnvironment: options.testEnvironment,
     });
     tasks.push(viteTask);
   }
@@ -112,6 +113,7 @@ export async function projectGenerator(
       uiFramework: 'none',
       coverageProvider: 'c8',
       skipFormat: true,
+      testEnvironment: options.testEnvironment,
     });
     tasks.push(vitestTask);
   }
