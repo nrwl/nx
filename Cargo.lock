@@ -811,10 +811,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "453ad9f582a441959e5f0d088b02ce04cfe8d51a8eaf077f12ac6d3e94164ca6"
 
 [[package]]
-name = "json_comments"
-version = "0.2.1"
+name = "jsonc-parser"
+version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41ee439ee368ba4a77ac70d04f14015415af8600d6c894dc1f11bd79758c57d5"
+checksum = "7b56a20e76235284255a09fcd1f45cf55d3c524ea657ebd3854735925c57743d"
+dependencies = [
+ "serde_json",
+]
 
 [[package]]
 name = "kqueue"
@@ -1132,7 +1135,7 @@ dependencies = [
  "ignore",
  "ignore-files",
  "itertools",
- "json_comments",
+ "jsonc-parser",
  "napi",
  "napi-build",
  "napi-derive",
