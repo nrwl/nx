@@ -22,6 +22,7 @@ export async function esbuildProjectGenerator(
     ...options,
     skipFormat: true,
   });
+  options.buildTarget ??= 'build';
   checkForTargetConflicts(tree, options);
   addBuildTarget(tree, options);
   await formatFiles(tree);
@@ -31,9 +32,9 @@ export async function esbuildProjectGenerator(
 function checkForTargetConflicts(tree: Tree, options: EsBuildProjectSchema) {
   if (options.skipValidation) return;
   const project = readProjectConfiguration(tree, options.project);
-  if (project.targets?.build) {
+  if (project.targets?.[options.buildTarget]) {
     throw new Error(
-      `Project "${options.project}" already has a build target. Pass --skipValidation to ignore this error.`
+      `Project "${options.project}" already has a ${options.buildTarget} target. Pass --skipValidation to ignore this error.`
     );
   }
 }
@@ -54,7 +55,10 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
 
   const buildOptions: EsBuildExecutorOptions = {
     main: getMainFile(tree, options),
-    outputPath: joinPathFragments('dist', project.root),
+    outputPath: joinPathFragments(
+      'dist',
+      project.root === '.' ? options.project : project.root
+    ),
     outputFileName: 'main.js',
     tsConfig,
     assets: [],
@@ -80,7 +84,7 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
     ...project,
     targets: {
       ...project.targets,
-      build: {
+      [options.buildTarget]: {
         executor: '@nx/esbuild:esbuild',
         outputs: ['{options.outputPath}'],
         defaultConfiguration: 'production',

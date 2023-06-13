@@ -245,6 +245,15 @@
       },
       "description": "Switch the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
       "factory": "./src/migrations/update-16-2-0/switch-data-persistence-operators-imports-to-ngrx-router-store"
+    },
+    "rename-angular-eslint-accesibility-rules": {
+      "cli": "nx",
+      "version": "16.4.0-beta.6",
+      "requires": {
+        "@angular-eslint/eslint-plugin-template": ">=16.0.0"
+      },
+      "description": "Remove the 'accessibility-' prefix from '@angular-eslint/eslint-plugin-template' rules.",
+      "factory": "./src/migrations/update-16-4-0/rename-angular-eslint-accesibility-rules"
     }
   },
   "packageJsonUpdates": {
@@ -464,7 +473,8 @@
     "14.4.0": {
       "version": "14.4.0-beta.1",
       "requires": {
-        "eslint": "^7.0.0 || ^8.0.0"
+        "eslint": "^7.0.0 || ^8.0.0",
+        "@angular/core": ">=14.0.0 <15.0.0"
       },
       "packages": {
         "@angular-eslint/eslint-plugin": {
@@ -674,6 +684,10 @@
     },
     "14.8.0-angular-eslint": {
       "version": "14.8.0-beta.0",
+      "requires": {
+        "eslint": "^7.0.0 || ^8.0.0",
+        "@angular/core": ">=14.0.0 <15.0.0"
+      },
       "packages": {
         "@angular-eslint/eslint-plugin": {
           "version": "~14.0.4",
@@ -769,7 +783,8 @@
     "15.2.2-angular-eslint": {
       "version": "15.2.2-beta.0",
       "requires": {
-        "eslint": "^7.20.0 || ^8.0.0"
+        "eslint": "^7.20.0 || ^8.0.0",
+        "@angular/core": ">=15.0.0 <16.0.0"
       },
       "packages": {
         "@angular-eslint/eslint-plugin": {
@@ -1099,7 +1114,8 @@
     "16.1.0-angular-eslint": {
       "version": "16.1.0-beta.1",
       "requires": {
-        "eslint": "^7.20.0 || ^8.0.0"
+        "eslint": "^7.20.0 || ^8.0.0",
+        "@angular/core": ">=16.0.0 <17.0.0"
       },
       "packages": {
         "@angular-eslint/eslint-plugin": {

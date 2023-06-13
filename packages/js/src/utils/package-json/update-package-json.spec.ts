@@ -434,11 +434,15 @@ describe('updatePackageJson', () => {
         "dependencies": {
           "external1": "~1.0.0",
           "external2": "^4.0.0",
+          "lib2": "^0.0.1",
+        },
+        "devDependencies": {
+          "jest": "27",
         },
         "main": "./main.js",
         "name": "@org/lib1",
         "types": "./main.d.ts",
-        "version": "0.0.1",
+        "version": "0.0.3",
       }
     `);
   });

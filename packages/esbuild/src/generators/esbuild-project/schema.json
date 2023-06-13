@@ -55,6 +55,11 @@
       "description": "Platform target for outputs.",
       "enum": ["browser", "node", "neutral"],
       "default": "node"
+    },
+    "buildTarget": {
+      "description": "The build target to add.",
+      "type": "string",
+      "default": "build"
     }
   },
   "required": [],
