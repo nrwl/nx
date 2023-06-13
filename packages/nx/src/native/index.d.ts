@@ -44,6 +44,7 @@ export interface NxWorkspaceFiles {
   projectConfigurations: Record<string, object>
 }
 export function getWorkspaceFilesNative(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Record<string, object>): NxWorkspaceFiles
+export function findImports(filePaths: Array<string>, callback: (obj: null, result: {file: string, importExpr: string}) => void): void
 export class Watcher {
   origin: string
   /**
@@ -53,4 +54,8 @@ export class Watcher {
   constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
   watch(callback: (err: string | null, events: WatchEvent[]) => void): void
   stop(): Promise<void>
+}
+export class ImportResult {
+  file: string
+  importExpr: string
 }

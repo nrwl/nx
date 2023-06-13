@@ -6,3 +6,4 @@ mod utils;
 mod walker;
 pub mod watch;
 pub mod workspace;
+pub mod ts_import_locators;
