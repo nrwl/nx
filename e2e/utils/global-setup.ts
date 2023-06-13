@@ -22,7 +22,7 @@ export default async function (globalConfig: Config.ConfigGlobals) {
         { stdio: 'pipe' }
       );
 
-      childProcess?.stdout?.on('data', (data) => {
+      const listener = (data) => {
         if (data.toString().includes('http://localhost:')) {
           const port = parseInt(
             data.toString().match(/localhost:(?<port>\d+)/)?.groups?.port
@@ -35,11 +35,12 @@ export default async function (globalConfig: Config.ConfigGlobals) {
           console.log('Set npm and yarn config registry to ' + registry);
 
           resolve(childProcess);
+          childProcess.stdout?.off('data', listener);
         }
-      });
+      };
+      childProcess?.stdout?.on('data', listener);
       childProcess?.stderr?.on('data', (data) => {
         process.stderr.write(data);
-        reject(data);
       });
       childProcess.on('error', (err) => {
         console.log('local registry error', err);

@@ -13,13 +13,18 @@ import {
 import * as path from 'path';
 import { SetupVerdaccioGeneratorSchema } from './schema';
 import { verdaccioVersion } from '../../utils/versions';
+import { execSync } from 'child_process';
 
 export async function setupVerdaccio(
   tree: Tree,
   options: SetupVerdaccioGeneratorSchema
 ) {
   if (!tree.exists('.verdaccio/config.yml')) {
-    generateFiles(tree, path.join(__dirname, 'files'), '.verdaccio', {});
+    generateFiles(tree, path.join(__dirname, 'files'), '.verdaccio', {
+      npmUplinkRegistry:
+        execSync('npm config get registry')?.toString()?.trim() ??
+        'https://registry.npmjs.org',
+    });
   }
 
   const verdaccioTarget: TargetConfiguration = {
