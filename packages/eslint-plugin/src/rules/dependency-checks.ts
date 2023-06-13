@@ -12,9 +12,6 @@ import { findProjectsNpmDependencies } from '@nx/js/src/internal';
 import { satisfies } from 'semver';
 
 // TODO LIST
-// + add rule and tests for checking package versions
-// + add rule for checking if package.json exists (by parsing project.json)
-// - add general error if no dependencies block but there are dependencies
 // - add migration to add project.json to list of lintable files
 // - handle helper dependencies (e.g. tslib or @swc/node)
 
@@ -33,7 +30,8 @@ export type MessageIds =
   | 'noPackageJson'
   | 'missingDependency'
   | 'obsoleteDependency'
-  | 'versionMismatch';
+  | 'versionMismatch'
+  | 'missingDependencySection';
 
 export const RULE_NAME = 'dependency-checks';
 
@@ -65,6 +63,7 @@ export default createESLintRule<Options, MessageIds>({
       missingDependency: `The "{{packageName}}" is missing from the "package.json".`,
       obsoleteDependency: `The "{{packageName}}" is found in the "package.json" but is not used.`,
       versionMismatch: `The "{{packageName}}" is found in the "package.json" but it's range is not matching the installed version. Installed version: {{version}}.`,
+      missingDependencySection: `The "dependencies" section is missing from the "package.json".`,
     },
   },
   defaultOptions: [
@@ -163,20 +162,22 @@ export default createESLintRule<Options, MessageIds>({
     }
 
     function validateMissingDependencies(node: AST.JSONProperty) {
-      const missingDeps = allDependencyNames.filter(
-        (d) => !packageJsonDeps.find((p) => p === d)
-      );
+      if (checkMissingDependencies) {
+        const missingDeps = allDependencyNames.filter(
+          (d) => !packageJsonDeps.find((p) => p === d)
+        );
 
-      missingDeps.forEach((d) => {
-        if (!ignoredDependencies.includes(d)) {
-          context.report({
-            node: node as any,
-            messageId: 'missingDependency',
-            data: { packageName: d },
-            // TODO create fixer
-          });
-        }
-      });
+        missingDeps.forEach((d) => {
+          if (!ignoredDependencies.includes(d)) {
+            context.report({
+              node: node as any,
+              messageId: 'missingDependency',
+              data: { packageName: d },
+              // TODO create fixer
+            });
+          }
+        });
+      }
     }
 
     function validateInvalidDependencies(node: AST.JSONProperty) {
@@ -210,6 +211,29 @@ export default createESLintRule<Options, MessageIds>({
       }
     }
 
+    function validateDependenciesSectionExistance(
+      node: AST.JSONObjectExpression
+    ) {
+      if (
+        allDependencyNames.length &&
+        allDependencyNames.some((d) => !ignoredDependencies.includes(d))
+      ) {
+        if (
+          !node.properties ||
+          !node.properties.some((p) =>
+            ['dependencies', 'peerDependencies', 'devDependencies'].includes(
+              (p.key as any).value
+            )
+          )
+        ) {
+          context.report({
+            node: node as any,
+            messageId: 'missingDependencySection',
+          });
+        }
+      }
+    }
+
     function validatePackageJsonExistance(node: AST.JSONLiteral) {
       if (
         checkMissingPackageJson &&
@@ -230,14 +254,17 @@ export default createESLintRule<Options, MessageIds>({
         ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(dev|peer)?dependencies$/i]'](
           node: AST.JSONProperty
         ) {
-          if (checkMissingDependencies) {
-            return validateMissingDependencies(node);
-          }
+          return validateMissingDependencies(node);
         },
         ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(dev|peer)?dependencies$/i] > JSONObjectExpression > JSONProperty'](
           node: AST.JSONProperty
         ) {
           return validateInvalidDependencies(node);
+        },
+        ['JSONExpressionStatement > JSONObjectExpression'](
+          node: AST.JSONObjectExpression
+        ) {
+          return validateDependenciesSectionExistance(node);
         },
       };
     } else {
