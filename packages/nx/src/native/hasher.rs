@@ -2,6 +2,7 @@
 
 use crate::native::parallel_walker::nx_walker;
 use crate::native::types::FileData;
+use crate::native::utils::glob::build_glob_set;
 use anyhow::anyhow;
 use crossbeam_channel::unbounded;
 use globset::{Glob, GlobSetBuilder};
@@ -49,19 +50,12 @@ fn hash_files_matching_globs(
     directory: String,
     glob_patterns: Vec<String>,
 ) -> anyhow::Result<Option<String>> {
-    let mut globset_builder = GlobSetBuilder::new();
-
-    for pattern in glob_patterns {
-        globset_builder.add(Glob::new(&pattern).map_err(|_| anyhow!("Invalid Glob {pattern}"))?);
-    }
-    let globset = globset_builder
-        .build()
-        .map_err(|_| anyhow!("Error building globset builder"))?;
+    let glob_set = build_glob_set(glob_patterns)?;
 
     let mut hashes = nx_walker(directory, move |receiver| {
         let mut collection: Vec<FileData> = Vec::new();
         for (path, content) in receiver {
-            if globset.is_match(&path) {
+            if glob_set.is_match(&path) {
                 collection.push(FileData {
                     file: path,
                     hash: xxh3::xxh3_64(&content).to_string(),
