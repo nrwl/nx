@@ -87,11 +87,13 @@ pub fn get_workspace_files_native(
     Ok(NxWorkspaceFiles {
         project_file_map,
         global_files,
-        config_files: projects.into_iter().map(|(path, _)| path).collect(),
+        config_files: projects.iter().map(|(path, _)| path.clone()).collect(),
     })
 }
 
-fn create_root_map(projects: &Vec<(String, Vec<u8>)>) -> anyhow::Result<HashMap<&Path, String>> {
+fn create_root_map(
+    projects: &Vec<(String, Vec<u8>)>,
+) -> anyhow::Result<hashbrown::HashMap<&Path, String>> {
     projects
         .par_iter()
         .map(|(path, content)| {
