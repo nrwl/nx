@@ -12,9 +12,11 @@ import { findProjectsNpmDependencies } from '@nx/js/src/internal';
 import { satisfies } from 'semver';
 
 // TODO LIST
-// - add rule and tests for checking package versions
-// - add rule for checking if package.json exists (by parsing project.json)
+// + add rule and tests for checking package versions
+// + add rule for checking if package.json exists (by parsing project.json)
+// - add general error if no dependencies block but there are dependencies
 // - add migration to add project.json to list of lintable files
+// - handle helper dependencies (e.g. tslib or @swc/node)
 
 export type Options = [
   {
@@ -23,7 +25,7 @@ export type Options = [
     checkObsoleteDependencies?: boolean;
     checkVersionMismatches?: boolean;
     checkMissingPackageJson?: boolean;
-    ignoreDependencies?: string[];
+    ignoredDependencies?: string[];
   }
 ];
 
@@ -72,7 +74,7 @@ export default createESLintRule<Options, MessageIds>({
       checkObsoleteDependencies: true,
       checkVersionMismatches: true,
       checkMissingPackageJson: true,
-      ignoreDependencies: [],
+      ignoredDependencies: [],
     },
   ],
   create(
@@ -80,7 +82,7 @@ export default createESLintRule<Options, MessageIds>({
     [
       {
         buildTargets,
-        ignoreDependencies,
+        ignoredDependencies,
         checkMissingDependencies,
         checkObsoleteDependencies,
         checkVersionMismatches,
@@ -166,12 +168,14 @@ export default createESLintRule<Options, MessageIds>({
       );
 
       missingDeps.forEach((d) => {
-        context.report({
-          node: node as any,
-          messageId: 'missingDependency',
-          data: { packageName: d },
-          // TODO create fixer
-        });
+        if (!ignoredDependencies.includes(d)) {
+          context.report({
+            node: node as any,
+            messageId: 'missingDependency',
+            data: { packageName: d },
+            // TODO create fixer
+          });
+        }
       });
     }
 
@@ -180,7 +184,10 @@ export default createESLintRule<Options, MessageIds>({
       const packageRange = (node.value as any).value;
 
       if (!allDependencyNames.includes(packageName)) {
-        if (checkObsoleteDependencies) {
+        if (
+          checkObsoleteDependencies &&
+          !ignoredDependencies.includes(packageName)
+        ) {
           context.report({
             node: node as any,
             messageId: 'obsoleteDependency',
@@ -189,6 +196,7 @@ export default createESLintRule<Options, MessageIds>({
         }
       } else if (
         checkVersionMismatches &&
+        !ignoredDependencies.includes(packageName) &&
         !satisfies(allDependencies[packageName], packageRange)
       ) {
         context.report({
@@ -206,7 +214,8 @@ export default createESLintRule<Options, MessageIds>({
       if (
         checkMissingPackageJson &&
         !existsSync(packageJsonPath) &&
-        buildTargets.includes(node.value.toString())
+        buildTargets.includes(node.value.toString()) &&
+        allDependencyNames.length > 0
       ) {
         context.report({
           node: node as any,
