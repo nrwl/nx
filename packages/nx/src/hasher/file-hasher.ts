@@ -9,8 +9,6 @@ export class FileHasher {
   async init(): Promise<void> {
     performance.mark('init hashing:start');
     // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
-    this.clear();
-
     const { hashFiles } = require('../native');
     this.clear();
     const filesObject = hashFiles(workspaceRoot);
