@@ -152,10 +152,12 @@ export async function getReportData(): Promise<ReportData> {
   const communityPlugins = findInstalledCommunityPlugins();
 
   let projectGraphError: Error | null = null;
-  try {
-    await createProjectGraphAsync();
-  } catch (e) {
-    projectGraphError = e;
+  if (isNativeAvailable()) {
+    try {
+      await createProjectGraphAsync();
+    } catch (e) {
+      projectGraphError = e;
+    }
   }
 
   const packageVersionsWeCareAbout = findInstalledPackagesWeCareAbout();
@@ -307,4 +309,13 @@ export function findInstalledPackagesWeCareAbout() {
     package: pkg,
     version,
   }));
+}
+
+function isNativeAvailable() {
+  try {
+    require('../../native');
+    return true;
+  } catch {
+    return false;
+  }
 }
