@@ -1,4 +1,4 @@
-import { getWorkspaceFilesNative } from '../index';
+import { getWorkspaceFilesNative, WorkspaceErrors } from '../index';
 import { TempFs } from '../../utils/testing/temp-fs';
 import { NxJsonConfiguration } from '../../config/nx-json';
 
@@ -209,11 +209,20 @@ describe('workspace files', () => {
       });
 
       let globs = ['**/project.json'];
-      expect(() =>
-        getWorkspaceFilesNative(fs.tempDir, globs)
-      ).toThrowErrorMatchingInlineSnapshot(
-        `"Unable to parse "libs/project1/project.json": Unexpected token in object on line 2 column 44."`
+
+      const error = getError(() => getWorkspaceFilesNative(fs.tempDir, globs));
+      expect(error.message).toMatchInlineSnapshot(
+        `"libs/project1/project.json"`
       );
+      expect(error).toHaveProperty('code', WorkspaceErrors.ParseError);
     });
   });
 });
+
+const getError = (fn: () => unknown): Error => {
+  try {
+    fn();
+  } catch (error: unknown) {
+    return error as Error;
+  }
+};

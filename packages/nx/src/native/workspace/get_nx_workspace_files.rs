@@ -1,7 +1,7 @@
 use jsonc_parser::ParseOptions;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
 use tracing::trace;
@@ -11,6 +11,7 @@ use crate::native::logger::enable_logger;
 use crate::native::parallel_walker::nx_walker;
 use crate::native::types::FileData;
 use crate::native::utils::glob::build_glob_set;
+use crate::native::workspace::errors::{InternalWorkspaceErrors, WorkspaceErrors};
 use crate::native::workspace::types::{FileLocation, ProjectConfiguration};
 
 #[napi(object)]
@@ -25,12 +26,13 @@ pub struct NxWorkspaceFiles {
 pub fn get_workspace_files_native(
     workspace_root: String,
     globs: Vec<String>,
-) -> anyhow::Result<NxWorkspaceFiles> {
+) -> napi::Result<NxWorkspaceFiles, WorkspaceErrors> {
     enable_logger();
 
     trace!("{workspace_root}, {globs:?}");
 
-    let (projects, mut file_data) = get_file_data(&workspace_root, globs)?;
+    let (projects, mut file_data) = get_file_data(&workspace_root, globs)
+        .map_err(|err| napi::Error::new(WorkspaceErrors::Generic, err.to_string()))?;
 
     let root_map = create_root_map(&projects)?;
 
@@ -93,7 +95,7 @@ pub fn get_workspace_files_native(
 
 fn create_root_map(
     projects: &Vec<(String, Vec<u8>)>,
-) -> anyhow::Result<hashbrown::HashMap<&Path, String>> {
+) -> Result<hashbrown::HashMap<&Path, String>, InternalWorkspaceErrors> {
     projects
         .par_iter()
         .map(|(path, content)| {
@@ -110,15 +112,25 @@ fn create_root_map(
                         std::str::from_utf8(content).expect("content should be valid utf8");
                     let parser_value =
                         jsonc_parser::parse_to_serde_value(content_str, &ParseOptions::default())
-                            .map_err(|err| anyhow::anyhow!("Unable to parse {path:?}: {err}"))?;
-                    serde_json::from_value(parser_value.into()).map_err(anyhow::Error::from)
+                            .map_err(|_| InternalWorkspaceErrors::ParseError {
+                            file: PathBuf::from(path),
+                        })?;
+                    serde_json::from_value(parser_value.into()).map_err(|_| {
+                        InternalWorkspaceErrors::Generic {
+                            msg: format!("Failed to parse {path:?}"),
+                        }
+                    })
                 })?;
 
                 let Some(parent_path) = path.parent() else {
-                    anyhow::bail!("{path:?} does not have a parent")
+                   return Err(InternalWorkspaceErrors::Generic {
+                        msg: format!("{path:?} has no parent"),
+                    })
                 };
                 let Some(name)  = project_configuration.name else {
-                    anyhow::bail!("{path:?} does not have a name")
+                  return  Err(InternalWorkspaceErrors::Generic {
+                      msg: format!("{path:?} has no name property"),
+                  });
                 };
                 Ok((parent_path, name))
             } else {
@@ -130,10 +142,14 @@ fn create_root_map(
                         .ok()
                 });
                 let Some(parent_path) = path.parent() else {
-                    anyhow::bail!("{path:?} does not have a parent")
+                    return Err(InternalWorkspaceErrors::Generic {
+                        msg: format!("{path:?} has no parent"),
+                    })
                 };
                 let Some(name)  = name else {
-                    anyhow::bail!("{path:?} does not have a name")
+                    return Err(InternalWorkspaceErrors::Generic {
+                        msg: format!("{path:?} has no name"),
+                    })
                 };
                 Ok((parent_path, name))
             };

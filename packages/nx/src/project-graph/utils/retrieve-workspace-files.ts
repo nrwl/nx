@@ -16,6 +16,7 @@ import {
 } from '../../adapter/angular-json';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectFileMap } from '../../config/project-graph';
+import { NxWorkspaceFiles, WorkspaceErrors } from '../../native';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -39,7 +40,17 @@ export async function retrieveWorkspaceFiles(
   );
 
   performance.mark('get-workspace-files:start');
-  let workspaceFiles = getWorkspaceFilesNative(workspaceRoot, globs);
+  let workspaceFiles: NxWorkspaceFiles;
+  try {
+    workspaceFiles = getWorkspaceFilesNative(workspaceRoot, globs);
+  } catch (e) {
+    // If the error is a parse error from Rust, then use the JS parseJson function to write a pretty error message
+    if (e.code === WorkspaceErrors.ParseError) {
+      readJsonFile(join(workspaceRoot, e.message));
+    } else {
+      throw e;
+    }
+  }
   performance.mark('get-workspace-files:end');
   performance.measure(
     'get-workspace-files',

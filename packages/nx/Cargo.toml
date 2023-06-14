@@ -20,6 +20,7 @@ watchexec-signals = "1.0.0"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"]}
 anyhow = "1.0.71"
+thiserror = "1.0.40"
 itertools = "0.10.5"
 rayon = "1.7.0"
 hashbrown = {version = "0.14.0", features = ["rayon"]}
