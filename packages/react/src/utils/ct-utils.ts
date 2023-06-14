@@ -11,8 +11,8 @@ import { getComponentNode } from './ast-utils';
 
 let tsModule: typeof import('typescript');
 
-const allowedFileExt = new RegExp(/\.[jt]sx?/g);
-const isSpecFile = new RegExp(/(spec|test)\./g);
+const allowedFileExt = new RegExp(/\.[jt]sx?/);
+const isSpecFile = new RegExp(/(spec|test)\./);
 
 export interface FoundTarget {
   config?: TargetConfiguration;
@@ -56,6 +56,7 @@ function assertValidConfig(config: unknown) {
     );
   }
 }
+
 export async function getBundlerFromTarget(
   found: FoundTarget,
   tree: Tree
