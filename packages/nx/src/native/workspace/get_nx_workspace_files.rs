@@ -106,55 +106,67 @@ fn create_root_map(
             return if file_name == "project.json" || file_name == "package.json" {
                 // use serde_json to do the initial parse, if that fails fall back to jsonc_parser.
                 // If all those fail, expose the error from jsonc_parser
-                let project_configuration: ProjectConfiguration = serde_json::from_slice(content)
-                    .or_else(|_| {
-                    let content_str =
-                        std::str::from_utf8(content).expect("content should be valid utf8");
-                    let parser_value =
-                        jsonc_parser::parse_to_serde_value(content_str, &ParseOptions::default())
-                            .map_err(|_| InternalWorkspaceErrors::ParseError {
-                            file: PathBuf::from(path),
-                        })?;
-                    serde_json::from_value(parser_value.into()).map_err(|_| {
-                        InternalWorkspaceErrors::Generic {
-                            msg: format!("Failed to parse {path:?}"),
-                        }
-                    })
-                })?;
+                let project_configuration: ProjectConfiguration =
+                    read_project_configuration(content, path)?;
 
                 let Some(parent_path) = path.parent() else {
                    return Err(InternalWorkspaceErrors::Generic {
                         msg: format!("{path:?} has no parent"),
                     })
                 };
-                let Some(name)  = project_configuration.name else {
-                  return  Err(InternalWorkspaceErrors::Generic {
-                      msg: format!("{path:?} has no name property"),
-                  });
-                };
-                Ok((parent_path, name))
-            } else {
-                let name = path.parent().and_then(|p| {
-                    p.file_name()
-                        .unwrap_or_else(|| OsStr::new(""))
+
+                let name: String = if let Some(name) = project_configuration.name {
+                    Ok(name)
+                } else {
+                    parent_path
+                        .file_name()
+                        .unwrap_or_default()
                         .to_os_string()
                         .into_string()
-                        .ok()
-                });
-                let Some(parent_path) = path.parent() else {
-                    return Err(InternalWorkspaceErrors::Generic {
+                        .map_err(|os_string| InternalWorkspaceErrors::Generic {
+                            msg: format!("Cannot turn {os_string:?} into String"),
+                        })
+                }?;
+                Ok((parent_path, name))
+            } else {
+                if let Some(parent_path) = path.parent() {
+                    Ok((
+                        parent_path,
+                        parent_path
+                            .file_name()
+                            .unwrap_or_default()
+                            .to_os_string()
+                            .into_string()
+                            .map_err(|os_string| InternalWorkspaceErrors::Generic {
+                                msg: format!("Cannot turn {os_string:?} into String"),
+                            })?,
+                    ))
+                } else {
+                    Err(InternalWorkspaceErrors::Generic {
                         msg: format!("{path:?} has no parent"),
                     })
-                };
-                let Some(name)  = name else {
-                    return Err(InternalWorkspaceErrors::Generic {
-                        msg: format!("{path:?} has no name"),
-                    })
-                };
-                Ok((parent_path, name))
+                }
             };
         })
         .collect()
+}
+
+fn read_project_configuration(
+    content: &Vec<u8>,
+    path: &Path,
+) -> Result<ProjectConfiguration, InternalWorkspaceErrors> {
+    serde_json::from_slice(content).or_else(|_| {
+        let content_str = std::str::from_utf8(content).expect("content should be valid utf8");
+        let parser_value =
+            jsonc_parser::parse_to_serde_value(content_str, &ParseOptions::default()).map_err(
+                |_| InternalWorkspaceErrors::ParseError {
+                    file: PathBuf::from(path),
+                },
+            )?;
+        serde_json::from_value(parser_value.into()).map_err(|_| InternalWorkspaceErrors::Generic {
+            msg: format!("Failed to parse {path:?}"),
+        })
+    })
 }
 
 type WorkspaceData = (Vec<(String, Vec<u8>)>, Vec<FileData>);

@@ -126,7 +126,7 @@ describe('workspace files', () => {
   });
 
   describe('errors', () => {
-    it('throws errors when projects are misconfigured', async () => {
+    it('it should infer names of configuration files without a name', async () => {
       const fs = new TempFs('workspace-files');
       const nxJson: NxJsonConfiguration = {};
       await fs.createFiles({
@@ -144,11 +144,27 @@ describe('workspace files', () => {
       });
 
       let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
-      expect(() =>
-        getWorkspaceFilesNative(fs.tempDir, globs)
-      ).toThrowErrorMatchingInlineSnapshot(
-        `""libs/project2/project.json" has no name property"`
-      );
+      expect(getWorkspaceFilesNative(fs.tempDir, globs).projectFileMap)
+        .toMatchInlineSnapshot(`
+        {
+          "project1": [
+            {
+              "file": "libs/project1/index.js",
+              "hash": "3244421341483603138",
+            },
+            {
+              "file": "libs/project1/project.json",
+              "hash": "13466615737813422520",
+            },
+          ],
+          "project2": [
+            {
+              "file": "libs/project2/project.json",
+              "hash": "1389868326933519382",
+            },
+          ],
+        }
+      `);
     });
 
     it('handles comments', async () => {
