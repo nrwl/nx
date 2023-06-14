@@ -1,4 +1,4 @@
-import { ESLint, Linter as LinterType } from 'eslint';
+import { Linter as LinterType } from 'eslint';
 
 /**
  * This configuration is intended to apply to all TypeScript source files.
@@ -21,6 +21,20 @@ export const globalTypeScriptOverrides = {
 export const globalJavaScriptOverrides = {
   files: ['*.js', '*.jsx'],
   extends: ['plugin:@nx/javascript'],
+  /**
+   * Having an empty rules object present makes it more obvious to the user where they would
+   * extend things from if they needed to
+   */
+  rules: {},
+};
+
+/**
+ * This configuration is intended to apply to all JSON source files.
+ * See the eslint-plugin package for what is in the referenced shareable config.
+ */
+export const globalJsonOverrides = {
+  files: ['*.json'],
+  parser: 'jsonc-eslint-parser',
   /**
    * Having an empty rules object present makes it more obvious to the user where they would
    * extend things from if they needed to
@@ -65,6 +79,7 @@ export const getGlobalEsLintConfiguration = (
       ...(rootProject ? [] : [moduleBoundariesOverride]),
       globalTypeScriptOverrides,
       globalJavaScriptOverrides,
+      globalJsonOverrides,
     ],
   };
   if (unitTestRunner === 'jest') {

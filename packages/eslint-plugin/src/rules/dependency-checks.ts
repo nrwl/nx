@@ -1,4 +1,4 @@
-import type { AST } from 'jsonc-eslint-parser';
+import { AST } from 'jsonc-eslint-parser';
 import { normalizePath, readJsonFile, workspaceRoot } from '@nx/devkit';
 import { createESLintRule } from '../utils/create-eslint-rule';
 import {
@@ -12,7 +12,6 @@ import { findProjectsNpmDependencies } from '@nx/js/src/internal';
 import { satisfies } from 'semver';
 
 // TODO LIST
-// - add migration to add project.json to list of lintable files
 // - handle helper dependencies (e.g. tslib or @swc/node)
 
 export type Options = [

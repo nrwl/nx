@@ -175,11 +175,11 @@ describe('convert-tslint-to-eslint', () => {
      * The root level .eslintrc.json should now have been generated
      */
     const eslintJson = readJson(host, '.eslintrc.json');
-    expect(eslintJson.overrides[3].rules['no-console'][1].allow).toContain(
+    expect(eslintJson.overrides[4].rules['no-console'][1].allow).toContain(
       'log'
     );
     // Remove no-console config because it is not deterministic across node versions
-    delete eslintJson.overrides[3].rules['no-console'][1].allow;
+    delete eslintJson.overrides[4].rules['no-console'][1].allow;
     expect(eslintJson).toMatchSnapshot();
 
     /**
@@ -222,11 +222,11 @@ describe('convert-tslint-to-eslint', () => {
      * The root level .eslintrc.json should now have been generated
      */
     const eslintJson = readJson(host, '.eslintrc.json');
-    expect(eslintJson.overrides[3].rules['no-console'][1].allow).toContain(
+    expect(eslintJson.overrides[4].rules['no-console'][1].allow).toContain(
       'log'
     );
     // Remove no-console config because it is not deterministic across node versions
-    delete eslintJson.overrides[3].rules['no-console'][1].allow;
+    delete eslintJson.overrides[4].rules['no-console'][1].allow;
     expect(eslintJson).toMatchSnapshot();
 
     /**

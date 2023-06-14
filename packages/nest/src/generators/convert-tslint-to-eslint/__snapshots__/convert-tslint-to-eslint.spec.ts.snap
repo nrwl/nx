@@ -150,6 +150,13 @@ exports[`convert-tslint-to-eslint should work for NestJS applications 3`] = `
     },
     {
       "files": [
+        "*.json",
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {},
+    },
+    {
+      "files": [
         "*.ts",
       ],
       "plugins": [
@@ -431,6 +438,13 @@ exports[`convert-tslint-to-eslint should work for NestJS libraries 3`] = `
         "*.js",
         "*.jsx",
       ],
+      "rules": {},
+    },
+    {
+      "files": [
+        "*.json",
+      ],
+      "parser": "jsonc-eslint-parser",
       "rules": {},
     },
     {
