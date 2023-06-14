@@ -12,11 +12,11 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
-import { fileExists, readJsonFile } from '../utils/fileutils';
+import { fileExists } from '../utils/fileutils';
 import { workspaceRoot } from '../utils/workspace-root';
-import { Workspaces } from '../config/workspaces';
 import { performance } from 'perf_hooks';
 import { retrieveWorkspaceFiles } from './utils/retrieve-workspace-files';
+import { readNxJson } from './file-utils';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -69,7 +69,7 @@ export function readProjectsConfigurationFromProjectGraph(
 }
 
 export async function buildProjectGraphWithoutDaemon() {
-  let nxJson = new Workspaces(workspaceRoot).readNxJson();
+  const nxJson = readNxJson();
 
   const { allWorkspaceFiles, projectFileMap, projectConfigurations } =
     await retrieveWorkspaceFiles(workspaceRoot, nxJson);
