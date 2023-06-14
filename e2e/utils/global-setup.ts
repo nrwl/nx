@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { ChildProcess, execSync, fork } from 'child_process';
+import { ChildProcess, exec, fork } from 'child_process';
 import { tmpdir } from 'tmp';
 import { existsSync } from 'fs-extra';
 import { Config } from '@jest/types';
@@ -57,8 +57,25 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     !existsSync('./build')
   ) {
     console.log('Publishing packages to local registry');
-    execSync('pnpm nx-release --local major', {
-      stdio: isVerbose ? 'inherit' : 'ignore',
+    await new Promise<void>((res, rej) => {
+      const publishProcess = exec('pnpm nx-release --local major');
+      let logs = Buffer.from('');
+      if (isVerbose) {
+        publishProcess?.stdout?.pipe(process.stdout);
+        publishProcess?.stderr?.pipe(process.stderr);
+      } else {
+        publishProcess?.stdout?.on('data', (data) => (logs += data));
+        publishProcess?.stderr?.on('data', (data) => (logs += data));
+      }
+      publishProcess.on('exit', (code) => {
+        if (code && code > 0) {
+          if (!isVerbose) {
+            console.log(logs.toString());
+          }
+          rej(code);
+        }
+        res();
+      });
     });
   }
 }
