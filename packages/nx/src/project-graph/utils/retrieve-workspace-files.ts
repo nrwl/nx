@@ -44,7 +44,7 @@ export async function retrieveWorkspaceFiles(
   try {
     workspaceFiles = getWorkspaceFilesNative(workspaceRoot, globs);
   } catch (e) {
-    // If the error is a parse error from Rust, then use the JS parseJson function to write a pretty error message
+    // If the error is a parse error from Rust, then use the JS readJsonFile function to write a pretty error message
     if (e.code === WorkspaceErrors.ParseError) {
       readJsonFile(join(workspaceRoot, e.message));
     } else {
