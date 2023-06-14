@@ -33,7 +33,7 @@ import { PackageJson } from '../utils/package-json';
 import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
 import {
-  mergeAngularJsonAndGlobProjects,
+  mergeAngularJsonAndProjects,
   shouldMergeAngularProjects,
 } from '../adapter/angular-json';
 import { getNxRequirePaths } from '../utils/installation-directory';
@@ -95,7 +95,7 @@ export class Workspaces {
       return this.cachedProjectsConfig;
     }
     const nxJson = this.readNxJson();
-    const projectsConfigurations = buildProjectsConfigurationsFromGlobs(
+    const projectsConfigurations = buildProjectsConfigurationsFromProjectPaths(
       nxJson,
       globForProjectFiles(
         this.root,
@@ -116,7 +116,7 @@ export class Workspaces {
         opts?._includeProjectsFromAngularJson
       )
     ) {
-      projectsConfigurations.projects = mergeAngularJsonAndGlobProjects(
+      projectsConfigurations.projects = mergeAngularJsonAndProjects(
         projectsConfigurations.projects,
         this.root
       );
@@ -623,7 +623,9 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
     // TODO(@AgentEnder): update logic after better way to determine root project inclusion
     // Include the root project
     return packageJson.nx ? patterns.concat('package.json') : patterns;
-  } catch {}
+  } catch {
+    return [];
+  }
 }
 
 function normalizePatterns(patterns: string[]): string[] {
@@ -801,7 +803,7 @@ export function inferProjectFromNonStandardFile(
   };
 }
 
-export function buildProjectsConfigurationsFromGlobs(
+export function buildProjectsConfigurationsFromProjectPaths(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   readJson: <T extends Object>(string) => T = <T extends Object>(string) =>
@@ -858,10 +860,9 @@ export function buildProjectsConfigurationsFromGlobs(
         if (!projects[name]) {
           projects[name] = config;
         } else {
-          logger.error(
+          logger.warn(
             `Skipping project inferred from ${file} since project ${name} already exists.`
           );
-          throw new Error();
         }
       }
     }

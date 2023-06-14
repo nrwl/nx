@@ -1,10 +1,9 @@
 import { TempFs } from '../../../../utils/testing/temp-fs';
 const tempFs = new TempFs('explicit-project-deps');
 
-import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
-import { fileHasher } from '../../../../hasher/file-hasher';
+import { retrieveWorkspaceFiles } from '../../../../project-graph/utils/retrieve-workspace-files';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -604,13 +603,13 @@ async function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
   const nxJson = {
     npmScope: 'proj',
   };
-  const projects = {
-    projects: {
-      [config.sourceProjectName]: {
-        root: `libs/${config.sourceProjectName}`,
-      },
-    },
+  const projectsFs = {
+    [`./libs/${config.sourceProjectName}/project.json`]: JSON.stringify({
+      name: config.sourceProjectName,
+      sourceRoot: `libs/${config.sourceProjectName}`,
+    }),
   };
+
   const fsJson = {
     './package.json': `{
       "name": "test",
@@ -663,9 +662,11 @@ async function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
     dependencyProjectNamesToImportPaths
   )) {
     fsJson[`libs/${projectName}/index.ts`] = ``;
-    projects.projects[projectName] = {
-      root: `libs/${projectName}`,
-    };
+
+    projectsFs[`./libs/${projectName}/project.json`] = JSON.stringify({
+      name: projectName,
+      sourceRoot: `libs/${projectName}`,
+    });
     tsConfig.compilerOptions.paths[tsconfigPath] = [
       `libs/${projectName}/index.ts`,
     ];
@@ -680,18 +681,19 @@ async function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
 
   fsJson['./tsconfig.base.json'] = JSON.stringify(tsConfig);
 
-  await tempFs.createFiles(fsJson);
+  await tempFs.createFiles({
+    ...fsJson,
+    ...projectsFs,
+  });
 
-  await fileHasher.init();
+  const { projectFileMap, projectConfigurations } =
+    await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
 
   return {
     ctx: {
-      projectsConfigurations: projects,
+      projectsConfigurations: projectConfigurations,
       nxJsonConfiguration: nxJson,
-      filesToProcess: createProjectFileMap(
-        projects as any,
-        fileHasher.allFileData()
-      ).projectFileMap,
+      filesToProcess: projectFileMap,
     },
     builder,
   };

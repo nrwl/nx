@@ -6,12 +6,8 @@ import {
 import * as fs from 'fs';
 import { JsonDiffType } from '../utils/json-diff';
 import ignore from 'ignore';
-import { fileHasher } from '../hasher/file-hasher';
 
 describe('calculateFileChanges', () => {
-  beforeEach(() => {
-    fileHasher.ensureInitialized();
-  });
   it('should return a whole file change by default for files that exist', () => {
     jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     const changes = calculateFileChanges(
