@@ -112,10 +112,6 @@
           "version": "^4.0.2",
           "alwaysAddToPackageJson": false
         },
-        "vite-plugin-eslint": {
-          "version": "^1.8.1",
-          "alwaysAddToPackageJson": false
-        },
         "vitest": {
           "version": "^0.25.8",
           "alwaysAddToPackageJson": false
