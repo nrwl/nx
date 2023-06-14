@@ -129,7 +129,7 @@ export function matchImportWithWildcard(
 }
 
 export function isRelative(s: string) {
-  return s.startsWith('.');
+  return s.startsWith('./') || s.startsWith('../');
 }
 
 export function getTargetProjectBasedOnRelativeImport(
