@@ -190,7 +190,7 @@ jobs:
              freebsd-version
              mkdir -p /Users/runner/work/_temp/_github_workflow
              echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
-             pnpm install --frozen-lockfile --dev --ignore-scripts --no-optional
+             pnpm install --frozen-lockfile --dev --ignore-scripts
              pnpm nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
              rm -rf node_modules
        - name: Upload artifact
