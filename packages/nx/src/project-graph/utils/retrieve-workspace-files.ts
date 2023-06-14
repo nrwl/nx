@@ -47,6 +47,8 @@ export async function retrieveWorkspaceFiles(
     // If the error is a parse error from Rust, then use the JS readJsonFile function to write a pretty error message
     if (e.code === WorkspaceErrors.ParseError) {
       readJsonFile(join(workspaceRoot, e.message));
+      // readJsonFile should always fail, but if it doesn't, then throw the original error
+      throw e;
     } else {
       throw e;
     }

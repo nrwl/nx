@@ -147,7 +147,7 @@ describe('workspace files', () => {
       expect(() =>
         getWorkspaceFilesNative(fs.tempDir, globs)
       ).toThrowErrorMatchingInlineSnapshot(
-        `""libs/project2/project.json" does not have a name"`
+        `""libs/project2/project.json" has no name property"`
       );
     });
 
