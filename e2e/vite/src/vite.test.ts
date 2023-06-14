@@ -62,7 +62,7 @@ describe('Vite Plugin', () => {
       });
     });
 
-    xdescribe('set up new React app with --bundler=vite option', () => {
+    describe('set up new React app with --bundler=vite option', () => {
       beforeEach(() => {
         proj = newProject();
         runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
