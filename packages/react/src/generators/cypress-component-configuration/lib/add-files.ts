@@ -9,11 +9,8 @@ import {
 import { nxVersion } from 'nx/src/utils/versions';
 import { componentTestGenerator } from '../../component-test/component-test';
 import type { CypressComponentConfigurationSchema } from '../schema';
-import {
-  FoundTarget,
-  getBundlerFromTarget,
-  isComponent,
-} from '../../../utils/ct-utils';
+import { getBundlerFromTarget, isComponent } from '../../../utils/ct-utils';
+import { FoundTarget } from '@nx/cypress/src/utils/find-target-options';
 
 export async function addFiles(
   tree: Tree,
@@ -26,7 +23,12 @@ export async function addFiles(
   const { addMountDefinition, addDefaultCTConfig } = await import(
     '@nx/cypress/src/utils/config'
   );
-  const actualBundler = await getBundlerFromTarget(found, tree);
+
+  // Specifically undefined to allow Remix workaround of passing an empty string
+  const actualBundler =
+    options.buildTarget !== undefined && options.bundler
+      ? options.bundler
+      : await getBundlerFromTarget(found, tree);
 
   if (options.bundler && options.bundler !== actualBundler) {
     logger.warn(

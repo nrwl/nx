@@ -2,22 +2,17 @@ import {
   createProjectGraphAsync,
   parseTargetString,
   readProjectConfiguration,
-  TargetConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { getComponentNode } from './ast-utils';
+import { type FoundTarget } from '@nx/cypress/src/utils/find-target-options';
 
 let tsModule: typeof import('typescript');
 
 const allowedFileExt = new RegExp(/\.[jt]sx?/);
 const isSpecFile = new RegExp(/(spec|test)\./);
-
-export interface FoundTarget {
-  config?: TargetConfiguration;
-  target: string;
-}
 
 export async function addCTTargetWithBuildTarget(
   tree: Tree,
@@ -27,16 +22,21 @@ export async function addCTTargetWithBuildTarget(
     validExecutorNames: Set<string>;
   }
 ): Promise<FoundTarget> {
-  const { findBuildConfig } = await import(
-    '@nx/cypress/src/utils/find-target-options'
-  );
-  const found = await findBuildConfig(tree, {
-    project: options.project,
-    buildTarget: options.buildTarget,
-    validExecutorNames: options.validExecutorNames,
-  });
+  let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
-  assertValidConfig(found?.config);
+  // Specifically undefined as a workaround for Remix to pass an empty string as the buildTarget
+  if (options.buildTarget === undefined) {
+    const { findBuildConfig } = await import(
+      '@nx/cypress/src/utils/find-target-options'
+    );
+    found = await findBuildConfig(tree, {
+      project: options.project,
+      buildTarget: options.buildTarget,
+      validExecutorNames: options.validExecutorNames,
+    });
+
+    assertValidConfig(found?.config);
+  }
 
   const projectConfig = readProjectConfiguration(tree, options.project);
   projectConfig.targets['component-test'].options = {

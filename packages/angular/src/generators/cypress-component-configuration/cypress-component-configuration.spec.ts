@@ -4,7 +4,6 @@ import {
   joinPathFragments,
   ProjectGraph,
   readProjectConfiguration,
-  stripIndents,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
@@ -38,6 +37,10 @@ describe('Cypress Component Testing Configuration', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('.gitignore', '');
     mockedInstalledCypressVersion.mockReturnValue(10);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('updateProjectConfig', () => {
@@ -165,7 +168,7 @@ describe('Cypress Component Testing Configuration', () => {
       });
     });
 
-    it('should throw with invalid --build-target', async () => {
+    it('should not throw with invalid --build-target', async () => {
       await generateTestApplication(tree, {
         name: 'fancy-app',
       });
@@ -213,12 +216,11 @@ describe('Cypress Component Testing Configuration', () => {
           buildTarget: 'fancy-app:build',
           generateTests: false,
         });
-      }).rejects.toThrowErrorMatchingInlineSnapshot(`
-        "Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
-        Provided project? fancy-lib
-        Provided build target? fancy-app:build
-        Provided Executors? @nx/angular:webpack-browser, @nrwl/angular:webpack-browser, @angular-devkit/build-angular:browser"
-      `);
+      }).resolves;
+
+      expect(
+        require('@nx/devkit').createProjectGraphAsync
+      ).not.toHaveBeenCalled();
     });
     it('should use own project config', async () => {
       await generateTestApplication(tree, {
@@ -847,6 +849,7 @@ async function setup(
     }
   }
 }
+
 function getCmpsFromTree(
   tree: Tree,
   options: { basePath: string; name: string }

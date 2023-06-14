@@ -27,7 +27,7 @@ interface FindTargetOptions {
   skipGetOptions?: boolean;
 }
 
-interface FoundTarget {
+export interface FoundTarget {
   config?: TargetConfiguration;
   target: string;
 }
