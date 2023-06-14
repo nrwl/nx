@@ -50,7 +50,7 @@ nx start my-app
 To generate a new library run:
 
 ```shell
-npx nx g @nx/react-native:lib your-lib-name
+npx nx g @nx/expo:lib your-lib-name
 ```
 
 ### Generating Components
@@ -58,7 +58,7 @@ npx nx g @nx/react-native:lib your-lib-name
 To generate a new component inside library run:
 
 ```shell
-npx nx g @nx/react-native:component your-component-name --project=your-lib-name --export
+npx nx g @nx/expo:component your-component-name --project=your-lib-name --export
 ```
 
 Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`
@@ -244,7 +244,27 @@ npx eas login
 To check the details of your build status, run:
 
 ```shell
-nx build-list  <app-name>
+nx build-list <app-name>
+```
+
+### Run EAS Submit
+
+EAS Submit is a hosted service for uploading and submitting your app binaries to the app stores. Since it's a hosted service, you can submit your app to both stores as long as you can run EAS CLI on your machine. This means you can easily submit your iOS and Android apps from your macOS, Windows, or Linux workstation or from CI.
+
+To start an EAS submit:
+
+```shell
+nx submit <app-name>
+```
+
+### Using EAS Update
+
+EAS Build includes some special affordances for Expo's `expo-updates` library. In particular, you can configure the channel property in eas.json and EAS Build will take care of updating it in your native project at build time.
+
+To start an EAS submit:
+
+```shell
+nx update <app-name>
 ```
 
 ### Testing Projects
@@ -269,6 +289,8 @@ Below table is a map between expo commands and Nx commands:
 | `expo install`     | `nx install <app-name>`     |
 | `eas build`        | `nx build <app-name>`       |
 | `eas build:list`   | `nx build-list <app-name>`  |
+| `eas submit`       | `nx submit <app-name>`      |
+| `eas update`       | `nx update <app-name>`      |
 
 ## More Documentation
 

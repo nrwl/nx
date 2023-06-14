@@ -26,10 +26,6 @@ describe('expo', () => {
     runCLI(
       `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
     );
-  });
-  afterAll(() => cleanupProject());
-
-  it('should test and lint', async () => {
     const componentName = uniq('component');
 
     runCLI(
@@ -40,7 +36,10 @@ describe('expo', () => {
       let updated = `// eslint-disable-next-line @typescript-eslint/no-unused-vars\nimport {${componentName}} from '${proj}/${libName}';\n${content}`;
       return updated;
     });
+  });
+  afterAll(() => cleanupProject());
 
+  it('should test and lint', async () => {
     expectTestsPass(await runCLIAsync(`test ${appName}`));
     expectTestsPass(await runCLIAsync(`test ${libName}`));
 
@@ -92,16 +91,12 @@ describe('expo', () => {
     expect(prebuildResult.combinedOutput).toContain('Config synced');
   });
 
-  // TODO(emily): expo-cli always fetches the latest version of react native
-  // re-enable it when expo-cli is fixed
-  xit('should install', async () => {
+  it('should install', async () => {
     // run install command
     const installResults = await runCLIAsync(
-      `install ${appName} --no-interactive --check`
+      `install ${appName} --no-interactive --fix=false`
     );
-    expect(installResults.combinedOutput).toContain(
-      'Dependencies are up to date'
-    );
+    expect(installResults.combinedOutput).toContain('up to date');
   });
 
   it('should start', async () => {
