@@ -192,7 +192,7 @@ describe('Web Components Applications', () => {
     runCLI(`build ${appName} --outputHashing none`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
-      /Foo=__decorate\(\[sealed\],Foo\)/
+      /Foo=(_ts|_)_decorate\(\[sealed\],Foo\)/g
     );
   }, 120000);
 
