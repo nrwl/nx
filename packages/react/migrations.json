@@ -916,6 +916,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.4.0-beta.8": {
+      "version": "16.4.0-beta.8",
+      "packages": {
+        "@emotion/styled": {
+          "version": "11.11.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/react": {
+          "version": "11.11.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/babel-plugin": {
+          "version": "11.11.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
