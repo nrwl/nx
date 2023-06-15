@@ -34,22 +34,6 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             this.projectGraph
           );
 
-          const importHelpers = !!readTsConfig(this.options.tsConfig).options
-            .importHelpers;
-          const shouldAddHelperDependency =
-            importHelpers &&
-            helperDependencies.every(
-              (dep) => dep.target !== HelperDependency.tsc
-            );
-
-          if (shouldAddHelperDependency) {
-            helperDependencies.push({
-              type: 'static',
-              source: this.context.projectName,
-              target: HelperDependency.tsc,
-            });
-          }
-
           const packageJson = createPackageJson(
             this.context.projectName,
             this.projectGraph,

@@ -60,6 +60,14 @@ const externalNodes: Record<string, ProjectGraphExternalNode> = {
       version: '2.1.0',
     },
   },
+  'npm:@swc/helpers': {
+    name: 'npm:@swc/helpers',
+    type: 'npm',
+    data: {
+      packageName: '@swc/helpers',
+      version: '1.2.3',
+    },
+  },
 };
 
 describe('Dependency checks (eslint)', () => {
@@ -1077,6 +1085,203 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(0);
   });
+
+  it('should require tslib if @nx/js:tsc executor', () => {
+    const packageJson = {
+      name: '@mycompany/liba',
+      dependencies: {
+        external1: '^16.0.0',
+      },
+    };
+
+    const tsConfigJson = {
+      extends: '../../tsconfig.base.json',
+      compilerOptions: {
+        module: 'commonjs',
+        outDir: '../../dist/out-tsc',
+        declaration: true,
+        types: ['node'],
+      },
+      exclude: [
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*_spec.ts',
+        '**/*_test.ts',
+        'jest.config.ts',
+      ],
+      include: ['**/*.ts'],
+    };
+
+    const tsConfiogBaseJson = {
+      compilerOptions: {
+        target: 'es2015',
+        importHelpers: true,
+        module: 'commonjs',
+        moduleResolution: 'node',
+        outDir: 'build',
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+        skipLibCheck: true,
+        types: ['node'],
+        lib: ['es2019'],
+        declaration: true,
+        resolveJsonModule: true,
+        baseUrl: '.',
+        rootDir: '.',
+        allowJs: true,
+      },
+    };
+
+    const fileSys = {
+      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+      './libs/liba/src/index.ts': '',
+      './libs/libb/tsconfig.json': JSON.stringify(tsConfigJson, null, 2),
+      './package.json': JSON.stringify(rootPackageJson, null, 2),
+      './tsconfig.base.json': JSON.stringify(tsConfiogBaseJson, null, 2),
+    };
+    vol.fromJSON(fileSys, '/root');
+
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/liba/package.json`,
+      JSON.stringify(packageJson, null, 2),
+      {
+        nodes: {
+          liba: {
+            name: 'liba',
+            type: 'lib',
+            data: {
+              root: 'libs/liba',
+              targets: {
+                build: {},
+              },
+            },
+          },
+          libb: {
+            name: 'libb',
+            type: 'lib',
+            data: {
+              root: 'libs/libb',
+              targets: {
+                build: {
+                  executor: '@nx/js:tsc',
+                  options: {
+                    tsConfig: 'libs/libb/tsconfig.json',
+                  },
+                },
+              },
+            },
+          },
+        },
+        externalNodes,
+        dependencies: {
+          liba: [
+            { source: 'liba', target: 'npm:external1', type: 'static' },
+            { source: 'liba', target: 'libb', type: 'static' },
+          ],
+          libb: [{ source: 'libb', target: 'npm:external2', type: 'static' }],
+        },
+      },
+      {
+        liba: [
+          createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+          createFile(`libs/liba/package.json`, ['npm:external1']),
+          createFile(`libs/libb/src/main.ts`, ['npm:external2']),
+        ],
+      }
+    );
+    expect(failures.length).toEqual(2);
+    expect(failures[0].message).toEqual(
+      `The "tslib" is missing from the "package.json".`
+    );
+    expect(failures[0].line).toEqual(3);
+    expect(failures[1].message).toEqual(
+      `The "external2\" is missing from the "package.json".`
+    );
+    expect(failures[1].line).toEqual(3);
+  });
+});
+
+it('should require swc if @nx/js:swc executor', () => {
+  const packageJson = {
+    name: '@mycompany/liba',
+    dependencies: {
+      external1: '^16.0.0',
+    },
+  };
+
+  const swcrc = {
+    jsc: {
+      externalHelpers: true,
+    },
+  };
+
+  const fileSys = {
+    './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+    './libs/liba/src/index.ts': '',
+    './libs/libb/.swcrc': JSON.stringify(swcrc, null, 2),
+    './package.json': JSON.stringify(rootPackageJson, null, 2),
+  };
+  vol.fromJSON(fileSys, '/root');
+
+  const failures = runRule(
+    {},
+    `${process.cwd()}/proj/libs/liba/package.json`,
+    JSON.stringify(packageJson, null, 2),
+    {
+      nodes: {
+        liba: {
+          name: 'liba',
+          type: 'lib',
+          data: {
+            root: 'libs/liba',
+            targets: {
+              build: {},
+            },
+          },
+        },
+        libb: {
+          name: 'libb',
+          type: 'lib',
+          data: {
+            root: 'libs/libb',
+            targets: {
+              build: {
+                executor: '@nx/js:swc',
+                options: {
+                  tsConfig: 'libs/libb/tsconfig.json',
+                },
+              },
+            },
+          },
+        },
+      },
+      externalNodes,
+      dependencies: {
+        liba: [
+          { source: 'liba', target: 'npm:external1', type: 'static' },
+          { source: 'liba', target: 'libb', type: 'static' },
+        ],
+        libb: [{ source: 'libb', target: 'npm:external2', type: 'static' }],
+      },
+    },
+    {
+      liba: [
+        createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+        createFile(`libs/liba/package.json`, ['npm:external1']),
+        createFile(`libs/libb/src/main.ts`, ['npm:external2']),
+      ],
+    }
+  );
+  expect(failures.length).toEqual(2);
+  expect(failures[0].message).toEqual(
+    `The "@swc/helpers" is missing from the "package.json".`
+  );
+  expect(failures[0].line).toEqual(3);
+  expect(failures[1].message).toEqual(
+    `The "external2\" is missing from the "package.json".`
+  );
+  expect(failures[1].line).toEqual(3);
 });
 
 function createFile(f: string, deps?: (string | [string, string])[]): FileData {

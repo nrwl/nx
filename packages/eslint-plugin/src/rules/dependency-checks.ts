@@ -10,6 +10,7 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import { findProjectsNpmDependencies } from '@nx/js/src/internal';
 import { satisfies } from 'semver';
+import { getHelperDependenciesFromProjectGraph } from '@nx/js';
 
 // TODO LIST
 // - handle helper dependencies (e.g. tslib or @swc/node)
@@ -137,11 +138,22 @@ export default createESLintRule<Options, MessageIds>({
       return {};
     }
 
+    // gather helper dependencies for @nx/js executors
+    const helperDependencies = getHelperDependenciesFromProjectGraph(
+      workspaceRoot,
+      sourceProject.name,
+      projectGraph
+    );
+
+    console.log('helperDependencies', helperDependencies);
+
     const npmDeps = findProjectsNpmDependencies(
       sourceProject,
       projectGraph,
       buildTarget,
-      {}, // TODO: helper dependencies, find a way how to get those, probably via config
+      {
+        helperDependencies: helperDependencies.map((dep) => dep.target),
+      },
       removePackageJsonFromFileMap(projectFileMap)
     );
     const allDependencies = {

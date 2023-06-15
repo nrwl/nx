@@ -110,8 +110,7 @@ export function getHelperDependenciesFromProjectGraph(
       // we check if a dependency is part of the workspace and if it's a library
       // because we wouldn't want to include external dependencies (npm packages)
       if (
-        !dependency.target.startsWith('npm:') &&
-        !!projectGraph.nodes[dependency.target] &&
+        projectGraph.nodes[dependency.target] &&
         projectGraph.nodes[dependency.target].type === 'lib'
       ) {
         const targetData = projectGraph.nodes[dependency.target].data;
