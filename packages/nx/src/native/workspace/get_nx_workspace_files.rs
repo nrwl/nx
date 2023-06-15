@@ -1,6 +1,5 @@
 use jsonc_parser::ParseOptions;
 use std::collections::HashMap;
-use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
@@ -11,7 +10,9 @@ use crate::native::logger::enable_logger;
 use crate::native::parallel_walker::nx_walker;
 use crate::native::types::FileData;
 use crate::native::utils::glob::build_glob_set;
+use crate::native::utils::path::Normalize;
 use crate::native::workspace::errors::{InternalWorkspaceErrors, WorkspaceErrors};
+use crate::native::workspace::get_config_files::insert_config_file_into_map;
 use crate::native::workspace::types::{FileLocation, ProjectConfiguration};
 
 #[napi(object)]
@@ -89,17 +90,19 @@ pub fn get_workspace_files_native(
     Ok(NxWorkspaceFiles {
         project_file_map,
         global_files,
-        config_files: projects.iter().map(|(path, _)| path.clone()).collect(),
+        config_files: projects
+            .keys()
+            .map(|path| path.to_normalized_string())
+            .collect(),
     })
 }
 
 fn create_root_map(
-    projects: &Vec<(String, Vec<u8>)>,
+    projects: &HashMap<PathBuf, Vec<u8>>,
 ) -> Result<hashbrown::HashMap<&Path, String>, InternalWorkspaceErrors> {
     projects
         .par_iter()
         .map(|(path, content)| {
-            let path = Path::new(path);
             let file_name = path
                 .file_name()
                 .expect("path should always have a filename");
@@ -128,31 +131,29 @@ fn create_root_map(
                         })
                 }?;
                 Ok((parent_path, name))
+            } else if let Some(parent_path) = path.parent() {
+                Ok((
+                    parent_path,
+                    parent_path
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_os_string()
+                        .into_string()
+                        .map_err(|os_string| InternalWorkspaceErrors::Generic {
+                            msg: format!("Cannot turn {os_string:?} into String"),
+                        })?,
+                ))
             } else {
-                if let Some(parent_path) = path.parent() {
-                    Ok((
-                        parent_path,
-                        parent_path
-                            .file_name()
-                            .unwrap_or_default()
-                            .to_os_string()
-                            .into_string()
-                            .map_err(|os_string| InternalWorkspaceErrors::Generic {
-                                msg: format!("Cannot turn {os_string:?} into String"),
-                            })?,
-                    ))
-                } else {
-                    Err(InternalWorkspaceErrors::Generic {
-                        msg: format!("{path:?} has no parent"),
-                    })
-                }
+                Err(InternalWorkspaceErrors::Generic {
+                    msg: format!("{path:?} has no parent"),
+                })
             };
         })
         .collect()
 }
 
 fn read_project_configuration(
-    content: &Vec<u8>,
+    content: &[u8],
     path: &Path,
 ) -> Result<ProjectConfiguration, InternalWorkspaceErrors> {
     serde_json::from_slice(content).or_else(|_| {
@@ -169,22 +170,20 @@ fn read_project_configuration(
     })
 }
 
-type WorkspaceData = (Vec<(String, Vec<u8>)>, Vec<FileData>);
+type WorkspaceData = (HashMap<PathBuf, Vec<u8>>, Vec<FileData>);
 fn get_file_data(workspace_root: &str, globs: Vec<String>) -> anyhow::Result<WorkspaceData> {
     let globs = build_glob_set(globs)?;
     let (projects, file_data) = nx_walker(workspace_root, move |rec| {
-        let mut projects: Vec<(String, Vec<u8>)> = vec![];
+        let mut projects: HashMap<PathBuf, (PathBuf, Vec<u8>)> = HashMap::new();
         let mut file_hashes: Vec<FileData> = vec![];
         for (path, content) in rec {
             file_hashes.push(FileData {
-                file: path.clone(),
+                file: path.to_normalized_string(),
                 hash: xxh3::xxh3_64(&content).to_string(),
             });
-            if globs.is_match(&path) {
-                projects.push((path, content));
-            }
+            insert_config_file_into_map((path, content), &mut projects, &globs)
         }
         (projects, file_hashes)
     });
-    Ok((projects, file_data))
+    Ok((projects.into_values().collect(), file_data))
 }

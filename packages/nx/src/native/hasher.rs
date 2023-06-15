@@ -3,6 +3,7 @@
 use crate::native::parallel_walker::nx_walker;
 use crate::native::types::FileData;
 use crate::native::utils::glob::build_glob_set;
+use crate::native::utils::path::Normalize;
 use anyhow::anyhow;
 use crossbeam_channel::unbounded;
 use globset::{Glob, GlobSetBuilder};
@@ -39,7 +40,10 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
     nx_walker(workspace_root, |rec| {
         let mut collection: HashMap<String, String> = HashMap::new();
         for (path, content) in rec {
-            collection.insert(path, xxh3::xxh3_64(&content).to_string());
+            collection.insert(
+                path.to_normalized_string(),
+                xxh3::xxh3_64(&content).to_string(),
+            );
         }
         collection
     })
@@ -57,7 +61,7 @@ fn hash_files_matching_globs(
         for (path, content) in receiver {
             if glob_set.is_match(&path) {
                 collection.push(FileData {
-                    file: path,
+                    file: path.to_normalized_string(),
                     hash: xxh3::xxh3_64(&content).to_string(),
                 });
             }
