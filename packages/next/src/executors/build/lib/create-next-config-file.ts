@@ -220,7 +220,7 @@ export function ensureFileExtensions(
   files: string[],
   absoluteDir: string
 ): string[] {
-  const extensions = ['.js', '.cjs', '.mjs'];
+  const extensions = ['.js', '.cjs', '.mjs', '.json'];
   return files.map((file) => {
     const providedExt = extname(file);
     if (providedExt && extensions.includes(providedExt)) return file;

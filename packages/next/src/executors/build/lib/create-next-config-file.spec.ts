@@ -116,11 +116,17 @@ describe('Next.js config: getWithNxContent', () => {
 
   it('should return files with their extensions when calling ensureFileExtensions', () => {
     const result = ensureFileExtensions(
-      ['bar', 'foo', 'faz', 'nested/baz.cjs'],
+      ['bar', 'baz', 'foo', 'faz', 'nested/baz.cjs'],
       join(__dirname, 'test-fixtures/ensure-exts')
     );
 
-    expect(result).toEqual(['bar.mjs', 'foo.cjs', 'faz.cjs', 'nested/baz.cjs']);
+    expect(result).toEqual([
+      'bar.mjs',
+      'baz.json',
+      'foo.cjs',
+      'faz.cjs',
+      'nested/baz.cjs',
+    ]);
   });
 
   it('should throw an error if a path cannot be found when calling ensureFileExtensions', () => {
