@@ -37,5 +37,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/cypress/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/cypress-legacy"
+      }
+    }
   }
 }

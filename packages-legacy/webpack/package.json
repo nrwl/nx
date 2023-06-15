@@ -32,5 +32,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/webpack/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/webpack-legacy"
+      }
+    }
   }
 }

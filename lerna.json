@@ -4,7 +4,11 @@
   "granularPathspec": false,
   "command": {
     "publish": {
-      "graphType": "all"
+      "directory": "{workspaceRoot}/build/{projectRoot}",
+      "assets": ["package.json"]
     }
+  },
+  "__experimentalAutomaticVersions": {
+    "referencePackage": "nx"
   }
 }

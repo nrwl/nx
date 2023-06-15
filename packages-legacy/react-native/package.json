@@ -34,5 +34,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/react-native/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/react-native-legacy"
+      }
+    }
   }
 }

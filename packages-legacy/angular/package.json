@@ -40,5 +40,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/angular/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/angular-legacy"
+      }
+    }
   }
 }

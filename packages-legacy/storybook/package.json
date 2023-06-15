@@ -33,5 +33,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/storybook/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/storybook-legacy"
+      }
+    }
   }
 }

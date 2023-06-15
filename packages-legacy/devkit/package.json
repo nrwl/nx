@@ -35,5 +35,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/devkit/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/devkit-legacy"
+      }
+    }
   }
 }

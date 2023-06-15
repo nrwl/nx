@@ -32,5 +32,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/esbuild/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/esbuild-legacy"
+      }
+    }
   }
 }

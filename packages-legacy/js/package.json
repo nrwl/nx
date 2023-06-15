@@ -35,5 +35,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/js/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/js-legacy"
+      }
+    }
   }
 }

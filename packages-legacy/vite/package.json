@@ -40,5 +40,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/vite/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/vite-legacy"
+      }
+    }
   }
 }

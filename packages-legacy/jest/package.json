@@ -37,5 +37,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/jest/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/jest-legacy"
+      }
+    }
   }
 }

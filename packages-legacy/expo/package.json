@@ -35,5 +35,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/expo/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/expo-legacy"
+      }
+    }
   }
 }

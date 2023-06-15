@@ -32,5 +32,12 @@
   },
   "nx-migrations": {
     "migrations": "@nx/rollup/migrations.json"
+  },
+  "lerna": {
+    "command": {
+      "publish": {
+        "directory": "{workspaceRoot}/build/packages/rollup-legacy"
+      }
+    }
   }
 }
