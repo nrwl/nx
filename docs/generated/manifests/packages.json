@@ -1451,12 +1451,12 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "node",
     "packageName": "@nx/node",
-    "description": "The Node Plugin for Nx contains generators and executors to manage Node applications within an Nx workspace.",
+    "description": "The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.",
     "documents": {
       "/packages/node/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "The Node Plugin for Nx contains generators and executors to manage Node applications within an Nx workspace.",
+        "description": "The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.",
         "file": "generated/packages/node/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -1467,17 +1467,7 @@
     },
     "root": "/packages/node",
     "source": "/packages/node/src",
-    "executors": {
-      "/packages/node/executors/node": {
-        "description": "Execute a Node application.",
-        "file": "generated/packages/node/executors/node.json",
-        "hidden": false,
-        "name": "node",
-        "originalFilePath": "/packages/node/src/executors/node/schema.json",
-        "path": "/packages/node/executors/node",
-        "type": "executor"
-      }
-    },
+    "executors": {},
     "generators": {
       "/packages/node/generators/init": {
         "description": "Initialize the `@nrwl/node` plugin.",

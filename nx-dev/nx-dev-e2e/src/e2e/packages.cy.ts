@@ -259,7 +259,6 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/node/generators/application',
     },
     { title: '@nx/node:library', path: '/packages/node/generators/library' },
-    { title: '@nx/node:node', path: '/packages/node/executors/node' },
     { title: 'nx', path: '/packages/nx' },
     { title: 'nx:noop', path: '/packages/nx/executors/noop' },
     {

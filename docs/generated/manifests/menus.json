@@ -5521,23 +5521,6 @@
             "disableCollapsible": false
           },
           {
-            "id": "executors",
-            "path": "/packages/node/executors",
-            "name": "executors",
-            "children": [
-              {
-                "id": "node",
-                "path": "/packages/node/executors/node",
-                "name": "node",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "generators",
             "path": "/packages/node/generators",
             "name": "generators",
