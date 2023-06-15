@@ -44,7 +44,7 @@ export function createWebpackConfig(
     let tsConfigPath = join(workspaceRoot, projectRoot, 'tsconfig.json');
     if (dependencies.length > 0) {
       tsConfigPath = createTmpTsConfig(
-        join(workspaceRoot, tsConfigPath),
+        tsConfigPath,
         workspaceRoot,
         projectRoot,
         dependencies
