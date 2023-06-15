@@ -47,6 +47,12 @@
       "version": "16.3.1-beta.0",
       "description": "Replace @nx/node:webpack with @nx/node:webpack for all project targets",
       "implementation": "./src/migrations/update-16-3-1/update-webpack-executor"
+    },
+    "update-16-4-0-replace-node-executor": {
+      "cli": "nx",
+      "version": "16.4.0-beta.8",
+      "description": "Replace @nx/node:node with @nx/js:node for all project targets",
+      "implementation": "./src/migrations/update-16-4-0/replace-node-executor"
     }
   },
   "packageJsonUpdates": {

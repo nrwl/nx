@@ -1433,12 +1433,12 @@
     "source": "/packages/next/src"
   },
   {
-    "description": "The Node Plugin for Nx contains generators and executors to manage Node applications within an Nx workspace.",
+    "description": "The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.",
     "documents": [
       {
         "id": "overview",
         "name": "Overview",
-        "description": "The Node Plugin for Nx contains generators and executors to manage Node applications within an Nx workspace.",
+        "description": "The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.",
         "file": "generated/packages/node/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -1447,17 +1447,7 @@
         "originalFilePath": "shared/packages/node/node-plugin"
       }
     ],
-    "executors": [
-      {
-        "description": "Execute a Node application.",
-        "file": "generated/packages/node/executors/node.json",
-        "hidden": false,
-        "name": "node",
-        "originalFilePath": "/packages/node/src/executors/node/schema.json",
-        "path": "node/executors/node",
-        "type": "executor"
-      }
-    ],
+    "executors": [],
     "generators": [
       {
         "description": "Initialize the `@nrwl/node` plugin.",
