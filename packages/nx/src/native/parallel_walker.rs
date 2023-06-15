@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::thread;
 use std::thread::available_parallelism;
 
@@ -8,7 +8,7 @@ use ignore::WalkBuilder;
 pub fn nx_walker<P, Fn, Re>(directory: P, f: Fn) -> Re
 where
     P: AsRef<Path>,
-    Fn: FnOnce(Receiver<(String, Vec<u8>)>) -> Re + Send + 'static,
+    Fn: FnOnce(Receiver<(PathBuf, Vec<u8>)>) -> Re + Send + 'static,
     Re: Send + 'static,
 {
     let directory = directory.as_ref();
@@ -27,7 +27,7 @@ where
 
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
 
-    let (sender, receiver) = unbounded::<(String, Vec<u8>)>();
+    let (sender, receiver) = unbounded::<(PathBuf, Vec<u8>)>();
 
     let receiver_thread = thread::spawn(|| f(receiver));
 
@@ -49,15 +49,7 @@ where
                 return Continue;
             };
 
-            let Some(file_path) = file_path.to_str() else {
-                return Continue;
-            };
-
-            // convert back-slashes in Windows paths, since the js expects only forward-slash path separators
-            #[cfg(target_os = "windows")]
-            let file_path = file_path.replace('\\', "/");
-
-            tx.send((file_path.to_string(), content)).ok();
+            tx.send((file_path.into(), content)).ok();
 
             Continue
         })
@@ -70,6 +62,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::native::utils::path::Normalize;
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
     use std::collections::HashMap;
@@ -117,10 +110,10 @@ mod test {
         assert_eq!(
             content,
             HashMap::from([
-                ("baz/qux.txt".into(), "content@qux".into()),
-                ("foo.txt".into(), "content1".into()),
-                ("test.txt".into(), "content".into()),
-                ("bar.txt".into(), "content2".into()),
+                (PathBuf::from("baz/qux.txt"), "content@qux".into()),
+                (PathBuf::from("foo.txt"), "content1".into()),
+                (PathBuf::from("test.txt"), "content".into()),
+                (PathBuf::from("bar.txt"), "content2".into()),
             ])
         );
     }
@@ -155,7 +148,7 @@ nested/child-two/
         let mut file_names = nx_walker(temp_dir, |rec| {
             let mut file_names = vec![];
             for (path, _) in rec {
-                file_names.push(path);
+                file_names.push(path.to_normalized_string());
             }
             file_names
         });

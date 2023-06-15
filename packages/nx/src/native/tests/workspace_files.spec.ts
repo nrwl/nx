@@ -1,4 +1,8 @@
-import { getWorkspaceFilesNative, WorkspaceErrors } from '../index';
+import {
+  getConfigFiles,
+  getWorkspaceFilesNative,
+  WorkspaceErrors,
+} from '../index';
 import { TempFs } from '../../utils/testing/temp-fs';
 import { NxJsonConfiguration } from '../../config/nx-json';
 
@@ -121,6 +125,48 @@ describe('workspace files', () => {
           "file": "package.json",
           "hash": "14409636362330144230",
         },
+      ]
+    `);
+  });
+  it('should dedupe configuration files', async () => {
+    const fs = new TempFs('workspace-files');
+    const nxJson: NxJsonConfiguration = {};
+    await fs.createFiles({
+      './nx.json': JSON.stringify(nxJson),
+      './package.json': JSON.stringify({
+        name: 'repo-name',
+        version: '0.0.0',
+        dependencies: {},
+      }),
+      './project.json': JSON.stringify({
+        name: 'repo-name',
+      }),
+      './libs/project1/project.json': JSON.stringify({
+        name: 'project1',
+      }),
+      './libs/project1/package.json': JSON.stringify({
+        name: 'project1',
+      }),
+      './libs/project1/index.js': '',
+    });
+
+    let globs = ['project.json', '**/project.json', '**/package.json'];
+    let { configFiles } = getWorkspaceFilesNative(fs.tempDir, globs);
+
+    configFiles = configFiles.sort();
+
+    expect(configFiles).toMatchInlineSnapshot(`
+      [
+        "libs/project1/project.json",
+        "project.json",
+      ]
+    `);
+
+    let configFiles2 = getConfigFiles(fs.tempDir, globs).sort();
+    expect(configFiles2).toMatchInlineSnapshot(`
+      [
+        "libs/project1/project.json",
+        "project.json",
       ]
     `);
   });
