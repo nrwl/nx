@@ -49,7 +49,6 @@ export interface NextServeBuilderOptions {
   buildTarget: string;
   customServerTarget?: string;
   hostname?: string;
-  proxyConfig?: string;
   buildLibsFromSource?: boolean;
   keepAliveTimeout?: number;
   turbo?: boolean;
