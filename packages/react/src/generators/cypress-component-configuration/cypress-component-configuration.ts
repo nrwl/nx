@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { addFiles } from './lib/add-files';
-import { FoundTarget, addCTTargetWithBuildTarget } from '../../utils/ct-utils';
+import { addCTTargetWithBuildTarget } from '../../utils/ct-utils';
 import { CypressComponentConfigurationSchema } from './schema.d';
 
 /**
@@ -27,7 +27,7 @@ export async function cypressComponentConfigGenerator(
     skipFormat: true,
   });
 
-  const found: FoundTarget = await addCTTargetWithBuildTarget(tree, {
+  const found = await addCTTargetWithBuildTarget(tree, {
     project: options.project,
     buildTarget: options.buildTarget,
     validExecutorNames: new Set<string>([
