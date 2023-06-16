@@ -43,7 +43,7 @@ To do so, simply:
 
 - Checkout the repo
 - Open it with VSCode
-- Open the "Commands prompt" and select "Dev Containers: Open Folder in Container..."
+- Open the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) and select "Dev Containers: Open Folder in Container..."
 
 The repo comes with a preconfigured `devcontainer.json` file (located in `.devcontainer/` folder at root), that `VSCode` will automatically use to install the aforementioned tools, inside a Docker image. It will even run `pnpm install` for you, so you can start contributing to Nx right after.
 
