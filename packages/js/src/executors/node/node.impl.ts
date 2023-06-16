@@ -10,11 +10,13 @@ import {
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { randomUUID } from 'crypto';
 import { join } from 'path';
+import * as path from 'path';
 
 import { InspectType, NodeExecutorOptions } from './schema';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { calculateProjectDependencies } from '../../utils/buildable-libs-utils';
 import { killTree } from './lib/kill-tree';
+import { fileExists } from 'nx/src/utils/fileutils';
 
 interface ActiveTask {
   id: string;
@@ -71,12 +73,11 @@ export async function* nodeExecutor(
 
   // Re-map buildable workspace projects to their output directory.
   const mappings = calculateResolveMappings(context, options);
-  const fileToRun = join(
-    context.root,
-    buildOptions.outputPath,
-    buildOptions.outputFileName ?? 'main.js'
-  );
 
+  const outputFileName =
+    buildOptions.outputFileName ?? `${path.parse(buildOptions.main).name}.js`;
+
+  const fileToRun = join(context.root, buildOptions.outputPath, outputFileName);
   const tasks: ActiveTask[] = [];
   let currentTask: ActiveTask = null;
 
@@ -159,7 +160,7 @@ export async function* nodeExecutor(
                   stdio: [0, 1, 'pipe', 'ipc'],
                   env: {
                     ...process.env,
-                    NX_FILE_TO_RUN: fileToRun,
+                    NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
                     NX_MAPPINGS: JSON.stringify(mappings),
                   },
                 }
@@ -168,7 +169,8 @@ export async function* nodeExecutor(
               task.childProcess.stderr.on('data', (data) => {
                 // Don't log out error if task is killed and new one has started.
                 // This could happen if a new build is triggered while new process is starting, since the operation is not atomic.
-                if (options.watch && !task.killed) {
+                // Log the error in normal mode
+                if (!options.watch || !task.killed) {
                   logger.error(data.toString());
                 }
               });
@@ -302,6 +304,25 @@ function runWaitUntilTargets(
       });
     })
   );
+}
+
+function fileToRunCorrectPath(fileToRun: string): string {
+  if (!fileExists(fileToRun)) {
+    const cjsFile = fileToRun.replace(/\.js$/, '.cjs');
+    if (fileExists(cjsFile)) {
+      fileToRun = cjsFile;
+    } else {
+      const mjsFile = fileToRun.replace(/\.js$/, '.mjs');
+      if (fileExists(mjsFile)) {
+        fileToRun = mjsFile;
+      } else {
+        throw new Error(
+          `Could not find ${fileToRun}. Make sure your build succeeded.`
+        );
+      }
+    }
+  }
+  return fileToRun;
 }
 
 export default nodeExecutor;

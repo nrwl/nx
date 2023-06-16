@@ -23,6 +23,7 @@ export interface RunCmdOpts {
   cwd?: string;
   silent?: boolean;
   verbose?: boolean;
+  redirectStderr?: boolean;
 }
 
 /**
@@ -325,26 +326,25 @@ export function runCLI(
     silenceError: false,
     env: undefined,
     verbose: undefined,
+    redirectStderr: undefined,
   }
 ): string {
   try {
     const pm = getPackageManagerCommand();
-    const logs = execSync(
-      `${pm.runNxSilent} ${command} ${
-        opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
-      }`,
-      {
-        cwd: opts.cwd || tmpProjPath(),
-        env: {
-          CI: 'true',
-          ...getStrippedEnvironmentVariables(),
-          ...opts.env,
-        },
-        encoding: 'utf-8',
-        stdio: 'pipe',
-        maxBuffer: 50 * 1024 * 1024,
-      }
-    );
+    const commandToRun = `${pm.runNxSilent} ${command} ${
+      opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
+    }${opts.redirectStderr ? ' 2>&1' : ''}`;
+    const logs = execSync(commandToRun, {
+      cwd: opts.cwd || tmpProjPath(),
+      env: {
+        CI: 'true',
+        ...getStrippedEnvironmentVariables(),
+        ...opts.env,
+      },
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      maxBuffer: 50 * 1024 * 1024,
+    });
 
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
