@@ -1189,6 +1189,11 @@
               "id": "deno-netlify-functions",
               "tags": ["deployment", "deno"],
               "file": "shared/recipes/deployment/deno-netlify-edge-functions"
+            },
+            {
+              "name": "Deploying Next.js applications to Vercel",
+              "id": "deploy-nextjs-to-vercel",
+              "file": "shared/recipes/deployment/deploy-nextjs-to-vercel"
             }
           ]
         },
@@ -1315,11 +1320,6 @@
               "name": "Configuring Browser Support",
               "id": "browser-support",
               "file": "shared/guides/browser-support"
-            },
-            {
-              "name": "Deploying Next.js applications to Vercel",
-              "id": "deploy-nextjs-to-vercel",
-              "file": "shared/guides/deploy-nextjs-to-vercel"
             },
             {
               "name": "Using Tailwind CSS in React",

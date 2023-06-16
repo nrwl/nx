@@ -953,6 +953,16 @@
         "isExternal": false,
         "path": "/recipes/deployment/deno-netlify-functions",
         "tags": ["deployment", "deno"]
+      },
+      {
+        "id": "deploy-nextjs-to-vercel",
+        "name": "Deploying Next.js applications to Vercel",
+        "description": "",
+        "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/deployment/deploy-nextjs-to-vercel",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1008,6 +1018,16 @@
     "isExternal": false,
     "path": "/recipes/deployment/deno-netlify-functions",
     "tags": ["deployment", "deno"]
+  },
+  "/recipes/deployment/deploy-nextjs-to-vercel": {
+    "id": "deploy-nextjs-to-vercel",
+    "name": "Deploying Next.js applications to Vercel",
+    "description": "",
+    "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/deployment/deploy-nextjs-to-vercel",
+    "tags": []
   },
   "/recipes/enforce-module-boundaries": {
     "id": "enforce-module-boundaries",
@@ -1308,16 +1328,6 @@
         "tags": []
       },
       {
-        "id": "deploy-nextjs-to-vercel",
-        "name": "Deploying Next.js applications to Vercel",
-        "description": "",
-        "file": "shared/guides/deploy-nextjs-to-vercel",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/deploy-nextjs-to-vercel",
-        "tags": []
-      },
-      {
         "id": "using-tailwind-css-in-react",
         "name": "Using Tailwind CSS in React",
         "description": "",
@@ -1570,16 +1580,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/browser-support",
-    "tags": []
-  },
-  "/recipes/other/deploy-nextjs-to-vercel": {
-    "id": "deploy-nextjs-to-vercel",
-    "name": "Deploying Next.js applications to Vercel",
-    "description": "",
-    "file": "shared/guides/deploy-nextjs-to-vercel",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/deploy-nextjs-to-vercel",
     "tags": []
   },
   "/recipes/other/using-tailwind-css-in-react": {

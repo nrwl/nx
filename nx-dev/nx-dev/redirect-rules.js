@@ -349,6 +349,8 @@ const recipesUrls = {
   '/recipes/other/apollo-react': '/recipes/example-repos/apollo-react',
   '/recipes/other/caching': '/recipes/example-repos/caching',
   '/recipes/other/dte': '/recipes/example-repos/dte',
+  '/recipes/other/deploy-nextjs-to-vercel':
+    '/recipes/deployment/deploy-nextjs-to-vercel',
 };
 
 /**
