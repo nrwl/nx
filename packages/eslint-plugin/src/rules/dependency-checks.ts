@@ -157,125 +157,144 @@ export default createESLintRule<Options, MessageIds>({
       sourceProject.data.root,
       'package.json'
     );
-    let projPackageJsonDeps: Record<string, string> = {};
-    if (existsSync(projPackageJsonPath)) {
-      projPackageJsonDeps = getAllDependencies(projPackageJsonPath);
-    }
-
+    const projPackageJsonDeps = getAllDependencies(projPackageJsonPath);
     const rootPackageJsonDeps = getAllDependencies(
       join(workspaceRoot, 'package.json')
     );
 
     function validateMissingDependencies(node: AST.JSONProperty) {
-      if (checkMissingDependencies) {
-        const missingDeps = projDependencyNames.filter(
-          (d) => !projPackageJsonDeps[d]
-        );
-
-        missingDeps.forEach((d) => {
-          if (!ignoredDependencies.includes(d)) {
-            context.report({
-              node: node as any,
-              messageId: 'missingDependency',
-              data: { packageName: d },
-              fix(fixer) {
-                const deps = (node.value as AST.JSONObjectExpression)
-                  .properties;
-                if (deps.length) {
-                  return fixer.insertTextAfter(
-                    deps[deps.length - 1] as any,
-                    `,\n    "${d}": "${
-                      rootPackageJsonDeps[d] || projDependencies[d]
-                    }"`
-                  );
-                } else {
-                  return fixer.replaceTextRange(
-                    [node.value.range[0] + 1, node.value.range[1] - 1],
-                    `\n    "${d}": "${
-                      rootPackageJsonDeps[d] || projDependencies[d]
-                    }"\n  `
-                  );
-                }
-              },
-            });
-          }
-        });
+      if (!checkMissingDependencies) {
+        return;
       }
-    }
+      const missingDeps = projDependencyNames.filter(
+        (d) => !projPackageJsonDeps[d]
+      );
 
-    function validateInvalidDependencies(node: AST.JSONProperty) {
-      const packageName = (node.key as any).value;
-      const packageRange = (node.value as any).value;
-
-      if (!projDependencyNames.includes(packageName)) {
-        if (
-          checkObsoleteDependencies &&
-          !ignoredDependencies.includes(packageName)
-        ) {
+      missingDeps.forEach((d) => {
+        if (!ignoredDependencies.includes(d)) {
           context.report({
             node: node as any,
-            messageId: 'obsoleteDependency',
-            data: { packageName: packageName },
-            fix: (fixer) => fixer.remove(node as any),
+            messageId: 'missingDependency',
+            data: { packageName: d },
+            fix(fixer) {
+              const deps = (node.value as AST.JSONObjectExpression).properties;
+              if (deps.length) {
+                return fixer.insertTextAfter(
+                  deps[deps.length - 1] as any,
+                  `,\n    "${d}": "${
+                    rootPackageJsonDeps[d] || projDependencies[d]
+                  }"`
+                );
+              } else {
+                return fixer.replaceTextRange(
+                  [node.value.range[0] + 1, node.value.range[1] - 1],
+                  `\n    "${d}": "${
+                    rootPackageJsonDeps[d] || projDependencies[d]
+                  }"\n  `
+                );
+              }
+            },
           });
         }
-      } else if (
-        checkVersionMismatches &&
-        !ignoredDependencies.includes(packageName) &&
-        !satisfies(projDependencies[packageName], packageRange)
+      });
+    }
+
+    function validateVersionMismatch(
+      node: AST.JSONProperty,
+      packageName: string,
+      packageRange: string
+    ) {
+      if (
+        !checkVersionMismatches ||
+        ignoredDependencies.includes(packageName) ||
+        satisfies(projDependencies[packageName], packageRange)
       ) {
-        context.report({
-          node: node as any,
-          messageId: 'versionMismatch',
-          data: {
-            packageName: packageName,
-            version: projDependencies[packageName],
-          },
-          fix: (fixer) =>
-            fixer.replaceText(
-              node as any,
-              `"${packageName}": "${
-                rootPackageJsonDeps[packageName] ||
-                projDependencies[packageName]
-              }"`
-            ),
-        });
+        return;
       }
+
+      context.report({
+        node: node as any,
+        messageId: 'versionMismatch',
+        data: {
+          packageName: packageName,
+          version: projDependencies[packageName],
+        },
+        fix: (fixer) =>
+          fixer.replaceText(
+            node as any,
+            `"${packageName}": "${
+              rootPackageJsonDeps[packageName] || projDependencies[packageName]
+            }"`
+          ),
+      });
+    }
+
+    function validateObsoleteDependencies(
+      node: AST.JSONProperty,
+      packageName: string
+    ) {
+      if (
+        !checkObsoleteDependencies ||
+        ignoredDependencies.includes(packageName)
+      ) {
+        return;
+      }
+
+      context.report({
+        node: node as any,
+        messageId: 'obsoleteDependency',
+        data: { packageName: packageName },
+        fix: (fixer) => {
+          let isLastProperty = false;
+          if (
+            node.parent.properties.length === 1 ||
+            node.parent.properties[node.parent.properties.length - 1] === node
+          ) {
+            isLastProperty = true;
+          }
+          // remove 4 spaces and new line from the start and pontetial comma from the end
+          return fixer.removeRange([
+            node.range[0] - 5,
+            node.range[1] + (isLastProperty ? 0 : 1),
+          ]);
+        },
+      });
     }
 
     function validateDependenciesSectionExistance(
       node: AST.JSONObjectExpression
     ) {
       if (
-        projDependencyNames.length &&
-        projDependencyNames.some((d) => !ignoredDependencies.includes(d))
+        !projDependencyNames.length ||
+        !projDependencyNames.some((d) => !ignoredDependencies.includes(d))
       ) {
-        if (
-          !node.properties ||
-          !node.properties.some((p) =>
-            ['dependencies', 'peerDependencies', 'devDependencies'].includes(
-              (p.key as any).value
-            )
+        return;
+      }
+      if (
+        !node.properties ||
+        !node.properties.some((p) =>
+          ['dependencies', 'peerDependencies', 'devDependencies'].includes(
+            (p.key as any).value
           )
-        ) {
-          context.report({
-            node: node as any,
-            messageId: 'missingDependencySection',
-            fix: (fixer) => {
-              if (!node.properties.length) {
-                return fixer.replaceText(
-                  node as any,
-                  `{\n  "dependencies": {\n  }\n}`
-                );
-              } else {
-                return fixer.insertTextAfter(
-                  node.properties[node.properties.length - 1] as any,
-                  `,\n  "dependencies": {\n  }`
-                );
-              }
-            },
-          });
-        }
+        )
+      ) {
+        context.report({
+          node: node as any,
+          messageId: 'missingDependencySection',
+          fix: (fixer) => {
+            if (!node.properties.length) {
+              return fixer.replaceText(
+                node as any,
+                `{\n  "dependencies": {\n  }\n}`
+              );
+            } else {
+              return fixer.insertTextAfter(
+                node.properties[node.properties.length - 1] as any,
+                `,\n  "dependencies": {\n  }`
+              );
+            }
+          },
+        });
       }
     }
 
@@ -304,7 +323,14 @@ export default createESLintRule<Options, MessageIds>({
         ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(dev|peer)?dependencies$/i] > JSONObjectExpression > JSONProperty'](
           node: AST.JSONProperty
         ) {
-          return validateInvalidDependencies(node);
+          const packageName = (node.key as any).value;
+          const packageRange = (node.value as any).value;
+
+          if (projDependencyNames.includes(packageName)) {
+            return validateVersionMismatch(node, packageName, packageRange);
+          } else {
+            return validateObsoleteDependencies(node, packageName);
+          }
         },
         ['JSONExpressionStatement > JSONObjectExpression'](
           node: AST.JSONObjectExpression

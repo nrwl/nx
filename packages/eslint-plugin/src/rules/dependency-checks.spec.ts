@@ -503,8 +503,9 @@ describe('Dependency checks (eslint)', () => {
     expect(result).toMatchInlineSnapshot(`
       "{
         "name": "@mycompany/liba",
-        "dependencies": {}
+        "dependencies": {
           "random-external": "1.2.3"
+        }
       }"
     `);
   });
@@ -747,7 +748,89 @@ describe('Dependency checks (eslint)', () => {
           "external1": "^16.0.0"
         },
         "peerDependencies": {
+        }
+      }"
+    `);
+  });
 
+  it('should remove obsolete package in the middle with fix', () => {
+    const packageJson = {
+      name: '@mycompany/liba',
+      dependencies: {
+        external1: '^16.0.0',
+      },
+      peerDependencies: {
+        unneeded: '>= 16 < 18',
+        external2: '^5.2.0',
+      },
+    };
+
+    const fileSys = {
+      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+      './libs/liba/src/index.ts': '',
+      './package.json': JSON.stringify(rootPackageJson, null, 2),
+    };
+    vol.fromJSON(fileSys, '/root');
+
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/liba/package.json`,
+      JSON.stringify(packageJson, null, 2),
+      {
+        nodes: {
+          liba: {
+            name: 'liba',
+            type: 'lib',
+            data: {
+              root: 'libs/liba',
+              targets: {
+                build: {},
+              },
+            },
+          },
+        },
+        externalNodes,
+        dependencies: {
+          liba: [
+            { source: 'liba', target: 'npm:external1', type: 'static' },
+            { source: 'liba', target: 'npm:external2', type: 'static' },
+          ],
+        },
+      },
+      {
+        liba: [
+          createFile(`libs/liba/src/main.ts`, [
+            'npm:external1',
+            'npm:external2',
+          ]),
+          createFile(`libs/liba/package.json`, [
+            'npm:external1',
+            'npm:external2',
+            'npm:unneeded',
+          ]),
+        ],
+      }
+    );
+    expect(failures.length).toEqual(1);
+    expect(failures[0].message).toEqual(
+      `The "unneeded\" is found in the "package.json" but is not used.`
+    );
+    expect(failures[0].line).toEqual(7);
+
+    // should apply fixer
+    const content = JSON.stringify(packageJson, null, 2);
+    const result =
+      content.slice(0, failures[0].fix.range[0]) +
+      failures[0].fix.text +
+      content.slice(failures[0].fix.range[1]);
+    expect(result).toMatchInlineSnapshot(`
+      "{
+        "name": "@mycompany/liba",
+        "dependencies": {
+          "external1": "^16.0.0"
+        },
+        "peerDependencies": {
+          "external2": "^5.2.0"
         }
       }"
     `);

@@ -1,12 +1,16 @@
 import { ProjectFileMap, readJsonFile } from '@nx/devkit';
+import { existsSync } from 'fs';
 
-export function getAllDependencies(path: string) {
-  const packageJson = readJsonFile(path);
-  return {
-    ...packageJson.dependencies,
-    ...packageJson.devDependencies,
-    ...packageJson.peerDependencies,
-  };
+export function getAllDependencies(path: string): Record<string, string> {
+  if (existsSync(path)) {
+    const packageJson = readJsonFile(path);
+    return {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+      ...packageJson.peerDependencies,
+    };
+  }
+  return {};
 }
 
 export function removePackageJsonFromFileMap(
