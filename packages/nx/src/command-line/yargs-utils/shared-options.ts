@@ -32,9 +32,11 @@ export function withRunOptions(yargs: Argv) {
       type: 'string',
       describe:
         'Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.',
-      default: false,
       coerce: (value) =>
-        value === 'true' || value === true
+        // when the type of an opt is "string", passing `--opt` comes through as having an empty string value.
+        // this coercion allows `--graph` to be passed through as a boolean directly, and also normalizes the
+        // `--graph=true` to produce the same behaviour as `--graph`.
+        value === '' || value === 'true' || value === true
           ? true
           : value === 'false' || value === false
           ? false

@@ -97,8 +97,6 @@ Exclude certain projects from being processed
 
 Type: `string`
 
-Default: `false`
-
 Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
 
 ### help
