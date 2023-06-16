@@ -1,16 +1,8 @@
 import 'dotenv/config';
-import {
-  ExecutorContext,
-  parseTargetString,
-  readTargetOptions,
-  runExecutor,
-} from '@nx/devkit';
-import { join, resolve } from 'path';
+import { ExecutorContext, parseTargetString, runExecutor } from '@nx/devkit';
+import { join } from 'path';
 
-import {
-  NextBuildBuilderOptions,
-  NextServeBuilderOptions,
-} from '../../utils/types';
+import { NextServeBuilderOptions } from '../../utils/types';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,
@@ -26,10 +18,6 @@ export default async function* serveExecutor(
   // Setting port that the custom server should use.
   (process.env as any).PORT = options.port;
 
-  const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
-    parseTargetString(options.buildTarget, context.projectGraph),
-    context
-  );
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
   yield* runCustomServer(projectRoot, options, context);

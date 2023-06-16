@@ -40,12 +40,6 @@
       "type": "string",
       "description": "Hostname on which the application is served."
     },
-    "proxyConfig": {
-      "type": "string",
-      "description": "Path to the proxy configuration file.",
-      "x-completion-type": "file",
-      "x-deprecated": "Use the built-in rewrite feature from Next.js. See: https://nextjs.org/docs/api-reference/next.config.js/rewrites"
-    },
     "buildLibsFromSource": {
       "type": "boolean",
       "description": "Read buildable libraries from source instead of building them separately.",
