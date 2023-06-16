@@ -1,3 +1,6 @@
+use std::fs;
+use std::path::{Path, PathBuf};
+
 #[napi]
 pub fn remove(src: String) -> anyhow::Result<()> {
     fs_extra::remove_items(&[src]).map_err(anyhow::Error::from)
@@ -7,9 +10,16 @@ pub fn remove(src: String) -> anyhow::Result<()> {
 pub fn copy(src: String, dest: String) -> anyhow::Result<()> {
     let copy_options = fs_extra::dir::CopyOptions::new()
         .overwrite(true)
-        .skip_exist(false)
-        .copy_inside(true);
-    fs_extra::copy_items(&[src], dest, &copy_options)?;
+        .skip_exist(false);
+
+    let dest: PathBuf = dest.into();
+    let dest_parent = dest.parent().unwrap_or(&dest);
+
+    if !dest_parent.exists() {
+        fs::create_dir_all(dest_parent)?;
+    }
+
+    fs_extra::copy_items(&[src], dest_parent, &copy_options)?;
     Ok(())
 }
 
@@ -20,7 +30,7 @@ mod test {
     use assert_fs::TempDir;
 
     #[test]
-    fn should_copy_files() {
+    fn should_copy_directories() {
         let temp = TempDir::new().unwrap();
         temp.child("parent")
             .child("child")
@@ -36,5 +46,20 @@ mod test {
         assert!(temp
             .child("new-parent/child/grand-child/.config/file.txt")
             .exists());
+    }
+
+    #[test]
+    fn should_copy_single_files() {
+        let temp = TempDir::new().unwrap();
+        temp.child("parent")
+            .child("file.txt")
+            .write_str("content")
+            .unwrap();
+
+        let src = temp.join("parent/file.txt");
+        let dest = temp.join("new-parent/file.txt");
+        copy(src.to_string_lossy().into(), dest.to_string_lossy().into()).unwrap();
+
+        assert!(temp.child("new-parent/file.txt").exists());
     }
 }
