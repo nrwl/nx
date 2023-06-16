@@ -1,6 +1,6 @@
-use crate::native::parallel_walker::nx_walker;
 use crate::native::utils::glob::build_glob_set;
 use crate::native::utils::path::Normalize;
+use crate::native::walker::nx_walker;
 use globset::GlobSet;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;

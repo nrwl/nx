@@ -7,10 +7,10 @@ use tracing::trace;
 use xxhash_rust::xxh3;
 
 use crate::native::logger::enable_logger;
-use crate::native::parallel_walker::nx_walker;
 use crate::native::types::FileData;
 use crate::native::utils::glob::build_glob_set;
 use crate::native::utils::path::Normalize;
+use crate::native::walker::nx_walker;
 use crate::native::workspace::errors::{InternalWorkspaceErrors, WorkspaceErrors};
 use crate::native::workspace::get_config_files::insert_config_file_into_map;
 use crate::native::workspace::types::{FileLocation, ProjectConfiguration};

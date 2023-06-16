@@ -1,21 +1,11 @@
 import { workspaceRoot } from '../utils/workspace-root';
-import {
-  copy,
-  lstat,
-  mkdir,
-  mkdirSync,
-  pathExists,
-  readFile,
-  remove,
-  writeFile,
-} from 'fs-extra';
-import { dirname, join, resolve } from 'path';
+import { mkdir, mkdirSync, pathExists, readFile, writeFile } from 'fs-extra';
+import { join } from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { execFile, spawn } from 'child_process';
+import { spawn } from 'child_process';
 import { cacheDir } from '../utils/cache-directory';
-import { platform } from 'os';
 import { Task } from '../config/task-graph';
-import * as fastGlob from 'fast-glob';
+import { copy, expandOutputs, remove } from '../native';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -29,7 +19,6 @@ export class Cache {
   root = workspaceRoot;
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
-  useFsExtraToCopyAndRemove = platform() === 'win32';
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
@@ -99,11 +88,7 @@ export class Cache {
         expandedOutputs.map(async (f) => {
           const src = join(this.root, f);
           if (await pathExists(src)) {
-            const isFile = (await lstat(src)).isFile();
-
             const cached = join(td, 'outputs', f);
-            const directory = isFile ? dirname(cached) : cached;
-            await mkdir(directory, { recursive: true });
             await this.copy(src, cached);
           }
         })
@@ -140,12 +125,8 @@ export class Cache {
         expandedOutputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
           if (await pathExists(cached)) {
-            const isFile = (await lstat(cached)).isFile();
             const src = join(this.root, f);
             await this.remove(src);
-            // Ensure parent directory is created if src is a file
-            const directory = isFile ? resolve(src, '..') : src;
-            await mkdir(directory, { recursive: true });
             await this.copy(cached, src);
           }
         })
@@ -168,17 +149,20 @@ export class Cache {
     return this._expandOutputs(outputs, cachedResult.outputsPath);
   }
 
-  private async _expandOutputs(outputs: string[], cwd: string) {
-    return (
-      await Promise.all(
-        outputs.map(async (entry) => {
-          if (await pathExists(join(cwd, entry))) {
-            return entry;
-          }
-          return fastGlob(entry, { cwd, dot: true });
-        })
-      )
-    ).flat();
+  private async _expandOutputs(
+    outputs: string[],
+    cwd: string
+  ): Promise<string[]> {
+    performance.mark('expandOutputs:start');
+    const results = expandOutputs(cwd, outputs);
+    performance.mark('expandOutputs:end');
+    performance.measure(
+      'expandOutputs',
+      'expandOutputs:start',
+      'expandOutputs:end'
+    );
+
+    return results;
   }
 
   private async copy(src: string, destination: string): Promise<void> {
@@ -187,35 +171,24 @@ export class Cache {
     // --> the fix is to remove trailing slashes to ensure consistent & expected behaviour
     src = src.replace(/[\/\\]$/, '');
 
-    if (this.useFsExtraToCopyAndRemove) {
-      return copy(src, destination);
-    }
     return new Promise((res, rej) => {
-      execFile('cp', ['-a', src, dirname(destination)], (error) => {
-        if (!error) {
-          res();
-        } else {
-          this.useFsExtraToCopyAndRemove = true;
-          copy(src, destination).then(res, rej);
-        }
-      });
+      try {
+        copy(src, destination);
+        res();
+      } catch (e) {
+        rej(e);
+      }
     });
   }
 
   private async remove(path: string): Promise<void> {
-    if (this.useFsExtraToCopyAndRemove) {
-      return remove(path);
-    }
-
-    return new Promise<void>((res, rej) => {
-      execFile('rm', ['-rf', path], (error) => {
-        if (!error) {
-          res();
-        } else {
-          this.useFsExtraToCopyAndRemove = true;
-          remove(path).then(res, rej);
-        }
-      });
+    return new Promise((res, rej) => {
+      try {
+        remove(path);
+        res();
+      } catch (e) {
+        rej(e);
+      }
     });
   }
 

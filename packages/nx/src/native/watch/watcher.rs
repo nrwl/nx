@@ -43,11 +43,7 @@ impl Watcher {
         let watch_exec = Watchexec::new(InitConfig::default(), RuntimeConfig::default())
             .map_err(anyhow::Error::from)?;
 
-        let mut globs = if let Some(globs) = additional_globs {
-            globs
-        } else {
-            vec![]
-        };
+        let mut globs = additional_globs.unwrap_or_default();
 
         // always ignore the .git  and node_modules folder
         globs.push(".git/".into());

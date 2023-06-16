@@ -1,9 +1,9 @@
 #![allow(unused)]
 
-use crate::native::parallel_walker::nx_walker;
 use crate::native::types::FileData;
 use crate::native::utils::glob::build_glob_set;
 use crate::native::utils::path::Normalize;
+use crate::native::walker::nx_walker;
 use anyhow::anyhow;
 use crossbeam_channel::unbounded;
 use globset::{Glob, GlobSetBuilder};
