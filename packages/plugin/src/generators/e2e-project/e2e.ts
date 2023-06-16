@@ -6,10 +6,12 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getPackageManagerCommand,
   getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,
+  readJson,
   readProjectConfiguration,
   runTasksInSerial,
   updateProjectConfiguration,
@@ -27,7 +29,6 @@ interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectName: string;
   pluginPropertyName: string;
-  npmScope: string;
   linter: Linter;
 }
 
@@ -35,7 +36,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
     options.projectDirectory
   );
-  const { npmScope, appsDir: defaultAppsDir } = getWorkspaceLayout(host);
+  const { appsDir: defaultAppsDir } = getWorkspaceLayout(host);
   const appsDir = layoutDirectory ?? defaultAppsDir;
 
   const projectName = options.rootProject ? 'e2e' : `${options.pluginName}-e2e`;
@@ -53,7 +54,6 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     linter: options.linter ?? Linter.EsLint,
     pluginPropertyName,
     projectRoot,
-    npmScope,
   };
 }
 
@@ -66,10 +66,21 @@ function validatePlugin(host: Tree, pluginName: string) {
 }
 
 function addFiles(host: Tree, options: NormalizedSchema) {
+  const projectConfiguration = readProjectConfiguration(
+    host,
+    options.pluginName
+  );
+  const { name: pluginPackageName } = readJson(
+    host,
+    join(projectConfiguration.root, 'package.json')
+  );
+
   generateFiles(host, join(__dirname, './files'), options.projectRoot, {
     ...options,
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
+    packageManagerCommands: getPackageManagerCommand('npm'),
+    pluginPackageName,
   });
 }
 

@@ -31,7 +31,9 @@ describe('Nx Plugin', () => {
   it('should be able to generate a Nx Plugin ', async () => {
     const plugin = uniq('plugin');
 
-    runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
+    runCLI(
+      `generate @nx/plugin:plugin ${plugin} --linter=eslint --e2eTestRunner=jest --publishable`
+    );
     const lintResults = runCLI(`lint ${plugin}`);
     expect(lintResults).toContain('All files pass linting.');
 
@@ -45,6 +47,7 @@ describe('Nx Plugin', () => {
     expect(project).toMatchObject({
       tags: [],
     });
+    runCLI(`e2e ${plugin}-e2e`);
   }, 90000);
 
   it('should be able to generate a migration', async () => {
@@ -405,9 +408,11 @@ describe('Nx Plugin', () => {
   it('should be able to generate a create-package plugin ', async () => {
     const plugin = uniq('plugin');
     const createAppName = `create-${plugin}-app`;
-    runCLI(`generate @nx/plugin:plugin ${plugin}`);
     runCLI(
-      `generate @nx/plugin:create-package ${createAppName} --project=${plugin}`
+      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`
+    );
+    runCLI(
+      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e`
     );
 
     const buildResults = runCLI(`build ${createAppName}`);
@@ -418,6 +423,8 @@ describe('Nx Plugin', () => {
       `libs/${createAppName}`,
       `dist/libs/${createAppName}/bin/index.js`
     );
+
+    runCLI(`e2e ${plugin}-e2e`);
   });
 
   it('should throw an error when run create-package for an invalid plugin ', async () => {

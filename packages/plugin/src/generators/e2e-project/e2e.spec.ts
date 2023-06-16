@@ -4,6 +4,7 @@ import {
   readProjectConfiguration,
   readJson,
   getProjects,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { e2eProjectGenerator } from './e2e';
@@ -17,6 +18,9 @@ describe('NxPlugin e2e-project Generator', () => {
     addProjectConfiguration(tree, 'my-plugin', {
       root: 'libs/my-plugin',
       targets: {},
+    });
+    writeJson(tree, 'libs/my-plugin/package.json', {
+      name: 'my-plugin',
     });
   });
 

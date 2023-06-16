@@ -1,10 +1,6 @@
 # path to a directory with all packages
 storage: ../tmp/local-registry/storage
 
-auth:
-  htpasswd:
-    file: ./htpasswd
-
 # a list of other known repositories we can talk to
 uplinks:
   npmjs:
@@ -26,4 +22,7 @@ packages:
 logs:
   type: stdout
   format: pretty
-  level: http
+  level: warn
+
+publish:
+  allow_offline: true # set offline to true to allow publish offline
