@@ -6,7 +6,6 @@ import {
   uniq,
   runCreatePlugin,
   cleanupProject,
-  tmpProjPath,
 } from '@nx/e2e/utils';
 
 describe('create-nx-plugin', () => {
@@ -64,7 +63,8 @@ describe('create-nx-plugin', () => {
     runCLI(`build ${pluginName}`);
     checkFilesExist(
       `dist/${pluginName}/package.json`,
-      `dist/${pluginName}/generators.json`
+      `dist/${pluginName}/generators.json`,
+      `e2e/tests/${pluginName}.spec.ts`
     );
 
     runCLI(`build create-${pluginName}-package`);

@@ -8,7 +8,7 @@ auth:
 # a list of other known repositories we can talk to
 uplinks:
   npmjs:
-    url: https://registry.npmjs.org/
+    url: <%= npmUplinkRegistry %>
     maxage: 60m
 
 packages:

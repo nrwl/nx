@@ -13,5 +13,5 @@ export interface CreatePackageSchema {
   compiler: 'swc' | 'tsc';
 
   // options to create e2e project, passed to e2e project generator
-  e2eTestRunner?: 'jest' | 'none';
+  e2eProject?: string;
 }

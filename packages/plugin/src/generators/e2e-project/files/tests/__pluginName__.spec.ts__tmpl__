@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   ensureNxProject,
-  readJson,
   runNxCommandAsync,
   runNxCommand,
 } from '@nx/plugin/testing';

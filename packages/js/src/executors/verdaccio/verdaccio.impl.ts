@@ -1,8 +1,8 @@
 import { ExecutorContext, logger } from '@nx/devkit';
-import { removeSync, existsSync } from 'fs-extra';
+import { existsSync, rmSync } from 'fs-extra';
 import { ChildProcess, execSync, fork } from 'child_process';
 import * as detectPort from 'detect-port';
-import { join } from 'path';
+import { join, resolve } from 'path';
 
 import { VerdaccioExecutorSchema } from './schema';
 
@@ -25,8 +25,12 @@ export async function verdaccioExecutor(
     );
   }
 
-  if (options.clear && options.storage && existsSync(options.storage)) {
-    removeSync(options.storage);
+  if (options.storage) {
+    options.storage = resolve(context.root, options.storage);
+    if (options.clear && existsSync(options.storage)) {
+      rmSync(options.storage, { recursive: true, force: true });
+      console.log(`Cleared local registry storage folder ${options.storage}`);
+    }
   }
 
   const cleanupFunctions =
@@ -84,23 +88,10 @@ function startVerdaccio(
             ? { VERDACCIO_STORAGE_PATH: options.storage }
             : {}),
         },
-        stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
+        stdio: 'inherit',
       }
     );
 
-    childProcess.stdout.on('data', (data) => {
-      process.stdout.write(data);
-    });
-    childProcess.stderr.on('data', (data) => {
-      if (
-        data.includes('VerdaccioWarning') ||
-        data.includes('DeprecationWarning')
-      ) {
-        process.stdout.write(data);
-      } else {
-        reject(data);
-      }
-    });
     childProcess.on('error', (err) => {
       reject(err);
     });

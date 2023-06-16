@@ -1,0 +1,31 @@
+import {
+  checkFilesExist,
+  removeTmpProject,
+  tmpFolder,
+  uniq,
+} from '@nx/plugin/testing';
+import { execSync } from 'child_process';
+import { join } from 'path';
+
+describe('<%= cliName %> e2e', () => {
+  let project: string;
+  beforeAll(async () => {
+    // create a workspace with cli
+    project = uniq('<%= cliName %>');
+    execSync(`npx <%= cliName %>@1.0.0 ${project}`, {
+      cwd: tmpFolder(),
+      env: process.env,
+    });
+  }, 240_000);
+
+  afterAll(() => {
+    // Remove the generated project from the file system
+    removeTmpProject(project);
+  });
+
+  it('should create project using <%= cliName %>', () => {
+    expect(() =>
+      checkFilesExist(join(tmpFolder(), project, 'package.json'))
+    ).not.toThrow();
+  });
+});
