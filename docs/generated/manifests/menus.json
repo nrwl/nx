@@ -2678,6 +2678,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Deploying Next.js applications to Vercel",
+            "path": "/recipes/deployment/deploy-nextjs-to-vercel",
+            "id": "deploy-nextjs-to-vercel",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2718,6 +2726,14 @@
         "name": "Add and Deploy Netlify Edge Functions with Deno",
         "path": "/recipes/deployment/deno-netlify-functions",
         "id": "deno-netlify-functions",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Deploying Next.js applications to Vercel",
+        "path": "/recipes/deployment/deploy-nextjs-to-vercel",
+        "id": "deploy-nextjs-to-vercel",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2963,14 +2979,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Deploying Next.js applications to Vercel",
-            "path": "/recipes/other/deploy-nextjs-to-vercel",
-            "id": "deploy-nextjs-to-vercel",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Using Tailwind CSS in React",
             "path": "/recipes/other/using-tailwind-css-in-react",
             "id": "using-tailwind-css-in-react",
@@ -3169,14 +3177,6 @@
         "name": "Configuring Browser Support",
         "path": "/recipes/other/browser-support",
         "id": "browser-support",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Deploying Next.js applications to Vercel",
-        "path": "/recipes/other/deploy-nextjs-to-vercel",
-        "id": "deploy-nextjs-to-vercel",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
