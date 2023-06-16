@@ -36,3 +36,8 @@ When using Nx in a CI environment, the Nx Daemon is disabled by default. Whether
 ## Logs
 
 To see information about the running Nx Daemon (such as its background process ID and log output file), run `nx daemon`. Once you have the path to that log file, you could either open it in your IDE or stream updates in a separate terminal window by running `tail -f {REPLACE_WITH_LOG_PATH}`, for example.
+
+## Customizing the socket location
+
+The Nx Daemon uses a unix socket to communicate between the daemon and the Nx processes. By default this socket gets placed in a temp directory. If you are using Nx in a docker-compose environment, however, you may want to run the daemon manually
+and control its location to enable sharing the daemon among your docker containers. To do so, simply set the NX_DAEMON_SOCKET_DIR environment variable to a shared directory.
