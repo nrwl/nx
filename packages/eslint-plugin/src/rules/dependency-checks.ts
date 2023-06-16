@@ -1,19 +1,17 @@
 import { AST } from 'jsonc-eslint-parser';
-import { normalizePath, readJsonFile, workspaceRoot } from '@nx/devkit';
+import { normalizePath, workspaceRoot } from '@nx/devkit';
 import { createESLintRule } from '../utils/create-eslint-rule';
-import {
-  readProjectGraph,
-  removePackageJsonFromFileMap,
-} from '../utils/project-graph-utils';
+import { readProjectGraph } from '../utils/project-graph-utils';
 import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { findProjectsNpmDependencies } from '@nx/js/src/internal';
 import { satisfies } from 'semver';
 import { getHelperDependenciesFromProjectGraph } from '@nx/js';
-
-// TODO LIST
-// - handle helper dependencies (e.g. tslib or @swc/node)
+import {
+  getAllDependencies,
+  removePackageJsonFromFileMap,
+} from '../utils/package-json-utils';
 
 export type Options = [
   {
@@ -117,20 +115,13 @@ export default createESLintRule<Options, MessageIds>({
       projectRootMappings,
       sourceFilePath
     );
-    const packageJsonPath = join(
-      workspaceRoot,
-      sourceProject.data.root,
-      'package.json'
-    );
 
     // check if source project exists, it's library and has a build target
-    if (
-      !sourceProject ||
-      sourceProject.type !== 'lib' ||
-      !buildTargets.some((t) => sourceProject.data.targets?.[t])
-    ) {
+    if (!sourceProject || sourceProject.type !== 'lib') {
       return {};
     }
+
+    // check if library has a build target
     const buildTarget = buildTargets.find(
       (t) => sourceProject.data.targets?.[t]
     );
@@ -145,8 +136,7 @@ export default createESLintRule<Options, MessageIds>({
       projectGraph
     );
 
-    console.log('helperDependencies', helperDependencies);
-
+    // find all dependencies for the project
     const npmDeps = findProjectsNpmDependencies(
       sourceProject,
       projectGraph,
@@ -156,26 +146,30 @@ export default createESLintRule<Options, MessageIds>({
       },
       removePackageJsonFromFileMap(projectFileMap)
     );
-    const allDependencies = {
+    const projDependencies = {
       ...npmDeps.dependencies,
       ...npmDeps.peerDependencies,
     };
-    const allDependencyNames = Object.keys(allDependencies);
+    const projDependencyNames = Object.keys(projDependencies);
 
-    let packageJsonDeps: string[] = [];
-    if (existsSync(packageJsonPath)) {
-      const packageJson = readJsonFile(packageJsonPath);
-      packageJsonDeps = Object.keys({
-        ...packageJson.dependencies,
-        ...packageJson.devDependencies,
-        ...packageJson.peerDependencies,
-      });
+    const projPackageJsonPath = join(
+      workspaceRoot,
+      sourceProject.data.root,
+      'package.json'
+    );
+    let projPackageJsonDeps: Record<string, string> = {};
+    if (existsSync(projPackageJsonPath)) {
+      projPackageJsonDeps = getAllDependencies(projPackageJsonPath);
     }
+
+    const rootPackageJsonDeps = getAllDependencies(
+      join(workspaceRoot, 'package.json')
+    );
 
     function validateMissingDependencies(node: AST.JSONProperty) {
       if (checkMissingDependencies) {
-        const missingDeps = allDependencyNames.filter(
-          (d) => !packageJsonDeps.find((p) => p === d)
+        const missingDeps = projDependencyNames.filter(
+          (d) => !projPackageJsonDeps[d]
         );
 
         missingDeps.forEach((d) => {
@@ -184,7 +178,25 @@ export default createESLintRule<Options, MessageIds>({
               node: node as any,
               messageId: 'missingDependency',
               data: { packageName: d },
-              // TODO create fixer
+              fix(fixer) {
+                const deps = (node.value as AST.JSONObjectExpression)
+                  .properties;
+                if (deps.length) {
+                  return fixer.insertTextAfter(
+                    deps[deps.length - 1] as any,
+                    `,\n    "${d}": "${
+                      rootPackageJsonDeps[d] || projDependencies[d]
+                    }"`
+                  );
+                } else {
+                  return fixer.replaceTextRange(
+                    [node.value.range[0] + 1, node.value.range[1] - 1],
+                    `\n    "${d}": "${
+                      rootPackageJsonDeps[d] || projDependencies[d]
+                    }"\n  `
+                  );
+                }
+              },
             });
           }
         });
@@ -195,7 +207,7 @@ export default createESLintRule<Options, MessageIds>({
       const packageName = (node.key as any).value;
       const packageRange = (node.value as any).value;
 
-      if (!allDependencyNames.includes(packageName)) {
+      if (!projDependencyNames.includes(packageName)) {
         if (
           checkObsoleteDependencies &&
           !ignoredDependencies.includes(packageName)
@@ -204,20 +216,29 @@ export default createESLintRule<Options, MessageIds>({
             node: node as any,
             messageId: 'obsoleteDependency',
             data: { packageName: packageName },
+            fix: (fixer) => fixer.remove(node as any),
           });
         }
       } else if (
         checkVersionMismatches &&
         !ignoredDependencies.includes(packageName) &&
-        !satisfies(allDependencies[packageName], packageRange)
+        !satisfies(projDependencies[packageName], packageRange)
       ) {
         context.report({
           node: node as any,
           messageId: 'versionMismatch',
           data: {
             packageName: packageName,
-            version: allDependencies[packageName],
+            version: projDependencies[packageName],
           },
+          fix: (fixer) =>
+            fixer.replaceText(
+              node as any,
+              `"${packageName}": "${
+                rootPackageJsonDeps[packageName] ||
+                projDependencies[packageName]
+              }"`
+            ),
         });
       }
     }
@@ -226,8 +247,8 @@ export default createESLintRule<Options, MessageIds>({
       node: AST.JSONObjectExpression
     ) {
       if (
-        allDependencyNames.length &&
-        allDependencyNames.some((d) => !ignoredDependencies.includes(d))
+        projDependencyNames.length &&
+        projDependencyNames.some((d) => !ignoredDependencies.includes(d))
       ) {
         if (
           !node.properties ||
@@ -240,6 +261,19 @@ export default createESLintRule<Options, MessageIds>({
           context.report({
             node: node as any,
             messageId: 'missingDependencySection',
+            fix: (fixer) => {
+              if (!node.properties.length) {
+                return fixer.replaceText(
+                  node as any,
+                  `{\n  "dependencies": {\n  }\n}`
+                );
+              } else {
+                return fixer.insertTextAfter(
+                  node.properties[node.properties.length - 1] as any,
+                  `,\n  "dependencies": {\n  }`
+                );
+              }
+            },
           });
         }
       }
@@ -248,9 +282,9 @@ export default createESLintRule<Options, MessageIds>({
     function validatePackageJsonExistance(node: AST.JSONLiteral) {
       if (
         checkMissingPackageJson &&
-        !existsSync(packageJsonPath) &&
+        !existsSync(projPackageJsonPath) &&
         buildTargets.includes(node.value.toString()) &&
-        allDependencyNames.length > 0
+        projDependencyNames.length > 0
       ) {
         context.report({
           node: node as any,

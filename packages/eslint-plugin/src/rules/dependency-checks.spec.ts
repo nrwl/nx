@@ -52,6 +52,14 @@ const externalNodes: Record<string, ProjectGraphExternalNode> = {
       version: '5.5.6',
     },
   },
+  'npm:random-external': {
+    name: 'npm:random-external',
+    type: 'npm',
+    data: {
+      packageName: 'random-external',
+      version: '1.2.3',
+    },
+  },
   'npm:tslib': {
     name: 'npm:tslib',
     type: 'npm',
@@ -122,7 +130,7 @@ describe('Dependency checks (eslint)', () => {
     expect(failures.length).toEqual(0);
   });
 
-  it('should report missing dependencies section', () => {
+  it('should report missing dependencies section and fix it', () => {
     const packageJson = {
       name: '@mycompany/liba',
     };
@@ -167,6 +175,20 @@ describe('Dependency checks (eslint)', () => {
     expect(failures[0].message).toEqual(
       'The "dependencies" section is missing from the "package.json".'
     );
+
+    // apply fix
+    const content = JSON.stringify(packageJson, null, 2);
+    const result =
+      content.slice(0, failures[0].fix.range[0]) +
+      failures[0].fix.text +
+      content.slice(failures[0].fix.range[1]);
+    expect(result).toMatchInlineSnapshot(`
+      "{
+        "name": "@mycompany/liba",
+        "dependencies": {
+        }
+      }"
+    `);
   });
 
   it('should not report missing dependencies section if all dependencies are ignored', () => {
@@ -299,7 +321,7 @@ describe('Dependency checks (eslint)', () => {
     expect(failures.length).toEqual(0);
   });
 
-  it('should error if package is missing', () => {
+  it('should error if package is missing and apply fixer', () => {
     const packageJson = {
       name: '@mycompany/liba',
       dependencies: {
@@ -345,10 +367,7 @@ describe('Dependency checks (eslint)', () => {
             'npm:external1',
             'npm:external2',
           ]),
-          createFile(`libs/liba/package.json`, [
-            'npm:external1',
-            'npm:external2',
-          ]),
+          createFile(`libs/liba/package.json`, ['npm:external1']),
         ],
       }
     );
@@ -357,6 +376,137 @@ describe('Dependency checks (eslint)', () => {
       `The "external2" is missing from the "package.json".`
     );
     expect(failures[0].line).toEqual(3);
+
+    // apply fix
+    const content = JSON.stringify(packageJson, null, 2);
+    const result =
+      content.slice(0, failures[0].fix.range[0]) +
+      failures[0].fix.text +
+      content.slice(failures[0].fix.range[1]);
+    expect(result).toMatchInlineSnapshot(`
+      "{
+        "name": "@mycompany/liba",
+        "dependencies": {
+          "external1": "^16.0.0",
+          "external2": "^5.2.0"
+        }
+      }"
+    `);
+  });
+
+  it('should add missing dependency when none are provided', () => {
+    const packageJson = {
+      name: '@mycompany/liba',
+      dependencies: {},
+    };
+
+    const fileSys = {
+      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+      './libs/liba/src/index.ts': '',
+      './package.json': JSON.stringify(rootPackageJson, null, 2),
+    };
+    vol.fromJSON(fileSys, '/root');
+
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/liba/package.json`,
+      JSON.stringify(packageJson, null, 2),
+      {
+        nodes: {
+          liba: {
+            name: 'liba',
+            type: 'lib',
+            data: {
+              root: 'libs/liba',
+              targets: {
+                build: {},
+              },
+            },
+          },
+        },
+        externalNodes,
+        dependencies: {
+          liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+        },
+      },
+      {
+        liba: [createFile(`libs/liba/src/main.ts`, ['npm:external1'])],
+      }
+    );
+    expect(failures.length).toEqual(1);
+
+    // apply fix
+    const content = JSON.stringify(packageJson, null, 2);
+    const result =
+      content.slice(0, failures[0].fix.range[0]) +
+      failures[0].fix.text +
+      content.slice(failures[0].fix.range[1]);
+    expect(result).toMatchInlineSnapshot(`
+      "{
+        "name": "@mycompany/liba",
+        "dependencies": {
+          "external1": "~16.1.2"
+        }
+      }"
+    `);
+  });
+
+  it('should take version from lockfile for fixer if not provided in the root package.json', () => {
+    const packageJson = {
+      name: '@mycompany/liba',
+      dependencies: {},
+    };
+
+    const fileSys = {
+      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+      './libs/liba/src/index.ts': '',
+      './package.json': JSON.stringify(rootPackageJson, null, 2),
+    };
+    vol.fromJSON(fileSys, '/root');
+
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/liba/package.json`,
+      JSON.stringify(packageJson, null, 2),
+      {
+        nodes: {
+          liba: {
+            name: 'liba',
+            type: 'lib',
+            data: {
+              root: 'libs/liba',
+              targets: {
+                build: {},
+              },
+            },
+          },
+        },
+        externalNodes,
+        dependencies: {
+          liba: [
+            { source: 'liba', target: 'npm:random-external', type: 'static' },
+          ],
+        },
+      },
+      {
+        liba: [createFile(`libs/liba/src/main.ts`, ['npm:random-external'])],
+      }
+    );
+    expect(failures.length).toEqual(1);
+
+    // apply fix
+    const content = JSON.stringify(packageJson, null, 2);
+    const result =
+      content.slice(0, failures[0].fix.range[0]) +
+      failures[0].fix.text +
+      content.slice(failures[0].fix.range[1]);
+    expect(result).toMatchInlineSnapshot(`
+      "{
+        "name": "@mycompany/liba",
+        "dependencies": {}
+          "random-external": "1.2.3"
+      }"
+    `);
   });
 
   it('should not error if there are no build targets', () => {
@@ -528,7 +678,7 @@ describe('Dependency checks (eslint)', () => {
     expect(failures.length).toEqual(0);
   });
 
-  it('should error if package is obsolete', () => {
+  it('should error if package is obsolete and fix it', () => {
     const packageJson = {
       name: '@mycompany/liba',
       dependencies: {
@@ -583,6 +733,24 @@ describe('Dependency checks (eslint)', () => {
       `The "unneeded\" is found in the "package.json" but is not used.`
     );
     expect(failures[0].line).toEqual(7);
+
+    // should apply fixer
+    const content = JSON.stringify(packageJson, null, 2);
+    const result =
+      content.slice(0, failures[0].fix.range[0]) +
+      failures[0].fix.text +
+      content.slice(failures[0].fix.range[1]);
+    expect(result).toMatchInlineSnapshot(`
+      "{
+        "name": "@mycompany/liba",
+        "dependencies": {
+          "external1": "^16.0.0"
+        },
+        "peerDependencies": {
+
+        }
+      }"
+    `);
   });
 
   it('should not check obsolete deps if checkObsoleteDependencies=false', () => {
@@ -691,7 +859,7 @@ describe('Dependency checks (eslint)', () => {
     expect(failures.length).toEqual(0);
   });
 
-  it('should error if package version is mismatch', () => {
+  it('should error if package version is mismatch and fix it', () => {
     const packageJson = {
       name: '@mycompany/liba',
       dependencies: {
@@ -754,6 +922,26 @@ describe('Dependency checks (eslint)', () => {
       `The "external2" is found in the "package.json" but it's range is not matching the installed version. Installed version: 5.5.6.`
     );
     expect(failures[1].line).toEqual(5);
+
+    // should apply fixer
+    const content = JSON.stringify(packageJson, null, 2);
+    let result =
+      content.slice(0, failures[0].fix.range[0]) +
+      failures[0].fix.text +
+      content.slice(failures[0].fix.range[1]);
+    result =
+      result.slice(0, failures[1].fix.range[0]) +
+      failures[1].fix.text +
+      result.slice(failures[1].fix.range[1]);
+    expect(result).toMatchInlineSnapshot(`
+      "{
+        "name": "@mycompany/liba",
+        "dependencies": {
+          "external1": "~16.1.2",
+          "external2": "^5.2.0"
+        }
+      }"
+    `);
   });
 
   it('should not error if mismatch when checkVersionMismatches is false', () => {
