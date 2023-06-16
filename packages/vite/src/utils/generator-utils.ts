@@ -538,7 +538,7 @@ export function createOrEditViteConfig(
     cache: {
       dir: '${offsetFromRoot(projectConfig.root)}node_modules/.vitest'
     },
-    environment: '${options.testEnvironment ?? 'node'}',
+    environment: '${options.testEnvironment ?? 'jsdom'}',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     ${
       options.inSourceTests
