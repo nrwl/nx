@@ -1,28 +1,30 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Tree, getProjects, updateProjectConfiguration } from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import { VitestExecutorOptions } from '../../executors/test/schema';
 
-export default function update(host: Tree) {
-  const projects = getProjects(host);
+export default function update(tree: Tree) {
+  const projects = getProjects(tree);
 
-  for (const [name, project] of projects) {
-    if (project.targets) {
-      for (const target of Object.values(project.targets)) {
-        if (target.executor === '@nx/vite:test') {
-          if (target.options?.testFile) {
-            target.options.testFile = [target.options.testFile];
-          }
+  forEachExecutorOptions<VitestExecutorOptions>(
+    tree,
+    '@nx/vite:test',
+    (options, projectName, targetName, configuration) => {
+      const projectConfig = projects.get(projectName);
 
-          if (target.configurations) {
-            for (const configuration of Object.values(target.configurations)) {
-              if (configuration.testFile) {
-                configuration.testFile = [configuration.testFile];
-              }
-            }
-          }
-        }
+      if (!options.testFile) {
+        return;
       }
 
-      updateProjectConfiguration(host, name, project);
+      const migratedOptions = { ...options, testFile: [options.testFile] };
+
+      if (configuration) {
+        projectConfig.targets[targetName].configurations[configuration] =
+          migratedOptions;
+      } else {
+        projectConfig.targets[targetName].options = migratedOptions;
+      }
+
+      updateProjectConfiguration(tree, projectName, projectConfig);
     }
-  }
+  );
 }

@@ -25,7 +25,7 @@
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
     },
     "update-16-4-0-test-file-config": {
-      "version": "16.4.0-beta.2",
+      "version": "16.4.0-beta.8",
       "description": "Changes the testFile config in the vite:test exectutor from a string to an array of strings",
       "cli": "nx",
       "implementation": "./src/migrations/update-16-4-0-test-file-config/update-16-4-0-test-file-config"
