@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: which lerna
-      - run: ls -la /usr/local/lib/node_modules
+      - run: ls -la /usr/local/lib/node_modules/lerna
+      - run: ls -la /usr/local/lib/node_modules/npm
+      - run: ls -la /usr/local/lib/node_modules/vercel
       # - run: which nx
       # - run: nx --version
   # do-not-merge:
