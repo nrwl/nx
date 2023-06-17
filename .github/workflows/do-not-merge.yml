@@ -8,10 +8,9 @@ jobs:
   foo:
     runs-on: ubuntu-latest
     steps:
-      - run: which lerna
-      - run: ls -la /usr/local/lib/node_modules/lerna/node_modules/.bin
       - run: sudo ln -s /usr/local/lib/node_modules/lerna/node_modules/.bin/nx /usr/local/bin/nx
       - run: nx --version
+      - run: nx print-affected
       
       # - run: which nx
       # - run: nx --version
