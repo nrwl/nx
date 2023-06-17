@@ -10,7 +10,8 @@ jobs:
     steps:
       - run: which lerna
       - run: ls -la /usr/local/lib/node_modules/lerna/node_modules/.bin
-      - run: /usr/local/lib/node_modules/lerna/node_modules/nx/bin/nx.js print-affected
+      - run: npx --no nx print-affected
+      - run: npm exec --offline -- nx print-affected
       
       # - run: which nx
       # - run: nx --version
