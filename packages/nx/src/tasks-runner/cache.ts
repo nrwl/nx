@@ -5,7 +5,6 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
-import { copy, expandOutputs, remove } from '../native';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -72,7 +71,7 @@ export class Cache {
       const tdCommit = join(this.cachePath, `${task.hash}.commit`);
 
       // might be left overs from partially-completed cache invocations
-      await remove(tdCommit);
+      await this.remove(tdCommit);
       await this.remove(td);
 
       await mkdir(td);
@@ -153,6 +152,7 @@ export class Cache {
     outputs: string[],
     cwd: string
   ): Promise<string[]> {
+    const { expandOutputs } = require('../native');
     performance.mark('expandOutputs:start');
     const results = expandOutputs(cwd, outputs);
     performance.mark('expandOutputs:end');
@@ -166,6 +166,7 @@ export class Cache {
   }
 
   private async copy(src: string, destination: string): Promise<void> {
+    const { copy } = require('../native');
     // 'cp -a /path/dir/ dest/' operates differently to 'cp -a /path/dir dest/'
     // --> which means actual build works but subsequent populate from cache (using cp -a) does not
     // --> the fix is to remove trailing slashes to ensure consistent & expected behaviour
@@ -182,6 +183,7 @@ export class Cache {
   }
 
   private async remove(path: string): Promise<void> {
+    const { remove } = require('../native');
     return new Promise((res, rej) => {
       try {
         remove(path);
