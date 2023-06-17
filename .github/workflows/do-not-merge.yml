@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: which lerna
-      - run: lerna --version
-      - run: which nx
-      - run: nx --version
+      - run: ls -la /usr/local/bin/lerna
+      # - run: which nx
+      # - run: nx --version
   # do-not-merge:
   #   if: ${{ github.repository_owner == 'nrwl' }}
   #   name: Prevent Merging
