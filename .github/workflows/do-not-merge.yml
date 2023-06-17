@@ -9,22 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: sudo ln -s /usr/local/lib/node_modules/lerna/node_modules/.bin/nx /usr/local/bin/nx
-      - run: nx --version
+
+      - uses: actions/checkout@v3
+
       - run: nx print-affected
-      
-      # - run: which nx
-      # - run: nx --version
-  # do-not-merge:
-  #   if: ${{ github.repository_owner == 'nrwl' }}
-  #   name: Prevent Merging
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Check for label
-  #       run: |
-  #         echo "${{ toJSON(github.event.*.labels.*.name) }}"
-  #         node -e 'const forbidden = ["target: next major version", "PR Status: needs tests", "PR Status: in-progress", "blocked: needs rebase"];
-  #          const match = ${{ toJSON(github.event.*.labels.*.name) }}.find(l => forbidden.includes(l));
-  #          if (match) {
-  #           console.log("Cannot merge PRs that are labeled with " + match);
-  #           process.exit(1)
-  #          }'
