@@ -11,7 +11,7 @@ npx create-nx-workspace@latest my-api \
   --docker
 ```
 
-This example uses [Fastify](https://www.fastify.io/) but you can equally use [Express](https://expressjs.com/), [Koa](https://koajs.com/) or [NestJS](https://nestjs.com/) by selecting those frameworks during project creation.
+This example uses [Fastify](https://www.fastify.dev/) but you can equally use [Express](https://expressjs.com/), [Koa](https://koajs.com/) or [NestJS](https://nestjs.com/) by selecting those frameworks during project creation.
 
 You can also install the `@nx/node` package into an existing Nx monorepo and generate a new Node application.
 
