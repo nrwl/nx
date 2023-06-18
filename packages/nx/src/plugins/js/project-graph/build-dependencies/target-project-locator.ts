@@ -181,7 +181,12 @@ export class TargetProjectLocator {
   private findProjectOfResolvedModule(
     resolvedModule: string
   ): string | undefined {
-    if (resolvedModule.startsWith('node_modules/')) return undefined;
+    if (
+      resolvedModule.startsWith('node_modules/') ||
+      resolvedModule.includes('/node_modules/')
+    ) {
+      return undefined;
+    }
     const normalizedResolvedModule = resolvedModule.startsWith('./')
       ? resolvedModule.substring(2)
       : resolvedModule;
