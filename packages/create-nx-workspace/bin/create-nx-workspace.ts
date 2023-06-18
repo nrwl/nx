@@ -939,7 +939,7 @@ async function determineNodeFramework(
         },
         {
           name: 'fastify',
-          message: 'Fastify [ https://www.fastify.io/ ]',
+          message: 'Fastify [ https://www.fastify.dev/ ]',
         },
         {
           name: 'koa',
