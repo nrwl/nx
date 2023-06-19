@@ -80,12 +80,12 @@ describe('update-16-4-0-vite-test-file-config migration', () => {
             "configurations": {
               "one": {
                 "ci": true,
-                "testFile": [
+                "testFiles": [
                   "test-file-one.ts",
                 ],
               },
               "two": {
-                "testFile": [
+                "testFiles": [
                   "test-file-two.ts",
                 ],
                 "watch": true,
@@ -94,7 +94,7 @@ describe('update-16-4-0-vite-test-file-config migration', () => {
             "executor": "@nx/vite:test",
             "options": {
               "config": "vite.config.ts",
-              "testFile": [
+              "testFiles": [
                 "test-file.ts",
               ],
             },
