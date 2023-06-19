@@ -4,7 +4,11 @@ import type {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '@nx/devkit';
-import { fileDataDepTarget } from 'nx/src/config/project-graph';
+import {
+  DependencyType,
+  fileDataDepTarget,
+  fileDataDepType,
+} from 'nx/src/config/project-graph';
 
 interface Reach {
   graph: ProjectGraph;
@@ -157,4 +161,26 @@ export function findFilesInCircularPath(
   }
 
   return filePathChain;
+}
+
+export function findFilesWithDynamicImports(
+  projectFileMap: ProjectFileMap,
+  sourceProjectName: string,
+  targetProjectName: string
+): FileData[] {
+  const files: FileData[] = [];
+  projectFileMap[sourceProjectName].forEach((file) => {
+    if (!file.deps) return;
+    if (
+      file.deps.some(
+        (d) =>
+          fileDataDepTarget(d) === targetProjectName &&
+          fileDataDepType(d) === DependencyType.dynamic
+      )
+    ) {
+      files.push(file);
+    }
+  });
+
+  return files;
 }

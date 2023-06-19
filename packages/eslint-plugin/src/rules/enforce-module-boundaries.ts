@@ -8,6 +8,7 @@ import {
 import { isRelativePath } from 'nx/src/utils/fileutils';
 import {
   checkCircularPath,
+  findFilesWithDynamicImports,
   findFilesInCircularPath,
 } from '../utils/graph-utils';
 import {
@@ -125,7 +126,7 @@ export default createESLintRule<Options, MessageIds>({
       noImportsOfE2e: 'Imports of e2e projects are forbidden',
       noImportOfNonBuildableLibraries:
         'Buildable libraries cannot import or export from non-buildable libraries',
-      noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
+      noImportsOfLazyLoadedLibraries: `Static imports of lazy-loaded libraries are forbidden.\n\nLibrary "{{targetProjectName}}" is lazy-loaded in these files:\n{{filePaths}}`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
       bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
       nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package. Nested import found at {{childProjectName}}`,
@@ -515,7 +516,18 @@ export default createESLintRule<Options, MessageIds>({
           []
         )
       ) {
+        const filesWithLazyImports = findFilesWithDynamicImports(
+          projectFileMap,
+          sourceProject.name,
+          targetProject.name
+        );
         context.report({
+          data: {
+            filePaths: filesWithLazyImports
+              .map(({ file }) => `- ${file}`)
+              .join('\n'),
+            targetProjectName: targetProject.name,
+          },
           node,
           messageId: 'noImportsOfLazyLoadedLibraries',
         });
