@@ -128,6 +128,7 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
+      env: process.env,
       tasks,
       taskGraph,
     });

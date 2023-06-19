@@ -289,6 +289,51 @@ describe('cache', () => {
     );
   }, 120000);
 
+  it('should support ENV as an input', () => {
+    const lib = uniq('lib');
+    runCLI(`generate @nx/js:lib ${lib}`);
+    updateJson(`nx.json`, (c) => {
+      c.targetDefaults = {
+        echo: {
+          inputs: {
+            env: 'NAME',
+          },
+        },
+      };
+
+      return c;
+    });
+
+    updateJson(`libs/${lib}/project.json`, (c) => {
+      c.targets = {
+        echo: {
+          command: 'echo $NAME',
+        },
+      };
+      return c;
+    });
+
+    const firstRun = runCLI(`echo ${lib}`, {
+      env: { NAME: 'e2e' },
+    });
+    expect(firstRun).not.toContain('read the output from the cache');
+
+    const secondRun = runCLI(`echo ${lib}`, {
+      env: { NAME: 'e2e' },
+    });
+    expect(secondRun).toContain('read the output from the cache');
+
+    const thirdRun = runCLI(`echo ${lib}`, {
+      env: { NAME: 'change' },
+    });
+    expect(thirdRun).not.toContain('read the output from the cache');
+
+    const fourthRun = runCLI(`echo ${lib}`, {
+      env: { NAME: 'change' },
+    });
+    expect(thirdRun).toContain('read the output from the cache');
+  }, 120000);
+
   function expectCached(
     actualOutput: string,
     expectedCachedProjects: string[]
