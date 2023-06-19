@@ -6,11 +6,7 @@ import * as logTransformer from 'strong-log-transformer';
 import { workspaceRoot } from '../utils/workspace-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
-import {
-  getCliPath,
-  getPrintableCommandArgsForTask,
-  getSerializedArgsForTask,
-} from './utils';
+import { getCliPath, getPrintableCommandArgsForTask } from './utils';
 import { Batch } from './tasks-schedule';
 import { join } from 'path';
 import {
@@ -63,6 +59,10 @@ export class ForkedProcessTaskRunner {
         });
         this.processes.add(p);
 
+        // ensure the child process is killed when the parent exits
+        process.on('exit', () => p.kill());
+        process.on('SIGTERM', () => p.kill());
+
         p.once('exit', (code, signal) => {
           this.processes.delete(p);
           if (code === null) code = this.signalToCode(signal);
@@ -82,21 +82,34 @@ export class ForkedProcessTaskRunner {
           }
         });
 
+        const printedTasks = new Set<string>();
         p.on('message', (message: BatchMessage) => {
           switch (message.type) {
-            case BatchMessageType.Complete: {
+            case BatchMessageType.CompleteTask: {
+              this.options.lifeCycle.printTaskTerminalOutput(
+                batchTaskGraph.tasks[message.task],
+                message.result.success ? 'success' : 'failure',
+                message.result.terminalOutput
+              );
+              printedTasks.add(message.task);
+
+              break;
+            }
+            case BatchMessageType.CompleteBatchExecution: {
               Object.entries(message.results).forEach(([taskName, result]) => {
-                this.options.lifeCycle.printTaskTerminalOutput(
-                  batchTaskGraph.tasks[taskName],
-                  result.success ? 'success' : 'failure',
-                  result.terminalOutput
-                );
+                if (!printedTasks.has(taskName)) {
+                  this.options.lifeCycle.printTaskTerminalOutput(
+                    batchTaskGraph.tasks[taskName],
+                    result.success ? 'success' : 'failure',
+                    result.terminalOutput
+                  );
+                }
               });
 
               res(message.results);
               break;
             }
-            case BatchMessageType.Tasks: {
+            case BatchMessageType.RunTasks: {
               break;
             }
             default: {
@@ -110,7 +123,7 @@ export class ForkedProcessTaskRunner {
 
         // Start the tasks
         p.send({
-          type: BatchMessageType.Tasks,
+          type: BatchMessageType.RunTasks,
           executorName,
           batchTaskGraph,
           fullTaskGraph,

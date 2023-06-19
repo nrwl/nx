@@ -706,7 +706,7 @@ A change to be made to a string
 
 ### TaskGraphExecutor
 
-Ƭ **TaskGraphExecutor**<`T`\>: (`taskGraph`: [`TaskGraph`](../../devkit/documents/nx_devkit#taskgraph), `options`: `Record`<`string`, `T`\>, `overrides`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/nx_devkit#executorcontext)) => `Promise`<`Record`<`string`, `ExecutorTaskResult`\> \| `AsyncIterableIterator`<`Record`<`string`, `ExecutorTaskResult`\>\>\>
+Ƭ **TaskGraphExecutor**<`T`\>: (`taskGraph`: [`TaskGraph`](../../devkit/documents/nx_devkit#taskgraph), `options`: `Record`<`string`, `T`\>, `overrides`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/nx_devkit#executorcontext)) => `Promise`<`BatchExecutorResult` \| `AsyncIterableIterator`<`BatchExecutorTaskResult`\>\>
 
 #### Type parameters
 
@@ -716,7 +716,7 @@ A change to be made to a string
 
 #### Type declaration
 
-▸ (`taskGraph`, `options`, `overrides`, `context`): `Promise`<`Record`<`string`, `ExecutorTaskResult`\> \| `AsyncIterableIterator`<`Record`<`string`, `ExecutorTaskResult`\>\>\>
+▸ (`taskGraph`, `options`, `overrides`, `context`): `Promise`<`BatchExecutorResult` \| `AsyncIterableIterator`<`BatchExecutorTaskResult`\>\>
 
 Implementation of a target of a project that handles multiple projects to be batched
 
@@ -731,7 +731,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ##### Returns
 
-`Promise`<`Record`<`string`, `ExecutorTaskResult`\> \| `AsyncIterableIterator`<`Record`<`string`, `ExecutorTaskResult`\>\>\>
+`Promise`<`BatchExecutorResult` \| `AsyncIterableIterator`<`BatchExecutorTaskResult`\>\>
 
 ---
 
