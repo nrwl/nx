@@ -163,16 +163,24 @@ export function findFilesInCircularPath(
   return filePathChain;
 }
 
-export function findFileByDependency(
+export function findFilesWithDynamicImports(
   projectFileMap: ProjectFileMap,
   sourceProjectName: string,
   targetProjectName: string
 ): FileData[] {
-  const isDynamicTargetDep = (dep: string | [string, string]) =>
-    fileDataDepType(dep) === DependencyType.dynamic &&
-    fileDataDepTarget(dep) === targetProjectName;
+  const files: FileData[] = [];
+  projectFileMap[sourceProjectName].forEach((file) => {
+    if (!file.deps) return;
+    if (
+      file.deps.some(
+        (d) =>
+          fileDataDepTarget(d) === targetProjectName &&
+          fileDataDepType(d) === DependencyType.dynamic
+      )
+    ) {
+      files.push(file);
+    }
+  });
 
-  return projectFileMap[sourceProjectName].filter((file) =>
-    file.deps?.find(isDynamicTargetDep)
-  );
+  return files;
 }

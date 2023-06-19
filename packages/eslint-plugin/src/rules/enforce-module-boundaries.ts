@@ -8,7 +8,7 @@ import {
 import { isRelativePath } from 'nx/src/utils/fileutils';
 import {
   checkCircularPath,
-  findFileByDependency,
+  findFilesWithDynamicImports,
   findFilesInCircularPath,
 } from '../utils/graph-utils';
 import {
@@ -516,7 +516,7 @@ export default createESLintRule<Options, MessageIds>({
           []
         )
       ) {
-        const filesWithLazyImports = findFileByDependency(
+        const filesWithLazyImports = findFilesWithDynamicImports(
           projectFileMap,
           sourceProject.name,
           targetProject.name
