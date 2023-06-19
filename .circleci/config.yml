@@ -187,7 +187,7 @@ jobs:
             pnpm nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
             pids+=($!)
             (pnpm nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
+            pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=3) &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
