@@ -295,9 +295,11 @@ describe('cache', () => {
     updateJson(`nx.json`, (c) => {
       c.targetDefaults = {
         echo: {
-          inputs: {
-            env: 'NAME',
-          },
+          inputs: [
+            {
+              env: 'NAME',
+            },
+          ],
         },
       };
 
