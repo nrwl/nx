@@ -511,8 +511,8 @@ describe('Nx Affected and Graph Tests', () => {
       expect(model).toHaveProperty('tasks');
     });
 
-    it('affected:graph should include affected projects in environment file', () => {
-      runCLI(`affected:graph --file=project-graph.html`);
+    it('should include affected projects in environment file', () => {
+      runCLI(`graph --affected --file=project-graph.html`);
 
       const environmentJs = readFile('static/environment.js');
       const affectedProjects = environmentJs
