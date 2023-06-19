@@ -261,14 +261,16 @@ export default createESLintRule<Options, MessageIds>({
         fix: (fixer) => {
           let isLastProperty = false;
           if (
-            node.parent.properties.length === 1 ||
             node.parent.properties[node.parent.properties.length - 1] === node
           ) {
             isLastProperty = true;
           }
-          // remove 4 spaces and new line from the start and pontetial comma from the end
+          // remove 4 spaces, new line and potential comma from previous line
+          const shouldRemoveSiblingComma =
+            isLastProperty && node.parent.properties.length > 1;
+          const leadingChars = 5 + (shouldRemoveSiblingComma ? 1 : 0);
           return fixer.removeRange([
-            node.range[0] - 5,
+            node.range[0] - leadingChars,
             node.range[1] + (isLastProperty ? 0 : 1),
           ]);
         },
