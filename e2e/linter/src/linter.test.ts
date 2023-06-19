@@ -9,6 +9,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import * as ts from 'typescript';
 
@@ -433,6 +434,71 @@ describe('Linter', () => {
         expect(fileContent).toContain(
           `import { someSelectivelyExportedFn } from '@${projScope}/${libA}';`
         );
+      });
+    });
+
+    describe('dependency checks', () => {
+      beforeAll(() => {
+        updateJson('.eslintrc.json', (json) => {
+          json.overrides = [
+            ...json.overrides,
+            {
+              files: ['*.json'],
+              parser: 'jsonc-eslint-parser',
+              rules: {
+                '@nx/dependency-checks': 'error',
+              },
+            },
+          ];
+          return json;
+        });
+        updateJson(`libs/${mylib}/project.json`, (json) => {
+          json.targets.lint.options.lintFilePatterns = [
+            `libs/${mylib}/**/*.ts`,
+            `libs/${mylib}/project.json`,
+            `libs/${mylib}/package.json`,
+          ];
+          return json;
+        });
+      });
+
+      it('should report dependency check issues', () => {
+        const nxVersion = readJson('package.json').devDependencies.nx;
+
+        let out = runCLI(`lint ${mylib}`, { silenceError: true });
+        expect(out).toContain('All files pass linting');
+
+        // make an explict dependency to nx
+        updateFile(
+          `libs/${mylib}/src/lib/${mylib}.ts`,
+          (content) =>
+            `import { nxVersion } from 'nx/src/utils/versions';\n\n` +
+            content.replace(`return '${mylib}'`, `return nxVersion`)
+        );
+
+        // output should now report missing dependencies section
+        out = runCLI(`lint ${mylib}`, { silenceError: true });
+        expect(out).toContain(
+          'The "dependencies" section is missing from the "package.json"'
+        );
+
+        // should fix the missing section issue
+        out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
+        expect(out).toContain('All files pass linting');
+
+        // intentionally set the invalid version
+        updateJson(`libs/${mylib}/package.json`, (json) => {
+          json.dependencies.nx = '100.0.0';
+          return json;
+        });
+        out = runCLI(`lint ${mylib}`, { silenceError: true });
+        expect(out).toContain(
+          `The "nx" is found in the "package.json" but it's range is not matching the installed version. Installed version: ${nxVersion}`
+        );
+
+        // should fix the version mismatch issue
+        out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
+        expect(out).toContain('All files pass linting');
       });
     });
   });

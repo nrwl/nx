@@ -157,7 +157,20 @@ export default createESLintRule<Options, MessageIds>({
       sourceProject.data.root,
       'package.json'
     );
-    const projPackageJsonDeps = getAllDependencies(projPackageJsonPath);
+
+    if (!(global as any).projPackageJsonDeps) {
+      const projPackageJsonDeps = {
+        get value() {
+          return this._value;
+        },
+        set value(value) {
+          this._value = value;
+        },
+      };
+      projPackageJsonDeps.value = getAllDependencies(projPackageJsonPath);
+      (global as any).projPackageJsonDeps = projPackageJsonDeps;
+    }
+    const projPackageJsonDeps = (global as any).projPackageJsonDeps;
     const rootPackageJsonDeps = getAllDependencies(
       join(workspaceRoot, 'package.json')
     );
@@ -167,7 +180,7 @@ export default createESLintRule<Options, MessageIds>({
         return;
       }
       const missingDeps = projDependencyNames.filter(
-        (d) => !projPackageJsonDeps[d]
+        (d) => !projPackageJsonDeps.value[d]
       );
 
       missingDeps.forEach((d) => {
@@ -177,20 +190,21 @@ export default createESLintRule<Options, MessageIds>({
             messageId: 'missingDependency',
             data: { packageName: d },
             fix(fixer) {
+              projPackageJsonDeps.value = {
+                ...projPackageJsonDeps.value,
+                [d]: rootPackageJsonDeps[d] || projDependencies[d],
+              };
+
               const deps = (node.value as AST.JSONObjectExpression).properties;
               if (deps.length) {
                 return fixer.insertTextAfter(
                   deps[deps.length - 1] as any,
-                  `,\n    "${d}": "${
-                    rootPackageJsonDeps[d] || projDependencies[d]
-                  }"`
+                  `,\n    "${d}": "${projPackageJsonDeps.value[d]}"`
                 );
               } else {
                 return fixer.replaceTextRange(
                   [node.value.range[0] + 1, node.value.range[1] - 1],
-                  `\n    "${d}": "${
-                    rootPackageJsonDeps[d] || projDependencies[d]
-                  }"\n  `
+                  `\n    "${d}": "${projPackageJsonDeps.value[d]}"\n  `
                 );
               }
             },
@@ -282,15 +296,27 @@ export default createESLintRule<Options, MessageIds>({
           node: node as any,
           messageId: 'missingDependencySection',
           fix: (fixer) => {
+            projPackageJsonDeps.value = projDependencyNames.sort().reduce(
+              (acc, d) => ({
+                ...acc,
+                [d]: rootPackageJsonDeps[d] || projDependencies[d],
+              }),
+              {}
+            );
+
+            const dependencies = Object.keys(projPackageJsonDeps.value)
+              .map((d) => `\n    "${d}": "${projPackageJsonDeps.value[d]}"`)
+              .join(',');
+
             if (!node.properties.length) {
               return fixer.replaceText(
                 node as any,
-                `{\n  "dependencies": {\n  }\n}`
+                `{\n  "dependencies": {${dependencies}\n  }\n}`
               );
             } else {
               return fixer.insertTextAfter(
                 node.properties[node.properties.length - 1] as any,
-                `,\n  "dependencies": {\n  }`
+                `,\n  "dependencies": {${dependencies}\n  }`
               );
             }
           },

@@ -79,6 +79,10 @@ const externalNodes: Record<string, ProjectGraphExternalNode> = {
 };
 
 describe('Dependency checks (eslint)', () => {
+  beforeEach(() => {
+    (global as any).projPackageJsonDeps = undefined;
+  });
+
   afterEach(() => {
     vol.reset();
   });
@@ -186,6 +190,7 @@ describe('Dependency checks (eslint)', () => {
       "{
         "name": "@mycompany/liba",
         "dependencies": {
+          "external1": "~16.1.2"
         }
       }"
     `);
@@ -1533,26 +1538,22 @@ it('should require swc if @nx/js:swc executor', () => {
           { source: 'liba', target: 'npm:external1', type: 'static' },
           { source: 'liba', target: 'libb', type: 'static' },
         ],
-        libb: [{ source: 'libb', target: 'npm:external2', type: 'static' }],
+        libb: [],
       },
     },
     {
       liba: [
         createFile(`libs/liba/src/main.ts`, ['npm:external1']),
         createFile(`libs/liba/package.json`, ['npm:external1']),
-        createFile(`libs/libb/src/main.ts`, ['npm:external2']),
+        createFile(`libs/libb/src/main.ts`),
       ],
     }
   );
-  expect(failures.length).toEqual(2);
+  expect(failures.length).toEqual(1);
   expect(failures[0].message).toEqual(
     `The "@swc/helpers" is missing from the "package.json".`
   );
   expect(failures[0].line).toEqual(3);
-  expect(failures[1].message).toEqual(
-    `The "external2\" is missing from the "package.json".`
-  );
-  expect(failures[1].line).toEqual(3);
 });
 
 function createFile(f: string, deps?: (string | [string, string])[]): FileData {
