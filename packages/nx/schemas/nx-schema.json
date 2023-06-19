@@ -163,7 +163,8 @@
             "type": "object",
             "properties": {
               "externalDependencies": {
-                "type": "string",
+                "type": "array",
+                "items": { "type": "string" },
                 "description": "The list of external dependencies that our target depends on for `nx:run-commands` and community plugins."
               }
             },
