@@ -33,6 +33,12 @@ export async function verdaccioExecutor(
     }
   }
 
+  const port = await detectPort(options.port);
+  if (port !== options.port) {
+    logger.info(`Port ${options.port} was occupied. Using port ${port}.`);
+    options.port = port;
+  }
+
   const cleanupFunctions =
     options.location === 'none' ? [] : [setupNpm(options), setupYarn(options)];
 
@@ -50,11 +56,6 @@ export async function verdaccioExecutor(
   process.on('SIGHUP', processExitListener);
 
   try {
-    const port = await detectPort(options.port);
-    if (port !== options.port) {
-      logger.info(`Port ${options.port} was occupied. Using port ${port}.`);
-      options.port = port;
-    }
     await startVerdaccio(options, context.root);
   } catch (e) {
     logger.error('Failed to start verdaccio: ' + e?.toString());
