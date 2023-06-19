@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
@@ -10,6 +11,7 @@ import {
 import { Schema } from './schema';
 import {
   babelPresetExpoVersion,
+  babelRuntimeVersion,
   easCliVersion,
   expoCliVersion,
   expoMetroConfigVersion,
@@ -78,6 +80,7 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
 }
 
 export function updateDependencies(host: Tree) {
+  const isPnpm = detectPackageManager(host.root) === 'pnpm';
   return addDependenciesToPackageJson(
     host,
     {
@@ -105,6 +108,11 @@ export function updateDependencies(host: Tree) {
       '@expo/cli': expoCliVersion,
       'eas-cli': easCliVersion,
       'babel-preset-expo': babelPresetExpoVersion,
+      ...(isPnpm
+        ? {
+            '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg
+          }
+        : {}),
     }
   );
 }

@@ -8,6 +8,7 @@ export const expoUpdatesVersion = '~0.16.4';
 export const expoCliVersion = '~0.7.3'; // @expo/cli
 export const easCliVersion = '~3.13.3';
 export const babelPresetExpoVersion = '~9.3.2';
+export const babelRuntimeVersion = '~^7.22.5';
 
 export const reactVersion = '18.2.0';
 export const reactDomVersion = '18.2.0';

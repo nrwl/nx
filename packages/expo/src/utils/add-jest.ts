@@ -31,7 +31,7 @@ export async function addJest(
     resolver: '@nx/jest/plugins/resolver',
     preset: 'jest-expo',
     transformIgnorePatterns: [
-      'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
+      'node_modules/(?!((.pnpm/)?((jest-)?react-native|@react-native(-community)?))|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
     ],
     moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
     setupFilesAfterEnv: ['<rootDir>/test-setup.${js ? 'js' : 'ts'}'],
