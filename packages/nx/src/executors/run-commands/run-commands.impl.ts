@@ -312,7 +312,15 @@ function parseArgs(options: RunCommandsOptions) {
     const unknownOptionsTreatedAsArgs = Object.keys(options)
       .filter((p) => propKeys.indexOf(p) === -1)
       .reduce((m, c) => ((m[c] = options[c]), m), {});
-    return unknownOptionsTreatedAsArgs;
+
+    const unparsedCommandArgs = yargsParser(options.__unparsed__, {
+      configuration: {
+        'parse-numbers': false,
+        'parse-positional-numbers': false,
+        'dot-notation': false,
+      },
+    });
+    return { ...unknownOptionsTreatedAsArgs, ...unparsedCommandArgs };
   }
   return yargsParser(args.replace(/(^"|"$)/g, ''), {
     configuration: { 'camel-case-expansion': false },
