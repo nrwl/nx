@@ -1,6 +1,6 @@
 export default function () {
-  if (global.nxLocalRegistryProcess) {
-    global.nxLocalRegistryProcess.kill();
+  if (global.e2eTeardown) {
+    global.e2eTeardown();
     console.log('Killed local registry process');
   }
 }
