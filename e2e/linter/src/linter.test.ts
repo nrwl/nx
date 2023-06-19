@@ -473,7 +473,7 @@ describe('Linter', () => {
           `libs/${mylib}/src/lib/${mylib}.ts`,
           (content) =>
             `import { nxVersion } from 'nx/src/utils/versions';\n\n` +
-            content.replace(`return '${mylib}'`, `return nxVersion`)
+            content.replace(/return .*;/, `return nxVersion;`)
         );
 
         // output should now report missing dependencies section
@@ -484,7 +484,9 @@ describe('Linter', () => {
 
         // should fix the missing section issue
         out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
-        expect(out).toContain('All files pass linting');
+        expect(out).toContain(
+          `Successfully ran target lint for project ${mylib}`
+        );
 
         // intentionally set the invalid version
         updateJson(`libs/${mylib}/package.json`, (json) => {
@@ -498,7 +500,9 @@ describe('Linter', () => {
 
         // should fix the version mismatch issue
         out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
-        expect(out).toContain('All files pass linting');
+        expect(out).toContain(
+          `Successfully ran target lint for project ${mylib}`
+        );
       });
     });
   });
