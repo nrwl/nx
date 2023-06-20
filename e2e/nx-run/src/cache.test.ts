@@ -293,6 +293,7 @@ describe('cache', () => {
     const lib = uniq('lib');
     runCLI(`generate @nx/js:lib ${lib}`);
     updateJson(`nx.json`, (c) => {
+      c.tasksRunnerOptions.default.options.cacheableOperations.push('echo');
       c.targetDefaults = {
         echo: {
           inputs: [
@@ -333,7 +334,7 @@ describe('cache', () => {
     const fourthRun = runCLI(`echo ${lib}`, {
       env: { NAME: 'change' },
     });
-    expect(thirdRun).toContain('read the output from the cache');
+    expect(fourthRun).toContain('read the output from the cache');
   }, 120000);
 
   function expectCached(
