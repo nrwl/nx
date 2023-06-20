@@ -57,11 +57,11 @@ export default createESLintRule<Options, MessageIds>({
       },
     ],
     messages: {
-      noPackageJson: `The "package.json" is required for buildable libraries, but does not exist in "{{projectName}}".`,
-      missingDependency: `The "{{packageName}}" is missing from the "package.json".`,
-      obsoleteDependency: `The "{{packageName}}" is found in the "package.json" but is not used.`,
-      versionMismatch: `The "{{packageName}}" is found in the "package.json" but it's range is not matching the installed version. Installed version: {{version}}.`,
-      missingDependencySection: `The "dependencies" section is missing from the "package.json".`,
+      noPackageJson: `A "package.json" file is required for buildable libraries, but does not exist in "{{projectName}}".`,
+      missingDependency: `The "{{projectName}}" uses the package "{{packageName}}", but it is missing from the project's "package.json".`,
+      obsoleteDependency: `The "{{packageName}}" package is found in the "package.json" but is not used by "{{projectName}}".`,
+      versionMismatch: `The "{{packageName}}" package is listed in "{{projectName}}"'s "package.json" but it's range is not compatible with the installed version. Installed version: {{version}}.`,
+      missingDependencySection: `Dependencies section is missing from the "package.json".`,
     },
   },
   defaultOptions: [
@@ -116,7 +116,7 @@ export default createESLintRule<Options, MessageIds>({
       sourceFilePath
     );
 
-    // check if source project exists, it's library and has a build target
+    // check if source project exists, it's a library
     if (!sourceProject || sourceProject.type !== 'lib') {
       return {};
     }
@@ -188,7 +188,7 @@ export default createESLintRule<Options, MessageIds>({
           context.report({
             node: node as any,
             messageId: 'missingDependency',
-            data: { packageName: d },
+            data: { packageName: d, projectName: sourceProject.name },
             fix(fixer) {
               projPackageJsonDeps.value = {
                 ...projPackageJsonDeps.value,
@@ -231,6 +231,7 @@ export default createESLintRule<Options, MessageIds>({
         messageId: 'versionMismatch',
         data: {
           packageName: packageName,
+          projectName: sourceProject.name,
           version: projDependencies[packageName],
         },
         fix: (fixer) =>
@@ -257,7 +258,7 @@ export default createESLintRule<Options, MessageIds>({
       context.report({
         node: node as any,
         messageId: 'obsoleteDependency',
-        data: { packageName: packageName },
+        data: { packageName: packageName, projectName: sourceProject.name },
         fix: (fixer) => {
           let isLastProperty = false;
           if (

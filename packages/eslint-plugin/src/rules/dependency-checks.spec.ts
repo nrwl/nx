@@ -176,8 +176,8 @@ describe('Dependency checks (eslint)', () => {
       }
     );
     expect(failures.length).toEqual(1);
-    expect(failures[0].message).toEqual(
-      'The "dependencies" section is missing from the "package.json".'
+    expect(failures[0].message).toMatchInlineSnapshot(
+      `"Dependencies section is missing from the "package.json"."`
     );
 
     // apply fix
@@ -377,8 +377,8 @@ describe('Dependency checks (eslint)', () => {
       }
     );
     expect(failures.length).toEqual(1);
-    expect(failures[0].message).toEqual(
-      `The "external2" is missing from the "package.json".`
+    expect(failures[0].message).toMatchInlineSnapshot(
+      `"The "liba" uses the package "external2", but it is missing from the project's "package.json"."`
     );
     expect(failures[0].line).toEqual(3);
 
@@ -735,8 +735,8 @@ describe('Dependency checks (eslint)', () => {
       }
     );
     expect(failures.length).toEqual(1);
-    expect(failures[0].message).toEqual(
-      `The "unneeded\" is found in the "package.json" but is not used.`
+    expect(failures[0].message).toMatchInlineSnapshot(
+      `"The "unneeded" package is found in the "package.json" but is not used by "liba"."`
     );
     expect(failures[0].line).toEqual(7);
 
@@ -817,8 +817,8 @@ describe('Dependency checks (eslint)', () => {
       }
     );
     expect(failures.length).toEqual(1);
-    expect(failures[0].message).toEqual(
-      `The "unneeded\" is found in the "package.json" but is not used.`
+    expect(failures[0].message).toMatchInlineSnapshot(
+      `"The "unneeded" package is found in the "package.json" but is not used by "liba"."`
     );
     expect(failures[0].line).toEqual(7);
 
@@ -1002,12 +1002,12 @@ describe('Dependency checks (eslint)', () => {
       }
     );
     expect(failures.length).toEqual(2);
-    expect(failures[0].message).toEqual(
-      `The "external1" is found in the "package.json" but it's range is not matching the installed version. Installed version: 16.1.8.`
+    expect(failures[0].message).toMatchInlineSnapshot(
+      `"The "external1" package is listed in "liba"'s "package.json" but it's range is not compatible with the installed version. Installed version: 16.1.8."`
     );
     expect(failures[0].line).toEqual(4);
-    expect(failures[1].message).toEqual(
-      `The "external2" is found in the "package.json" but it's range is not matching the installed version. Installed version: 5.5.6.`
+    expect(failures[1].message).toMatchInlineSnapshot(
+      `"The "external2" package is listed in "liba"'s "package.json" but it's range is not compatible with the installed version. Installed version: 5.5.6."`
     );
     expect(failures[1].line).toEqual(5);
 
@@ -1144,8 +1144,8 @@ describe('Dependency checks (eslint)', () => {
       }
     );
     expect(failures.length).toEqual(1);
-    expect(failures[0].message).toEqual(
-      `The "external2" is found in the "package.json" but it's range is not matching the installed version. Installed version: 5.5.6.`
+    expect(failures[0].message).toMatchInlineSnapshot(
+      `"The "external2" package is listed in "liba"'s "package.json" but it's range is not compatible with the installed version. Installed version: 5.5.6."`
     );
     expect(failures[0].line).toEqual(5);
   });
@@ -1202,8 +1202,8 @@ describe('Dependency checks (eslint)', () => {
       }
     );
     expect(failures.length).toEqual(1);
-    expect(failures[0].message).toEqual(
-      `The "package.json" is required for buildable libraries, but does not exist in "liba".`
+    expect(failures[0].message).toMatchInlineSnapshot(
+      `"A "package.json" file is required for buildable libraries, but does not exist in "liba"."`
     );
     expect(failures[0].line).toEqual(6);
   });
@@ -1467,12 +1467,12 @@ describe('Dependency checks (eslint)', () => {
       }
     );
     expect(failures.length).toEqual(2);
-    expect(failures[0].message).toEqual(
-      `The "tslib" is missing from the "package.json".`
+    expect(failures[0].message).toMatchInlineSnapshot(
+      `"The "liba" uses the package "tslib", but it is missing from the project's "package.json"."`
     );
     expect(failures[0].line).toEqual(3);
-    expect(failures[1].message).toEqual(
-      `The "external2\" is missing from the "package.json".`
+    expect(failures[1].message).toMatchInlineSnapshot(
+      `"The "liba" uses the package "external2", but it is missing from the project's "package.json"."`
     );
     expect(failures[1].line).toEqual(3);
   });
@@ -1550,8 +1550,8 @@ it('should require swc if @nx/js:swc executor', () => {
     }
   );
   expect(failures.length).toEqual(1);
-  expect(failures[0].message).toEqual(
-    `The "@swc/helpers" is missing from the "package.json".`
+  expect(failures[0].message).toMatchInlineSnapshot(
+    `"The "liba" uses the package "@swc/helpers", but it is missing from the project's "package.json"."`
   );
   expect(failures[0].line).toEqual(3);
 });
