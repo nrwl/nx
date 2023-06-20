@@ -1,5 +1,11 @@
 import { execSync } from 'child_process';
-import { copySync, moveSync, readdirSync, removeSync } from 'fs-extra';
+import {
+  copySync,
+  moveSync,
+  readdirSync,
+  removeSync,
+  existsSync,
+} from 'fs-extra';
 import { join } from 'path';
 import { InitArgs } from '../../init';
 import {
@@ -174,6 +180,9 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 }
 
 function createTempWorkspace(options: NormalizedOptions) {
+  if (options.packageManager && existsSync('yarn.lock')) {
+    moveSync('yarn.lock', join('tmp', 'yarn.lock'), { overwrite: true });
+  }
   removeSync('temp-workspace');
 
   execSync(
@@ -251,6 +260,12 @@ function overridePackageDeps(
 function moveFilesToTempWorkspace(options: NormalizedOptions) {
   output.log({ title: '🚚 Moving your React app in your new Nx workspace' });
 
+  if (
+    options.packageManager === 'yarn' &&
+    existsSync(join('tmp', 'yarn.lock'))
+  ) {
+    moveSync(join('tmp', 'yarn.lock'), 'yarn.lock', { overwrite: true });
+  }
   copyPackageJsonDepsFromTempWorkspace();
   const requiredCraFiles = [
     'project.json',
