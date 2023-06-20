@@ -479,7 +479,7 @@ describe('Linter', () => {
         // output should now report missing dependencies section
         out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain(
-          'The "dependencies" section is missing from the "package.json"'
+          'Dependencies section is missing from the "package.json"'
         );
 
         // should fix the missing section issue
@@ -495,7 +495,7 @@ describe('Linter', () => {
         });
         out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain(
-          `The "nx" is found in the "package.json" but it's range is not matching the installed version. Installed version: ${nxVersion}`
+          `The "nx" package is listed in "${mylib}"'s "package.json" but it's range is not compatible with the installed version. Installed version: ${nxVersion}`
         );
 
         // should fix the version mismatch issue
