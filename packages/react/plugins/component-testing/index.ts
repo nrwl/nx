@@ -22,6 +22,7 @@ import {
 
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
+
 type ViteDevServer = {
   framework: 'react';
   bundler: 'vite';
@@ -33,6 +34,7 @@ type WebpackDevServer = {
   bundler: 'webpack';
   webpackConfig?: any;
 };
+
 /**
  * React nx preset for Cypress Component Testing
  *
@@ -78,7 +80,7 @@ export function nxComponentTestingPreset(
           const viteConfigPath = findViteConfig(normalizedProjectRootPath);
 
           const { mergeConfig, loadConfigFromFile, searchForWorkspaceRoot } =
-            (await import('vite')) as typeof import('vite');
+            await import('vite');
 
           const resolved = await loadConfigFromFile(
             {
