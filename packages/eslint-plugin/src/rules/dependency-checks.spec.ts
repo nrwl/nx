@@ -80,7 +80,7 @@ const externalNodes: Record<string, ProjectGraphExternalNode> = {
 
 describe('Dependency checks (eslint)', () => {
   beforeEach(() => {
-    (global as any).projPackageJsonDeps = undefined;
+    globalThis.projPackageJsonDeps = undefined;
   });
 
   afterEach(() => {
@@ -1577,10 +1577,10 @@ function runRule(
   projectGraph: ProjectGraph,
   projectFileMap: ProjectFileMap
 ): Linter.LintMessage[] {
-  (global as any).projectPath = `${process.cwd()}/proj`;
-  (global as any).projectGraph = projectGraph;
-  (global as any).projectFileMap = projectFileMap;
-  (global as any).projectRootMappings = createProjectRootMappings(
+  globalThis.projectPath = `${process.cwd()}/proj`;
+  globalThis.projectGraph = projectGraph;
+  globalThis.projectFileMap = projectFileMap;
+  globalThis.projectRootMappings = createProjectRootMappings(
     projectGraph.nodes
   );
 
