@@ -40,7 +40,7 @@ pub fn get_workspace_files_native(
     trace!(?root_map);
 
     // Files need to be sorted each time because when we do hashArray in the TaskHasher.js, the order of the files should be deterministic
-    file_data.sort();
+    file_data.par_sort();
 
     let file_locations = file_data
         .into_par_iter()
