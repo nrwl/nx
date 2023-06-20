@@ -1,6 +1,6 @@
 # Using Tailwind CSS with Angular projects
 
-The purpose of this guide is to cover how to use and configure [Tailwind CSS](https://tailwindcss.com/)
+The purpose of this page is to cover how to use and configure [Tailwind CSS](https://tailwindcss.com/)
 with [Angular](https://angular.io/) projects. It shows the different options available to set it up in existing projects
 or new projects, and it also contains a set of our recommended setups for using Tailwind CSS in different scenarios that
 can be found on an Nx workspace.
@@ -8,71 +8,47 @@ can be found on an Nx workspace.
 For an in-depth look on this topic, be sure to check out our blog
 post [Set up Tailwind CSS with Angular in an Nx workspace](https://medium.com/nrwl/set-up-tailwind-css-with-angular-in-an-nx-workspace-6f039a0f4479).
 
-## Get Started
+## Generating or adding Tailwind CSS support to Angular projects
 
-To generate an Angular application or library with Tailwind CSS configured, add the `--add-tailwind` flag to the generate command:
+To generate an Angular application with Tailwind CSS configured run:
 
 ```shell
 npx nx g @nx/angular:app my-app --add-tailwind
 ```
 
+To generate an Angular buildable library with Tailwind CSS configured run:
+
 ```shell
 npx nx g @nx/angular:lib my-lib --buildable --add-tailwind
 ```
 
-To add Tailwind to an existing project, run the [setup-tailwind](/packages/angular/generators/setup-tailwind) generator:
+To generate an Angular publishable library with Tailwind CSS configured run:
+
+```shell
+npx nx g @nx/angular:lib my-lib --publishable --importPath=@my-org/my-lib --add-tailwind
+```
+
+To add Tailwind CSS to an existing Angular application, buildable library or publishable library, run:
 
 ```shell
 npx nx g @nx/angular:setup-tailwind my-project
 ```
 
-## Tailwind CSS support by the Nx Angular plugin
+You can see the available options for the above generator in [its docs](/packages/angular/generators/setup-tailwind).
 
-The Nx Angular plugin provides support for Tailwind CSS v2 and v3. The support includes the following features:
+## Configuring the content sources for a project and its dependencies
 
-- A generator called `@nx/angular:setup-tailwind` that configures Tailwind CSS in an existing project.
-- An option `--add-tailwind` for the `@nx/angular:app` generator to create an application with Tailwind CSS
-  pre-configured.
-- An option `--add-tailwind` for the `@nx/angular:lib` generator to create a library with Tailwind CSS pre-configured.
-  This option can only be used with buildable and publishable libraries.
-- Ability to build buildable libraries with Tailwind CSS using the `@nx/angular:ng-packagr-lite` executor.
-- Ability to build publishable libraries with Tailwind CSS using the `@nx/angular:package` executor.
+Tailwind CSS scans files looking for class names to generate only the CSS needed by what's being used in those files.
+To configure which files should be processed, the `tailwind.config.js` has a `content` property (formerly called `purge`
+in v2). You can find more details on Tailwind's
+[official documentation](https://tailwindcss.com/docs/content-configuration#configuring-source-paths).
 
-The generation for existing or new projects will perform the following steps:
-
-- Check if the `tailwindcss` package is already installed and if not installed, it will install the necessary
-  packages (`tailwindcss`, `postcss` and `autoprefixer`)
-- Create a `tailwind.config.js` file in the project root with the default configuration to get started (specific to the
-  installed version) and set up to scan the content (or purge for v2) of the project's source and its dependencies (
-  using the [`createGlobPatternsForDependencies` utility function](#createglobpatternsfordependencies-utility-function))
-- Based on the project type, it will perform the following actions:
-  - Applications: update the application styles entry point file located at `apps/app1/src/styles.css` by including
-    the Tailwind CSS base styles
-  - Libraries: add the `tailwind.config.js` file path to the `build` target configuration
-
-{% callout type="note" title="More details" %}
-When Tailwind CSS has not been installed yet, the generator will install Tailwind CSS v3. Only if Tailwind CSS v2 is
-installed, the generator will use it and generate the configuration accordingly.
-{% /callout %}
-
-> All the examples in this guide will use Tailwind CSS v3, but the guide will work the same for v2. To convert the
-> examples to v2, check
-> the [Tailwind CSS upgrade guide](https://tailwindcss.com/docs/upgrade-guide#migrating-to-the-jit-engine) to understand
-> the differences between the configuration for both versions.
-
-### `createGlobPatternsForDependencies` utility function
-
-One of the advantages of Tailwind is that it post-processes your CSS removing (also called "purging") all the parts that
-are not being used. In order to configure which file should be processed, the `tailwind.config.js` has a `content`
-property (formerly called `purge` in v2). You can find more details on
-Tailwind's [official documentation](https://tailwindcss.com/docs/content-configuration#configuring-source-paths).
-
-The `content` property usually consistes of a glob pattern to include all the necessary files that should be processed.
+The `content` property usually consists of a glob pattern to include all the necessary files that should be processed.
 In an Nx workspace it is very common for a project to have other projects as its dependencies. Setting and updating the
 glob to reflect those dependencies and their files is cumbersome and error prone.
 
-Nx has a utility function that can be used to construct the glob representation of all files a project depends on (based
-on the Nx Project Graph).
+Nx has a utility function (`createGlobPatternsForDependencies`) that can be used to construct the glob representation of
+all files a project depends on (based on the Nx Project Graph).
 
 The function receives a directory path that is used to identify the project for which the dependencies are going to be
 identified (therefore it needs to be a directory path within a project). It can also receive an optional glob pattern to
@@ -110,7 +86,7 @@ and `lib2` as dependencies, the utility function will return the following glob 
 ```
 
 {% callout type="note" title="Usage with Module Federation" %}
-When using Tailwind with Module Federation, Tailwind starts its purge at the host application, and only includes direct
+When using Tailwind with Module Federation, Tailwind starts scanning files at the host application, and only includes direct
 dependencies of that application. As the other applications in the Module Federation are not direct dependencies, but
 rather runtime dependencies, this can lead to missing classes from being included in your generated Tailwind css file.
 
@@ -125,53 +101,14 @@ This can be fixed in two manners:
 
 {% /callout %}
 
-## Generating or adding Tailwind CSS support to Angular projects
-
-### Generate an Angular application with Tailwind CSS pre-configured
-
-To generate an Angular application with Tailwind CSS configured by default, you can use the following command:
-
-```shell
-npx nx g @nx/angular:app my-app --add-tailwind
-```
-
-### Generate an Angular buildable library with Tailwind CSS pre-configured
-
-To generate an Angular buildable library with Tailwind CSS configured by default, you can use the following command:
-
-```shell
-npx nx g @nx/angular:lib my-lib --buildable --add-tailwind
-```
-
-### Generate an Angular publishable library with Tailwind CSS pre-configured
-
-To generate an Angular publishable library with Tailwind CSS configured by default, you can use the following command:
-
-```shell
-npx nx g @nx/angular:lib my-lib --publishable --importPath=@my-org/my-lib --add-tailwind
-```
-
-### Add Tailwind CSS to an existing Angular application, buildable library or publishable library
-
-To add Tailwind CSS to an existing Angular application, buildable library or publishable library, you can use the
-following command:
-
-```shell
-npx nx g @nx/angular:setup-tailwind my-project
-```
-
-You can see the available options for the above generator in [its docs](/packages/angular/generators/setup-tailwind).
-
 ## Tailwind CSS setup scenarios
 
 ### Configure Tailwind CSS for an application with non-buildable libraries as dependencies
 
 In workspaces with a single application that's consuming non-buildable libraries (libraries without a `build` target),
-you only need to configure Tailwind CSS in the application. You can do so by
-either [generating the application with Tailwind CSS already configured](#generate-an-angular-application-with-tailwind-css-pre-configured)
-or
-by [adding Tailwind CSS to an existing application](#add-tailwind-css-to-an-existing-angular-application-buildable-library-or-publishable-library)
-.
+you only need to configure Tailwind CSS in the application. You can do so by either generating the application with
+Tailwind CSS already configured or by adding Tailwind CSS to an existing application as shown in a
+[previous section](#generating-or-adding-tailwind-css-support-to-angular-projects).
 
 In this scenario, the libraries will be processed as part of the application build process and therefore, the
 application's configuration for Tailwind CSS will be used.
@@ -222,43 +159,12 @@ The `content` property shouldn't be specified in the preset because its value is
 
 Add the project configuration for the project:
 
-If using the workspace configuration v2:
-
-```jsonc {% fileName="angular.json or project.json" %}
-{
-  "version": 2,
-  "projects": {
-    ...
-    "tailwind-preset": "libs/tailwind-preset"
-  }
-}
-```
-
 ```jsonc {% fileName="libs/tailwind-preset/project.json" %}
 {
   "projectType": "library",
-  "root": "libs/tailwind-preset",
   "sourceRoot": "libs/tailwind-preset",
   "targets": {},
   "tags": []
-}
-```
-
-If using the workspace configuration v1:
-
-```jsonc {% fileName="angular.json" %}
-{
-  "version": 1,
-  "projects": {
-    ...
-    "tailwind-preset": {
-      "projectType": "library",
-      "root": "libs/tailwind-preset",
-      "sourceRoot": "libs/tailwind-preset",
-      "architect": {},
-      "tags": []
-    }
-  }
 }
 ```
 
@@ -363,52 +269,33 @@ module.exports = {
 
 Add the project configuration for the project:
 
-If using the workspace configuration v2:
-
-```jsonc {% fileName="project.json" %}
-{
-  "version": 2,
-  "projects": {
-    ...
-    "tailwind-preset": "libs/tailwind-preset"
-  }
-}
-```
-
 ```json {% fileName="libs/tailwind-preset/project.json" %}
 {
   "projectType": "library",
-  "root": "libs/tailwind-preset",
   "sourceRoot": "libs/tailwind-preset",
   "targets": {},
   "tags": []
 }
 ```
 
-If using the workspace configuration v1:
-
-```jsonc {% fileName="angular.json" %}
-{
-  "version": 1,
-  "projects": {
-    ...
-    "tailwind-preset": {
-      "projectType": "library",
-      "root": "libs/tailwind-preset",
-      "sourceRoot": "libs/tailwind-preset",
-      "architect": {},
-      "tags": []
-    }
-  }
-}
-```
-
 Adjust the `tailwind.config.js` file of the different applications to use the preset and remove the configuration that's
 already included in the preset:
 
-```javascript {% fileName="tailwind.config.js" %}
-// apps/app1/tailwind.config.js
-// apps/app2/tailwind.config.js
+```javascript {% fileName="apps/app1/tailwind.config.js" %}
+const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+const { join } = require('path');
+const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
+
+module.exports = {
+  presets: [sharedTailwindConfig],
+  content: [
+    join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+    ...createGlobPatternsForDependencies(__dirname),
+  ],
+};
+```
+
+```javascript {% fileName="apps/app2/tailwind.config.js" %}
 const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
 const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
@@ -424,8 +311,7 @@ module.exports = {
 
 Do the same with any shared buildable or publishable library `tailwind.config.js` file:
 
-```javascript {% fileName="tailwind.config.js" %}
-// libs/lib1/tailwind.config.js
+```javascript {% fileName="libs/lib1/tailwind.config.js" %}
 const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
 const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
@@ -490,7 +376,7 @@ Add the CSS variable values to the different application styles entry point:
 ```
 
 If you're using a publishable library, you want to distribute it with a generated CSS that can be used by the consuming
-applications. To do so, take a look at [this section](#distribute-publishable-libraries-themes).
+applications. To do so, take a look at [the next section](#distribute-publishable-libraries-themes).
 
 ### Distribute publishable libraries themes
 
@@ -531,7 +417,7 @@ configured.
 Next, you need to configure your project to build the theme when you build the library. Edit the project configuration
 to have the following targets:
 
-```jsonc {% fileName="project.json" %}
+```jsonc {% fileName="libs/lib1/project.json" %}
 ...
 "build-angular": {
   "executor": "@nx/angular:package",
