@@ -3,6 +3,7 @@ import { getCachedSerializedProjectGraphPromise } from './project-graph-incremen
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
 import { fileHasher } from '../../hasher/file-hasher';
+import { setHashEnv } from '../../hasher/set-hash-env';
 
 /**
  * We use this not to recreated hasher for every hash operation
@@ -14,9 +15,12 @@ let storedHasher: InProcessTaskHasher | null = null;
 
 export async function handleHashTasks(payload: {
   runnerOptions: any;
+  env: any;
   tasks: Task[];
   taskGraph: TaskGraph;
 }) {
+  setHashEnv(payload.env);
+
   const { projectGraph, allWorkspaceFiles, projectFileMap } =
     await getCachedSerializedProjectGraphPromise();
   const nxJson = readNxJson();

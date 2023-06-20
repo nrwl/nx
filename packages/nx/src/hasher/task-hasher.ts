@@ -17,6 +17,7 @@ import { findMatchingProjects } from '../utils/find-matching-projects';
 import { FileHasher, hashArray } from './file-hasher';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import { join } from 'path';
+import { getHashEnv } from './set-hash-env';
 
 type ExpandedSelfInput =
   | { fileset: string }
@@ -695,7 +696,8 @@ class TaskHasherImpl {
   }
 
   private async hashEnv(envVarName: string): Promise<PartialHash> {
-    const value = hashArray([process.env[envVarName] ?? '']);
+    let env = getHashEnv();
+    const value = hashArray([env[envVarName] ?? '']);
     return {
       details: { [`env:${envVarName}`]: value },
       value,
