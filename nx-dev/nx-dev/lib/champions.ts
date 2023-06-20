@@ -73,6 +73,31 @@ export const champions1: Champion[] = [
     ],
     location: 'Argentina',
   },
+  {
+    name: 'Dmitriy Stepanenko',
+    expertise: 'Angular, Qwik, Plugins, Community, Blogs',
+    imageUrl: '/images/champions/dmitriy-stepanenko.webp',
+    contact: [
+      {
+        label: 'stepanenkodmitri@gmail.com',
+        link: 'mailto:stepanenkodmitri@gmail.com',
+      },
+    ],
+    location: 'Ukraine',
+  },
+  {
+    name: 'Daniel Glejzner',
+    expertise:
+      '🅰️ Mentor / Angular Architect - 📖 DDD & Nx / @AngularWroclaw - Organizer / Angular Bros - Co-Founder / Host of Angular Tech Twitter Spaces',
+    imageUrl: '/images/champions/daniel-glejzner.webp',
+    contact: [
+      {
+        label: '@danielglejzner',
+        link: 'https://twitter.com/danielglejzner',
+      },
+    ],
+    location: 'Poland',
+  },
 ];
 export const champions2: Champion[] = [
   {
@@ -151,6 +176,32 @@ export const champions2: Champion[] = [
     ],
     location: 'Luxembourg',
   },
+  {
+    name: 'Edouard Bozon',
+    expertise: 'Angular, Architecture, Automation, Testing, Devtools',
+    imageUrl: '/images/champions/edouard-bozon.webp',
+    contact: [
+      {
+        label: '@edbzn',
+        link: 'https://twitter.com/edbzn',
+      },
+    ],
+    location: 'France',
+  },
+  {
+    name: 'Stefan Haas',
+    expertise:
+      'Angular, Repository Structure, Onboarding New Devs, Architecture, Blogging',
+    imageUrl: '/images/champions/stefan-haas.webp',
+    contact: [
+      {
+        label: 'LinkedIn: Stefan Haas',
+        link: 'https://www.linkedin.com/in/stefan-haas-686a921b4/',
+      },
+      // https://github.com/HaasStefan/, https://twitter.com/StefanvHaas,  stefan.haas.privat@gmail.com
+    ],
+    location: 'Austria',
+  },
 ];
 export const champions3: Champion[] = [
   {
@@ -226,5 +277,44 @@ export const champions3: Champion[] = [
       },
     ],
     location: 'Utah, USA',
+  },
+  {
+    name: 'Michael Hladky',
+    expertise:
+      'We support big companies to achieve their goals by writing plugins, designing enterprise architecture and auditing their web performance',
+    imageUrl: '/images/champions/michael-hladky.webp',
+    contact: [
+      {
+        label: 'office@push-based.io',
+        link: 'mailto:office@push-based.io',
+      },
+    ],
+    location: 'Austria',
+  },
+  {
+    name: 'Nacho Vazquez',
+    expertise:
+      'Angular, Qwik, SolidJS, enterprise workspaces, open source, architecture, repository structure, plugins, documentation',
+    imageUrl: '/images/champions/nacho-vazquez.webp',
+    contact: [
+      {
+        label: '@naxodev',
+        link: 'https://twitter.com/naxodev',
+      },
+    ],
+    location: 'Uruguay',
+  },
+  {
+    name: 'Nathan Walker',
+    expertise:
+      'Open source project efficiencies, diverse ecosystem collaboration within workspaces and cross platform targeting for small to large enterprises.',
+    imageUrl: '/images/champions/nathan-walker.webp',
+    contact: [
+      {
+        label: '@wwwalkerrun',
+        link: 'https://twitter.com/wwwalkerrun',
+      },
+    ],
+    location: 'USA',
   },
 ];
