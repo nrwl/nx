@@ -102,16 +102,15 @@ export async function watchOutputFiles(cb: FileWatcherCallback) {
       return cb(err, null);
     }
 
-    for (const event of events) {
-      if (
-        event.path.startsWith('.git') ||
-        event.path.includes('node_modules')
-      ) {
-        return;
-      }
-    }
+    events = events.filter((event) => {
+      return (
+        !event.path.startsWith('.git') && !event.path.includes('node_modules')
+      );
+    });
 
-    cb(null, events);
+    if (events.length !== 0) {
+      cb(null, events);
+    }
   });
   return watcher;
 }
