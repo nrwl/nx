@@ -5,6 +5,7 @@ import { printAffected } from './print-affected';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
 import type { NxArgs } from '../../utils/command-line-utils';
 import {
+  loadEnvVars,
   parseFiles,
   readGraphFileFromGraphArg,
   splitArgsIntoNxArgsAndOverrides,
@@ -23,7 +24,7 @@ import { workspaceConfigurationCheck } from '../../utils/workspace-configuration
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { allFileData } from '../../utils/all-file-data';
-import { NX_PREFIX, logger } from '../../utils/logger';
+import { logger, NX_PREFIX } from '../../utils/logger';
 import { affectedGraphDeprecationMessage } from './command-object';
 
 export async function affected(
@@ -38,6 +39,7 @@ export async function affected(
   performance.measure('code-loading', 'init-local', 'code-loading:end');
   workspaceConfigurationCheck();
 
+  await loadEnvVars();
   const nxJson = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,

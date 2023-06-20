@@ -22,14 +22,16 @@ import {
   createTaskGraph,
   mapTargetDefaultsToDependencies,
 } from '../../tasks-runner/create-task-graph';
-import { TargetDefaults, TargetDependencies } from '../../config/nx-json';
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
 import { Server } from 'net';
 import { readProjectFileMapCache } from '../../project-graph/nx-deps-cache';
 import { fileHasher } from '../../hasher/file-hasher';
 import { getAffectedGraphNodes } from '../affected/affected';
-import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
+import {
+  loadEnvVars,
+  splitArgsIntoNxArgsAndOverrides,
+} from '../../utils/command-line-utils';
 
 export interface ProjectGraphClientResponse {
   hash: string;
@@ -196,6 +198,7 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
+  await loadEnvVars();
   if (
     Array.isArray(args.targets) &&
     args.targets.length > 1 &&

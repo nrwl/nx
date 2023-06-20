@@ -4,21 +4,9 @@ import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import * as chalk from 'chalk';
+import { loadEnvVars } from '../../utils/command-line-utils';
 
 export const LARGE_BUFFER = 1024 * 1000000;
-
-async function loadEnvVars(path?: string) {
-  if (path) {
-    const result = (await import('dotenv')).config({ path });
-    if (result.error) {
-      throw result.error;
-    }
-  } else {
-    try {
-      (await import('dotenv')).config();
-    } catch {}
-  }
-}
 
 export type Json = { [k: string]: any };
 

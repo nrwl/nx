@@ -37,6 +37,19 @@ export interface NxArgs {
   type?: string;
 }
 
+export async function loadEnvVars(path?: string) {
+  if (path) {
+    const result = (await import('dotenv')).config({ path });
+    if (result.error) {
+      throw result.error;
+    }
+  } else {
+    try {
+      (await import('dotenv')).config();
+    } catch {}
+  }
+}
+
 export function splitArgsIntoNxArgsAndOverrides(
   args: { [k: string]: any },
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
