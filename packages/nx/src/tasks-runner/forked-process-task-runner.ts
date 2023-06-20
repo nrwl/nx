@@ -421,6 +421,8 @@ export class ForkedProcessTaskRunner {
     if (process.env.NX_LOAD_DOT_ENV_FILES == 'true') {
       return {
         ...this.getDotenvVariablesForForkedProcess(),
+        ...parseEnv(`.${task.target.configuration}.env`),
+        ...parseEnv(`.env.${task.target.configuration}`),
         ...parseEnv(`.${task.target.target}.env`),
         ...parseEnv(`.env.${task.target.target}`),
         ...(task.target.configuration

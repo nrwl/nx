@@ -20,9 +20,11 @@ By default, Nx will load any environment variables you place in the following fi
 9. `.[target-name].[configuration-name].env`
 10. `.env.[target-name]`
 11. `.[target-name].env`
-12. `.local.env`
-13. `.env.local`
-14. `.env`
+12. `.env.[configuration-name]`
+13. `.[configuration-name].env`
+14. `.local.env`
+15. `.env.local`
+16. `.env`
 
 {% callout type="warning" title="Order is important" %}
 Nx will move through the above list, ignoring files it can't find, and loading environment variables
