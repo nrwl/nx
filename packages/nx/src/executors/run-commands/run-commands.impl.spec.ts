@@ -54,6 +54,26 @@ describe('Run Commands', () => {
     expect(readFile(f)).toEqual('123');
   });
 
+  it.each([
+    [`--key=123`, `args.key`, `123`],
+    [`--key="123.10"`, `args.key`, `123.10`],
+    [`--nested.key="123.10"`, `args.nested.key`, `123.10`],
+  ])(
+    'should interpolate %s into %s as %s',
+    async (cmdLineArg, argKey, expected) => {
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          command: `echo {${argKey}} >> ${f}`,
+          __unparsed__: [cmdLineArg],
+        },
+        context
+      );
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual(expected);
+    }
+  );
+
   it('should run commands serially', async () => {
     const f = fileSync().name;
     const result = await runCommands(
