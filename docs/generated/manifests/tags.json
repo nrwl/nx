@@ -858,6 +858,41 @@
       "id": "node-aws-lambda",
       "name": "Deploying AWS lambda in Node.js",
       "path": "/recipes/deployment/node-aws-lambda"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/nestjs-prisma",
+      "id": "nestjs-prisma",
+      "name": "Using Prisma with NestJS",
+      "path": "/recipes/database/nestjs-prisma"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/mongo-fastify",
+      "id": "mongo-fastify",
+      "name": "Using Mongo with Fastify",
+      "path": "/recipes/database/mongo-fastify"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/redis-fastify",
+      "id": "redis-fastify",
+      "name": "Using Redis with Fastify",
+      "path": "/recipes/database/redis-fastify"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/postgres-fastify",
+      "id": "postgres-fastify",
+      "name": "Using Postgres with Fastify",
+      "path": "/recipes/database/postgres-fastify"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/serverless-fastify-planetscale",
+      "id": "serverless-fastify-planetscale",
+      "name": "Using PlanetScale with Serverless Fastify",
+      "path": "/recipes/database/serverless-fastify-planetscale"
     }
   ],
   "deno": [
@@ -874,6 +909,52 @@
       "id": "deno-netlify-functions",
       "name": "Add and Deploy Netlify Edge Functions with Deno",
       "path": "/recipes/deployment/deno-netlify-functions"
+    }
+  ],
+  "database": [
+    {
+      "description": "",
+      "file": "shared/recipes/database/nestjs-prisma",
+      "id": "nestjs-prisma",
+      "name": "Using Prisma with NestJS",
+      "path": "/recipes/database/nestjs-prisma"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/mongo-fastify",
+      "id": "mongo-fastify",
+      "name": "Using Mongo with Fastify",
+      "path": "/recipes/database/mongo-fastify"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/redis-fastify",
+      "id": "redis-fastify",
+      "name": "Using Redis with Fastify",
+      "path": "/recipes/database/redis-fastify"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/postgres-fastify",
+      "id": "postgres-fastify",
+      "name": "Using Postgres with Fastify",
+      "path": "/recipes/database/postgres-fastify"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/serverless-fastify-planetscale",
+      "id": "serverless-fastify-planetscale",
+      "name": "Using PlanetScale with Serverless Fastify",
+      "path": "/recipes/database/serverless-fastify-planetscale"
+    }
+  ],
+  "serverless": [
+    {
+      "description": "",
+      "file": "shared/recipes/database/serverless-fastify-planetscale",
+      "id": "serverless-fastify-planetscale",
+      "name": "Using PlanetScale with Serverless Fastify",
+      "path": "/recipes/database/serverless-fastify-planetscale"
     }
   ],
   "workspace-watching": [
