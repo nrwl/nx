@@ -42,9 +42,10 @@ async function getTerminalOutputLifeCycle(
   tasks: Task[],
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration,
-  overrides: Record<string, unknown>
+  overrides: Record<string, unknown>,
+  loadDotEnvFiles: boolean
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
-  const { runnerOptions } = getRunner(nxArgs, nxJson);
+  const { runnerOptions } = getRunner(nxArgs, nxJson, loadDotEnvFiles);
   const isRunOne = initiatingProject != null;
   const useDynamicOutput =
     shouldUseDynamicLifeCycle(tasks, runnerOptions, nxArgs.outputStyle) &&
@@ -170,7 +171,8 @@ export async function runCommand(
         tasks,
         nxArgs,
         nxJson,
-        overrides
+        overrides,
+        extraOptions.loadDotEnvFiles
       );
 
       const status = await invokeTasksRunner({
@@ -229,9 +231,11 @@ export async function invokeTasksRunner({
   loadDotEnvFiles: boolean;
   initiatingProject: string | null;
 }) {
-  setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
-
-  const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
+  const { tasksRunner, runnerOptions } = getRunner(
+    nxArgs,
+    nxJson,
+    loadDotEnvFiles
+  );
 
   let hasher;
   if (daemonClient.enabled()) {
@@ -370,11 +374,13 @@ function shouldUseDynamicLifeCycle(
 
 export function getRunner(
   nxArgs: NxArgs,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  loadDotEnvFiles: boolean
 ): {
   tasksRunner: TasksRunner;
   runnerOptions: any;
 } {
+  setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
   let runner = nxArgs.runner;
   runner = runner || 'default';
   if (!nxJson.tasksRunnerOptions) {

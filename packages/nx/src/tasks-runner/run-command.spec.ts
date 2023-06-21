@@ -27,7 +27,8 @@ describe('getRunner', () => {
 
     const { tasksRunner, runnerOptions } = getRunner(
       { runner: 'custom' },
-      nxJson
+      nxJson,
+      true
     );
 
     expect(tasksRunner).toEqual(mockRunner);
@@ -49,7 +50,8 @@ describe('getRunner', () => {
 
     const { tasksRunner, runnerOptions } = getRunner(
       { runner: 'custom' },
-      nxJson
+      nxJson,
+      true
     );
     expect(tasksRunner).toBe(mockRunner);
     expect(runnerOptions).toEqual({
@@ -69,8 +71,36 @@ describe('getRunner', () => {
       },
     };
 
-    const { tasksRunner } = getRunner({}, nxJson);
+    const { tasksRunner } = getRunner({}, nxJson, true);
 
     expect(tasksRunner).toEqual(mockRunner);
+  });
+
+  it('should set args via env', () => {
+    jest.mock('custom-default-runner', () => mockRunner, {
+      virtual: true,
+    });
+
+    nxJson.tasksRunnerOptions = {
+      default: {
+        runner: 'custom-default-runner',
+      },
+    };
+    const args: Record<string, any> = {
+      targets: ['test'],
+      parallel: 3,
+      skipNxCache: false,
+      nxBail: false,
+      nxIgnoreCycles: false,
+      all: true,
+      projects: [],
+    };
+    const previousEnv = structuredClone({ ...process.env });
+    process.env.NX_BATCH_MODE = 'true';
+    getRunner(args, nxJson, true);
+    expect(process.env.NX_BATCH_MODE).toEqual('true');
+    expect(args.outputStyle).toEqual('stream');
+    process.env = previousEnv;
+    expect(process.env.NX_BATCH_MODE).toBeUndefined();
   });
 });
