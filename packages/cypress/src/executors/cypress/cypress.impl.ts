@@ -24,7 +24,6 @@ export type Json = { [k: string]: any };
 export interface CypressExecutorOptions extends Json {
   cypressConfig: string;
   watch?: boolean;
-  tsConfig?: string;
   devServerTarget?: string;
   headed?: boolean;
   /**
@@ -91,11 +90,6 @@ function normalizeOptions(
   context: ExecutorContext
 ): NormalizedCypressExecutorOptions {
   options.env = options.env || {};
-  if (options.tsConfig) {
-    const tsConfigPath = join(context.root, options.tsConfig);
-    options.env.tsConfig = tsConfigPath;
-    process.env.TS_NODE_PROJECT = tsConfigPath;
-  }
   if (options.testingType === 'component') {
     const project = context?.projectGraph?.nodes?.[context.projectName];
     if (project?.data?.root) {

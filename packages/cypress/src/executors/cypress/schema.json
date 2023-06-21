@@ -32,6 +32,7 @@
       "default": false
     },
     "tsConfig": {
+      "x-deprecated": "This option no longer has any effect. Cypress supports typescript out of the box. Add any options directly to <projectRoot>/tsconfig.json or <projectRoot>/cypress/tsconfig.json",
       "type": "string",
       "description": "The path of the Cypress tsconfig configuration json file.",
       "x-completion-type": "file",
