@@ -32,23 +32,6 @@ export function formatSolutionBuilderStatusReport(
   return formattedDiagnostic;
 }
 
-// adapted from TS default watch status reporter
-export function formatWatchStatusReport(
-  diagnostic: ts.Diagnostic,
-  newLine: string
-): string {
-  let output = `[${formatColorAndReset(
-    getLocaleTimeString(),
-    ForegroundColorEscapeSequences.Grey
-  )}] `;
-  output += `${ts.flattenDiagnosticMessageText(
-    diagnostic.messageText,
-    ts.sys.newLine
-  )}${newLine + newLine}`;
-
-  return output;
-}
-
 function formatColorAndReset(text: string, formatStyle: string) {
   const resetEscapeSequence = '\u001b[0m';
   return formatStyle + text + resetEscapeSequence;

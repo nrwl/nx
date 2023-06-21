@@ -159,6 +159,10 @@ export class TasksSchedule {
     rootExecutorName: string,
     isRoot: boolean
   ) {
+    if (!this.canBatchTaskBeScheduled(task.id, batches[rootExecutorName])) {
+      return;
+    }
+
     const { batchImplementationFactory } = await getExecutorForTask(
       task,
       this.workspaces,
@@ -198,6 +202,16 @@ export class TasksSchedule {
         false
       );
     }
+  }
+
+  private canBatchTaskBeScheduled(
+    taskId: string,
+    batchTaskGraph: TaskGraph | undefined
+  ): boolean {
+    // all deps have either completed or belong to the same batch
+    return this.taskGraph.dependencies[taskId].every(
+      (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
+    );
   }
 
   private canBeScheduled(taskId: string) {
