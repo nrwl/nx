@@ -59,10 +59,6 @@ export class ForkedProcessTaskRunner {
         });
         this.processes.add(p);
 
-        // ensure the child process is killed when the parent exits
-        process.on('exit', () => p.kill());
-        process.on('SIGTERM', () => p.kill());
-
         p.once('exit', (code, signal) => {
           this.processes.delete(p);
           if (code === null) code = this.signalToCode(signal);
@@ -483,6 +479,13 @@ export class ForkedProcessTaskRunner {
     });
 
     // Terminate any task processes on exit
+    process.on('exit', () => {
+      this.processes.forEach((p) => {
+        if (p.connected) {
+          p.kill();
+        }
+      });
+    });
     process.on('SIGINT', () => {
       this.processes.forEach((p) => {
         if (p.connected) {

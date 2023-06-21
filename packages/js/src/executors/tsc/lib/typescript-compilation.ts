@@ -9,7 +9,6 @@ import {
 
 export interface TypescriptInMemoryTsConfig {
   content: string;
-  modifiedTime: Date;
   path: string;
 }
 
@@ -174,18 +173,16 @@ function* compileTS(
     hooks?.beforeProjectCompilationCallback?.(project.project);
 
     if (project.kind === ts.InvalidatedProjectKind.UpdateOutputFileStamps) {
-      if (projectName) {
-        logger.info(
-          `Updating output timestamps of project "${projectName}"...\n`,
-          project.project
-        );
-      }
+      logger.info(
+        `Updating output timestamps of project "${projectName}"...\n`,
+        project.project
+      );
 
       // update output timestamps and mark project as complete
       const status = project.done();
       const success = status === ts.ExitStatus.Success;
 
-      if (projectName && success) {
+      if (success) {
         logger.info(
           `Done updating output timestamps of project "${projectName}"...\n`,
           project.project
@@ -399,12 +396,6 @@ function getSystem(
         return context[path].tsConfig.content;
       }
       return ts.sys.readFile(path, encoding);
-    },
-    getModifiedTime(path) {
-      if (context[path]) {
-        return context[path].tsConfig.modifiedTime;
-      }
-      return ts.sys.getModifiedTime(path);
     },
   };
 }

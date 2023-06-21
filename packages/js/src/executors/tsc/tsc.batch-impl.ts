@@ -1,7 +1,6 @@
 import { ExecutorContext, TaskGraph, parseTargetString } from '@nx/devkit';
 import { rmSync } from 'fs';
 import type { BatchExecutorTaskResult } from 'nx/src/config/misc-interfaces';
-import { shouldStreamOutput } from 'nx/src/tasks-runner/utils';
 import { getLastValueFromAsyncIterableIterator } from 'nx/src/utils/async-iterator';
 import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import type { ExecutorOptions } from '../../utils/schema';
@@ -56,38 +55,22 @@ export async function* tscBatchExecutor(
     context
   );
 
-  const streamOutput = (tsConfig?: string) =>
-    (tsConfig &&
-      tsConfigTaskInfoMap[tsConfig] &&
-      taskGraph.tasks[tsConfigTaskInfoMap[tsConfig].task] &&
-      shouldStreamOutput(
-        taskGraph.tasks[tsConfigTaskInfoMap[tsConfig].task],
-        null,
-        {}
-      )) ||
-    shouldWatch;
   const logger: TypescripCompilationLogger = {
     error: (message, tsConfig) => {
-      if (streamOutput(tsConfig)) {
-        process.stderr.write(message);
-      }
-      if (tsConfig && tsConfigTaskInfoMap[tsConfig]) {
+      process.stderr.write(message);
+      if (tsConfig) {
         tsConfigTaskInfoMap[tsConfig].terminalOutput += message;
       }
     },
     info: (message, tsConfig) => {
-      if (streamOutput(tsConfig)) {
-        process.stdout.write(message);
-      }
-      if (tsConfig && tsConfigTaskInfoMap[tsConfig]) {
+      process.stdout.write(message);
+      if (tsConfig) {
         tsConfigTaskInfoMap[tsConfig].terminalOutput += message;
       }
     },
     warn: (message, tsConfig) => {
-      if (streamOutput(tsConfig)) {
-        process.stdout.write(message);
-      }
-      if (tsConfig && tsConfigTaskInfoMap[tsConfig]) {
+      process.stdout.write(message);
+      if (tsConfig) {
         tsConfigTaskInfoMap[tsConfig].terminalOutput += message;
       }
     },

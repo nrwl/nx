@@ -1,5 +1,9 @@
-import type { ExecutorContext } from '@nx/devkit';
-import { parseTargetString } from '@nx/devkit';
+import type {
+  ExecutorContext,
+  ProjectGraphProjectNode,
+  Target,
+} from '@nx/devkit';
+import { getOutputsForTargetAndConfiguration } from '@nx/devkit';
 import { join } from 'path';
 import type {
   ExecutorOptions,
@@ -22,10 +26,18 @@ export function getTaskOptions(
     return result;
   }
 
-  const { taskOptions, root } = parseTaskInfo(taskName, context);
+  const { taskOptions, root, projectNode, target } = parseTaskInfo(
+    taskName,
+    context
+  );
 
-  const outputPath = taskOptions.outputPath
-    ? join(context.root, taskOptions.outputPath)
+  const outputs = getOutputsForTargetAndConfiguration(
+    { overrides: context.taskGraph.tasks[taskName].overrides, target },
+    projectNode
+  );
+
+  const outputPath = outputs.length
+    ? join(context.root, outputs[0])
     : join(context.root, 'dist', root);
   const rootDir = join(context.root, root);
   const tsConfig = taskOptions.tsConfig
@@ -69,10 +81,17 @@ export function getTaskWithTscExecutorOptions(
 function parseTaskInfo<T = Record<string, any>>(
   taskName: string,
   context: ExecutorContext
-): { taskOptions: T; root: string; sourceRoot: string } {
+): {
+  taskOptions: T;
+  root: string;
+  sourceRoot: string;
+  projectNode: ProjectGraphProjectNode;
+  target: Target;
+} {
   const target = context.taskGraph.tasks[taskName].target;
   const projectNode = context.projectGraph.nodes[target.project];
   const targetConfig = projectNode.data.targets?.[target.target];
+  const { sourceRoot, root } = projectNode.data;
 
   const taskOptions = {
     ...targetConfig.options,
@@ -81,8 +100,5 @@ function parseTaskInfo<T = Record<string, any>>(
       : {}),
   };
 
-  const { project } = parseTargetString(taskName, context.projectGraph);
-  const { sourceRoot, root } = context.projectsConfigurations.projects[project];
-
-  return { taskOptions, root, sourceRoot };
+  return { taskOptions, root, sourceRoot, projectNode, target };
 }

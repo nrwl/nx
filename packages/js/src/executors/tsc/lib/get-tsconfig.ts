@@ -6,7 +6,6 @@ import {
 } from '@nx/devkit';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { join } from 'path';
-import * as ts from 'typescript';
 import {
   DependentBuildableProjectNode,
   computeCompilerOptionsPaths,
@@ -217,7 +216,18 @@ function getInMemoryTsConfig(
   projectReferences: string[],
   dependentBuildableProjectNodes: DependentBuildableProjectNode[]
 ): TypescriptInMemoryTsConfig {
-  const originalTsConfig = readJsonFile(tsConfig);
+  const originalTsConfig = readJsonFile(tsConfig, {
+    allowTrailingComma: true,
+    disallowComments: false,
+  });
+
+  const allProjectReferences = Array.from(
+    new Set<string>(
+      (originalTsConfig.references ?? [])
+        .map((r: { path: string }) => r.path)
+        .concat(projectReferences)
+    )
+  );
 
   return {
     content: JSON.stringify({
@@ -235,11 +245,10 @@ function getInMemoryTsConfig(
               tsConfig,
               dependentBuildableProjectNodes
             )
-          : undefined,
+          : originalTsConfig.compilerOptions?.paths,
       },
-      references: projectReferences.map((pr) => ({ path: pr })),
+      references: allProjectReferences.map((pr) => ({ path: pr })),
     }),
-    modifiedTime: ts.sys.getModifiedTime(tsConfig),
     path: tsConfig,
   };
 }
