@@ -46,10 +46,11 @@ async function getTerminalOutputLifeCycle(
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   const { runnerOptions } = getRunner(nxArgs, nxJson);
   const isRunOne = initiatingProject != null;
-  const useDynamicOutput =
-    shouldUseDynamicLifeCycle(tasks, runnerOptions, nxArgs.outputStyle) &&
-    process.env.NX_VERBOSE_LOGGING !== 'true' &&
-    process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT !== 'false';
+  const useDynamicOutput = shouldUseDynamicLifeCycle(
+    tasks,
+    runnerOptions,
+    nxArgs.outputStyle
+  );
 
   const overridesWithoutHidden = { ...overrides };
   delete overridesWithoutHidden['__overrides_unparsed__'];
@@ -195,10 +196,7 @@ export async function runCommand(
 }
 
 function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
-  if (process.env.NX_BATCH_MODE === 'true') {
-    nxArgs.outputStyle = 'stream';
-  }
-  if (nxArgs.outputStyle == 'stream') {
+  if (nxArgs.outputStyle == 'stream' || process.env.NX_BATCH_MODE === 'true') {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'true';
   }
@@ -360,12 +358,18 @@ function shouldUseDynamicLifeCycle(
   options: any,
   outputStyle: string
 ) {
+  if (
+    process.env.NX_BATCH_MODE === 'true' ||
+    process.env.NX_VERBOSE_LOGGING === 'true' ||
+    process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT === 'false'
+  ) {
+    return false;
+  }
   if (!process.stdout.isTTY) return false;
   if (isCI()) return false;
   if (outputStyle === 'static' || outputStyle === 'stream') return false;
 
-  const noForwarding = !tasks.find((t) => shouldStreamOutput(t, null, options));
-  return noForwarding;
+  return !tasks.find((t) => shouldStreamOutput(t, null, options));
 }
 
 export function getRunner(
