@@ -38,4 +38,7 @@ packages:
 logs:
   type: stdout
   format: pretty
-  level: http
+  level: warn
+
+publish:
+  allow_offline: true # set offline to true to allow publish offline
