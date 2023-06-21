@@ -1,12 +1,10 @@
 import * as path from 'path';
-import { Configuration, WebpackPluginInstance, ProgressPlugin } from 'webpack';
+import { join } from 'path';
+import { Configuration, ProgressPlugin, WebpackPluginInstance } from 'webpack';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { readTsConfig } from '@nx/js';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import TerserPlugin = require('terser-webpack-plugin');
-import nodeExternals = require('webpack-node-externals');
-import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 import { StatsJsonPlugin } from '../plugins/stats-json-plugin';
@@ -14,6 +12,32 @@ import { createCopyPlugin } from './create-copy-plugin';
 import { GeneratePackageJsonPlugin } from '../plugins/generate-package-json-plugin';
 import { getOutputHashFormat } from './hash-format';
 import { NxWebpackPlugin } from './config';
+import { existsSync } from 'fs';
+import TerserPlugin = require('terser-webpack-plugin');
+import nodeExternals = require('webpack-node-externals');
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import browserslist = require('browserslist');
+
+const VALID_BROWSERSLIST_FILES = ['.browserslistrc', 'browserslist'];
+
+function getTerserEcmaVersion(projectRoot: string) {
+  let pathToBrowserslistFile = '';
+  for (const browserslistFile of VALID_BROWSERSLIST_FILES) {
+    const fullPathToFile = join(projectRoot, browserslistFile);
+    if (existsSync(fullPathToFile)) {
+      pathToBrowserslistFile = fullPathToFile;
+      break;
+    }
+  }
+
+  if (!pathToBrowserslistFile) {
+    return 2020;
+  }
+
+  const env = browserslist.loadConfig({ path: pathToBrowserslistFile });
+  const browsers = browserslist(env);
+  return browsers.includes('ie 11') ? 5 : 2020;
+}
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -213,7 +237,9 @@ export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
                 parallel: true,
                 terserOptions: {
                   keep_classnames: true,
-                  ecma: 2020,
+                  ecma: getTerserEcmaVersion(
+                    join(options.root, options.projectRoot)
+                  ),
                   safari10: true,
                   format: {
                     ascii_only: true,
