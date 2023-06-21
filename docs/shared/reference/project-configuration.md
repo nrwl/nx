@@ -181,10 +181,7 @@ Targets that only use commands natively available in the terminal will not depen
           "externalDependencies": []
         }
       ],
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "cp src/assets dist"
-      }
+      "command": "cp src/assets dist"
     }
   }
 }
@@ -201,10 +198,7 @@ If a target uses a command from an npm package, that package should be listed.
           "externalDependencies": ["lerna"]
         }
       ],
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "npx lerna publish"
-      }
+      "command": "npx lerna publish"
     }
   }
 }
@@ -213,7 +207,7 @@ If a target uses a command from an npm package, that package should be listed.
 _Dependent tasks output_
 
 This input allows us to depend on the output, rather than the input of the dependent tasks. We can specify the glob pattern to match only the subset of the output files.
-The parameter `transitive` defines whether the check and the pattern should be recursively applied to the dependent tasks of the child tasks.
+The `transitive` parameter defines whether the check and the pattern should be recursively applied to the dependent tasks of the child tasks.
 
 Examples:
 
