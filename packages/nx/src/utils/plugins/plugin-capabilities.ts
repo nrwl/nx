@@ -75,8 +75,8 @@ export async function getPluginCapabilities(
           'executors'
         ),
       },
-      projectGraphExtension: !!pluginModule.processProjectGraph,
-      projectInference: !!pluginModule.projectFilePatterns,
+      projectGraphExtension: !!pluginModule?.processProjectGraph,
+      projectInference: !!pluginModule?.projectFilePatterns,
     };
   } catch {
     return null;
