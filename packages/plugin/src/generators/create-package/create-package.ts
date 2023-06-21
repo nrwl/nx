@@ -12,6 +12,8 @@ import {
   runTasksInSerial,
   joinPathFragments,
   getProjects,
+  detectPackageManager,
+  getPackageManagerCommand,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { nxVersion } from 'nx/src/utils/versions';
@@ -19,6 +21,7 @@ import generatorGenerator from '../generator/generator';
 import { CreatePackageSchema } from './schema';
 import { NormalizedSchema, normalizeSchema } from './utils/normalize-schema';
 import { hasGenerator } from '../../utils/has-generator';
+import { join } from 'path';
 
 export async function createPackageGenerator(
   host: Tree,
@@ -157,6 +160,11 @@ function addE2eProject(host: Tree, options: NormalizedSchema) {
     host,
     options.e2eProject
   );
+  const projectConfiguration = readProjectConfiguration(host, options.project);
+  const { name: pluginPackageName } = readJson(
+    host,
+    join(projectConfiguration.root, 'package.json')
+  );
 
   generateFiles(
     host,
@@ -165,6 +173,8 @@ function addE2eProject(host: Tree, options: NormalizedSchema) {
     {
       pluginName: options.project,
       cliName: options.name,
+      packageManagerCommands: getPackageManagerCommand('npm'),
+      pluginPackageName,
       tmpl: '',
     }
   );
