@@ -13,8 +13,8 @@ jobs:
       - name: Check for label
         run: |
           echo "${{ toJSON(github.event.*.labels.*.name) }}"
-          node -e 'const forbidden = ["target: next major version", "PR Status: needs tests", "PR Status: in-progress", "blocked: needs rebase"];
-           const match = ${{ toJSON(github.event.*.labels.*.name) }}.find(l => forbidden.includes(l));
+          node -e 'const forbidden = ["target: next major version", "pr status: needs tests", "pr status: in-progress", "blocked: needs rebase", "pr status: do not merge"];
+           const match = ${{ toJSON(github.event.*.labels.*.name) }}.find(l => forbidden.includes(l.toLowerCase()));
            if (match) {
             console.log("Cannot merge PRs that are labeled with " + match);
             process.exit(1)
