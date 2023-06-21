@@ -365,6 +365,7 @@ export function createLoaderFromCompiler(
           cwd: path.join(options.root, options.sourceRoot),
           emitDecoratorMetadata: tsConfig.options.emitDecoratorMetadata,
           isModern: true,
+          isTest: process.env.NX_CYPRESS_COMPONENT_TEST === 'true',
           envName: process.env.BABEL_ENV ?? process.env.NODE_ENV,
           cacheDirectory: true,
           cacheCompression: false,

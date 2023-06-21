@@ -21,7 +21,13 @@ export interface NxComponentTestingOptions {
   bundler?: 'vite' | 'webpack';
 }
 
-export function nxBaseCypressPreset(pathToConfig: string): BaseCypressPreset {
+export function nxBaseCypressPreset(
+  pathToConfig: string,
+  options?: { testingType: 'component' | 'e2e' }
+): BaseCypressPreset {
+  // used to set babel settings for react CT.
+  process.env.NX_CYPRESS_COMPONENT_TEST =
+    options?.testingType === 'component' ? 'true' : 'false';
   // prevent from placing path outside the root of the workspace
   // if they pass in a file or directory
   const normalizedPath = lstatSync(pathToConfig).isDirectory()
