@@ -30,10 +30,7 @@
     "./src/builders/*.impl": "./src/builders/*.impl.js",
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
     "./src/executors/*.impl": "./src/executors/*.impl.js",
-    "./src/executors/*/compat": "./src/executors/*/compat.js",
-    ".": {
-      "require": "./index.cjs"
-    }
+    "./src/executors/*/compat": "./src/executors/*/compat.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
