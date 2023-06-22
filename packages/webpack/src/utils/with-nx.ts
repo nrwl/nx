@@ -45,7 +45,7 @@ const IGNORED_WEBPACK_WARNINGS = [
 ];
 
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
-const mainFields = ['main', 'module'];
+const mainFields = ['module', 'main'];
 
 const processed = new Set();
 
