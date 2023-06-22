@@ -1,4 +1,4 @@
-import { PageEvent, Reflection, ReflectionKind } from 'typedoc';
+import { PageEvent, Reflection, ReflectionKind, RenderTemplate } from 'typedoc';
 import { MarkdownTheme } from 'typedoc-plugin-markdown/dist/theme';
 
 /**
@@ -12,10 +12,13 @@ export default class NxMarkdownTheme extends MarkdownTheme {
     super(renderer);
   }
 
-  render(page: PageEvent<Reflection>): string {
+  render(
+    page: PageEvent<Reflection>,
+    template: RenderTemplate<PageEvent<Reflection>>
+  ): string {
     return (
       super
-        .render(page)
+        .render(page, template)
         .replace(/.md#/gi, '#')
         /**
          * Hack: This is the simplest way to update the urls and make them work
