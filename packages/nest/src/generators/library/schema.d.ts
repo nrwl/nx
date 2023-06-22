@@ -25,7 +25,7 @@ export interface LibraryGeneratorOptions {
     | 'es2018'
     | 'es2019'
     | 'es2020'
-    | "es2021";
+    | 'es2021';
   testEnvironment?: 'jsdom' | 'node';
   unitTestRunner?: UnitTestRunner;
   standaloneConfig?: boolean;
