@@ -3,7 +3,7 @@ import { writeFileSync } from 'fs';
 import { LifeCycle } from '../../tasks-runner/life-cycle';
 import { Task } from '../../config/task-graph';
 import { TaskStatus } from '../../tasks-runner/tasks-runner';
-import { projectGraphCacheDirectory } from '../../utils/cache-directory';
+import { cacheDir } from '../../utils/cache-directory';
 
 export class StoreRunInformationLifeCycle implements LifeCycle {
   private startTime: string;
@@ -106,7 +106,7 @@ function parseCommand() {
 
 function storeFileFunction(runDetails: any) {
   writeFileSync(
-    join(projectGraphCacheDirectory, 'run.json'),
+    join(cacheDir, 'run.json'),
     JSON.stringify(runDetails, null, 2)
   );
 }
