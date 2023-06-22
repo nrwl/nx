@@ -494,7 +494,7 @@ async function determineReactOptions(
   let bundler: undefined | 'webpack' | 'vite' | 'rspack' = undefined;
   let nextAppDir = false;
 
-  if (parsedArgs.preset) {
+  if (parsedArgs.preset && parsedArgs.preset !== Preset.React) {
     preset = parsedArgs.preset;
     if (
       preset === Preset.ReactStandalone ||
@@ -605,7 +605,7 @@ async function determineAngularOptions(
   let standaloneApi: boolean;
   let routing: boolean;
 
-  if (parsedArgs.preset) {
+  if (parsedArgs.preset && parsedArgs.preset !== Preset.Angular) {
     preset = parsedArgs.preset;
 
     if (preset === Preset.AngularStandalone) {
