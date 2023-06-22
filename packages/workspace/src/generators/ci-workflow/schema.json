@@ -34,5 +34,5 @@
       "pattern": "^[a-zA-Z].*$"
     }
   },
-  "required": ["ci"]
+  "required": ["ci", "name"]
 }

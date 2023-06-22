@@ -28,7 +28,7 @@ describe('CI Workflow generator', () => {
 
       it('should generate github CI config', async () => {
         setNxCloud(tree);
-        await ciWorkflowGenerator(tree, { ci: 'github' });
+        await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
 
         expect(
           tree.read('.github/workflows/ci.yml', 'utf-8')
@@ -37,14 +37,14 @@ describe('CI Workflow generator', () => {
 
       it('should generate circleci CI config', async () => {
         setNxCloud(tree);
-        await ciWorkflowGenerator(tree, { ci: 'circleci' });
+        await ciWorkflowGenerator(tree, { ci: 'circleci', name: 'CI' });
 
         expect(tree.read('.circleci/config.yml', 'utf-8')).toMatchSnapshot();
       });
 
       it('should generate azure CI config', async () => {
         setNxCloud(tree);
-        await ciWorkflowGenerator(tree, { ci: 'azure' });
+        await ciWorkflowGenerator(tree, { ci: 'azure', name: 'CI' });
 
         expect(tree.read('azure-pipelines.yml', 'utf-8')).toMatchSnapshot();
       });
@@ -63,7 +63,10 @@ describe('CI Workflow generator', () => {
 
       it('should generate bitbucket pipelines config', async () => {
         setNxCloud(tree);
-        await ciWorkflowGenerator(tree, { ci: 'bitbucket-pipelines' });
+        await ciWorkflowGenerator(tree, {
+          ci: 'bitbucket-pipelines',
+          name: 'CI',
+        });
 
         expect(tree.read('bitbucket-pipelines.yml', 'utf-8')).toMatchSnapshot();
       });
@@ -75,7 +78,10 @@ describe('CI Workflow generator', () => {
         nxJson.affected.defaultBase = 'my-branch';
         writeJson(tree, 'nx.json', nxJson);
 
-        await ciWorkflowGenerator(tree, { ci: 'bitbucket-pipelines' });
+        await ciWorkflowGenerator(tree, {
+          ci: 'bitbucket-pipelines',
+          name: 'CI',
+        });
 
         expect(readJson(tree, 'nx.json').affected.defaultBase).toEqual(
           'origin/my-branch'
@@ -84,7 +90,7 @@ describe('CI Workflow generator', () => {
 
       it('should generate gitlab config', async () => {
         setNxCloud(tree);
-        await ciWorkflowGenerator(tree, { ci: 'gitlab' });
+        await ciWorkflowGenerator(tree, { ci: 'gitlab', name: 'CI' });
 
         expect(tree.read('.gitlab-ci.yml', 'utf-8')).toMatchSnapshot();
       });
@@ -93,6 +99,7 @@ describe('CI Workflow generator', () => {
         await expect(
           ciWorkflowGenerator(tree, {
             ci: 'github',
+            name: 'CI',
           })
         ).rejects.toThrowErrorMatchingSnapshot();
       });
