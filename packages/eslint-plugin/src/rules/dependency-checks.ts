@@ -3,7 +3,6 @@ import { normalizePath, workspaceRoot } from '@nx/devkit';
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
-import { existsSync } from 'fs';
 import { join } from 'path';
 import { findProjectsNpmDependencies } from '@nx/js/src/internal';
 import { satisfies } from 'semver';
@@ -25,7 +24,6 @@ export type Options = [
 ];
 
 export type MessageIds =
-  | 'noPackageJson'
   | 'missingDependency'
   | 'obsoleteDependency'
   | 'versionMismatch'
@@ -51,17 +49,15 @@ export default createESLintRule<Options, MessageIds>({
           checkMissingDependencies: { type: 'boolean' },
           checkObsoleteDependencies: { type: 'boolean' },
           checkVersionMismatches: { type: 'boolean' },
-          checkMissingPackageJson: { type: 'boolean' },
         },
         additionalProperties: false,
       },
     ],
     messages: {
-      noPackageJson: `A "package.json" file is required for buildable libraries, but does not exist in "{{projectName}}".`,
       missingDependency: `The "{{projectName}}" uses the package "{{packageName}}", but it is missing from the project's "package.json".`,
-      obsoleteDependency: `The "{{packageName}}" package is found in the "package.json" but is not used by "{{projectName}}".`,
-      versionMismatch: `The "{{packageName}}" package is listed in "{{projectName}}"'s "package.json" but it's range is not compatible with the installed version. Installed version: {{version}}.`,
-      missingDependencySection: `Dependencies section is missing from the "package.json".`,
+      obsoleteDependency: `The "{{packageName}}" package is not used by "{{projectName}}".`,
+      versionMismatch: `The version specifier does not contain the installed version of "{{packageName}}" package: {{version}}.`,
+      missingDependencySection: `Dependency sections are missing from the "package.json" but following dependencies were detected: {{dependencies}}`,
     },
   },
   defaultOptions: [
@@ -70,7 +66,6 @@ export default createESLintRule<Options, MessageIds>({
       checkMissingDependencies: true,
       checkObsoleteDependencies: true,
       checkVersionMismatches: true,
-      checkMissingPackageJson: true,
       ignoredDependencies: [],
     },
   ],
@@ -83,7 +78,6 @@ export default createESLintRule<Options, MessageIds>({
         checkMissingDependencies,
         checkObsoleteDependencies,
         checkVersionMismatches,
-        checkMissingPackageJson,
       },
     ]
   ) {
@@ -91,11 +85,8 @@ export default createESLintRule<Options, MessageIds>({
       return {};
     }
     const fileName = normalizePath(context.getFilename());
-    // support only package.json and project.json
-    if (
-      !fileName.endsWith('/package.json') &&
-      !fileName.endsWith('/project.json')
-    ) {
+    // support only package.json
+    if (!fileName.endsWith('/package.json')) {
       return {};
     }
 
@@ -114,8 +105,8 @@ export default createESLintRule<Options, MessageIds>({
       sourceFilePath
     );
 
-    // check if source project exists, it's a library
-    if (!sourceProject || sourceProject.type !== 'lib') {
+    // check if source project exists
+    if (!sourceProject) {
       return {};
     }
 
@@ -148,7 +139,7 @@ export default createESLintRule<Options, MessageIds>({
       ...npmDeps.dependencies,
       ...npmDeps.peerDependencies,
     };
-    const projDependencyNames = Object.keys(projDependencies);
+    const expectedDependencyNames = Object.keys(projDependencies);
 
     const projPackageJsonPath = join(
       workspaceRoot,
@@ -167,7 +158,7 @@ export default createESLintRule<Options, MessageIds>({
       if (!checkMissingDependencies) {
         return;
       }
-      const missingDeps = projDependencyNames.filter(
+      const missingDeps = expectedDependencyNames.filter(
         (d) => !projPackageJsonDeps[d]
       );
 
@@ -199,14 +190,16 @@ export default createESLintRule<Options, MessageIds>({
       });
     }
 
-    function validateVersionMismatch(
+    function validateVersionMatchesInstalled(
       node: AST.JSONProperty,
       packageName: string,
       packageRange: string
     ) {
+      if (!checkVersionMismatches) {
+        return;
+      }
       if (
-        !checkVersionMismatches ||
-        ignoredDependencies.includes(packageName) ||
+        projDependencies[packageName] === '*' ||
         satisfies(projDependencies[packageName], packageRange)
       ) {
         return;
@@ -217,7 +210,6 @@ export default createESLintRule<Options, MessageIds>({
         messageId: 'versionMismatch',
         data: {
           packageName: packageName,
-          projectName: sourceProject.name,
           version: projDependencies[packageName],
         },
         fix: (fixer) =>
@@ -230,14 +222,11 @@ export default createESLintRule<Options, MessageIds>({
       });
     }
 
-    function validateObsoleteDependencies(
+    function reportObsoleteDependency(
       node: AST.JSONProperty,
       packageName: string
     ) {
-      if (
-        !checkObsoleteDependencies ||
-        ignoredDependencies.includes(packageName)
-      ) {
+      if (!checkObsoleteDependencies) {
         return;
       }
 
@@ -246,12 +235,8 @@ export default createESLintRule<Options, MessageIds>({
         messageId: 'obsoleteDependency',
         data: { packageName: packageName, projectName: sourceProject.name },
         fix: (fixer) => {
-          let isLastProperty = false;
-          if (
-            node.parent.properties[node.parent.properties.length - 1] === node
-          ) {
-            isLastProperty = true;
-          }
+          const isLastProperty =
+            node.parent.properties[node.parent.properties.length - 1] === node;
           // remove 4 spaces, new line and potential comma from previous line
           const shouldRemoveSiblingComma =
             isLastProperty && node.parent.properties.length > 1;
@@ -268,24 +253,32 @@ export default createESLintRule<Options, MessageIds>({
       node: AST.JSONObjectExpression
     ) {
       if (
-        !projDependencyNames.length ||
-        !projDependencyNames.some((d) => !ignoredDependencies.includes(d))
+        !expectedDependencyNames.length ||
+        !expectedDependencyNames.some((d) => !ignoredDependencies.includes(d))
       ) {
         return;
       }
       if (
         !node.properties ||
         !node.properties.some((p) =>
-          ['dependencies', 'peerDependencies', 'devDependencies'].includes(
-            (p.key as any).value
-          )
+          [
+            'dependencies',
+            'peerDependencies',
+            'devDependencies',
+            'optionalDependencies',
+          ].includes((p.key as any).value)
         )
       ) {
         context.report({
           node: node as any,
           messageId: 'missingDependencySection',
+          data: {
+            dependencies: expectedDependencyNames
+              .map((d) => `\n- "${d}"`)
+              .join(),
+          },
           fix: (fixer) => {
-            projDependencyNames.sort().reduce((acc, d) => {
+            expectedDependencyNames.sort().reduce((acc, d) => {
               acc[d] = rootPackageJsonDeps[d] || projDependencies[d];
               return acc;
             }, projPackageJsonDeps);
@@ -310,54 +303,37 @@ export default createESLintRule<Options, MessageIds>({
       }
     }
 
-    function validatePackageJsonExistance(node: AST.JSONLiteral) {
-      if (
-        checkMissingPackageJson &&
-        !existsSync(projPackageJsonPath) &&
-        buildTargets.includes(node.value.toString()) &&
-        projDependencyNames.length > 0
+    return {
+      ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(dev|peer|optional)?dependencies$/i]'](
+        node: AST.JSONProperty
       ) {
-        context.report({
-          node: node as any,
-          messageId: 'noPackageJson',
-          data: { projectName: sourceProject.name },
-        });
-      }
-    }
+        return validateMissingDependencies(node);
+      },
+      ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(dev|peer|optional)?dependencies$/i] > JSONObjectExpression > JSONProperty'](
+        node: AST.JSONProperty
+      ) {
+        const packageName = (node.key as any).value;
+        const packageRange = (node.value as any).value;
 
-    if (fileName.endsWith('/package.json')) {
-      return {
-        ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(dev|peer)?dependencies$/i]'](
-          node: AST.JSONProperty
-        ) {
-          return validateMissingDependencies(node);
-        },
-        ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(dev|peer)?dependencies$/i] > JSONObjectExpression > JSONProperty'](
-          node: AST.JSONProperty
-        ) {
-          const packageName = (node.key as any).value;
-          const packageRange = (node.value as any).value;
+        if (ignoredDependencies.includes(packageName)) {
+          return;
+        }
 
-          if (projDependencyNames.includes(packageName)) {
-            return validateVersionMismatch(node, packageName, packageRange);
-          } else {
-            return validateObsoleteDependencies(node, packageName);
-          }
-        },
-        ['JSONExpressionStatement > JSONObjectExpression'](
-          node: AST.JSONObjectExpression
-        ) {
-          return validateDependenciesSectionExistance(node);
-        },
-      };
-    } else {
-      return {
-        ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value="targets"] > JSONObjectExpression > JSONProperty > JSONLiteral'](
-          node: AST.JSONLiteral
-        ) {
-          return validatePackageJsonExistance(node);
-        },
-      };
-    }
+        if (expectedDependencyNames.includes(packageName)) {
+          return validateVersionMatchesInstalled(
+            node,
+            packageName,
+            packageRange
+          );
+        } else {
+          return reportObsoleteDependency(node, packageName);
+        }
+      },
+      ['JSONExpressionStatement > JSONObjectExpression'](
+        node: AST.JSONObjectExpression
+      ) {
+        return validateDependenciesSectionExistance(node);
+      },
+    };
   },
 });

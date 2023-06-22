@@ -54,13 +54,6 @@ exports[`@nx/linter:init --linter eslint should generate the global eslint confi
         "plugin:@nx/javascript"
       ],
       "rules": {}
-    },
-    {
-      "files": [
-        "*.json"
-      ],
-      "parser": "jsonc-eslint-parser",
-      "rules": {}
     }
   ]
 }

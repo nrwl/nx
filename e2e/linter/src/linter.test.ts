@@ -439,7 +439,7 @@ describe('Linter', () => {
 
     describe('dependency checks', () => {
       beforeAll(() => {
-        updateJson('.eslintrc.json', (json) => {
+        updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
           json.overrides = [
             ...json.overrides,
             {
@@ -472,14 +472,14 @@ describe('Linter', () => {
         updateFile(
           `libs/${mylib}/src/lib/${mylib}.ts`,
           (content) =>
-            `import { nxVersion } from 'nx/src/utils/versions';\n\n` +
-            content.replace(/return .*;/, `return nxVersion;`)
+            `import { names } from '@nx/devkit';\n\n` +
+            content.replace(/return .*;/, `return names(${mylib}).className;`)
         );
 
         // output should now report missing dependencies section
         out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain(
-          'Dependencies section is missing from the "package.json"'
+          'Dependency sections are missing from the "package.json"'
         );
 
         // should fix the missing section issue
@@ -487,15 +487,29 @@ describe('Linter', () => {
         expect(out).toContain(
           `Successfully ran target lint for project ${mylib}`
         );
+        const packageJson = readJson(`libs/${mylib}/package.json`);
+        expect(packageJson).toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "@nx/devkit": "17.0.0",
+              "@swc/core": "~1.3.51",
+              "@swc/helpers": "~0.5.0",
+              "nx": "17.0.0",
+            },
+            "name": "@proj/mylib5149535",
+            "type": "commonjs",
+            "version": "0.0.1",
+          }
+        `);
 
         // intentionally set the invalid version
         updateJson(`libs/${mylib}/package.json`, (json) => {
-          json.dependencies.nx = '100.0.0';
+          json.dependencies['@nx/devkit'] = '100.0.0';
           return json;
         });
         out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain(
-          `The "nx" package is listed in "${mylib}"'s "package.json" but it's range is not compatible with the installed version. Installed version: ${nxVersion}`
+          `The version specifier does not contain the installed version of "@nx/devkit" package: ${nxVersion}`
         );
 
         // should fix the version mismatch issue

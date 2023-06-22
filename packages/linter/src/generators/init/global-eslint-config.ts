@@ -79,7 +79,6 @@ export const getGlobalEsLintConfiguration = (
       ...(rootProject ? [] : [moduleBoundariesOverride]),
       globalTypeScriptOverrides,
       globalJavaScriptOverrides,
-      globalJsonOverrides,
     ],
   };
   if (unitTestRunner === 'jest') {

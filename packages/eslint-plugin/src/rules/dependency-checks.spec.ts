@@ -176,9 +176,10 @@ describe('Dependency checks (eslint)', () => {
       }
     );
     expect(failures.length).toEqual(1);
-    expect(failures[0].message).toMatchInlineSnapshot(
-      `"Dependencies section is missing from the "package.json"."`
-    );
+    expect(failures[0].message).toMatchInlineSnapshot(`
+      "Dependency sections are missing from the "package.json" but following dependencies were detected: 
+      - "external1""
+    `);
 
     // apply fix
     const content = JSON.stringify(packageJson, null, 2);
@@ -736,7 +737,7 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "unneeded" package is found in the "package.json" but is not used by "liba"."`
+      `"The "unneeded" package is not used by "liba"."`
     );
     expect(failures[0].line).toEqual(7);
 
@@ -818,7 +819,7 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "unneeded" package is found in the "package.json" but is not used by "liba"."`
+      `"The "unneeded" package is not used by "liba"."`
     );
     expect(failures[0].line).toEqual(7);
 
@@ -1003,11 +1004,11 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(2);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "external1" package is listed in "liba"'s "package.json" but it's range is not compatible with the installed version. Installed version: 16.1.8."`
+      `"The version specifier does not contain the installed version of "external1" package: 16.1.8."`
     );
     expect(failures[0].line).toEqual(4);
     expect(failures[1].message).toMatchInlineSnapshot(
-      `"The "external2" package is listed in "liba"'s "package.json" but it's range is not compatible with the installed version. Installed version: 5.5.6."`
+      `"The version specifier does not contain the installed version of "external2" package: 5.5.6."`
     );
     expect(failures[1].line).toEqual(5);
 
@@ -1145,221 +1146,9 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "external2" package is listed in "liba"'s "package.json" but it's range is not compatible with the installed version. Installed version: 5.5.6."`
+      `"The version specifier does not contain the installed version of "external2" package: 5.5.6."`
     );
     expect(failures[0].line).toEqual(5);
-  });
-
-  it('should report missing package.json', () => {
-    const projectJson = {
-      name: 'liba',
-      sourceRoot: 'libs/liba/src',
-      projectType: 'library',
-      targets: {
-        build: {},
-      },
-    };
-
-    const fileSys = {
-      './libs/liba/project.json': JSON.stringify(projectJson, null, 2),
-      './libs/liba/src/index.ts': '',
-      './package.json': JSON.stringify(rootPackageJson, null, 2),
-    };
-    vol.fromJSON(fileSys, '/root');
-
-    const failures = runRule(
-      {},
-      `${process.cwd()}/proj/libs/liba/project.json`,
-      JSON.stringify(projectJson, null, 2),
-      {
-        nodes: {
-          liba: {
-            name: 'liba',
-            type: 'lib',
-            data: {
-              root: 'libs/liba',
-              targets: {
-                build: {},
-              },
-            },
-          },
-        },
-        externalNodes,
-        dependencies: {
-          liba: [
-            { source: 'liba', target: 'npm:external1', type: 'static' },
-            { source: 'liba', target: 'npm:external2', type: 'static' },
-          ],
-        },
-      },
-      {
-        liba: [
-          createFile(`libs/liba/src/main.ts`, [
-            'npm:external1',
-            'npm:external2',
-          ]),
-        ],
-      }
-    );
-    expect(failures.length).toEqual(1);
-    expect(failures[0].message).toMatchInlineSnapshot(
-      `"A "package.json" file is required for buildable libraries, but does not exist in "liba"."`
-    );
-    expect(failures[0].line).toEqual(6);
-  });
-
-  it('should not report missing package.json if no buildable target', () => {
-    const projectJson = {
-      name: 'liba',
-      sourceRoot: 'libs/liba/src',
-      projectType: 'library',
-      targets: {
-        nonbuildable: {},
-      },
-    };
-
-    const fileSys = {
-      './libs/liba/project.json': JSON.stringify(projectJson, null, 2),
-      './libs/liba/src/index.ts': '',
-      './package.json': JSON.stringify(rootPackageJson, null, 2),
-    };
-    vol.fromJSON(fileSys, '/root');
-
-    const failures = runRule(
-      {},
-      `${process.cwd()}/proj/libs/liba/project.json`,
-      JSON.stringify(projectJson, null, 2),
-      {
-        nodes: {
-          liba: {
-            name: 'liba',
-            type: 'lib',
-            data: {
-              root: 'libs/liba',
-              targets: {
-                nonbuildable: {},
-              },
-            },
-          },
-        },
-        externalNodes,
-        dependencies: {
-          liba: [
-            { source: 'liba', target: 'npm:external1', type: 'static' },
-            { source: 'liba', target: 'npm:external2', type: 'static' },
-          ],
-        },
-      },
-      {
-        liba: [
-          createFile(`libs/liba/src/main.ts`, [
-            'npm:external1',
-            'npm:external2',
-          ]),
-        ],
-      }
-    );
-    expect(failures.length).toEqual(0);
-  });
-
-  it('should not report missing package.json if checkMissingPackageJson=false', () => {
-    const projectJson = {
-      name: 'liba',
-      sourceRoot: 'libs/liba/src',
-      projectType: 'library',
-      targets: {
-        build: {},
-      },
-    };
-
-    const fileSys = {
-      './libs/liba/project.json': JSON.stringify(projectJson, null, 2),
-      './libs/liba/src/index.ts': '',
-      './package.json': JSON.stringify(rootPackageJson, null, 2),
-    };
-    vol.fromJSON(fileSys, '/root');
-
-    const failures = runRule(
-      { checkMissingPackageJson: false },
-      `${process.cwd()}/proj/libs/liba/project.json`,
-      JSON.stringify(projectJson, null, 2),
-      {
-        nodes: {
-          liba: {
-            name: 'liba',
-            type: 'lib',
-            data: {
-              root: 'libs/liba',
-              targets: {
-                build: {},
-              },
-            },
-          },
-        },
-        externalNodes,
-        dependencies: {
-          liba: [
-            { source: 'liba', target: 'npm:external1', type: 'static' },
-            { source: 'liba', target: 'npm:external2', type: 'static' },
-          ],
-        },
-      },
-      {
-        liba: [
-          createFile(`libs/liba/src/main.ts`, [
-            'npm:external1',
-            'npm:external2',
-          ]),
-        ],
-      }
-    );
-    expect(failures.length).toEqual(0);
-  });
-
-  it('should not report missing package.json if no dependencies', () => {
-    const projectJson = {
-      name: 'liba',
-      sourceRoot: 'libs/liba/src',
-      projectType: 'library',
-      targets: {
-        build: {},
-      },
-    };
-
-    const fileSys = {
-      './libs/liba/project.json': JSON.stringify(projectJson, null, 2),
-      './libs/liba/src/index.ts': '',
-      './package.json': JSON.stringify(rootPackageJson, null, 2),
-    };
-    vol.fromJSON(fileSys, '/root');
-
-    const failures = runRule(
-      {},
-      `${process.cwd()}/proj/libs/liba/project.json`,
-      JSON.stringify(projectJson, null, 2),
-      {
-        nodes: {
-          liba: {
-            name: 'liba',
-            type: 'lib',
-            data: {
-              root: 'libs/liba',
-              targets: {
-                build: {},
-              },
-            },
-          },
-        },
-        externalNodes,
-        dependencies: {
-          liba: [],
-        },
-      },
-      {
-        liba: [createFile(`libs/liba/src/main.ts`)],
-      }
-    );
-    expect(failures.length).toEqual(0);
   });
 
   it('should require tslib if @nx/js:tsc executor', () => {

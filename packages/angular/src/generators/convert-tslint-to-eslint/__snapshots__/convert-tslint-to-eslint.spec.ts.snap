@@ -112,13 +112,6 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
     },
     {
       "files": [
-        "*.json",
-      ],
-      "parser": "jsonc-eslint-parser",
-      "rules": {},
-    },
-    {
-      "files": [
         "*.ts",
       ],
       "plugins": [
@@ -422,13 +415,6 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
     },
     {
       "files": [
-        "*.json",
-      ],
-      "parser": "jsonc-eslint-parser",
-      "rules": {},
-    },
-    {
-      "files": [
         "*.ts",
       ],
       "plugins": [
@@ -712,13 +698,6 @@ exports[`convert-tslint-to-eslint should work for Angular applications 3`] = `
         "*.js",
         "*.jsx",
       ],
-      "rules": {},
-    },
-    {
-      "files": [
-        "*.json",
-      ],
-      "parser": "jsonc-eslint-parser",
       "rules": {},
     },
     {
@@ -1071,13 +1050,6 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 3`] = `
         "*.js",
         "*.jsx",
       ],
-      "rules": {},
-    },
-    {
-      "files": [
-        "*.json",
-      ],
-      "parser": "jsonc-eslint-parser",
       "rules": {},
     },
     {
