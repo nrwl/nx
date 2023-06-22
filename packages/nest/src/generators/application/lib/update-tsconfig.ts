@@ -8,7 +8,7 @@ export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
     joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
     (json) => {
       json.compilerOptions.emitDecoratorMetadata = true;
-      json.compilerOptions.target = 'es2015';
+      json.compilerOptions.target = 'es2021';
       if (options.strict) {
         json.compilerOptions = {
           ...json.compilerOptions,
