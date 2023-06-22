@@ -59,6 +59,12 @@
       "version": "16.4.0-beta.10",
       "description": "Remove tsconfig.e2e.json and add settings to project tsconfig.json. tsConfigs executor option is now deprecated. The project level tsconfig.json file should be used instead.",
       "implementation": "./src/migrations/update-16-4-0/tsconfig-sourcemaps"
+    },
+    "update-16-4-0-warn-incompatible-angular-cypress": {
+      "cli": "nx",
+      "version": "16.4.0-beta.11",
+      "description": "Cypress Component Testing is broken with Angular 16.1.0. Warn about it if the workspace has Angular >= 16.1.0 and Angular projects using Component Testing.",
+      "implementation": "./src/migrations/update-16-4-0/warn-incompatible-angular-cypress"
     }
   },
   "packageJsonUpdates": {
