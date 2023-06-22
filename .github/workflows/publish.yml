@@ -169,8 +169,7 @@ jobs:
            usesh: true
            mem: 3000
            prepare: |
-             pkg install -y -f curl node libnghttp2
-             curl -qL https://www.npmjs.com/install.sh | sh
+             pkg install -y -f curl node libnghttp2 npm
              npm install --location=global --ignore-scripts pnpm
              curl https://sh.rustup.rs -sSf --output rustup.sh
              sh rustup.sh -y --profile minimal --default-toolchain stable
