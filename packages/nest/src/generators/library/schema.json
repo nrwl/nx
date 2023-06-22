@@ -92,7 +92,7 @@
       "default": "node"
     },
     "target": {
-      "description": "The ES target, Nest suggest using es6 or higher.",
+      "description": "The ES target, Nest suggest using es2021 or higher.",
       "type": "string",
       "default": "es2021",
       "enum": [
