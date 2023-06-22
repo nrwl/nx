@@ -734,6 +734,12 @@
               "tags": ["use-code-generators"],
               "path": "/reference/nx-json#generators",
               "isExternal": true
+            },
+            {
+              "name": "Site Map",
+              "id": "sitemap",
+              "tags": [],
+              "file": "shared/reference/sitemap"
             }
           ]
         }
