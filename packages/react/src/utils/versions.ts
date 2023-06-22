@@ -8,9 +8,9 @@ export const reactDomVersion = '18.2.0';
 export const reactIsVersion = '18.2.0';
 export const swcLoaderVersion = '0.1.15';
 export const babelLoaderVersion = '^9.1.2';
-export const typesReactVersion = '18.2.12';
-export const typesReactDomVersion = '18.2.5';
-export const typesReactIsVersion = '18.2.0';
+export const typesReactVersion = '18.2.13';
+export const typesReactDomVersion = '18.2.6';
+export const typesReactIsVersion = '18.2.1';
 
 export const typesNodeVersion = '18.14.2';
 
