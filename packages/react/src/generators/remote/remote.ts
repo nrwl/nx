@@ -50,7 +50,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   tasks.push(initAppTask);
 
   if (schema.host) {
-    updateHostWithRemote(host, schema.host, options.name);
+    updateHostWithRemote(host, schema.host, options.projectName);
   }
 
   // Module federation requires bootstrap code to be dynamically imported.
