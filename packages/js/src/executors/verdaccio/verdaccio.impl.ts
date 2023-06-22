@@ -171,19 +171,11 @@ function setupNpm(options: VerdaccioExecutorSchema) {
   };
 }
 
-function getYarnUnsafeHttpWhitelist(
-  isYarnV1: boolean,
-  options: VerdaccioExecutorSchema
-) {
-  return isYarnV1
+function getYarnUnsafeHttpWhitelist(isYarnV1: boolean) {
+  return !isYarnV1
     ? new Set<string>(
         JSON.parse(
-          execSync(
-            `yarn config get unsafeHttpWhitelist --json` + options.location ===
-              'home'
-              ? ' --home'
-              : ''
-          ).toString()
+          execSync(`yarn config get unsafeHttpWhitelist --json`).toString()
         )
       )
     : null;
@@ -193,106 +185,99 @@ function setYarnUnsafeHttpWhitelist(
   currentWhitelist: Set<string>,
   options: VerdaccioExecutorSchema
 ) {
-  execSync(
-    `yarn config set unsafeHttpWhitelist --json '${JSON.stringify(
-      Array.from(currentWhitelist)
-    )}'` +
-      options.location ===
-      'home'
-      ? ' --home'
-      : ''
-  );
+  if (currentWhitelist.size > 1) {
+    execSync(
+      `yarn config set unsafeHttpWhitelist --json '${JSON.stringify(
+        Array.from(currentWhitelist)
+      )}'` + (options.location === 'user' ? ' --home' : '')
+    );
+  } else {
+    execSync(
+      `yarn config unset unsafeHttpWhitelist` +
+        (options.location === 'user' ? ' --home' : '')
+    );
+  }
 }
 
 function setupYarn(options: VerdaccioExecutorSchema) {
+  let isYarnV1;
+
   try {
-    const isYarnV1 = major(execSync('yarn --version').toString().trim()) === 1;
+    isYarnV1 = major(execSync('yarn --version').toString().trim()) === 1;
+  } catch {
+    // This would fail if yarn is not installed which is okay
+    return () => {};
+  }
+  try {
+    const registryConfigName = isYarnV1 ? 'registry' : 'npmRegistryServer';
 
-    try {
-      const registryConfigName = isYarnV1 ? 'registry' : 'npmRegistryServer';
+    const yarnRegistryPath = execSync(`yarn config get ${registryConfigName}`)
+      ?.toString()
+      ?.trim()
+      ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
 
-      const yarnRegistryPath = execSync(`yarn config get ${registryConfigName}`)
-        ?.toString()
-        ?.trim()
-        ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
+    execSync(
+      `yarn config set ${registryConfigName} http://localhost:${options.port}/` +
+        (options.location === 'user' ? ' --home' : '')
+    );
 
-      execSync(
-        `yarn config set ${registryConfigName} http://localhost:${options.port}/` +
-          options.location ===
-          'home'
-          ? ' --home'
-          : ''
-      );
+    logger.info(`Set yarn registry to http://localhost:${options.port}/`);
 
-      logger.info(`Set yarn registry to http://localhost:${options.port}/`);
+    const currentWhitelist: Set<string> | null =
+      getYarnUnsafeHttpWhitelist(isYarnV1);
 
-      const currentWhitelist: Set<string> | null = getYarnUnsafeHttpWhitelist(
-        isYarnV1,
-        options
-      );
+    let whitelistedLocalhost = false;
 
-      let whitelistedLocalhost = false;
+    if (!isYarnV1 && !currentWhitelist.has('localhost')) {
+      whitelistedLocalhost = true;
+      currentWhitelist.add('localhost');
 
-      if (!isYarnV1) {
-        if (!currentWhitelist.has('localhost')) {
-          whitelistedLocalhost = true;
-          currentWhitelist.add('localhost');
-
-          setYarnUnsafeHttpWhitelist(currentWhitelist, options);
-          logger.info(
-            `Whitelisted http://localhost:${options.port}/ as an unsafe http server`
-          );
-        }
-      }
-
-      return () => {
-        try {
-          if (yarnRegistryPath) {
-            execSync(
-              `yarn config set ${registryConfigName} ${yarnRegistryPath}` +
-                options.location ===
-                'home'
-                ? ' --home'
-                : ''
-            );
-            logger.info(
-              `Reset yarn ${registryConfigName} to ${yarnRegistryPath}`
-            );
-          } else {
-            execSync(
-              `yarn config delete ${registryConfigName}` + options.location ===
-                'home'
-                ? ' --home'
-                : ''
-            );
-          }
-
-          if (whitelistedLocalhost) {
-            const currentWhitelist: Set<string> = getYarnUnsafeHttpWhitelist(
-              isYarnV1,
-              options
-            );
-
-            if (currentWhitelist.has('localhost')) {
-              currentWhitelist.delete('localhost');
-
-              setYarnUnsafeHttpWhitelist(currentWhitelist, options);
-              logger.info(
-                `Removed http://localhost:${options.port}/ as an unsafe http server`
-              );
-            }
-          }
-        } catch (e) {
-          throw new Error(`Failed to reset yarn registry: ${e.message}`);
-        }
-      };
-    } catch (e) {
-      throw new Error(
-        `Failed to set yarn registry to http://localhost:${options.port}/: ${e.message}`
+      setYarnUnsafeHttpWhitelist(currentWhitelist, options);
+      logger.info(
+        `Whitelisted http://localhost:${options.port}/ as an unsafe http server`
       );
     }
+
+    return () => {
+      try {
+        if (yarnRegistryPath) {
+          execSync(
+            `yarn config set ${registryConfigName} ${yarnRegistryPath}` +
+              (options.location === 'user' ? ' --home' : '')
+          );
+          logger.info(
+            `Reset yarn ${registryConfigName} to ${yarnRegistryPath}`
+          );
+        } else {
+          execSync(
+            `yarn config ${
+              isYarnV1 ? 'delete' : 'unset'
+            } ${registryConfigName}` +
+              (options.location === 'user' ? ' --home' : '')
+          );
+        }
+
+        if (whitelistedLocalhost) {
+          const currentWhitelist: Set<string> =
+            getYarnUnsafeHttpWhitelist(isYarnV1);
+
+          if (currentWhitelist.has('localhost')) {
+            currentWhitelist.delete('localhost');
+
+            setYarnUnsafeHttpWhitelist(currentWhitelist, options);
+            logger.info(
+              `Removed http://localhost:${options.port}/ as an unsafe http server`
+            );
+          }
+        }
+      } catch (e) {
+        throw new Error(`Failed to reset yarn registry: ${e.message}`);
+      }
+    };
   } catch (e) {
-    return () => {};
+    throw new Error(
+      `Failed to set yarn registry to http://localhost:${options.port}/: ${e.message}`
+    );
   }
 }
 
