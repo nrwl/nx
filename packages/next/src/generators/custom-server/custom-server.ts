@@ -28,7 +28,7 @@ export async function customServerGenerator(
   }
 
   const outputPath = project.targets?.build?.options?.outputPath;
-  const root = project.targets?.build?.options?.root;
+  const root = project.root;
 
   if (
     !root ||
