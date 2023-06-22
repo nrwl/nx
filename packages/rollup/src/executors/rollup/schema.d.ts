@@ -33,4 +33,5 @@ export interface RollupExecutorOptions {
   generateExportsField?: boolean;
   skipTypeCheck?: boolean;
   babelUpwardRootMode?: boolean;
+  skipTypeField?: boolean;
 }

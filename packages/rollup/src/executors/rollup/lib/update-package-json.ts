@@ -45,8 +45,9 @@ export function updatePackageJson(
     packageJson.main = './index.cjs';
     exports['.']['require'] = './index.cjs';
   }
-
-  packageJson.type = options.format.includes('esm') ? 'module' : 'commonjs';
+  if (!options.skipTypeField) {
+    packageJson.type = options.format.includes('esm') ? 'module' : 'commonjs';
+  }
 
   // Support for older TS versions < 4.5
   packageJson.types = types;
