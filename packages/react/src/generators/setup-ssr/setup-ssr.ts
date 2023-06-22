@@ -115,6 +115,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
         target: 'node',
         main: `${projectRoot}/server.ts`,
         outputPath: joinPathFragments(originalOutputPath, 'server'),
+        outputFileName: 'server.js',
         tsConfig: `${projectRoot}/tsconfig.server.json`,
         compiler: 'babel',
         externalDependencies: 'all',

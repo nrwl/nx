@@ -9,8 +9,8 @@ import {
 } from '@nx/devkit';
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { randomUUID } from 'crypto';
-import { join } from 'path';
 import * as path from 'path';
+import { join } from 'path';
 
 import { InspectType, NodeExecutorOptions } from './schema';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
@@ -81,173 +81,172 @@ export async function* nodeExecutor(
   const tasks: ActiveTask[] = [];
   let currentTask: ActiveTask = null;
 
-  yield* createAsyncIterable<{ success: boolean }>(
-    async ({ done, next, error }) => {
-      const processQueue = async () => {
-        if (tasks.length === 0) return;
+  yield* createAsyncIterable<{
+    success: boolean;
+    options?: Record<string, any>;
+  }>(async ({ done, next, error }) => {
+    const processQueue = async () => {
+      if (tasks.length === 0) return;
 
-        const previousTask = currentTask;
-        const task = tasks.shift();
-        currentTask = task;
-        await previousTask?.stop('SIGTERM');
-        await task.start();
-      };
+      const previousTask = currentTask;
+      const task = tasks.shift();
+      currentTask = task;
+      await previousTask?.stop('SIGTERM');
+      await task.start();
+    };
 
-      const debouncedProcessQueue = debounce(
-        processQueue,
-        options.debounce ?? 1_000
-      );
+    const debouncedProcessQueue = debounce(
+      processQueue,
+      options.debounce ?? 1_000
+    );
 
-      const addToQueue = async () => {
-        const task: ActiveTask = {
-          id: randomUUID(),
-          killed: false,
-          childProcess: null,
-          promise: null,
-          start: async () => {
-            let buildFailed = false;
-            // Run the build
-            task.promise = new Promise<void>(async (resolve, reject) => {
-              task.childProcess = exec(
-                `npx nx run ${context.projectName}:${buildTarget.target}${
-                  buildTarget.configuration
-                    ? `:${buildTarget.configuration}`
-                    : ''
-                }`,
-                {
-                  cwd: context.root,
-                },
-                (error, stdout, stderr) => {
-                  if (
-                    // Build succeeded
-                    !error ||
-                    // If task was killed then another build process has started, ignore errors.
-                    task.killed
-                  ) {
-                    resolve();
-                    return;
-                  }
-
-                  logger.info(stdout);
-                  buildFailed = true;
-                  if (options.watch) {
-                    logger.error(
-                      `Build failed, waiting for changes to restart...`
-                    );
-                    resolve(); // Don't reject because it'll error out and kill the Nx process.
-                  } else {
-                    logger.error(`Build failed. See above for errors.`);
-                    reject();
-                  }
+    const addToQueue = async () => {
+      const task: ActiveTask = {
+        id: randomUUID(),
+        killed: false,
+        childProcess: null,
+        promise: null,
+        start: async () => {
+          let buildFailed = false;
+          // Run the build
+          task.promise = new Promise<void>(async (resolve, reject) => {
+            task.childProcess = exec(
+              `npx nx run ${context.projectName}:${buildTarget.target}${
+                buildTarget.configuration ? `:${buildTarget.configuration}` : ''
+              }`,
+              {
+                cwd: context.root,
+              },
+              (error, stdout, stderr) => {
+                if (
+                  // Build succeeded
+                  !error ||
+                  // If task was killed then another build process has started, ignore errors.
+                  task.killed
+                ) {
+                  resolve();
+                  return;
                 }
-              );
-            });
 
-            // Wait for build to finish
-            await task.promise;
-
-            // Task may have been stopped due to another running task.
-            // OR build failed, so don't start the process.
-            if (task.killed || buildFailed) return;
-
-            // Run the program
-            task.promise = new Promise<void>((resolve, reject) => {
-              task.childProcess = fork(
-                joinPathFragments(__dirname, 'node-with-require-overrides'),
-                options.args ?? [],
-                {
-                  execArgv: getExecArgv(options),
-                  stdio: [0, 1, 'pipe', 'ipc'],
-                  env: {
-                    ...process.env,
-                    NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
-                    NX_MAPPINGS: JSON.stringify(mappings),
-                  },
-                }
-              );
-
-              task.childProcess.stderr.on('data', (data) => {
-                // Don't log out error if task is killed and new one has started.
-                // This could happen if a new build is triggered while new process is starting, since the operation is not atomic.
-                // Log the error in normal mode
-                if (!options.watch || !task.killed) {
-                  logger.error(data.toString());
-                }
-              });
-
-              task.childProcess.once('exit', (code) => {
-                if (options.watch && !task.killed) {
-                  logger.info(
-                    `NX Process exited with code ${code}, waiting for changes to restart...`
+                logger.info(stdout);
+                buildFailed = true;
+                if (options.watch) {
+                  logger.error(
+                    `Build failed, waiting for changes to restart...`
                   );
+                  resolve(); // Don't reject because it'll error out and kill the Nx process.
+                } else {
+                  logger.error(`Build failed. See above for errors.`);
+                  reject();
                 }
-                if (!options.watch) done();
-                resolve();
-              });
+              }
+            );
+          });
 
-              next({ success: true });
+          // Wait for build to finish
+          await task.promise;
+
+          // Task may have been stopped due to another running task.
+          // OR build failed, so don't start the process.
+          if (task.killed || buildFailed) return;
+
+          // Run the program
+          task.promise = new Promise<void>((resolve, reject) => {
+            task.childProcess = fork(
+              joinPathFragments(__dirname, 'node-with-require-overrides'),
+              options.args ?? [],
+              {
+                execArgv: getExecArgv(options),
+                stdio: [0, 1, 'pipe', 'ipc'],
+                env: {
+                  ...process.env,
+                  NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
+                  NX_MAPPINGS: JSON.stringify(mappings),
+                },
+              }
+            );
+
+            task.childProcess.stderr.on('data', (data) => {
+              // Don't log out error if task is killed and new one has started.
+              // This could happen if a new build is triggered while new process is starting, since the operation is not atomic.
+              // Log the error in normal mode
+              if (!options.watch || !task.killed) {
+                logger.error(data.toString());
+              }
             });
-          },
-          stop: async (signal = 'SIGTERM') => {
-            task.killed = true;
-            // Request termination and wait for process to finish gracefully.
-            // NOTE: `childProcess` may not have been set yet if the task did not have a chance to start.
-            // e.g. multiple file change events in a short time (like git checkout).
-            if (task.childProcess) {
-              await killTree(task.childProcess.pid, signal);
-            }
-            await task.promise;
-          },
-        };
 
-        tasks.push(task);
-      };
+            task.childProcess.once('exit', (code) => {
+              if (options.watch && !task.killed) {
+                logger.info(
+                  `NX Process exited with code ${code}, waiting for changes to restart...`
+                );
+              }
+              if (!options.watch) done();
+              resolve();
+            });
 
-      const stopWatch = await daemonClient.registerFileWatcher(
-        {
-          watchProjects: [context.projectName],
-          includeDependentProjects: true,
+            next({ success: true, options: buildOptions });
+          });
         },
-        async (err, data) => {
-          if (err === 'closed') {
-            logger.error(`Watch error: Daemon closed the connection`);
-            process.exit(1);
-          } else if (err) {
-            logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
-          } else {
-            logger.info(`NX File change detected. Restarting...`);
-            await addToQueue();
-            await debouncedProcessQueue();
+        stop: async (signal = 'SIGTERM') => {
+          task.killed = true;
+          // Request termination and wait for process to finish gracefully.
+          // NOTE: `childProcess` may not have been set yet if the task did not have a chance to start.
+          // e.g. multiple file change events in a short time (like git checkout).
+          if (task.childProcess) {
+            await killTree(task.childProcess.pid, signal);
           }
-        }
-      );
-
-      const stopAllTasks = (signal: NodeJS.Signals = 'SIGTERM') => {
-        for (const task of tasks) {
-          task.stop(signal);
-        }
+          await task.promise;
+        },
       };
 
-      process.on('SIGTERM', async () => {
-        stopWatch();
-        stopAllTasks('SIGTERM');
-        process.exit(128 + 15);
-      });
-      process.on('SIGINT', async () => {
-        stopWatch();
-        stopAllTasks('SIGINT');
-        process.exit(128 + 2);
-      });
-      process.on('SIGHUP', async () => {
-        stopWatch();
-        stopAllTasks('SIGHUP');
-        process.exit(128 + 1);
-      });
+      tasks.push(task);
+    };
 
-      await addToQueue();
-      await processQueue();
-    }
-  );
+    const stopWatch = await daemonClient.registerFileWatcher(
+      {
+        watchProjects: [context.projectName],
+        includeDependentProjects: true,
+      },
+      async (err, data) => {
+        if (err === 'closed') {
+          logger.error(`Watch error: Daemon closed the connection`);
+          process.exit(1);
+        } else if (err) {
+          logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
+        } else {
+          logger.info(`NX File change detected. Restarting...`);
+          await addToQueue();
+          await debouncedProcessQueue();
+        }
+      }
+    );
+
+    const stopAllTasks = (signal: NodeJS.Signals = 'SIGTERM') => {
+      for (const task of tasks) {
+        task.stop(signal);
+      }
+    };
+
+    process.on('SIGTERM', async () => {
+      stopWatch();
+      stopAllTasks('SIGTERM');
+      process.exit(128 + 15);
+    });
+    process.on('SIGINT', async () => {
+      stopWatch();
+      stopAllTasks('SIGINT');
+      process.exit(128 + 2);
+    });
+    process.on('SIGHUP', async () => {
+      stopWatch();
+      stopAllTasks('SIGHUP');
+      process.exit(128 + 1);
+    });
+
+    await addToQueue();
+    await processQueue();
+  });
 }
 
 function getExecArgv(options: NodeExecutorOptions) {
@@ -284,6 +283,7 @@ function calculateResolveMappings(
     return m;
   }, {});
 }
+
 function runWaitUntilTargets(
   options: NodeExecutorOptions,
   context: ExecutorContext
