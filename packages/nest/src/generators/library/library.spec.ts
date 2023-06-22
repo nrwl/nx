@@ -302,14 +302,14 @@ describe('lib', () => {
       expect(tsconfigJson.compilerOptions.target).toEqual('es6');
     });
 
-    it('should set target to es2020 in tsconfig.lib.json', async () => {
-      await libraryGenerator(tree, { name: libName, target: 'es2020' });
+    it('should set target to es2021 in tsconfig.lib.json', async () => {
+      await libraryGenerator(tree, { name: libName, target: 'es2021' });
 
       const tsconfigJson = readJson(
         tree,
         `libs/${libFileName}/tsconfig.lib.json`
       );
-      expect(tsconfigJson.compilerOptions.target).toEqual('es2020');
+      expect(tsconfigJson.compilerOptions.target).toEqual('es2021');
     });
   });
 

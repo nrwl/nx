@@ -51,7 +51,7 @@ describe('application generator', () => {
       `apps/${appDirectory}/tsconfig.app.json`
     );
     expect(tsConfig.compilerOptions.emitDecoratorMetadata).toBe(true);
-    expect(tsConfig.compilerOptions.target).toBe('es2015');
+    expect(tsConfig.compilerOptions.target).toBe('es2021');
     expect(tsConfig.exclude).toEqual([
       'jest.config.ts',
       'src/**/*.spec.ts',
