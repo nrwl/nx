@@ -57,7 +57,7 @@ export default createESLintRule<Options, MessageIds>({
       missingDependency: `The "{{projectName}}" uses the package "{{packageName}}", but it is missing from the project's "package.json".`,
       obsoleteDependency: `The "{{packageName}}" package is not used by "{{projectName}}".`,
       versionMismatch: `The version specifier does not contain the installed version of "{{packageName}}" package: {{version}}.`,
-      missingDependencySection: `Dependency sections are missing from the "package.json" but following dependencies were detected: {{dependencies}}`,
+      missingDependencySection: `Dependency sections are missing from the "package.json" but following dependencies were detected:{{dependencies}}`,
     },
   },
   defaultOptions: [
@@ -237,6 +237,31 @@ export default createESLintRule<Options, MessageIds>({
         fix: (fixer) => {
           const isLastProperty =
             node.parent.properties[node.parent.properties.length - 1] === node;
+          const index = node.parent.properties.findIndex((n) => n === node);
+
+          if (index > 0) {
+            const previousNode = node.parent.properties[index - 1];
+            return fixer.removeRange([
+              previousNode.range[1] + 1,
+              node.range[1] + (isLastProperty ? 0 : 1),
+            ]);
+          } else {
+            const parent = node.parent;
+
+            // it's the only property
+            if (isLastProperty) {
+              return fixer.removeRange([
+                parent.range[0] + 1,
+                parent.range[1] - 1,
+              ]);
+            } else {
+              return fixer.removeRange([
+                parent.range[0] + 1,
+                node.range[1] + 1,
+              ]);
+            }
+          }
+
           // remove 4 spaces, new line and potential comma from previous line
           const shouldRemoveSiblingComma =
             isLastProperty && node.parent.properties.length > 1;

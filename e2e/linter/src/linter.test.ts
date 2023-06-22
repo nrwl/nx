@@ -463,7 +463,10 @@ describe('Linter', () => {
       });
 
       it('should report dependency check issues', () => {
-        const nxVersion = readJson('package.json').devDependencies.nx;
+        const rootPackageJson = readJson('package.json');
+        const nxVersion = rootPackageJson.devDependencies.nx;
+        const swcCoreVersion = rootPackageJson.devDependencies['@swc/core'];
+        const swcHelpersVersion = rootPackageJson.dependencies['@swc/helpers'];
 
         let out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain('All files pass linting');
@@ -491,12 +494,12 @@ describe('Linter', () => {
         expect(packageJson).toMatchInlineSnapshot(`
           {
             "dependencies": {
-              "@nx/devkit": "17.0.0",
-              "@swc/core": "~1.3.51",
-              "@swc/helpers": "~0.5.0",
-              "nx": "17.0.0",
+              "@nx/devkit": "${nxVersion}",
+              "@swc/core": "${swcCoreVersion}",
+              "@swc/helpers": "${swcHelpersVersion}",
+              "nx": "${nxVersion}",
             },
-            "name": "@proj/mylib5149535",
+            "name": "@proj/${mylib}",
             "type": "commonjs",
             "version": "0.0.1",
           }
