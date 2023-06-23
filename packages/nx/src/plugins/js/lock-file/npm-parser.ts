@@ -173,7 +173,11 @@ function createNode(
       hash:
         snapshot.integrity ||
         hashArray(
-          snapshot.resolved ? [snapshot.resolved] : [packageName, version]
+          snapshot.resolved
+            ? [snapshot.resolved]
+            : version
+            ? [packageName, version]
+            : [packageName]
         ),
     },
   };
