@@ -1,0 +1,16 @@
+name: Post release jobs
+
+on:
+  release:
+    types: ["published"]
+
+jobs:
+  run-deno-tasks:
+    if: ${{ github.repository_owner == 'nrwl' }}
+    name: Run Tasks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run deno scripts
+        run: |
+          echo "${{ toJSON(github.event.release) }}"
+          deno scripts/deno-scripts/post-release.ts '${{ toJSON(github.event.release) }}'
