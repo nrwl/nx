@@ -78,7 +78,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       ).toBeTruthy();
     });
 
-    it('should update `tsconfig.lib.json` file', async () => {
+    it('should update `tsconfig.lib.json` file if project does not use vite', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         standaloneConfig: false,

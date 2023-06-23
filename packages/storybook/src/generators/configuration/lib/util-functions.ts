@@ -157,7 +157,8 @@ export function addStaticTarget(tree: Tree, opts: StorybookConfigureSchema) {
 
 export function configureTsProjectConfig(
   tree: Tree,
-  schema: StorybookConfigureSchema
+  schema: StorybookConfigureSchema,
+  usesVite?: boolean
 ) {
   const { name: projectName } = schema;
 
@@ -178,19 +179,31 @@ export function configureTsProjectConfig(
     tsConfigContent = readJson<TsConfig>(tree, tsConfigPath);
   }
 
-  if (
-    !tsConfigContent?.exclude?.includes('**/*.stories.ts') &&
-    !tsConfigContent?.exclude?.includes('**/*.stories.js')
-  ) {
-    tsConfigContent.exclude = [
-      ...(tsConfigContent.exclude || []),
-      '**/*.stories.ts',
-      '**/*.stories.js',
-      ...(schema.uiFramework === '@storybook/react-native' ||
-      schema.uiFramework?.startsWith('@storybook/react')
-        ? ['**/*.stories.jsx', '**/*.stories.tsx']
-        : []),
-    ];
+  /**
+   * The reason we don't exclude the stories for Vite
+   * is because Storybook Vite builder uses the project's vite.config.ts file.
+   * The project's vite.config.ts file uses the project's tsconfig.json file.
+   * Storybook's tsconfig.json file includes the `.stories.*` files,
+   * however the project's tsconfig.json excludes the `.stories.*` files.
+   * The result is that Storybook's Vite builder, which uses the project's
+   * vite.config.ts file, which uses the project's tsconfig.json,
+   * will not be able to find the `.stories.*` files.
+   */
+  if (!usesVite) {
+    if (
+      !tsConfigContent?.exclude?.includes('**/*.stories.ts') &&
+      !tsConfigContent?.exclude?.includes('**/*.stories.js')
+    ) {
+      tsConfigContent.exclude = [
+        ...(tsConfigContent.exclude || []),
+        '**/*.stories.ts',
+        '**/*.stories.js',
+        ...(schema.uiFramework === '@storybook/react-native' ||
+        schema.uiFramework?.startsWith('@storybook/react')
+          ? ['**/*.stories.jsx', '**/*.stories.tsx']
+          : []),
+      ];
+    }
   }
 
   writeJson(tree, tsConfigPath, tsConfigContent);

@@ -96,6 +96,9 @@ export async function configurationGenerator(
   });
   tasks.push(initTask);
 
+  const projectUsesVite =
+    !!viteBuildTarget || schema.uiFramework.endsWith('-vite');
+
   createProjectStorybookDir(
     tree,
     schema.name,
@@ -107,11 +110,11 @@ export async function configurationGenerator(
     projectIsRootProjectInStandaloneWorkspace(root),
     !!nextBuildTarget,
     compiler === 'swc',
-    !!viteBuildTarget || schema.uiFramework.endsWith('-vite'),
+    projectUsesVite,
     viteConfigFilePath
   );
 
-  configureTsProjectConfig(tree, schema);
+  configureTsProjectConfig(tree, schema, projectUsesVite);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
 
