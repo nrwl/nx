@@ -234,6 +234,10 @@ function isConstraintBanningProject(
   const { allowedExternalImports, bannedExternalImports } = constraint;
   const { packageName } = externalProject.data;
 
+  if (imp !== packageName && !imp.startsWith(`${packageName}/`)) {
+    return false;
+  }
+
   /* Check if import is banned... */
   if (
     bannedExternalImports?.some((importDefinition) =>
@@ -245,7 +249,9 @@ function isConstraintBanningProject(
 
   /* ... then check if there is a whitelist and if there is a match in the whitelist.  */
   return allowedExternalImports?.every(
-    (importDefinition) => !parseImportWildcards(importDefinition).test(imp)
+    (importDefinition) =>
+      !imp.startsWith(packageName) ||
+      !parseImportWildcards(importDefinition).test(imp)
   );
 }
 
