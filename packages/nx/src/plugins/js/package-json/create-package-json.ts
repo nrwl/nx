@@ -82,6 +82,9 @@ export function createPackageJson(
           version: packageJson.version,
         };
       }
+      if (options.isProduction) {
+        delete packageJson.devDependencies;
+      }
     } catch (e) {}
   }
 

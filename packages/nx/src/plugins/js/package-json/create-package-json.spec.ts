@@ -499,4 +499,159 @@ describe('createPackageJson', () => {
     );
     expect(filterUsingGlobPatternsSpy).toHaveBeenCalledTimes(4);
   });
+
+  it('should exclude devDependencies from production build when local package.json is imported', () => {
+    jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+      namedInputs: {
+        default: ['{projectRoot}/**/*'],
+        production: ['!{projectRoot}/**/*.spec.ts'],
+      },
+      targetDefaults: {
+        build: {
+          inputs: ['default', 'production', '^production'],
+        },
+      },
+    });
+
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({
+      name: 'project1',
+      version: '1.0.0',
+      dependencies: {
+        axios: '1.0.0',
+        tslib: '2.4.0',
+        jest: '29.0.0',
+        typescript: '4.8.4',
+      },
+      devDependencies: {
+        webpack: '1.0.0',
+      },
+    });
+
+    expect(
+      createPackageJson(
+        'lib1',
+        {
+          nodes: {
+            lib1: {
+              type: 'lib',
+              name: 'lib1',
+              data: {
+                root: 'libs/lib1',
+                targets: {
+                  build: {},
+                },
+                files: [
+                  {
+                    file: 'libs/lib1/src/main.ts',
+                    dependencies: [
+                      {
+                        type: DependencyType.static,
+                        target: 'npm:typescript',
+                        source: 'lib1',
+                      },
+                    ],
+                    hash: '',
+                  },
+                  {
+                    file: 'libs/lib1/src/main2.ts',
+                    dependencies: [
+                      {
+                        type: DependencyType.static,
+                        target: 'lib2',
+                        source: 'lib1',
+                      },
+                    ],
+                    hash: '',
+                  },
+                  {
+                    file: 'libs/lib1/src/main.spec.ts',
+                    dependencies: [
+                      {
+                        type: DependencyType.static,
+                        target: 'npm:jest',
+                        source: 'lib1',
+                      },
+                    ],
+                    hash: '',
+                  },
+                ],
+              },
+            },
+            lib2: {
+              type: 'lib',
+              name: 'lib2',
+              data: {
+                root: 'libs/lib2',
+                targets: {
+                  build: {},
+                },
+                files: [
+                  {
+                    file: 'libs/lib2/src/main.ts',
+                    dependencies: [
+                      {
+                        type: DependencyType.static,
+                        target: 'npm:axios',
+                        source: 'lib2',
+                      },
+                    ],
+                    hash: '',
+                  },
+                  {
+                    file: 'libs/lib2/src/main.spec.ts',
+                    dependencies: [
+                      {
+                        type: DependencyType.static,
+                        target: 'npm:jest',
+                        source: 'lib2',
+                      },
+                    ],
+                    hash: '',
+                  },
+                ],
+              },
+            },
+          },
+          externalNodes: {
+            'npm:tslib': {
+              type: 'npm',
+              name: 'npm:tslib',
+              data: { version: '2.4.0', hash: '', packageName: 'tslib' },
+            },
+            'npm:typescript': {
+              type: 'npm',
+              name: 'npm:typescript',
+              data: { version: '4.8.4', hash: '', packageName: 'typescript' },
+            },
+            'npm:jest': {
+              type: 'npm',
+              name: 'npm:jest',
+              data: { version: '29.0.0', hash: '', packageName: 'jest' },
+            },
+            'npm:axios': {
+              type: 'npm',
+              name: 'npm:jest',
+              data: { version: '1.0.0', hash: '', packageName: 'axios' },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          target: 'build',
+          isProduction: true,
+          helperDependencies: ['npm:tslib'],
+        }
+      )
+    ).toEqual({
+      dependencies: {
+        axios: '1.0.0',
+        jest: '29.0.0',
+        tslib: '2.4.0',
+        typescript: '4.8.4',
+      },
+      name: 'project1',
+      version: '1.0.0',
+    });
+  });
 });
