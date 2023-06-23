@@ -1245,7 +1245,6 @@
             }
           ]
         },
-
         {
           "name": "Enforce Module Boundaries",
           "id": "enforce-module-boundaries",
@@ -1342,6 +1341,11 @@
               "name": "React Native with Nx",
               "id": "react-native",
               "file": "shared/guides/react-native"
+            },
+            {
+              "name": "Remix with Nx",
+              "id": "remix",
+              "file": "shared/guides/remix"
             },
             {
               "name": "Adding Images, Fonts, and Files",
@@ -1629,7 +1633,11 @@
               "id": "create-nx-workspace",
               "file": "generated/cli/create-nx-workspace"
             },
-            { "name": "init", "id": "init", "file": "generated/cli/init" },
+            {
+              "name": "init",
+              "id": "init",
+              "file": "generated/cli/init"
+            },
             {
               "name": "generate",
               "id": "generate",
@@ -1698,7 +1706,11 @@
               "id": "report",
               "file": "generated/cli/report"
             },
-            { "name": "list", "id": "list", "file": "generated/cli/list" },
+            {
+              "name": "list",
+              "id": "list",
+              "file": "generated/cli/list"
+            },
             {
               "name": "workspace-lint",
               "id": "workspace-lint",

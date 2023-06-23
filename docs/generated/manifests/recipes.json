@@ -1389,6 +1389,16 @@
         "tags": []
       },
       {
+        "id": "remix",
+        "name": "Remix with Nx",
+        "description": "",
+        "file": "shared/guides/remix",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/remix",
+        "tags": []
+      },
+      {
         "id": "adding-assets-react",
         "name": "Adding Images, Fonts, and Files",
         "description": "",
@@ -1641,6 +1651,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/react-native",
+    "tags": []
+  },
+  "/recipes/other/remix": {
+    "id": "remix",
+    "name": "Remix with Nx",
+    "description": "",
+    "file": "shared/guides/remix",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/remix",
     "tags": []
   },
   "/recipes/other/adding-assets-react": {

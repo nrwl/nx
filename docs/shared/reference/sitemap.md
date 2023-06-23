@@ -199,6 +199,7 @@
     - [Advanced Update Nx](/recipes/other/advanced-update)
     - [JavaScript and TypeScript](/recipes/other/js-and-ts)
     - [React Native with Nx](/recipes/other/react-native)
+    - [Remix with Nx](/recipes/other/remix)
     - [Adding Images, Fonts, and Files](/recipes/other/adding-assets-react)
     - [Setup incremental builds for Angular applications](/recipes/other/setup-incremental-builds-angular)
     - [Profiling Build Performance](/recipes/other/performance-profiling)
