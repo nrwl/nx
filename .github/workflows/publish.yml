@@ -167,7 +167,7 @@ jobs:
          with:
            envs: DEBUG RUSTUP_HOME CARGO_HOME RUSTUP_IO_THREADS
            usesh: true
-           mem: 3000
+           mem: 4096
            prepare: |
              pkg install -y -f curl node libnghttp2 npm
              npm install --location=global --ignore-scripts pnpm
@@ -192,6 +192,7 @@ jobs:
              pnpm install --frozen-lockfile --ignore-scripts
              pnpm nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
              rm -rf node_modules
+             rm -rf dist
        - name: Upload artifact
          uses: actions/upload-artifact@v3
          with:
