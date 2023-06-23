@@ -39,8 +39,8 @@ export default async function (tree: Tree) {
             ignore: ['@nx/react/plugins/storybook'],
           },
         ];
-        return json;
       }
+      return json;
     });
   }
 
