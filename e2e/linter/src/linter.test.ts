@@ -9,6 +9,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import * as ts from 'typescript';
 
@@ -432,6 +433,92 @@ describe('Linter', () => {
         );
         expect(fileContent).toContain(
           `import { someSelectivelyExportedFn } from '@${projScope}/${libA}';`
+        );
+      });
+    });
+
+    describe('dependency checks', () => {
+      beforeAll(() => {
+        updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
+          json.overrides = [
+            ...json.overrides,
+            {
+              files: ['*.json'],
+              parser: 'jsonc-eslint-parser',
+              rules: {
+                '@nx/dependency-checks': 'error',
+              },
+            },
+          ];
+          return json;
+        });
+        updateJson(`libs/${mylib}/project.json`, (json) => {
+          json.targets.lint.options.lintFilePatterns = [
+            `libs/${mylib}/**/*.ts`,
+            `libs/${mylib}/project.json`,
+            `libs/${mylib}/package.json`,
+          ];
+          return json;
+        });
+      });
+
+      it('should report dependency check issues', () => {
+        const rootPackageJson = readJson('package.json');
+        const nxVersion = rootPackageJson.devDependencies.nx;
+        const swcCoreVersion = rootPackageJson.devDependencies['@swc/core'];
+        const swcHelpersVersion = rootPackageJson.dependencies['@swc/helpers'];
+
+        let out = runCLI(`lint ${mylib}`, { silenceError: true });
+        expect(out).toContain('All files pass linting');
+
+        // make an explict dependency to nx
+        updateFile(
+          `libs/${mylib}/src/lib/${mylib}.ts`,
+          (content) =>
+            `import { names } from '@nx/devkit';\n\n` +
+            content.replace(/return .*;/, `return names(${mylib}).className;`)
+        );
+
+        // output should now report missing dependencies section
+        out = runCLI(`lint ${mylib}`, { silenceError: true });
+        expect(out).toContain(
+          'Dependency sections are missing from the "package.json"'
+        );
+
+        // should fix the missing section issue
+        out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
+        expect(out).toContain(
+          `Successfully ran target lint for project ${mylib}`
+        );
+        const packageJson = readJson(`libs/${mylib}/package.json`);
+        expect(packageJson).toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "@nx/devkit": "${nxVersion}",
+              "@swc/core": "${swcCoreVersion}",
+              "@swc/helpers": "${swcHelpersVersion}",
+              "nx": "${nxVersion}",
+            },
+            "name": "@proj/${mylib}",
+            "type": "commonjs",
+            "version": "0.0.1",
+          }
+        `);
+
+        // intentionally set the invalid version
+        updateJson(`libs/${mylib}/package.json`, (json) => {
+          json.dependencies['@nx/devkit'] = '100.0.0';
+          return json;
+        });
+        out = runCLI(`lint ${mylib}`, { silenceError: true });
+        expect(out).toContain(
+          `The version specifier does not contain the installed version of "@nx/devkit" package: ${nxVersion}`
+        );
+
+        // should fix the version mismatch issue
+        out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
+        expect(out).toContain(
+          `Successfully ran target lint for project ${mylib}`
         );
       });
     });

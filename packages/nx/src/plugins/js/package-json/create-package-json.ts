@@ -40,40 +40,15 @@ export function createPackageJson(
   } = {},
   fileMap: ProjectFileMap = null
 ): PackageJson {
-  if (fileMap == null) {
-    fileMap = readProjectFileMapCache()?.projectFileMap || {};
-  }
-
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
 
-  const { selfInputs, dependencyInputs } = options.target
-    ? getTargetInputs(readNxJson(), projectNode, options.target)
-    : { selfInputs: [], dependencyInputs: [] };
-
-  const npmDeps: NpmDeps = {
-    dependencies: {},
-    peerDependencies: {},
-    peerDependenciesMeta: {},
-  };
-
-  const seen = new Set<string>();
-
-  options.helperDependencies?.forEach((dep) => {
-    seen.add(dep);
-    npmDeps.dependencies[graph.externalNodes[dep].data.packageName] =
-      graph.externalNodes[dep].data.version;
-    recursivelyCollectPeerDependencies(dep, graph, npmDeps, seen);
-  });
-
-  findAllNpmDeps(
-    fileMap,
+  const npmDeps = findProjectsNpmDependencies(
     projectNode,
     graph,
-    npmDeps,
-    seen,
-    dependencyInputs,
-    selfInputs
+    options.target,
+    { helperDependencies: options.helperDependencies },
+    fileMap
   );
 
   // default package.json if one does not exist
@@ -198,6 +173,51 @@ export function createPackageJson(
   );
 
   return packageJson;
+}
+
+export function findProjectsNpmDependencies(
+  projectNode: ProjectGraphProjectNode,
+  graph: ProjectGraph,
+  target: string,
+  options: {
+    helperDependencies?: string[];
+  },
+  fileMap?: ProjectFileMap
+): NpmDeps {
+  if (fileMap == null) {
+    fileMap = readProjectFileMapCache()?.projectFileMap || {};
+  }
+
+  const { selfInputs, dependencyInputs } = target
+    ? getTargetInputs(readNxJson(), projectNode, target)
+    : { selfInputs: [], dependencyInputs: [] };
+
+  const npmDeps: NpmDeps = {
+    dependencies: {},
+    peerDependencies: {},
+    peerDependenciesMeta: {},
+  };
+
+  const seen = new Set<string>();
+
+  options.helperDependencies?.forEach((dep) => {
+    seen.add(dep);
+    npmDeps.dependencies[graph.externalNodes[dep].data.packageName] =
+      graph.externalNodes[dep].data.version;
+    recursivelyCollectPeerDependencies(dep, graph, npmDeps, seen);
+  });
+
+  findAllNpmDeps(
+    fileMap,
+    projectNode,
+    graph,
+    npmDeps,
+    seen,
+    dependencyInputs,
+    selfInputs
+  );
+
+  return npmDeps;
 }
 
 function findAllNpmDeps(

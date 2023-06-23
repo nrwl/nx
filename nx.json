@@ -105,6 +105,7 @@
           "{projectRoot}/generators.json",
           "{projectRoot}/executors.json",
           "{projectRoot}/package.json",
+          "{projectRoot}/project.json",
           "{projectRoot}/migrations.json"
         ]
       },

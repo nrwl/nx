@@ -1,5 +1,4 @@
 import {
-  addDependenciesToPackageJson,
   formatFiles,
   joinPathFragments,
   logger,
@@ -16,9 +15,8 @@ import {
 
 import type { Linter as ESLint } from 'eslint';
 
-import { Schema as EsLintExecutorOptions } from '@nx/linter/src/executors/eslint/schema';
+import type { Schema as EsLintExecutorOptions } from '@nx/linter/src/executors/eslint/schema';
 
-import { jsoncEslintParserVersion } from '../../utils/versions';
 import { PluginLintChecksGeneratorSchema } from './schema';
 import { NX_PREFIX } from 'nx/src/utils/logger';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
@@ -57,17 +55,10 @@ export default async function pluginLintCheckGenerator(
       `${NX_PREFIX} plugin lint checks can only be added to plugins which use eslint for linting`
     );
   }
-  const installTask = addDependenciesToPackageJson(
-    host,
-    {},
-    { 'jsonc-eslint-parser': jsoncEslintParserVersion }
-  );
 
   if (!options.skipFormat) {
     await formatFiles(host);
   }
-
-  return () => installTask;
 }
 
 export function addMigrationJsonChecks(
