@@ -7,7 +7,6 @@
     "e2e-base": {
       "executor": "@nx/cypress:cypress",
       "options": {
-        "tsConfig": "graph/client-e2e/tsconfig.e2e.json",
         "testingType": "e2e",
         "browser": "chrome"
       },
