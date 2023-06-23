@@ -35,7 +35,8 @@
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",
-    "@nx/node": "file:../node"
+    "@nx/node": "file:../node",
+    "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "publishConfig": {
     "access": "public"
