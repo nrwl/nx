@@ -2300,6 +2300,16 @@
         "isExternal": true,
         "path": "/reference/nx-json#generators",
         "tags": ["use-code-generators"]
+      },
+      {
+        "id": "sitemap",
+        "name": "Site Map",
+        "description": "",
+        "file": "shared/reference/sitemap",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/see-also/sitemap",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -2375,5 +2385,15 @@
     "isExternal": true,
     "path": "/reference/nx-json#generators",
     "tags": ["use-code-generators"]
+  },
+  "/see-also/sitemap": {
+    "id": "sitemap",
+    "name": "Site Map",
+    "description": "",
+    "file": "shared/reference/sitemap",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/see-also/sitemap",
+    "tags": []
   }
 }

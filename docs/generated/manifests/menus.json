@@ -1847,6 +1847,14 @@
             "isExternal": true,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Site Map",
+            "path": "/see-also/sitemap",
+            "id": "sitemap",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -1904,6 +1912,14 @@
         "path": "/reference/nx-json#generators",
         "id": "nxjson-generator-defaults",
         "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Site Map",
+        "path": "/see-also/sitemap",
+        "id": "sitemap",
+        "isExternal": false,
         "children": [],
         "disableCollapsible": false
       }
