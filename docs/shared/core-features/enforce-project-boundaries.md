@@ -94,7 +94,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {% /tab %}
 {% /tabs %}
 
-Next you should update your root lint configuration:
+Next, you should update your root lint configuration:
 
 - If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `"@nx/enforce-module-boundaries"` and you should update the `"depConstraints"`:
 
@@ -129,44 +129,44 @@ Next you should update your root lint configuration:
 }
 ```
 
-With these constraints in place, `scope:client` projects can only depend on other `scope:client` projects or on `scope:shared` projects. And `scope:admin` projects can only depend on other `scope:admin` projects or on `scope:shared` projects. So `scope:client` and `scope:admin` cannot depend on each other.
+With these constraints in place, `scope:client` projects can only depend on projects with `scope:client` or `scope:shared`. And `scope:admin` projects can only depend on projects with `scope:admin` or `scope:shared`. So `scope:client` and `scope:admin` cannot depend on each other.
 
-Projects without any tags cannot depend on any other projects, unless you allow all tags (see below).
-
-If you try to violate the constraints, you will get an error when linting:
+Projects without any tags cannot depend on any other projects. If you try to violate the constraints, you will get an error when linting:
 
 ```shell
 A project tagged with "scope:admin" can only depend on projects
 tagged with "scoped:shared" or "scope:admin".
 ```
 
+The exception to this rule is by explicitly allowing all tags (see below).
+
 ### Tag formats
-
-- `string`: allow exact tags
-
-Example: projects tagged with `scope:client` can only depend on projects tagged `scope:client`
-
-```json
-{
-  "sourceTag": "scope:client",
-  "onlyDependOnLibsWithTags": ["scope:client"]
-}
-```
 
 - `*`: allow all tags
 
 Example: projects with any tags (including untagged) can depend on any other project.
 
-```json
+```jsonc
 {
   "sourceTag": "*",
   "onlyDependOnLibsWithTags": ["*"]
 }
 ```
 
+- `string`: allow exact tags
+
+Example: projects tagged with `scope:client` can only depend on projects tagged with `scope:util`.
+
+```jsonc
+{
+  "sourceTag": "scope:client",
+  "onlyDependOnLibsWithTags": ["scope:util"]
+}
+```
+
 - `regex`: allow tags matching the regular expression
 
-Example: projects tagged with `scope:client` can depend on projects with a tag matching the regular expression `/^scope.*/`. In this case `scope:a`, `scope:b`, etc are all allowed tags for dependencies.
+Example: projects tagged with `scope:client` can depend on projects with a tag matching the regular expression `/^scope.*/`. In this case, the `scope:util`, `scope:client`, etc. are all allowed tags for dependencies.
 
 ```json
 {
@@ -185,3 +185,5 @@ Example: projects with a tag starting with `scope:` can depend on projects with 
   "onlyDependOnLibsWithTags": ["scope:*"]
 }
 ```
+
+Globbing supports only the basic use of `*`. For more complex scenarios use the `regex` above.
