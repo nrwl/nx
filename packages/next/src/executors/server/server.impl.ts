@@ -4,7 +4,7 @@ import {
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 
 import {
   NextBuildBuilderOptions,

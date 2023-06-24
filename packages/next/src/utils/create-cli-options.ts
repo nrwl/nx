@@ -3,8 +3,7 @@ export function createCliOptions(
 ): string[] {
   return Object.entries(obj).reduce((arr, [key, value]) => {
     if (value !== undefined) {
-      const kebabCase = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
-      arr.push(`--${kebabCase}=${value}`);
+      arr.push(`--${key}=${value}`);
     }
     return arr;
   }, []);
