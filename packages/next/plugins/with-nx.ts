@@ -106,9 +106,17 @@ function getNxContext(
     const buildTarget = parseTargetString(targetOptions.buildTarget, graph);
     return getNxContext(graph, buildTarget);
   } else {
-    throw new Error(
-      'Could not determine the config for this Next application.'
+    const inferredBuildTargetName = `${target.project}:build`;
+    const inferredBuildTarget = parseTargetString(
+      inferredBuildTargetName,
+      graph
     );
+    if (!inferredBuildTarget) {
+      throw new Error(
+        'Could not determine the config for this Next application.'
+      );
+    }
+    return getNxContext(graph, inferredBuildTarget);
   }
 }
 
