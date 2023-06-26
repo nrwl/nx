@@ -597,6 +597,11 @@
               "file": "shared/deprecated/workspace-json"
             },
             {
+              "name": "workspace-lint",
+              "id": "workspace-lint",
+              "file": "shared/deprecated/workspace-lint"
+            },
+            {
               "name": "Workspace Generators",
               "id": "workspace-generators",
               "file": "shared/deprecated/workspace-generators"

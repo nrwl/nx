@@ -1899,6 +1899,16 @@
         "tags": []
       },
       {
+        "id": "workspace-lint",
+        "name": "workspace-lint",
+        "description": "",
+        "file": "shared/deprecated/workspace-lint",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/workspace-lint",
+        "tags": []
+      },
+      {
         "id": "workspace-generators",
         "name": "Workspace Generators",
         "description": "",
@@ -2032,6 +2042,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-json",
+    "tags": []
+  },
+  "/deprecated/workspace-lint": {
+    "id": "workspace-lint",
+    "name": "workspace-lint",
+    "description": "",
+    "file": "shared/deprecated/workspace-lint",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/workspace-lint",
     "tags": []
   },
   "/deprecated/workspace-generators": {

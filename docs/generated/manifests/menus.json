@@ -1526,6 +1526,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "workspace-lint",
+            "path": "/deprecated/workspace-lint",
+            "id": "workspace-lint",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Workspace Generators",
             "path": "/deprecated/workspace-generators",
             "id": "workspace-generators",
@@ -1629,6 +1637,14 @@
         "name": "workspace.json",
         "path": "/deprecated/workspace-json",
         "id": "workspace-json",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "workspace-lint",
+        "path": "/deprecated/workspace-lint",
+        "id": "workspace-lint",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
