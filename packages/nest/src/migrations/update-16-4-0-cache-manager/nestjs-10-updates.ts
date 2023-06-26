@@ -113,7 +113,7 @@ export function updateCacheManagerImport(
 export function updateTsConfigTarget(tree: Tree, tsConfigPath: string) {
   updateJson(tree, tsConfigPath, (json) => {
     if (!json.compilerOptions.target) {
-      return;
+      return json;
     }
 
     const normalizedTargetName = json.compilerOptions.target.toUpperCase();
