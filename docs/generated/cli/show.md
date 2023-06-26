@@ -23,10 +23,10 @@ Show all projects in the workspace:
  nx show projects
 ```
 
-Show all projects with names starting with "api-". The pattern option is useful to see which projects would be selected by run-many.:
+Show all projects with names starting with "api-". The "projects" option is useful to see which projects would be selected by run-many.:
 
 ```shell
- nx show projects --pattern=api-*
+ nx show projects --projects api-*
 ```
 
 Show all projects with a serve target:

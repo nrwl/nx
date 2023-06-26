@@ -354,9 +354,9 @@ export const examples: Record<string, Example[]> = {
     },
 
     {
-      command: 'show projects --pattern=api-*',
+      command: 'show projects --projects api-*',
       description:
-        'Show all projects with names starting with "api-". The pattern option is useful to see which projects would be selected by run-many.',
+        'Show all projects with names starting with "api-". The "projects" option is useful to see which projects would be selected by run-many.',
     },
 
     {
