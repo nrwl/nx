@@ -45,7 +45,11 @@ export default async function* serveExecutor(
   // Setting port that the custom server should use.
   process.env.PORT = `${options.port}`;
 
-  const args = createCliOptions({ port, keepAliveTimeout, hostname });
+  const args = createCliOptions({ port, hostname });
+
+  if (keepAliveTimeout && !options.dev) {
+    args.push('--keepAliveTimeout', `${keepAliveTimeout}`);
+  }
 
   const nextDir = resolve(context.root, buildOptions.outputPath);
 
