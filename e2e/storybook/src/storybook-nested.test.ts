@@ -42,7 +42,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
       checkFilesExist(
         '.storybook/main.js',
         '.storybook/preview.js',
-        '.storybook/tsconfig.json'
+        'tsconfig.storybook.json'
       );
     });
 
