@@ -45,7 +45,10 @@ describe('Nx Commands', () => {
     createFile(`libs/${proj3}/newfile2.txt`, 'content');
     createFile(`newfile2.txt`, 'content');
 
-    expect(await getOutput()).toEqual([proj1, proj2, proj3]);
+    let content = await getOutput();
+    let results = content.sort();
+
+    expect(results).toEqual([proj1, proj2, proj3]);
   });
 
   it('should watch for all project changes and output the file name changes', async () => {
@@ -95,7 +98,10 @@ describe('Nx Commands', () => {
     createFile(`libs/${proj3}/newfile2.txt`, 'content');
     createFile(`newfile2.txt`, 'content');
 
-    expect(await getOutput()).toEqual([proj1, proj3]);
+    let output = await getOutput();
+    let results = output.sort();
+
+    expect(results).toEqual([proj1, proj3]);
   });
 
   it('should watch projects including their dependencies', async () => {
