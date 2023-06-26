@@ -46,7 +46,6 @@
     "semver": "7.5.3",
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.1.2",
-    "tsconfig-paths-webpack-plugin": "4.0.0",
     "url-loader": "^4.1.1",
     "webpack-merge": "^5.8.0",
     "@nx/devkit": "file:../devkit",

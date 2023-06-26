@@ -210,9 +210,7 @@ function withNx(
           workspaceRoot,
           projectDirectory,
           options.fileReplacements,
-          options.assets,
-          dependencies,
-          path.join(workspaceRoot, context.libsDir)
+          options.assets
         )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
 
       return nextConfig;
