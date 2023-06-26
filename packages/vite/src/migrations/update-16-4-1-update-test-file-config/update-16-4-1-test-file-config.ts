@@ -19,16 +19,20 @@ export default function update(tree: Tree) {
         return;
       }
 
-      const migratedOptions: VitestExecutorOptions = {
-        ...options,
-        testFiles: [options.testFile],
-      };
+      const newTestFileArgs = [options.testFile];
+
+      delete options.testFile;
 
       if (configuration) {
-        projectConfig.targets[targetName].configurations[configuration] =
-          migratedOptions;
+        projectConfig.targets[targetName].configurations[configuration] = {
+          ...options,
+          testFiles: newTestFileArgs,
+        };
       } else {
-        projectConfig.targets[targetName].options = migratedOptions;
+        projectConfig.targets[targetName].options = {
+          ...options,
+          testFiles: newTestFileArgs,
+        };
       }
 
       updateProjectConfiguration(tree, projectName, projectConfig);

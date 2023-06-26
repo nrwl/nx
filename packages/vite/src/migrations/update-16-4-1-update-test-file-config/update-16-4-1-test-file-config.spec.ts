@@ -5,16 +5,16 @@ import {
   readProjectConfiguration,
 } from '@nx/devkit';
 
-import update from './update-16-4-0-test-file-config';
+import updateTestFileOption from './update-16-4-1-test-file-config';
 
-describe('update-16-4-0-vite-test-file-config migration', () => {
+describe('update-16-5-0-vite-test-file-config migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should run successfully when testFile does not exist in the config', async () => {
+  it('should run successfully when testFile does not exist in the config', () => {
     addProjectConfiguration(tree, 'vitest', {
       root: 'vitest',
       targets: {
@@ -27,7 +27,7 @@ describe('update-16-4-0-vite-test-file-config migration', () => {
         },
       },
     });
-    await update(tree);
+    updateTestFileOption(tree);
     expect(readProjectConfiguration(tree, 'vitest')).toMatchInlineSnapshot(`
       {
         "$schema": "../node_modules/nx/schemas/project-schema.json",
@@ -46,7 +46,7 @@ describe('update-16-4-0-vite-test-file-config migration', () => {
     `);
   });
 
-  it('should run successfully when testFile exists in options and configurations', async () => {
+  it('should run successfully when testFile exists in options and configurations', () => {
     addProjectConfiguration(tree, 'vitest', {
       root: 'vitest',
       targets: {
@@ -69,7 +69,7 @@ describe('update-16-4-0-vite-test-file-config migration', () => {
         },
       },
     });
-    await update(tree);
+    updateTestFileOption(tree);
     expect(readProjectConfiguration(tree, 'vitest')).toMatchInlineSnapshot(`
       {
         "$schema": "../node_modules/nx/schemas/project-schema.json",
