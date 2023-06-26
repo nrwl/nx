@@ -48,7 +48,7 @@ export default async function* serveExecutor(
   const args = createCliOptions({ port, hostname });
 
   if (keepAliveTimeout && !options.dev) {
-    args.push('--keepAliveTimeout', `${keepAliveTimeout}`);
+    args.push(`--keepAliveTimeout=${keepAliveTimeout}`);
   }
 
   const nextDir = resolve(context.root, buildOptions.outputPath);
