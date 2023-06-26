@@ -134,8 +134,13 @@ function addMissingDependencies(
       packageJson[propType][packageName] = version;
     } else {
       const packageName = entry.name;
+      if (!!workspacePackageJson.devDependencies?.[packageName]) {
+        return;
+      }
+
       if (
         !packageJson.dependencies?.[packageName] &&
+        !packageJson.devDependencies?.[packageName] &&
         !packageJson.peerDependencies?.[packageName]
       ) {
         const outputs = getOutputsForTargetAndConfiguration(
