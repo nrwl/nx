@@ -118,7 +118,7 @@ describe('watcher', () => {
         [
           {
             "path": "boo.txt",
-            "type": "update",
+            "type": "create",
           },
         ]
       `);
