@@ -5,6 +5,8 @@ use std::thread::available_parallelism;
 use crossbeam_channel::{unbounded, Receiver};
 use ignore::WalkBuilder;
 
+use crate::native::utils::glob::build_glob_set;
+
 pub fn nx_walker<P, Fn, Re>(directory: P, f: Fn) -> Re
 where
     P: AsRef<Path>,
@@ -13,8 +15,12 @@ where
 {
     let directory = directory.as_ref();
     let nx_ignore = directory.join(".nxignore");
-    let git_folder = directory.join(".git");
-    let node_folder = directory.join("node_modules");
+
+    let ignore_glob_set = build_glob_set(vec![
+        String::from("**/node_modules"),
+        String::from("**/.git"),
+    ])
+    .expect("These static ignores always build");
 
     let mut walker = WalkBuilder::new(directory);
     walker.hidden(false);
@@ -22,7 +28,8 @@ where
 
     // We should make sure to always ignore node_modules and the .git folder
     walker.filter_entry(move |entry| {
-        !(entry.path().starts_with(&git_folder) || entry.path().starts_with(&node_folder))
+        let path = entry.path().to_string_lossy();
+        !ignore_glob_set.is_match(path.as_ref())
     });
 
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
