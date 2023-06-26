@@ -30,6 +30,13 @@ npm install -D @nx/storybook
 ```
 
 {% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/storybook
+```
+
+{% /tab %}
 {% /tabs %}
 
 ## Using Storybook
