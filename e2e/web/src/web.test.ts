@@ -5,16 +5,20 @@ import {
   createFile,
   isNotWindows,
   killPorts,
+  listFiles,
   newProject,
   readFile,
   rmDist,
   runCLI,
   runCLIAsync,
   runCypressTests,
+  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
 } from '@nx/e2e/utils';
+import { join } from 'path';
+import { copyFileSync } from 'fs';
 
 describe('Web Components Applications', () => {
   beforeEach(() => newProject());
@@ -29,24 +33,11 @@ describe('Web Components Applications', () => {
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
 
-    runCLI(`build ${appName} --outputHashing none --compiler babel`);
-    checkFilesExist(
-      `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/main.js`,
-      `dist/apps/${appName}/styles.css`
-    );
-
-    expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
-      '<link rel="stylesheet" href="styles.css">'
-    );
-
     const testResults = await runCLIAsync(`test ${appName}`);
 
     expect(testResults.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
-
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
     expect(lintE2eResults).toContain('All files pass linting.');
@@ -56,6 +47,55 @@ describe('Web Components Applications', () => {
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPorts()).toBeTruthy();
     }
+
+    copyFileSync(
+      join(__dirname, 'test-fixtures/inlined.png'),
+      join(tmpProjPath(), `apps/${appName}/src/app/inlined.png`)
+    );
+    copyFileSync(
+      join(__dirname, 'test-fixtures/emitted.png'),
+      join(tmpProjPath(), `apps/${appName}/src/app/emitted.png`)
+    );
+    updateFile(
+      `apps/${appName}/src/app/app.element.ts`,
+      `
+      // @ts-ignore
+      import inlined from './inlined.png';
+      // @ts-ignore
+      import emitted from './emitted.png';
+      export class AppElement extends HTMLElement {
+        public static observedAttributes = [];
+        connectedCallback() {
+          this.innerHTML = \`
+            <img src="\${inlined} "/>
+            <img src="\${emitted} "/>
+          \`;
+        }
+      }
+      customElements.define('app-root', AppElement);
+    `
+    );
+    runCLI(`build ${appName} --outputHashing none --compiler babel`);
+    checkFilesExist(
+      `dist/apps/${appName}/index.html`,
+      `dist/apps/${appName}/runtime.js`,
+      `dist/apps/${appName}/emitted.png`,
+      `dist/apps/${appName}/main.js`,
+      `dist/apps/${appName}/styles.css`
+    );
+    checkFilesDoNotExist(`dist/apps/${appName}/inlined.png`);
+
+    expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
+      '<img src="data:image/png;base64'
+    );
+    // Should not be a JS module but kept as a PNG
+    expect(readFile(`dist/apps/${appName}/emitted.png`)).not.toContain(
+      'export default'
+    );
+
+    expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
+      '<link rel="stylesheet" href="styles.css">'
+    );
   }, 500000);
 
   it('should remove previous output before building', async () => {

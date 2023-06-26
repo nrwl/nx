@@ -39,7 +39,6 @@
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^5.0.0",
     "dotenv": "~10.0.0",
-    "file-loader": "^6.2.0",
     "fork-ts-checker-webpack-plugin": "7.2.13",
     "ignore": "^5.0.4",
     "less": "4.1.3",
