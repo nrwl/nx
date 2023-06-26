@@ -17,7 +17,8 @@ export interface FileData {
  */
 export const enum EventType {
   delete = 'delete',
-  update = 'update'
+  update = 'update',
+  create = 'create'
 }
 export interface WatchEvent {
   path: string

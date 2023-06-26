@@ -55,8 +55,13 @@ describe('Nx Commands', () => {
     createFile(`libs/${proj1}/newfile2.txt`, 'content');
     createFile(`newfile2.txt`, 'content');
 
-    expect(await getOutput()).toEqual([
-      `libs/${proj1}/newfile.txt libs/${proj1}/newfile2.txt libs/${proj2}/newfile.txt`,
+    let output = (await getOutput())[0];
+    let results = output.split(' ').sort();
+
+    expect(results).toEqual([
+      `libs/${proj1}/newfile.txt`,
+      `libs/${proj1}/newfile2.txt`,
+      `libs/${proj2}/newfile.txt`,
     ]);
   });
 
@@ -69,8 +74,14 @@ describe('Nx Commands', () => {
     createFile(`libs/${proj1}/newfile2.txt`, 'content');
     createFile(`newfile2.txt`, 'content');
 
-    expect(await getOutput()).toEqual([
-      `libs/${proj1}/newfile.txt libs/${proj1}/newfile2.txt libs/${proj2}/newfile.txt newfile2.txt`,
+    let output = (await getOutput())[0];
+    let results = output.split(' ').sort();
+
+    expect(results).toEqual([
+      `libs/${proj1}/newfile.txt`,
+      `libs/${proj1}/newfile2.txt`,
+      `libs/${proj2}/newfile.txt`,
+      'newfile2.txt',
     ]);
   });
 
@@ -102,7 +113,7 @@ describe('Nx Commands', () => {
     createFile(`libs/${proj3}/newfile2.txt`, 'content');
     createFile(`newfile2.txt`, 'content');
 
-    expect(await getOutput()).toEqual([proj3, proj1]);
+    expect(await getOutput()).toEqual([proj1, proj3]);
   });
 });
 

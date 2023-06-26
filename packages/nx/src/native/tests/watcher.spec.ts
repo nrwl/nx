@@ -33,7 +33,7 @@ describe('watcher', () => {
         [
           {
             "path": "app1/main.html",
-            "type": "update",
+            "type": "create",
           },
         ]
       `);
