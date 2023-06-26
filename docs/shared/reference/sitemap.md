@@ -102,6 +102,7 @@
     - [Glossary](/reference/glossary)
   - [Deprecated](/deprecated)
     - [workspace.json](/deprecated/workspace-json)
+    - [workspace-lint](/deprecated/workspace-lint)
     - [Workspace Generators](/deprecated/workspace-generators)
     - [Workspace Executors](/deprecated/workspace-executors)
     - [defaultCollection](/deprecated/default-collection)
