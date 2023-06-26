@@ -167,9 +167,9 @@ export const webpack = async (
   }
 
   const { withNx, withWeb } = require('@nx/webpack');
-  const tsconfigPath = join(options.configDir, 'tsconfig.json');
 
   const projectData = await getProjectData(options);
+  const tsconfigPath = join(projectData.projectRoot, 'tsconfig.storybook.json');
 
   fixBabelConfigurationIfNeeded(storybookWebpackConfig, projectData);
 
