@@ -7,6 +7,37 @@ use ignore::WalkBuilder;
 
 use crate::native::utils::glob::build_glob_set;
 
+use walkdir::WalkDir;
+
+/// Walks the directory in a single thread and does not ignore any files
+/// Should only be used for small directories, and not traversing the whole workspace
+pub fn nx_walker_sync<'a, P>(directory: P) -> impl Iterator<Item = PathBuf>
+where
+    P: AsRef<Path> + 'a,
+{
+    let base_dir: PathBuf = directory.as_ref().into();
+
+    let ignore_glob_set = build_glob_set(vec![
+        String::from("**/node_modules"),
+        String::from("**/.git"),
+    ])
+    .expect("These static ignores always build");
+
+    // Use WalkDir instead of ignore::WalkBuilder because it's faster
+    WalkDir::new(&base_dir)
+        .into_iter()
+        .filter_entry(move |entry| {
+            let path = entry.path().to_string_lossy();
+            !ignore_glob_set.is_match(path.as_ref())
+        })
+        .filter_map(move |entry| {
+            entry
+                .ok()
+                .and_then(|e| e.path().strip_prefix(&base_dir).ok().map(|p| p.to_owned()))
+        })
+}
+
+/// Walk the directory and ignore files from .gitignore and .nxignore
 pub fn nx_walker<P, Fn, Re>(directory: P, f: Fn) -> Re
 where
     P: AsRef<Path>,
@@ -43,8 +74,7 @@ where
         Box::new(move |entry| {
             use ignore::WalkState::*;
 
-            #[rustfmt::skip]
-                let Ok(dir_entry) = entry else {
+            let Ok(dir_entry) = entry else {
                 return Continue;
             };
 
@@ -68,11 +98,15 @@ where
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::native::utils::path::Normalize;
+    use std::collections::HashMap;
+    use std::{assert_eq, vec};
+
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
-    use std::collections::HashMap;
+
+    use crate::native::utils::path::Normalize;
+
+    use super::*;
 
     ///
     /// Setup a temporary directory to do testing in

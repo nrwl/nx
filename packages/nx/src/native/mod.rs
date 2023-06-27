@@ -1,7 +1,8 @@
+pub mod cache;
 pub mod hasher;
 mod logger;
-mod parallel_walker;
 mod types;
 mod utils;
+mod walker;
 pub mod watch;
 pub mod workspace;
