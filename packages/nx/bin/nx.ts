@@ -23,6 +23,23 @@ function main() {
     process.argv[2] !== '--help' &&
     !_supportedPlatform()
   ) {
+    if (
+      process.platform == 'win32' ||
+      process.platform == 'darwin' ||
+      process.platform == 'linux' ||
+      process.platform == 'freebsd'
+    ) {
+      output.error({
+        title: 'Native binary not found',
+        bodyLines: [
+          `The Nx CLI could not find a native binary for your supported platform (${process.platform}-${process.arch}).`,
+          'This likely means that optional dependencies were not installed correctly.',
+          'For troubleshooting steps, please see https://nx.dev/recipes/ci/troubleshoot-nx-install-issues#native-modules',
+        ],
+      });
+      process.exit(1);
+    }
+
     output.error({
       title: 'Platform not supported',
       bodyLines: [
