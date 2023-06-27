@@ -73,9 +73,19 @@ export async function* nodeExecutor(
 
   // Re-map buildable workspace projects to their output directory.
   const mappings = calculateResolveMappings(context, options);
+  let outputFileName =
+    buildOptions.outputFileName || `${path.parse(buildOptions.main).name}.js`;
 
-  const outputFileName =
-    buildOptions.outputFileName ?? `${path.parse(buildOptions.main).name}.js`;
+  if (!buildOptions.outputFileName) {
+    const matches = buildOptions.main.match(/^(?!.*src)(.*)\/([^/]*)$/); //ignore strings that contain src and split paths into [folders before main, main.ts]
+    if (matches) {
+      const [mainFolder, mainFileName] = matches.slice(1);
+      outputFileName = path.join(
+        mainFolder,
+        `${path.parse(mainFileName).name}.js`
+      );
+    }
+  }
 
   const fileToRun = join(context.root, buildOptions.outputPath, outputFileName);
   const tasks: ActiveTask[] = [];
