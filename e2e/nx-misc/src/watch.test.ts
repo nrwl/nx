@@ -119,7 +119,10 @@ describe('Nx Commands', () => {
     createFile(`libs/${proj3}/newfile2.txt`, 'content');
     createFile(`newfile2.txt`, 'content');
 
-    expect(await getOutput()).toEqual([proj1, proj3]);
+    let output = await getOutput();
+    let results = output.sort();
+
+    expect(results).toEqual([proj1, proj3]);
   });
 });
 
