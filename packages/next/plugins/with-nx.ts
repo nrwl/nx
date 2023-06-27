@@ -2,7 +2,6 @@
  * WARNING: Do not add development dependencies to top-level imports.
  * Instead, `require` them inline during the build phase.
  */
-import * as path from 'path';
 import type { NextConfig } from 'next';
 import type { NextConfigFn } from '../src/utils/config';
 import type { NextBuildBuilderOptions } from '../src/utils/types';
@@ -44,21 +43,6 @@ function getWithNxContext(): WithNxContext {
   };
 }
 
-function getTargetConfig(graph: ProjectGraph, target: Target) {
-  const projectNode = graph.nodes[target.project];
-  return projectNode.data.targets[target.target];
-}
-
-function getOptions(graph: ProjectGraph, target: Target) {
-  const targetConfig = getTargetConfig(graph, target);
-  const options = targetConfig.options;
-  if (target.configuration) {
-    Object.assign(options, targetConfig.configurations[target.configuration]);
-  }
-
-  return options;
-}
-
 function getNxContext(
   graph: ProjectGraph,
   target: Target
@@ -70,46 +54,39 @@ function getNxContext(
   configurationName?: string;
 } {
   const { parseTargetString } = require('@nx/devkit');
-  const targetConfig = getTargetConfig(graph, target);
-
-  if (
-    '@nx/next:build' === targetConfig.executor ||
-    '@nrwl/next:build' === targetConfig.executor
-  ) {
-    return {
-      node: graph.nodes[target.project],
-      options: getOptions(graph, target),
-      projectName: target.project,
-      targetName: target.target,
-      configurationName: target.configuration,
-    };
+  const projectNode = graph.nodes[target.project];
+  const targetConfig = projectNode.data.targets[target.target];
+  const targetOptions = targetConfig.options;
+  if (target.configuration) {
+    Object.assign(
+      targetOptions,
+      targetConfig.configurations[target.configuration]
+    );
   }
 
-  const targetOptions = getOptions(graph, target);
-
-  // If we are running serve or export pull the options from the dependent target first (ex. build)
   if (targetOptions.devServerTarget) {
-    const devServerTarget = parseTargetString(
-      targetOptions.devServerTarget,
-      graph
+    // Executors such as @nx/cypress:cypress define the devServerTarget option.
+    return getNxContext(
+      graph,
+      parseTargetString(targetOptions.devServerTarget, graph)
     );
-
-    return getNxContext(graph, devServerTarget);
-  } else if (
-    [
-      '@nx/next:server',
-      '@nx/next:export',
-      '@nrwl/next:server',
-      '@nrwl/next:export',
-    ].includes(targetConfig.executor)
-  ) {
-    const buildTarget = parseTargetString(targetOptions.buildTarget, graph);
-    return getNxContext(graph, buildTarget);
-  } else {
-    throw new Error(
-      'Could not determine the config for this Next application.'
+  } else if (targetOptions.buildTarget) {
+    // Executors such as @nx/next:server or @nx/next:export define the buildTarget option.
+    return getNxContext(
+      graph,
+      parseTargetString(targetOptions.buildTarget, graph)
     );
   }
+
+  // Default case, return info for current target.
+  // This could be a build using @nx/next:build or run-commands without using our executors.
+  return {
+    node: graph.nodes[target.project],
+    options: targetOptions,
+    projectName: target.project,
+    targetName: target.target,
+    configurationName: target.configuration,
+  };
 }
 
 /**
@@ -194,13 +171,17 @@ function withNx(
         }
       });
 
-      const outputDir = `${offsetFromRoot(projectDirectory)}${
-        options.outputPath
-      }`;
-      nextConfig.distDir =
-        nextConfig.distDir && nextConfig.distDir !== '.next'
-          ? joinPathFragments(outputDir, nextConfig.distDir)
-          : joinPathFragments(outputDir, '.next');
+      // outputPath may be undefined if using run-commands or other executors other than @nx/next:build.
+      // In this case, the user should set distDir in their next.config.js.
+      if (options.outputPath) {
+        const outputDir = `${offsetFromRoot(projectDirectory)}${
+          options.outputPath
+        }`;
+        nextConfig.distDir =
+          nextConfig.distDir && nextConfig.distDir !== '.next'
+            ? joinPathFragments(outputDir, nextConfig.distDir)
+            : joinPathFragments(outputDir, '.next');
+      }
 
       const userWebpackConfig = nextConfig.webpack;
 
