@@ -16,14 +16,19 @@ where
     P: AsRef<Path> + 'a,
 {
     let base_dir: PathBuf = directory.as_ref().into();
-    let git_folder = base_dir.join(".git");
-    let node_folder = base_dir.join("node_modules");
+
+    let ignore_glob_set = build_glob_set(vec![
+        String::from("**/node_modules"),
+        String::from("**/.git"),
+    ])
+    .expect("These static ignores always build");
 
     // Use WalkDir instead of ignore::WalkBuilder because it's faster
     WalkDir::new(&base_dir)
         .into_iter()
         .filter_entry(move |entry| {
-            !(entry.path().starts_with(&git_folder) || entry.path().starts_with(&node_folder))
+            let path = entry.path().to_string_lossy();
+            !ignore_glob_set.is_match(path.as_ref())
         })
         .filter_map(move |entry| {
             entry
