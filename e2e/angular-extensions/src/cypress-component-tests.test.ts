@@ -14,8 +14,7 @@ import {
 import { names } from '@nx/devkit';
 import { join } from 'path';
 
-// TODO(leo): enable when https://github.com/cypress-io/cypress/pull/27030 is merged and released
-describe.skip('Angular Cypress Component Tests', () => {
+describe('Angular Cypress Component Tests', () => {
   let projectName: string;
   const appName = uniq('cy-angular-app');
   const usedInAppLibName = uniq('cy-angular-lib');
