@@ -161,6 +161,65 @@ describe('calculateProjectDependencies', () => {
     });
   });
 
+  it('should make sure fallback buildable identification based on target name works', async () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        example: {
+          type: 'lib',
+          name: 'example',
+          data: {
+            root: '/root/example',
+            targets: {
+              'my-build-target': {
+                executor: 'x',
+              },
+            },
+          },
+        },
+        example2: {
+          type: 'lib',
+          name: 'example2',
+          data: {
+            root: '/root/example2',
+            targets: {
+              'my-build-target': {
+                executor: 'x',
+              },
+            },
+          },
+        },
+      },
+      externalNodes: {},
+      dependencies: {
+        example: [
+          // when example2 dependency is listed first
+          {
+            source: 'example',
+            target: 'example2',
+            type: DependencyType.static,
+          },
+        ],
+      },
+    };
+
+    const results = calculateProjectDependencies(
+      graph,
+      'root',
+      'example',
+      'my-build-target',
+      undefined
+    );
+    expect(results).toMatchObject({
+      target: {
+        name: 'example',
+      },
+      topLevelDependencies: [
+        // expect example2
+        expect.objectContaining({ name: 'example2' }),
+      ],
+    });
+  });
+
   it('should include all top-level dependencies, even ones that are also transitive', async () => {
     const graph: ProjectGraph = {
       nodes: {
@@ -252,6 +311,163 @@ describe('calculateProjectDependencies', () => {
         // expect example2 and formik as top-level deps, but not foo
         expect.objectContaining({ name: 'example2' }),
         expect.objectContaining({ name: 'formik' }),
+      ],
+    });
+  });
+
+  it('should identify buildable libraries correctly', () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        somejslib1: {
+          name: 'somejslib1',
+          type: 'lib',
+          data: {
+            name: 'somejslib1',
+            sourceRoot: 'libs/somejslib1/src',
+            projectType: 'library',
+            targets: {
+              'my-custom-build-target': {
+                executor: '@nx/js:tsc',
+                outputs: ['{options.outputPath}'],
+                options: {
+                  outputPath: 'dist/libs/somejslib1',
+                  main: 'libs/somejslib1/src/index.ts',
+                },
+              },
+            },
+            tags: [],
+            root: 'libs/somejslib1',
+            implicitDependencies: [],
+          },
+        },
+        somejslib2: {
+          name: 'somejslib2',
+          type: 'lib',
+          data: {
+            name: 'somejslib2',
+            sourceRoot: 'libs/somejslib2/src',
+            projectType: 'library',
+            targets: {
+              'my-other-build-target': {
+                executor: '@nx/js:swc',
+                outputs: ['{options.outputPath}'],
+                options: {
+                  outputPath: 'dist/libs/somejslib2',
+                  main: 'libs/somejslib2/src/index.ts',
+                },
+              },
+            },
+            tags: [],
+            root: 'libs/somejslib2',
+            implicitDependencies: [],
+          },
+        },
+      },
+      externalNodes: {},
+      dependencies: {
+        example: [
+          {
+            source: 'example',
+            target: 'npm:some-lib',
+            type: DependencyType.static,
+          },
+        ],
+        somejslib1: [
+          {
+            source: 'somejslib2',
+            target: 'somejslib2',
+            type: DependencyType.static,
+          },
+        ],
+      },
+    };
+
+    const results = calculateProjectDependencies(
+      graph,
+      'root',
+      'somejslib1',
+      'build',
+      undefined
+    );
+    expect(results).toMatchObject({
+      target: {
+        name: 'somejslib1',
+        type: 'lib',
+        data: {
+          name: 'somejslib1',
+          sourceRoot: 'libs/somejslib1/src',
+          projectType: 'library',
+          targets: {
+            'my-custom-build-target': {
+              executor: '@nx/js:tsc',
+              outputs: ['{options.outputPath}'],
+              options: {
+                outputPath: 'dist/libs/somejslib1',
+                main: 'libs/somejslib1/src/index.ts',
+              },
+            },
+          },
+          tags: [],
+          root: 'libs/somejslib1',
+          implicitDependencies: [],
+        },
+      },
+      dependencies: [
+        {
+          name: 'somejslib2',
+          outputs: ['dist/libs/somejslib2'],
+          node: {
+            name: 'somejslib2',
+            type: 'lib',
+            data: {
+              name: 'somejslib2',
+              sourceRoot: 'libs/somejslib2/src',
+              projectType: 'library',
+              targets: {
+                'my-other-build-target': {
+                  executor: '@nx/js:swc',
+                  outputs: ['{options.outputPath}'],
+                  options: {
+                    outputPath: 'dist/libs/somejslib2',
+                    main: 'libs/somejslib2/src/index.ts',
+                  },
+                },
+              },
+              tags: [],
+              root: 'libs/somejslib2',
+              implicitDependencies: [],
+            },
+          },
+        },
+      ],
+      nonBuildableDependencies: [],
+      topLevelDependencies: [
+        {
+          name: 'somejslib2',
+          outputs: ['dist/libs/somejslib2'],
+          node: {
+            name: 'somejslib2',
+            type: 'lib',
+            data: {
+              name: 'somejslib2',
+              sourceRoot: 'libs/somejslib2/src',
+              projectType: 'library',
+              targets: {
+                'my-other-build-target': {
+                  executor: '@nx/js:swc',
+                  outputs: ['{options.outputPath}'],
+                  options: {
+                    outputPath: 'dist/libs/somejslib2',
+                    main: 'libs/somejslib2/src/index.ts',
+                  },
+                },
+              },
+              tags: [],
+              root: 'libs/somejslib2',
+              implicitDependencies: [],
+            },
+          },
+        },
       ],
     });
   });

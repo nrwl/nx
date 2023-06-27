@@ -12,17 +12,48 @@ import type * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from 'nx/src/utils/output';
 import { isNpmProject } from 'nx/src/project-graph/operators';
-import { ensureTypescript } from './typescript/ensure-typescript';
 import { readTsConfigPaths } from './typescript/ts-config';
 
-let tsModule: typeof import('typescript');
-
-function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
-  return (
-    node.data.targets &&
-    node.data.targets[target] &&
-    node.data.targets[target].executor !== ''
-  );
+function isBuildable(node: ProjectGraphProjectNode, target: string): string {
+  let buildTargetName: string | undefined = undefined;
+  // TODO(katerina): Remove @nrwl/* for Nx 17
+  const listOfBuildExecutors = [
+    '@nx/js:swc',
+    '@nx/js:tsc',
+    '@nx/rollup:rollup',
+    '@nx/rspack:rspack',
+    '@nx/vite:build',
+    '@nx/esbuild:esbuild',
+    '@nx/webpack:webpack',
+    '@nx/angular:ng-packagr-lite',
+    '@nx/angular:package',
+    '@nx/next:build',
+    '@nrwl/js:swc',
+    '@nrwl/js:tsc',
+    '@nrwl/rollup:rollup',
+    '@nrwl/rspack:rspack',
+    '@nrwl/vite:build',
+    '@nrwl/esbuild:esbuild',
+    '@nrwl/webpack:webpack',
+    '@nrwl/angular:ng-packagr-lite',
+    '@nrwl/angular:package',
+    '@nrwl/next:build',
+  ];
+  for (const targetName of Object.keys(node.data.targets ?? {})) {
+    const target = node.data.targets[targetName];
+    if (listOfBuildExecutors.includes(target.executor)) {
+      buildTargetName = targetName;
+      break;
+    }
+  }
+  if (!buildTargetName) {
+    return node.data.targets &&
+      node.data.targets[target] &&
+      node.data.targets[target].executor !== ''
+      ? target
+      : undefined;
+  }
+  return buildTargetName;
 }
 
 export type DependentBuildableProjectNode = {
@@ -73,7 +104,8 @@ export function calculateProjectDependencies(
       let project: DependentBuildableProjectNode = null;
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
       if (depNode.type === 'lib') {
-        if (isBuildable(targetName, depNode)) {
+        const dependencyTargetName = isBuildable(depNode, targetName);
+        if (dependencyTargetName) {
           const libPackageJsonPath = join(
             root,
             depNode.data.root,
@@ -89,7 +121,7 @@ export function calculateProjectDependencies(
                 overrides: {},
                 target: {
                   project: projectName,
-                  target: targetName,
+                  target: dependencyTargetName,
                   configuration: configurationName,
                 },
               },
