@@ -20,34 +20,20 @@ function main() {
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
-    process.argv[2] !== '--help' &&
-    !_supportedPlatform()
+    process.argv[2] !== '--help'
   ) {
-    if (
-      process.platform == 'win32' ||
-      process.platform == 'darwin' ||
-      process.platform == 'linux' ||
-      process.platform == 'freebsd'
-    ) {
+    try {
+      assertSupportedPlatform();
+    } catch (e) {
       output.error({
-        title: 'Native binary not found',
+        title: e.name,
         bodyLines: [
-          `The Nx CLI could not find a native binary for your supported platform (${process.platform}-${process.arch}).`,
-          'This likely means that optional dependencies were not installed correctly.',
-          'For troubleshooting steps, please see https://nx.dev/recipes/ci/troubleshoot-nx-install-issues#native-modules',
+          e.message,
+          'For more information please see https://nx.dev/recipes/ci/troubleshoot-nx-install-issues',
         ],
       });
       process.exit(1);
     }
-
-    output.error({
-      title: 'Platform not supported',
-      bodyLines: [
-        `This platform (${process.platform}-${process.arch}) is currently not supported by Nx.`,
-        'For a list of supported platforms, please see https://nx.dev/recipes/ci/troubleshoot-nx-install-issues#supported-native-module-platform',
-      ],
-    });
-    process.exit(1);
   }
 
   const workspace = findWorkspaceRoot(process.cwd());
@@ -273,12 +259,30 @@ function _getLatestVersionOfNx(): string {
   }
 }
 
-function _supportedPlatform(): boolean {
+function assertSupportedPlatform() {
   try {
     require('../src/native');
-    return true;
-  } catch {
-    return false;
+  } catch (e) {
+    const err = new Error();
+    if (
+      process.platform == 'win32' ||
+      process.platform == 'darwin' ||
+      process.platform == 'linux' ||
+      process.platform == 'freebsd'
+    ) {
+      err.name = 'Missing Platform Dependency';
+      err.message =
+        `The Nx CLI could not find or load the native binary for your supported platform (${process.platform}-${process.arch}). ` +
+        'This likely means that optional dependencies were not installed correctly, or your system is missing some system dependencies.';
+      if (process.env.NX_VERBOSE_LOGGING == 'true') {
+        err.message += `\n\nAdditional error information: \n${e.message}`;
+      }
+    } else {
+      err.name = 'Platform not supported';
+      err.message = `This platform (${process.platform}-${process.arch}) is currently not supported by Nx.`;
+    }
+
+    throw err;
   }
 }
 
