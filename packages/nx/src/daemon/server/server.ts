@@ -469,6 +469,7 @@ export async function startServer(): Promise<Server> {
   });
 }
 
+// TODO(cammisuli): remove with nx 16.6 (only our watcher will be supported)
 function useNativeWatcher() {
   return process.env.NX_NATIVE_WATCHER === 'true';
 }

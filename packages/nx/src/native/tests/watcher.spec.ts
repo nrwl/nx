@@ -33,7 +33,7 @@ describe('watcher', () => {
         [
           {
             "path": "app1/main.html",
-            "type": "update",
+            "type": "create",
           },
         ]
       `);
@@ -118,7 +118,7 @@ describe('watcher', () => {
         [
           {
             "path": "boo.txt",
-            "type": "update",
+            "type": "create",
           },
         ]
       `);

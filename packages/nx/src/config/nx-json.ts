@@ -96,10 +96,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
        * Default options for the runner
        */
       options?: any;
-      /**
-       * Enables the Rust watcher within the daemon
-       */
-      nativeWatcher?: boolean;
     };
   };
   /**
