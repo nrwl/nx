@@ -1166,7 +1166,6 @@ dependencies = [
  "colored",
  "crossbeam-channel",
  "fs_extra",
- "futures",
  "globset",
  "hashbrown",
  "ignore",
