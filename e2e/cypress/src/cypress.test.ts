@@ -178,8 +178,7 @@ describe('env vars', () => {
     'should allow CT and e2e in the same project',
     async () => {
       await testCtAndE2eInProject('next');
-      // TODO(leo): uncomment when https://github.com/cypress-io/cypress/pull/27030 is merged and released
-      // await testCtAndE2eInProject('angular');
+      await testCtAndE2eInProject('angular');
       await testCtAndE2eInProject('react');
     },
     TEN_MINS_MS
