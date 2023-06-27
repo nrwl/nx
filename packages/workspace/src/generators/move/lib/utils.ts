@@ -1,10 +1,10 @@
 import {
   getWorkspaceLayout,
   joinPathFragments,
+  normalizePath,
   ProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-
 import { Schema } from '../schema';
 
 /**
@@ -35,12 +35,17 @@ export function getDestination(
 }
 
 /**
- * Replaces slashes with dashes
+ * Joins path segments replacing slashes with dashes
  *
  * @param path
  */
 export function getNewProjectName(path: string): string {
-  return path.replace(/\//g, '-');
+  // strip leading '/' or './' or '../' and trailing '/' and replaces '/' with '-'
+  return normalizePath(path)
+    .replace(/(^\.{0,2}\/|\.{1,2}\/|\/$)/g, '')
+    .split('/')
+    .filter((x) => !!x)
+    .join('-');
 }
 
 /**
@@ -48,9 +53,13 @@ export function getNewProjectName(path: string): string {
  *
  * @param input
  */
-export function normalizeSlashes(input: string): string {
-  return input
-    .split('/')
-    .filter((x) => !!x)
-    .join('/');
+export function normalizePathSlashes(input: string): string {
+  return (
+    normalizePath(input)
+      // strip leading ./ or /
+      .replace(/^\.?\//, '')
+      .split('/')
+      .filter((x) => !!x)
+      .join('/')
+  );
 }

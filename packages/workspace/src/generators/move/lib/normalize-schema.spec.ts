@@ -46,6 +46,25 @@ describe('normalizeSchema', () => {
     expect(result).toEqual(expected);
   });
 
+  it('should normalize destination and derive projectName correctly', () => {
+    const expected: NormalizedSchema = {
+      destination: 'my/library',
+      importPath: '@proj/my/library',
+      newProjectName: 'my-library',
+      projectName: 'my-library',
+      relativeToRootDestination: 'libs/my/library',
+      updateImportPath: true,
+    };
+
+    const result = normalizeSchema(
+      tree,
+      { ...schema, destination: './my/library' },
+      projectConfiguration
+    );
+
+    expect(result).toEqual(expected);
+  });
+
   it('should use provided import path', () => {
     const expected: NormalizedSchema = {
       destination: 'my/library',

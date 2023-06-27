@@ -1,8 +1,12 @@
 import { formatFiles, Tree } from '@nx/devkit';
 import { moveGenerator } from '@nx/workspace/generators';
-import { updateModuleName } from './lib/update-module-name';
-import { updateNgPackage } from './lib/update-ng-package';
-import { Schema } from './schema';
+import {
+  normalizeSchema,
+  updateModuleName,
+  updateNgPackage,
+  updateSecondaryEntryPoints,
+} from './lib';
+import type { Schema } from './schema';
 
 /**
  * Moves an Angular lib/app to another folder (and renames it in the process)
@@ -15,11 +19,14 @@ export async function angularMoveGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<void> {
-  await moveGenerator(tree, { ...schema, skipFormat: true });
-  updateModuleName(tree, schema);
-  updateNgPackage(tree, schema);
+  const normalizedSchema = normalizeSchema(tree, schema);
 
-  if (!schema.skipFormat) {
+  await moveGenerator(tree, { ...schema, skipFormat: true });
+  updateModuleName(tree, normalizedSchema);
+  updateNgPackage(tree, normalizedSchema);
+  updateSecondaryEntryPoints(tree, normalizedSchema);
+
+  if (!normalizedSchema.skipFormat) {
     await formatFiles(tree);
   }
 }
