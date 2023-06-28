@@ -6,13 +6,11 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
-import { getNewProjectName } from '../../utils/get-new-project-name';
 import { join, relative } from 'path';
-import { Schema } from '../schema';
+import type { NormalizedSchema } from '../schema';
 
-export function updateNgPackage(tree: Tree, schema: Schema): void {
-  const newProjectName = getNewProjectName(schema.destination);
-  const project = readProjectConfiguration(tree, newProjectName);
+export function updateNgPackage(tree: Tree, schema: NormalizedSchema): void {
+  const project = readProjectConfiguration(tree, schema.newProjectName);
 
   if (project.projectType === 'application') {
     return;
@@ -29,13 +27,13 @@ export function updateNgPackage(tree: Tree, schema: Schema): void {
   const outputs = getOutputsForTargetAndConfiguration(
     {
       target: {
-        project: newProjectName,
+        project: schema.newProjectName,
         target: 'build',
       },
       overrides: {},
     },
     {
-      name: newProjectName,
+      name: schema.newProjectName,
       type: 'lib',
       data: {
         root: project.root,

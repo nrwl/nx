@@ -25,10 +25,9 @@ export class TasksSchedule {
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
   private reverseProjectGraph = reverse(this.projectGraph);
   private scheduledBatches: Batch[] = [];
-
   private scheduledTasks: string[] = [];
-
   private completedTasks = new Set<string>();
+  private scheduleRequestsExecutionChain = Promise.resolve();
 
   constructor(
     private readonly hasher: TaskHasher,
@@ -40,14 +39,9 @@ export class TasksSchedule {
   ) {}
 
   public async scheduleNextTasks() {
-    if (process.env.NX_BATCH_MODE === 'true') {
-      await this.scheduleBatches();
-    }
-    for (let root of this.notScheduledTaskGraph.roots) {
-      if (this.canBeScheduled(root)) {
-        await this.scheduleTask(root);
-      }
-    }
+    this.scheduleRequestsExecutionChain =
+      this.scheduleRequestsExecutionChain.then(() => this.scheduleTasks());
+    await this.scheduleRequestsExecutionChain;
   }
 
   public hasTasks() {
@@ -81,6 +75,17 @@ export class TasksSchedule {
     return this.scheduledBatches.length > 0
       ? this.scheduledBatches.shift()
       : null;
+  }
+
+  private async scheduleTasks() {
+    if (process.env.NX_BATCH_MODE === 'true') {
+      await this.scheduleBatches();
+    }
+    for (let root of this.notScheduledTaskGraph.roots) {
+      if (this.canBeScheduled(root)) {
+        await this.scheduleTask(root);
+      }
+    }
   }
 
   private async scheduleTask(taskId: string) {

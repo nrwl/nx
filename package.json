@@ -64,17 +64,17 @@
     "@ngrx/router-store": "~16.0.0",
     "@ngrx/store": "~16.0.0",
     "@nguniversal/builders": "~16.1.0",
-    "@nx/cypress": "16.4.0-beta.16",
-    "@nx/devkit": "16.4.0-beta.16",
-    "@nx/eslint-plugin": "16.4.0-beta.16",
-    "@nx/jest": "16.4.0-beta.16",
-    "@nx/js": "16.4.0-beta.16",
-    "@nx/linter": "16.4.0-beta.16",
-    "@nx/next": "16.4.0-beta.16",
-    "@nx/react": "16.4.0-beta.16",
-    "@nx/storybook": "16.4.0-beta.16",
-    "@nx/web": "16.4.0-beta.16",
-    "@nx/webpack": "16.4.0-beta.16",
+    "@nx/cypress": "16.5.0-beta.0",
+    "@nx/devkit": "16.5.0-beta.0",
+    "@nx/eslint-plugin": "16.5.0-beta.0",
+    "@nx/jest": "16.5.0-beta.0",
+    "@nx/js": "16.5.0-beta.0",
+    "@nx/linter": "16.5.0-beta.0",
+    "@nx/next": "16.5.0-beta.0",
+    "@nx/react": "16.5.0-beta.0",
+    "@nx/storybook": "16.5.0-beta.0",
+    "@nx/web": "16.5.0-beta.0",
+    "@nx/webpack": "16.5.0-beta.0",
     "@parcel/watcher": "2.0.4",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
@@ -143,7 +143,7 @@
     "convert-source-map": "^2.0.0",
     "copy-webpack-plugin": "^10.2.4",
     "css-minimizer-webpack-plugin": "^5.0.0",
-    "cypress": "12.11.0",
+    "cypress": "12.16.0",
     "cytoscape": "^3.18.2",
     "cytoscape-dagre": "^2.4.0",
     "cytoscape-popper": "^2.0.0",
@@ -210,7 +210,7 @@
     "next-sitemap": "^3.1.10",
     "ng-packagr": "~16.1.0",
     "node-fetch": "^2.6.7",
-    "nx": "16.4.0-beta.16",
+    "nx": "16.5.0-beta.0",
     "nx-cloud": "16.0.5",
     "octokit": "^2.0.14",
     "open": "^8.4.0",
@@ -267,7 +267,7 @@
     "use-sync-external-store": "^1.2.0",
     "verdaccio": "^5.0.4",
     "vite": "^4.3.4",
-    "webpack": "^5.80.0",
+    "webpack": "5.86.0",
     "webpack-dev-server": "^4.9.3",
     "webpack-merge": "^5.8.0",
     "webpack-node-externals": "^3.0.0",
@@ -347,6 +347,10 @@
       "depcheck",
       "documentation"
     ]
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "lerna@6.6.2": "patches/lerna@6.6.2.patch"
+    }
   }
 }
-
