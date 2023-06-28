@@ -15,6 +15,7 @@ import { stripIndents } from '../src/utils/strip-indents';
 import { readModulePackageJson } from '../src/utils/package-json';
 import { execSync } from 'child_process';
 import { join } from 'path';
+import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
 
 function main() {
   if (
@@ -22,18 +23,7 @@ function main() {
     process.argv[2] !== '--version' &&
     process.argv[2] !== '--help'
   ) {
-    try {
-      assertSupportedPlatform();
-    } catch (e) {
-      output.error({
-        title: e.name,
-        bodyLines: [
-          e.message,
-          'For more information please see https://nx.dev/recipes/ci/troubleshoot-nx-install-issues',
-        ],
-      });
-      process.exit(1);
-    }
+    assertSupportedPlatform();
   }
 
   const workspace = findWorkspaceRoot(process.cwd());
@@ -256,33 +246,6 @@ function _getLatestVersionOfNx(): string {
     } catch {
       return null;
     }
-  }
-}
-
-function assertSupportedPlatform() {
-  try {
-    require('../src/native');
-  } catch (e) {
-    const err = new Error();
-    if (
-      process.platform == 'win32' ||
-      process.platform == 'darwin' ||
-      process.platform == 'linux' ||
-      process.platform == 'freebsd'
-    ) {
-      err.name = 'Missing Platform Dependency';
-      err.message =
-        `The Nx CLI could not find or load the native binary for your supported platform (${process.platform}-${process.arch}). ` +
-        'This likely means that optional dependencies were not installed correctly, or your system is missing some system dependencies.';
-      if (process.env.NX_VERBOSE_LOGGING == 'true') {
-        err.message += `\n\nAdditional error information: \n${e.message}`;
-      }
-    } else {
-      err.name = 'Platform not supported';
-      err.message = `This platform (${process.platform}-${process.arch}) is currently not supported by Nx.`;
-    }
-
-    throw err;
   }
 }
 
