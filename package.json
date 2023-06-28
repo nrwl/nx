@@ -347,6 +347,10 @@
       "depcheck",
       "documentation"
     ]
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "lerna@6.6.2": "patches/lerna@6.6.2.patch"
+    }
   }
 }
-
