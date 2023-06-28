@@ -4,7 +4,7 @@ import { Linter } from '@nx/linter';
 import { moveGenerator } from '@nx/workspace/generators';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { generateTestLibrary } from '../../utils/testing';
-import { Schema } from '../schema';
+import { NormalizedSchema } from '../schema';
 import { updateModuleName } from './update-module-name';
 
 describe('updateModuleName Rule', () => {
@@ -20,17 +20,19 @@ describe('updateModuleName Rule', () => {
       name: 'my-first',
       simpleName: true,
     });
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'my-first',
       destination: 'my/first',
       updateImportPath: true,
+      newProjectName: 'my-first',
+      oldProjectRoot: 'libs/my-first',
     };
     await moveGenerator(tree, schema);
 
     updateModuleName(tree, { ...schema, destination: 'my/first' });
 
     expect(tree.exists(updatedModulePath)).toBe(true);
-    const moduleFile = tree.read(updatedModulePath).toString('utf-8');
+    const moduleFile = tree.read(updatedModulePath, 'utf-8');
     expect(moduleFile).toContain(`export class MyFirstModule {}`);
   });
 
@@ -42,10 +44,12 @@ describe('updateModuleName Rule', () => {
     const indexPath = '/libs/shared/my-first/src/index.ts';
     const secondModulePath = '/libs/my-second/src/lib/my-second.module.ts';
 
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'my-first',
       destination: 'shared/my-first',
       updateImportPath: true,
+      newProjectName: 'shared-my-first',
+      oldProjectRoot: 'libs/my-first',
     };
 
     beforeEach(async () => {
@@ -111,10 +115,10 @@ describe('updateModuleName Rule', () => {
       expect(tree.exists(updatedModulePath)).toBe(true);
       expect(tree.exists(updatedModuleSpecPath)).toBe(true);
 
-      const moduleFile = tree.read(updatedModulePath).toString('utf-8');
+      const moduleFile = tree.read(updatedModulePath, 'utf-8');
       expect(moduleFile).toContain(`export class SharedMyFirstModule {}`);
 
-      const moduleSpecFile = tree.read(updatedModuleSpecPath).toString('utf-8');
+      const moduleSpecFile = tree.read(updatedModuleSpecPath, 'utf-8');
       expect(moduleSpecFile).toContain(
         `import { SharedMyFirstModule } from './shared-my-first.module';`
       );
@@ -130,7 +134,7 @@ describe('updateModuleName Rule', () => {
     it('should update any references to the module', async () => {
       updateModuleName(tree, schema);
 
-      const importerFile = tree.read(secondModulePath).toString('utf-8');
+      const importerFile = tree.read(secondModulePath, 'utf-8');
       expect(importerFile).toContain(
         `import { SharedMyFirstModule } from '@proj/shared/my-first';`
       );
@@ -142,7 +146,7 @@ describe('updateModuleName Rule', () => {
     it('should update the index.ts file which exports the module', async () => {
       updateModuleName(tree, schema);
 
-      const indexFile = tree.read(indexPath).toString('utf-8');
+      const indexFile = tree.read(indexPath, 'utf-8');
       expect(indexFile).toContain(
         `export * from './lib/shared-my-first.module';`
       );
@@ -150,10 +154,12 @@ describe('updateModuleName Rule', () => {
   });
 
   describe('rename', () => {
-    const schema: Schema = {
+    const schema: NormalizedSchema = {
       projectName: 'my-source',
       destination: 'my-destination',
       updateImportPath: true,
+      newProjectName: 'my-destination',
+      oldProjectRoot: 'libs/my-source',
     };
 
     const modulePath = '/libs/my-destination/src/lib/my-destination.module.ts';
@@ -233,10 +239,10 @@ describe('updateModuleName Rule', () => {
       expect(tree.exists(modulePath)).toBe(true);
       expect(tree.exists(moduleSpecPath)).toBe(true);
 
-      const moduleFile = tree.read(modulePath).toString('utf-8');
+      const moduleFile = tree.read(modulePath, 'utf-8');
       expect(moduleFile).toContain(`export class MyDestinationModule {}`);
 
-      const moduleSpecFile = tree.read(moduleSpecPath).toString('utf-8');
+      const moduleSpecFile = tree.read(moduleSpecPath, 'utf-8');
       expect(moduleSpecFile).toContain(
         `import { MyDestinationModule } from './my-destination.module';`
       );
@@ -252,7 +258,7 @@ describe('updateModuleName Rule', () => {
     it('should update any references to the module', async () => {
       updateModuleName(tree, schema);
 
-      const importerFile = tree.read(importerPath).toString('utf-8');
+      const importerFile = tree.read(importerPath, 'utf-8');
       expect(importerFile).toContain(
         `import { MyDestinationModule } from '@proj/my-destination';`
       );
@@ -264,10 +270,32 @@ describe('updateModuleName Rule', () => {
     it('should update the index.ts file which exports the module', async () => {
       updateModuleName(tree, schema);
 
-      const indexFile = tree.read(indexPath).toString('utf-8');
+      const indexFile = tree.read(indexPath, 'utf-8');
       expect(indexFile).toContain(
         `export * from './lib/my-destination.module';`
       );
+    });
+
+    it('should not rename unrelated symbols with similar name in different projects', async () => {
+      // create different project whose main module name starts with the same
+      // name of the project we're moving
+      await generateTestLibrary(tree, {
+        name: 'my-source-demo',
+        buildable: false,
+        linter: Linter.EsLint,
+        publishable: false,
+        simpleName: true,
+        skipFormat: false,
+        unitTestRunner: UnitTestRunner.Jest,
+      });
+
+      updateModuleName(tree, schema);
+
+      const moduleFile = tree.read(
+        '/libs/my-source-demo/src/lib/my-source-demo.module.ts',
+        'utf-8'
+      );
+      expect(moduleFile).toContain(`export class MySourceDemoModule {}`);
     });
   });
 });
