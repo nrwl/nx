@@ -91,3 +91,52 @@ Automatically migrate from the Angular CLI
 {% /persona %}
 
 {% /cards %}
+
+## Expand an Existing Nx Workspace
+
+Once you have added Nx to your repo, it is easy to add a new project.  For each new project, you can choose to create it in the package-based style or integrated style.  You can also [convert a standalone app into an integrated repo](/recipes) by moving the app into a subfolder.  The guides below show you how to add projects using some popular frameworks.
+
+### Add an Integrated Project
+
+{% cards cols="4" %}
+
+{% title-card title="React" url="#start-a-new-monorepo" /%}
+{% title-card title="Next" url="#start-a-new-monorepo" /%}
+{% title-card title="Angular" url="#start-a-new-standalone-project" /%}
+{% title-card title="Nest" url="#start-a-new-standalone-project" /%}
+{% title-card title="Node" url="#adding-nx-to-an-existing-project-or-monorepo" /%}
+{% title-card title="Express" url="#adding-nx-to-an-existing-project-or-monorepo" /%}
+{% title-card title="React Native" url="#adding-nx-to-an-existing-project-or-monorepo" /%}
+{% title-card title="Expo" url="#adding-nx-to-an-existing-project-or-monorepo" /%}
+{% title-card title="Qwik" url="#adding-nx-to-an-existing-project-or-monorepo" /%}
+
+{% /cards %}
+
+
+### Add a Package-based Project
+
+{% cards cols="4" %}
+
+{% title-card title="Gatsby" url="#start-a-new-monorepo" /%}
+{% title-card title="Vue" url="#start-a-new-monorepo" /%}
+{% title-card title="Svelte" url="#start-a-new-standalone-project" /%}
+{% title-card title="Solid" url="#start-a-new-standalone-project" /%}
+{% title-card title="Astro" url="#adding-nx-to-an-existing-project-or-monorepo" /%}
+{% title-card title="Lit" url="#adding-nx-to-an-existing-project-or-monorepo" /%}
+{% title-card title="Nuxt" url="#adding-nx-to-an-existing-project-or-monorepo" /%}
+{% title-card title="Stencil" url="#adding-nx-to-an-existing-project-or-monorepo" /%}
+{% title-card title="Alpine" url="#adding-nx-to-an-existing-project-or-monorepo" /%}
+
+{% /cards %}
+
+### Add a Non-Typescript Project
+
+{% cards cols="4" %}
+
+{% title-card title="Gradle (Java)" url="#start-a-new-monorepo" /%}
+{% title-card title="Rust" url="#start-a-new-monorepo" /%}
+{% title-card title="Go" url="#start-a-new-standalone-project" /%}
+{% title-card title=".NET" url="#start-a-new-standalone-project" /%}
+
+{% /cards %}
+
