@@ -90,6 +90,43 @@ dependencies. The test script will also consider the jest config file at the roo
 
 For more information about modifying `inputs` and `namedInputs` for your own repo, read [Customizing Inputs](/more-concepts/customizing-inputs)
 
+### Filesets
+
+By default a value in `inputs` refers to either a `namedInput` or a `fileset`.
+
+```json {% fileName="project.json"%}
+{
+  "targets": {
+    "some-target": {
+      "inputs": ["{workspaceRoot}/cache-file-input"]
+    }
+  }
+}
+```
+
+**is equivalent to**
+
+```json {% fileName="project.json"%}
+{
+  "targets": {
+    "some-target": {
+      "inputs": [{ "fileset": "{workspaceRoot}/cache-file-input" }]
+    }
+  }
+}
+```
+
+<!-- prettier-ignore-start -->
+{% callout type="note" title="Ignored Files" %}
+
+By default any file that is ignored by either a `.gitignore` or `.nxignore` file will not be considered
+as an input to the cache. 
+
+You could consider using a runtime hash input if a file ignored by one of these files is needed as an
+input to the hash.
+{% /callout %}
+<!-- prettier-ignore-end -->
+
 ## Runtime Hash Inputs
 
 Your targets can also depend on runtime values.
