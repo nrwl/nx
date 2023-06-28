@@ -1,10 +1,5 @@
 import { output } from '../utils/output';
 
-/**
- * Checks to see if the current platform is supported by Nx.
- *
- * Will exit the process with an output message if the platform is not supported.
- */
 export function assertSupportedPlatform() {
   try {
     require('../src/native');
@@ -31,6 +26,10 @@ export function assertSupportedPlatform() {
         `This platform (${process.platform}-${process.arch}) is currently not supported by Nx.`,
       ];
     }
+
+    bodyLines.push(
+      'For more information please see https://nx.dev/recipes/ci/troubleshoot-nx-install-issues'
+    );
 
     output.error({
       title,
