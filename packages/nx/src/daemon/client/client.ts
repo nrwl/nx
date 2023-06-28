@@ -238,6 +238,7 @@ export class DaemonClient {
             title: 'Daemon process terminated and closed the connection',
             bodyLines: [
               'Please rerun the command, which will restart the daemon.',
+              `If you get this error again, check for any errors in the daemon process logs found in: ${DAEMON_OUTPUT_LOG_FILE}`,
             ],
           });
           process.exit(1);
