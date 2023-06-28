@@ -22,7 +22,8 @@ When updating Nx that is already on 15.8, the package-lock.json should continue 
 ### How to fix
 
 1. If you are running your install command with `--no-optional`, try again without the flag.
-2. Delete your node_modules and `package-lock.json` and re-run `npm i`. This should have the `package-lock.json` file updated properly.
+1. Delete your node_modules and `package-lock.json` (or other lock files) and re-run your package manager's install command.
+1. If running on Windows, make sure that the [installed Microsoft Visual C++ Redistributable is up-to-date](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
 
 ### Supported native module platforms
 
