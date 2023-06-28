@@ -1,4 +1,9 @@
-import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Schema } from '../schema';
 import { updateImports } from './update-imports';
@@ -289,6 +294,37 @@ export MyExtendedClass extends MyClass {};`
     const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
       '@proj/my-destination': ['libs/my-destination/src/index.ts'],
+    });
+  });
+
+  it('should update project ref in the root tsconfig.base.json for secondary entry points', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-source',
+    });
+    updateJson(tree, '/tsconfig.base.json', (json) => {
+      json.compilerOptions.paths['@proj/my-source/testing'] = [
+        'libs/my-source/testing/src/index.ts',
+      ];
+      json.compilerOptions.paths['@proj/different-alias'] = [
+        'libs/my-source/some-path/src/index.ts',
+      ];
+      return json;
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+    updateImports(
+      tree,
+      normalizeSchema(tree, schema, projectConfig),
+      projectConfig
+    );
+
+    const tsConfig = readJson(tree, '/tsconfig.base.json');
+    expect(tsConfig.compilerOptions.paths).toEqual({
+      '@proj/my-destination': ['libs/my-destination/src/index.ts'],
+      '@proj/my-destination/testing': [
+        'libs/my-destination/testing/src/index.ts',
+      ],
+      '@proj/different-alias': ['libs/my-destination/some-path/src/index.ts'],
     });
   });
 
