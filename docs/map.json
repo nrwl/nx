@@ -583,6 +583,13 @@
               "id": "glossary",
               "tags": [],
               "file": "shared/reference/glossary"
+            },
+            {
+              "name": "Changelog",
+              "id": "changelog",
+              "file": "",
+              "path": "/reference/changelog",
+              "isExternal": true
             }
           ]
         },
