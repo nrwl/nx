@@ -1,6 +1,7 @@
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { TaskOrchestrator } from './task-orchestrator';
 import { performance } from 'perf_hooks';
+import * as os from 'os';
 import { TaskHasher } from '../hasher/task-hasher';
 import { LifeCycle } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';
@@ -53,7 +54,7 @@ export const defaultTasksRunner: TasksRunner<
     (options as any)['parallel'] === undefined ||
     (options as any)['parallel'] === ''
   ) {
-    (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
+    (options as any)['parallel'] = Number((options as any)['maxParallel'] || Math.max(os.cpus().length - 1, 8));
   }
 
   options.lifeCycle.startCommand();
