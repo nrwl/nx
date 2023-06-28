@@ -17,11 +17,10 @@ export async function getProjectsFilteredByDependencies(
   const projectGraph = await createProjectGraphAsync();
 
   return Object.entries(projectGraph.dependencies)
-    .filter(([node, dep]) =>
-      dep.some(
-        ({ target }) =>
-          !projectGraph.externalNodes?.[node] && dependencies.includes(target)
-      )
+    .filter(
+      ([node, deps]) =>
+        !projectGraph.externalNodes?.[node] &&
+        deps.some(({ target }) => dependencies.includes(target))
     )
     .map(([projectName]) => ({
       project: readProjectConfiguration(tree, projectName),
