@@ -1540,9 +1540,9 @@
           ]
         },
         {
-          "name": "On Prem",
+          "name": "Enterprise + On Prem",
           "id": "private-cloud",
-          "description": "Learn about Nx Cloud On Premise, dedicated Nx Cloud application hosted on your server, in your network with total private access.",
+          "description": "Learn about Nx Cloud Enterprise + On-Prem.",
           "itemList": [
             {
               "name": "Get Started",
@@ -1558,6 +1558,11 @@
               "name": "Authenticate with GitHub",
               "id": "auth-github",
               "file": "nx-cloud/private/auth-github"
+            },
+            {
+              "name": "On-Prem VM Setup",
+              "id": "ami-setup",
+              "file": "nx-cloud/private/ami-setup"
             },
             {
               "name": "Authenticate with GitLab",
@@ -1578,16 +1583,6 @@
               "name": "Advanced Configuration",
               "id": "advanced-config",
               "file": "nx-cloud/private/advanced-config"
-            },
-            {
-              "name": "Kubernetes Setup",
-              "id": "kubernetes-setup",
-              "file": "nx-cloud/private/kubernetes-setup"
-            },
-            {
-              "name": "Standalone",
-              "id": "standalone",
-              "file": "nx-cloud/private/standalone"
             }
           ]
         },

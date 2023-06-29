@@ -36,7 +36,7 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/account/encryption',
     },
     {
-      title: 'Running Nx Cloud on Prem',
+      title: 'Running Nx Cloud Enterprise',
       path: '/nx-cloud/private-cloud/get-started',
     },
     {
@@ -50,6 +50,10 @@ describe('nx-dev: Nx Cloud section', () => {
     {
       title: 'GitLab Auth',
       path: '/nx-cloud/private-cloud/auth-gitlab',
+    },
+    {
+      title: 'Setting up a dedicated NxCloud VM',
+      path: '/nx-cloud/private-cloud/ami-setup',
     },
     {
       title: 'BitBucket Auth',

@@ -234,8 +234,8 @@
   },
   "/nx-cloud/private-cloud": {
     "id": "private-cloud",
-    "name": "On Prem",
-    "description": "Learn about Nx Cloud On Premise, dedicated Nx Cloud application hosted on your server, in your network with total private access.",
+    "name": "Enterprise + On Prem",
+    "description": "Learn about Nx Cloud Enterprise + On-Prem.",
     "file": "",
     "itemList": [
       {
@@ -266,6 +266,16 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-cloud/private-cloud/auth-github",
+        "tags": []
+      },
+      {
+        "id": "ami-setup",
+        "name": "On-Prem VM Setup",
+        "description": "",
+        "file": "nx-cloud/private/ami-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/ami-setup",
         "tags": []
       },
       {
@@ -307,26 +317,6 @@
         "isExternal": false,
         "path": "/nx-cloud/private-cloud/advanced-config",
         "tags": []
-      },
-      {
-        "id": "kubernetes-setup",
-        "name": "Kubernetes Setup",
-        "description": "",
-        "file": "nx-cloud/private/kubernetes-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/private-cloud/kubernetes-setup",
-        "tags": []
-      },
-      {
-        "id": "standalone",
-        "name": "Standalone",
-        "description": "",
-        "file": "nx-cloud/private/standalone",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/private-cloud/standalone",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -361,6 +351,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/nx-cloud/private-cloud/auth-github",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/ami-setup": {
+    "id": "ami-setup",
+    "name": "On-Prem VM Setup",
+    "description": "",
+    "file": "nx-cloud/private/ami-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/ami-setup",
     "tags": []
   },
   "/nx-cloud/private-cloud/auth-gitlab": {
@@ -401,26 +401,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/nx-cloud/private-cloud/advanced-config",
-    "tags": []
-  },
-  "/nx-cloud/private-cloud/kubernetes-setup": {
-    "id": "kubernetes-setup",
-    "name": "Kubernetes Setup",
-    "description": "",
-    "file": "nx-cloud/private/kubernetes-setup",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/private-cloud/kubernetes-setup",
-    "tags": []
-  },
-  "/nx-cloud/private-cloud/standalone": {
-    "id": "standalone",
-    "name": "Standalone",
-    "description": "",
-    "file": "nx-cloud/private/standalone",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/private-cloud/standalone",
     "tags": []
   },
   "/nx-cloud/reference": {
