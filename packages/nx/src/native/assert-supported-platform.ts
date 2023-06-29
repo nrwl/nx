@@ -2,7 +2,7 @@ import { output } from '../utils/output';
 
 export function assertSupportedPlatform() {
   try {
-    require('../src/native');
+    require('./index.js');
   } catch (e) {
     let title = '';
     let bodyLines = [];

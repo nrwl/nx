@@ -28,13 +28,10 @@ When updating Nx that is already on 15.8, the package-lock.json should continue 
 Confirm that you see `@nx/nx-plaform-arch` in your `node_modules` folder (e.g. `@nx/nx-darwin-arm64`, `@nx/nx-win32-x64-msvc`, etc).
 
 If you are still experiencing issues after following the previous steps, please [open an issue on Github](https://github.com/nrwl/nx/issues/new?assignees=&labels=type:+bug&projects=&template=1-bug.yml) and we will help you troubleshoot.
-Be prepared to give as much detail as possible about your system, we will need the following information at a minimum:
+Be prepared to give as much detail as possible about your system, we will need the following information at a minimum, the contents of `nx report` plus
 
-- Operating system
 - Operating system version
-- CPU Architecture (x64, arm64, etc)
-- Node version
-- Package manager (npm, yarn, pnpm, etc), it's version and the install command
+- The package manager (npm, yarn, pnpm, etc) install command
 
 ### Supported native module platforms
 
