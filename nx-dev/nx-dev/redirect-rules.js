@@ -632,6 +632,10 @@ const pluginUrls = {
   '/recipes/generators/modifying-files': '/plugins/recipes/modifying-files',
 };
 
+const referenceUrls = {
+  '/changelog': '/reference/changelog',
+};
+
 /**
  * Public export API
  */
@@ -649,4 +653,5 @@ module.exports = {
   packagesDocuments,
   conceptUrls,
   pluginUrls,
+  referenceUrls,
 };
