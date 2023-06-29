@@ -348,7 +348,10 @@ function mapSnapshots(
           .slice(0, key.indexOf('#'))
           .replace(`@patch:${packageName}@`, '@npm:');
       }
-      if (!existingKeys.get(packageName).has(normalizedKey)) {
+      if (
+        !existingKeys.get(packageName) ||
+        !existingKeys.get(packageName).has(normalizedKey)
+      ) {
         keysSet.delete(key);
       }
     }
