@@ -299,7 +299,7 @@
     "@tailwindcss/typography": "^0.5.7",
     "@types/license-checker": "^25.0.3",
     "@yarnpkg/lockfile": "^1.1.0",
-    "@yarnpkg/parsers": "^3.0.0-rc.18",
+    "@yarnpkg/parsers": "3.0.0-rc.46",
     "@zkochan/js-yaml": "0.0.6",
     "axios": "1.0.0",
     "classnames": "^2.3.1",
