@@ -92,11 +92,13 @@ export default async function buildExecutor(
     });
   }
 
-  createNextConfigFile(options, context);
-
-  copySync(join(projectRoot, 'public'), join(options.outputPath, 'public'), {
-    dereference: true,
-  });
-
+  // If output path is different from source path, then copy over the config and public files.
+  // This is the default behavior when running `nx build <app>`.
+  if (options.outputPath.replace(/\/$/, '') !== projectRoot) {
+    createNextConfigFile(options, context);
+    copySync(join(projectRoot, 'public'), join(options.outputPath, 'public'), {
+      dereference: true,
+    });
+  }
   return { success: true };
 }
