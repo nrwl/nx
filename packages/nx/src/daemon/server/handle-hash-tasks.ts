@@ -25,10 +25,7 @@ export async function handleHashTasks(payload: {
     await getCachedSerializedProjectGraphPromise();
   const nxJson = readNxJson();
 
-  if (
-    projectGraph !== storedProjectGraph ||
-    payload.taskGraph !== storedTaskGraph
-  ) {
+  if (projectGraph !== storedProjectGraph) {
     storedProjectGraph = projectGraph;
     storedTaskGraph = payload.taskGraph;
     storedHasher = new InProcessTaskHasher(
