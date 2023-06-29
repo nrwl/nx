@@ -682,6 +682,7 @@ export function renameAndMoveOldTsConfig(
         json.extends = json.extends.replace('../', './');
       }
 
+      json.files ??= [];
       for (let i = 0; i < json.files?.length; i++) {
         // drop one level of nesting
         if (json.files[i].startsWith('../../../')) {
@@ -689,6 +690,7 @@ export function renameAndMoveOldTsConfig(
         }
       }
 
+      json.include ??= [];
       for (let i = 0; i < json.include?.length; i++) {
         if (json.include[i].startsWith('../')) {
           json.include[i] = json.include[i].replace('../', '');
@@ -702,6 +704,7 @@ export function renameAndMoveOldTsConfig(
         }
       }
 
+      json.exclude ??= [];
       for (let i = 0; i < json.exclude?.length; i++) {
         if (json.exclude[i].startsWith('../')) {
           json.exclude[i] = json.exclude[i].replace('../', 'src/');
@@ -719,6 +722,7 @@ export function renameAndMoveOldTsConfig(
 
   const projectTsConfig = joinPathFragments(projectRoot, 'tsconfig.json');
   updateJson(tree, projectTsConfig, (json) => {
+    json.references ??= [];
     for (let i = 0; i < json.references?.length; i++) {
       if (json.references[i].path === './.storybook/tsconfig.json') {
         json.references[i].path = './tsconfig.storybook.json';
