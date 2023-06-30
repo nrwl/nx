@@ -1,7 +1,7 @@
 - Nx
 
-  - [Start Here](/getting-started)
-    - [Getting Started](/getting-started/intro)
+  - [Getting Started](/getting-started)
+    - [Intro to Nx](/getting-started/intro)
     - [Installation](/getting-started/installation)
     - [Why Nx?](/getting-started/why-nx)
     - [5 min Tutorials](/getting-started/tutorials)

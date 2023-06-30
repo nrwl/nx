@@ -9,12 +9,12 @@
       "description": "Nx documentation for you to discover!",
       "itemList": [
         {
-          "name": "Start Here",
+          "name": "Getting Started",
           "id": "getting-started",
           "description": "Get started with basic information, concepts and tutorials.",
           "itemList": [
             {
-              "name": "Getting Started",
+              "name": "Intro to Nx",
               "id": "intro",
               "file": "shared/getting-started/intro"
             },
