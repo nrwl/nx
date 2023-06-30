@@ -40,11 +40,14 @@ export function getPackageManagerCommand(
 } {
   const pmVersion = getPackageManagerVersion(packageManager);
   const [pmMajor, pmMinor] = pmVersion.split('.');
+  const isWindows = process.platform === 'win32';
 
   switch (packageManager) {
     case 'yarn':
       const useBerry = +pmMajor >= 2;
-      const installCommand = 'yarn install --silent';
+      const installCommand = `${
+        isWindows ? 'yarn.cmd' : 'yarn'
+      } install --silent`;
       return {
         preInstall: `yarn set version ${pmVersion}`,
         install: useBerry
@@ -60,13 +63,17 @@ export function getPackageManagerCommand(
         useExec = true;
       }
       return {
-        install: 'pnpm install --no-frozen-lockfile --silent --ignore-scripts',
+        install: `${
+          isWindows ? 'pnpm.cmd' : 'pnpm'
+        } install --no-frozen-lockfile --silent --ignore-scripts`,
         exec: useExec ? 'pnpm exec' : 'pnpx',
       };
 
     case 'npm':
       return {
-        install: 'npm install --silent --ignore-scripts',
+        install: `${
+          isWindows ? 'npm.cmd' : 'npm'
+        } install --silent --ignore-scripts`,
         exec: 'npx',
       };
   }

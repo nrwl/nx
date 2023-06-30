@@ -40,10 +40,12 @@ export async function createSandbox(packageManager: PackageManager) {
     generatePackageManagerFiles(tmpDir, packageManager);
 
     if (preInstall) {
-      await execAndWait(preInstall, tmpDir);
+      const [preInstallFile, ...preInstallArgs] = preInstall.split(' ');
+      await execAndWait(preInstallFile, preInstallArgs, tmpDir);
     }
 
-    await execAndWait(install, tmpDir);
+    const [file, ...args] = install.split(' ');
+    await execAndWait(file, args, tmpDir);
 
     installSpinner.succeed();
   } catch (e) {

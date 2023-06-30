@@ -12,9 +12,18 @@ export async function setupNxCloud(
 ) {
   const nxCloudSpinner = ora(`Setting up Nx Cloud`).start();
   try {
-    const pmc = getPackageManagerCommand(packageManager);
+    const nx = require.resolve('nx', {
+      paths: [directory],
+    });
     const res = await execAndWait(
-      `${pmc.exec} nx g nx:connect-to-nx-cloud --no-interactive --quiet`,
+      `node`,
+      [
+        nx,
+        'g',
+        'nx-cloud:init',
+        '--no-analytics',
+        '--installationSource=create-nx-workspace',
+      ],
       directory
     );
     nxCloudSpinner.succeed('Nx Cloud has been set up successfully');

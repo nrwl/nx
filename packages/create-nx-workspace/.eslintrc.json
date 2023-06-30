@@ -32,7 +32,8 @@
         "@nx/dependency-checks": [
           "error",
           {
-            "buildTargets": ["build-base"]
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": ["nx"]
           }
         ]
       }

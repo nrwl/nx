@@ -5,7 +5,6 @@ import { execAndWait } from './utils/child-process-utils';
 import { mapErrorToBodyLines } from './utils/error-utils';
 import { output } from './utils/output';
 import {
-  getPackageManagerCommand,
   getPackageManagerVersion,
   PackageManager,
 } from './utils/package-manager';
@@ -37,36 +36,33 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
 
   const args = unparse({
     ...options,
-  }).join(' ');
+  });
 
-  const pmc = getPackageManagerCommand(packageManager);
-
-  const command = `new ${args}`;
-
-  const workingDir = process.cwd().replace(/\\/g, '/');
-  let nxWorkspaceRoot = `"${workingDir}"`;
+  let workingDir = process.cwd().replace(/\\/g, '/');
 
   // If path contains spaces there is a problem in Windows for npm@6.
   // In this case we have to escape the wrapping quotes.
   if (
     process.platform === 'win32' &&
-    /\s/.test(nxWorkspaceRoot) &&
+    /\s/.test(workingDir) &&
     packageManager === 'npm'
   ) {
     const pmVersion = +getPackageManagerVersion(packageManager, tmpDir).split(
       '.'
     )[0];
     if (pmVersion < 7) {
-      nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
+      workingDir = `\\"${workingDir.slice(1, -1)}\\"`;
     }
   }
   let workspaceSetupSpinner = ora(
     `Creating your workspace in ${directory}`
   ).start();
+  const nx = require.resolve('nx', {
+    paths: [tmpDir],
+  });
 
   try {
-    const fullCommand = `${pmc.exec} nx ${command} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
-    await execAndWait(fullCommand, tmpDir);
+    await execAndWait('node', [nx, 'new', ...args], tmpDir, workingDir);
 
     workspaceSetupSpinner.succeed(
       `Successfully created the workspace: ${directory}.`

@@ -50,12 +50,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     nxCloudInstallRes = await setupNxCloud(directory, packageManager);
 
     if (nxCloud !== 'yes') {
-      await setupCI(
-        directory,
-        nxCloud,
-        packageManager,
-        nxCloudInstallRes?.code === 0
-      );
+      await setupCI(directory, nxCloud, nxCloudInstallRes?.code === 0);
     }
   }
   if (!skipGit && commit) {

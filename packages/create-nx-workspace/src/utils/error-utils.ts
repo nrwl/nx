@@ -1,7 +1,7 @@
 export class CreateNxWorkspaceError extends Error {
   constructor(
     public logMessage: string,
-    public code: number | null | undefined,
+    public code: string | number | null | undefined,
     public logFile: string
   ) {
     super(logMessage);
