@@ -46,20 +46,16 @@ pub fn get_workspace_files_native(
         .into_par_iter()
         .map(|file_data| {
             let file_path = Path::new(&file_data.file);
-            trace!(?file_path);
             let mut parent = file_path.parent().unwrap_or_else(|| Path::new(""));
-            trace!(?parent);
-            while root_map.get(parent).is_none() {
-                parent = parent.parent().unwrap_or_else(|| Path::new(""));
 
-                if parent == Path::new("") {
-                    return (FileLocation::Global, file_data);
-                }
+            while root_map.get(parent).is_none() && parent != Path::new("") {
+                parent = parent.parent().unwrap_or_else(|| Path::new(""));
             }
 
-            let project_name = root_map.get(parent).unwrap();
-
-            (FileLocation::Project(project_name.clone()), file_data)
+            match root_map.get(parent) {
+                Some(project_name) => (FileLocation::Project(project_name.clone()), file_data),
+                None => (FileLocation::Global, file_data),
+            }
         })
         .collect::<Vec<(FileLocation, FileData)>>();
 

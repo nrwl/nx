@@ -128,6 +128,56 @@ describe('workspace files', () => {
       ]
     `);
   });
+
+  it('should assign files to the root project if it exists', async () => {
+    const fs = new TempFs('workspace-files');
+    const nxJson: NxJsonConfiguration = {};
+    await fs.createFiles({
+      './nx.json': JSON.stringify(nxJson),
+      './package.json': JSON.stringify({
+        name: 'repo-name',
+        version: '0.0.0',
+        dependencies: {},
+      }),
+      './project.json': JSON.stringify({
+        name: 'repo-name',
+      }),
+      './src/index.js': '',
+      './jest.config.js': '',
+    });
+    const globs = ['project.json', '**/project.json', '**/package.json'];
+    const { globalFiles, projectFileMap } = getWorkspaceFilesNative(
+      fs.tempDir,
+      globs
+    );
+
+    expect(globalFiles).toEqual([]);
+    expect(projectFileMap['repo-name']).toMatchInlineSnapshot(`
+      [
+        {
+          "file": "jest.config.js",
+          "hash": "3244421341483603138",
+        },
+        {
+          "file": "nx.json",
+          "hash": "1389868326933519382",
+        },
+        {
+          "file": "package.json",
+          "hash": "14409636362330144230",
+        },
+        {
+          "file": "project.json",
+          "hash": "4357927788053707201",
+        },
+        {
+          "file": "src/index.js",
+          "hash": "3244421341483603138",
+        },
+      ]
+    `);
+  });
+
   it('should dedupe configuration files', async () => {
     const fs = new TempFs('workspace-files');
     const nxJson: NxJsonConfiguration = {};
