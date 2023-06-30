@@ -54,7 +54,7 @@ function processTasksAndPopulateTsConfigTaskInfoMap(
       const tsConfigPath = join(
         context.root,
         relative(context.root, taskOptions.tsConfig)
-      );
+      ).replace(/\\/g, '/');
 
       tsConfigTaskInfoMap[tsConfigPath] = taskInfo;
       taskTsConfigCache.add(taskName);
