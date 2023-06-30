@@ -45,7 +45,7 @@ export default createESLintRule<Options, MessageIds>({
         type: 'object',
         properties: {
           buildTargets: [{ type: 'string' }],
-          ignoreDependencies: [{ type: 'string' }],
+          ignoredDependencies: [{ type: 'string' }],
           checkMissingDependencies: { type: 'boolean' },
           checkObsoleteDependencies: { type: 'boolean' },
           checkVersionMismatches: { type: 'boolean' },
