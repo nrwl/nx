@@ -31,6 +31,55 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "5 min Tutorials",
+            "path": "/getting-started/tutorials",
+            "id": "tutorials",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Package-Based Monorepo",
+                "path": "/getting-started/tutorials/package-based-repo-tutorial",
+                "id": "package-based-repo-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Integrated Monorepo",
+                "path": "/getting-started/tutorials/integrated-repo-tutorial",
+                "id": "integrated-repo-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React Standalone",
+                "path": "/getting-started/tutorials/react-standalone-tutorial",
+                "id": "react-standalone-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Angular Standalone",
+                "path": "/getting-started/tutorials/angular-standalone-tutorial",
+                "id": "angular-standalone-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Node Standalone",
+                "path": "/getting-started/tutorials/node-server-tutorial",
+                "id": "node-server-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -61,13 +110,13 @@
       },
       {
         "name": "5 min Tutorials",
-        "path": "/tutorials",
+        "path": "/getting-started/tutorials",
         "id": "tutorials",
         "isExternal": false,
         "children": [
           {
             "name": "Package-Based Monorepo",
-            "path": "/tutorials/package-based-repo-tutorial",
+            "path": "/getting-started/tutorials/package-based-repo-tutorial",
             "id": "package-based-repo-tutorial",
             "isExternal": false,
             "children": [],
@@ -75,7 +124,7 @@
           },
           {
             "name": "Integrated Monorepo",
-            "path": "/tutorials/integrated-repo-tutorial",
+            "path": "/getting-started/tutorials/integrated-repo-tutorial",
             "id": "integrated-repo-tutorial",
             "isExternal": false,
             "children": [],
@@ -83,7 +132,7 @@
           },
           {
             "name": "React Standalone",
-            "path": "/tutorials/react-standalone-tutorial",
+            "path": "/getting-started/tutorials/react-standalone-tutorial",
             "id": "react-standalone-tutorial",
             "isExternal": false,
             "children": [],
@@ -91,7 +140,7 @@
           },
           {
             "name": "Angular Standalone",
-            "path": "/tutorials/angular-standalone-tutorial",
+            "path": "/getting-started/tutorials/angular-standalone-tutorial",
             "id": "angular-standalone-tutorial",
             "isExternal": false,
             "children": [],
@@ -99,7 +148,7 @@
           },
           {
             "name": "Node Standalone",
-            "path": "/tutorials/node-server-tutorial",
+            "path": "/getting-started/tutorials/node-server-tutorial",
             "id": "node-server-tutorial",
             "isExternal": false,
             "children": [],
@@ -110,7 +159,7 @@
       },
       {
         "name": "Package-Based Monorepo",
-        "path": "/tutorials/package-based-repo-tutorial",
+        "path": "/getting-started/tutorials/package-based-repo-tutorial",
         "id": "package-based-repo-tutorial",
         "isExternal": false,
         "children": [],
@@ -118,7 +167,7 @@
       },
       {
         "name": "Integrated Monorepo",
-        "path": "/tutorials/integrated-repo-tutorial",
+        "path": "/getting-started/tutorials/integrated-repo-tutorial",
         "id": "integrated-repo-tutorial",
         "isExternal": false,
         "children": [],
@@ -126,7 +175,7 @@
       },
       {
         "name": "React Standalone",
-        "path": "/tutorials/react-standalone-tutorial",
+        "path": "/getting-started/tutorials/react-standalone-tutorial",
         "id": "react-standalone-tutorial",
         "isExternal": false,
         "children": [],
@@ -134,7 +183,7 @@
       },
       {
         "name": "Angular Standalone",
-        "path": "/tutorials/angular-standalone-tutorial",
+        "path": "/getting-started/tutorials/angular-standalone-tutorial",
         "id": "angular-standalone-tutorial",
         "isExternal": false,
         "children": [],
@@ -142,7 +191,7 @@
       },
       {
         "name": "Node Standalone",
-        "path": "/tutorials/node-server-tutorial",
+        "path": "/getting-started/tutorials/node-server-tutorial",
         "id": "node-server-tutorial",
         "isExternal": false,
         "children": [],
