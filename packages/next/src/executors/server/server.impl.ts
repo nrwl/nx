@@ -30,7 +30,7 @@ export default async function* serveExecutor(
   );
   const projectRoot = context.workspace.projects[context.projectName].root;
 
-  const { port, keepAliveTimeout, hostname } = options;
+  const { port, keepAliveTimeout, hostname = 'localhost' } = options;
 
   // This is required for the default custom server to work. See the @nx/next:app generator.
   process.env.NX_NEXT_DIR = projectRoot;
