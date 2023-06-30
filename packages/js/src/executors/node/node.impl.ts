@@ -213,46 +213,48 @@ export async function* nodeExecutor(
       tasks.push(task);
     };
 
-    const stopWatch = await daemonClient.registerFileWatcher(
-      {
-        watchProjects: [context.projectName],
-        includeDependentProjects: true,
-      },
-      async (err, data) => {
-        if (err === 'closed') {
-          logger.error(`Watch error: Daemon closed the connection`);
-          process.exit(1);
-        } else if (err) {
-          logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
-        } else {
-          logger.info(`NX File change detected. Restarting...`);
-          await addToQueue();
-          await debouncedProcessQueue();
+    if (options.watch) {
+      const stopWatch = await daemonClient.registerFileWatcher(
+        {
+          watchProjects: [context.projectName],
+          includeDependentProjects: true,
+        },
+        async (err, data) => {
+          if (err === 'closed') {
+            logger.error(`Watch error: Daemon closed the connection`);
+            process.exit(1);
+          } else if (err) {
+            logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
+          } else {
+            logger.info(`NX File change detected. Restarting...`);
+            await addToQueue();
+            await debouncedProcessQueue();
+          }
         }
-      }
-    );
+      );
 
-    const stopAllTasks = (signal: NodeJS.Signals = 'SIGTERM') => {
-      for (const task of tasks) {
-        task.stop(signal);
-      }
-    };
+      const stopAllTasks = (signal: NodeJS.Signals = 'SIGTERM') => {
+        for (const task of tasks) {
+          task.stop(signal);
+        }
+      };
 
-    process.on('SIGTERM', async () => {
-      stopWatch();
-      stopAllTasks('SIGTERM');
-      process.exit(128 + 15);
-    });
-    process.on('SIGINT', async () => {
-      stopWatch();
-      stopAllTasks('SIGINT');
-      process.exit(128 + 2);
-    });
-    process.on('SIGHUP', async () => {
-      stopWatch();
-      stopAllTasks('SIGHUP');
-      process.exit(128 + 1);
-    });
+      process.on('SIGTERM', async () => {
+        stopWatch();
+        stopAllTasks('SIGTERM');
+        process.exit(128 + 15);
+      });
+      process.on('SIGINT', async () => {
+        stopWatch();
+        stopAllTasks('SIGINT');
+        process.exit(128 + 2);
+      });
+      process.on('SIGHUP', async () => {
+        stopWatch();
+        stopAllTasks('SIGHUP');
+        process.exit(128 + 1);
+      });
+    }
 
     await addToQueue();
     await processQueue();
