@@ -55,6 +55,7 @@
     "minimatch": "3.0.5",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
+    "p-queue": "^6.6.2",
     "semver": "7.5.3",
     "string-width": "^4.2.3",
     "strong-log-transformer": "^2.1.0",

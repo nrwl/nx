@@ -219,6 +219,7 @@
     "octokit": "^2.0.14",
     "open": "^8.4.0",
     "openai": "~3.3.0",
+    "p-queue": "^6.6.2",
     "ora": "5.3.0",
     "parse-markdown-links": "^1.0.4",
     "parse5": "4.0.0",

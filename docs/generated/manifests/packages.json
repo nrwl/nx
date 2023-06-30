@@ -1776,6 +1776,17 @@
         "tags": ["workspace-watching"],
         "originalFilePath": "generated/cli/watch"
       },
+      "/packages/nx/documents/cmd": {
+        "id": "cmd",
+        "name": "cmd",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/cmd",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/nx/documents/cmd",
+        "tags": [],
+        "originalFilePath": "generated/cli/cmd"
+      },
       "/packages/nx/documents/show": {
         "id": "show",
         "name": "show",

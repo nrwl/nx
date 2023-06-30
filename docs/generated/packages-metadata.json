@@ -1758,6 +1758,17 @@
         "originalFilePath": "generated/cli/watch"
       },
       {
+        "id": "cmd",
+        "name": "cmd",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/cmd",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/cmd",
+        "tags": [],
+        "originalFilePath": "generated/cli/cmd"
+      },
+      {
         "id": "show",
         "name": "show",
         "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",

@@ -5995,6 +5995,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "cmd",
+                "path": "/packages/nx/documents/cmd",
+                "id": "cmd",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "show",
                 "path": "/packages/nx/documents/show",
                 "id": "show",

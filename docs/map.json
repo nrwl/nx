@@ -1772,6 +1772,11 @@
               "file": "generated/cli/watch"
             },
             {
+              "name": "cmd",
+              "id": "cmd",
+              "file": "generated/cli/cmd"
+            },
+            {
               "name": "show",
               "id": "show",
               "file": "generated/cli/show"

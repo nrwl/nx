@@ -491,6 +491,7 @@
       - [repair](/packages/nx/documents/repair)
       - [exec](/packages/nx/documents/exec)
       - [watch](/packages/nx/documents/watch)
+      - [cmd](/packages/nx/documents/cmd)
       - [show](/packages/nx/documents/show)
       - [view-logs](/packages/nx/documents/view-logs)
     - [executors](/packages/nx/executors)
