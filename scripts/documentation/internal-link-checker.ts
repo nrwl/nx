@@ -1,5 +1,6 @@
 import { workspaceRoot } from '@nx/devkit';
 import { XMLParser } from 'fast-xml-parser';
+import { existsSync, readJSONSync } from 'fs-extra';
 import * as glob from 'glob';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -82,6 +83,33 @@ function readSiteMapLinks(filePath: string): string[] {
   return sitemap.urlset.url.map((obj) => obj.loc);
 }
 
+/**
+ * This function checks if a link is for a private package.
+ * When link is for a private package, it is not included in the sitemap.
+ * However, some shared docs might be written for this private package during development.
+ * @param link e.g. /packages/vite/generators/configuration
+ * @returns true if the link is for a private package or NODE_ENV is not development, false otherwise.
+ */
+function checkLinkIsForPrivatePackage(link: string) {
+  // skip this check in dev mode
+  if (process.env.NODE_ENV === 'development') {
+    return false;
+  }
+  const pathSegments = link.split('/').filter(Boolean);
+  if (pathSegments[0] === 'packages') {
+    const packageJsonPath = join(
+      workspaceRoot,
+      pathSegments[0],
+      pathSegments[1],
+      'package.json'
+    );
+    if (existsSync(packageJsonPath)) {
+      return readJSONSync(packageJsonPath).private ?? false;
+    }
+  }
+  return false;
+}
+
 // Main
 const documentLinks = extractAllLinks(join(workspaceRoot, 'docs'));
 const sitemapLinks = readSiteMapIndex(
@@ -91,8 +119,12 @@ const sitemapLinks = readSiteMapIndex(
 const errors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
-    if (!sitemapLinks.includes(['https://nx.dev', link].join('')))
+    if (
+      !sitemapLinks.includes(['https://nx.dev', link].join('')) &&
+      !checkLinkIsForPrivatePackage(link)
+    ) {
       errors.push({ file, link });
+    }
   }
 }
 
