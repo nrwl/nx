@@ -5,18 +5,21 @@ import {
   joinPathFragments,
   logger,
   parseTargetString,
+  ProjectGraphProjectNode,
   runExecutor,
+  TargetConfiguration,
 } from '@nx/devkit';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
 import { join } from 'path';
 
 import { InspectType, NodeExecutorOptions } from './schema';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { calculateProjectDependencies } from '../../utils/buildable-libs-utils';
 import { killTree } from './lib/kill-tree';
 import { fileExists } from 'nx/src/utils/fileutils';
+import { getMainFileDirRelativeToProjectRoot } from '../../utils/get-main-file-dir';
 
 interface ActiveTask {
   id: string;
@@ -35,6 +38,14 @@ function debounce(fn: () => void, wait: number) {
   };
 }
 
+// NOTE: this is a combination of @nx/js:tsc, @nx/js:tsc, @nx/webpack;webpack, @nx/esbuild:esbuild and @nx/rollup:rollup
+interface BuildOptions {
+  readonly main: string;
+  readonly outputPath: string;
+  // Available only for @nx/webpack;webpack, @nx/esbuild:esbuild and @nx/rollup:rollup
+  readonly outputFileName?: string;
+}
+
 export async function* nodeExecutor(
   options: NodeExecutorOptions,
   context: ExecutorContext
@@ -45,11 +56,13 @@ export async function* nodeExecutor(
     options.buildTarget,
     context.projectGraph
   );
+  const buildTargetOptions = project.data.targets[buildTarget.target];
 
-  let buildOptions: Record<string, any>;
-  if (project.data.targets[buildTarget.target]) {
+  let buildOptions: BuildOptions;
+
+  if (buildTargetOptions) {
     buildOptions = {
-      ...project.data.targets[buildTarget.target]?.options,
+      ...buildTargetOptions.options,
       ...options.buildTargetOptions,
     };
   } else {
@@ -73,21 +86,13 @@ export async function* nodeExecutor(
 
   // Re-map buildable workspace projects to their output directory.
   const mappings = calculateResolveMappings(context, options);
-  let outputFileName =
-    buildOptions.outputFileName || `${path.parse(buildOptions.main).name}.js`;
+  const fileToRun = getFileToRun(
+    context,
+    project,
+    buildOptions,
+    buildTargetOptions
+  );
 
-  if (!buildOptions.outputFileName) {
-    const matches = buildOptions.main.match(/^(?!.*src)(.*)\/([^/]*)$/); //ignore strings that contain src and split paths into [folders before main, main.ts]
-    if (matches) {
-      const [mainFolder, mainFileName] = matches.slice(1);
-      outputFileName = path.join(
-        mainFolder,
-        `${path.parse(mainFileName).name}.js`
-      );
-    }
-  }
-
-  const fileToRun = join(context.root, buildOptions.outputPath, outputFileName);
   const tasks: ActiveTask[] = [];
   let currentTask: ActiveTask = null;
 
@@ -316,6 +321,40 @@ function runWaitUntilTargets(
       });
     })
   );
+}
+
+function isJsLibBuilder(targetConfiguration: TargetConfiguration): boolean {
+  return (
+    targetConfiguration.executor === '@nx/js:tsc' ||
+    targetConfiguration.executor === '@nx/js:swc'
+  );
+}
+
+function getFileToRun(
+  context: ExecutorContext,
+  project: ProjectGraphProjectNode,
+  buildOptions: BuildOptions,
+  buildTargetOptions: TargetConfiguration
+): string {
+  let outputFileName = buildOptions.outputFileName;
+
+  if (!outputFileName) {
+    const fileName = `${path.parse(buildOptions.main).name}.js`;
+
+    if (isJsLibBuilder(buildTargetOptions)) {
+      outputFileName = path.join(
+        getMainFileDirRelativeToProjectRoot(
+          buildOptions.main,
+          project.data.root
+        ),
+        fileName
+      );
+    } else {
+      outputFileName = fileName;
+    }
+  }
+
+  return join(context.root, buildOptions.outputPath, outputFileName);
 }
 
 function fileToRunCorrectPath(fileToRun: string): string {

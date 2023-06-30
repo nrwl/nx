@@ -9,7 +9,6 @@ import {
   ExecutorContext,
   getOutputsForTargetAndConfiguration,
   joinPathFragments,
-  normalizePath,
   ProjectFileMap,
   ProjectGraphProjectNode,
   readJsonFile,
@@ -17,7 +16,7 @@ import {
   writeJsonFile,
 } from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
-import { basename, dirname, join, parse, relative } from 'path';
+import { basename, join, parse } from 'path';
 import { writeFileSync } from 'fs-extra';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { fileExists } from 'nx/src/utils/fileutils';
@@ -25,14 +24,7 @@ import type { PackageJson } from 'nx/src/utils/package-json';
 import { existsSync } from 'fs';
 import { readProjectFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
-function getMainFileDirRelativeToProjectRoot(
-  main: string,
-  projectRoot: string
-): string {
-  const mainFileDir = dirname(main);
-  const relativeDir = normalizePath(relative(projectRoot, mainFileDir));
-  return relativeDir === '' ? `./` : `./${relativeDir}/`;
-}
+import { getMainFileDirRelativeToProjectRoot } from '../get-main-file-dir';
 
 export type SupportedFormat = 'cjs' | 'esm';
 
