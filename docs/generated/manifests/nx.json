@@ -1,13 +1,13 @@
 {
   "/getting-started": {
     "id": "getting-started",
-    "name": "Start Here",
+    "name": "Getting Started",
     "description": "Get started with basic information, concepts and tutorials.",
     "file": "",
     "itemList": [
       {
         "id": "intro",
-        "name": "Getting Started",
+        "name": "Intro to Nx",
         "description": "",
         "file": "shared/getting-started/intro",
         "itemList": [],
@@ -42,7 +42,7 @@
   },
   "/getting-started/intro": {
     "id": "intro",
-    "name": "Getting Started",
+    "name": "Intro to Nx",
     "description": "",
     "file": "shared/getting-started/intro",
     "itemList": [],

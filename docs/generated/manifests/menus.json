@@ -3,13 +3,13 @@
     "id": "nx",
     "menu": [
       {
-        "name": "Start Here",
+        "name": "Getting Started",
         "path": "/getting-started",
         "id": "getting-started",
         "isExternal": false,
         "children": [
           {
-            "name": "Getting Started",
+            "name": "Intro to Nx",
             "path": "/getting-started/intro",
             "id": "intro",
             "isExternal": false,
@@ -36,7 +36,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Getting Started",
+        "name": "Intro to Nx",
         "path": "/getting-started/intro",
         "id": "intro",
         "isExternal": false,
