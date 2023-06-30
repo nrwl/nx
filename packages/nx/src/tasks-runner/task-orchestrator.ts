@@ -349,6 +349,7 @@ export class TaskOrchestrator {
 
     if (doNotSkipCache) {
       // cache the results
+      performance.mark('cache-results-start');
       await Promise.all(
         results
           .filter(
@@ -374,6 +375,12 @@ export class TaskOrchestrator {
           .map(async ({ task, code, terminalOutput, outputs }) =>
             this.cache.put(task, terminalOutput, outputs, code)
           )
+      );
+      performance.mark('cache-results-end');
+      performance.measure(
+        'cache-results',
+        'cache-results-start',
+        'cache-results-end'
       );
     }
     this.options.lifeCycle.endTasks(

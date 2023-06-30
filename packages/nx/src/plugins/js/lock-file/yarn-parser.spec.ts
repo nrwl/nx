@@ -979,7 +979,7 @@ __metadata:
       vol.fromJSON(fileSys, '/root');
     });
 
-    it('should parse and prune packages with mixed keys', () => {
+    it('should parse classic and prune packages with mixed keys', () => {
       const lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/mixed-keys/yarn.lock'
@@ -1177,6 +1177,218 @@ __metadata:
           "npm:wrap-ansi@8.1.0": {
             "data": {
               "hash": "sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==",
+              "packageName": "wrap-ansi",
+              "version": "8.1.0",
+            },
+            "name": "npm:wrap-ansi@8.1.0",
+            "type": "npm",
+          },
+        }
+      `);
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyYarnLockfile(prunedGraph, lockFile, packageJson);
+      expect(result).toEqual(lockFile);
+    });
+
+    it('should parse berry and prune packages with mixed keys', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/mixed-keys/yarn-berry.lock'
+      )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/mixed-keys/package.json'
+      ));
+
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
+      expect(graph.externalNodes).toMatchInlineSnapshot(`
+        {
+          "npm:@isaacs/cliui": {
+            "data": {
+              "hash": "4a473b9b32a7d4d3cfb7a614226e555091ff0c5a29a1734c28c72a182c2f6699b26fc6b5c2131dfd841e86b185aea714c72201d7c98c2fba5f17709333a67aeb",
+              "packageName": "@isaacs/cliui",
+              "version": "8.0.2",
+            },
+            "name": "npm:@isaacs/cliui",
+            "type": "npm",
+          },
+          "npm:ansi-regex@5.0.1": {
+            "data": {
+              "hash": "2aa4bb54caf2d622f1afdad09441695af2a83aa3fe8b8afa581d205e57ed4261c183c4d3877cee25794443fde5876417d859c108078ab788d6af7e4fe52eb66b",
+              "packageName": "ansi-regex",
+              "version": "5.0.1",
+            },
+            "name": "npm:ansi-regex@5.0.1",
+            "type": "npm",
+          },
+          "npm:ansi-regex@6.0.1": {
+            "data": {
+              "hash": "1ff8b7667cded1de4fa2c9ae283e979fc87036864317da86a2e546725f96406746411d0d85e87a2d12fa5abd715d90006de7fa4fa0477c92321ad3b4c7d4e169",
+              "packageName": "ansi-regex",
+              "version": "6.0.1",
+            },
+            "name": "npm:ansi-regex@6.0.1",
+            "type": "npm",
+          },
+          "npm:ansi-styles@4.3.0": {
+            "data": {
+              "hash": "513b44c3b2105dd14cc42a19271e80f386466c4be574bccf60b627432f9198571ebf4ab1e4c3ba17347658f4ee1711c163d574248c0c1cdc2d5917a0ad582ec4",
+              "packageName": "ansi-styles",
+              "version": "4.3.0",
+            },
+            "name": "npm:ansi-styles@4.3.0",
+            "type": "npm",
+          },
+          "npm:ansi-styles@6.2.1": {
+            "data": {
+              "hash": "ef940f2f0ced1a6347398da88a91da7930c33ecac3c77b72c5905f8b8fe402c52e6fde304ff5347f616e27a742da3f1dc76de98f6866c69251ad0b07a66776d9",
+              "packageName": "ansi-styles",
+              "version": "6.2.1",
+            },
+            "name": "npm:ansi-styles@6.2.1",
+            "type": "npm",
+          },
+          "npm:cliui": {
+            "data": {
+              "hash": "79648b3b0045f2e285b76fb2e24e207c6db44323581e421c3acbd0e86454cba1b37aea976ab50195a49e7384b871e6dfb2247ad7dec53c02454ac6497394cb56",
+              "packageName": "cliui",
+              "version": "8.0.1",
+            },
+            "name": "npm:cliui",
+            "type": "npm",
+          },
+          "npm:color-convert": {
+            "data": {
+              "hash": "79e6bdb9fd479a205c71d89574fccfb22bd9053bd98c6c4d870d65c132e5e904e6034978e55b43d69fcaa7433af2016ee203ce76eeba9cfa554b373e7f7db336",
+              "packageName": "color-convert",
+              "version": "2.0.1",
+            },
+            "name": "npm:color-convert",
+            "type": "npm",
+          },
+          "npm:color-name": {
+            "data": {
+              "hash": "b0445859521eb4021cd0fb0cc1a75cecf67fceecae89b63f62b201cca8d345baf8b952c966862a9d9a2632987d4f6581f0ec8d957dfacece86f0a7919316f610",
+              "packageName": "color-name",
+              "version": "1.1.4",
+            },
+            "name": "npm:color-name",
+            "type": "npm",
+          },
+          "npm:eastasianwidth": {
+            "data": {
+              "hash": "7d00d7cd8e49b9afa762a813faac332dee781932d6f2c848dc348939c4253f1d4564341b7af1d041853bc3f32c2ef141b58e0a4d9862c17a7f08f68df1e0f1ed",
+              "packageName": "eastasianwidth",
+              "version": "0.2.0",
+            },
+            "name": "npm:eastasianwidth",
+            "type": "npm",
+          },
+          "npm:emoji-regex@8.0.0": {
+            "data": {
+              "hash": "d4c5c39d5a9868b5fa152f00cada8a936868fd3367f33f71be515ecee4c803132d11b31a6222b2571b1e5f7e13890156a94880345594d0ce7e3c9895f560f192",
+              "packageName": "emoji-regex",
+              "version": "8.0.0",
+            },
+            "name": "npm:emoji-regex@8.0.0",
+            "type": "npm",
+          },
+          "npm:emoji-regex@9.2.2": {
+            "data": {
+              "hash": "8487182da74aabd810ac6d6f1994111dfc0e331b01271ae01ec1eb0ad7b5ecc2bbbbd2f053c05cb55a1ac30449527d819bbfbf0e3de1023db308cbcb47f86601",
+              "packageName": "emoji-regex",
+              "version": "9.2.2",
+            },
+            "name": "npm:emoji-regex@9.2.2",
+            "type": "npm",
+          },
+          "npm:is-fullwidth-code-point": {
+            "data": {
+              "hash": "44a30c29457c7fb8f00297bce733f0a64cd22eca270f83e58c105e0d015e45c019491a4ab2faef91ab51d4738c670daff901c799f6a700e27f7314029e99e348",
+              "packageName": "is-fullwidth-code-point",
+              "version": "3.0.0",
+            },
+            "name": "npm:is-fullwidth-code-point",
+            "type": "npm",
+          },
+          "npm:string-width-cjs": {
+            "data": {
+              "hash": "e52c10dc3fbfcd6c3a15f159f54a90024241d0f149cf8aed2982a2d801d2e64df0bf1dc351cf8e95c3319323f9f220c16e740b06faecd53e2462df1d2b5443fb",
+              "packageName": "string-width-cjs",
+              "version": "npm:string-width@^4.2.0",
+            },
+            "name": "npm:string-width-cjs",
+            "type": "npm",
+          },
+          "npm:string-width@4.2.3": {
+            "data": {
+              "hash": "e52c10dc3fbfcd6c3a15f159f54a90024241d0f149cf8aed2982a2d801d2e64df0bf1dc351cf8e95c3319323f9f220c16e740b06faecd53e2462df1d2b5443fb",
+              "packageName": "string-width",
+              "version": "4.2.3",
+            },
+            "name": "npm:string-width@4.2.3",
+            "type": "npm",
+          },
+          "npm:string-width@5.1.2": {
+            "data": {
+              "hash": "7369deaa29f21dda9a438686154b62c2c5f661f8dda60449088f9f980196f7908fc39fdd1803e3e01541970287cf5deae336798337e9319a7055af89dafa7193",
+              "packageName": "string-width",
+              "version": "5.1.2",
+            },
+            "name": "npm:string-width@5.1.2",
+            "type": "npm",
+          },
+          "npm:strip-ansi-cjs": {
+            "data": {
+              "hash": "f3cd25890aef3ba6e1a74e20896c21a46f482e93df4a06567cebf2b57edabb15133f1f94e57434e0a958d61186087b1008e89c94875d019910a213181a14fc8c",
+              "packageName": "strip-ansi-cjs",
+              "version": "npm:strip-ansi@^6.0.1",
+            },
+            "name": "npm:strip-ansi-cjs",
+            "type": "npm",
+          },
+          "npm:strip-ansi@6.0.1": {
+            "data": {
+              "hash": "f3cd25890aef3ba6e1a74e20896c21a46f482e93df4a06567cebf2b57edabb15133f1f94e57434e0a958d61186087b1008e89c94875d019910a213181a14fc8c",
+              "packageName": "strip-ansi",
+              "version": "6.0.1",
+            },
+            "name": "npm:strip-ansi@6.0.1",
+            "type": "npm",
+          },
+          "npm:strip-ansi@7.1.0": {
+            "data": {
+              "hash": "859c73fcf27869c22a4e4d8c6acfe690064659e84bef9458aa6d13719d09ca88dcfd40cbf31fd0be63518ea1a643fe070b4827d353e09533a5b0b9fd4553d64d",
+              "packageName": "strip-ansi",
+              "version": "7.1.0",
+            },
+            "name": "npm:strip-ansi@7.1.0",
+            "type": "npm",
+          },
+          "npm:wrap-ansi": {
+            "data": {
+              "hash": "a790b846fd4505de962ba728a21aaeda189b8ee1c7568ca5e817d85930e06ef8d1689d49dbf0e881e8ef84436af3a88bc49115c2e2788d841ff1b8b5b51a608b",
+              "packageName": "wrap-ansi",
+              "version": "7.0.0",
+            },
+            "name": "npm:wrap-ansi",
+            "type": "npm",
+          },
+          "npm:wrap-ansi-cjs": {
+            "data": {
+              "hash": "a790b846fd4505de962ba728a21aaeda189b8ee1c7568ca5e817d85930e06ef8d1689d49dbf0e881e8ef84436af3a88bc49115c2e2788d841ff1b8b5b51a608b",
+              "packageName": "wrap-ansi-cjs",
+              "version": "npm:wrap-ansi@^7.0.0",
+            },
+            "name": "npm:wrap-ansi-cjs",
+            "type": "npm",
+          },
+          "npm:wrap-ansi@8.1.0": {
+            "data": {
+              "hash": "371733296dc2d616900ce15a0049dca0ef67597d6394c57347ba334393599e800bab03c41d4d45221b6bc967b8c453ec3ae4749eff3894202d16800fdfe0e238",
               "packageName": "wrap-ansi",
               "version": "8.1.0",
             },

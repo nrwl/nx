@@ -30,17 +30,18 @@ describe('assertWorkspaceValidity', () => {
 
   it('should throw for an invalid project-level implicit dependency', () => {
     mockWorkspaceJson.projects.app2.implicitDependencies = ['invalidproj'];
+    mockWorkspaceJson.projects.lib1.implicitDependencies = '*';
 
-    try {
-      assertWorkspaceValidity(mockWorkspaceJson, {});
-      fail('should not reach');
-    } catch (e) {
-      expect(e.message).toContain(
-        'The following implicitDependencies point to non-existent project(s)'
-      );
-      expect(e.message).toContain('invalidproj');
-      expect(e.message).toContain('invalidproj');
-    }
+    expect(() => assertWorkspaceValidity(mockWorkspaceJson, {}))
+      .toThrowErrorMatchingInlineSnapshot(`
+      "Configuration Error
+      The following implicitDependencies should be an array of strings:
+        lib1.implicitDependencies: "*"
+
+      The following implicitDependencies point to non-existent project(s):
+        app2
+          invalidproj"
+    `);
   });
 
   it('should throw for an invalid project-level implicit dependency with glob', () => {

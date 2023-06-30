@@ -5,6 +5,39 @@ use std::thread::available_parallelism;
 use crossbeam_channel::{unbounded, Receiver};
 use ignore::WalkBuilder;
 
+use crate::native::utils::glob::build_glob_set;
+
+use walkdir::WalkDir;
+
+/// Walks the directory in a single thread and does not ignore any files
+/// Should only be used for small directories, and not traversing the whole workspace
+pub fn nx_walker_sync<'a, P>(directory: P) -> impl Iterator<Item = PathBuf>
+where
+    P: AsRef<Path> + 'a,
+{
+    let base_dir: PathBuf = directory.as_ref().into();
+
+    let ignore_glob_set = build_glob_set(vec![
+        String::from("**/node_modules"),
+        String::from("**/.git"),
+    ])
+    .expect("These static ignores always build");
+
+    // Use WalkDir instead of ignore::WalkBuilder because it's faster
+    WalkDir::new(&base_dir)
+        .into_iter()
+        .filter_entry(move |entry| {
+            let path = entry.path().to_string_lossy();
+            !ignore_glob_set.is_match(path.as_ref())
+        })
+        .filter_map(move |entry| {
+            entry
+                .ok()
+                .and_then(|e| e.path().strip_prefix(&base_dir).ok().map(|p| p.to_owned()))
+        })
+}
+
+/// Walk the directory and ignore files from .gitignore and .nxignore
 pub fn nx_walker<P, Fn, Re>(directory: P, f: Fn) -> Re
 where
     P: AsRef<Path>,
@@ -13,8 +46,12 @@ where
 {
     let directory = directory.as_ref();
     let nx_ignore = directory.join(".nxignore");
-    let git_folder = directory.join(".git");
-    let node_folder = directory.join("node_modules");
+
+    let ignore_glob_set = build_glob_set(vec![
+        String::from("**/node_modules"),
+        String::from("**/.git"),
+    ])
+    .expect("These static ignores always build");
 
     let mut walker = WalkBuilder::new(directory);
     walker.hidden(false);
@@ -22,7 +59,8 @@ where
 
     // We should make sure to always ignore node_modules and the .git folder
     walker.filter_entry(move |entry| {
-        !(entry.path().starts_with(&git_folder) || entry.path().starts_with(&node_folder))
+        let path = entry.path().to_string_lossy();
+        !ignore_glob_set.is_match(path.as_ref())
     });
 
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
@@ -36,8 +74,7 @@ where
         Box::new(move |entry| {
             use ignore::WalkState::*;
 
-            #[rustfmt::skip]
-                let Ok(dir_entry) = entry else {
+            let Ok(dir_entry) = entry else {
                 return Continue;
             };
 
@@ -61,11 +98,15 @@ where
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::native::utils::path::Normalize;
+    use std::collections::HashMap;
+    use std::{assert_eq, vec};
+
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
-    use std::collections::HashMap;
+
+    use crate::native::utils::path::Normalize;
+
+    use super::*;
 
     ///
     /// Setup a temporary directory to do testing in

@@ -68,8 +68,8 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
 
       expect(tree.read('.storybook/main.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('libs/test-ui-lib/.storybook/tsconfig.json', 'utf-8')
-      ).toMatchSnapshot();
+        tree.exists('libs/test-ui-lib/tsconfig.storybook.json')
+      ).toBeFalsy();
       expect(
         tree.read('libs/test-ui-lib/.storybook/main.ts', 'utf-8')
       ).toMatchSnapshot();
@@ -116,7 +116,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
             "path": "./tsconfig.spec.json",
           },
           {
-            "path": "./.storybook/tsconfig.json",
+            "path": "./tsconfig.storybook.json",
           },
         ]
       `);
@@ -145,7 +145,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         .toMatchInlineSnapshot(`
         {
           "project": [
-            "libs/test-ui-lib2/.storybook/tsconfig.json",
+            "libs/test-ui-lib2/tsconfig.storybook.json",
           ],
         }
       `);
@@ -164,7 +164,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
 
       expect(
-        tree.read('libs/test-ui-lib2/.storybook/tsconfig.json', 'utf-8')
+        tree.read('libs/test-ui-lib2/tsconfig.storybook.json', 'utf-8')
       ).toMatchSnapshot();
     });
 

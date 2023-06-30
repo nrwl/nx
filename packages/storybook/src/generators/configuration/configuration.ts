@@ -22,6 +22,7 @@ import {
   configureTsProjectConfig,
   configureTsSolutionConfig,
   createProjectStorybookDir,
+  createStorybookTsconfigFile,
   getE2EProjectName,
   getViteConfigFilePath,
   projectIsRootProjectInStandaloneWorkspace,
@@ -96,6 +97,9 @@ export async function configurationGenerator(
   });
   tasks.push(initTask);
 
+  const mainDir =
+    !!nextBuildTarget && projectType === 'application' ? 'components' : 'src';
+
   createProjectStorybookDir(
     tree,
     schema.name,
@@ -105,12 +109,22 @@ export async function configurationGenerator(
     root,
     projectType,
     projectIsRootProjectInStandaloneWorkspace(root),
+    mainDir,
     !!nextBuildTarget,
     compiler === 'swc',
     !!viteBuildTarget || schema.uiFramework.endsWith('-vite'),
     viteConfigFilePath
   );
 
+  if (schema.uiFramework !== '@storybook/angular') {
+    createStorybookTsconfigFile(
+      tree,
+      root,
+      schema.uiFramework,
+      projectIsRootProjectInStandaloneWorkspace(root),
+      mainDir
+    );
+  }
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);

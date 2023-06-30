@@ -11,6 +11,7 @@ import {
   findTransitiveExternalDependencies,
   hasBannedDependencies,
   hasBannedImport,
+  hasNoneOfTheseTags,
   isAngularSecondaryEntrypoint,
   isTerminalRun,
 } from './runtime-lint-utils';
@@ -79,6 +80,28 @@ describe('findConstraintsFor', () => {
         data: { root: '.', tags: ['baz'] },
       })
     ).toEqual([{ sourceTag: '/a|b/', onlyDependOnLibsWithTags: ['c'] }]);
+  });
+
+  it('should find constraints matching glob', () => {
+    const constriants: DepConstraint[] = [
+      { sourceTag: 'a:*', onlyDependOnLibsWithTags: ['b:*'] },
+      { sourceTag: 'b:*', onlyDependOnLibsWithTags: ['c:*'] },
+      { sourceTag: 'c:*', onlyDependOnLibsWithTags: ['a:*'] },
+    ];
+    expect(
+      findConstraintsFor(constriants, {
+        type: 'lib',
+        name: 'someLib',
+        data: { root: '.', tags: ['a:a'] },
+      })
+    ).toEqual([{ sourceTag: 'a:*', onlyDependOnLibsWithTags: ['b:*'] }]);
+    expect(
+      findConstraintsFor(constriants, {
+        type: 'lib',
+        name: 'someLib',
+        data: { root: '.', tags: ['a:abc'] },
+      })
+    ).toEqual([{ sourceTag: 'a:*', onlyDependOnLibsWithTags: ['b:*'] }]);
   });
 });
 
@@ -508,4 +531,30 @@ describe('isAngularSecondaryEntrypoint', () => {
       )
     ).toBe(false);
   });
+});
+
+describe('hasNoneOfTheseTags', () => {
+  const source: ProjectGraphProjectNode = {
+    type: 'lib',
+    name: 'aLib',
+    data: {
+      tags: ['abc'],
+    } as any,
+  };
+
+  it.each([
+    [true, ['a']],
+    [true, ['b']],
+    [true, ['c']],
+    [true, ['az*']],
+    [true, ['/[A-Z]+/']],
+    [false, ['ab*']],
+    [false, ['*']],
+    [false, ['/[a-z]*/']],
+  ])(
+    'should return %s when project has tags ["abc"] and requested tags are %s',
+    (expected, tags) => {
+      expect(hasNoneOfTheseTags(source, tags)).toBe(expected);
+    }
+  );
 });

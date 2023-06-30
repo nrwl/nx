@@ -213,11 +213,13 @@ describe('create-nx-workspace', () => {
       packageManager,
     });
 
+    checkFilesExist(`apps/${appName}/pages/index.tsx`);
+
     expectNoAngularDevkit();
     expectCodeIsFormatted();
   });
 
-  it('should be able to create a nextjs standalone workspace', () => {
+  it('should be able to create a nextjs standalone workspace using app router', () => {
     const wsName = uniq('next');
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
@@ -227,6 +229,25 @@ describe('create-nx-workspace', () => {
       appName,
       packageManager,
     });
+
+    checkFilesExist('app/page.tsx');
+
+    expectNoAngularDevkit();
+    expectCodeIsFormatted();
+  });
+
+  it('should be able to create a nextjs standalone workspace using pages router', () => {
+    const wsName = uniq('next');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'nextjs-standalone',
+      style: 'css',
+      nextAppDir: false,
+      appName,
+      packageManager,
+    });
+
+    checkFilesExist('pages/index.tsx');
 
     expectNoAngularDevkit();
     expectCodeIsFormatted();

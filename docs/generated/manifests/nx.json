@@ -1796,6 +1796,16 @@
         "isExternal": false,
         "path": "/reference/glossary",
         "tags": []
+      },
+      {
+        "id": "changelog",
+        "name": "Changelog",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/reference/changelog",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1882,6 +1892,16 @@
     "path": "/reference/glossary",
     "tags": []
   },
+  "/reference/changelog": {
+    "id": "changelog",
+    "name": "Changelog",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/reference/changelog",
+    "tags": []
+  },
   "/deprecated": {
     "id": "deprecated",
     "name": "Deprecated",
@@ -1896,6 +1916,16 @@
         "itemList": [],
         "isExternal": false,
         "path": "/deprecated/workspace-json",
+        "tags": []
+      },
+      {
+        "id": "workspace-lint",
+        "name": "workspace-lint",
+        "description": "",
+        "file": "shared/deprecated/workspace-lint",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/workspace-lint",
         "tags": []
       },
       {
@@ -2032,6 +2062,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-json",
+    "tags": []
+  },
+  "/deprecated/workspace-lint": {
+    "id": "workspace-lint",
+    "name": "workspace-lint",
+    "description": "",
+    "file": "shared/deprecated/workspace-lint",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/workspace-lint",
     "tags": []
   },
   "/deprecated/workspace-generators": {
@@ -2300,6 +2340,16 @@
         "isExternal": true,
         "path": "/reference/nx-json#generators",
         "tags": ["use-code-generators"]
+      },
+      {
+        "id": "sitemap",
+        "name": "Site Map",
+        "description": "",
+        "file": "shared/reference/sitemap",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/see-also/sitemap",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -2375,5 +2425,15 @@
     "isExternal": true,
     "path": "/reference/nx-json#generators",
     "tags": ["use-code-generators"]
+  },
+  "/see-also/sitemap": {
+    "id": "sitemap",
+    "name": "Site Map",
+    "description": "",
+    "file": "shared/reference/sitemap",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/see-also/sitemap",
+    "tags": []
   }
 }

@@ -927,6 +927,32 @@ Violation detected in:
       expect(failures.length).toEqual(0);
     });
 
+    it('should support globs', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            {
+              sourceTag: 'p*',
+              onlyDependOnLibsWithTags: ['domain*'],
+            },
+          ],
+        },
+        `${process.cwd()}/proj/libs/public/src/index.ts`,
+        `
+          import '@mycompany/impl-domain2';
+          import('@mycompany/impl-domain2');
+          import '@mycompany/impl-both-domains';
+          import('@mycompany/impl-both-domains');
+          import '@mycompany/impl';
+          import('@mycompany/impl');
+        `,
+        graph,
+        fileMap
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
     it('should report errors for combo source tags', () => {
       const failures = runRule(
         {

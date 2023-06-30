@@ -9,7 +9,7 @@
     "directory": "packages/nx"
   },
   "scripts": {
-    "postinstall": "node ./bin/compute-project-graph"
+    "postinstall": "node ./bin/post-install"
   },
   "keywords": [
     "Monorepo",
@@ -34,7 +34,7 @@
   "dependencies": {
     "@parcel/watcher": "2.0.4",
     "@yarnpkg/lockfile": "^1.1.0",
-    "@yarnpkg/parsers": "^3.0.0-rc.18",
+    "@yarnpkg/parsers": "3.0.0-rc.46",
     "@zkochan/js-yaml": "0.0.6",
     "axios": "^1.0.0",
     "chalk": "^4.1.0",
@@ -55,7 +55,7 @@
     "minimatch": "3.0.5",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
-    "semver": "7.3.4",
+    "semver": "7.5.3",
     "string-width": "^4.2.3",
     "strong-log-transformer": "^2.1.0",
     "tar-stream": "~2.2.0",

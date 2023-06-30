@@ -3,10 +3,13 @@ import { workspaceRoot } from '../src/utils/workspace-root';
 import { fileExists } from '../src/utils/fileutils';
 import { join } from 'path';
 import { daemonClient } from '../src/daemon/client/client';
+import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
 
 (async () => {
   try {
     if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
+      assertSupportedPlatform();
+
       try {
         await daemonClient.stop();
       } catch (e) {}

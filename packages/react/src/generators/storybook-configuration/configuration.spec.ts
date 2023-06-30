@@ -42,7 +42,7 @@ describe('react:storybook-configuration', () => {
 
     expect(appTree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
     expect(
-      appTree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
+      appTree.exists('libs/test-ui-lib/tsconfig.storybook.json')
     ).toBeTruthy();
     expect(
       appTree.exists('apps/test-ui-lib-e2e/cypress.config.ts')
@@ -104,7 +104,7 @@ describe('react:storybook-configuration', () => {
 
     expect(appTree.exists('apps/test-ui-app/.storybook/main.js')).toBeTruthy();
     expect(
-      appTree.exists('apps/test-ui-app/.storybook/tsconfig.json')
+      appTree.exists('apps/test-ui-app/tsconfig.storybook.json')
     ).toBeTruthy();
 
     /**

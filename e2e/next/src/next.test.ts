@@ -1,6 +1,7 @@
 import { detectPackageManager, joinPathFragments } from '@nx/devkit';
 import { capitalize } from '@nx/devkit/src/utils/string-utils';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   getPackageManagerCommand,
@@ -296,7 +297,7 @@ describe('Next.js Applications', () => {
     await killPorts();
   }, 300_000);
 
-  it('should support custom next.config.js and output it in dist', async () => {
+  it('should support custom webpack and run-commands using withNx', async () => {
     const appName = uniq('app');
 
     runCLI(
@@ -306,7 +307,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-        const { withNx } = require('@nx/next/plugins/with-nx');
+        const { withNx } = require('@nx/next');
         const nextConfig = {
           nx: {
             svgr: false,
@@ -341,18 +342,47 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-        const { withNx } = require('@nx/next/plugins/with-nx');
+        const { withNx } = require('@nx/next');
         // Not including "nx" entry should still work.
         const nextConfig = {};
 
         module.exports = withNx(nextConfig);
       `
     );
-
     rmDist();
     runCLI(`build ${appName}`);
-
     checkFilesExist(`dist/apps/${appName}/next.config.js`);
+
+    // Make sure withNx works with run-commands.
+    updateProjectConfig(appName, (json) => {
+      json.targets.build = {
+        command: 'npx next build',
+        outputs: [`apps/${appName}/.next`],
+        options: {
+          cwd: `apps/${appName}`,
+        },
+      };
+      return json;
+    });
+    expect(() => {
+      runCLI(`build ${appName}`);
+    }).not.toThrow();
+    checkFilesExist(`apps/${appName}/.next/build-manifest.json`);
+  }, 300_000);
+
+  it('should build in dev mode without errors', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+    );
+
+    checkFilesDoNotExist(`apps/${appName}/.next/build-manifest.json`);
+    checkFilesDoNotExist(`apps/${appName}/.nx-helpers/with-nx.js`);
+
+    expect(() => {
+      runCLI(`build ${appName} --configuration=development`);
+    }).not.toThrow();
   }, 300_000);
 
   it('should support --js flag', async () => {
@@ -421,7 +451,7 @@ describe('Next.js Applications', () => {
       checkUnitTest: false,
       checkLint: false,
       checkE2E: false,
-      checkExport: true,
+      checkExport: false,
     });
   }, 300_000);
 

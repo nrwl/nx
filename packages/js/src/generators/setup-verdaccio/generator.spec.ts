@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
+import { Tree, readJson, updateJson } from '@nx/devkit';
 
 import generator from './generator';
 import { SetupVerdaccioGeneratorSchema } from './schema';
@@ -27,6 +27,49 @@ describe('setup-verdaccio generator', () => {
             config: '.verdaccio/config.yml',
             storage: 'tmp/local-registry/storage',
           },
+        },
+      },
+    });
+    const packageJson = readJson<PackageJson>(tree, 'package.json');
+    expect(packageJson.nx).toEqual({
+      includedScripts: [],
+    });
+  });
+
+  it('should not override existing root project settings from package.json', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.nx = {
+        includedScripts: ['test'],
+        targets: {
+          build: {
+            outputs: ['dist'],
+          },
+        },
+      };
+      return json;
+    });
+    await generator(tree, options);
+    const config = readJson(tree, 'project.json');
+    expect(config).toEqual({
+      name: 'test-name',
+      $schema: 'node_modules/nx/schemas/project-schema.json',
+      targets: {
+        'local-registry': {
+          executor: '@nx/js:verdaccio',
+          options: {
+            port: 4873,
+            config: '.verdaccio/config.yml',
+            storage: 'tmp/local-registry/storage',
+          },
+        },
+      },
+    });
+    const packageJson = readJson<PackageJson>(tree, 'package.json');
+    expect(packageJson.nx).toEqual({
+      includedScripts: ['test'],
+      targets: {
+        build: {
+          outputs: ['dist'],
         },
       },
     });

@@ -36,6 +36,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
   if (options.createPackageName) {
     const cliTask = await createPackageGenerator(tree, {
       name: options.createPackageName,
+      e2eProject: 'e2e',
       project: options.pluginName,
       skipFormat: true,
       unitTestRunner: 'jest',

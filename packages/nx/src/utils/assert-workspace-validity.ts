@@ -38,10 +38,26 @@ export function assertWorkspaceValidity(
     });
   }
 
+  const projectsWithNonArrayImplicitDependencies = new Map<string, unknown>();
+
   projectNames
     .filter((projectName) => {
       const project = projects[projectName];
-      return !!project.implicitDependencies;
+
+      // Report if for whatever reason, a project is configured to use implicitDependencies but it is not an array
+      if (
+        !!project.implicitDependencies &&
+        !Array.isArray(project.implicitDependencies)
+      ) {
+        projectsWithNonArrayImplicitDependencies.set(
+          projectName,
+          project.implicitDependencies
+        );
+      }
+      return (
+        !!project.implicitDependencies &&
+        Array.isArray(project.implicitDependencies)
+      );
     })
     .reduce((map, projectName) => {
       const project = projects[projectName];
@@ -55,19 +71,38 @@ export function assertWorkspaceValidity(
       return map;
     }, invalidImplicitDependencies);
 
-  if (invalidImplicitDependencies.size === 0) {
+  if (
+    projectsWithNonArrayImplicitDependencies.size === 0 &&
+    invalidImplicitDependencies.size === 0
+  ) {
+    // No issues
     return;
   }
 
-  let message = `The following implicitDependencies point to non-existent project(s):\n`;
-  message += [...invalidImplicitDependencies.keys()]
-    .map((key) => {
-      const projectNames = invalidImplicitDependencies.get(key);
-      return `  ${key}\n${projectNames
-        .map((projectName) => `    ${projectName}`)
-        .join('\n')}`;
-    })
-    .join('\n\n');
+  let message = '';
+
+  if (projectsWithNonArrayImplicitDependencies.size > 0) {
+    message += `The following implicitDependencies should be an array of strings:\n`;
+    projectsWithNonArrayImplicitDependencies.forEach(
+      (implicitDependencies, projectName) => {
+        message += `  ${projectName}.implicitDependencies: "${implicitDependencies}"\n`;
+      }
+    );
+    message += '\n';
+  }
+
+  if (invalidImplicitDependencies.size > 0) {
+    message += `The following implicitDependencies point to non-existent project(s):\n`;
+    message += [...invalidImplicitDependencies.keys()]
+      .map((key) => {
+        const projectNames = invalidImplicitDependencies.get(key);
+        return `  ${key}\n${projectNames
+          .map((projectName) => `    ${projectName}`)
+          .join('\n')}`;
+      })
+      .join('\n\n');
+  }
+
   throw new Error(`Configuration Error\n${message}`);
 }
 

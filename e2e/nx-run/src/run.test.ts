@@ -189,6 +189,7 @@ describe('Nx Running Tests', () => {
       const myapp = uniq('app');
       const target = uniq('script');
       const expectedOutput = uniq('myEchoedString');
+      const expectedEnvOutput = uniq('myEnvString');
 
       runCLI(`generate @nx/web:app ${myapp}`);
       updateFile(
@@ -196,12 +197,30 @@ describe('Nx Running Tests', () => {
         JSON.stringify({
           name: myapp,
           scripts: {
-            [target]: `echo ${expectedOutput}`,
+            [target]: `echo ${expectedOutput} $ENV_VAR`,
+          },
+          nx: {
+            targets: {
+              [target]: {
+                configurations: {
+                  production: {},
+                },
+              },
+            },
           },
         })
       );
 
+      updateFile(
+        `apps/${myapp}/.env.production`,
+        `ENV_VAR=${expectedEnvOutput}`
+      );
+
       expect(runCLI(`${target} ${myapp}`)).toContain(expectedOutput);
+      expect(runCLI(`${target} ${myapp}`)).not.toContain(expectedEnvOutput);
+      expect(runCLI(`${target} ${myapp} --configuration production`)).toContain(
+        expectedEnvOutput
+      );
     }, 10000);
 
     it('should run targets inferred from plugin-specified project files', () => {

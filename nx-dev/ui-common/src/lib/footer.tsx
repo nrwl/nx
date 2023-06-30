@@ -21,6 +21,10 @@ export function Footer(): JSX.Element {
         name: 'Brands & Guidelines',
         href: 'https://nx.app/brands?utm_source=nx.dev',
       },
+      {
+        name: 'Site Map',
+        href: '/see-also/sitemap',
+      },
     ],
     community: [
       { name: 'Twitter', href: 'https://twitter.com/NXdevtools' },

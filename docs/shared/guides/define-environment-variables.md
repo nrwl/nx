@@ -11,18 +11,22 @@ By default, Nx will load any environment variables you place in the following fi
 
 1. `apps/my-app/.env.[target-name].[configuration-name]`
 2. `apps/my-app/.[target-name].[configuration-name].env`
-3. `apps/my-app/.env.[target-name]`
-4. `apps/my-app/.[target-name].env`
-5. `apps/my-app/.env.local`
-6. `apps/my-app/.local.env`
-7. `apps/my-app/.env`
-8. `.env.[target-name].[configuration-name]`
-9. `.[target-name].[configuration-name].env`
-10. `.env.[target-name]`
-11. `.[target-name].env`
-12. `.local.env`
-13. `.env.local`
-14. `.env`
+3. `apps/my-app/.env.[configuration-name]`
+4. `apps/my-app/.[configuration-name].env`
+5. `apps/my-app/.env.[target-name]`
+6. `apps/my-app/.[target-name].env`
+7. `apps/my-app/.env.local`
+8. `apps/my-app/.local.env`
+9. `apps/my-app/.env`
+10. `.env.[target-name].[configuration-name]`
+11. `.[target-name].[configuration-name].env`
+12. `.env.[configuration-name]`
+13. `.[configuration-name].env`
+14. `.env.[target-name]`
+15. `.[target-name].env`
+16. `.local.env`
+17. `.env.local`
+18. `.env`
 
 {% callout type="warning" title="Order is important" %}
 Nx will move through the above list, ignoring files it can't find, and loading environment variables

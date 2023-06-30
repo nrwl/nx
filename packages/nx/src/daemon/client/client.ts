@@ -238,6 +238,7 @@ export class DaemonClient {
             title: 'Daemon process terminated and closed the connection',
             bodyLines: [
               'Please rerun the command, which will restart the daemon.',
+              `If you get this error again, check for any errors in the daemon process logs found in: ${DAEMON_OUTPUT_LOG_FILE}`,
             ],
           });
           process.exit(1);
@@ -345,8 +346,10 @@ export class DaemonClient {
     this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
     this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
 
-    if (this.nxJson.tasksRunnerOptions.default?.nativeWatcher) {
-      DAEMON_ENV_SETTINGS['NX_NATIVE_WATCHER'] = true;
+    if (this.nxJson.tasksRunnerOptions.default?.options?.useParcelWatcher) {
+      DAEMON_ENV_SETTINGS['NX_NATIVE_WATCHER'] = 'false';
+    } else {
+      DAEMON_ENV_SETTINGS['NX_NATIVE_WATCHER'] = 'true';
     }
 
     const backgroundProcess = spawn(

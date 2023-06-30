@@ -11,7 +11,7 @@ import {
   PackageMetadata,
   ProcessedPackageMetadata,
 } from '@nx/nx-dev/models-package';
-import { generateJsonFile } from '../utils';
+import { generateIndexMarkdownFile, generateJsonFile } from '../utils';
 import { convertToDictionary } from './utils-generator/convert-to-dictionary';
 
 interface DocumentSection {
@@ -126,7 +126,7 @@ export function generateManifests(workspace: string): Promise<void[]> {
   /**
    * We can now create manifest files.
    */
-  const fileGenerationPromises = [];
+  const fileGenerationPromises: Promise<any>[] = [];
   manifests.forEach((manifest) =>
     fileGenerationPromises.push(
       generateJsonFile(
@@ -140,6 +140,12 @@ export function generateManifests(workspace: string): Promise<void[]> {
   );
   fileGenerationPromises.push(
     generateJsonFile(resolve(targetFolder, `menus.json`), menus)
+  );
+  fileGenerationPromises.push(
+    generateIndexMarkdownFile(
+      resolve(documentationPath, `shared`, `reference`, `sitemap.md`),
+      menus
+    )
   );
 
   return Promise.all(fileGenerationPromises);
@@ -174,18 +180,22 @@ function generateTags(manifests: Manifest[]) {
         });
 
       if (isPackage(item))
-        Object.values(item.documents).forEach((documentMetadata) => {
-          documentMetadata.tags.forEach((t: string) => {
-            const tagData = {
-              description: documentMetadata.description,
-              file: ['generated', 'packages', documentMetadata.file].join('/'),
-              id: documentMetadata.id,
-              name: documentMetadata.name,
-              path: documentMetadata.path,
-            };
-            !tags[t] ? (tags[t] = [tagData]) : tags[t].push(tagData);
-          });
-        });
+        Object.values(item.documents).forEach(
+          (documentMetadata: DocumentMetadata) => {
+            documentMetadata.tags.forEach((t: string) => {
+              const tagData = {
+                description: documentMetadata.description,
+                file: ['generated', 'packages', documentMetadata.file].join(
+                  '/'
+                ),
+                id: documentMetadata.id,
+                name: documentMetadata.name,
+                path: documentMetadata.path,
+              };
+              !tags[t] ? (tags[t] = [tagData]) : tags[t].push(tagData);
+            });
+          }
+        );
     }
   });
 

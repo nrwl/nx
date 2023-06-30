@@ -1443,6 +1443,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Changelog",
+            "path": "/reference/changelog",
+            "id": "changelog",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -1512,6 +1520,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Changelog",
+        "path": "/reference/changelog",
+        "id": "changelog",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Deprecated",
         "path": "/deprecated",
         "id": "deprecated",
@@ -1521,6 +1537,14 @@
             "name": "workspace.json",
             "path": "/deprecated/workspace-json",
             "id": "workspace-json",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "workspace-lint",
+            "path": "/deprecated/workspace-lint",
+            "id": "workspace-lint",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1629,6 +1653,14 @@
         "name": "workspace.json",
         "path": "/deprecated/workspace-json",
         "id": "workspace-json",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "workspace-lint",
+        "path": "/deprecated/workspace-lint",
+        "id": "workspace-lint",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1847,6 +1879,14 @@
             "isExternal": true,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Site Map",
+            "path": "/see-also/sitemap",
+            "id": "sitemap",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -1904,6 +1944,14 @@
         "path": "/reference/nx-json#generators",
         "id": "nxjson-generator-defaults",
         "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Site Map",
+        "path": "/see-also/sitemap",
+        "id": "sitemap",
+        "isExternal": false,
         "children": [],
         "disableCollapsible": false
       }
@@ -3028,6 +3076,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Remix with Nx",
+            "path": "/recipes/other/remix",
+            "id": "remix",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Adding Images, Fonts, and Files",
             "path": "/recipes/other/adding-assets-react",
             "id": "adding-assets-react",
@@ -3226,6 +3282,14 @@
         "name": "React Native with Nx",
         "path": "/recipes/other/react-native",
         "id": "react-native",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Remix with Nx",
+        "path": "/recipes/other/remix",
+        "id": "remix",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

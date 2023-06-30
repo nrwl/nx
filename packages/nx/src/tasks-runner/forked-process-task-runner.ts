@@ -433,10 +433,16 @@ export class ForkedProcessTaskRunner {
         ...parseEnv(`.${task.target.target}.env`),
         ...parseEnv(`.env.${task.target.target}`),
         ...(task.target.configuration
-          ? parseEnv(`.${task.target.target}.${task.target.configuration}.env`)
-          : {}),
-        ...(task.target.configuration
-          ? parseEnv(`.env.${task.target.target}.${task.target.configuration}`)
+          ? {
+              ...parseEnv(`.${task.target.configuration}.env`),
+              ...parseEnv(
+                `.${task.target.target}.${task.target.configuration}.env`
+              ),
+              ...parseEnv(`.env.${task.target.configuration}`),
+              ...parseEnv(
+                `.env.${task.target.target}.${task.target.configuration}`
+              ),
+            }
           : {}),
         ...parseEnv(`${task.projectRoot}/.env`),
         ...parseEnv(`${task.projectRoot}/.local.env`),
@@ -444,14 +450,20 @@ export class ForkedProcessTaskRunner {
         ...parseEnv(`${task.projectRoot}/.${task.target.target}.env`),
         ...parseEnv(`${task.projectRoot}/.env.${task.target.target}`),
         ...(task.target.configuration
-          ? parseEnv(
-              `${task.projectRoot}/.${task.target.target}.${task.target.configuration}.env`
-            )
-          : {}),
-        ...(task.target.configuration
-          ? parseEnv(
-              `${task.projectRoot}/.env.${task.target.target}.${task.target.configuration}`
-            )
+          ? {
+              ...parseEnv(
+                `${task.projectRoot}/.${task.target.configuration}.env`
+              ),
+              ...parseEnv(
+                `${task.projectRoot}/.${task.target.target}.${task.target.configuration}.env`
+              ),
+              ...parseEnv(
+                `${task.projectRoot}/.env.${task.target.configuration}`
+              ),
+              ...parseEnv(
+                `${task.projectRoot}/.env.${task.target.target}.${task.target.configuration}`
+              ),
+            }
           : {}),
       };
     } else {

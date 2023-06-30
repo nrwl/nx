@@ -48,6 +48,15 @@ export function parseYarnLockfile(
   addDependencies(data, builder, keyMap);
 }
 
+function getPackageNames(keys: string): string[] {
+  const packageNames = new Set<string>();
+  keys.split(', ').forEach((key) => {
+    const packageName = key.slice(0, key.indexOf('@', 1));
+    packageNames.add(packageName);
+  });
+  return Array.from(packageNames);
+}
+
 function addNodes(
   { __metadata, ...dependencies }: YarnLockFile,
   builder: ProjectGraphBuilder,
@@ -61,40 +70,45 @@ function addNodes(
     if (snapshot.linkType === 'soft' || keys.includes('@patch:')) {
       return;
     }
-    const packageName = keys.slice(0, keys.indexOf('@', 1));
-    const version = findVersion(
-      packageName,
-      keys.split(', ')[0],
-      snapshot,
-      isBerry
-    );
-    keys.split(', ').forEach((key) => {
-      // we don't need to keep duplicates, we can just track the keys
-      const existingNode = nodes.get(packageName)?.get(version);
-      if (existingNode) {
-        keyMap.set(key, existingNode);
-        return;
-      }
+    const packageNames = getPackageNames(keys);
+    packageNames.forEach((packageName) => {
+      const version = findVersion(
+        packageName,
+        keys.split(', ')[0],
+        snapshot,
+        isBerry
+      );
 
-      const node: ProjectGraphExternalNode = {
-        type: 'npm',
-        name: version ? `npm:${packageName}@${version}` : `npm:${packageName}`,
-        data: {
-          version,
-          packageName,
-          hash:
-            snapshot.integrity ||
-            snapshot.checksum ||
-            hashArray([packageName, version]),
-        },
-      };
+      keys.split(', ').forEach((key) => {
+        // we don't need to keep duplicates, we can just track the keys
+        const existingNode = nodes.get(packageName)?.get(version);
+        if (existingNode) {
+          keyMap.set(key, existingNode);
+          return;
+        }
 
-      keyMap.set(key, node);
-      if (!nodes.has(packageName)) {
-        nodes.set(packageName, new Map([[version, node]]));
-      } else {
-        nodes.get(packageName).set(version, node);
-      }
+        const node: ProjectGraphExternalNode = {
+          type: 'npm',
+          name: version
+            ? `npm:${packageName}@${version}`
+            : `npm:${packageName}`,
+          data: {
+            version,
+            packageName,
+            hash:
+              snapshot.integrity ||
+              snapshot.checksum ||
+              hashArray([packageName, version]),
+          },
+        };
+
+        keyMap.set(key, node);
+        if (!nodes.has(packageName)) {
+          nodes.set(packageName, new Map([[version, node]]));
+        } else {
+          nodes.get(packageName).set(version, node);
+        }
+      });
     });
   });
 
@@ -348,7 +362,10 @@ function mapSnapshots(
           .slice(0, key.indexOf('#'))
           .replace(`@patch:${packageName}@`, '@npm:');
       }
-      if (!existingKeys.get(packageName).has(normalizedKey)) {
+      if (
+        !existingKeys.get(packageName) ||
+        !existingKeys.get(packageName).has(normalizedKey)
+      ) {
         keysSet.delete(key);
       }
     }

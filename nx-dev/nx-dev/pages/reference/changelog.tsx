@@ -1,12 +1,21 @@
 import { TagIcon } from '@heroicons/react/24/outline';
-import { Footer, Header } from '@nx/nx-dev/ui-common';
+import {
+  Breadcrumbs,
+  DocumentationHeader,
+  Footer,
+  SidebarContainer,
+} from '@nx/nx-dev/ui-common';
 import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { Octokit } from 'octokit';
 import { compare, parse } from 'semver';
-import { changeLogApi } from '../lib/changelog.api';
+import { changeLogApi } from '../../lib/changelog.api';
+import { useNavToggle } from '../../lib/navigation-toggle.effect';
+import { menusApi } from '../../lib/menus.api';
+import { MenuItem } from '@nx/nx-dev/models-menu';
+import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
 
 interface ChangelogEntry {
   version: string;
@@ -19,6 +28,7 @@ interface ChangelogEntry {
 
 interface ChangeLogProps {
   changelog: ChangelogEntry[];
+  menu: MenuItem[];
 }
 
 interface GithubReleaseData {
@@ -153,6 +163,7 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
   return {
     props: {
       changelog: groupedReleases,
+      menu: menusApi.getMenu('nx', ''),
     },
   };
 }
@@ -178,6 +189,11 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
   });
   const convertToDate = (invalidDate) =>
     new Date(invalidDate.replace(/(nd|th|rd)/g, ''));
+  const { toggleNav, navIsOpen } = useNavToggle();
+
+  const menu = {
+    sections: [getBasicNxSection(props.menu)],
+  };
 
   return (
     <>
@@ -201,10 +217,19 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
           type: 'website',
         }}
       />
-      <Header />
+      <div className="w-full flex-shrink-0">
+        <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
+      </div>
+
       <main id="main" role="main">
-        <div className="mx-auto flex max-w-7xl flex-col space-y-12 py-12 px-4 sm:px-6 lg:space-y-0 lg:py-16 lg:px-8">
-          <header className="space-y-4 md:py-12">
+        <div className="mx-auto flex max-w-7xl flex-col py-8 px-4 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <Breadcrumbs path={router.asPath} />
+          </div>
+          <div className="hidden">
+            <SidebarContainer menu={menu} navIsOpen={navIsOpen} />
+          </div>
+          <header className="mt-0">
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
               Nx Changelog
             </h1>
@@ -212,7 +237,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
               All the Nx goodies in one page, sorted by release.
             </p>
           </header>
-          <ul role="list" className="m-0 space-y-6">
+          <ul className="m-0 space-y-6 py-6">
             {renderedChangelog.map((changelog, idx) => (
               <li key={changelog.version} className="relative sm:flex gap-x-4">
                 <div

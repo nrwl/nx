@@ -71,7 +71,7 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
             path: './tsconfig.spec.json',
           },
           {
-            path: './.storybook/tsconfig.json',
+            path: './tsconfig.storybook.json',
           },
         ],
       });
@@ -96,7 +96,7 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       });
 
       expect(tree.exists('.storybook/main.js')).toBeTruthy();
-      expect(tree.exists('.storybook/tsconfig.json')).toBeTruthy();
+      expect(tree.exists('tsconfig.storybook.json')).toBeTruthy();
       expect(tree.exists('.storybook/preview.js')).toBeTruthy();
     });
 
@@ -110,11 +110,11 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       });
 
       expect(tree.exists('.storybook/main.ts')).toBeFalsy();
-      expect(tree.exists('.storybook/tsconfig.json')).toBeFalsy();
+      expect(tree.exists('tsconfig.storybook.json')).toBeFalsy();
       expect(tree.exists('.storybook/preview.ts')).toBeFalsy();
 
       expect(tree.exists('apps/reapp/.storybook/main.ts')).toBeTruthy();
-      expect(tree.exists('apps/reapp/.storybook/tsconfig.json')).toBeTruthy();
+      expect(tree.exists('apps/reapp/tsconfig.storybook.json')).toBeTruthy();
       expect(tree.exists('apps/reapp/.storybook/preview.ts')).toBeTruthy();
 
       await configurationGenerator(tree, {
@@ -124,17 +124,17 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       });
 
       expect(tree.exists('.storybook/main.ts')).toBeTruthy();
-      expect(tree.exists('.storybook/tsconfig.json')).toBeTruthy();
+      expect(tree.exists('tsconfig.storybook.json')).toBeTruthy();
       expect(tree.exists('.storybook/preview.ts')).toBeTruthy();
 
       expect(tree.read('.storybook/main.ts', 'utf-8')).toMatchSnapshot();
-      expect(tree.read('.storybook/tsconfig.json', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('tsconfig.storybook.json', 'utf-8')).toMatchSnapshot();
       expect(tree.read('.storybook/preview.ts', 'utf-8')).toMatchSnapshot();
       expect(
         tree.read('apps/reapp/.storybook/main.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('apps/reapp/.storybook/tsconfig.json', 'utf-8')
+        tree.read('apps/reapp/tsconfig.storybook.json', 'utf-8')
       ).toMatchSnapshot();
       expect(
         tree.read('apps/reapp/.storybook/preview.ts', 'utf-8')

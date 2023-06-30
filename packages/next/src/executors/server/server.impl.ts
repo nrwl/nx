@@ -30,7 +30,7 @@ export default async function* serveExecutor(
   );
   const projectRoot = context.workspace.projects[context.projectName].root;
 
-  const { port, keepAliveTimeout, hostname } = options;
+  const { port, keepAliveTimeout, hostname = 'localhost' } = options;
 
   // This is required for the default custom server to work. See the @nx/next:app generator.
   process.env.NX_NEXT_DIR = projectRoot;
@@ -45,7 +45,11 @@ export default async function* serveExecutor(
   // Setting port that the custom server should use.
   process.env.PORT = `${options.port}`;
 
-  const args = createCliOptions({ port, keepAliveTimeout, hostname });
+  const args = createCliOptions({ port, hostname });
+
+  if (keepAliveTimeout && !options.dev) {
+    args.push(`--keepAliveTimeout=${keepAliveTimeout}`);
+  }
 
   const nextDir = resolve(context.root, buildOptions.outputPath);
 

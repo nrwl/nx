@@ -400,9 +400,7 @@ export async function generateGraph(
     } else if (args.projects) {
       url.searchParams.append(
         'projects',
-        args.projects
-          .map((projectName) => encodeURIComponent(projectName))
-          .join(' ')
+        args.projects.map((projectName) => projectName).join(' ')
       );
     } else if (args.affected) {
       url.pathname += '/affected';

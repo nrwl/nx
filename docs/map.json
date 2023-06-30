@@ -583,6 +583,13 @@
               "id": "glossary",
               "tags": [],
               "file": "shared/reference/glossary"
+            },
+            {
+              "name": "Changelog",
+              "id": "changelog",
+              "file": "",
+              "path": "/reference/changelog",
+              "isExternal": true
             }
           ]
         },
@@ -595,6 +602,11 @@
               "name": "workspace.json",
               "id": "workspace-json",
               "file": "shared/deprecated/workspace-json"
+            },
+            {
+              "name": "workspace-lint",
+              "id": "workspace-lint",
+              "file": "shared/deprecated/workspace-lint"
             },
             {
               "name": "Workspace Generators",
@@ -734,6 +746,12 @@
               "tags": ["use-code-generators"],
               "path": "/reference/nx-json#generators",
               "isExternal": true
+            },
+            {
+              "name": "Site Map",
+              "id": "sitemap",
+              "tags": [],
+              "file": "shared/reference/sitemap"
             }
           ]
         }
@@ -1234,7 +1252,6 @@
             }
           ]
         },
-
         {
           "name": "Enforce Module Boundaries",
           "id": "enforce-module-boundaries",
@@ -1331,6 +1348,11 @@
               "name": "React Native with Nx",
               "id": "react-native",
               "file": "shared/guides/react-native"
+            },
+            {
+              "name": "Remix with Nx",
+              "id": "remix",
+              "file": "shared/guides/remix"
             },
             {
               "name": "Adding Images, Fonts, and Files",
@@ -1618,7 +1640,11 @@
               "id": "create-nx-workspace",
               "file": "generated/cli/create-nx-workspace"
             },
-            { "name": "init", "id": "init", "file": "generated/cli/init" },
+            {
+              "name": "init",
+              "id": "init",
+              "file": "generated/cli/init"
+            },
             {
               "name": "generate",
               "id": "generate",
@@ -1687,7 +1713,11 @@
               "id": "report",
               "file": "generated/cli/report"
             },
-            { "name": "list", "id": "list", "file": "generated/cli/list" },
+            {
+              "name": "list",
+              "id": "list",
+              "file": "generated/cli/list"
+            },
             {
               "name": "workspace-lint",
               "id": "workspace-lint",

@@ -103,6 +103,12 @@ function hasTag(proj: ProjectGraphProjectNode, tag: string): boolean {
     return (proj.data.tags || []).some((t) => regex.test(t));
   }
 
+  // if the tag is a glob, check if the project matches the glob prefix
+  if (tag.includes('*')) {
+    const regex = mapGlobToRegExp(tag);
+    return (proj.data.tags || []).some((t) => regex.test(t));
+  }
+
   return (proj.data.tags || []).indexOf(tag) > -1;
 }
 
@@ -241,7 +247,7 @@ function isConstraintBanningProject(
   /* Check if import is banned... */
   if (
     bannedExternalImports?.some((importDefinition) =>
-      parseImportWildcards(importDefinition).test(imp)
+      mapGlobToRegExp(importDefinition).test(imp)
     )
   ) {
     return true;
@@ -251,7 +257,7 @@ function isConstraintBanningProject(
   return allowedExternalImports?.every(
     (importDefinition) =>
       !imp.startsWith(packageName) ||
-      !parseImportWildcards(importDefinition).test(imp)
+      !mapGlobToRegExp(importDefinition).test(imp)
   );
 }
 
@@ -384,7 +390,7 @@ function packageExistsInPackageJson(
  * @param importDefinition
  * @returns
  */
-function parseImportWildcards(importDefinition: string): RegExp {
+function mapGlobToRegExp(importDefinition: string): RegExp {
   // we replace all instances of `*`, `**..*` and `.*` with `.*`
   const mappedWildcards = importDefinition.split(/(?:\.\*)|\*+/).join('.*');
   return new RegExp(`^${new RegExp(mappedWildcards).source}$`);

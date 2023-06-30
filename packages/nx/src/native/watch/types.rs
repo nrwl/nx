@@ -1,6 +1,7 @@
 use napi::bindgen_prelude::*;
 use std::path::PathBuf;
 use tracing::trace;
+use watchexec_events::filekind::FileEventKind;
 use watchexec_events::{Event, Tag};
 
 #[napi(string_enum)]
@@ -12,6 +13,8 @@ pub enum EventType {
     delete,
     #[allow(non_camel_case_types)]
     update,
+    #[allow(non_camel_case_types)]
+    create,
 }
 
 #[derive(Debug, Clone)]
@@ -64,7 +67,12 @@ impl From<&Event> for WatchEventInternal {
         let event_type = if matches!(path.1, None) && !path_ref.exists() {
             EventType::delete
         } else {
-            EventType::update
+            match event_kind {
+                FileEventKind::Create(_) => EventType::create,
+                FileEventKind::Modify(_) => EventType::update,
+                FileEventKind::Remove(_) => EventType::delete,
+                _ => EventType::update,
+            }
         };
 
         trace!(?path, ?event_kind, ?event_type, "event kind -> event type");
