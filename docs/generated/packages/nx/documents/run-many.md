@@ -10,7 +10,7 @@ Run target for multiple listed projects
 ## Usage
 
 ```shell
-nx run-many
+nx run-many [target]
 ```
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.

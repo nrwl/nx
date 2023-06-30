@@ -10,7 +10,7 @@ Run target for affected projects
 ## Usage
 
 ```shell
-nx affected
+nx affected [target]
 ```
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.

@@ -11,7 +11,7 @@ import {
 } from '../yargs-utils/shared-options';
 
 export const yargsAffectedCommand: CommandModule = {
-  command: 'affected',
+  command: 'affected [target]',
   describe: 'Run target for affected projects',
   builder: (yargs) =>
     linkToNxDevAndExamples(

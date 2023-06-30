@@ -8,7 +8,7 @@ import {
 } from '../yargs-utils/shared-options';
 
 export const yargsRunManyCommand: CommandModule = {
-  command: 'run-many',
+  command: 'run-many [target]',
   describe: 'Run target for multiple listed projects',
   builder: (yargs) =>
     linkToNxDevAndExamples(
