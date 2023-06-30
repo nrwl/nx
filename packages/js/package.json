@@ -47,6 +47,8 @@
     "detect-port": "^1.5.1",
     "fast-glob": "3.2.7",
     "fs-extra": "^11.1.0",
+    "ts-node": "10.9.1",
+    "tsconfig-paths": "^4.1.2",
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",
     "minimatch": "3.0.5",

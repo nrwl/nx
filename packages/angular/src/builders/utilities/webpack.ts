@@ -1,4 +1,5 @@
 import { merge } from 'webpack-merge';
+import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
 
 export async function mergeCustomWebpackConfig(
   baseWebpackConfig: any,
@@ -47,26 +48,4 @@ export function resolveIndexHtmlTransformer(
   const transform = indexTransformer.default ?? indexTransformer;
 
   return (indexHtml) => transform(target, indexHtml);
-}
-
-function tsNodeRegister(file: string, tsConfig?: string) {
-  if (!file?.endsWith('.ts')) return;
-  // Register TS compiler lazily
-  require('ts-node').register({
-    project: tsConfig,
-    compilerOptions: {
-      module: 'CommonJS',
-      types: ['node'],
-    },
-  });
-
-  if (!tsConfig) return;
-
-  // Register paths in tsConfig
-  const tsconfigPaths = require('tsconfig-paths');
-  const { absoluteBaseUrl: baseUrl, paths } =
-    tsconfigPaths.loadConfig(tsConfig);
-  if (baseUrl && paths) {
-    tsconfigPaths.register({ baseUrl, paths });
-  }
 }

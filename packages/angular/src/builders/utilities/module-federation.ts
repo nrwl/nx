@@ -1,7 +1,8 @@
 import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
-import { logger, Remotes } from '@nx/devkit';
+import { logger } from '@nx/devkit';
+import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
 
 export function getDynamicRemotes(
   project: ProjectConfiguration,
@@ -71,26 +72,54 @@ export function getDynamicRemotes(
   return dynamicRemotes;
 }
 
+function getModuleFederationConfig(
+  tsconfigPath: string,
+  workspaceRoot: string,
+  projectRoot: string
+) {
+  const moduleFederationConfigPathJS = join(
+    workspaceRoot,
+    projectRoot,
+    'module-federation.config.js'
+  );
+
+  const moduleFederationConfigPathTS = join(
+    workspaceRoot,
+    projectRoot,
+    'module-federation.config.ts'
+  );
+
+  let moduleFederationConfigPath = moduleFederationConfigPathJS;
+
+  if (existsSync(moduleFederationConfigPathTS)) {
+    tsNodeRegister(moduleFederationConfigPathTS, tsconfigPath);
+    moduleFederationConfigPath = moduleFederationConfigPathTS;
+  }
+
+  try {
+    const config = require(moduleFederationConfigPath);
+    return {
+      mfeConfig: config.default || config,
+      mfConfigPath: moduleFederationConfigPath,
+    };
+  } catch {
+    throw new Error(
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/angular:host"?`
+    );
+  }
+}
+
 export function getStaticRemotes(
   project: ProjectConfiguration,
   context: import('@angular-devkit/architect').BuilderContext,
   workspaceProjects: Record<string, ProjectConfiguration>,
   remotesToSkip: Set<string>
 ): string[] {
-  const mfConfigPath = join(
+  const { mfeConfig, mfConfigPath } = getModuleFederationConfig(
+    project.targets.build.options.tsConfig,
     context.workspaceRoot,
-    project.root,
-    'module-federation.config.js'
+    project.root
   );
-
-  let mfeConfig: { remotes: Remotes };
-  try {
-    mfeConfig = require(mfConfigPath);
-  } catch {
-    throw new Error(
-      `Could not load ${mfConfigPath}. Was this project generated with "@nx/angular:host"?`
-    );
-  }
 
   const remotesConfig =
     Array.isArray(mfeConfig.remotes) && mfeConfig.remotes.length > 0
