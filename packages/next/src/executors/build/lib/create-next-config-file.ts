@@ -24,6 +24,13 @@ export function createNextConfigFile(
   options: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
+  // Don't overwrite the next.config.js file if output path is the same as the source path.
+  if (
+    options.outputPath.replace(/\/$/, '') ===
+    context.projectGraph.nodes[context.projectName].data.root
+  ) {
+    return;
+  }
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
   const configRelativeToProjectRoot = findNextConfigPath(
     projectRoot,
