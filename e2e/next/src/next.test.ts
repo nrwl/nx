@@ -1,6 +1,7 @@
 import { detectPackageManager, joinPathFragments } from '@nx/devkit';
 import { capitalize } from '@nx/devkit/src/utils/string-utils';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   getPackageManagerCommand,
@@ -367,6 +368,21 @@ describe('Next.js Applications', () => {
       runCLI(`build ${appName}`);
     }).not.toThrow();
     checkFilesExist(`apps/${appName}/.next/build-manifest.json`);
+  }, 300_000);
+
+  it('should build in dev mode without errors', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+    );
+
+    checkFilesDoNotExist(`apps/${appName}/.next/build-manifest.json`);
+    checkFilesDoNotExist(`apps/${appName}/.nx-helpers/with-nx.js`);
+
+    expect(() => {
+      runCLI(`build ${appName} --configuration=development`);
+    }).not.toThrow();
   }, 300_000);
 
   it('should support --js flag', async () => {
