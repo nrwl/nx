@@ -181,6 +181,7 @@ export function findProjectsNpmDependencies(
   target: string,
   options: {
     helperDependencies?: string[];
+    ignoredDependencies?: string[];
   },
   fileMap?: ProjectFileMap
 ): NpmDeps {
@@ -213,6 +214,7 @@ export function findProjectsNpmDependencies(
     graph,
     npmDeps,
     seen,
+    options.ignoredDependencies || [],
     dependencyInputs,
     selfInputs
   );
@@ -226,6 +228,7 @@ function findAllNpmDeps(
   graph: ProjectGraph,
   npmDeps: NpmDeps,
   seen: Set<string>,
+  ignoredDependencies: string[],
   dependencyPatterns: string[],
   rootPatterns?: string[]
 ): void {
@@ -260,6 +263,14 @@ function findAllNpmDeps(
     } else {
       if (node) {
         seen.add(dep);
+        // do not add ignored dependencies to the list or non-npm dependencies
+        if (
+          ignoredDependencies.includes(node.data.packageName) ||
+          node.type !== 'npm'
+        ) {
+          continue;
+        }
+
         npmDeps.dependencies[node.data.packageName] = node.data.version;
         recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
       } else if (graph.nodes[dep]) {
@@ -269,6 +280,7 @@ function findAllNpmDeps(
           graph,
           npmDeps,
           seen,
+          ignoredDependencies,
           dependencyPatterns
         );
       }
