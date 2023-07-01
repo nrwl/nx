@@ -42,7 +42,7 @@
       "hostname": {
         "type": "string",
         "description": "Hostname on which the application is served.",
-        "default": "localhost"
+        "default": "0.0.0.0"
       },
       "buildLibsFromSource": {
         "type": "boolean",
