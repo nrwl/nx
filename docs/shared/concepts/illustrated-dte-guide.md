@@ -40,7 +40,7 @@ Efficiently parallelizing your CI process across many agents can dramatically sp
 
 Nx Cloud is FREE for open source projects. Contact cloud-support@nrwl.io to get set up.
 
-For closed source projects, the first 500 computation hours per month are free. Most workspaces don't exceed this amount. No credit card is required. After 500 hours, the cost is $1 per computation hour.
+For closed source projects, the first 300 CI pipeline executions per month are free. No credit card is required. After 300 CI pipeline executions, you can upgrade to the Pro plan.
 
 For more details, see the [Nx Cloud pricing page](https://nx.app/pricing).
 
