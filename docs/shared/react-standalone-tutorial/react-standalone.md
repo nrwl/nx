@@ -434,7 +434,7 @@ nx g @nx/react:component product-list --project=modules-products
 
 We don't need to implement anything fancy as we just want to learn how to import it into our main React application.
 
-```tsx {% fileName="modules/products/src/lib/product-list.tsx" %}
+```tsx {% fileName="modules/products/src/lib/product-list/product-list.tsx" %}
 import styles from './product-list.module.css';
 
 /* eslint-disable-next-line */
