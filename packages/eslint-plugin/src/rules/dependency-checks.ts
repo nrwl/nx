@@ -11,6 +11,7 @@ import {
   getAllDependencies,
   removePackageJsonFromFileMap,
 } from '../utils/package-json-utils';
+import { JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';
 
 export type Options = [
   {
@@ -54,7 +55,7 @@ export default createESLintRule<Options, MessageIds>({
       },
     ],
     messages: {
-      missingDependency: `The "{{projectName}}" uses the package "{{packageName}}", but it is missing from the project's "package.json".`,
+      missingDependency: `The "{{projectName}}" uses the following packages, but they are missing from the "{{section}}":{{packageNames}}`,
       obsoleteDependency: `The "{{packageName}}" package is not used by "{{projectName}}".`,
       versionMismatch: `The version specifier does not contain the installed version of "{{packageName}}" package: {{version}}.`,
       missingDependencySection: `Dependency sections are missing from the "package.json" but following dependencies were detected:{{dependencies}}`,
@@ -159,35 +160,43 @@ export default createESLintRule<Options, MessageIds>({
         return;
       }
       const missingDeps = expectedDependencyNames.filter(
-        (d) => !projPackageJsonDeps[d]
+        (d) => !projPackageJsonDeps[d] && !ignoredDependencies.includes(d)
       );
 
-      missingDeps.forEach((d) => {
-        if (!ignoredDependencies.includes(d)) {
-          context.report({
-            node: node as any,
-            messageId: 'missingDependency',
-            data: { packageName: d, projectName: sourceProject.name },
-            fix(fixer) {
+      if (missingDeps.length) {
+        context.report({
+          node: node as any,
+          messageId: 'missingDependency',
+          data: {
+            packageNames: missingDeps.map((d) => `\n    - ${d}`).join(''),
+            section: (node.key as JSONLiteral).value,
+            projectName: sourceProject.name,
+          },
+          fix(fixer) {
+            missingDeps.forEach((d) => {
               projPackageJsonDeps[d] =
                 rootPackageJsonDeps[d] || projDependencies[d];
+            });
 
-              const deps = (node.value as AST.JSONObjectExpression).properties;
-              if (deps.length) {
-                return fixer.insertTextAfter(
-                  deps[deps.length - 1] as any,
-                  `,\n    "${d}": "${projPackageJsonDeps[d]}"`
-                );
-              } else {
-                return fixer.replaceTextRange(
-                  [node.value.range[0] + 1, node.value.range[1] - 1],
-                  `\n    "${d}": "${projPackageJsonDeps[d]}"\n  `
-                );
-              }
-            },
-          });
-        }
-      });
+            const deps = (node.value as AST.JSONObjectExpression).properties;
+            const mappedDeps = missingDeps
+              .map((d) => `\n    "${d}": "${projPackageJsonDeps[d]}"`)
+              .join(',');
+
+            if (deps.length) {
+              return fixer.insertTextAfter(
+                deps[deps.length - 1] as any,
+                `,${mappedDeps}`
+              );
+            } else {
+              return fixer.insertTextAfterRange(
+                [node.value.range[0] + 1, node.value.range[1] - 1],
+                `${mappedDeps}\n  `
+              );
+            }
+          },
+        });
+      }
     }
 
     function validateVersionMatchesInstalled(
@@ -261,15 +270,6 @@ export default createESLintRule<Options, MessageIds>({
               ]);
             }
           }
-
-          // remove 4 spaces, new line and potential comma from previous line
-          const shouldRemoveSiblingComma =
-            isLastProperty && node.parent.properties.length > 1;
-          const leadingChars = 5 + (shouldRemoveSiblingComma ? 1 : 0);
-          return fixer.removeRange([
-            node.range[0] - leadingChars,
-            node.range[1] + (isLastProperty ? 0 : 1),
-          ]);
         },
       });
     }
