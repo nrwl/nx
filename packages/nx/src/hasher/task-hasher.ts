@@ -429,13 +429,14 @@ class TaskHasherImpl {
         partialHashes.push(node.data.version);
       }
       // we want to calculate the hash of the entire dependency tree
-      if (this.projectGraph.dependencies[projectName]) {
-        this.projectGraph.dependencies[projectName].forEach((d) => {
-          if (!visited.has(d.target)) {
-            partialHashes.push(this.hashExternalDependency(d.target, visited));
-          }
-        });
-      }
+      this.projectGraph.dependencies[projectName]?.forEach((d) => {
+        if (!visited.has(d.target)) {
+          partialHashes.push(
+            this.hashExternalDependency(d.target, new Set(visited))
+          );
+        }
+      });
+
       partialHash = hashArray(partialHashes);
     } else {
       // unknown dependency
