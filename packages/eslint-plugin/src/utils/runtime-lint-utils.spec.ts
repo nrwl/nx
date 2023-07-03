@@ -138,7 +138,9 @@ describe('hasBannedImport', () => {
       },
     ];
 
-    expect(hasBannedImport(source, target, constraints)).toBe(constraints[1]);
+    expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
+      constraints[1]
+    );
   });
 
   it('should return just first DepConstraint banning given target', () => {
@@ -156,7 +158,9 @@ describe('hasBannedImport', () => {
       },
     ];
 
-    expect(hasBannedImport(source, target, constraints)).toBe(constraints[1]);
+    expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
+      constraints[1]
+    );
   });
 
   it('should return null if tag does not match', () => {
@@ -174,7 +178,9 @@ describe('hasBannedImport', () => {
       },
     ];
 
-    expect(hasBannedImport(source, target, constraints)).toBe(undefined);
+    expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
+      undefined
+    );
   });
 
   it('should return null if packages does not match', () => {
@@ -188,7 +194,9 @@ describe('hasBannedImport', () => {
       },
     ];
 
-    expect(hasBannedImport(source, target, constraints)).toBe(undefined);
+    expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
+      undefined
+    );
   });
 });
 
@@ -298,12 +306,17 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     );
   });
 
-  it('should return target and constraint pair if any dependents have banned import', () => {
+  it("should return empty array if any dependents don't have banned import", () => {
     expect(
-      hasBannedDependencies(externalDependencies.slice(1), graph, {
-        sourceTag: 'a',
-        bannedExternalImports: ['angular'],
-      })
+      hasBannedDependencies(
+        externalDependencies.slice(1),
+        graph,
+        {
+          sourceTag: 'a',
+          bannedExternalImports: ['angular'],
+        },
+        'react-native'
+      )
     ).toStrictEqual([]);
   });
 
@@ -314,7 +327,12 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
+      hasBannedDependencies(
+        externalDependencies.slice(1),
+        graph,
+        constraint,
+        'react-native'
+      )
     ).toStrictEqual([[bannedTarget, d, constraint]]);
   });
 
@@ -325,7 +343,12 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
+      hasBannedDependencies(
+        externalDependencies.slice(1),
+        graph,
+        constraint,
+        'react'
+      )
     ).toStrictEqual([
       [nonBannedTarget, target, constraint],
       [nonBannedTarget, c, constraint],
@@ -339,8 +362,20 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
-        .length
+      hasBannedDependencies(
+        externalDependencies.slice(1),
+        graph,
+        constraint,
+        'react-native'
+      ).length
+    ).toBe(0);
+    expect(
+      hasBannedDependencies(
+        externalDependencies.slice(1),
+        graph,
+        constraint,
+        'react'
+      ).length
     ).toBe(0);
   });
 });
