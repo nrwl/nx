@@ -242,7 +242,7 @@ export default createESLintRule<Options, MessageIds>({
           if (index > 0) {
             const previousNode = node.parent.properties[index - 1];
             return fixer.removeRange([
-              previousNode.range[1] + 1,
+              previousNode.range[1] + (isLastProperty ? 0 : 1),
               node.range[1] + (isLastProperty ? 0 : 1),
             ]);
           } else {
