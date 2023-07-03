@@ -290,7 +290,7 @@ describe('updatePackageJson', () => {
   const fileMap = {
     '@org/lib1': [
       {
-        file: 'test.ts',
+        file: 'libs/lib1/src/test.ts',
         hash: '',
         deps: ['npm:external1', 'npm:external2'],
       },
