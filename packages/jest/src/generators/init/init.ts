@@ -124,7 +124,9 @@ function addTestInputs(tree: Tree) {
       // Remove tsconfig.spec.json
       '!{projectRoot}/tsconfig.spec.json',
       // Remove jest.config.js/ts
-      '!{projectRoot}/jest.config.[jt]s'
+      '!{projectRoot}/jest.config.[jt]s',
+      // Remove test-setup.js/ts
+      '!{projectRoot}/src/test-setup.[jt]s'
     );
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
