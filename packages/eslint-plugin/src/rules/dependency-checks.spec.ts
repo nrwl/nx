@@ -378,9 +378,10 @@ describe('Dependency checks (eslint)', () => {
       }
     );
     expect(failures.length).toEqual(1);
-    expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "liba" uses the package "external2", but it is missing from the project's "package.json"."`
-    );
+    expect(failures[0].message).toMatchInlineSnapshot(`
+      "The "liba" uses the following packages, but they are missing from the "dependencies":
+          - external2"
+    `);
     expect(failures[0].line).toEqual(3);
 
     // apply fix
@@ -1407,15 +1408,13 @@ describe('Dependency checks (eslint)', () => {
         ],
       }
     );
-    expect(failures.length).toEqual(2);
-    expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "liba" uses the package "tslib", but it is missing from the project's "package.json"."`
-    );
+    expect(failures.length).toEqual(1);
+    expect(failures[0].message).toMatchInlineSnapshot(`
+      "The "liba" uses the following packages, but they are missing from the "dependencies":
+          - tslib
+          - external2"
+    `);
     expect(failures[0].line).toEqual(3);
-    expect(failures[1].message).toMatchInlineSnapshot(
-      `"The "liba" uses the package "external2", but it is missing from the project's "package.json"."`
-    );
-    expect(failures[1].line).toEqual(3);
   });
 });
 
@@ -1491,9 +1490,10 @@ it('should require swc if @nx/js:swc executor', () => {
     }
   );
   expect(failures.length).toEqual(1);
-  expect(failures[0].message).toMatchInlineSnapshot(
-    `"The "liba" uses the package "@swc/helpers", but it is missing from the project's "package.json"."`
-  );
+  expect(failures[0].message).toMatchInlineSnapshot(`
+  "The "liba" uses the following packages, but they are missing from the "dependencies":
+      - @swc/helpers"
+`);
   expect(failures[0].line).toEqual(3);
 });
 
