@@ -10,6 +10,11 @@ exports[`generateFiles should copy files from a directory into the tree 1`] = `
 "
 `;
 
+exports[`generateFiles should overwrite files when option is overwrite 1`] = `
+"file in directory contents
+"
+`;
+
 exports[`generateFiles should remove ".template" from paths 1`] = `
 "file with template suffix contents
 "

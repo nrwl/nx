@@ -101,6 +101,16 @@ Hello, my name is mylib!
 
 If you want the generated file or folder name to contain variable values, use `__variable__`. So `NOTES-for-__name__.md` would be resolved to `NOTES_for_mylib.md` in the above example.
 
+## Overwrite mode
+
+By default, generators overwrite files when they already exist.
+
+You can customize this behaviour with an optional argument to `generateFiles` that can take one of three values:
+
+- `OverwriteStrategy.Overwrite` (default): all generated files are created and overwrite existing target files if any.
+- `OverwriteStrategy.KeepExisting`: generated files are created only when target file does not exist. Existing target files are kept as is.
+- `OverwriteStrategy.ThrowIfExisting`: if a target file already exists, an exception is thrown. Suitable when a pristine target environment is expected.
+
 ## EJS Syntax Quickstart
 
 The [EJS syntax](https://ejs.co/) can do much more than replace variable names with values. Here are some common techniques.
