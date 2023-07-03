@@ -128,8 +128,8 @@ export default createESLintRule<Options, MessageIds>({
         'Buildable libraries cannot import or export from non-buildable libraries',
       noImportsOfLazyLoadedLibraries: `Static imports of lazy-loaded libraries are forbidden.\n\nLibrary "{{targetProjectName}}" is lazy-loaded in these files:\n{{filePaths}}`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
-      bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
-      nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package. Nested import found at {{childProjectName}}`,
+      bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import "{{imp}}"`,
+      nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import "{{imp}}". Nested import found at {{childProjectName}}`,
       noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
       onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{tags}}`,
       emptyOnlyTagsConstraintViolation:
@@ -405,7 +405,8 @@ export default createESLintRule<Options, MessageIds>({
         const constraint = hasBannedImport(
           sourceProject,
           targetProject,
-          depConstraints
+          depConstraints,
+          imp
         );
         if (constraint) {
           context.report({
@@ -415,7 +416,7 @@ export default createESLintRule<Options, MessageIds>({
               sourceTag: isComboDepConstraint(constraint)
                 ? constraint.allSourceTags.join('" and "')
                 : constraint.sourceTag,
-              package: targetProject.data.packageName,
+              imp,
             },
           });
         }
@@ -624,19 +625,20 @@ export default createESLintRule<Options, MessageIds>({
             const matches = hasBannedDependencies(
               transitiveExternalDeps,
               projectGraph,
-              constraint
+              constraint,
+              imp
             );
             if (matches.length > 0) {
               matches.forEach(([target, violatingSource, constraint]) => {
                 context.report({
                   node,
-                  messageId: 'bannedExternalImportsViolation',
+                  messageId: 'nestedBannedExternalImportsViolation',
                   data: {
                     sourceTag: isComboDepConstraint(constraint)
                       ? constraint.allSourceTags.join('" and "')
                       : constraint.sourceTag,
                     childProjectName: violatingSource.name,
-                    package: target.data.packageName,
+                    imp,
                   },
                 });
               });

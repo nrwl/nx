@@ -234,15 +234,20 @@ export function getSourceFilePath(sourceFileName: string, projectPath: string) {
  */
 function isConstraintBanningProject(
   externalProject: ProjectGraphExternalNode,
-  constraint: DepConstraint
+  constraint: DepConstraint,
+  imp: string
 ): boolean {
   const { allowedExternalImports, bannedExternalImports } = constraint;
   const { packageName } = externalProject.data;
 
+  if (imp !== packageName && !imp.startsWith(`${packageName}/`)) {
+    return false;
+  }
+
   /* Check if import is banned... */
   if (
     bannedExternalImports?.some((importDefinition) =>
-      mapGlobToRegExp(importDefinition).test(packageName)
+      mapGlobToRegExp(importDefinition).test(imp)
     )
   ) {
     return true;
@@ -250,14 +255,17 @@ function isConstraintBanningProject(
 
   /* ... then check if there is a whitelist and if there is a match in the whitelist.  */
   return allowedExternalImports?.every(
-    (importDefinition) => !mapGlobToRegExp(importDefinition).test(packageName)
+    (importDefinition) =>
+      !imp.startsWith(packageName) ||
+      !mapGlobToRegExp(importDefinition).test(imp)
   );
 }
 
 export function hasBannedImport(
   source: ProjectGraphProjectNode,
   target: ProjectGraphExternalNode,
-  depConstraints: DepConstraint[]
+  depConstraints: DepConstraint[],
+  imp: string
 ): DepConstraint | undefined {
   // return those constraints that match source project
   depConstraints = depConstraints.filter((c) => {
@@ -271,7 +279,7 @@ export function hasBannedImport(
     return tags.every((t) => hasTag(source, t));
   });
   return depConstraints.find((constraint) =>
-    isConstraintBanningProject(target, constraint)
+    isConstraintBanningProject(target, constraint, imp)
   );
 }
 
@@ -323,7 +331,8 @@ export function findTransitiveExternalDependencies(
 export function hasBannedDependencies(
   externalDependencies: ProjectGraphDependency[],
   graph: ProjectGraph,
-  depConstraint: DepConstraint
+  depConstraint: DepConstraint,
+  imp: string
 ):
   | Array<[ProjectGraphExternalNode, ProjectGraphProjectNode, DepConstraint]>
   | undefined {
@@ -331,7 +340,8 @@ export function hasBannedDependencies(
     .filter((dependency) =>
       isConstraintBanningProject(
         graph.externalNodes[dependency.target],
-        depConstraint
+        depConstraint,
+        imp
       )
     )
     .map((dep) => [
