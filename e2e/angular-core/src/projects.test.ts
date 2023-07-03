@@ -53,6 +53,11 @@ describe('Angular Projects', () => {
       `generate @nx/angular:app ${standaloneApp} --directory=myDir --standalone=true --no-interactive`
     );
 
+    const esbuildApp = uniq('esbuild-app');
+    runCLI(
+      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --directory=myDir --no-interactive`
+    );
+
     updateFile(
       `apps/${app1}/src/app/app.module.ts`,
       `
@@ -73,10 +78,11 @@ describe('Angular Projects', () => {
 
     // check build
     runCLI(
-      `run-many --target build --projects=${app1},my-dir-${standaloneApp} --parallel --prod --output-hashing none`
+      `run-many --target build --projects=${app1},my-dir-${standaloneApp},my-dir-${esbuildApp} --parallel --prod --output-hashing none`
     );
     checkFilesExist(`dist/apps/${app1}/main.js`);
     checkFilesExist(`dist/apps/my-dir/${standaloneApp}/main.js`);
+    checkFilesExist(`dist/apps/my-dir/${esbuildApp}/index.html`);
     // This is a loose requirement because there are a lot of
     // influences external from this project that affect this.
     const es2015BundleSize = getSize(tmpProjPath(`dist/apps/${app1}/main.js`));
@@ -87,7 +93,7 @@ describe('Angular Projects', () => {
 
     // check unit tests
     runCLI(
-      `run-many --target test --projects=${app1},my-dir-${standaloneApp},${lib1} --parallel`
+      `run-many --target test --projects=${app1},my-dir-${standaloneApp},my-dir-${esbuildApp},${lib1} --parallel`
     );
 
     // check e2e tests
