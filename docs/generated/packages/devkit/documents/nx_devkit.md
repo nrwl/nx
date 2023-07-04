@@ -39,6 +39,7 @@ It only uses language primitives and immutable objects
 - [NxAffectedConfig](../../devkit/documents/nx_devkit#nxaffectedconfig)
 - [NxJsonConfiguration](../../devkit/documents/nx_devkit#nxjsonconfiguration)
 - [NxPlugin](../../devkit/documents/nx_devkit#nxplugin)
+- [PackageJson](../../devkit/documents/nx_devkit#packagejson)
 - [ProjectConfiguration](../../devkit/documents/nx_devkit#projectconfiguration)
 - [ProjectFileMap](../../devkit/documents/nx_devkit#projectfilemap)
 - [ProjectGraph](../../devkit/documents/nx_devkit#projectgraph)
@@ -308,6 +309,14 @@ Nx.json configuration
 • **NxPlugin**: `Object`
 
 A plugin for Nx
+
+---
+
+### PackageJson
+
+• **PackageJson**: `Object`
+
+Package Json configuration
 
 ---
 

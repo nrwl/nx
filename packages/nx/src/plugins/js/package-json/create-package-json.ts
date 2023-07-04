@@ -16,7 +16,6 @@ import {
 import { readNxJson } from '../../../config/configuration';
 import { readProjectFileMapCache } from '../../../project-graph/nx-deps-cache';
 import { join } from 'path';
-import { file } from 'tmp';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -44,11 +43,19 @@ export function createPackageJson(
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
 
+  const rootPackageJson = readJsonFile(
+    `${options.root || workspaceRoot}/package.json`
+  );
+
   const npmDeps = findProjectsNpmDependencies(
     projectNode,
     graph,
     options.target,
-    { helperDependencies: options.helperDependencies },
+    rootPackageJson,
+    {
+      helperDependencies: options.helperDependencies,
+      isProduction: options.isProduction,
+    },
     fileMap
   );
 
@@ -93,9 +100,6 @@ export function createPackageJson(
     );
   };
 
-  const rootPackageJson = readJsonFile(
-    `${options.root || workspaceRoot}/package.json`
-  );
   Object.entries(npmDeps.dependencies).forEach(([packageName, version]) => {
     if (
       rootPackageJson.devDependencies?.[packageName] &&
@@ -180,9 +184,11 @@ export function findProjectsNpmDependencies(
   projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,
   target: string,
+  rootPackageJson: PackageJson,
   options: {
     helperDependencies?: string[];
     ignoredDependencies?: string[];
+    isProduction?: boolean;
   },
   fileMap?: ProjectFileMap
 ): NpmDeps {
@@ -209,27 +215,27 @@ export function findProjectsNpmDependencies(
     recursivelyCollectPeerDependencies(dep, graph, npmDeps, seen);
   });
 
+  // if it's production, we want to ignore all found devDependencies
+  const ignoredDependencies =
+    options.isProduction && rootPackageJson.devDependencies
+      ? [
+          ...(options.ignoredDependencies || []),
+          ...Object.keys(rootPackageJson.devDependencies),
+        ]
+      : options.ignoredDependencies || [];
+
   findAllNpmDeps(
     fileMap,
     projectNode,
     graph,
     npmDeps,
     seen,
-    options.ignoredDependencies || [],
+    ignoredDependencies,
     dependencyInputs,
     selfInputs
   );
 
   return npmDeps;
-}
-
-// this function checks if the file path in in the root and not index.ts file
-// these files are likely configuration files
-function isMainOrNonRoot(filePath: string, root: string): boolean {
-  if (filePath.slice(root.length + 1).includes('/')) {
-    return true;
-  }
-  return !!/(index|main|public(-|_)api)\.(t|j)sx?$/.exec(filePath);
 }
 
 function findAllNpmDeps(
@@ -250,7 +256,7 @@ function findAllNpmDeps(
     projectNode.data.root,
     projectFileMap[projectNode.name] || [],
     rootPatterns ?? dependencyPatterns
-  ).filter((f) => isMainOrNonRoot(f.file, projectNode.data.root));
+  );
 
   const projectDependencies = new Set<string>();
 

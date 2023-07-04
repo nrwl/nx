@@ -177,6 +177,11 @@ export { stripIndents } from './utils/strip-indents';
 /**
  * @category Utils
  */
+export type { PackageJson } from './utils/package-json';
+
+/**
+ * @category Utils
+ */
 export { joinPathFragments, normalizePath } from './utils/path';
 
 // TODO(v16): Change this to export from './utils/workspace-root'

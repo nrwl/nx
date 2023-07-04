@@ -33,6 +33,9 @@ export interface NxMigrationsConfiguration {
 
 type PackageOverride = { [key: string]: string | PackageOverride };
 
+/**
+ * Package Json configuration
+ */
 export interface PackageJson {
   // Generic Package.Json Configuration
   name: string;

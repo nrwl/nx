@@ -9,6 +9,7 @@ import { satisfies } from 'semver';
 import { getHelperDependenciesFromProjectGraph } from '@nx/js';
 import {
   getAllDependencies,
+  getPackageJson,
   removePackageJsonFromFileMap,
 } from '../utils/package-json-utils';
 import { JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';
@@ -126,13 +127,17 @@ export default createESLintRule<Options, MessageIds>({
       projectGraph
     );
 
+    const rootPackageJson = getPackageJson(join(workspaceRoot, 'package.json'));
+
     // find all dependencies for the project
     const npmDeps = findProjectsNpmDependencies(
       sourceProject,
       projectGraph,
       buildTarget,
+      rootPackageJson,
       {
         helperDependencies: helperDependencies.map((dep) => dep.target),
+        isProduction: true,
       },
       removePackageJsonFromFileMap(projectFileMap)
     );
@@ -148,12 +153,12 @@ export default createESLintRule<Options, MessageIds>({
       'package.json'
     );
 
-    globalThis.projPackageJsonDeps ??= getAllDependencies(projPackageJsonPath);
+    globalThis.projPackageJsonDeps ??= getAllDependencies(
+      getPackageJson(projPackageJsonPath)
+    );
     const projPackageJsonDeps: Record<string, string> =
       globalThis.projPackageJsonDeps;
-    const rootPackageJsonDeps = getAllDependencies(
-      join(workspaceRoot, 'package.json')
-    );
+    const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
     function validateMissingDependencies(node: AST.JSONProperty) {
       if (!checkMissingDependencies) {
