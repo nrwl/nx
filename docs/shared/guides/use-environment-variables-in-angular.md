@@ -120,6 +120,13 @@ platformBrowserDynamic()
   .catch((err) => console.error(err));
 ```
 
+You can also set the variable before running the command by using:
+MacOS & Linux:
+`NX_API_URL=https://localhost:9999/** npm run build-prod`
+
+Windows:
+`set NX_API_URL=https://localhost:9999/** & npm run build-prod`
+
 You should also update `tsconfig.apps.json` and `tsconfig.spec.json` files to include node types.
 
 ```json lines
