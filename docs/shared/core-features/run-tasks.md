@@ -102,6 +102,42 @@ npx nx affected -t test
 
 Learn more about the affected command [here](/concepts/affected).
 
+## Run Root-Level Tasks
+
+Sometimes you have tasks that apply to the entire codebase rather than to a single project. But you still want those tasks to go through the "Nx pipeline" in order to benefit from caching. You can define these in the root-level `package.json` as follows:
+
+```json {% fileName="package.json" %}
+{
+  "name": "myorg",
+  "scripts": {
+    "docs": "node ./generateDocsSite.js"
+  },
+  "nx": {}
+}
+```
+
+> Note the `nx: {}` property on the `package.json`. This is necessary to inform Nx about this root-level project. The property can also be expanded to specify cache inputs and outputs.
+
+To invoke it, use:
+
+```shell
+npx nx docs
+```
+
+If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run the script (i.e. `npm run docs`) you can use the [nx exec](/packages/nx/documents/exec) command:
+
+```json {% fileName="package.json" %}
+{
+  "name": "myorg",
+  "scripts": {
+    "docs": "nx exec -- node ./generateDocsSite.js"
+  },
+  "nx": {}
+}
+```
+
+Learn more about root-level tasks [in our dedicated recipe page](/recipes/other/root-level-scripts).
+
 ## Defining the Task Pipeline
 
 In a monorepo you might need to define the order with which the tasks are being run. For example, if project `app` depends on `header` you might want to run the `build` target on `header` before running the `build` target on `app`.

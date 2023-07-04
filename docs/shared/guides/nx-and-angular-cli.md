@@ -46,7 +46,7 @@ Replace `[package]` with the name of the package you're trying to add.
 
 Nx can improve your developer experience without rearranging folders in your workspace and without the need to have multiple apps in the same repo. The changes outlined in the previous sections are the only modifications to your existing workflow that are needed, then Nx opens the door to many more DX improvements.
 
-Without any additional changes, Nx provides task caching, automated architecture diagrams and IDE integrations. Then, with some minor configuration, you can add task pipelines, distributed caching and CI improvements. To take full advantage of these features, you can begin to separate your large application into self-contained libraries. For an introduction to this process, complete the [Angular Standalone Tutorial](/tutorials/angular-standalone-tutorial).
+Without any additional changes, Nx provides task caching, automated architecture diagrams and IDE integrations. Then, with some minor configuration, you can add task pipelines, distributed caching and CI improvements. To take full advantage of these features, you can begin to separate your large application into self-contained libraries. For an introduction to this process, complete the [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial).
 
 ## More Info
 
