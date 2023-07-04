@@ -27,38 +27,38 @@
               "name": "Why Nx?",
               "id": "why-nx",
               "file": "shared/getting-started/why-nx"
-            }
-          ]
-        },
-        {
-          "name": "5 min Tutorials",
-          "id": "tutorials",
-          "description": "Get started with basic information, concepts and tutorials.",
-          "itemList": [
-            {
-              "name": "Package-Based Monorepo",
-              "id": "package-based-repo-tutorial",
-              "file": "shared/npm-tutorial/package-based"
             },
             {
-              "name": "Integrated Monorepo",
-              "id": "integrated-repo-tutorial",
-              "file": "shared/npm-tutorial/integrated"
-            },
-            {
-              "name": "React Standalone",
-              "id": "react-standalone-tutorial",
-              "file": "shared/react-standalone-tutorial/react-standalone"
-            },
-            {
-              "name": "Angular Standalone",
-              "id": "angular-standalone-tutorial",
-              "file": "shared/angular-standalone-tutorial/angular-standalone"
-            },
-            {
-              "name": "Node Standalone",
-              "id": "node-server-tutorial",
-              "file": "shared/node-server-tutorial/1-code-generation"
+              "name": "5 min Tutorials",
+              "id": "tutorials",
+              "description": "Get started with basic information, concepts and tutorials.",
+              "itemList": [
+                {
+                  "name": "Package-Based Monorepo",
+                  "id": "package-based-repo-tutorial",
+                  "file": "shared/npm-tutorial/package-based"
+                },
+                {
+                  "name": "Integrated Monorepo",
+                  "id": "integrated-repo-tutorial",
+                  "file": "shared/npm-tutorial/integrated"
+                },
+                {
+                  "name": "React Standalone",
+                  "id": "react-standalone-tutorial",
+                  "file": "shared/react-standalone-tutorial/react-standalone"
+                },
+                {
+                  "name": "Angular Standalone",
+                  "id": "angular-standalone-tutorial",
+                  "file": "shared/angular-standalone-tutorial/angular-standalone"
+                },
+                {
+                  "name": "Node Standalone",
+                  "id": "node-server-tutorial",
+                  "file": "shared/node-server-tutorial/1-code-generation"
+                }
+              ]
             }
           ]
         },

@@ -369,7 +369,7 @@ const tutorialBaseUrls = {
   '/(l|latest)/(a|angular)/tutorial/1-code-generation':
     '/angular-tutorial/1-code-generation',
   '/(l|latest)/(a|node)/tutorial/1-code-generation':
-    '/tutorials/node-server-tutorial',
+    '/getting-started/tutorials/node-server-tutorial',
   '/(l|latest)/(r|react)/tutorial/1-code-generation':
     '/react-tutorial/1-code-generation',
 };
@@ -405,7 +405,7 @@ const oldNodeTutorialPaths = [
 ];
 
 const extraNodeRedirects = {
-  '/getting-started/node-tutorial': '/tutorials/node-server-tutorial',
+  '/getting-started/node-tutorial': '/getting-started/node-server-tutorial',
   '/node-tutorial/1-code-generation': '/node-server-tutorial/1-code-generation',
   '/node-tutorial/2-project-graph': '/node-server-tutorial/2-project-graph',
   '/node-tutorial/3-task-running': '/node-server-tutorial/3-task-running',
@@ -413,7 +413,8 @@ const extraNodeRedirects = {
   '/node-tutorial/5-docker-target': '/node-server-tutorial/5-docker-target',
   '/node-tutorial/6-summary': '/node-server-tutorial/6-summary',
 };
-const nodeRedirectDestination = '/tutorials/node-server-tutorial';
+const nodeRedirectDestination =
+  '/getting-started/tutorials/node-server-tutorial';
 const nodeTutorialRedirects = oldNodeTutorialPaths.reduce((acc, path) => {
   acc[path] = nodeRedirectDestination;
   return acc;
@@ -451,25 +452,25 @@ for (const path of oldAngularTutorialPaths) {
  */
 const standaloneTutorialRedirects = {
   '/shared/react-standalone-tutorial/1-code-generation':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   '/shared/react-standalone-tutorial/2-project-graph':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   '/shared/react-standalone-tutorial/3-task-running':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   '/shared/react-standalone-tutorial/4-task-pipelines':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   '/shared/react-standalone-tutorial/5-summary':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   'shared/angular-standalone-tutorial/1-code-generation':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
   'shared/angular-standalone-tutorial/2-project-graph':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
   'shared/angular-standalone-tutorial/3-task-running':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
   'shared/angular-standalone-tutorial/4-task-pipelines':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
   'shared/angular-standalone-tutorial/5-summary':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
 };
 
 const packagesIndexes = {
@@ -599,13 +600,26 @@ const conceptUrls = {
   '/more-concepts/global-nx':
     '/getting-started/installation#installing-nx-globally',
   '/getting-started/package-based-repo-tutorial':
-    '/tutorials/package-based-repo-tutorial',
+    '/getting-started/tutorials/package-based-repo-tutorial',
   '/getting-started/integrated-repo-tutorial':
-    '/tutorials/integrated-repo-tutorial',
+    '/getting-started/tutorials/integrated-repo-tutorial',
   '/getting-started/react-standalone-tutorial':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   '/getting-started/angular-standalone-tutorial':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
+};
+
+const nested5minuteTutorialUrls = {
+  '/tutorials/package-based-repo-tutorial':
+    '/getting-started/tutorials/package-based-repo-tutorial',
+  '/tutorials/integrated-repo-tutorial':
+    '/getting-started/tutorials/integrated-repo-tutorial',
+  '/tutorials/react-standalone-tutorial':
+    '/getting-started/tutorials/react-standalone-tutorial',
+  '/tutorials/angular-standalone-tutorial':
+    '/getting-started/tutorials/angular-standalone-tutorial',
+  '/tutorials/node-server-tutorial':
+    '/getting-started/tutorials/node-server-tutorial',
 };
 
 const pluginUrls = {
@@ -648,5 +662,6 @@ module.exports = {
   packagesIndexes,
   packagesDocuments,
   conceptUrls,
+  nested5minuteTutorialUrls,
   pluginUrls,
 };
