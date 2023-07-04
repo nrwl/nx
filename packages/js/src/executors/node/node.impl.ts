@@ -10,7 +10,6 @@ import {
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
-import { join } from 'path';
 
 import { InspectType, NodeExecutorOptions } from './schema';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
@@ -41,6 +40,9 @@ export async function* nodeExecutor(
 ) {
   process.env.NODE_ENV ??= context?.configurationName ?? 'development';
   const project = context.projectGraph.nodes[context.projectName];
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
+
   const buildTarget = parseTargetString(
     options.buildTarget,
     context.projectGraph
@@ -84,10 +86,15 @@ export async function* nodeExecutor(
         mainFolder,
         `${path.parse(mainFileName).name}.js`
       );
+      outputFileName = outputFileName.replace(projectRoot, '');
     }
   }
 
-  const fileToRun = join(context.root, buildOptions.outputPath, outputFileName);
+  const fileToRun = joinPathFragments(
+    context.root,
+    buildOptions.outputPath,
+    outputFileName
+  );
   const tasks: ActiveTask[] = [];
   let currentTask: ActiveTask = null;
 
