@@ -225,13 +225,11 @@ export function findProjectsNpmDependencies(
 
 // this function checks if the file path in in the root and not index.ts file
 // these files are likely configuration files
-function isIndexOrNonRoot(filePath: string, root: string): boolean {
+function isMainOrNonRoot(filePath: string, root: string): boolean {
   if (filePath.slice(root.length + 1).includes('/')) {
     return true;
   }
-  return ['index.ts', 'index.js', 'index.jsx', 'index.tsx'].some(
-    (f) => `${root}/${f}` === filePath
-  );
+  return !!/(index|main|public(-|_)api)\.(t|j)sx?$/.exec(filePath);
 }
 
 function findAllNpmDeps(
@@ -252,7 +250,7 @@ function findAllNpmDeps(
     projectNode.data.root,
     projectFileMap[projectNode.name] || [],
     rootPatterns ?? dependencyPatterns
-  ).filter((f) => isIndexOrNonRoot(f.file, projectNode.data.root));
+  ).filter((f) => isMainOrNonRoot(f.file, projectNode.data.root));
 
   const projectDependencies = new Set<string>();
 
