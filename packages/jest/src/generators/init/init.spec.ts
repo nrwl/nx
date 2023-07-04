@@ -86,6 +86,7 @@ export default {
     );
     expect(productionFileSet).toContain('!{projectRoot}/tsconfig.spec.json');
     expect(productionFileSet).toContain('!{projectRoot}/jest.config.[jt]s');
+    expect(productionFileSet).toContain('!{projectRoot}/src/test-setup.[jt]s');
     expect(testDefaults).toEqual({
       inputs: ['default', '^production', '{workspaceRoot}/jest.preset.js'],
     });
