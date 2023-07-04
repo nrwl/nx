@@ -1,16 +1,24 @@
 # Automate Updating Dependencies
 
-The Nx CLI provides the `migrate` command to help you stay up to date with the latest version of Nx.
+Keeping a codebase updated with the latest changes in your framework of choice and tooling can be challenging. Not to mention that "tooling maintenance work" is usually hard to squeeze into your feature sprint.
 
-Not only does `nx migrate` update you to the latest version of Nx, but it also updates the versions of dependencies that we support and test such as Jest and Cypress. You can also use the `migrate` command to update any Nx plugin.
+The `nx migrate` helps by automating the process of updating:
 
-## Update to the latest Nx version
+- package versions in your `package.json`
+- configuration files (e.g. your Jest, ESLint or Nx config)
+- your source code (e.g. fixing breaking changes or migrating to new best practices)
+
+## How does it work?
+
+Nx knows where its configuration files are and can therefore make sure they match the expected format or can alternatively adjust them. This automated update process, commonly referred to as "migration," becomes even more powerful when you leverage [Nx plugins](/packages). Nx plugins, which are NPM packages with a range of capabilities (code generation, task automation...), offer targeted updates based on their specific areas of responsibility.
+
+For example, the [Nx ESLint plugin](/packages/linter) excels at configuring linting in your workspace. With its understanding of the configuration file locations, this plugin can provide precise migration scripts to update ESLint packages in your `package.json` and corresponding configuration files in your workspace when a new version is released.
 
 Updating happens in three steps:
 
 - The installed dependencies are updated including the `package.json` (and `node_modules`).
-- The source code in the repo is updated to match the new versions of packages in `package.json`.
-- Remove the `migrations.json` file
+- The source code in the repo is updated to match the new versions of packages according to set of instructions specified in `migrations.json` file.
+- Optionally remove the `migrations.json` file or keep it to re-run it in different Git branches
 
 ### Step 1: Updating dependencies and generating migrations
 
@@ -20,11 +28,7 @@ First, run the `migrate` command:
 nx migrate latest # same as nx migrate nx@latest
 ```
 
-You can also specify the name of the package and the version:
-
-```shell
-nx migrate nx@version # you can also specify version
-```
+Note you can also specify an exact version by replacing `latest` with `nx@<version>`.
 
 This fetches the specified version of the `nx` package, analyzes the dependencies and fetches all the dependent packages. The process keeps going until all the dependencies are resolved. This results in:
 
@@ -41,11 +45,7 @@ At this stage, after inspecting the `package.json`, you may wish to manually run
 
 ### Step 2: Running migrations
 
-The next step in the process involves using the `migrate` CLI in order to apply the migrations that were generated in `migrations.json` in the previous step.
-
-Each Nx plugin is able to provide a set of migrations which are relevant to particular versions of the package, and so `migrations.json` will only contain migrations which are appropriate for the update you are currently applying.
-
-The common case is that you will simply apply all migrations from the generated JSON file, exactly as they were generated in the previous step, by running:
+You can now run the actual code migrations that were generated in the `migrations.json` in the previous step.
 
 ```shell
 nx migrate --run-migrations
@@ -53,12 +53,14 @@ nx migrate --run-migrations
 
 This will update your source code in your workspace in accordance with the implementation of the various migrations which ran and all the changes will be unstaged ready for you to review and commit yourself.
 
+Note that each Nx plugin is able to provide a set of migrations which are relevant to particular versions of the package. Hence `migrations.json` will only contain migrations which are appropriate for the update you are currently applying.
+
 ### Step 3: Cleaning up
 
 After you run all the migrations, you can remove `migrations.json` and commit any outstanding changes.
 
 Note: You may want to keep the `migrations.json` until every branch that was created before the migration has been merged. Leaving the `migrations.json` in place allows devs to run `nx migrate --run-migrations` to apply the same migration process to their newly merged code as well.
 
-## Problems?
+## Need to opt-out of some migrations?
 
-If you can't run `nx migrate --run-migrations` all in one step, try the tips in [Advanced Update Process](/recipes/other/advanced-update)
+Sometimes you need to temporarily opt-out from some migrations because your workspace is not ready yet. You can manually adjust the `migrations.json` or run the update with the `--interactive` flag to choose which migrations you accept. Find more details in our [Advanced Update Process](/recipes/other/advanced-update) guide.
