@@ -546,7 +546,7 @@ export function getGlobPatternsFromPlugins(
       continue;
     }
     for (const filePattern of plugin.projectFilePatterns) {
-      patterns.push('**/' + filePattern);
+      patterns.push('*/**/' + filePattern);
     }
   }
 
@@ -566,7 +566,7 @@ export async function getGlobPatternsFromPluginsAsync(
       continue;
     }
     for (const filePattern of plugin.projectFilePatterns) {
-      patterns.push('**/' + filePattern);
+      patterns.push('*/**/' + filePattern);
     }
   }
 
