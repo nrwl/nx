@@ -46,7 +46,11 @@ export default async function buildExecutor(
     process.env['__NEXT_REACT_ROOT'] ||= 'true';
   }
 
-  const { experimentalAppOnly, profile, debug } = options;
+  const { experimentalAppOnly, profile, debug, outputPath } = options;
+
+  // Set output path here since it can also be set via CLI
+  // We can retrieve it inside plugins/with-nx
+  process.env.NX_NEXT_OUTPUT_PATH ??= outputPath;
 
   const args = createCliOptions({ experimentalAppOnly, profile, debug });
   const command = `npx next build ${args.join(' ')}`;
