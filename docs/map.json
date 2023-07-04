@@ -1043,29 +1043,45 @@
           ]
         },
         {
-          "name": "Adopting Nx From Angular CLI",
+          "name": "Angular",
           "id": "adopting-nx-angular",
-          "description": "Advanced guides to adopt Nx coming from the Angular CLI",
+          "description": "Advanced guides to using Nx with Angular ecosystem",
           "itemList": [
             {
-              "name": "From Angular CLI",
+              "name": "Migrating Angular CLI",
               "id": "migration-angular",
               "file": "shared/migration/migration-angular"
             },
             {
-              "name": "From Angular CLI to Integrated",
+              "name": "Migrating Angular CLI to Integrated",
               "id": "angular-integrated",
               "file": "shared/migration/angular-integrated"
             },
             {
-              "name": "From Angular CLI Manually",
+              "name": "Migrating Angular Manually",
               "id": "angular-manual",
               "file": "shared/migration/angular-manual"
             },
             {
-              "name": "From Multiple Angular CLI Repos",
+              "name": "Migrate Multiple Angular Repos",
               "id": "angular-multiple",
               "file": "shared/migration/angular-multiple"
+            },
+            {
+              "name": "Using Tailwind CSS with Angular projects",
+              "id": "using-tailwind-css-with-angular-projects",
+              "file": "shared/guides/using-tailwind-css-with-angular-projects"
+            },
+            {
+              "name": "Using NgRx",
+              "id": "misc-ngrx",
+              "file": "shared/guides/misc-ngrx"
+            },
+            {
+              "name": "Standalone NgRx APIs",
+              "id": "standalone-ngrx-apis",
+              "tags": [],
+              "file": "shared/recipes/standalone-ngrx-apis"
             }
           ]
         },
@@ -1397,16 +1413,6 @@
               "file": "shared/guides/react-18"
             },
             {
-              "name": "Using Tailwind CSS with Angular projects",
-              "id": "using-tailwind-css-with-angular-projects",
-              "file": "shared/guides/using-tailwind-css-with-angular-projects"
-            },
-            {
-              "name": "Using NgRx",
-              "id": "misc-ngrx",
-              "file": "shared/guides/misc-ngrx"
-            },
-            {
               "name": "Using Data Persistence operators",
               "id": "misc-data-persistence",
               "file": "shared/guides/misc-data-persistence"
@@ -1452,12 +1458,6 @@
               "id": "rescope",
               "tags": [],
               "file": "shared/recipes/rescope"
-            },
-            {
-              "name": "Standalone NgRx APIs",
-              "id": "standalone-ngrx-apis",
-              "tags": [],
-              "file": "shared/recipes/standalone-ngrx-apis"
             }
           ]
         }
