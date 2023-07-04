@@ -82,7 +82,7 @@ describe('Angular Projects', () => {
     );
     checkFilesExist(`dist/apps/${app1}/main.js`);
     checkFilesExist(`dist/apps/my-dir/${standaloneApp}/main.js`);
-    checkFilesExist(`dist/apps/my-dir/${esbuildApp}/index.html`);
+    checkFilesExist(`dist/apps/my-dir/${esbuildApp}/main.js`);
     // This is a loose requirement because there are a lot of
     // influences external from this project that affect this.
     const es2015BundleSize = getSize(tmpProjPath(`dist/apps/${app1}/main.js`));
