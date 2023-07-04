@@ -798,7 +798,7 @@ Congrats, you made it!! You now know how to leverage the Nx standalone applicati
 Here's some more things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- Learn about popular generators such as [how to setup Tailwind](/recipes/other/using-tailwind-css-with-angular-projects) or [add Storybook to your UI library](/packages/storybook/documents/overview-angular)
+- Learn about popular generators such as [how to setup Tailwind](/recipes/adopting-nx-angular/using-tailwind-css-with-angular-projects) or [add Storybook to your UI library](/packages/storybook/documents/overview-angular)
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/adopting-nx/migration-angular)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
 - [Speed up CI: Share your cache](/core-features/share-your-cache)

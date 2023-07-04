@@ -210,7 +210,8 @@ const diataxis = {
   '/migration/adding-to-monorepo': '/recipes/adopting-nx/adding-to-monorepo',
   '/migration/migration-cra': '/recipes/adopting-nx/migration-cra',
   '/migration/migration-angular': '/recipes/adopting-nx/migration-angular',
-  '/migration/migration-angularjs': '/recipes/adopting-nx/migration-angularjs',
+  '/migration/migration-angularjs':
+    '/recipes/adopting-nx-angular/migration-angularjs',
   '/migration/preserving-git-histories':
     '/recipes/adopting-nx/preserving-git-histories',
   '/migration/manual': '/recipes/adopting-nx/manual',
@@ -266,9 +267,10 @@ const diataxis = {
     '/recipes/other/using-tailwind-css-in-react',
   '/guides/react-18': '/recipes/other/react-18',
   '/guides/using-tailwind-css-with-angular-projects':
-    '/recipes/other/using-tailwind-css-with-angular-projects',
-  '/guides/misc-ngrx': '/recipes/other/misc-ngrx',
-  '/guides/misc-data-persistence': '/recipes/other/misc-data-persistence',
+    '/recipes/adopting-nx-angular/using-tailwind-css-with-angular-projects',
+  '/guides/misc-ngrx': '/recipes/adopting-nx-angular/misc-ngrx',
+  '/guides/misc-data-persistence':
+    '/recipes/adopting-nx-angular/misc-data-persistence',
   '/guides/nx-devkit-angular-devkit': '/more-concepts/nx-devkit-angular-devkit',
   '/module-federation/faster-builds':
     '/recipes/module-federation/faster-builds',
@@ -353,6 +355,15 @@ const recipesUrls = {
     '/recipes/deployment/deploy-nextjs-to-vercel',
   '/recipes/other/azure-last-successful-commit':
     '/recipes/ci/azure-last-successful-commit',
+  '/recipes/adopting-nx/migration-angularjs':
+    '/recipes/adopting-nx-angular/migration-angularjs',
+  '/recipes/other/misc-ngrx': '/recipes/adopting-nx-angular/misc-ngrx',
+  '/recipes/other/using-tailwind-css-with-angular-projects':
+    '/recipes/adopting-nx-angular/using-tailwind-css-with-angular-projects',
+  '/recipes/other/standalone-ngrx-apis':
+    '/recipes/adopting-nx-angular/standalone-ngrx-apis',
+  '/recipes/other/misc-data-persistence':
+    '/recipes/adopting-nx-angular/misc-data-persistence',
 };
 
 /**

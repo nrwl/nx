@@ -1026,11 +1026,6 @@
               "file": "shared/migration/lerna-and-nx"
             },
             {
-              "name": "From AngularJS",
-              "id": "migration-angularjs",
-              "file": "shared/migration/migration-angularjs"
-            },
-            {
               "name": "Preserving Git Histories",
               "id": "preserving-git-histories",
               "file": "shared/migration/preserving-git-histories"
@@ -1068,6 +1063,11 @@
               "file": "shared/migration/angular-multiple"
             },
             {
+              "name": "Migrate AngularJS",
+              "id": "migration-angularjs",
+              "file": "shared/migration/migration-angularjs"
+            },
+            {
               "name": "Using Tailwind CSS with Angular projects",
               "id": "using-tailwind-css-with-angular-projects",
               "file": "shared/guides/using-tailwind-css-with-angular-projects"
@@ -1080,8 +1080,12 @@
             {
               "name": "Standalone NgRx APIs",
               "id": "standalone-ngrx-apis",
-              "tags": [],
               "file": "shared/recipes/standalone-ngrx-apis"
+            },
+            {
+              "name": "Using Data Persistence operators",
+              "id": "misc-data-persistence",
+              "file": "shared/guides/misc-data-persistence"
             }
           ]
         },
@@ -1411,11 +1415,6 @@
               "name": "React 18 Migration",
               "id": "react-18",
               "file": "shared/guides/react-18"
-            },
-            {
-              "name": "Using Data Persistence operators",
-              "id": "misc-data-persistence",
-              "file": "shared/guides/misc-data-persistence"
             },
             {
               "name": "Troubleshoot Cache Misses",

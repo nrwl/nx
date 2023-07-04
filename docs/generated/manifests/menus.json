@@ -2355,14 +2355,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "From AngularJS",
-            "path": "/recipes/adopting-nx/migration-angularjs",
-            "id": "migration-angularjs",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Preserving Git Histories",
             "path": "/recipes/adopting-nx/preserving-git-histories",
             "id": "preserving-git-histories",
@@ -2422,14 +2414,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "From AngularJS",
-        "path": "/recipes/adopting-nx/migration-angularjs",
-        "id": "migration-angularjs",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Preserving Git Histories",
         "path": "/recipes/adopting-nx/preserving-git-histories",
         "id": "preserving-git-histories",
@@ -2446,13 +2430,13 @@
         "disableCollapsible": false
       },
       {
-        "name": "Adopting Nx From Angular CLI",
+        "name": "Angular",
         "path": "/recipes/adopting-nx-angular",
         "id": "adopting-nx-angular",
         "isExternal": false,
         "children": [
           {
-            "name": "From Angular CLI",
+            "name": "Migrating Angular CLI",
             "path": "/recipes/adopting-nx-angular/migration-angular",
             "id": "migration-angular",
             "isExternal": false,
@@ -2460,7 +2444,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "From Angular CLI to Integrated",
+            "name": "Migrating Angular CLI to Integrated",
             "path": "/recipes/adopting-nx-angular/angular-integrated",
             "id": "angular-integrated",
             "isExternal": false,
@@ -2468,7 +2452,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "From Angular CLI Manually",
+            "name": "Migrating Angular Manually",
             "path": "/recipes/adopting-nx-angular/angular-manual",
             "id": "angular-manual",
             "isExternal": false,
@@ -2476,9 +2460,49 @@
             "disableCollapsible": false
           },
           {
-            "name": "From Multiple Angular CLI Repos",
+            "name": "Migrate Multiple Angular Repos",
             "path": "/recipes/adopting-nx-angular/angular-multiple",
             "id": "angular-multiple",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Migrate AngularJS",
+            "path": "/recipes/adopting-nx-angular/migration-angularjs",
+            "id": "migration-angularjs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Using Tailwind CSS with Angular projects",
+            "path": "/recipes/adopting-nx-angular/using-tailwind-css-with-angular-projects",
+            "id": "using-tailwind-css-with-angular-projects",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Using NgRx",
+            "path": "/recipes/adopting-nx-angular/misc-ngrx",
+            "id": "misc-ngrx",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Standalone NgRx APIs",
+            "path": "/recipes/adopting-nx-angular/standalone-ngrx-apis",
+            "id": "standalone-ngrx-apis",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Using Data Persistence operators",
+            "path": "/recipes/adopting-nx-angular/misc-data-persistence",
+            "id": "misc-data-persistence",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -2487,7 +2511,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "From Angular CLI",
+        "name": "Migrating Angular CLI",
         "path": "/recipes/adopting-nx-angular/migration-angular",
         "id": "migration-angular",
         "isExternal": false,
@@ -2495,7 +2519,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "From Angular CLI to Integrated",
+        "name": "Migrating Angular CLI to Integrated",
         "path": "/recipes/adopting-nx-angular/angular-integrated",
         "id": "angular-integrated",
         "isExternal": false,
@@ -2503,7 +2527,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "From Angular CLI Manually",
+        "name": "Migrating Angular Manually",
         "path": "/recipes/adopting-nx-angular/angular-manual",
         "id": "angular-manual",
         "isExternal": false,
@@ -2511,9 +2535,49 @@
         "disableCollapsible": false
       },
       {
-        "name": "From Multiple Angular CLI Repos",
+        "name": "Migrate Multiple Angular Repos",
         "path": "/recipes/adopting-nx-angular/angular-multiple",
         "id": "angular-multiple",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate AngularJS",
+        "path": "/recipes/adopting-nx-angular/migration-angularjs",
+        "id": "migration-angularjs",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using Tailwind CSS with Angular projects",
+        "path": "/recipes/adopting-nx-angular/using-tailwind-css-with-angular-projects",
+        "id": "using-tailwind-css-with-angular-projects",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using NgRx",
+        "path": "/recipes/adopting-nx-angular/misc-ngrx",
+        "id": "misc-ngrx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Standalone NgRx APIs",
+        "path": "/recipes/adopting-nx-angular/standalone-ngrx-apis",
+        "id": "standalone-ngrx-apis",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using Data Persistence operators",
+        "path": "/recipes/adopting-nx-angular/misc-data-persistence",
+        "id": "misc-data-persistence",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3205,30 +3269,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Tailwind CSS with Angular projects",
-            "path": "/recipes/other/using-tailwind-css-with-angular-projects",
-            "id": "using-tailwind-css-with-angular-projects",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Using NgRx",
-            "path": "/recipes/other/misc-ngrx",
-            "id": "misc-ngrx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Using Data Persistence operators",
-            "path": "/recipes/other/misc-data-persistence",
-            "id": "misc-data-persistence",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Troubleshoot Cache Misses",
             "path": "/recipes/other/troubleshoot-cache-misses",
             "id": "troubleshoot-cache-misses",
@@ -3280,14 +3320,6 @@
             "name": "Rescope Packages from @nrwl to @nx",
             "path": "/recipes/other/rescope",
             "id": "rescope",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Standalone NgRx APIs",
-            "path": "/recipes/other/standalone-ngrx-apis",
-            "id": "standalone-ngrx-apis",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3408,30 +3440,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Tailwind CSS with Angular projects",
-        "path": "/recipes/other/using-tailwind-css-with-angular-projects",
-        "id": "using-tailwind-css-with-angular-projects",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Using NgRx",
-        "path": "/recipes/other/misc-ngrx",
-        "id": "misc-ngrx",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Using Data Persistence operators",
-        "path": "/recipes/other/misc-data-persistence",
-        "id": "misc-data-persistence",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Troubleshoot Cache Misses",
         "path": "/recipes/other/troubleshoot-cache-misses",
         "id": "troubleshoot-cache-misses",
@@ -3483,14 +3491,6 @@
         "name": "Rescope Packages from @nrwl to @nx",
         "path": "/recipes/other/rescope",
         "id": "rescope",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Standalone NgRx APIs",
-        "path": "/recipes/other/standalone-ngrx-apis",
-        "id": "standalone-ngrx-apis",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

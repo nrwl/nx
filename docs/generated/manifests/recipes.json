@@ -429,16 +429,6 @@
         "tags": []
       },
       {
-        "id": "migration-angularjs",
-        "name": "From AngularJS",
-        "description": "",
-        "file": "shared/migration/migration-angularjs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/adopting-nx/migration-angularjs",
-        "tags": []
-      },
-      {
         "id": "preserving-git-histories",
         "name": "Preserving Git Histories",
         "description": "",
@@ -513,16 +503,6 @@
     "path": "/recipes/adopting-nx/lerna-and-nx",
     "tags": []
   },
-  "/recipes/adopting-nx/migration-angularjs": {
-    "id": "migration-angularjs",
-    "name": "From AngularJS",
-    "description": "",
-    "file": "shared/migration/migration-angularjs",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/adopting-nx/migration-angularjs",
-    "tags": []
-  },
   "/recipes/adopting-nx/preserving-git-histories": {
     "id": "preserving-git-histories",
     "name": "Preserving Git Histories",
@@ -545,13 +525,13 @@
   },
   "/recipes/adopting-nx-angular": {
     "id": "adopting-nx-angular",
-    "name": "Adopting Nx From Angular CLI",
-    "description": "Advanced guides to adopt Nx coming from the Angular CLI",
+    "name": "Angular",
+    "description": "Advanced guides to using Nx with Angular ecosystem",
     "file": "",
     "itemList": [
       {
         "id": "migration-angular",
-        "name": "From Angular CLI",
+        "name": "Migrating Angular CLI",
         "description": "",
         "file": "shared/migration/migration-angular",
         "itemList": [],
@@ -561,7 +541,7 @@
       },
       {
         "id": "angular-integrated",
-        "name": "From Angular CLI to Integrated",
+        "name": "Migrating Angular CLI to Integrated",
         "description": "",
         "file": "shared/migration/angular-integrated",
         "itemList": [],
@@ -571,7 +551,7 @@
       },
       {
         "id": "angular-manual",
-        "name": "From Angular CLI Manually",
+        "name": "Migrating Angular Manually",
         "description": "",
         "file": "shared/migration/angular-manual",
         "itemList": [],
@@ -581,12 +561,62 @@
       },
       {
         "id": "angular-multiple",
-        "name": "From Multiple Angular CLI Repos",
+        "name": "Migrate Multiple Angular Repos",
         "description": "",
         "file": "shared/migration/angular-multiple",
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/adopting-nx-angular/angular-multiple",
+        "tags": []
+      },
+      {
+        "id": "migration-angularjs",
+        "name": "Migrate AngularJS",
+        "description": "",
+        "file": "shared/migration/migration-angularjs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/migration-angularjs",
+        "tags": []
+      },
+      {
+        "id": "using-tailwind-css-with-angular-projects",
+        "name": "Using Tailwind CSS with Angular projects",
+        "description": "",
+        "file": "shared/guides/using-tailwind-css-with-angular-projects",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/using-tailwind-css-with-angular-projects",
+        "tags": []
+      },
+      {
+        "id": "misc-ngrx",
+        "name": "Using NgRx",
+        "description": "",
+        "file": "shared/guides/misc-ngrx",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/misc-ngrx",
+        "tags": []
+      },
+      {
+        "id": "standalone-ngrx-apis",
+        "name": "Standalone NgRx APIs",
+        "description": "",
+        "file": "shared/recipes/standalone-ngrx-apis",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/standalone-ngrx-apis",
+        "tags": []
+      },
+      {
+        "id": "misc-data-persistence",
+        "name": "Using Data Persistence operators",
+        "description": "",
+        "file": "shared/guides/misc-data-persistence",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/misc-data-persistence",
         "tags": []
       }
     ],
@@ -596,7 +626,7 @@
   },
   "/recipes/adopting-nx-angular/migration-angular": {
     "id": "migration-angular",
-    "name": "From Angular CLI",
+    "name": "Migrating Angular CLI",
     "description": "",
     "file": "shared/migration/migration-angular",
     "itemList": [],
@@ -606,7 +636,7 @@
   },
   "/recipes/adopting-nx-angular/angular-integrated": {
     "id": "angular-integrated",
-    "name": "From Angular CLI to Integrated",
+    "name": "Migrating Angular CLI to Integrated",
     "description": "",
     "file": "shared/migration/angular-integrated",
     "itemList": [],
@@ -616,7 +646,7 @@
   },
   "/recipes/adopting-nx-angular/angular-manual": {
     "id": "angular-manual",
-    "name": "From Angular CLI Manually",
+    "name": "Migrating Angular Manually",
     "description": "",
     "file": "shared/migration/angular-manual",
     "itemList": [],
@@ -626,12 +656,62 @@
   },
   "/recipes/adopting-nx-angular/angular-multiple": {
     "id": "angular-multiple",
-    "name": "From Multiple Angular CLI Repos",
+    "name": "Migrate Multiple Angular Repos",
     "description": "",
     "file": "shared/migration/angular-multiple",
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx-angular/angular-multiple",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/migration-angularjs": {
+    "id": "migration-angularjs",
+    "name": "Migrate AngularJS",
+    "description": "",
+    "file": "shared/migration/migration-angularjs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/migration-angularjs",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/using-tailwind-css-with-angular-projects": {
+    "id": "using-tailwind-css-with-angular-projects",
+    "name": "Using Tailwind CSS with Angular projects",
+    "description": "",
+    "file": "shared/guides/using-tailwind-css-with-angular-projects",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/using-tailwind-css-with-angular-projects",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/misc-ngrx": {
+    "id": "misc-ngrx",
+    "name": "Using NgRx",
+    "description": "",
+    "file": "shared/guides/misc-ngrx",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/misc-ngrx",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/standalone-ngrx-apis": {
+    "id": "standalone-ngrx-apis",
+    "name": "Standalone NgRx APIs",
+    "description": "",
+    "file": "shared/recipes/standalone-ngrx-apis",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/standalone-ngrx-apis",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/misc-data-persistence": {
+    "id": "misc-data-persistence",
+    "name": "Using Data Persistence operators",
+    "description": "",
+    "file": "shared/guides/misc-data-persistence",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/misc-data-persistence",
     "tags": []
   },
   "/recipes/executors": {
@@ -1489,36 +1569,6 @@
         "tags": []
       },
       {
-        "id": "using-tailwind-css-with-angular-projects",
-        "name": "Using Tailwind CSS with Angular projects",
-        "description": "",
-        "file": "shared/guides/using-tailwind-css-with-angular-projects",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/using-tailwind-css-with-angular-projects",
-        "tags": []
-      },
-      {
-        "id": "misc-ngrx",
-        "name": "Using NgRx",
-        "description": "",
-        "file": "shared/guides/misc-ngrx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/misc-ngrx",
-        "tags": []
-      },
-      {
-        "id": "misc-data-persistence",
-        "name": "Using Data Persistence operators",
-        "description": "",
-        "file": "shared/guides/misc-data-persistence",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/misc-data-persistence",
-        "tags": []
-      },
-      {
         "id": "troubleshoot-cache-misses",
         "name": "Troubleshoot Cache Misses",
         "description": "",
@@ -1586,16 +1636,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/other/rescope",
-        "tags": []
-      },
-      {
-        "id": "standalone-ngrx-apis",
-        "name": "Standalone NgRx APIs",
-        "description": "",
-        "file": "shared/recipes/standalone-ngrx-apis",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/standalone-ngrx-apis",
         "tags": []
       }
     ],
@@ -1743,36 +1783,6 @@
     "path": "/recipes/other/react-18",
     "tags": []
   },
-  "/recipes/other/using-tailwind-css-with-angular-projects": {
-    "id": "using-tailwind-css-with-angular-projects",
-    "name": "Using Tailwind CSS with Angular projects",
-    "description": "",
-    "file": "shared/guides/using-tailwind-css-with-angular-projects",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/using-tailwind-css-with-angular-projects",
-    "tags": []
-  },
-  "/recipes/other/misc-ngrx": {
-    "id": "misc-ngrx",
-    "name": "Using NgRx",
-    "description": "",
-    "file": "shared/guides/misc-ngrx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/misc-ngrx",
-    "tags": []
-  },
-  "/recipes/other/misc-data-persistence": {
-    "id": "misc-data-persistence",
-    "name": "Using Data Persistence operators",
-    "description": "",
-    "file": "shared/guides/misc-data-persistence",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/misc-data-persistence",
-    "tags": []
-  },
   "/recipes/other/troubleshoot-cache-misses": {
     "id": "troubleshoot-cache-misses",
     "name": "Troubleshoot Cache Misses",
@@ -1841,16 +1851,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/rescope",
-    "tags": []
-  },
-  "/recipes/other/standalone-ngrx-apis": {
-    "id": "standalone-ngrx-apis",
-    "name": "Standalone NgRx APIs",
-    "description": "",
-    "file": "shared/recipes/standalone-ngrx-apis",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/standalone-ngrx-apis",
     "tags": []
   }
 }
