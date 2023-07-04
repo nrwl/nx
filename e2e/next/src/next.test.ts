@@ -227,6 +227,19 @@ describe('Next.js Applications', () => {
     });
   }, 1_000_000);
 
+  it('should build app and .next artifacts at the outputPath if provided by the CLI', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
+
+    runCLI(`build ${appName} --outputPath="dist/foo"`);
+
+    checkFilesExist('dist/foo/package.json');
+    checkFilesExist('dist/foo/next.config.js');
+    // Next Files
+    checkFilesExist('dist/foo/.next/package.json');
+    checkFilesExist('dist/foo/.next/build-manifest.json');
+  }, 600_000);
+
   // TODO(jack): re-enable this test
   xit('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');
