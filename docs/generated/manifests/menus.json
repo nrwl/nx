@@ -2121,6 +2121,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Find the Last Successful Commit in Azure Pipelines",
+            "path": "/recipes/ci/azure-last-successful-commit",
+            "id": "azure-last-successful-commit",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Setting up CircleCI",
             "path": "/recipes/ci/monorepo-ci-circle-ci",
             "id": "monorepo-ci-circle-ci",
@@ -2191,6 +2199,14 @@
         "name": "Setting up Azure Pipelines",
         "path": "/recipes/ci/monorepo-ci-azure",
         "id": "monorepo-ci-azure",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Find the Last Successful Commit in Azure Pipelines",
+        "path": "/recipes/ci/azure-last-successful-commit",
+        "id": "azure-last-successful-commit",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3164,14 +3180,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Find the Last Successful Commit in Azure Pipelines",
-            "path": "/recipes/other/azure-last-successful-commit",
-            "id": "azure-last-successful-commit",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Troubleshoot Cache Misses",
             "path": "/recipes/other/troubleshoot-cache-misses",
             "id": "troubleshoot-cache-misses",
@@ -3370,14 +3378,6 @@
         "name": "Using Data Persistence operators",
         "path": "/recipes/other/misc-data-persistence",
         "id": "misc-data-persistence",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Find the Last Successful Commit in Azure Pipelines",
-        "path": "/recipes/other/azure-last-successful-commit",
-        "id": "azure-last-successful-commit",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

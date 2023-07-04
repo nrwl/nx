@@ -351,6 +351,8 @@ const recipesUrls = {
   '/recipes/other/dte': '/recipes/example-repos/dte',
   '/recipes/other/deploy-nextjs-to-vercel':
     '/recipes/deployment/deploy-nextjs-to-vercel',
+  '/recipes/other/azure-last-successful-commit':
+    '/recipes/ci/azure-last-successful-commit',
 };
 
 /**
