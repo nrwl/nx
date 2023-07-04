@@ -959,6 +959,11 @@
               "file": "shared/monorepo-ci-azure"
             },
             {
+              "name": "Find the Last Successful Commit in Azure Pipelines",
+              "id": "azure-last-successful-commit",
+              "file": "shared/recipes/azure-last-successful-commit"
+            },
+            {
               "name": "Setting up CircleCI",
               "id": "monorepo-ci-circle-ci",
               "file": "shared/monorepo-ci-circle-ci"
@@ -1405,11 +1410,6 @@
               "name": "Using Data Persistence operators",
               "id": "misc-data-persistence",
               "file": "shared/guides/misc-data-persistence"
-            },
-            {
-              "name": "Find the Last Successful Commit in Azure Pipelines",
-              "id": "azure-last-successful-commit",
-              "file": "shared/recipes/azure-last-successful-commit"
             },
             {
               "name": "Troubleshoot Cache Misses",

@@ -198,6 +198,16 @@
         "tags": []
       },
       {
+        "id": "azure-last-successful-commit",
+        "name": "Find the Last Successful Commit in Azure Pipelines",
+        "description": "",
+        "file": "shared/recipes/azure-last-successful-commit",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/ci/azure-last-successful-commit",
+        "tags": []
+      },
+      {
         "id": "monorepo-ci-circle-ci",
         "name": "Setting up CircleCI",
         "description": "",
@@ -290,6 +300,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/ci/monorepo-ci-azure",
+    "tags": []
+  },
+  "/recipes/ci/azure-last-successful-commit": {
+    "id": "azure-last-successful-commit",
+    "name": "Find the Last Successful Commit in Azure Pipelines",
+    "description": "",
+    "file": "shared/recipes/azure-last-successful-commit",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/ci/azure-last-successful-commit",
     "tags": []
   },
   "/recipes/ci/monorepo-ci-circle-ci": {
@@ -1499,16 +1519,6 @@
         "tags": []
       },
       {
-        "id": "azure-last-successful-commit",
-        "name": "Find the Last Successful Commit in Azure Pipelines",
-        "description": "",
-        "file": "shared/recipes/azure-last-successful-commit",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/azure-last-successful-commit",
-        "tags": []
-      },
-      {
         "id": "troubleshoot-cache-misses",
         "name": "Troubleshoot Cache Misses",
         "description": "",
@@ -1761,16 +1771,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/misc-data-persistence",
-    "tags": []
-  },
-  "/recipes/other/azure-last-successful-commit": {
-    "id": "azure-last-successful-commit",
-    "name": "Find the Last Successful Commit in Azure Pipelines",
-    "description": "",
-    "file": "shared/recipes/azure-last-successful-commit",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/azure-last-successful-commit",
     "tags": []
   },
   "/recipes/other/troubleshoot-cache-misses": {
