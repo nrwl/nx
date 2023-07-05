@@ -5,9 +5,12 @@ import {
   readFile,
   runCLI,
   runCLIAsync,
+  runCommandUntil,
+  waitUntil,
   tmpProjPath,
   uniq,
   updateFile,
+  updateProjectConfig,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
 
@@ -47,5 +50,54 @@ describe('Node Applications + webpack', () => {
     await runCLIAsync(`build ${app} --optimization`);
     const optimizedContent = readFile(`dist/apps/${app}/main.js`);
     expect(optimizedContent).toContain('console.log("foo "+"bar")');
+
+    // Test that serve can re-run dependency builds.
+    const lib = uniq('nodelib');
+    runCLI(`generate @nx/js:lib ${lib} --bundler=esbuild --no-interactive`);
+
+    updateProjectConfig(app, (config) => {
+      // Since we read from lib from dist, we should re-build it when lib changes.
+      config.targets.build.options.buildLibsFromSource = false;
+      config.targets.serve.options.runBuildTargetDependencies = true;
+      return config;
+    });
+
+    updateFile(
+      `apps/${app}/src/main.ts`,
+      `
+      import { ${lib} } from '@proj/${lib}';
+      console.log('Hello ' + ${lib}());
+    `
+    );
+
+    const serveProcess = await runCommandUntil(
+      `serve ${app} --watch --runBuildTargetDependencies`,
+      (output) => {
+        return output.includes(`Hello`);
+      }
+    );
+
+    // Update library source and check that it triggers rebuild.
+    const terminalOutputs: string[] = [];
+    serveProcess.stdout.on('data', (chunk) => {
+      const data = chunk.toString();
+      terminalOutputs.push(data);
+    });
+
+    updateFile(
+      `libs/${lib}/src/index.ts`,
+      `export function ${lib}() { return 'should rebuild lib'; }`
+    );
+
+    await waitUntil(
+      () => {
+        return terminalOutputs.some((output) =>
+          output.includes(`should rebuild lib`)
+        );
+      },
+      { timeout: 30_000, ms: 200 }
+    );
+
+    serveProcess.kill();
   }, 300_000);
 });
