@@ -129,9 +129,7 @@ describe('js e2e', () => {
       return json;
     });
 
-    runCLI(`build ${lib}`);
-
-    const rootPackageJson = readJson(`package.json`);
+    runCLI(`build ${lib} --updateBuildableProjectDepsInPackageJson`);
 
     expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
       'peerDependencies.tslib'
@@ -221,7 +219,7 @@ describe('package.json updates', () => {
     `;
     });
 
-    runCLI(`build ${lib}`);
+    runCLI(`build ${lib} --updateBuildableProjectDepsInPackageJson`);
 
     // Check that only 'react' exists, don't care about version
     expect(readJson(`dist/libs/${lib}/package.json`).dependencies).toEqual({

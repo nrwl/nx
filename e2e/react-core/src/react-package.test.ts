@@ -129,7 +129,7 @@ describe('Build React libraries and apps', () => {
       /*
        * 2. With dependencies
        */
-      runCLI(`build ${parentLib}`);
+      runCLI(`build ${parentLib} --updateBuildableProjectDepsInPackageJson`);
 
       checkFilesExist(`dist/libs/${parentLib}/index.js`);
 

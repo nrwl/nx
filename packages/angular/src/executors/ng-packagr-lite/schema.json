@@ -40,7 +40,7 @@
     "updateBuildableProjectDepsInPackageJson": {
       "type": "boolean",
       "description": "Whether to update the buildable project dependencies in the build output package.json.",
-      "default": true
+      "default": false
     },
     "buildableProjectDepsInPackageJsonType": {
       "type": "string",
