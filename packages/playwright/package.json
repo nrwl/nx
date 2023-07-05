@@ -29,17 +29,15 @@
     "directory": "packages/playwright"
   },
   "dependencies": {
-    "@phenomnomnominal/tsquery": "~5.0.1",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/linter": "file:../linter"
+    "@nx/devkit": "file:../devkit"
   },
   "peerDependencies": {
-    "playwright": "^1.35.1"
+    "@playwright/test": "^1.30.0"
   },
   "peerDependenciesMeta": {
-    "cypress": {
+    "@playwright/test": {
       "optional": true
     }
-  }
+  },
+  "executors": "./executors.json"
 }
