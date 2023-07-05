@@ -6,8 +6,8 @@ import {
   logger,
   parseTargetString,
   ProjectGraphProjectNode,
+  readTargetOptions,
   runExecutor,
-  TargetConfiguration,
 } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { daemonClient } from 'nx/src/daemon/client/client';
@@ -38,14 +38,6 @@ function debounce(fn: () => void, wait: number) {
   };
 }
 
-// NOTE: this is a combination of @nx/js:tsc, @nx/js:tsc, @nx/webpack;webpack, @nx/esbuild:esbuild and @nx/rollup:rollup
-interface BuildOptions {
-  readonly main: string;
-  readonly outputPath: string;
-  // Available only for @nx/webpack;webpack, @nx/esbuild:esbuild and @nx/rollup:rollup
-  readonly outputFileName?: string;
-}
-
 export async function* nodeExecutor(
   options: NodeExecutorOptions,
   context: ExecutorContext
@@ -56,22 +48,22 @@ export async function* nodeExecutor(
     options.buildTarget,
     context.projectGraph
   );
-  const buildTargetOptions = project.data.targets[buildTarget.target];
 
-  let buildOptions: BuildOptions;
-
-  if (buildTargetOptions) {
-    buildOptions = {
-      ...buildTargetOptions.options,
-      ...options.buildTargetOptions,
-    };
-  } else {
+  if (!project.data.targets[buildTarget.target]) {
     throw new Error(
       `Cannot find build target ${chalk.bold(
         options.buildTarget
       )} for project ${chalk.bold(context.projectName)}`
     );
   }
+
+  const buildTargetExecutor =
+    project.data.targets[buildTarget.target]?.executor;
+
+  const buildOptions: Record<string, any> = {
+    ...readTargetOptions(buildTarget, context),
+    ...options.buildTargetOptions,
+  };
 
   if (options.waitUntilTargets && options.waitUntilTargets.length > 0) {
     const results = await runWaitUntilTargets(options, context);
@@ -90,7 +82,7 @@ export async function* nodeExecutor(
     context,
     project,
     buildOptions,
-    buildTargetOptions
+    buildTargetExecutor
   );
 
   const tasks: ActiveTask[] = [];
@@ -323,25 +315,20 @@ function runWaitUntilTargets(
   );
 }
 
-function isJsLibBuilder(targetConfiguration: TargetConfiguration): boolean {
-  return (
-    targetConfiguration.executor === '@nx/js:tsc' ||
-    targetConfiguration.executor === '@nx/js:swc'
-  );
-}
-
 function getFileToRun(
   context: ExecutorContext,
   project: ProjectGraphProjectNode,
-  buildOptions: BuildOptions,
-  buildTargetOptions: TargetConfiguration
+  buildOptions: Record<string, any>,
+  buildTargetExecutor: string
 ): string {
   let outputFileName = buildOptions.outputFileName;
 
   if (!outputFileName) {
     const fileName = `${path.parse(buildOptions.main).name}.js`;
-
-    if (isJsLibBuilder(buildTargetOptions)) {
+    if (
+      buildTargetExecutor === '@nx/js:tsc' ||
+      buildTargetExecutor === '@nx/js:swc'
+    ) {
       outputFileName = path.join(
         getMainFileDirRelativeToProjectRoot(
           buildOptions.main,
