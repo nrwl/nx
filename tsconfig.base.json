@@ -83,6 +83,7 @@
       "@nx/nx-dev/ui-references": ["nx-dev/ui-references/src/index.ts"],
       "@nx/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
       "@nx/nx-dev/ui-theme": ["nx-dev/ui-theme/src/index.ts"],
+      "@nx/playwright": ["packages/playwright/src/index.ts"],
       "@nx/plugin": ["packages/plugin"],
       "@nx/plugin/*": ["packages/plugin/*"],
       "@nx/react": ["packages/react"],

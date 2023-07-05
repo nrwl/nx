@@ -99,6 +99,8 @@ pnpm-lock.yaml @nrwl/nx-pipelines-reviewers
 /e2e/cypress/** @nrwl/nx-testing-tools-reviewers
 /packages/jest/** @nrwl/nx-testing-tools-reviewers
 /e2e/jest/** @nrwl/nx-testing-tools-reviewers
+/packages/playwright/** @nrwl/nx-testing-tools-reviewers
+/e2e/playwright/** @nrwl/nx-testing-tools-reviewers
 
 # Linter
 /docs/generated/packages/eslint-plugin/** @nrwl/nx-linter-reviewers @nrwl/nx-docs-reviewers
