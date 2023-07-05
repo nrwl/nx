@@ -252,7 +252,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                   <div className="h-2 w-2 rounded-full bg-slate-100 ring-1 ring-slate-300 dark:ring-slate-500 dark:bg-slate-600" />
                 </div>
                 <div
-                  id={convertToDate(changelog.date).toLocaleDateString()}
+                  id={changelog.version}
                   className="flex flex-col w-36 shrink-0 group"
                 >
                   <p className="py-0.5">
@@ -269,6 +269,9 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                       />{' '}
                       v{changelog.version}
                     </a>
+                    <a aria-hidden="true" href={`#${changelog.version}`}>
+                      <LinkIcon className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
+                    </a>
                   </p>
                   <p className="py-0.5 text-xs leading-5 text-slate-400 dark:text-slate-500">
                     <time
@@ -277,14 +280,6 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                       ).toLocaleDateString()}
                     >
                       {changelog.date}
-                      <a
-                        aria-hidden="true"
-                        href={`#${convertToDate(
-                          changelog.date
-                        ).toLocaleDateString()}`}
-                      >
-                        <LinkIcon className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
-                      </a>
                     </time>
                   </p>
                 </div>
