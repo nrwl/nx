@@ -4881,6 +4881,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "The `dependency-checks` rule",
+                "path": "/packages/eslint-plugin/documents/dependency-checks",
+                "id": "dependency-checks",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
