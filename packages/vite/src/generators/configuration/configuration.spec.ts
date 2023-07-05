@@ -94,7 +94,6 @@ describe('@nx/vite:configuration', () => {
       const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies).toMatchObject({
         vite: expect.any(String),
-        'vite-tsconfig-paths': expect.any(String),
       });
     });
 

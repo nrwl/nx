@@ -1,3 +1,4 @@
+import { names } from '@nx/devkit';
 import {
   cleanupProject,
   createFile,
@@ -240,6 +241,74 @@ describe('Vite Plugin', () => {
       100_000;
   });
 
+  describe('incremental building', () => {
+    const app = uniq('demo');
+    const lib = uniq('my-lib');
+    beforeAll(() => {
+      proj = newProject({ name: uniq('vite-incr-build') });
+      runCLI(`generate @nx/react:app ${app} --bundler=vite --no-interactive`);
+
+      // only this project will be directly used from dist
+      runCLI(
+        `generate @nx/react:lib ${lib}-buildable --unitTestRunner=none --bundler=vite --importPath="@acme/buildable" --no-interactive`
+      );
+
+      runCLI(
+        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/non-buildable" --no-interactive`
+      );
+
+      // because the default js lib builds as cjs it cannot be loaded from dist
+      // so the paths plugin should always resolve to the libs source
+      runCLI(
+        `generate @nx/js:lib ${lib}-js --bundler=tsc --importPath="@acme/js-lib" --no-interactive`
+      );
+      const buildableLibCmp = names(`${lib}-buildable`).className;
+      const nonBuildableLibCmp = names(lib).className;
+      const buildableJsLibFn = names(`${lib}-js`).propertyName;
+
+      updateFile(`apps/${app}/src/app/app.tsx`, () => {
+        return `// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import styles from './app.module.css';
+
+import NxWelcome from './nx-welcome';
+import { ${buildableLibCmp} } from '@acme/buildable';
+import { ${buildableJsLibFn} } from '@acme/js-lib';
+import { ${nonBuildableLibCmp} } from '@acme/non-buildable';
+
+export function App() {
+  return (
+    <div>
+      <${buildableLibCmp} />
+      <${nonBuildableLibCmp} />
+      <p>{${buildableJsLibFn}()}</p>
+      <NxWelcome title="${app}" />
+    </div>
+  );
+}
+export default App;
+`;
+      });
+    });
+
+    afterAll(() => {
+      cleanupProject();
+    });
+
+    it('should build app from libs source', () => {
+      const results = runCLI(`build ${app} --buildLibsFromSource=true`);
+      expect(results).toContain('Successfully ran target build for project');
+      // this should be more modules than build from dist
+      expect(results).toContain('40 modules transformed');
+    });
+
+    it('should build app from libs dist', () => {
+      const results = runCLI(`build ${app} --buildLibsFromSource=false`);
+      expect(results).toContain('Successfully ran target build for project');
+      // this should be less modules than building from source
+      expect(results).toContain('38 modules transformed');
+    });
+  });
+
   describe('should be able to create libs that use vitest', () => {
     const lib = uniq('my-lib');
     beforeEach(() => {
@@ -255,7 +324,6 @@ describe('Vite Plugin', () => {
         `Successfully ran target test for project ${lib}`
       );
 
-      // TODO(caleb): run tests from project root and make sure they still work
       const nestedResults = await runCLIAsync(`test ${lib} --skip-nx-cache`, {
         cwd: `${tmpProjPath()}/libs/${lib}`,
       });
@@ -270,7 +338,7 @@ describe('Vite Plugin', () => {
         return `/// <reference types="vitest" />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
-        import viteTsConfigPaths from 'vite-tsconfig-paths';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
         export default defineConfig({
           server: {
@@ -279,9 +347,7 @@ describe('Vite Plugin', () => {
           },
           plugins: [
             react(),
-            viteTsConfigPaths({
-              root: './',
-            }),
+            nxViteTsPaths()
           ],
           test: {
             globals: true,
@@ -321,7 +387,8 @@ describe('Vite Plugin', () => {
       updateFile(`libs/${lib}/vite.config.ts`, () => {
         return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
 
 export default defineConfig({
   server: {
@@ -330,9 +397,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    viteTsConfigPaths({
-      root: './',
-    }),
+    nxViteTsPaths()
   ],
   test: {
     globals: true,
