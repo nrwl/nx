@@ -72,6 +72,7 @@ export function newProject({
         `@nx/next`,
         `@nx/node`,
         `@nx/plugin`,
+        `@nx/playwright`,
         `@nx/rollup`,
         `@nx/react`,
         `@nx/storybook`,
