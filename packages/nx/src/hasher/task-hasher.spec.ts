@@ -1161,6 +1161,144 @@ describe('TaskHasher', () => {
       expect(hash.value).toContain('|5.0.0|');
     });
 
+    it('should hash entire subtree of dependencies', async () => {
+      const createHasher = () =>
+        new InProcessTaskHasher(
+          {},
+          allWorkspaceFiles,
+          {
+            nodes: {
+              appA: {
+                name: 'appA',
+                type: 'app',
+                data: {
+                  root: 'apps/appA',
+                  targets: { build: { executor: '@nx/webpack:webpack' } },
+                },
+              },
+              appB: {
+                name: 'appB',
+                type: 'app',
+                data: {
+                  root: 'apps/appB',
+                  targets: { build: { executor: '@nx/webpack:webpack' } },
+                },
+              },
+            },
+            externalNodes: {
+              'npm:packageA': {
+                name: 'npm:packageA',
+                type: 'npm',
+                data: {
+                  packageName: 'packageA',
+                  version: '0.0.0',
+                  hash: '$packageA0.0.0$',
+                },
+              },
+              'npm:packageB': {
+                name: 'npm:packageB',
+                type: 'npm',
+                data: {
+                  packageName: 'packageB',
+                  version: '0.0.0',
+                  hash: '$packageB0.0.0$',
+                },
+              },
+              'npm:packageC': {
+                name: 'npm:packageC',
+                type: 'npm',
+                data: {
+                  packageName: 'packageC',
+                  version: '0.0.0',
+                  hash: '$packageC0.0.0$',
+                },
+              },
+            },
+            dependencies: {
+              appA: [
+                {
+                  source: 'app',
+                  target: 'npm:packageA',
+                  type: DependencyType.static,
+                },
+                {
+                  source: 'app',
+                  target: 'npm:packageB',
+                  type: DependencyType.static,
+                },
+                {
+                  source: 'app',
+                  target: 'npm:packageC',
+                  type: DependencyType.static,
+                },
+              ],
+              appB: [
+                {
+                  source: 'app',
+                  target: 'npm:packageC',
+                  type: DependencyType.static,
+                },
+              ],
+              'npm:packageC': [
+                {
+                  source: 'app',
+                  target: 'npm:packageA',
+                  type: DependencyType.static,
+                },
+                {
+                  source: 'app',
+                  target: 'npm:packageB',
+                  type: DependencyType.static,
+                },
+              ],
+              'npm:packageB': [
+                {
+                  source: 'app',
+                  target: 'npm:packageA',
+                  type: DependencyType.static,
+                },
+              ],
+            },
+          },
+          {
+            roots: ['app-build'],
+            tasks: {
+              'app-build': {
+                id: 'app-build',
+                target: { project: 'app', target: 'build' },
+                overrides: {},
+              },
+            },
+            dependencies: {},
+          },
+          {} as any,
+          {},
+          fileHasher
+        );
+
+      const computeTaskHash = async (hasher, appName) => {
+        const hashAppA = await hasher.hashTask({
+          target: { project: appName, target: 'build' },
+          id: `${appName}-build`,
+          overrides: { prop: 'prop-value' },
+        });
+
+        return hashAppA.value;
+      };
+
+      const hasher1 = createHasher();
+
+      await computeTaskHash(hasher1, 'appA');
+      const hashAppB1 = await computeTaskHash(hasher1, 'appB');
+
+      const hasher2 = createHasher();
+
+      const hashAppB2 = await computeTaskHash(hasher2, 'appB');
+      await computeTaskHash(hasher2, 'appA');
+
+      expect(hashAppB1).toEqual(hashAppB2);
+    });
+
     it('should not hash when nx:run-commands executor', async () => {
       const hasher = new InProcessTaskHasher(
         {},
