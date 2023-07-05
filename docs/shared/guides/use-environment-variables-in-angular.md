@@ -106,7 +106,8 @@ Alternatively, you can set the variable when running a terminal command by using
 
 - MacOS & Linux: `NX_API_URL=http://localhost:9999 npm run build-prod`
 - Windows: `set NX_API_URL=http://localhost:9999 & npm run build-prod`
-  {% /callout %}
+
+{% /callout %}
 
 Finally, We can use environment variables in our code. For example,
 
