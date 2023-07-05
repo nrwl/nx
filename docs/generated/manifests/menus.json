@@ -3101,7 +3101,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Advanced Update Nx",
+            "name": "Advanced Update Process",
             "path": "/recipes/other/advanced-update",
             "id": "advanced-update",
             "isExternal": false,
@@ -3312,7 +3312,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Advanced Update Nx",
+        "name": "Advanced Update Process",
         "path": "/recipes/other/advanced-update",
         "id": "advanced-update",
         "isExternal": false,

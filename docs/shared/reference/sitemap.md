@@ -196,7 +196,7 @@
     - [Run Root-Level NPM Scripts with Nx](/recipes/other/root-level-scripts)
     - [Disable Graph Links Created from Analyzing Source Files](/recipes/other/analyze-source-files)
     - [Workspace Watching](/recipes/other/workspace-watching)
-    - [Advanced Update Nx](/recipes/other/advanced-update)
+    - [Advanced Update Process](/recipes/other/advanced-update)
     - [JavaScript and TypeScript](/recipes/other/js-and-ts)
     - [React Native with Nx](/recipes/other/react-native)
     - [Remix with Nx](/recipes/other/remix)

@@ -1334,7 +1334,7 @@
               "file": "shared/recipes/workspace-watching"
             },
             {
-              "name": "Advanced Update Nx",
+              "name": "Advanced Update Process",
               "id": "advanced-update",
               "tags": ["automate-updating-dependencies"],
               "file": "shared/recipes/advanced-update"

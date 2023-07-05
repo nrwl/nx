@@ -1360,7 +1360,7 @@
       },
       {
         "id": "advanced-update",
-        "name": "Advanced Update Nx",
+        "name": "Advanced Update Process",
         "description": "",
         "file": "shared/recipes/advanced-update",
         "itemList": [],
@@ -1625,7 +1625,7 @@
   },
   "/recipes/other/advanced-update": {
     "id": "advanced-update",
-    "name": "Advanced Update Nx",
+    "name": "Advanced Update Process",
     "description": "",
     "file": "shared/recipes/advanced-update",
     "itemList": [],
