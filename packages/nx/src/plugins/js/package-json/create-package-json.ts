@@ -43,11 +43,19 @@ export function createPackageJson(
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
 
+  const rootPackageJson = readJsonFile(
+    `${options.root || workspaceRoot}/package.json`
+  );
+
   const npmDeps = findProjectsNpmDependencies(
     projectNode,
     graph,
     options.target,
-    { helperDependencies: options.helperDependencies },
+    rootPackageJson,
+    {
+      helperDependencies: options.helperDependencies,
+      isProduction: options.isProduction,
+    },
     fileMap
   );
 
@@ -92,9 +100,6 @@ export function createPackageJson(
     );
   };
 
-  const rootPackageJson = readJsonFile(
-    `${options.root || workspaceRoot}/package.json`
-  );
   Object.entries(npmDeps.dependencies).forEach(([packageName, version]) => {
     if (
       rootPackageJson.devDependencies?.[packageName] &&
@@ -179,9 +184,11 @@ export function findProjectsNpmDependencies(
   projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,
   target: string,
+  rootPackageJson: PackageJson,
   options: {
     helperDependencies?: string[];
     ignoredDependencies?: string[];
+    isProduction?: boolean;
   },
   fileMap?: ProjectFileMap
 ): NpmDeps {
@@ -208,13 +215,22 @@ export function findProjectsNpmDependencies(
     recursivelyCollectPeerDependencies(dep, graph, npmDeps, seen);
   });
 
+  // if it's production, we want to ignore all found devDependencies
+  const ignoredDependencies =
+    options.isProduction && rootPackageJson.devDependencies
+      ? [
+          ...(options.ignoredDependencies || []),
+          ...Object.keys(rootPackageJson.devDependencies),
+        ]
+      : options.ignoredDependencies || [];
+
   findAllNpmDeps(
     fileMap,
     projectNode,
     graph,
     npmDeps,
     seen,
-    options.ignoredDependencies || [],
+    ignoredDependencies,
     dependencyInputs,
     selfInputs
   );
