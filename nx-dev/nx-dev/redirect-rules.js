@@ -360,6 +360,9 @@ const nxCloudUrls = {
   '/nx-cloud/set-up/add-nx-cloud': '/core-features/share-your-cache',
   '/nx-cloud/set-up/set-up-caching': '/core-features/share-your-cache',
   '/nx-cloud/set-up/set-up-dte': '/core-features/distribute-task-execution',
+  '/nx-cloud/private-cloud/standalone': '/nx-cloud/private-cloud/ami-setup',
+  '/nx-cloud/private-cloud/kubernetes-setup':
+    '/nx-cloud/private-cloud/get-started',
 };
 
 /**
