@@ -5,7 +5,6 @@ version: 2.1
 # -------------------------
 orbs:
   nx: nrwl/nx@1.6.1
-  node: circleci/node@5.1.0
   rust: circleci/rust@1.6.0
   browser-tools: circleci/browser-tools@1.4.0
 
@@ -20,14 +19,14 @@ executors:
   linux:
     <<: *defaults
     docker:
-      - image: cimg/rust:1.66.1-browsers
+      - image: cimg/rust:1.70.0-browsers
     resource_class: medium+
 
   macos:
     <<: *defaults
     resource_class: macos.x86.medium.gen2
     macos:
-      xcode: &_XCODE_VERSION '13.0.0'
+      xcode: &_XCODE_VERSION '14.3.1'
 
 # -------------------------
 #        COMMANDS
@@ -95,9 +94,6 @@ commands:
                   sudo apt-get install -y ca-certificates lsof
             - browser-tools/install-chrome
             - browser-tools/install-chromedriver
-      - node/install:
-          # Use LTS version
-          node-version: ''
       - run-pnpm-install:
           os: << parameters.os >>
 
