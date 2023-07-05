@@ -2170,6 +2170,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Find the Last Successful Commit in Azure Pipelines",
+            "path": "/recipes/ci/azure-last-successful-commit",
+            "id": "azure-last-successful-commit",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Setting up CircleCI",
             "path": "/recipes/ci/monorepo-ci-circle-ci",
             "id": "monorepo-ci-circle-ci",
@@ -2240,6 +2248,14 @@
         "name": "Setting up Azure Pipelines",
         "path": "/recipes/ci/monorepo-ci-azure",
         "id": "monorepo-ci-azure",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Find the Last Successful Commit in Azure Pipelines",
+        "path": "/recipes/ci/azure-last-successful-commit",
+        "id": "azure-last-successful-commit",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3213,14 +3229,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Find the Last Successful Commit in Azure Pipelines",
-            "path": "/recipes/other/azure-last-successful-commit",
-            "id": "azure-last-successful-commit",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Troubleshoot Cache Misses",
             "path": "/recipes/other/troubleshoot-cache-misses",
             "id": "troubleshoot-cache-misses",
@@ -3419,14 +3427,6 @@
         "name": "Using Data Persistence operators",
         "path": "/recipes/other/misc-data-persistence",
         "id": "misc-data-persistence",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Find the Last Successful Commit in Azure Pipelines",
-        "path": "/recipes/other/azure-last-successful-commit",
-        "id": "azure-last-successful-commit",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3960,7 +3960,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "On Prem",
+        "name": "Enterprise + On Prem",
         "path": "/nx-cloud/private-cloud",
         "id": "private-cloud",
         "isExternal": false,
@@ -3985,6 +3985,14 @@
             "name": "Authenticate with GitHub",
             "path": "/nx-cloud/private-cloud/auth-github",
             "id": "auth-github",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "On-Prem VM Setup",
+            "path": "/nx-cloud/private-cloud/ami-setup",
+            "id": "ami-setup",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4020,22 +4028,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Kubernetes Setup",
-            "path": "/nx-cloud/private-cloud/kubernetes-setup",
-            "id": "kubernetes-setup",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Standalone",
-            "path": "/nx-cloud/private-cloud/standalone",
-            "id": "standalone",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4060,6 +4052,14 @@
         "name": "Authenticate with GitHub",
         "path": "/nx-cloud/private-cloud/auth-github",
         "id": "auth-github",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "On-Prem VM Setup",
+        "path": "/nx-cloud/private-cloud/ami-setup",
+        "id": "ami-setup",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4092,22 +4092,6 @@
         "name": "Advanced Configuration",
         "path": "/nx-cloud/private-cloud/advanced-config",
         "id": "advanced-config",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Kubernetes Setup",
-        "path": "/nx-cloud/private-cloud/kubernetes-setup",
-        "id": "kubernetes-setup",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Standalone",
-        "path": "/nx-cloud/private-cloud/standalone",
-        "id": "standalone",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

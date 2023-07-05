@@ -3,7 +3,7 @@
 Before running any task, Nx computes its computation hash. As long as the computation hash is the same, the output of
 running the task is the same.
 
-By default, the computation hash for - say - `nx test remixapp` includes:
+By default, the computation hash for something like `nx test remixapp` includes:
 
 - All the source files of `remixapp` and its dependencies
 - Relevant global configuration

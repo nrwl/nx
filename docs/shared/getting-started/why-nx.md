@@ -2,7 +2,7 @@
 
 We created Nx because developers struggle to configure, maintain and especially integrate various tools and frameworks. Setting up a system that works well for a handful of developers and at the same time, easily scales up to an entire organization is hard. This includes setting up low-level build tooling, configuring fast CI, and keeping your codebase healthy, up-to-date, and maintainable.
 
-We wanted to provide a solution that is easy to adopt and scales.
+We wanted to provide a solution that is easy to adopt and scale.
 
 ## How Does Nx Help You?
 
