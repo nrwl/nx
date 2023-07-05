@@ -1,5 +1,6 @@
-import { PackageJson, ProjectFileMap, readJsonFile } from '@nx/devkit';
+import { ProjectFileMap, readJsonFile } from '@nx/devkit';
 import { existsSync } from 'fs';
+import { PackageJson } from 'nx/src/utils/package-json';
 
 export function getAllDependencies(
   packageJson: PackageJson
