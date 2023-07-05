@@ -5,18 +5,21 @@ import {
   joinPathFragments,
   logger,
   parseTargetString,
+  ProjectGraphProjectNode,
+  readTargetOptions,
   runExecutor,
 } from '@nx/devkit';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
 import { join } from 'path';
 
 import { InspectType, NodeExecutorOptions } from './schema';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { calculateProjectDependencies } from '../../utils/buildable-libs-utils';
 import { killTree } from './lib/kill-tree';
 import { fileExists } from 'nx/src/utils/fileutils';
+import { getMainFileDirRelativeToProjectRoot } from '../../utils/get-main-file-dir';
 
 interface ActiveTask {
   id: string;
@@ -46,19 +49,21 @@ export async function* nodeExecutor(
     context.projectGraph
   );
 
-  let buildOptions: Record<string, any>;
-  if (project.data.targets[buildTarget.target]) {
-    buildOptions = {
-      ...project.data.targets[buildTarget.target]?.options,
-      ...options.buildTargetOptions,
-    };
-  } else {
+  if (!project.data.targets[buildTarget.target]) {
     throw new Error(
       `Cannot find build target ${chalk.bold(
         options.buildTarget
       )} for project ${chalk.bold(context.projectName)}`
     );
   }
+
+  const buildTargetExecutor =
+    project.data.targets[buildTarget.target]?.executor;
+
+  const buildOptions: Record<string, any> = {
+    ...readTargetOptions(buildTarget, context),
+    ...options.buildTargetOptions,
+  };
 
   if (options.waitUntilTargets && options.waitUntilTargets.length > 0) {
     const results = await runWaitUntilTargets(options, context);
@@ -73,21 +78,13 @@ export async function* nodeExecutor(
 
   // Re-map buildable workspace projects to their output directory.
   const mappings = calculateResolveMappings(context, options);
-  let outputFileName =
-    buildOptions.outputFileName || `${path.parse(buildOptions.main).name}.js`;
+  const fileToRun = getFileToRun(
+    context,
+    project,
+    buildOptions,
+    buildTargetExecutor
+  );
 
-  if (!buildOptions.outputFileName) {
-    const matches = buildOptions.main.match(/^(?!.*src)(.*)\/([^/]*)$/); //ignore strings that contain src and split paths into [folders before main, main.ts]
-    if (matches) {
-      const [mainFolder, mainFileName] = matches.slice(1);
-      outputFileName = path.join(
-        mainFolder,
-        `${path.parse(mainFileName).name}.js`
-      );
-    }
-  }
-
-  const fileToRun = join(context.root, buildOptions.outputPath, outputFileName);
   const tasks: ActiveTask[] = [];
   let currentTask: ActiveTask = null;
 
@@ -316,6 +313,35 @@ function runWaitUntilTargets(
       });
     })
   );
+}
+
+function getFileToRun(
+  context: ExecutorContext,
+  project: ProjectGraphProjectNode,
+  buildOptions: Record<string, any>,
+  buildTargetExecutor: string
+): string {
+  let outputFileName = buildOptions.outputFileName;
+
+  if (!outputFileName) {
+    const fileName = `${path.parse(buildOptions.main).name}.js`;
+    if (
+      buildTargetExecutor === '@nx/js:tsc' ||
+      buildTargetExecutor === '@nx/js:swc'
+    ) {
+      outputFileName = path.join(
+        getMainFileDirRelativeToProjectRoot(
+          buildOptions.main,
+          project.data.root
+        ),
+        fileName
+      );
+    } else {
+      outputFileName = fileName;
+    }
+  }
+
+  return join(context.root, buildOptions.outputPath, outputFileName);
 }
 
 function fileToRunCorrectPath(fileToRun: string): string {
