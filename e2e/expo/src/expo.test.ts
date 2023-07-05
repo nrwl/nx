@@ -92,15 +92,15 @@ describe('expo', () => {
     expect(prebuildResult.combinedOutput).toContain('Config synced');
   });
 
-  // TODO(emily): expo-cli always fetches the latest version of react native
-  // re-enable it when expo-cli is fixed
+  // TODO(emily): this test failed due to version conflict with conflict with @config-plugins/detox
+  // https://github.com/expo/config-plugins/issues/178
   xit('should install', async () => {
     // run install command
     const installResults = await runCLIAsync(
-      `install ${appName} --no-interactive --check`
+      `install ${appName} --no-interactive`
     );
     expect(installResults.combinedOutput).toContain(
-      'Dependencies are up to date'
+      'Successfully ran target install'
     );
   });
 

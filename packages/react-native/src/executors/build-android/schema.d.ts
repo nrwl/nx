@@ -1,4 +1,5 @@
 // options taken from https://github.com/react-native-community/cli/blob/main/packages/cli-platform-android/src/commands/buildAndroid/index.ts
+// https://github.com/react-native-community/cli/blob/main/packages/cli-platform-android/README.md#build-android
 
 import { ReactNativeStartOptions } from '../start/schema';
 
@@ -20,12 +21,13 @@ export interface ReactNativeBuildAndroidOptions
   // react native options
   mode: string; // default is debug
   activeArchOnly: boolean; // default is false
-  port: number; // default is 8081
-  tasks?: Array<string>;
+  tasks?: string | Array<string>;
   extraParams?: Array<string>;
-  interactive?: boolean;
+  interactive: boolean;
 
   // nx options
+  // @deprecated, no longer used
   packager: boolean; // default is true
+  // @deprecated, add to sync-deps to dependsOn
   sync: boolean;
 }

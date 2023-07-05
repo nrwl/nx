@@ -11,11 +11,7 @@
     "presets": [
       { "name": "Build iOS for a simulator", "keys": ["simulator"] },
       { "name": "Build iOS for a device", "keys": ["device"] },
-      { "name": "Build iOS for a device with udid", "keys": ["udid"] },
-      {
-        "name": "Run `pod install` before building iOS app",
-        "keys": ["install"]
-      }
+      { "name": "Build iOS for a device with udid", "keys": ["udid"] }
     ],
     "properties": {
       "simulator": {
@@ -72,17 +68,22 @@
         "description": "Explicitly select which scheme and configuration to use before running a build"
       },
       "extraParams": {
-        "type": "string",
+        "oneOf": [
+          { "type": "array", "items": { "type": "string" } },
+          { "type": "string" }
+        ],
         "description": "Custom params that will be passed to xcodebuild command."
       },
       "install": {
         "type": "boolean",
         "description": "Runs `pod install` for native modules before building iOS app.",
+        "x-deprecated": "Add pod-install to dependsOn in project.json for this target instead",
         "default": true
       },
       "sync": {
         "type": "boolean",
         "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
+        "x-deprecated": "Add sync-deps to dependsOn in project.json for this target instead",
         "default": true
       },
       "resetCache": {
@@ -93,7 +94,8 @@
       "packager": {
         "type": "boolean",
         "description": "Launch packager while building",
-        "default": true
+        "default": true,
+        "x-deprecated": "Run `nx run <project>:start` instead. Will be removed in Nx 17."
       }
     },
     "required": [],

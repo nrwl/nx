@@ -24,6 +24,7 @@ import {
   reactNativeCommunityCli,
   reactNativeCommunityCliAndroid,
   reactNativeCommunityCliIos,
+  reactNativeMetroConfigVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeVersion,
@@ -90,6 +91,7 @@ export function updateDependencies(host: Tree) {
       '@types/node': typesNodeVersion,
       '@types/react': typesReactVersion,
       '@types/react-native': typesReactNativeVersion,
+      '@react-native/metro-config': reactNativeMetroConfigVersion,
       '@react-native-community/cli': reactNativeCommunityCli,
       '@react-native-community/cli-platform-android':
         reactNativeCommunityCliAndroid,
@@ -98,6 +100,7 @@ export function updateDependencies(host: Tree) {
       '@testing-library/jest-native': testingLibraryJestNativeVersion,
       'jest-react-native': jestReactNativeVersion,
       metro: metroVersion,
+      'metro-config': metroVersion,
       'metro-resolver': metroVersion,
       'metro-babel-register': metroVersion,
       'metro-react-native-babel-preset': metroVersion,
@@ -108,7 +111,6 @@ export function updateDependencies(host: Tree) {
       '@babel/preset-react': babelPresetReactVersion,
       ...(isPnpm
         ? {
-            'metro-config': metroVersion, // metro-config is used by metro.config.js
             '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg
           }
         : {}),

@@ -121,12 +121,6 @@ describe('app', () => {
             'cd ../../../apps/my-dir/my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
           type: 'android.apk',
         },
-        'android.eas': {
-          binaryPath: '../../../apps/my-dir/my-app/dist/MyApp.apk',
-          build:
-            'npx nx run my-app:download --platform android --distribution simulator --output=../../../apps/my-dir/my-app/dist/',
-          type: 'android.apk',
-        },
         'android.local': {
           binaryPath: '../../../apps/my-dir/my-app/dist/MyApp.apk',
           build:
@@ -145,12 +139,6 @@ describe('app', () => {
             '../../../apps/my-dir/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
             "cd ../../../apps/my-dir/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
-          type: 'ios.app',
-        },
-        'ios.eas': {
-          binaryPath: '../../../apps/my-dir/my-app/dist/MyApp.app',
-          build:
-            'npx nx run my-app:download --platform ios --distribution simulator --output=../../../apps/my-dir/my-app/dist/',
           type: 'ios.app',
         },
         'ios.local': {
@@ -196,12 +184,6 @@ describe('app', () => {
             'cd ../../apps/my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
           type: 'android.apk',
         },
-        'android.eas': {
-          binaryPath: '../../apps/my-app/dist/MyApp.apk',
-          build:
-            'npx nx run my-app:download --platform android --distribution simulator --output=../../apps/my-app/dist/',
-          type: 'android.apk',
-        },
         'android.local': {
           binaryPath: '../../apps/my-app/dist/MyApp.apk',
           build:
@@ -220,12 +202,6 @@ describe('app', () => {
             '../../apps/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
             "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
-          type: 'ios.app',
-        },
-        'ios.eas': {
-          binaryPath: '../../apps/my-app/dist/MyApp.app',
-          build:
-            'npx nx run my-app:download --platform ios --distribution simulator --output=../../apps/my-app/dist/',
           type: 'ios.app',
         },
         'ios.local': {
@@ -272,12 +248,6 @@ describe('app', () => {
             'cd ../../apps/my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
           type: 'android.apk',
         },
-        'android.eas': {
-          binaryPath: '../../apps/my-app/dist/myappname.apk',
-          build:
-            'npx nx run my-app:download --platform android --distribution simulator --output=../../apps/my-app/dist/',
-          type: 'android.apk',
-        },
         'android.local': {
           binaryPath: '../../apps/my-app/dist/myappname.apk',
           build:
@@ -296,12 +266,6 @@ describe('app', () => {
             '../../apps/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
             "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
-          type: 'ios.app',
-        },
-        'ios.eas': {
-          binaryPath: '../../apps/my-app/dist/myappname.app',
-          build:
-            'npx nx run my-app:download --platform ios --distribution simulator --output=../../apps/my-app/dist/',
           type: 'ios.app',
         },
         'ios.local': {

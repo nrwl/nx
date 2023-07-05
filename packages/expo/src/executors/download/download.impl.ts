@@ -28,6 +28,7 @@ export interface ReactNativeDownloadOutput {
 const streamPipeline = promisify(pipeline);
 
 /**
+ * @deprecated TODO(v17) this executor is to be removed in NX 17. It is no longer used.
  * This executor downloads the latest EAS build.
  * It calls the build list executor to list EAS builds with options passed in.
  */
