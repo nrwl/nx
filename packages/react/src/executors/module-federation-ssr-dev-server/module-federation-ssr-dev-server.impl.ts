@@ -46,9 +46,27 @@ export default async function* moduleFederationSsrDevServer(
   }
 
   const remotesToSkip = new Set(options.skipRemotes ?? []);
-  const knownRemotes = (moduleFederationConfig.remotes ?? []).filter(
-    (r) => !remotesToSkip.has(r)
-  );
+  const remotesNotInWorkspace: string[] = [];
+  const knownRemotes = (moduleFederationConfig.remotes ?? []).filter((r) => {
+    const validRemote = Array.isArray(r) ? r[0] : r;
+
+    if (remotesToSkip.has(validRemote)) {
+      return false;
+    } else if (!context.projectGraph.nodes[validRemote]) {
+      remotesNotInWorkspace.push(validRemote);
+      return false;
+    } else {
+      return true;
+    }
+  });
+
+  if (remotesNotInWorkspace.length > 0) {
+    logger.warn(
+      `Skipping serving ${remotesNotInWorkspace.join(
+        ', '
+      )} as they could not be found in the workspace. Ensure they are served correctly.`
+    );
+  }
 
   const devServeApps = !options.devRemotes
     ? []
