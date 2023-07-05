@@ -114,48 +114,67 @@ export async function* nodeExecutor(
         childProcess: null,
         promise: null,
         start: async () => {
-          let buildFailed = false;
-          // Run the build
-          task.promise = new Promise<void>(async (resolve, reject) => {
-            task.childProcess = exec(
-              `npx nx run ${context.projectName}:${buildTarget.target}${
-                buildTarget.configuration ? `:${buildTarget.configuration}` : ''
-              }`,
+          if (options.runBuildTargetDependencies) {
+            // If task dependencies are to be run, then we need to run through CLI since `runExecutor` doesn't support it.
+            task.promise = new Promise<void>(async (resolve, reject) => {
+              task.childProcess = fork(
+                require.resolve('nx'),
+                [
+                  'run',
+                  `${context.projectName}:${buildTarget.target}${
+                    buildTarget.configuration
+                      ? `:${buildTarget.configuration}`
+                      : ''
+                  }`,
+                ],
+                {
+                  cwd: context.root,
+                  stdio: 'inherit',
+                }
+              );
+              task.childProcess.once('exit', (code) => {
+                if (code === 0) resolve();
+                else reject();
+              });
+            });
+          } else {
+            const output = await runExecutor(
+              buildTarget,
               {
-                cwd: context.root,
+                ...options.buildTargetOptions,
+                watch: false, // we'll handle the watch in this executor
               },
-              (error, stdout, stderr) => {
-                if (
-                  // Build succeeded
-                  !error ||
-                  // If task was killed then another build process has started, ignore errors.
-                  task.killed
-                ) {
-                  resolve();
-                  return;
-                }
-
-                logger.info(stdout);
-                buildFailed = true;
-                if (options.watch) {
-                  logger.error(
-                    `Build failed, waiting for changes to restart...`
-                  );
-                  resolve(); // Don't reject because it'll error out and kill the Nx process.
-                } else {
-                  logger.error(`Build failed. See above for errors.`);
-                  reject();
-                }
-              }
+              context
             );
-          });
+            task.promise = new Promise(async (resolve, reject) => {
+              let error = false;
+              let event;
+              do {
+                event = await output.next();
+                if (event.value?.success === false) {
+                  error = true;
+                }
+              } while (!event.done);
+              if (error) reject();
+              else resolve();
+            });
+          }
 
-          // Wait for build to finish
-          await task.promise;
+          // Wait for build to finish.
+          try {
+            await task.promise;
+          } catch {
+            // If in watch-mode, don't throw or else the process exits.
+            if (options.watch) {
+              logger.error(`Build failed, waiting for changes to restart...`);
+              return;
+            } else {
+              throw new Error(`Build failed. See above for errors.`);
+            }
+          }
 
-          // Task may have been stopped due to another running task.
-          // OR build failed, so don't start the process.
-          if (task.killed || buildFailed) return;
+          // Before running the program, check if the task has been killed (by a new change during watch).
+          if (task.killed) return;
 
           // Run the program
           task.promise = new Promise<void>((resolve, reject) => {
@@ -173,16 +192,17 @@ export async function* nodeExecutor(
               }
             );
 
-            task.childProcess.stderr.on('data', (data) => {
+            const handleStdErr = (data) => {
               // Don't log out error if task is killed and new one has started.
               // This could happen if a new build is triggered while new process is starting, since the operation is not atomic.
               // Log the error in normal mode
               if (!options.watch || !task.killed) {
                 logger.error(data.toString());
               }
-            });
-
+            };
+            task.childProcess.stderr.on('data', handleStdErr);
             task.childProcess.once('exit', (code) => {
+              task.childProcess.off('data', handleStdErr);
               if (options.watch && !task.killed) {
                 logger.info(
                   `NX Process exited with code ${code}, waiting for changes to restart...`
@@ -203,7 +223,11 @@ export async function* nodeExecutor(
           if (task.childProcess) {
             await killTree(task.childProcess.pid, signal);
           }
-          await task.promise;
+          try {
+            await task.promise;
+          } catch {
+            // Doesn't matter if task fails, we just need to wait until it finishes.
+          }
         },
       };
 
