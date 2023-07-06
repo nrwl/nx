@@ -263,6 +263,12 @@
       },
       "description": "Update the @angular/cli package version to ~16.1.0.",
       "factory": "./src/migrations/update-16-4-0/update-angular-cli"
+    },
+    "explicitly-set-projects-to-update-buildable-deps": {
+      "cli": "nx",
+      "version": "16.6.0-beta.0",
+      "description": "Explicitly set 'updateBuildableProjectDepsInPackageJson' to 'true' in targets that rely on that value as the default.",
+      "factory": "./src/migrations/update-16-6-0/explicitly-set-projects-to-update-buildable-deps"
     }
   },
   "packageJsonUpdates": {

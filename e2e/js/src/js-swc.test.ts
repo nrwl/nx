@@ -91,7 +91,9 @@ describe('js e2e', () => {
       return json;
     });
 
-    runCLI(`build ${lib} --generateLockfile=true`);
+    runCLI(
+      `build ${lib} --generateLockfile=true --updateBuildableProjectDepsInPackageJson`
+    );
     checkFilesExist(
       `dist/libs/${lib}/package.json`,
       `dist/libs/${lib}/${
