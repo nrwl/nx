@@ -5,7 +5,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-import { webpackProjectGenerator } from './webpack-project';
+import configurationGenerator from './configuration';
 
 describe('webpackProject', () => {
   let tree: Tree;
@@ -20,7 +20,7 @@ describe('webpackProject', () => {
   });
 
   it('should generate files', async () => {
-    await webpackProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       project: 'mypkg',
     });
 
@@ -39,7 +39,7 @@ describe('webpackProject', () => {
   });
 
   it('should support --main option', async () => {
-    await webpackProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       project: 'mypkg',
       main: 'libs/mypkg/index.ts',
     });
@@ -59,7 +59,7 @@ describe('webpackProject', () => {
   });
 
   it('should support --tsConfig option', async () => {
-    await webpackProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       project: 'mypkg',
       tsConfig: 'libs/mypkg/tsconfig.custom.json',
     });
@@ -79,7 +79,7 @@ describe('webpackProject', () => {
   });
 
   it('should support --devServer option', async () => {
-    await webpackProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       project: 'mypkg',
       devServer: true,
     });

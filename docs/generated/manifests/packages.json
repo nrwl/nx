@@ -651,13 +651,13 @@
         "path": "/packages/esbuild/generators/init",
         "type": "generator"
       },
-      "/packages/esbuild/generators/esbuild-project": {
+      "/packages/esbuild/generators/configuration": {
         "description": "Add esbuild configuration to a project.",
-        "file": "generated/packages/esbuild/generators/esbuild-project.json",
+        "file": "generated/packages/esbuild/generators/configuration.json",
         "hidden": true,
-        "name": "esbuild-project",
-        "originalFilePath": "/packages/esbuild/src/generators/esbuild-project/schema.json",
-        "path": "/packages/esbuild/generators/esbuild-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/esbuild/src/generators/configuration/schema.json",
+        "path": "/packages/esbuild/generators/configuration",
         "type": "generator"
       }
     },
@@ -2336,13 +2336,13 @@
         "path": "/packages/rollup/generators/init",
         "type": "generator"
       },
-      "/packages/rollup/generators/rollup-project": {
+      "/packages/rollup/generators/configuration": {
         "description": "Add rollup configuration to a project.",
-        "file": "generated/packages/rollup/generators/rollup-project.json",
+        "file": "generated/packages/rollup/generators/configuration.json",
         "hidden": true,
-        "name": "rollup-project",
-        "originalFilePath": "/packages/rollup/src/generators/rollup-project/schema.json",
-        "path": "/packages/rollup/generators/rollup-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/rollup/src/generators/configuration/schema.json",
+        "path": "/packages/rollup/generators/configuration",
         "type": "generator"
       }
     },
@@ -2782,13 +2782,13 @@
         "path": "/packages/webpack/generators/init",
         "type": "generator"
       },
-      "/packages/webpack/generators/webpack-project": {
+      "/packages/webpack/generators/configuration": {
         "description": "Add webpack configuration to a project.",
-        "file": "generated/packages/webpack/generators/webpack-project.json",
+        "file": "generated/packages/webpack/generators/configuration.json",
         "hidden": true,
-        "name": "webpack-project",
-        "originalFilePath": "/packages/webpack/src/generators/webpack-project/schema.json",
-        "path": "/packages/webpack/generators/webpack-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/webpack/src/generators/configuration/schema.json",
+        "path": "/packages/webpack/generators/configuration",
         "type": "generator"
       }
     },

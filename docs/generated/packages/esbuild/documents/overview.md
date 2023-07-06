@@ -45,13 +45,13 @@ This command will install the esbuild plugin if needed, and set `@nx/esbuild:esb
 If you already have a JS project that you want to use esbuild for, run this command:
 
 ```shell
-nx g esbuild-project mylib
+nx g @nx/esbuild:configuration mylib
 ```
 
 This generator validates there isn't an existing `build` target. If you want to overwrite the existing target you can pass the `--skipValidation` option.
 
 ```shell
-nx g esbuild-project mylib --skipValidation
+nx g @nx/esbuild:configuration mylib --skipValidation
 ```
 
 ## Using esbuild

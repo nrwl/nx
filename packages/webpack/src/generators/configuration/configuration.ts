@@ -9,12 +9,12 @@ import {
 } from '@nx/devkit';
 
 import { webpackInitGenerator } from '../init/init';
-import { WebpackProjectGeneratorSchema } from './schema';
+import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 
-export async function webpackProjectGenerator(
+export async function configurationGenerator(
   tree: Tree,
-  options: WebpackProjectGeneratorSchema
+  options: ConfigurationGeneratorSchema
 ) {
   const task = await webpackInitGenerator(tree, {
     ...options,
@@ -35,7 +35,7 @@ export async function webpackProjectGenerator(
 
 function checkForTargetConflicts(
   tree: Tree,
-  options: WebpackProjectGeneratorSchema
+  options: ConfigurationGeneratorSchema
 ) {
   if (options.skipValidation) return;
 
@@ -54,7 +54,7 @@ function checkForTargetConflicts(
   }
 }
 
-function addBuildTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
+function addBuildTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
   const project = readProjectConfiguration(tree, options.project);
   const buildOptions: WebpackExecutorOptions = {
     target: options.target,
@@ -132,7 +132,7 @@ module.exports = composePlugins(withNx(), (config) => {
   });
 }
 
-function addServeTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
+function addServeTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
   const project = readProjectConfiguration(tree, options.project);
   updateProjectConfiguration(tree, options.project, {
     ...project,
@@ -153,8 +153,6 @@ function addServeTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
   });
 }
 
-export default webpackProjectGenerator;
+export default configurationGenerator;
 
-export const webpackProjectSchematic = convertNxGenerator(
-  webpackProjectGenerator
-);
+export const compat = convertNxGenerator(configurationGenerator);
