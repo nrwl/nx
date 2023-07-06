@@ -198,7 +198,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     nxJson,
     projectFiles,
     (file) => readJson(tree, file)
-  ).projects;
+  );
 }
 
 /**

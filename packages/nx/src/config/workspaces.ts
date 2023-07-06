@@ -95,7 +95,7 @@ export class Workspaces {
       return this.cachedProjectsConfig;
     }
     const nxJson = this.readNxJson();
-    const projectsConfigurations = buildProjectsConfigurationsFromProjectPaths(
+    let projectsConfigurations = buildProjectsConfigurationsFromProjectPaths(
       nxJson,
       globForProjectFiles(
         this.root,
@@ -116,15 +116,18 @@ export class Workspaces {
         opts?._includeProjectsFromAngularJson
       )
     ) {
-      projectsConfigurations.projects = mergeAngularJsonAndProjects(
-        projectsConfigurations.projects,
+      projectsConfigurations = mergeAngularJsonAndProjects(
+        projectsConfigurations,
         this.root
       );
     }
-    this.cachedProjectsConfig = this.mergeTargetDefaultsIntoProjectDescriptions(
-      projectsConfigurations,
-      nxJson
-    );
+    this.cachedProjectsConfig = {
+      version: 2,
+      projects: this.mergeTargetDefaultsIntoProjectDescriptions(
+        projectsConfigurations,
+        nxJson
+      ),
+    };
     return this.cachedProjectsConfig;
   }
 
@@ -140,10 +143,10 @@ export class Workspaces {
   }
 
   private mergeTargetDefaultsIntoProjectDescriptions(
-    config: ProjectsConfigurations,
+    projects: Record<string, ProjectConfiguration>,
     nxJson: NxJsonConfiguration
   ) {
-    for (const proj of Object.values(config.projects)) {
+    for (const proj of Object.values(projects)) {
       if (proj.targets) {
         for (const targetName of Object.keys(proj.targets)) {
           const projectTargetDefinition = proj.targets[targetName];
@@ -163,7 +166,7 @@ export class Workspaces {
         }
       }
     }
-    return config;
+    return projects;
   }
 
   isNxExecutor(nodeModule: string, executor: string) {
@@ -808,7 +811,7 @@ export function buildProjectsConfigurationsFromProjectPaths(
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   readJson: <T extends Object>(string) => T = <T extends Object>(string) =>
     readJsonFile<T>(string) // making this an arg allows us to reuse in devkit
-): ProjectsConfigurations {
+): Record<string, ProjectConfiguration> {
   const projects: Record<string, ProjectConfiguration> = {};
 
   for (const file of projectFiles) {
@@ -868,10 +871,7 @@ export function buildProjectsConfigurationsFromProjectPaths(
     }
   }
 
-  return {
-    version: 2,
-    projects: projects,
-  };
+  return projects;
 }
 
 export function mergeTargetConfigurations(
