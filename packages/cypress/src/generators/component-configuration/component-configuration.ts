@@ -11,6 +11,7 @@ import {
   updateJson,
   updateProjectConfiguration,
   updateNxJson,
+  convertNxGenerator,
 } from '@nx/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
@@ -25,7 +26,7 @@ import { addBaseCypressSetup } from '../base-setup/base-setup';
 
 type NormalizeCTOptions = ReturnType<typeof normalizeOptions>;
 
-export async function cypressComponentConfiguration(
+export async function componentConfigurationGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
@@ -216,4 +217,5 @@ export function updateTsConfigForComponentTesting(
   }
 }
 
-export default cypressComponentConfiguration;
+export default componentConfigurationGenerator;
+export const compat = convertNxGenerator(componentConfigurationGenerator);
