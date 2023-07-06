@@ -8,7 +8,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { jestConfigObject } from '../../utils/config/functions';
 
-import { jestProjectGenerator } from './jest-project';
+import configurationGenerator from './configuration';
 import { JestProjectSchema } from './schema.d';
 
 describe('jestProject', () => {
@@ -45,7 +45,7 @@ describe('jestProject', () => {
   });
 
   it('should generate files', async () => {
-    await jestProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
       setupFile: 'angular',
@@ -61,7 +61,7 @@ describe('jestProject', () => {
   });
 
   it('should alter project configuration', async () => {
-    await jestProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
       setupFile: 'angular',
@@ -87,7 +87,7 @@ describe('jestProject', () => {
   });
 
   it('should create a jest.config.ts', async () => {
-    await jestProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
     } as JestProjectSchema);
@@ -95,7 +95,7 @@ describe('jestProject', () => {
   });
 
   it('should add a reference to solution tsconfig.json', async () => {
-    await jestProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
     } as JestProjectSchema);
@@ -106,7 +106,7 @@ describe('jestProject', () => {
   });
 
   it('should create a tsconfig.spec.json', async () => {
-    await jestProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
       setupFile: 'angular',
@@ -132,7 +132,7 @@ describe('jestProject', () => {
 
   describe('--setup-file', () => {
     it('should generate src/test-setup.ts', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
       } as JestProjectSchema);
@@ -143,7 +143,7 @@ describe('jestProject', () => {
     });
 
     it('should have setupFilesAfterEnv in the jest.config when generated for web-components', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         setupFile: 'web-components',
@@ -154,7 +154,7 @@ describe('jestProject', () => {
     });
 
     it('should have setupFilesAfterEnv and globals.ts-jest in the jest.config when generated for angular', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         setupFile: 'angular',
@@ -168,7 +168,7 @@ describe('jestProject', () => {
     });
 
     it('should not list the setup file in project configuration', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         setupFile: 'none',
@@ -178,7 +178,7 @@ describe('jestProject', () => {
     });
 
     it('should not list the setup file in tsconfig.spec.json', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         setupFile: 'none',
@@ -190,7 +190,7 @@ describe('jestProject', () => {
 
   describe('--skip-setup-file', () => {
     it('should generate src/test-setup.ts', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         skipSetupFile: true,
@@ -199,7 +199,7 @@ describe('jestProject', () => {
     });
 
     it('should not list the setup file in project configuration', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         skipSetupFile: true,
@@ -209,7 +209,7 @@ describe('jestProject', () => {
     });
 
     it('should not list the setup file in tsconfig.spec.json', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         skipSetupFile: true,
@@ -221,7 +221,7 @@ describe('jestProject', () => {
 
   describe('--skip-serializers', () => {
     it('should not list the serializers in jest.config.ts', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         skipSerializers: true,
@@ -239,7 +239,7 @@ describe('jestProject', () => {
 
   describe('--support-tsx', () => {
     it('should add jest.transform', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         supportTsx: true,
@@ -254,7 +254,7 @@ describe('jestProject', () => {
     });
 
     it('should add tsx to moduleExtensions', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         supportTsx: true,
@@ -270,7 +270,7 @@ describe('jestProject', () => {
   });
 
   it('should create jest.config.js with --js flag', async () => {
-    await jestProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
       js: true,
@@ -284,7 +284,7 @@ describe('jestProject', () => {
   });
 
   it('should use jest.config.js in project config with --js flag', async () => {
-    await jestProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
       js: true,
@@ -297,7 +297,7 @@ describe('jestProject', () => {
 
   it('should always use jest.preset.js with --js', async () => {
     tree.write('jest.preset.ts', '');
-    await jestProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
       js: true,
@@ -309,7 +309,7 @@ describe('jestProject', () => {
   });
 
   it('should use module.exports with --js flag', async () => {
-    await jestProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
       js: true,
@@ -322,7 +322,7 @@ describe('jestProject', () => {
 
   describe('--babelJest', () => {
     it('should generate proper jest.transform when babelJest is true', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         babelJest: true,
@@ -338,7 +338,7 @@ describe('jestProject', () => {
     });
 
     it('should generate proper jest.transform when babelJest and supportTsx is true', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         babelJest: true,
@@ -348,7 +348,7 @@ describe('jestProject', () => {
     });
 
     it('should generate proper jest.transform when --compiler=swc and supportTsx is true', async () => {
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         compiler: 'swc',
@@ -371,7 +371,7 @@ describe('jestProject', () => {
         name: 'my-project',
         targets: {},
       });
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'my-project',
       });
@@ -402,7 +402,7 @@ describe('jestProject', () => {
         name: 'my-project',
         targets: {},
       });
-      await jestProjectGenerator(tree, {
+      await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'my-project',
         js: true,

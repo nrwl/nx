@@ -963,13 +963,13 @@
         "path": "/packages/jest/generators/init",
         "type": "generator"
       },
-      "/packages/jest/generators/jest-project": {
+      "/packages/jest/generators/configuration": {
         "description": "Add Jest configuration to a project.",
-        "file": "generated/packages/jest/generators/jest-project.json",
+        "file": "generated/packages/jest/generators/configuration.json",
         "hidden": true,
-        "name": "jest-project",
-        "originalFilePath": "/packages/jest/src/generators/jest-project/schema.json",
-        "path": "/packages/jest/generators/jest-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/jest/src/generators/configuration/schema.json",
+        "path": "/packages/jest/generators/configuration",
         "type": "generator"
       }
     },
