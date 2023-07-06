@@ -26,7 +26,7 @@ executors:
     <<: *defaults
     resource_class: macos.x86.medium.gen2
     macos:
-      xcode: &_XCODE_VERSION '14.3.1'
+      xcode: '14.2.0'
 
 # -------------------------
 #        COMMANDS
@@ -41,10 +41,22 @@ commands:
           name: Restore pnpm Package Cache
           keys:
             - node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
-      - run:
-          name: Install pnpm package manager
-          command: |
-            npm install --prefix=$HOME/.local -g @pnpm/exe@8.3.1
+      - when:
+          condition:
+            equal: [<< parameters.os >>, linux]
+          steps:
+            - run:
+                name: Install pnpm package manager (linux)
+                command: |
+                  npm install --prefix=$HOME/.local -g @pnpm/exe@8.3.1
+      - when:
+          condition:
+            equal: [<< parameters.os >>, macos]
+          steps:
+            - run:
+                name: Install pnpm package manager (macos)
+                command: |
+                  npm install -g @pnpm/exe@8.3.1
       - run:
           name: Install Dependencies
           command: |
