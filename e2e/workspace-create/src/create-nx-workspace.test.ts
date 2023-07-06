@@ -9,10 +9,11 @@ import {
   getSelectedPackageManager,
   packageManagerLockFile,
   readJson,
+  runCommand,
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e/utils';
-import { existsSync, mkdirSync } from 'fs-extra';
+import { existsSync, mkdirSync, readdirSync, rmSync } from 'fs-extra';
 
 describe('create-nx-workspace', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
@@ -414,7 +415,7 @@ describe('create-nx-workspace', () => {
   });
 });
 
-describe('create-nx-workspace custom parent folder', () => {
+describe('create-nx-workspace parent folder', () => {
   const tmpDir = `${e2eCwd}/${uniq('with space')}`;
   const wsName = uniq('parent');
   const packageManager = getSelectedPackageManager() || 'pnpm';
@@ -431,5 +432,45 @@ describe('create-nx-workspace custom parent folder', () => {
     });
 
     expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
+  });
+});
+
+describe('create-nx-workspace yarn berry', () => {
+  const tmpDir = `${e2eCwd}/${uniq('yarn-berry')}`;
+  let wsName: string;
+
+  beforeAll(() => {
+    mkdirSync(tmpDir, { recursive: true });
+    runCommand('yarn set version berry', { cwd: tmpDir });
+    // previous command creates a package.json file which we don't want
+    rmSync(`${tmpDir}/package.json`);
+  });
+
+  afterEach(() => cleanupProject({ cwd: `${tmpDir}/${wsName}` }));
+
+  it('should create a workspace with yarn berry', () => {
+    wsName = uniq('apps');
+
+    runCreateWorkspace(wsName, {
+      preset: 'apps',
+      packageManager: 'yarn',
+      cwd: tmpDir,
+    });
+
+    expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
+    console.log(readdirSync(`${tmpDir}/${wsName}`));
+  });
+
+  it('should create a js workspace with yarn berry', () => {
+    wsName = uniq('ts');
+
+    runCreateWorkspace(wsName, {
+      preset: 'ts',
+      packageManager: 'yarn',
+      cwd: tmpDir,
+    });
+
+    expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
+    console.log(readdirSync(`${tmpDir}/${wsName}`));
   });
 });
