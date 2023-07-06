@@ -1,5 +1,6 @@
 import {
   fragment,
+  json,
   logging,
   normalize,
   Path,
@@ -14,7 +15,7 @@ import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 
 // Importing @angular-devkit/architect here will cause issues importing this file without @angular-devkit/architect installed
 /* eslint-disable no-restricted-imports */
-import type { Architect } from '@angular-devkit/architect';
+import type { Architect, Target } from '@angular-devkit/architect';
 import type { NodeModulesBuilderInfo } from '@angular-devkit/architect/node/node-modules-architect-host';
 
 import * as chalk from 'chalk';
@@ -52,6 +53,7 @@ import {
   CustomHasher,
   Executor,
   ExecutorConfig,
+  ExecutorContext,
   ExecutorsJson,
   TaskGraphExecutor,
 } from '../config/misc-interfaces';
@@ -61,6 +63,92 @@ import {
   resolveImplementation,
   resolveSchema,
 } from '../config/schema-utils';
+
+export async function createBuilderContext(
+  builderInfo: {
+    builderName: string;
+    description: string;
+    optionSchema: any;
+  },
+  context: ExecutorContext
+) {
+  require('nx/src/adapter/compat');
+  const fsHost = new NxScopedHost(context.root);
+  const { workspace } = await workspaces.readWorkspace(
+    'angular.json',
+    workspaces.createWorkspaceHost(fsHost)
+  );
+  const architectHost = await getWrappedWorkspaceNodeModulesArchitectHost(
+    workspace,
+    context.root
+  );
+
+  const registry = new schema.CoreSchemaRegistry();
+  registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  registry.addSmartDefaultProvider('unparsed', () => {
+    // This happens when context.scheduleTarget is used to run a target using nx:run-commands
+    return [];
+  });
+  const { Architect } = require('@angular-devkit/architect');
+
+  const architect: Architect = new Architect(architectHost, registry);
+
+  const { firstValueFrom } = require('rxjs');
+  const toPromise = (obs: Observable<any>) =>
+    firstValueFrom ? firstValueFrom(obs) : obs.toPromise();
+
+  const validateOptions = (options: json.JsonObject, builderName: string) =>
+    toPromise(
+      architect['_scheduler'].schedule('..validateOptions', [
+        builderName,
+        options,
+      ]).output
+    );
+
+  const getProjectMetadata = (target: Target | string) =>
+    toPromise(
+      architect['_scheduler'].schedule('..getProjectMetadata', target).output
+    );
+
+  const builderContext: import('@angular-devkit/architect').BuilderContext = {
+    workspaceRoot: context.root,
+    target: {
+      project: context.projectName,
+      target: context.targetName,
+      configuration: context.configurationName,
+    },
+    builder: {
+      ...builderInfo,
+    },
+    logger: getLogger(),
+    id: 1,
+    currentDirectory: process.cwd(),
+    scheduleTarget: architect.scheduleTarget,
+    getBuilderNameForTarget: architectHost.getBuilderNameForTarget,
+    scheduleBuilder: architect.scheduleBuilder,
+    getTargetOptions: architectHost.getOptionsForTarget,
+    addTeardown(teardown: () => Promise<void> | void) {
+      // No-op as Nx doesn't require an implementation of this function
+      return;
+    },
+    reportProgress(...args) {
+      // No-op as Nx doesn't require an implementation of this function
+      return;
+    },
+    reportRunning(...args) {
+      // No-op as Nx doesn't require an implementation of this function
+      return;
+    },
+    reportStatus(status: string) {
+      // No-op as Nx doesn't require an implementation of this function
+      return;
+    },
+    getProjectMetadata,
+    validateOptions,
+  };
+
+  return builderContext;
+}
 
 export async function scheduleTarget(
   root: string,
@@ -88,122 +176,7 @@ export async function scheduleTarget(
     return [];
   });
 
-  const AngularWorkspaceNodeModulesArchitectHost =
-    require('@angular-devkit/architect/node').WorkspaceNodeModulesArchitectHost;
-
-  class WrappedWorkspaceNodeModulesArchitectHost extends AngularWorkspaceNodeModulesArchitectHost {
-    private workspaces = new Workspaces(this.root);
-
-    constructor(private workspace, private root) {
-      super(workspace, root);
-    }
-    async resolveBuilder(builderStr: string): Promise<NodeModulesBuilderInfo> {
-      const [packageName, builderName] = builderStr.split(':');
-
-      const { executorsFilePath, executorConfig } = this.readExecutorsJson(
-        packageName,
-        builderName
-      );
-      const builderInfo = this.readExecutor(packageName, builderName);
-      return {
-        name: builderStr,
-        builderName,
-        description:
-          readJsonFile<ExecutorsJson>(executorsFilePath).builders[builderName]
-            .description,
-        optionSchema: builderInfo.schema,
-        import: resolveImplementation(
-          executorConfig.implementation,
-          dirname(executorsFilePath)
-        ),
-      };
-    }
-
-    private readExecutorsJson(nodeModule: string, builder: string) {
-      const { json: packageJson, path: packageJsonPath } =
-        readPluginPackageJson(
-          nodeModule,
-          this.workspaces['resolvePaths'].bind(this.workspaces)()
-        );
-      const executorsFile = packageJson.executors ?? packageJson.builders;
-
-      if (!executorsFile) {
-        throw new Error(
-          `The "${nodeModule}" package does not support Nx executors or Angular Devkit Builders.`
-        );
-      }
-
-      const executorsFilePath = require.resolve(
-        join(dirname(packageJsonPath), executorsFile)
-      );
-      const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
-      const executorConfig: {
-        implementation: string;
-        batchImplementation?: string;
-        schema: string;
-        hasher?: string;
-      } = executorsJson.builders?.[builder];
-      if (!executorConfig) {
-        throw new Error(
-          `Cannot find builder '${builder}' in ${executorsFilePath}.`
-        );
-      }
-      return { executorsFilePath, executorConfig, isNgCompat: true };
-    }
-
-    private readExecutor(
-      nodeModule: string,
-      executor: string
-    ): ExecutorConfig & { isNgCompat: boolean } {
-      try {
-        const { executorsFilePath, executorConfig, isNgCompat } =
-          this.readExecutorsJson(nodeModule, executor);
-        const executorsDir = dirname(executorsFilePath);
-        const schemaPath = resolveSchema(executorConfig.schema, executorsDir);
-        const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
-
-        const implementationFactory = this.getImplementationFactory<Executor>(
-          executorConfig.implementation,
-          executorsDir
-        );
-
-        const batchImplementationFactory = executorConfig.batchImplementation
-          ? this.getImplementationFactory<TaskGraphExecutor>(
-              executorConfig.batchImplementation,
-              executorsDir
-            )
-          : null;
-
-        const hasherFactory = executorConfig.hasher
-          ? this.getImplementationFactory<CustomHasher>(
-              executorConfig.hasher,
-              executorsDir
-            )
-          : null;
-
-        return {
-          schema,
-          implementationFactory,
-          batchImplementationFactory,
-          hasherFactory,
-          isNgCompat,
-        };
-      } catch (e) {
-        throw new Error(
-          `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
-        );
-      }
-    }
-
-    private getImplementationFactory<T>(
-      implementation: string,
-      executorsDir: string
-    ): () => T {
-      return getImplementationFactory(implementation, executorsDir);
-    }
-  }
-
-  const architectHost = new WrappedWorkspaceNodeModulesArchitectHost(
+  const architectHost = await getWrappedWorkspaceNodeModulesArchitectHost(
     workspace,
     root
   );
@@ -1049,4 +1022,127 @@ function saveProjectsConfigurationsInWrappedSchematic(
       JSON.stringify(toOldFormat(newAngularJson), null, 2)
     );
   }
+}
+
+async function getWrappedWorkspaceNodeModulesArchitectHost(
+  workspace: workspaces.WorkspaceDefinition,
+  root: string
+) {
+  const {
+    WorkspaceNodeModulesArchitectHost: AngularWorkspaceNodeModulesArchitectHost,
+  } = await import('@angular-devkit/architect/node');
+
+  class WrappedWorkspaceNodeModulesArchitectHost extends AngularWorkspaceNodeModulesArchitectHost {
+    private workspaces = new Workspaces(this.root);
+
+    constructor(private workspace, private root) {
+      super(workspace, root);
+    }
+    async resolveBuilder(builderStr: string): Promise<NodeModulesBuilderInfo> {
+      const [packageName, builderName] = builderStr.split(':');
+
+      const { executorsFilePath, executorConfig } = this.readExecutorsJson(
+        packageName,
+        builderName
+      );
+      const builderInfo = this.readExecutor(packageName, builderName);
+      return {
+        name: builderStr,
+        builderName,
+        description:
+          readJsonFile<ExecutorsJson>(executorsFilePath).builders[builderName]
+            .description,
+        optionSchema: builderInfo.schema,
+        import: resolveImplementation(
+          executorConfig.implementation,
+          dirname(executorsFilePath)
+        ),
+      };
+    }
+
+    private readExecutorsJson(nodeModule: string, builder: string) {
+      const { json: packageJson, path: packageJsonPath } =
+        readPluginPackageJson(
+          nodeModule,
+          this.workspaces['resolvePaths'].bind(this.workspaces)()
+        );
+      const executorsFile = packageJson.executors ?? packageJson.builders;
+
+      if (!executorsFile) {
+        throw new Error(
+          `The "${nodeModule}" package does not support Nx executors or Angular Devkit Builders.`
+        );
+      }
+
+      const executorsFilePath = require.resolve(
+        join(dirname(packageJsonPath), executorsFile)
+      );
+      const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
+      const executorConfig: {
+        implementation: string;
+        batchImplementation?: string;
+        schema: string;
+        hasher?: string;
+      } = executorsJson.builders?.[builder];
+      if (!executorConfig) {
+        throw new Error(
+          `Cannot find builder '${builder}' in ${executorsFilePath}.`
+        );
+      }
+      return { executorsFilePath, executorConfig, isNgCompat: true };
+    }
+
+    private readExecutor(
+      nodeModule: string,
+      executor: string
+    ): ExecutorConfig & { isNgCompat: boolean } {
+      try {
+        const { executorsFilePath, executorConfig, isNgCompat } =
+          this.readExecutorsJson(nodeModule, executor);
+        const executorsDir = dirname(executorsFilePath);
+        const schemaPath = resolveSchema(executorConfig.schema, executorsDir);
+        const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
+
+        const implementationFactory = this.getImplementationFactory<Executor>(
+          executorConfig.implementation,
+          executorsDir
+        );
+
+        const batchImplementationFactory = executorConfig.batchImplementation
+          ? this.getImplementationFactory<TaskGraphExecutor>(
+              executorConfig.batchImplementation,
+              executorsDir
+            )
+          : null;
+
+        const hasherFactory = executorConfig.hasher
+          ? this.getImplementationFactory<CustomHasher>(
+              executorConfig.hasher,
+              executorsDir
+            )
+          : null;
+
+        return {
+          schema,
+          implementationFactory,
+          batchImplementationFactory,
+          hasherFactory,
+          isNgCompat,
+        };
+      } catch (e) {
+        throw new Error(
+          `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
+        );
+      }
+    }
+
+    private getImplementationFactory<T>(
+      implementation: string,
+      executorsDir: string
+    ): () => T {
+      return getImplementationFactory(implementation, executorsDir);
+    }
+  }
+
+  return new WrappedWorkspaceNodeModulesArchitectHost(workspace, root);
 }

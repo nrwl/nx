@@ -4266,6 +4266,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "browser-esbuild",
+                "path": "/packages/angular/executors/browser-esbuild",
+                "name": "browser-esbuild",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "webpack-browser",
                 "path": "/packages/angular/executors/webpack-browser",
                 "name": "webpack-browser",

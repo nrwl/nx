@@ -282,6 +282,7 @@
       - [delegate-build](/packages/angular/executors/delegate-build)
       - [ng-packagr-lite](/packages/angular/executors/ng-packagr-lite)
       - [package](/packages/angular/executors/package)
+      - [browser-esbuild](/packages/angular/executors/browser-esbuild)
       - [webpack-browser](/packages/angular/executors/webpack-browser)
       - [webpack-dev-server](/packages/angular/executors/webpack-dev-server)
       - [webpack-server](/packages/angular/executors/webpack-server)
