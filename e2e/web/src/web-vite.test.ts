@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -6,10 +7,13 @@ import {
   isNotWindows,
   killPorts,
   newProject,
+  readFile,
+  readJson,
   removeFile,
   runCLI,
   runCLIAsync,
   runCypressTests,
+  tmpProjPath,
   uniq,
 } from '@nx/e2e/utils';
 
@@ -42,7 +46,7 @@ describe('Web Components Applications with bundler set as vite', () => {
     }
   }, 500000);
 
-  it('should remove previous output before building', async () => {
+  it('xx should remove previous output before building', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -50,6 +54,16 @@ describe('Web Components Applications with bundler set as vite', () => {
     runCLI(
       `generate @nx/react:lib ${libName} --bundler=vite --no-interactive --unitTestRunner=vitest`
     );
+
+    const packageJson = readJson(`package.json`);
+    const content = readFile(`libs/${libName}/vite.config.ts`);
+    console.log(
+      execSync(`pnpm why vite`, { cwd: tmpProjPath() }).toString('utf-8')
+    );
+    console.log(
+      execSync(`pnpm why vitest`, { cwd: tmpProjPath() }).toString('utf-8')
+    );
+    console.log('>>> DEBUG config', { content, packageJson });
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
     createFile(`dist/libs/${libName}/_should_remove.txt`);
