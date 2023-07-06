@@ -52,6 +52,9 @@
         "nx-dev/data-access-documents/src/node.index.ts"
       ],
       "@nx/nx-dev/data-access-menu": ["nx-dev/data-access-menu/src/index.ts"],
+      "@nx/nx-dev/data-access-openai": [
+        "nx-dev/data-access-openai/src/index.ts"
+      ],
       "@nx/nx-dev/data-access-packages": [
         "nx-dev/data-access-packages/src/index.ts"
       ],

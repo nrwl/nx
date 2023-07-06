@@ -71,6 +71,7 @@
     "@nx/js": "16.5.0-beta.3",
     "@nx/linter": "16.5.0-beta.3",
     "@nx/next": "16.5.0-beta.3",
+    "@nx/node": "0.0.1",
     "@nx/react": "16.5.0-beta.3",
     "@nx/storybook": "16.5.0-beta.3",
     "@nx/web": "16.5.0-beta.3",
@@ -354,4 +355,3 @@
     }
   }
 }
-
