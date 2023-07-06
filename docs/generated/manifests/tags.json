@@ -26,7 +26,7 @@
       "file": "shared/recipes/root-level-scripts",
       "id": "root-level-scripts",
       "name": "Run Root-Level NPM Scripts with Nx",
-      "path": "/recipes/other/root-level-scripts"
+      "path": "/recipes/managing-repository/root-level-scripts"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -165,7 +165,7 @@
       "file": "shared/recipes/analyze-source-files",
       "id": "analyze-source-files",
       "name": "Disable Graph Links Created from Analyzing Source Files",
-      "path": "/recipes/other/analyze-source-files"
+      "path": "/recipes/managing-repository/analyze-source-files"
     },
     {
       "description": "",
@@ -304,7 +304,7 @@
       "file": "shared/recipes/advanced-update",
       "id": "advanced-update",
       "name": "Advanced Update Process",
-      "path": "/recipes/other/advanced-update"
+      "path": "/recipes/managing-repository/advanced-update"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -614,6 +614,22 @@
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
+    }
+  ],
+  "repository-types": [
+    {
+      "description": "",
+      "file": "shared/concepts/integrated-vs-package-based",
+      "id": "integrated-vs-package-based",
+      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+      "path": "/concepts/integrated-vs-package-based"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/repo-types/standalone-to-integrated",
+      "id": "standalone-to-integrated",
+      "name": "Convert from a Standalone Repository to an Integrated Repository",
+      "path": "/recipes/managing-repository/standalone-to-integrated"
     }
   ],
   "create-your-own-plugin": [
@@ -963,7 +979,7 @@
       "file": "shared/recipes/workspace-watching",
       "id": "workspace-watching",
       "name": "Workspace Watching",
-      "path": "/recipes/other/workspace-watching"
+      "path": "/recipes/managing-repository/workspace-watching"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
