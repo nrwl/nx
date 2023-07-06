@@ -23,7 +23,7 @@ export async function createSandbox(packageManager: PackageManager) {
     `Installing dependencies with ${packageManager}`
   ).start();
 
-  const { install } = getPackageManagerCommand(packageManager);
+  const { install, preInstall } = getPackageManagerCommand(packageManager);
 
   const tmpDir = dirSync().name;
   try {
@@ -38,6 +38,10 @@ export async function createSandbox(packageManager: PackageManager) {
       })
     );
     generatePackageManagerFiles(tmpDir, packageManager);
+
+    if (preInstall) {
+      await execAndWait(preInstall, tmpDir);
+    }
 
     await execAndWait(install, tmpDir);
 
