@@ -13,7 +13,7 @@ import { rollupInitGenerator } from '../init/init';
 import { RollupExecutorOptions } from '../../executors/rollup/schema';
 import { RollupProjectSchema } from './schema';
 
-export async function rollupProjectGenerator(
+export async function configurationGenerator(
   tree: Tree,
   options: RollupProjectSchema
 ) {
@@ -99,8 +99,8 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
   });
 }
 
-export default rollupProjectGenerator;
+export default configurationGenerator;
 
-export const rollupProjectSchematic = convertNxGenerator(
-  rollupProjectGenerator
+export const compat = convertNxGenerator(
+  configurationGenerator
 );

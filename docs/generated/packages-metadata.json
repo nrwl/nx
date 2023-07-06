@@ -2302,11 +2302,11 @@
       },
       {
         "description": "Add rollup configuration to a project.",
-        "file": "generated/packages/rollup/generators/rollup-project.json",
+        "file": "generated/packages/rollup/generators/configuration.json",
         "hidden": true,
-        "name": "rollup-project",
-        "originalFilePath": "/packages/rollup/src/generators/rollup-project/schema.json",
-        "path": "rollup/generators/rollup-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/rollup/src/generators/configuration/schema.json",
+        "path": "rollup/generators/configuration",
         "type": "generator"
       }
     ],

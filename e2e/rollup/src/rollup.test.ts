@@ -20,7 +20,7 @@ describe('Rollup Plugin', () => {
 
     // babel (default)
     runCLI(
-      `generate @nx/rollup:rollup-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
+      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -34,7 +34,7 @@ describe('Rollup Plugin', () => {
 
     // swc
     runCLI(
-      `generate @nx/rollup:rollup-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
+      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -48,7 +48,7 @@ describe('Rollup Plugin', () => {
 
     // tsc
     runCLI(
-      `generate @nx/rollup:rollup-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
+      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);

@@ -557,7 +557,7 @@
       - [rollup](/packages/rollup/executors/rollup)
     - [generators](/packages/rollup/generators)
       - [init](/packages/rollup/generators/init)
-      - [rollup-project](/packages/rollup/generators/rollup-project)
+      - [configuration](/packages/rollup/generators/configuration)
   - [storybook](/packages/storybook)
     - [documents](/packages/storybook/documents)
       - [Nx Storybook Plugin Overview](/packages/storybook/documents/overview)

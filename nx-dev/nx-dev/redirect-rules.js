@@ -76,6 +76,8 @@ const schemaUrls = {
   '/react/storybook-configuration':
     '/packages/react/generators/storybook-configuration',
   '/react/hook': '/packages/react/generators/hook',
+  '/packages/rollup/generators/rollup-project':
+    '/packages/rollup/generators/configuration',
   '/jest/jest': '/packages/jest/executors/jest',
   '/cypress/cypress': '/packages/cypress/executors/cypress',
   '/cypress/cypress-project': '/packages/cypress/generators/cypress-project',

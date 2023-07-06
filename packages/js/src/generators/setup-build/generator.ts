@@ -102,8 +102,8 @@ export async function setupBuildGenerator(
       break;
     }
     case 'rollup': {
-      const { rollupProjectGenerator } = ensurePackage('@nx/rollup', nxVersion);
-      const task = await rollupProjectGenerator(tree, {
+      const { configurationGenerator } = ensurePackage('@nx/rollup', nxVersion);
+      const task = await configurationGenerator(tree, {
         buildTarget: options.buildTarget,
         main: mainFile,
         project: options.project,

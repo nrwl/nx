@@ -6522,9 +6522,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "rollup-project",
-                "path": "/packages/rollup/generators/rollup-project",
-                "name": "rollup-project",
+                "id": "configuration",
+                "path": "/packages/rollup/generators/configuration",
+                "name": "configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
