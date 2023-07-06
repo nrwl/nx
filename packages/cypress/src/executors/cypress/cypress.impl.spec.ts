@@ -1,5 +1,6 @@
 import { getTempTailwindPath } from '../../utils/ct-helpers';
 import { ExecutorContext, stripIndents } from '@nx/devkit';
+import * as executorUtils from 'nx/src/command-line/run/executor-utils';
 import * as path from 'path';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import cypressExecutor, { CypressExecutorOptions } from './cypress.impl';
@@ -43,8 +44,16 @@ describe('Cypress builder', () => {
       },
     },
   } as any;
-  (devkit as any).readTargetOptions = jest.fn().mockReturnValue({
+  jest.spyOn(devkit, 'readTargetOptions').mockReturnValue({
     watch: true,
+  });
+  jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+    schema: { properties: {} },
+    hasherFactory: jest.fn(),
+    implementationFactory: jest.fn(),
+    batchImplementationFactory: jest.fn(),
+    isNgCompat: true,
+    isNxExecutor: true,
   });
   let runExecutor: any;
   let mockGetTailwindPath: jest.Mock<ReturnType<typeof getTempTailwindPath>> =
@@ -57,9 +66,6 @@ describe('Cypress builder', () => {
         baseUrl: 'http://localhost:4200',
       },
     ]);
-    (devkit as any).Workspaces = jest.fn().mockReturnValue({
-      readExecutor: () => ({ schema: { properties: {} } }),
-    });
     (devkit as any).stripIndents = (s) => s;
     (devkit as any).parseTargetString = (s) => {
       const [project, target, configuration] = s.split(':');

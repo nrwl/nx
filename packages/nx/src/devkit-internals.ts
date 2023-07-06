@@ -4,3 +4,4 @@
  * These may not be available in certain version of Nx, so be sure to check them first.
  */
 export { createTempNpmDirectory } from './utils/package-manager';
+export { getExecutorInformation } from './command-line/run/executor-utils';

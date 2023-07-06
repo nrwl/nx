@@ -1,7 +1,7 @@
 import { sync as globSync } from 'fast-glob';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import * as path from 'path';
-import { basename, dirname, extname, join } from 'path';
+import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile, readYamlFile } from '../utils/fileutils';
@@ -10,7 +10,6 @@ import {
   loadNxPlugins,
   loadNxPluginsSync,
   readPluginPackageJson,
-  registerPluginTSTranspiler,
 } from '../utils/nx-plugin';
 
 import type { NxJsonConfiguration, TargetDefaults } from './nx-json';
@@ -20,14 +19,9 @@ import {
   TargetConfiguration,
 } from './workspace-json-project-json';
 import {
-  CustomHasher,
-  Executor,
-  ExecutorConfig,
-  ExecutorsJson,
   Generator,
   GeneratorsJson,
   GeneratorsJsonEntry,
-  TaskGraphExecutor,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
 import { output } from '../utils/output';
@@ -42,6 +36,7 @@ import {
   findProjectForPath,
   normalizeProjectRoot,
 } from '../project-graph/utils/find-project-for-path';
+import { getImplementationFactory, resolveSchema } from './schema-utils';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
@@ -169,59 +164,8 @@ export class Workspaces {
     return projects;
   }
 
-  isNxExecutor(nodeModule: string, executor: string) {
-    return !this.readExecutor(nodeModule, executor).isNgCompat;
-  }
-
   isNxGenerator(collectionName: string, generatorName: string) {
     return !this.readGenerator(collectionName, generatorName).isNgCompat;
-  }
-
-  readExecutor(
-    nodeModule: string,
-    executor: string
-  ): ExecutorConfig & { isNgCompat: boolean } {
-    try {
-      const { executorsFilePath, executorConfig, isNgCompat } =
-        this.readExecutorsJson(nodeModule, executor);
-      const executorsDir = path.dirname(executorsFilePath);
-      const schemaPath = this.resolveSchema(
-        executorConfig.schema,
-        executorsDir
-      );
-      const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
-
-      const implementationFactory = this.getImplementationFactory<Executor>(
-        executorConfig.implementation,
-        executorsDir
-      );
-
-      const batchImplementationFactory = executorConfig.batchImplementation
-        ? this.getImplementationFactory<TaskGraphExecutor>(
-            executorConfig.batchImplementation,
-            executorsDir
-          )
-        : null;
-
-      const hasherFactory = executorConfig.hasher
-        ? this.getImplementationFactory<CustomHasher>(
-            executorConfig.hasher,
-            executorsDir
-          )
-        : null;
-
-      return {
-        schema,
-        implementationFactory,
-        batchImplementationFactory,
-        hasherFactory,
-        isNgCompat,
-      };
-    } catch (e) {
-      throw new Error(
-        `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
-      );
-    }
   }
 
   readGenerator(
@@ -251,17 +195,14 @@ export class Workspaces {
         generatorsJson.generators?.[normalizedGeneratorName] ||
         generatorsJson.schematics?.[normalizedGeneratorName];
       const isNgCompat = !generatorsJson.generators?.[normalizedGeneratorName];
-      const schemaPath = this.resolveSchema(
-        generatorConfig.schema,
-        generatorsDir
-      );
+      const schemaPath = resolveSchema(generatorConfig.schema, generatorsDir);
       const schema = readJsonFile(schemaPath);
       if (!schema.properties || typeof schema.properties !== 'object') {
         schema.properties = {};
       }
       generatorConfig.implementation =
         generatorConfig.implementation || generatorConfig.factory;
-      const implementationFactory = this.getImplementationFactory<Generator>(
+      const implementationFactory = getImplementationFactory<Generator>(
         generatorConfig.implementation,
         generatorsDir
       );
@@ -320,97 +261,6 @@ export class Workspaces {
         return {};
       }
     }
-  }
-
-  private getImplementationFactory<T>(
-    implementation: string,
-    directory: string
-  ): () => T {
-    const [implementationModulePath, implementationExportName] =
-      implementation.split('#');
-    return () => {
-      const modulePath = this.resolveImplementation(
-        implementationModulePath,
-        directory
-      );
-      if (extname(modulePath) === '.ts') {
-        registerPluginTSTranspiler();
-      }
-      const module = require(modulePath);
-      return implementationExportName
-        ? module[implementationExportName]
-        : module.default ?? module;
-    };
-  }
-
-  private resolveSchema(schemaPath: string, directory: string): string {
-    const maybeSchemaPath = join(directory, schemaPath);
-    if (existsSync(maybeSchemaPath)) {
-      return maybeSchemaPath;
-    }
-
-    return require.resolve(schemaPath, {
-      paths: [directory],
-    });
-  }
-
-  private resolveImplementation(
-    implementationModulePath: string,
-    directory: string
-  ): string {
-    const validImplementations = ['', '.js', '.ts'].map(
-      (x) => implementationModulePath + x
-    );
-
-    for (const maybeImplementation of validImplementations) {
-      const maybeImplementationPath = join(directory, maybeImplementation);
-      if (existsSync(maybeImplementationPath)) {
-        return maybeImplementationPath;
-      }
-
-      try {
-        return require.resolve(maybeImplementation, {
-          paths: [directory],
-        });
-      } catch {}
-    }
-
-    throw new Error(
-      `Could not resolve "${implementationModulePath}" from "${directory}".`
-    );
-  }
-
-  private readExecutorsJson(nodeModule: string, executor: string) {
-    const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
-      nodeModule,
-      this.resolvePaths()
-    );
-    const executorsFile = packageJson.executors ?? packageJson.builders;
-
-    if (!executorsFile) {
-      throw new Error(
-        `The "${nodeModule}" package does not support Nx executors.`
-      );
-    }
-
-    const executorsFilePath = require.resolve(
-      path.join(path.dirname(packageJsonPath), executorsFile)
-    );
-    const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
-    const executorConfig: {
-      implementation: string;
-      batchImplementation?: string;
-      schema: string;
-      hasher?: string;
-    } =
-      executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
-    if (!executorConfig) {
-      throw new Error(
-        `Cannot find executor '${executor}' in ${executorsFilePath}.`
-      );
-    }
-    const isNgCompat = !executorsJson.executors?.[executor];
-    return { executorsFilePath, executorConfig, isNgCompat };
   }
 
   private readGeneratorsJson(
@@ -483,22 +333,6 @@ function findMatchingProjectInCwd(
   }
   const matchingProject = findProjectForPath(relativeCwd, projectRootMappings);
   return matchingProject;
-}
-
-export function normalizeExecutorSchema(
-  schema: Partial<ExecutorConfig['schema']>
-): ExecutorConfig['schema'] {
-  const version = (schema.version ??= 1);
-  return {
-    version,
-    outputCapture:
-      schema.outputCapture ?? version < 2 ? 'direct-nodejs' : 'pipe',
-    properties:
-      !schema.properties || typeof schema.properties !== 'object'
-        ? {}
-        : schema.properties,
-    ...schema,
-  };
 }
 
 function findFullGeneratorName(
