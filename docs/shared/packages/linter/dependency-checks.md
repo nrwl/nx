@@ -1,16 +1,16 @@
 # Dependency Checks rule
 
-The `@nx/dependency-checks` ESLint rule enables you to discover mismatches between dependencies specified in project's `package.json` and the dependencies that your project depends on.
+The `@nx/dependency-checks` ESLint rule enables you to discover mismatches between dependencies specified in a project's `package.json` and the dependencies that your project actually depends on. If your project is using for example `axios`, but the `package.json` does not specify it as a dependency, your library might not work correctly. This rule helps catch these problems before your users do.
 
-This rule will use the project graph to collect all the dependencies of your project, based on the input of your `build` target. It will filter out all the dependencies marked as `devDependencies` in your root `package.json` to ensures dependencies of your compilation pipelines (e.g. dependencies of `webpack.config` or `vite.config`) or test setups are not included in the expected list.
+The rule uses the project graph to collect all the dependencies of your project, based on the input of your `build` target. It will filter out all the dependencies marked as `devDependencies` in your root `package.json` to ensures dependencies of your compilation pipelines (e.g. dependencies of `webpack.config` or `vite.config`) or test setups are not included in the expected list.
 
-We use versions of the installed packages to ensure the version specifier matches the version you are using while testing the functionality.
+We use versions of the installed packages when checking whether the version specifier in `package.json` is correct. The reason behind this, is that this is the only version for which we can "guarantee" that things work and were tested. If you specify a range outside of that version, that would mean that you are shipping potentially untested code.
 
 ## Usage
 
 You can use the `dependency-checks` rule by adding it to your ESLint rules configuration:
 
-```jsonc
+```jsonc {% fileName=".eslintrc.json" %}
 {
   // ... more ESLint config here
   "overrides": [
@@ -28,7 +28,7 @@ You can use the `dependency-checks` rule by adding it to your ESLint rules confi
 
 Linting `JSON` files is not enabled by default, so you will also need to add `package.json` to the `lintFilePatterns`:
 
-```jsonc
+```jsonc {% fileName="project.json" %}
 {
   // ... project.json config
   "targets": {
@@ -49,7 +49,7 @@ Linting `JSON` files is not enabled by default, so you will also need to add `pa
 
 Sometimes we intentionally want to add or remove a dependency from our `package.json` despite what the rule suggests. We can use the rule's options to override default behavior:
 
-```jsonc
+```jsonc {% fileName=".eslintrc.json" %}
 {
   "@nx/dependency-checks": [
     "error",
