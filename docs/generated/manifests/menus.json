@@ -3087,14 +3087,14 @@
         "disableCollapsible": false
       },
       {
-        "name": "Other",
-        "path": "/recipes/other",
-        "id": "other",
+        "name": "Managing Your Nx Repository",
+        "path": "/recipes/managing-repository",
+        "id": "managing-repository",
         "isExternal": false,
         "children": [
           {
             "name": "Run Root-Level NPM Scripts with Nx",
-            "path": "/recipes/other/root-level-scripts",
+            "path": "/recipes/managing-repository/root-level-scripts",
             "id": "root-level-scripts",
             "isExternal": false,
             "children": [],
@@ -3102,7 +3102,7 @@
           },
           {
             "name": "Disable Graph Links Created from Analyzing Source Files",
-            "path": "/recipes/other/analyze-source-files",
+            "path": "/recipes/managing-repository/analyze-source-files",
             "id": "analyze-source-files",
             "isExternal": false,
             "children": [],
@@ -3110,7 +3110,7 @@
           },
           {
             "name": "Workspace Watching",
-            "path": "/recipes/other/workspace-watching",
+            "path": "/recipes/managing-repository/workspace-watching",
             "id": "workspace-watching",
             "isExternal": false,
             "children": [],
@@ -3118,20 +3118,85 @@
           },
           {
             "name": "Advanced Update Process",
-            "path": "/recipes/other/advanced-update",
+            "path": "/recipes/managing-repository/advanced-update",
             "id": "advanced-update",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "JavaScript and TypeScript",
-            "path": "/recipes/other/js-and-ts",
-            "id": "js-and-ts",
+            "name": "Convert from a Standalone Repository to an Integrated Repository",
+            "path": "/recipes/managing-repository/standalone-to-integrated",
+            "id": "standalone-to-integrated",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
+          {
+            "name": "JavaScript and TypeScript",
+            "path": "/recipes/managing-repository/js-and-ts",
+            "id": "js-and-ts",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Run Root-Level NPM Scripts with Nx",
+        "path": "/recipes/managing-repository/root-level-scripts",
+        "id": "root-level-scripts",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Disable Graph Links Created from Analyzing Source Files",
+        "path": "/recipes/managing-repository/analyze-source-files",
+        "id": "analyze-source-files",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Workspace Watching",
+        "path": "/recipes/managing-repository/workspace-watching",
+        "id": "workspace-watching",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Advanced Update Process",
+        "path": "/recipes/managing-repository/advanced-update",
+        "id": "advanced-update",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Convert from a Standalone Repository to an Integrated Repository",
+        "path": "/recipes/managing-repository/standalone-to-integrated",
+        "id": "standalone-to-integrated",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "JavaScript and TypeScript",
+        "path": "/recipes/managing-repository/js-and-ts",
+        "id": "js-and-ts",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Other",
+        "path": "/recipes/other",
+        "id": "other",
+        "isExternal": false,
+        "children": [
           {
             "name": "React Native with Nx",
             "path": "/recipes/other/react-native",
@@ -3301,46 +3366,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Run Root-Level NPM Scripts with Nx",
-        "path": "/recipes/other/root-level-scripts",
-        "id": "root-level-scripts",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Disable Graph Links Created from Analyzing Source Files",
-        "path": "/recipes/other/analyze-source-files",
-        "id": "analyze-source-files",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Workspace Watching",
-        "path": "/recipes/other/workspace-watching",
-        "id": "workspace-watching",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Advanced Update Process",
-        "path": "/recipes/other/advanced-update",
-        "id": "advanced-update",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "JavaScript and TypeScript",
-        "path": "/recipes/other/js-and-ts",
-        "id": "js-and-ts",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {

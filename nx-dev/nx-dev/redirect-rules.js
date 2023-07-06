@@ -365,6 +365,15 @@ const recipesUrls = {
     '/recipes/deployment/deploy-nextjs-to-vercel',
   '/recipes/other/azure-last-successful-commit':
     '/recipes/ci/azure-last-successful-commit',
+  '/recipes/other/root-level-scripts':
+    '/recipes/managing-repository/root-level-scripts',
+  '/recipes/other/analyze-source-files':
+    '/recipes/managing-repository/analyze-source-files',
+  '/recipes/other/workspace-watching':
+    '/recipes/managing-repository/workspace-watching',
+  '/recipes/other/advanced-update':
+    '/recipes/managing-repository/advanced-update',
+  '/recipes/other/js-and-ts': '/recipes/managing-repository/js-and-ts',
 };
 
 /**

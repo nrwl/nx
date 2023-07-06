@@ -345,7 +345,7 @@
           "itemList": [
             {
               "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-              "tags": ["intro"],
+              "tags": ["intro", "repository-types"],
               "id": "integrated-vs-package-based",
               "file": "shared/concepts/integrated-vs-package-based"
             },
@@ -1316,9 +1316,9 @@
           ]
         },
         {
-          "name": "Other",
-          "id": "other",
-          "description": "Other recipes you will find useful.",
+          "name": "Managing Your Nx Repository",
+          "id": "managing-repository",
+          "description": "Configuring the Repository Itself",
           "itemList": [
             {
               "name": "Run Root-Level NPM Scripts with Nx",
@@ -1345,10 +1345,23 @@
               "file": "shared/recipes/advanced-update"
             },
             {
+              "name": "Convert from a Standalone Repository to an Integrated Repository",
+              "id": "standalone-to-integrated",
+              "tags": ["repository-types"],
+              "file": "shared/recipes/repo-types/standalone-to-integrated"
+            },
+            {
               "name": "JavaScript and TypeScript",
               "id": "js-and-ts",
               "file": "shared/guides/js-and-ts"
-            },
+            }
+          ]
+        },
+        {
+          "name": "Other",
+          "id": "other",
+          "description": "Other recipes you will find useful.",
+          "itemList": [
             {
               "name": "React Native with Nx",
               "id": "react-native",

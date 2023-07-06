@@ -1184,7 +1184,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/integrated-vs-package-based",
-        "tags": ["intro"]
+        "tags": ["intro", "repository-types"]
       },
       {
         "id": "mental-model",
@@ -1259,7 +1259,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/integrated-vs-package-based",
-    "tags": ["intro"]
+    "tags": ["intro", "repository-types"]
   },
   "/concepts/mental-model": {
     "id": "mental-model",
