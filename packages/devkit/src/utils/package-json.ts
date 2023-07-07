@@ -464,12 +464,20 @@ export function ensurePackage<T extends any = any>(
 
   console.log(`Fetching ${pkg}...`);
   const packageManager = detectPackageManager();
+  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+  const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
+  if (preInstallCommand) {
+    // ensure package.json and repo in tmp folder is set to a proper package manager state
+    execSync(preInstallCommand, {
+      cwd: tempDir,
+      stdio: isVerbose ? 'inherit' : 'ignore',
+    });
+  }
   let addCommand = getPackageManagerCommand(packageManager).addDev;
   if (packageManager === 'pnpm') {
     addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
   }
 
-  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
   execSync(`${addCommand} ${pkg}@${requiredVersion}`, {
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',

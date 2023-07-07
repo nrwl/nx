@@ -36,6 +36,7 @@ export function getPackageManagerCommand(
 ): {
   install: string;
   exec: string;
+  preInstall?: string;
 } {
   const [pmMajor, pmMinor] =
     getPackageManagerVersion(packageManager).split('.');
@@ -45,6 +46,9 @@ export function getPackageManagerCommand(
       const useBerry = +pmMajor >= 2;
       const installCommand = 'yarn install --silent';
       return {
+        preInstall: useBerry
+          ? 'yarn set version stable'
+          : 'yarn set version classic',
         install: useBerry
           ? installCommand
           : `${installCommand} --ignore-scripts`,
