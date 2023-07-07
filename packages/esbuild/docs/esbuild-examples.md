@@ -1,6 +1,6 @@
 `<app-root>/project.json`:
 
-```json
+```jsonc
 {
   //...
   "targets": {

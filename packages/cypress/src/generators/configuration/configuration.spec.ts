@@ -7,7 +7,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { cypressE2EConfigurationGenerator } from './cypress-e2e-configuration';
+import cypressE2EConfigurationGenerator from './configuration';
 
 import { installedCypressVersion } from '../../utils/cypress-version';
 

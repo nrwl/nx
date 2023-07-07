@@ -1,4 +1,4 @@
-import { cypressComponentConfiguration as baseCyCTConfig } from '@nx/cypress';
+import { componentConfigurationGenerator as baseCyCTConfig } from '@nx/cypress';
 import {
   addDefaultCTConfig,
   addMountDefinition,
