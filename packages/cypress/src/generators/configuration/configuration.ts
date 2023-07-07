@@ -39,7 +39,7 @@ export interface CypressE2EConfigSchema {
 }
 type NormalizedSchema = ReturnType<typeof normalizeOptions>;
 
-export async function cypressE2EConfigurationGenerator(
+export async function configurationGenerator(
   tree: Tree,
   options: CypressE2EConfigSchema
 ) {
@@ -220,5 +220,5 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
   updateProjectConfiguration(tree, opts.project, projectConfig);
 }
 
-export default cypressE2EConfigurationGenerator;
-export const compat = convertNxGenerator(cypressE2EConfigurationGenerator);
+export default configurationGenerator;
+export const compat = convertNxGenerator(configurationGenerator);

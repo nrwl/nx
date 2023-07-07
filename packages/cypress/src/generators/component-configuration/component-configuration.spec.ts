@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { installedCypressVersion } from '../../utils/cypress-version';
-import { cypressComponentConfiguration } from './cypress-component-configuration';
+import { componentConfigurationGenerator } from './component-configuration';
 
 jest.mock('../../utils/cypress-version');
 let projectConfig: ProjectConfiguration = {
@@ -97,7 +97,7 @@ describe('Cypress Component Configuration', () => {
 
   it('should add base cypress component testing config', async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
-    await cypressComponentConfiguration(tree, {
+    await componentConfigurationGenerator(tree, {
       project: 'cool-lib',
       skipFormat: false,
     });
@@ -157,7 +157,7 @@ describe('Cypress Component Configuration', () => {
       };
       return json;
     });
-    await cypressComponentConfiguration(tree, {
+    await componentConfigurationGenerator(tree, {
       project: 'cool-lib',
       skipFormat: false,
     });
@@ -202,7 +202,7 @@ export default defineConfig({
       },
     });
 
-    await cypressComponentConfiguration(tree, {
+    await componentConfigurationGenerator(tree, {
       project: 'cool-lib',
       skipFormat: true,
     });
@@ -219,7 +219,7 @@ export default defineConfig({
     mockedInstalledCypressVersion.mockReturnValue(9);
     await expect(
       async () =>
-        await cypressComponentConfiguration(tree, {
+        await componentConfigurationGenerator(tree, {
           project: 'cool-lib',
           skipFormat: true,
         })

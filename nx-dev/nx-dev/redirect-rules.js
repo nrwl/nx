@@ -144,6 +144,10 @@ const schemaUrls = {
   '/react-native/start': '/packages/react-native/executors/start',
   '/react-native/storybook': '/packages/react-native/executors/storybook',
   '/react-native/sync-deps': '/packages/react-native/executors/sync-deps',
+  '/packages/cypress/generators/cypress-e2e-configuration':
+    '/packages/cypress/generators/configuration',
+  '/packages/cypress/generators/cypress-component-configuration':
+    '/packages/cypress/generators/component-configuration',
   '/packages/nx-plugin/generators/executor':
     '/packages/plugin/generators/executor',
   '/packages/nx-plugin/generators/migration':
