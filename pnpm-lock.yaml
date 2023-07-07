@@ -366,6 +366,9 @@ devDependencies:
   '@testing-library/react':
     specifier: 13.4.0
     version: 13.4.0(react-dom@18.2.0)(react@18.2.0)
+  '@types/common-tags':
+    specifier: ^1.8.1
+    version: 1.8.1
   '@types/css-minimizer-webpack-plugin':
     specifier: ^3.2.1
     version: 3.2.1(esbuild@0.17.5)(webpack@5.88.0)
@@ -10164,6 +10167,10 @@ packages:
   /@types/chai@4.3.5:
     resolution: {integrity: sha512-mEo1sAde+UCE6b2hxn332f1g1E8WfYRu6p5SvTKr2ZKC1f7gFJXk4h5PyGP9Dt6gCaG8y8XhwnXWC6Iy2cmBng==}
     dev: false
+
+  /@types/common-tags@1.8.1:
+    resolution: {integrity: sha512-20R/mDpKSPWdJs5TOpz3e7zqbeCNuMCPhV7Yndk9KU2Rbij2r5W4RzwDPkzC+2lzUqXYu9rFzTktCBnDjHuNQg==}
+    dev: true
 
   /@types/connect-history-api-fallback@1.3.5:
     resolution: {integrity: sha512-h8QJa8xSb1WD4fpKBDcATDNGXghFj6/3GRWG6dhmRcu0RX1Ubasur2Uvx5aeEwlf0MwblEC2bMzzMQntxnw/Cw==}

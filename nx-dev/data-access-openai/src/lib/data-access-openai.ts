@@ -135,7 +135,7 @@ export async function handler(query: any) {
     const response = await openai.createCompletion({
       model: 'text-davinci-003',
       prompt,
-      // max_tokens: 2048,
+      max_tokens: 1024,
       temperature: 0,
       stream: true,
     });
