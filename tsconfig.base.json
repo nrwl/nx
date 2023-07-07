@@ -45,6 +45,7 @@
       "@nx/next/*": ["packages/next/*"],
       "@nx/node": ["packages/node"],
       "@nx/node/*": ["packages/node/*"],
+      "@nx/nx-dev/data-access-ai": ["nx-dev/data-access-ai/src/index.ts"],
       "@nx/nx-dev/data-access-documents": [
         "nx-dev/data-access-documents/src/index.ts"
       ],
