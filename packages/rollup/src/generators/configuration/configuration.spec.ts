@@ -7,9 +7,9 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-import { rollupProjectGenerator } from './rollup-project';
+import configurationGenerator from './configuration';
 
-describe('rollupProjectGenerator', () => {
+describe('configurationGenerator', () => {
   let tree: Tree;
 
   beforeEach(async () => {
@@ -22,7 +22,7 @@ describe('rollupProjectGenerator', () => {
   });
 
   it('should generate files', async () => {
-    await rollupProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       project: 'mypkg',
     });
 
@@ -50,7 +50,7 @@ describe('rollupProjectGenerator', () => {
       name: '@acme/mypkg',
       version: '1.0.0',
     });
-    await rollupProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       project: 'mypkg',
     });
 
@@ -61,7 +61,7 @@ describe('rollupProjectGenerator', () => {
   });
 
   it('should support --main option', async () => {
-    await rollupProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       project: 'mypkg',
       main: 'libs/mypkg/index.ts',
     });
@@ -81,7 +81,7 @@ describe('rollupProjectGenerator', () => {
   });
 
   it('should support --tsConfig option', async () => {
-    await rollupProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       project: 'mypkg',
       tsConfig: 'libs/mypkg/tsconfig.custom.json',
     });

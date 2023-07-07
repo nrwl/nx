@@ -148,6 +148,8 @@ const schemaUrls = {
     '/packages/cypress/generators/configuration',
   '/packages/cypress/generators/cypress-component-configuration':
     '/packages/cypress/generators/component-configuration',
+  '/packages/esbuild/generators/esbuild-project':
+    '/packages/esbuild/generators/configuration',
   '/packages/nx-plugin/generators/executor':
     '/packages/plugin/generators/executor',
   '/packages/nx-plugin/generators/migration':
@@ -156,6 +158,10 @@ const schemaUrls = {
   '/packages/nx-plugin/generators/schematic':
     '/packages/plugin/generators/generator',
   '/packages/nx-plugin/generators/e2e': '/packages/plugin/executors/e2e',
+  '/packages/rollup/generators/rollup-project':
+    '/packages/rollup/generators/configuration',
+  '/packages/webpack/generators/webpack-project':
+    '/packages/webpack/generators/configuration',
   '/nx-plugin/executor': '/packages/plugin/generators/executor',
   '/nx-plugin/migration': '/packages/plugin/generators/migration',
   '/nx-plugin/plugin': '/packages/plugin/generators/plugin',

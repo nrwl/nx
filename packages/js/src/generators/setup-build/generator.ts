@@ -88,11 +88,11 @@ export async function setupBuildGenerator(
       break;
     }
     case 'esbuild': {
-      const { esbuildProjectGenerator } = ensurePackage(
+      const { configurationGenerator } = ensurePackage(
         '@nx/esbuild',
         nxVersion
       );
-      const task = await esbuildProjectGenerator(tree, {
+      const task = await configurationGenerator(tree, {
         main: mainFile,
         buildTarget: options.buildTarget,
         project: options.project,
@@ -102,8 +102,8 @@ export async function setupBuildGenerator(
       break;
     }
     case 'rollup': {
-      const { rollupProjectGenerator } = ensurePackage('@nx/rollup', nxVersion);
-      const task = await rollupProjectGenerator(tree, {
+      const { configurationGenerator } = ensurePackage('@nx/rollup', nxVersion);
+      const task = await configurationGenerator(tree, {
         buildTarget: options.buildTarget,
         main: mainFile,
         project: options.project,

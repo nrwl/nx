@@ -14,7 +14,7 @@ import { esbuildInitGenerator } from '../init/init';
 import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
 import { EsBuildProjectSchema } from './schema';
 
-export async function esbuildProjectGenerator(
+export async function configurationGenerator(
   tree: Tree,
   options: EsBuildProjectSchema
 ) {
@@ -126,8 +126,6 @@ function getTsConfigFile(tree: Tree, options: EsBuildProjectSchema) {
   return options.tsConfig;
 }
 
-export const esbuildProjectSchematic = convertNxGenerator(
-  esbuildProjectGenerator
-);
+export const compat = convertNxGenerator(configurationGenerator);
 
-export default esbuildProjectGenerator;
+export default configurationGenerator;

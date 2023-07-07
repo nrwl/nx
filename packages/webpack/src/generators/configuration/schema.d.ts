@@ -1,4 +1,4 @@
-export interface WebpackProjectGeneratorSchema {
+export interface ConfigurationGeneratorSchema {
   project: string;
   main?: string;
   tsConfig?: string;

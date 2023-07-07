@@ -5,9 +5,9 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import esbuildProjectGenerator from './esbuild-project';
+import configurationGenerator from './configuration';
 
-describe('esbuildProjectGenerator', () => {
+describe('configurationGenerator', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -25,7 +25,7 @@ describe('esbuildProjectGenerator', () => {
     tree.write(`mypkg/src/${main}`, 'console.log("main");');
     writeJson(tree, `mypkg/${tsConfig}`, {});
 
-    await esbuildProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       project: 'mypkg',
     });
 
@@ -47,7 +47,7 @@ describe('esbuildProjectGenerator', () => {
     tree.write(`src/main.ts`, 'console.log("main");');
     writeJson(tree, `tsconfig.app.json`, {});
 
-    await esbuildProjectGenerator(tree, {
+    await configurationGenerator(tree, {
       project: 'mypkg',
     });
 

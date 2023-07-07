@@ -63,5 +63,5 @@
     }
   },
   "required": [],
-  "examplesFile": "../../../docs/esbuild-project-examples.md"
+  "examplesFile": "../../../docs/configuration-examples.md"
 }

@@ -4841,9 +4841,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "esbuild-project",
-                "path": "/packages/esbuild/generators/esbuild-project",
-                "name": "esbuild-project",
+                "id": "configuration",
+                "path": "/packages/esbuild/generators/configuration",
+                "name": "configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -6530,9 +6530,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "rollup-project",
-                "path": "/packages/rollup/generators/rollup-project",
-                "name": "rollup-project",
+                "id": "configuration",
+                "path": "/packages/rollup/generators/configuration",
+                "name": "configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -6986,9 +6986,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "webpack-project",
-                "path": "/packages/webpack/generators/webpack-project",
-                "name": "webpack-project",
+                "id": "configuration",
+                "path": "/packages/webpack/generators/configuration",
+                "name": "configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
