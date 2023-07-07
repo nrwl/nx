@@ -131,7 +131,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
     return () => {};
   }
 
-  let npmRegistryPath;
+  let npmRegistryPath: string;
   try {
     npmRegistryPath = execSync(
       `npm config get registry --location ${options.location}`
@@ -154,7 +154,13 @@ function setupNpm(options: VerdaccioExecutorSchema) {
 
   return () => {
     try {
-      if (npmRegistryPath) {
+      const currentNpmRegistryPath = execSync(
+        `npm config get registry --location ${options.location}`
+      )
+        ?.toString()
+        ?.trim()
+        ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
+      if (npmRegistryPath && currentNpmRegistryPath.includes('localhost')) {
         execSync(
           `npm config set registry ${npmRegistryPath} --location ${options.location}`
         );
@@ -240,7 +246,13 @@ function setupYarn(options: VerdaccioExecutorSchema) {
 
     return () => {
       try {
-        if (yarnRegistryPath) {
+        const currentYarnRegistryPath = execSync(
+          `yarn config get ${registryConfigName}`
+        )
+          ?.toString()
+          ?.trim()
+          ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
+        if (yarnRegistryPath && currentYarnRegistryPath.includes('localhost')) {
           execSync(
             `yarn config set ${registryConfigName} ${yarnRegistryPath}` +
               (options.location === 'user' ? ' --home' : '')
