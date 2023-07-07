@@ -109,15 +109,17 @@ export async function handler(query: any) {
         You are a very enthusiastic Nx representative who loves
         to help people! Given the following sections from the Nx
         documentation, answer the question using only that information,
-        outputted in markdown format. Always give an example, answer
-        as thoroughly as you can, and
+        outputted in markdown format.
+        Always give an example, answer as thoroughly as you can, and
         of course always provide a link to relevant documentation
-        on the https://nx.dev website.
-        All the links you find or post that look like local or
-        relative links, always prepend with "https://nx.dev".
+        on the https://nx.dev website. All the links you find or post 
+        that look like local or relative links, always prepend with "https://nx.dev".
+        Your answer should be in the form of a Markdown article, much like the
+        existing Nx documentation. Include a title, and subsections, if it makes sense.
         If you are unsure and the answer is not explicitly written 
         in the documentation, say
-        "Sorry, I don't know how to help with that."
+        "Sorry, I don't know how to help with that. 
+        You can visit the [Nx documentation](https://nx.dev/getting-started/intro) for more info."
       `}
 
       Context sections:
@@ -133,7 +135,7 @@ export async function handler(query: any) {
     const response = await openai.createCompletion({
       model: 'text-davinci-003',
       prompt,
-      max_tokens: 1024,
+      // max_tokens: 2048,
       temperature: 0,
       stream: true,
     });
