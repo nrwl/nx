@@ -94,7 +94,7 @@ Automatically migrate from the Angular CLI
 
 ## Add a New Project to an Existing Nx Workspace
 
-Once you have set up Nx in your repo, it is easy to add a new project. For each new project, you can choose to create it in the package-based style or integrated style. You can also [convert a standalone app into an integrated repo](/recipes/managing-repository/standalone-to-integrated) by moving the app into a subfolder. The guides below show you how to add projects from popular frameworks.
+Once you have set up Nx in your repo, it is easy to add a new project. For each new project, you can choose to create it in the package-based style or integrated style. You can also [convert a standalone app into an integrated repo](/recipes) by moving the app into a subfolder. The guides below show you how to add projects from popular frameworks.
 
 ### Add an Integrated Project
 
