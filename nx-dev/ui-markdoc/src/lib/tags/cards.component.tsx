@@ -3,6 +3,7 @@ import {
   ArrowTopRightOnSquareIcon,
   DocumentIcon,
   PlayCircleIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import { ReactNode } from 'react';
 
@@ -96,6 +97,38 @@ export function TitleCard({
     >
       <span className="absolute inset-0" />
       {title}
+    </a>
+  );
+}
+
+export function AddProjectCard({
+  title,
+  url,
+  iconSrc = '/images/icons/nx.svg',
+}: {
+  title: string;
+  url: string;
+  iconSrc: string;
+}): JSX.Element {
+  return (
+    <a
+      key={title}
+      href={url}
+      className="relative col-span-1 flex items-center rounded-md border border-slate-200 bg-slate-50/40 p-4 text-left text-lg font-semibold shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800 lg:justify-center lg:text-center"
+      style={{ textDecorationLine: 'none' }}
+    >
+      <span className="absolute inset-0" />
+      <PlusIcon className="mr-3 h-5 w-5 shrink-0" />
+      <div className="col-span-1 flex items-center justify-center flex-grow not-prose">
+        <img
+          className="h-5 w-5 mr-2 opacity-75 dark:invert"
+          loading="lazy"
+          src={iconSrc}
+          alt={title + ' logo'}
+          aria-hidden="true"
+        />
+        {title}
+      </div>
     </a>
   );
 }

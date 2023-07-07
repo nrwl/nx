@@ -44,3 +44,20 @@ export const titleCard: Schema = {
     },
   },
 };
+export const addProjectCard: Schema = {
+  render: 'AddProjectCard',
+  attributes: {
+    title: {
+      type: 'String',
+      required: true,
+    },
+    url: {
+      type: 'String',
+      required: true,
+    },
+    iconSrc: {
+      type: 'String',
+      required: false,
+    },
+  },
+};

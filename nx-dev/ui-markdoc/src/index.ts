@@ -17,8 +17,18 @@ import { CustomLink } from './lib/nodes/link.component';
 import { link } from './lib/nodes/link.schema';
 import { Callout } from './lib/tags/callout.component';
 import { callout } from './lib/tags/callout.schema';
-import { Card, Cards, TitleCard } from './lib/tags/cards.component';
-import { card, cards, titleCard } from './lib/tags/cards.schema';
+import {
+  Card,
+  Cards,
+  TitleCard,
+  AddProjectCard,
+} from './lib/tags/cards.component';
+import {
+  addProjectCard,
+  card,
+  cards,
+  titleCard,
+} from './lib/tags/cards.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
 import { githubRepository } from './lib/tags/github-repository.schema';
 import { StackblitzButton } from './lib/tags/stackblitz-button.component';
@@ -69,10 +79,12 @@ export const getMarkdocCustomConfig = (
       tab,
       tabs,
       'title-card': titleCard,
+      'add-project-card': addProjectCard,
       youtube,
     },
   },
   components: {
+    AddProjectCard,
     Callout,
     Card,
     Cards,
