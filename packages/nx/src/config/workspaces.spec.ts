@@ -7,12 +7,14 @@ import {
 import { TargetConfiguration } from './workspace-json-project-json';
 import { TempFs } from '../utils/testing/temp-fs';
 
-const libConfig = (name) => ({
-  root: `libs/${name}`,
-  sourceRoot: `libs/${name}/src`,
+const libConfig = (root, name?: string) => ({
+  name: name ?? toProjectName(`${root}/some-file`),
+  root: `libs/${root}`,
+  sourceRoot: `libs/${root}/src`,
 });
 
-const packageLibConfig = (root) => ({
+const packageLibConfig = (root, name?: string) => ({
+  name: name ?? toProjectName(`${root}/some-file`),
   root,
   sourceRoot: root,
   projectType: 'library',
@@ -48,13 +50,17 @@ describe('Workspaces', () => {
 
       const workspaces = new Workspaces(fs.tempDir);
       const resolved = workspaces.readProjectsConfigurations();
+      console.log(resolved);
       expect(resolved.projects.lib1).toEqual(standaloneConfig);
     });
 
     it('should build project configurations from glob', async () => {
       const lib1Config = libConfig('lib1');
       const lib2Config = packageLibConfig('libs/lib2');
-      const domainPackageConfig = packageLibConfig('libs/domain/lib3');
+      const domainPackageConfig = packageLibConfig(
+        'libs/domain/lib3',
+        'domain-lib3'
+      );
       const domainLibConfig = libConfig('domain/lib4');
 
       await fs.createFiles({
@@ -74,10 +80,14 @@ describe('Workspaces', () => {
 
       const workspaces = new Workspaces(fs.tempDir);
       const { projects } = workspaces.readProjectsConfigurations();
-      // projects got deduped so the workspace one remained
+      console.log(projects);
+
+      // projects got merged for lib1
       expect(projects['lib1']).toEqual({
+        name: 'lib1',
         root: 'libs/lib1',
         sourceRoot: 'libs/lib1/src',
+        projectType: 'library',
       });
       expect(projects.lib2).toEqual(lib2Config);
       expect(projects['domain-lib3']).toEqual(domainPackageConfig);
@@ -107,6 +117,7 @@ describe('Workspaces', () => {
       const workspaces = new Workspaces(fs.tempDir);
       const resolved = workspaces.readProjectsConfigurations();
       expect(resolved.projects['my-package']).toEqual({
+        name: 'my-package',
         root: 'packages/my-package',
         sourceRoot: 'packages/my-package',
         projectType: 'library',

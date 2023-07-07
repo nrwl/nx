@@ -2,6 +2,7 @@ import { sync } from 'fast-glob';
 import { existsSync } from 'fs';
 import * as path from 'path';
 import { ProjectGraphProcessor } from '../config/project-graph';
+import { toProjectName, Workspaces } from '../config/workspaces';
 
 import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from '../utils/fileutils';
@@ -23,31 +24,43 @@ import {
   findProjectForPath,
 } from '../project-graph/utils/find-project-for-path';
 import { normalizePath } from './path';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { getNxRequirePaths } from './installation-directory';
 import { readTsConfig } from '../plugins/js/utils/typescript';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 import type * as ts from 'typescript';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
+import { NxPluginV1 } from './nx-plugin.deprecated';
 
-export type ProjectTargetConfigurator = (
-  file: string
-) => Record<string, TargetConfiguration>;
+export type ProjectConfigurationBuilder = (
+  projectConfigurationFile: string,
+  context: {
+    projectsConfigurations: Record<string, ProjectConfiguration>,
+    nxJsonConfiguration: NxJsonConfiguration,
+    workspaceRoot: string
+  }
+) => Record<string, ProjectConfiguration>;
+
+export type NxPluginV2 = {
+  name: string;
+
+  /**
+   * Provides a map between file patterns and functions that retrieve configuration info from
+   * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFile }
+   */
+  processProjectNodes?: Record<string, ProjectConfigurationBuilder>;
+
+  // Todo(@AgentEnder): This shouldn't be a full processor, since its only responsible for defining edges between projects. What do we want the API to be?
+  processProjectDependencies?: ProjectGraphProcessor;
+};
+
+export * from './nx-plugin.deprecated';
 
 /**
  * A plugin for Nx
  */
-export interface NxPlugin {
-  name: string;
-  processProjectGraph?: ProjectGraphProcessor;
-  registerProjectTargets?: ProjectTargetConfigurator;
-
-  /**
-   * A glob pattern to search for non-standard project files.
-   * @example: ["*.csproj", "pom.xml"]
-   */
-  projectFilePatterns?: string[];
-}
+export type NxPlugin = NxPluginV1 | NxPluginV2;
 
 // Short lived cache (cleared between cmd runs)
 // holding resolved nx plugin objects.
@@ -128,7 +141,7 @@ export function loadNxPluginsSync(
   plugins?: string[],
   paths = getNxRequirePaths(),
   root = workspaceRoot
-): NxPlugin[] {
+): (NxPluginV2 & Pick<NxPluginV1, 'processProjectGraph'>)[] {
   const result: NxPlugin[] = [];
 
   // TODO: This should be specified in nx.json
@@ -152,14 +165,14 @@ export function loadNxPluginsSync(
     }
   }
 
-  return result;
+  return result.map(ensurePluginIsV2);
 }
 
 export async function loadNxPlugins(
   plugins?: string[],
   paths = getNxRequirePaths(),
   root = workspaceRoot
-): Promise<NxPlugin[]> {
+): Promise<(NxPluginV2 & Pick<NxPluginV1, 'processProjectGraph'>)[]> {
   const result: NxPlugin[] = [];
 
   // TODO: This should be specified in nx.json
@@ -174,7 +187,30 @@ export async function loadNxPlugins(
     result.push(await loadNxPluginAsync(plugin, paths, root));
   }
 
-  return result;
+  return result.map(ensurePluginIsV2);
+}
+
+function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
+  if ('projectFilePatterns' in plugin && !('buildProjectNodes' in plugin)) {
+    return {
+      ...plugin,
+      processProjectNodes: {
+        [`*/**/{${(plugin.projectFilePatterns ?? []).join(',')}}`]: (
+          configFilePath
+        ) => {
+          const name = toProjectName(configFilePath);
+          return {
+            [name]: {
+              name,
+              root: dirname(configFilePath),
+              targets: plugin.registerProjectTargets?.(configFilePath),
+            },
+          };
+        },
+      },
+    };
+  }
+  return plugin;
 }
 
 export function mergePluginTargetsWithNxTargets(
@@ -184,7 +220,11 @@ export function mergePluginTargetsWithNxTargets(
 ): Record<string, TargetConfiguration> {
   let newTargets: Record<string, TargetConfiguration> = {};
   for (const plugin of plugins) {
-    if (!plugin.projectFilePatterns?.length || !plugin.registerProjectTargets) {
+    if (
+      !('projectFilePatterns' in plugin) ||
+      !plugin.projectFilePatterns?.length ||
+      !plugin.registerProjectTargets
+    ) {
       continue;
     }
 

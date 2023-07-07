@@ -6,6 +6,8 @@
 
 ▸ (`file`): `Record`<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
 
+@deprecated(v18) Add targets to the nodes when building them instead.
+
 ##### Parameters
 
 | Name   | Type     |

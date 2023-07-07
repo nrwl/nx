@@ -51,6 +51,11 @@ export async function buildWorkspaceProjectNodes(
     const p = ctx.projectsConfigurations.projects[key];
     const projectRoot = join(workspaceRoot, p.root);
 
+    // Todo(@AgentEnder) we can move a lot of this to the buildProjectNodes
+    // builtin plugin inside workspaces.ts, but there would be some functional differences
+    // - The plugin would only apply to package.json files found via the workspaces globs
+    //   - This means that scripts / tags / etc from the `nx` property wouldn't be read if a project
+    //     is being found by project.json and not included in the workspaces configuration. Maybe this is fine?
     if (existsSync(join(projectRoot, 'package.json'))) {
       p.targets = mergeNpmScriptsWithTargets(projectRoot, p.targets);
 
@@ -79,12 +84,6 @@ export async function buildWorkspaceProjectNodes(
       key,
       p.implicitDependencies,
       partialProjectGraphNodes
-    );
-
-    p.targets = mergePluginTargetsWithNxTargets(
-      p.root,
-      p.targets,
-      await loadNxPlugins(ctx.nxJsonConfiguration.plugins)
     );
 
     p.targets = normalizeProjectTargets(p, nxJson.targetDefaults, key);

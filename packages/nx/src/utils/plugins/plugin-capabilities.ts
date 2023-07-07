@@ -78,8 +78,15 @@ export async function getPluginCapabilities(
           'executors'
         ),
       },
-      projectGraphExtension: !!pluginModule?.processProjectGraph,
-      projectInference: !!pluginModule?.projectFilePatterns,
+      projectGraphExtension:
+        pluginModule &&
+        ('processProjectGraph' in pluginModule ||
+          'buildProjectNodes' in pluginModule ||
+          'buildProjectDependencies' in pluginModule),
+      projectInference:
+        pluginModule &&
+        ('projectFilePatterns' in pluginModule ||
+          'buildProjectNodes' in pluginModule),
     };
   } catch {
     return null;

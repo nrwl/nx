@@ -5,7 +5,6 @@ import {
 } from '../../config/workspace-json-project-json';
 import {
   buildProjectsConfigurationsFromProjectPaths,
-  deduplicateProjectFiles,
   renamePropertyWithStableKeys,
 } from '../../config/workspaces';
 import { joinPathFragments, normalizePath } from '../../utils/path';
@@ -191,6 +190,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
   return buildProjectsConfigurationsFromProjectPaths(
     nxJson,
     projectFiles,
+    tree.root,
     (file) => readJson(tree, file)
   );
 }
@@ -223,7 +223,7 @@ function findCreatedProjectFiles(tree: Tree) {
       }
     }
   }
-  return deduplicateProjectFiles(createdProjectFiles).map(normalizePath);
+  return createdProjectFiles.map(normalizePath);
 }
 
 /**

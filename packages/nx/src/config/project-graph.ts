@@ -138,6 +138,7 @@ export interface ProjectGraphProcessorContext {
 
 /**
  * A function that produces an updated ProjectGraph
+ * @deprecated(v18) Use `buildProjectDependencies` and `buildProjectNodes` instead.
  */
 export type ProjectGraphProcessor = (
   currentGraph: ProjectGraph,

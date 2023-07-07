@@ -160,8 +160,11 @@ function createProjectConfigurations(
   performance.mark('build-project-configs:start');
 
   let projectConfigurations = mergeTargetDefaultsIntoProjectDescriptions(
-    buildProjectsConfigurationsFromProjectPaths(nxJson, configFiles, (path) =>
-      readJsonFile(join(workspaceRoot, path))
+    buildProjectsConfigurationsFromProjectPaths(
+      nxJson,
+      configFiles,
+      workspaceRoot,
+      (path) => readJsonFile(join(workspaceRoot, path))
     ),
     nxJson
   );

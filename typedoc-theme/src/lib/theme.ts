@@ -54,14 +54,14 @@ export default class NxMarkdownTheme extends MarkdownTheme {
         directory: '.',
         template: this.getReflectionTemplate(),
       },
+      {
+        kind: [ReflectionKind.TypeAlias],
+        isLeaf: true,
+        directory: '.',
+        template: this.getReflectionMemberTemplate(),
+      },
       ...(this.allReflectionsHaveOwnDocument
         ? [
-            {
-              kind: [ReflectionKind.TypeAlias],
-              isLeaf: true,
-              directory: '.',
-              template: this.getReflectionMemberTemplate(),
-            },
             {
               kind: [ReflectionKind.Variable],
               isLeaf: true,
