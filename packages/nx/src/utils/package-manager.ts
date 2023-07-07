@@ -15,6 +15,7 @@ const execAsync = promisify(exec);
 export type PackageManager = 'yarn' | 'pnpm' | 'npm';
 
 export interface PackageManagerCommands {
+  preInstall?: string;
   install: string;
   ciInstall: string;
   add: string;
@@ -64,6 +65,9 @@ export function getPackageManagerCommand(
       const useBerry = gte(yarnVersion, '2.0.0');
 
       return {
+        preInstall: useBerry
+          ? 'yarn set version stable'
+          : 'yarn set version classic',
         install: 'yarn',
         ciInstall: useBerry
           ? 'yarn install --immutable'
