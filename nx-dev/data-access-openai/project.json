@@ -1,0 +1,27 @@
+{
+  "name": "nx-dev-data-access-openai",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/data-access-openai/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/nx-dev/data-access-openai",
+        "tsConfig": "nx-dev/data-access-openai/tsconfig.lib.json",
+        "packageJson": "nx-dev/data-access-openai/package.json",
+        "main": "nx-dev/data-access-openai/src/index.ts",
+        "assets": ["nx-dev/data-access-openai/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["nx-dev/data-access-openai/**/*.ts"]
+      }
+    }
+  },
+  "tags": ["scope:nx-dev", "type:data-access"]
+}

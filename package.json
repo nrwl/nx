@@ -92,6 +92,7 @@
     "@storybook/react": "^7.0.24",
     "@storybook/react-webpack5": "^7.0.24",
     "@storybook/types": "^7.0.24",
+    "@supabase/supabase-js": "^2.26.0",
     "@svgr/rollup": "^8.0.1",
     "@svgr/webpack": "^8.0.1",
     "@swc-node/register": "^1.4.2",
@@ -128,6 +129,7 @@
     "@xstate/immer": "0.3.1",
     "@xstate/inspect": "0.7.0",
     "@xstate/react": "3.0.1",
+    "ai": "^2.1.15",
     "ajv": "^8.11.0",
     "autoprefixer": "10.4.13",
     "babel-jest": "29.4.3",
@@ -138,6 +140,7 @@
     "chokidar": "^3.5.1",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
+    "common-tags": "^1.8.2",
     "confusing-browser-globals": "^1.0.9",
     "conventional-changelog-cli": "^2.0.23",
     "convert-source-map": "^2.0.0",
@@ -173,6 +176,7 @@
     "flat": "^5.0.2",
     "fork-ts-checker-webpack-plugin": "7.2.13",
     "fs-extra": "^11.1.0",
+    "gpt3-tokenizer": "^1.1.5",
     "html-webpack-plugin": "5.5.0",
     "http-server": "14.1.0",
     "husky": "^8.0.1",
@@ -214,6 +218,7 @@
     "nx-cloud": "16.0.5",
     "octokit": "^2.0.14",
     "open": "^8.4.0",
+    "openai-edge": "^1.1.1",
     "ora": "5.3.0",
     "parse-markdown-links": "^1.0.4",
     "parse5": "4.0.0",
@@ -354,4 +359,3 @@
     }
   }
 }
-
