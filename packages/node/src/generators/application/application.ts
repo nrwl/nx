@@ -23,7 +23,7 @@ import {
   updateTsConfigsToJs,
 } from '@nx/devkit';
 import { Linter, lintProjectGenerator } from '@nx/linter';
-import { jestProjectGenerator } from '@nx/jest';
+import { configurationGenerator } from '@nx/jest';
 
 import { getRelativePathToRootTsConfig, tsConfigBaseOptions } from '@nx/js';
 import { join } from 'path';
@@ -391,7 +391,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   }
 
   if (options.unitTestRunner === 'jest') {
-    const jestTask = await jestProjectGenerator(tree, {
+    const jestTask = await configurationGenerator(tree, {
       ...options,
       project: options.name,
       setupFile: 'none',

@@ -393,7 +393,7 @@
       - [jest](/packages/jest/executors/jest)
     - [generators](/packages/jest/generators)
       - [init](/packages/jest/generators/init)
-      - [jest-project](/packages/jest/generators/jest-project)
+      - [configuration](/packages/jest/generators/configuration)
   - [js](/packages/js)
     - [documents](/packages/js/documents)
       - [Overview](/packages/js/documents/overview)

@@ -68,7 +68,7 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
     addTestInputs(tree);
   }
   if (options.rootProject) {
-    // we don't want any config to be made because the `jestProjectGenerator`
+    // we don't want any config to be made because the `configurationGenerator` will do it.
     // will copy the template config file
     return;
   }

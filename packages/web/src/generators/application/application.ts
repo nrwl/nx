@@ -273,10 +273,10 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     tasks.push(cypressTask);
   }
   if (options.unitTestRunner === 'jest') {
-    const { jestProjectGenerator } = await ensurePackage<
+    const { configurationGenerator } = await ensurePackage<
       typeof import('@nx/jest')
     >('@nx/jest', nxVersion);
-    const jestTask = await jestProjectGenerator(host, {
+    const jestTask = await configurationGenerator(host, {
       project: options.projectName,
       skipSerializers: true,
       setupFile: 'web-components',

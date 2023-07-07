@@ -5,7 +5,7 @@ import {
   joinPathFragments,
   Tree,
 } from '@nx/devkit';
-import { jestProjectGenerator } from '@nx/jest';
+import { configurationGenerator } from '@nx/jest';
 import { Linter } from '@nx/linter';
 import { addTsConfigPath } from '@nx/js';
 import { lt } from 'semver';
@@ -124,7 +124,7 @@ async function addUnitTestRunner(
   options: NormalizedSchema['libraryOptions']
 ) {
   if (options.unitTestRunner === 'jest') {
-    await jestProjectGenerator(host, {
+    await configurationGenerator(host, {
       project: options.name,
       setupFile: 'angular',
       supportTsx: false,
