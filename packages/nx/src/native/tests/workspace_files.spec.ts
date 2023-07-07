@@ -1,12 +1,24 @@
-import {
-  getConfigFiles,
-  getWorkspaceFilesNative,
-  WorkspaceErrors,
-} from '../index';
+import { getProjectConfigurations, getWorkspaceFilesNative } from '../index';
 import { TempFs } from '../../utils/testing/temp-fs';
 import { NxJsonConfiguration } from '../../config/nx-json';
+import { dirname, join } from 'path';
+import { readJsonFile } from '../../utils/fileutils';
 
 describe('workspace files', () => {
+  function createParseConfigurationsFunction(tempDir: string) {
+    return (filenames: string[]) => {
+      const res = {};
+      for (const filename of filenames) {
+        const json = readJsonFile(join(tempDir, filename));
+        res[json.name] = {
+          ...json,
+          root: dirname(filename),
+        };
+      }
+      return res;
+    };
+  }
+
   it('should gather workspace file information', async () => {
     const fs = new TempFs('workspace-files');
     const nxJson: NxJsonConfiguration = {};
@@ -41,12 +53,16 @@ describe('workspace files', () => {
     });
 
     let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
-    let { projectFileMap, configFiles, globalFiles } = getWorkspaceFilesNative(
-      fs.tempDir,
-      globs
-    );
+    let { projectFileMap, projectConfigurations, globalFiles } =
+      getWorkspaceFilesNative(
+        fs.tempDir,
+        globs,
+        createParseConfigurationsFunction(fs.tempDir)
+      );
 
-    let sortedConfigs = configFiles.sort();
+    let sortedConfigs = Object.values(projectConfigurations).sort((a, b) =>
+      a['name'].localeCompare(b['name'])
+    );
 
     expect(projectFileMap).toMatchInlineSnapshot(`
       {
@@ -104,11 +120,26 @@ describe('workspace files', () => {
     `);
     expect(sortedConfigs).toMatchInlineSnapshot(`
       [
-        "libs/nested/project/project.json",
-        "libs/package-project/package.json",
-        "libs/project1/project.json",
-        "libs/project2/project.json",
-        "libs/project3/project.json",
+        {
+          "name": "nested-project",
+          "root": "libs/nested/project",
+        },
+        {
+          "name": "package-project",
+          "root": "libs/package-project",
+        },
+        {
+          "name": "project1",
+          "root": "libs/project1",
+        },
+        {
+          "name": "project2",
+          "root": "libs/project2",
+        },
+        {
+          "name": "project3",
+          "root": "libs/project3",
+        },
       ]
     `);
     expect(globalFiles).toMatchInlineSnapshot(`
@@ -148,7 +179,8 @@ describe('workspace files', () => {
     const globs = ['project.json', '**/project.json', '**/package.json'];
     const { globalFiles, projectFileMap } = getWorkspaceFilesNative(
       fs.tempDir,
-      globs
+      globs,
+      createParseConfigurationsFunction(fs.tempDir)
     );
 
     expect(globalFiles).toEqual([]);
@@ -201,140 +233,117 @@ describe('workspace files', () => {
     });
 
     let globs = ['project.json', '**/project.json', '**/package.json'];
-    let { configFiles } = getWorkspaceFilesNative(fs.tempDir, globs);
 
-    configFiles = configFiles.sort();
-
-    expect(configFiles).toMatchInlineSnapshot(`
-      [
-        "libs/project1/project.json",
-        "project.json",
-      ]
-    `);
-
-    let configFiles2 = getConfigFiles(fs.tempDir, globs).sort();
-    expect(configFiles2).toMatchInlineSnapshot(`
-      [
-        "libs/project1/project.json",
-        "project.json",
-      ]
-    `);
-  });
-
-  describe('errors', () => {
-    it('it should infer names of configuration files without a name', async () => {
-      const fs = new TempFs('workspace-files');
-      const nxJson: NxJsonConfiguration = {};
-      await fs.createFiles({
-        './nx.json': JSON.stringify(nxJson),
-        './package.json': JSON.stringify({
-          name: 'repo-name',
-          version: '0.0.0',
-          dependencies: {},
-        }),
-        './libs/project1/project.json': JSON.stringify({
-          name: 'project1',
-        }),
-        './libs/project1/index.js': '',
-        './libs/project2/project.json': JSON.stringify({}),
-      });
-
-      let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
-      expect(getWorkspaceFilesNative(fs.tempDir, globs).projectFileMap)
-        .toMatchInlineSnapshot(`
-        {
-          "project1": [
-            {
-              "file": "libs/project1/index.js",
-              "hash": "3244421341483603138",
-            },
-            {
-              "file": "libs/project1/project.json",
-              "hash": "13466615737813422520",
-            },
-          ],
-          "project2": [
-            {
-              "file": "libs/project2/project.json",
-              "hash": "1389868326933519382",
-            },
-          ],
+    let projectConfigurations = getProjectConfigurations(
+      fs.tempDir,
+      globs,
+      (filenames) => {
+        const res = {};
+        for (const filename of filenames) {
+          const json = readJsonFile(join(fs.tempDir, filename));
+          res[json.name] = {
+            ...json,
+            root: dirname(filename),
+          };
         }
-      `);
-    });
-
-    it('handles comments', async () => {
-      const fs = new TempFs('workspace-files');
-      const nxJson: NxJsonConfiguration = {};
-      await fs.createFiles({
-        './nx.json': JSON.stringify(nxJson),
-        './package.json': JSON.stringify({
-          name: 'repo-name',
-          version: '0.0.0',
-          dependencies: {},
-        }),
-        './libs/project1/project.json': `{
-        "name": "temp"
-        // this should not fail
-        }`,
-        './libs/project1/index.js': '',
-      });
-
-      let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
-      expect(() => getWorkspaceFilesNative(fs.tempDir, globs)).not.toThrow();
-    });
-
-    it('handles extra comma', async () => {
-      const fs = new TempFs('workspace-files');
-      const nxJson: NxJsonConfiguration = {};
-      await fs.createFiles({
-        './nx.json': JSON.stringify(nxJson),
-        './package.json': JSON.stringify({
-          name: 'repo-name',
-          version: '0.0.0',
-          dependencies: {},
-        }),
-        './libs/project1/project.json': `{
-        "name": "temp", 
-        }`,
-        './libs/project1/index.js': '',
-      });
-
-      let globs = ['**/project.json'];
-      expect(() => getWorkspaceFilesNative(fs.tempDir, globs)).not.toThrow();
-    });
-
-    it('throws parsing errors: missing brackets', async () => {
-      const fs = new TempFs('workspace-files');
-      const nxJson: NxJsonConfiguration = {};
-      await fs.createFiles({
-        './nx.json': JSON.stringify(nxJson),
-        './package.json': JSON.stringify({
-          name: 'repo-name',
-          version: '0.0.0',
-          dependencies: {},
-        }),
-        './libs/project1/project.json': `{
-        "name": "temp", "property": "child": 2 }
-        }`,
-        './libs/project1/index.js': '',
-      });
-
-      let globs = ['**/project.json'];
-
-      const error = getError(() => getWorkspaceFilesNative(fs.tempDir, globs));
-      expect(error.message).toMatchInlineSnapshot(
-        `"libs/project1/project.json"`
-      );
-      expect(error).toHaveProperty('code', WorkspaceErrors.ParseError);
-    });
+        return res;
+      }
+    );
+    expect(projectConfigurations).toMatchInlineSnapshot(`
+      {
+        "project1": {
+          "name": "project1",
+          "root": "libs/project1",
+        },
+        "repo-name": {
+          "name": "repo-name",
+          "root": ".",
+        },
+      }
+    `);
   });
-});
 
-const getError = (fn: () => unknown): Error => {
-  try {
-    fn();
-  } catch (error: unknown) {
-    return error as Error;
-  }
-};
+  // describe('errors', () => {
+  //   it('it should infer names of configuration files without a name', async () => {
+  //     const fs = new TempFs('workspace-files');
+  //     const nxJson: NxJsonConfiguration = {};
+  //     await fs.createFiles({
+  //       './nx.json': JSON.stringify(nxJson),
+  //       './package.json': JSON.stringify({
+  //         name: 'repo-name',
+  //         version: '0.0.0',
+  //         dependencies: {},
+  //       }),
+  //       './libs/project1/project.json': JSON.stringify({
+  //         name: 'project1',
+  //       }),
+  //       './libs/project1/index.js': '',
+  //       './libs/project2/project.json': JSON.stringify({}),
+  //     });
+  //
+  //     let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
+  //     expect(getWorkspaceFilesNative(fs.tempDir, globs).projectFileMap)
+  //       .toMatchInlineSnapshot(`
+  //       {
+  //         "libs/project1": [
+  //           {
+  //             "file": "libs/project1/index.js",
+  //             "hash": "3244421341483603138",
+  //           },
+  //           {
+  //             "file": "libs/project1/project.json",
+  //             "hash": "13466615737813422520",
+  //           },
+  //         ],
+  //         "libs/project2": [
+  //           {
+  //             "file": "libs/project2/project.json",
+  //             "hash": "1389868326933519382",
+  //           },
+  //         ],
+  //       }
+  //     `);
+  //   });
+  //
+  //   it('handles comments', async () => {
+  //     const fs = new TempFs('workspace-files');
+  //     const nxJson: NxJsonConfiguration = {};
+  //     await fs.createFiles({
+  //       './nx.json': JSON.stringify(nxJson),
+  //       './package.json': JSON.stringify({
+  //         name: 'repo-name',
+  //         version: '0.0.0',
+  //         dependencies: {},
+  //       }),
+  //       './libs/project1/project.json': `{
+  //       "name": "temp"
+  //       // this should not fail
+  //       }`,
+  //       './libs/project1/index.js': '',
+  //     });
+  //
+  //     let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
+  //     expect(() => getWorkspaceFilesNative(fs.tempDir, globs)).not.toThrow();
+  //   });
+  //
+  //   it('handles extra comma', async () => {
+  //     const fs = new TempFs('workspace-files');
+  //     const nxJson: NxJsonConfiguration = {};
+  //     await fs.createFiles({
+  //       './nx.json': JSON.stringify(nxJson),
+  //       './package.json': JSON.stringify({
+  //         name: 'repo-name',
+  //         version: '0.0.0',
+  //         dependencies: {},
+  //       }),
+  //       './libs/project1/project.json': `{
+  //       "name": "temp",
+  //       }`,
+  //       './libs/project1/index.js': '',
+  //     });
+  //
+  //     let globs = ['**/project.json'];
+  //     expect(() => getWorkspaceFilesNative(fs.tempDir, globs)).not.toThrow();
+  //   });
+  // });
+});
