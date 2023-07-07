@@ -358,6 +358,7 @@
     - [documents](/packages/eslint-plugin/documents)
       - [Overview](/packages/eslint-plugin/documents/overview)
       - [The `enforce-module-boundaries` rule](/packages/eslint-plugin/documents/enforce-module-boundaries)
+      - [The `dependency-checks` rule](/packages/eslint-plugin/documents/dependency-checks)
   - [expo](/packages/expo)
     - [documents](/packages/expo/documents)
       - [Overview](/packages/expo/documents/overview)

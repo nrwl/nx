@@ -690,6 +690,17 @@
         "path": "/packages/eslint-plugin/documents/enforce-module-boundaries",
         "tags": [],
         "originalFilePath": "shared/packages/linter/enforce-module-boundaries"
+      },
+      "/packages/eslint-plugin/documents/dependency-checks": {
+        "id": "dependency-checks",
+        "name": "The `dependency-checks` rule",
+        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
+        "file": "generated/packages/eslint-plugin/documents/dependency-checks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/eslint-plugin/documents/dependency-checks",
+        "tags": [],
+        "originalFilePath": "shared/packages/linter/dependency-checks"
       }
     },
     "root": "/packages/eslint-plugin",

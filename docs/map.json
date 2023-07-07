@@ -2062,6 +2062,12 @@
               "name": "The `enforce-module-boundaries` rule",
               "path": "/packages/eslint-plugin",
               "file": "shared/packages/linter/enforce-module-boundaries"
+            },
+            {
+              "id": "dependency-checks",
+              "name": "The `dependency-checks` rule",
+              "path": "/packages/eslint-plugin",
+              "file": "shared/packages/linter/dependency-checks"
             }
           ]
         },
