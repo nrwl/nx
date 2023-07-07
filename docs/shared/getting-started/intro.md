@@ -1,6 +1,26 @@
 # Intro to Nx
 
-Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. Learn more about [how Nx works](/getting-started/why-nx).
+Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. Find out more about [why you should use Nx](/getting-started/why-nx).
+
+If instead you want to jump right into it, run the following command. It will guide you through the setup:
+
+{% tabs %}
+{% tab label="npm" %}
+
+{% terminal-command command="npx create-nx-workspace"  /%}
+
+{% /tab %}
+{% tab label="yarn" %}
+
+{% terminal-command command="npx create-nx-workspace --pm yarn"  /%}
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+{% terminal-command command="npx create-nx-workspace --pm pnpm"  /%}
+
+{% /tab %}
+{% /tabs %}
 
 You can use Nx to quickly scaffold a new standalone project or even an entire monorepo. It can be incrementally adopted and will grow with your project as it scales.
 
@@ -70,7 +90,11 @@ A modern Node server with scaffolding for Express, Fastify or Koa. There's also 
 
 ## Adding Nx to an Existing Project or Monorepo
 
-Coming from an existing project and want to adopt Nx? We have a few recipes to help you get started.
+If you have an existing project and want to adopt Nx or migrate to Nx just run the following command which guides you through the migration process:
+
+{% terminal-command command="npx nx@latest init"  /%}
+
+Alternatively, here are some recipes that give you more details based on the technology stack you're using:
 
 {% cards cols="2" %}
 

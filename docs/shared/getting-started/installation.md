@@ -5,36 +5,34 @@ Create a new Nx workspace using the following command:
 {% tabs %}
 {% tab label="npm" %}
 
-```shell
-npm create nx-workspace
-```
+{% terminal-command command="npx create-nx-workspace"  /%}
 
 {% /tab %}
 {% tab label="yarn" %}
 
-```shell
-yarn create nx-workspace
-```
+{% terminal-command command="npx create-nx-workspace --pm yarn"  /%}
 
 {% /tab %}
 {% tab label="pnpm" %}
 
-```shell
-pnpm create nx-workspace
-```
+{% terminal-command command="npx create-nx-workspace --pm pnpm"  /%}
 
 {% /tab %}
 {% /tabs %}
 
 This will guide you through the setup, asking whether you want a monorepo or a standalone app and whether you want to start with a blank or a preconfigured setup.
 
-```{% command="npm create nx-workspace" %}
-? Choose what to create                 …
-Package-based monorepo: Nx makes it fast but lets you run things your way.
-Integrated monorepo:    Nx configures your favorite frameworks and lets you focus on shipping features.
-Standalone React app:   Nx configures Vite (or Webpack), ESLint, and Cypress.
-Standalone Angular app: Nx configures Jest, ESLint, and Cypress.
-Standalone Node app:    Nx configures a framework (ex. Express), esbuild, ESlint and Jest.
+```{% command="npx create-nx-workspace" %}
+
+ >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
+✔ Where would you like to create your workspace? · myorg
+? Which stack do you want to use? …
+None:          Configures a minimal structure without specific frameworks or technologies.
+TS/JS:         Configures a TypeScript/JavaScript package without specific frameworks or platforms.
+React:         Configures a React app with your framework of choice.
+Angular:       Configures a Angular app with modern tooling.
+Node:          Configures a Node API with your framework of choice.
 ```
 
 Once you've created your workspace, you can
@@ -50,9 +48,7 @@ Learn more about [running tasks](/core-features/run-tasks).
 
 If you want to add Nx to an existing repository run:
 
-```shell
-npx nx@latest init
-```
+{% terminal-command command="npx nx@latest init" /%}
 
 You can also manually install the nx NPM package and create a [nx.json](https://nx.dev/reference/nx-json) to configure it. Learn more about [adopting Nx in an existing project](/recipes/adopting-nx)
 
@@ -63,23 +59,17 @@ You can install Nx globally. Depending on your package manager, use one of the f
 {% tabs %}
 {% tab label="npm" %}
 
-```shell
-npm install --global nx@latest
-```
+{% terminal-command command="npm install --global nx@latest" /%}
 
 {% /tab %}
 {% tab label="yarn" %}
 
-```shell
-yarn global add nx@latest
-```
+{% terminal-command command="yarn global add nx@latest" /%}
 
 {% /tab %}
 {% tab label="pnpm" %}
 
-```shell
-pnpm install --global nx@latest
-```
+{% terminal-command command="pnpm install --global nx@latest" /%}
 
 {% /tab %}
 {% /tabs %}

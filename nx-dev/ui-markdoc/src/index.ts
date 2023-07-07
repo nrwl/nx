@@ -39,6 +39,10 @@ import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
 import { YouTube } from './lib/tags/youtube.components';
 import { youtube } from './lib/tags/youtube.schema';
+import {
+  TerminalCommand,
+  terminalCommand,
+} from './lib/tags/terminal-command.component';
 
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
@@ -70,6 +74,7 @@ export const getMarkdocCustomConfig = (
       tabs,
       'title-card': titleCard,
       youtube,
+      'terminal-command': terminalCommand,
     },
   },
   components: {
@@ -92,6 +97,7 @@ export const getMarkdocCustomConfig = (
     Tabs,
     TitleCard,
     YouTube,
+    TerminalCommand,
   },
 });
 
