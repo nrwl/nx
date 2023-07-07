@@ -8,7 +8,11 @@ We use the version numbers of the installed packages when checking whether the v
 
 ## Usage
 
-You can use the `dependency-checks` rule by adding it to your ESLint rules configuration:
+Library generators from `@nx` packages will configure this rule automatically when you opt-in for bundler/build setup.
+
+### Manual setup
+
+To set it up manually for existing libraries, you need to add the `dependency-checks` rule to your project's ESLint configuration:
 
 ```jsonc {% fileName=".eslintrc.json" %}
 {
@@ -26,7 +30,7 @@ You can use the `dependency-checks` rule by adding it to your ESLint rules confi
 }
 ```
 
-Linting `JSON` files is not enabled by default, so you will also need to add `package.json` to the `lintFilePatterns`:
+Additionally, you need to add the `package.json` to the `lintFilePatterns`:
 
 ```jsonc {% fileName="project.json" %}
 {
@@ -54,7 +58,11 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
   "@nx/dependency-checks": [
     "error",
     {
-      // for available options check below
+      "buildTargets": ["build", "custom-build"], // add non standard build target names
+      "ignoredDependencies": ["lodash"], // these libs will be ommited from checks
+      "checkMissingDependencies": true, // toggle to disable
+      "checkObsoleteDependencies": true, // toggle to disable
+      "checkVersionMismatches": true // toggle to disable
     }
   ]
 }
