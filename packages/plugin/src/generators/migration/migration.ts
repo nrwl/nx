@@ -15,6 +15,12 @@ import type { Schema } from './schema';
 import * as path from 'path';
 import { addMigrationJsonChecks } from '../lint-checks/generator';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
+import {
+  nxVersion,
+  swcCoreVersion,
+  swcHelpersVersion,
+  swcNodeVersion,
+} from '@nx/js/src/utils/versions';
 interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectSourceRoot: string;
@@ -107,6 +113,15 @@ function updatePackageJson(host: Tree, options: NormalizedSchema) {
       } else if (preexistingValue.migrations) {
         preexistingValue.migrations = './migrations.json';
       }
+
+      json.dependencies = {
+        ...json.dependencies,
+        '@nx/devkit': nxVersion,
+        nx: nxVersion,
+        '@swc-node/register': swcNodeVersion,
+        '@swc/core': swcCoreVersion,
+        '@swc/helpers': swcHelpersVersion,
+      };
 
       return json;
     }

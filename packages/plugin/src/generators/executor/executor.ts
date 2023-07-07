@@ -16,6 +16,12 @@ import type { Schema } from './schema';
 import * as path from 'path';
 import { PackageJson } from 'nx/src/utils/package-json';
 import pluginLintCheckGenerator from '../lint-checks/generator';
+import {
+  nxVersion,
+  swcCoreVersion,
+  swcHelpersVersion,
+  swcNodeVersion,
+} from '@nx/js/src/utils/versions';
 
 interface NormalizedSchema extends Schema {
   fileName: string;
@@ -122,6 +128,22 @@ async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
       options.skipLintChecks
     );
   }
+  // add dependencies
+  updateJson<PackageJson>(
+    host,
+    joinPathFragments(options.projectRoot, 'package.json'),
+    (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        '@nx/devkit': nxVersion,
+        nx: nxVersion,
+        '@swc-node/register': swcNodeVersion,
+        '@swc/core': swcCoreVersion,
+        '@swc/helpers': swcHelpersVersion,
+      };
+      return json;
+    }
+  );
 
   return updateJson(host, executorsPath, (json) => {
     let executors = json.executors ?? json.builders;
