@@ -32,12 +32,13 @@
     "@nx/devkit": "file:../devkit"
   },
   "peerDependencies": {
-    "@playwright/test": "^1.30.0"
+    "@playwright/test": "^1.36.0"
   },
   "peerDependenciesMeta": {
     "@playwright/test": {
       "optional": true
     }
   },
-  "executors": "./executors.json"
+  "executors": "./executors.json",
+  "generators": "./generators.json"
 }
