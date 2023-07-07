@@ -564,7 +564,7 @@ export function getTsConfigPath(
   const { root, projectType } = readProjectConfiguration(tree, projectName);
   return join(
     root,
-    path && path.length > 0
+    path?.length > 0
       ? path
       : projectType === 'application'
       ? 'tsconfig.app.json'
@@ -595,7 +595,7 @@ export function addBuildStorybookToCacheableOperations(tree: Tree) {
 }
 
 export function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
-  return relative(workspaceRoot, projectRoot).length === 0;
+  return relative(workspaceRoot, projectRoot)?.length === 0;
 }
 
 export function workspaceHasRootProject(tree: Tree) {
@@ -682,14 +682,14 @@ export function renameAndMoveOldTsConfig(
         json.extends = json.extends.replace('../', './');
       }
 
-      for (let i = 0; i < json.files.length; i++) {
+      for (let i = 0; i < json.files?.length; i++) {
         // drop one level of nesting
         if (json.files[i].startsWith('../../../')) {
           json.files[i] = json.files[i].replace('../../../', '../../');
         }
       }
 
-      for (let i = 0; i < json.include.length; i++) {
+      for (let i = 0; i < json.include?.length; i++) {
         if (json.include[i].startsWith('../')) {
           json.include[i] = json.include[i].replace('../', '');
         }
@@ -702,7 +702,7 @@ export function renameAndMoveOldTsConfig(
         }
       }
 
-      for (let i = 0; i < json.exclude.length; i++) {
+      for (let i = 0; i < json.exclude?.length; i++) {
         if (json.exclude[i].startsWith('../')) {
           json.exclude[i] = json.exclude[i].replace('../', 'src/');
         }
@@ -719,7 +719,7 @@ export function renameAndMoveOldTsConfig(
 
   const projectTsConfig = joinPathFragments(projectRoot, 'tsconfig.json');
   updateJson(tree, projectTsConfig, (json) => {
-    for (let i = 0; i < json.references.length; i++) {
+    for (let i = 0; i < json.references?.length; i++) {
       if (json.references[i].path === './.storybook/tsconfig.json') {
         json.references[i].path = './tsconfig.storybook.json';
         break;
