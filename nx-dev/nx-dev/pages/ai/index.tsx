@@ -15,13 +15,13 @@ export default function Ai(): JSX.Element {
   const [error, setError] = useState(null);
 
   const handleSubmit = async () => {
-    // setFinalResult('loading...');
+    setFinalResult('loading...');
     try {
       const response = await nxDevDataAccessAi(
         'What is the best way to set up inputs in my nx.json?'
       );
-      // const completeText = (await getStringFromStream(response)) as string;
-      // setFinalResult(completeText);
+      const completeText = (await getStringFromStream(response)) as string;
+      setFinalResult(completeText);
     } catch (error) {
       logger.error(error);
       setError(error);
