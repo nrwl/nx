@@ -36,7 +36,6 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'injection-js',
     'browserslist',
     'cacache',
-    'find-cache-dir',
     'less',
     'node-sass',
     'node-sass-tilde-importer',
