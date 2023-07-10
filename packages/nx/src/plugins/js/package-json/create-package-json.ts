@@ -180,6 +180,8 @@ export function createPackageJson(
   return packageJson;
 }
 
+// TODO(jack): This should be moved to`@nx/js` and be used specifically for generating package.json and lock file for apps.
+// We use this for lib package.json as well, but that use case will be removed in v17. Users need to use `@nx/dependency-checks` lint rule instead.
 export function findProjectsNpmDependencies(
   projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,

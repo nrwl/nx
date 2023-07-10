@@ -1,18 +1,17 @@
+import { join } from 'path';
+import { satisfies } from 'semver';
 import { AST } from 'jsonc-eslint-parser';
+import { type JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';
 import { normalizePath, workspaceRoot } from '@nx/devkit';
+import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
+
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
-import { join } from 'path';
-import { findProjectsNpmDependencies } from '@nx/js/src/internal';
-import { satisfies } from 'semver';
-import { getHelperDependenciesFromProjectGraph } from '@nx/js';
 import {
   getAllDependencies,
   getPackageJson,
-  removePackageJsonFromFileMap,
 } from '../utils/package-json-utils';
-import { JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';
 
 export type Options = [
   {
@@ -22,6 +21,7 @@ export type Options = [
     checkVersionMismatches?: boolean;
     checkMissingPackageJson?: boolean;
     ignoredDependencies?: string[];
+    recursive?: boolean;
   }
 ];
 
@@ -51,6 +51,7 @@ export default createESLintRule<Options, MessageIds>({
           checkMissingDependencies: { type: 'boolean' },
           checkObsoleteDependencies: { type: 'boolean' },
           checkVersionMismatches: { type: 'boolean' },
+          recursive: { type: 'boolean' },
         },
         additionalProperties: false,
       },
@@ -69,6 +70,7 @@ export default createESLintRule<Options, MessageIds>({
       checkObsoleteDependencies: true,
       checkVersionMismatches: true,
       ignoredDependencies: [],
+      recursive: false,
     },
   ],
   create(
@@ -80,6 +82,7 @@ export default createESLintRule<Options, MessageIds>({
         checkMissingDependencies,
         checkObsoleteDependencies,
         checkVersionMismatches,
+        recursive,
       },
     ]
   ) {
@@ -92,8 +95,7 @@ export default createESLintRule<Options, MessageIds>({
       return {};
     }
 
-    const projectPath = normalizePath(globalThis.projectPath || workspaceRoot);
-    const sourceFilePath = getSourceFilePath(fileName, projectPath);
+    const sourceFilePath = getSourceFilePath(fileName, workspaceRoot);
     const { projectGraph, projectRootMappings, projectFileMap } =
       readProjectGraph(RULE_NAME);
 
@@ -120,32 +122,16 @@ export default createESLintRule<Options, MessageIds>({
       return {};
     }
 
-    // gather helper dependencies for @nx/js executors
-    const helperDependencies = getHelperDependenciesFromProjectGraph(
-      workspaceRoot,
-      sourceProject.name,
-      projectGraph
-    );
-
     const rootPackageJson = getPackageJson(join(workspaceRoot, 'package.json'));
 
-    // find all dependencies for the project
-    const npmDeps = findProjectsNpmDependencies(
+    const npmDependencies = findNpmDependencies(
+      workspaceRoot,
       sourceProject,
       projectGraph,
-      buildTarget,
-      rootPackageJson,
-      {
-        helperDependencies: helperDependencies.map((dep) => dep.target),
-        isProduction: true,
-      },
-      removePackageJsonFromFileMap(projectFileMap)
+      projectFileMap,
+      { recursive }
     );
-    const projDependencies = {
-      ...npmDeps.dependencies,
-      ...npmDeps.peerDependencies,
-    };
-    const expectedDependencyNames = Object.keys(projDependencies);
+    const expectedDependencyNames = Object.keys(npmDependencies);
 
     const projPackageJsonPath = join(
       workspaceRoot,
@@ -180,7 +166,7 @@ export default createESLintRule<Options, MessageIds>({
           fix(fixer) {
             missingDeps.forEach((d) => {
               projPackageJsonDeps[d] =
-                rootPackageJsonDeps[d] || projDependencies[d];
+                rootPackageJsonDeps[d] || npmDependencies[d];
             });
 
             const deps = (node.value as AST.JSONObjectExpression).properties;
@@ -213,8 +199,8 @@ export default createESLintRule<Options, MessageIds>({
         return;
       }
       if (
-        projDependencies[packageName] === '*' ||
-        satisfies(projDependencies[packageName], packageRange)
+        npmDependencies[packageName] === '*' ||
+        satisfies(npmDependencies[packageName], packageRange)
       ) {
         return;
       }
@@ -224,13 +210,13 @@ export default createESLintRule<Options, MessageIds>({
         messageId: 'versionMismatch',
         data: {
           packageName: packageName,
-          version: projDependencies[packageName],
+          version: npmDependencies[packageName],
         },
         fix: (fixer) =>
           fixer.replaceText(
             node as any,
             `"${packageName}": "${
-              rootPackageJsonDeps[packageName] || projDependencies[packageName]
+              rootPackageJsonDeps[packageName] || npmDependencies[packageName]
             }"`
           ),
       });
@@ -309,7 +295,7 @@ export default createESLintRule<Options, MessageIds>({
           },
           fix: (fixer) => {
             expectedDependencyNames.sort().reduce((acc, d) => {
-              acc[d] = rootPackageJsonDeps[d] || projDependencies[d];
+              acc[d] = rootPackageJsonDeps[d] || dependencies[d];
               return acc;
             }, projPackageJsonDeps);
 
@@ -350,13 +336,9 @@ export default createESLintRule<Options, MessageIds>({
         }
 
         if (expectedDependencyNames.includes(packageName)) {
-          return validateVersionMatchesInstalled(
-            node,
-            packageName,
-            packageRange
-          );
+          validateVersionMatchesInstalled(node, packageName, packageRange);
         } else {
-          return reportObsoleteDependency(node, packageName);
+          reportObsoleteDependency(node, packageName);
         }
       },
       ['JSONExpressionStatement > JSONObjectExpression'](
