@@ -50,6 +50,31 @@
       "rules": {
         "@nx/nx-plugin-checks": "error"
       }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "ignoredDependencies": [
+              "nx",
+              "tslib",
+              "typescript",
+              "prettier",
+              // Only in unit test
+              "file-type",
+              // Installed to workspaec
+              "rxjs",
+              "@angular-devkit/core",
+              "@angular-devkit/architect",
+              "@angular-devkit/schematics",
+              "webpack"
+            ]
+          }
+        ]
+      }
     }
   ]
 }

@@ -22,6 +22,27 @@
     {
       "files": ["*.js", "*.jsx"],
       "rules": {}
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "ignoredDependencies": [
+              "nx",
+              "tslib",
+              "typescript",
+              "eslint",
+              // Test-only
+              "memfs",
+              // Installed to workspace
+              "@angular-eslint/eslint-plugin"
+            ]
+          }
+        ]
+      }
     }
   ]
 }

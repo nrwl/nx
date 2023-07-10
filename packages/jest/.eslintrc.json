@@ -24,6 +24,27 @@
       "rules": {
         "@nx/nx-plugin-checks": "error"
       }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "ignoredDependencies": [
+              "nx",
+              "tslib",
+              "typescript",
+              "prettier",
+              "jest",
+              "@jest/types",
+              // require.resolve is used
+              "identity-obj-proxy"
+            ]
+          }
+        ]
+      }
     }
   ],
   "ignorePatterns": ["!**/*"]

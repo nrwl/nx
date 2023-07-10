@@ -70,6 +70,18 @@
         ],
         "no-restricted-imports": "off"
       }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "ignoredDependencies": ["tslib", "typescript"]
+          }
+        ]
+      }
     }
   ]
 }

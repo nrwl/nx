@@ -36,7 +36,8 @@
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",
     "@nx/node": "file:../node",
-    "@phenomnomnominal/tsquery": "~5.0.1"
+    "@phenomnomnominal/tsquery": "~5.0.1",
+    "semver": "7.5.3"
   },
   "publishConfig": {
     "access": "public"
