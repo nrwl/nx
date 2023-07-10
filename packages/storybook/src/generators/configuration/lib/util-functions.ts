@@ -675,7 +675,7 @@ export function renameAndMoveOldTsConfig(
   pathToStorybookConfigFile: string,
   tree: Tree
 ) {
-  if (pathToStorybookConfigFile) {
+  if (pathToStorybookConfigFile && tree.exists(pathToStorybookConfigFile)) {
     updateJson(tree, pathToStorybookConfigFile, (json) => {
       if (json.extends?.startsWith('../')) {
         // drop one level of nesting
@@ -718,6 +718,11 @@ export function renameAndMoveOldTsConfig(
   }
 
   const projectTsConfig = joinPathFragments(projectRoot, 'tsconfig.json');
+
+  if (!tree.exists(projectTsConfig)) {
+    return;
+  }
+
   updateJson(tree, projectTsConfig, (json) => {
     for (let i = 0; i < json.references?.length; i++) {
       if (json.references[i].path === './.storybook/tsconfig.json') {
