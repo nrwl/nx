@@ -441,7 +441,7 @@ describe('create-nx-workspace yarn berry', () => {
 
   beforeAll(() => {
     mkdirSync(tmpDir, { recursive: true });
-    runCommand('corepack prepare yarn@3 --activate', { cwd: tmpDir });
+    runCommand('corepack prepare yarn@stable --activate', { cwd: tmpDir });
     runCommand('yarn set version stable', { cwd: tmpDir });
     // previous command creates a package.json file which we don't want
     rmSync(`${tmpDir}/package.json`);

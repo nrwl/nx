@@ -27,13 +27,20 @@ export async function generateWorkspaceFiles(
   createFiles(tree, options);
   createNxJson(tree, options);
 
-  const [packageMajor] = getPackageManagerVersion(
+  const packageManagerVersion = getPackageManagerVersion(
     options.packageManager as PackageManager
-  ).split('.');
+  );
+  const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
     createNpmrc(tree, options);
-  } else if (options.packageManager === 'yarn' && +packageMajor >= 2) {
-    createYarnrcYml(tree, options);
+  } else if (options.packageManager === 'yarn') {
+    if (+packageMajor >= 2) {
+      createYarnrcYml(tree, options);
+    }
+    updateJson(tree, join(options.directory, 'package.json'), (json) => {
+      json.packageManager = `yarn@${packageManagerVersion}`;
+      return json;
+    });
   }
   setPresetProperty(tree, options);
   addNpmScripts(tree, options);

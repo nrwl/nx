@@ -4,9 +4,8 @@ import * as ora from 'ora';
 import { join } from 'path';
 
 import {
-  generatePackageManagerFiles,
+  updatePackageManagerFiles,
   getPackageManagerCommand,
-  getPackageManagerVersion,
   PackageManager,
 } from './utils/package-manager';
 import { execAndWait } from './utils/child-process-utils';
@@ -24,33 +23,25 @@ export async function createSandbox(packageManager: PackageManager) {
     `Installing dependencies with ${packageManager}`
   ).start();
 
-  const { install, preInstall } = getPackageManagerCommand(packageManager);
-
-  const packageJson: any = {
-    dependencies: {
-      nx: nxVersion,
-      '@nx/workspace': nxVersion,
-    },
-    license: 'MIT',
-  };
-
-  // if it's yarn, we want to add the version information to the package.json
-  if (packageManager === 'yarn') {
-    const yarnVersion = getPackageManagerVersion(packageManager);
-    packageJson.packageManager = `yarn@${yarnVersion}`;
-  }
+  const { install } = getPackageManagerCommand(packageManager);
 
   const tmpDir = dirSync().name;
   try {
     writeFileSync(
       join(tmpDir, 'package.json'),
-      JSON.stringify(packageJson, null, 2)
+      JSON.stringify(
+        {
+          dependencies: {
+            nx: nxVersion,
+            '@nx/workspace': nxVersion,
+          },
+          license: 'MIT',
+        },
+        null,
+        2
+      )
     );
-    generatePackageManagerFiles(tmpDir, packageManager);
-
-    if (preInstall) {
-      await execAndWait(preInstall, tmpDir);
-    }
+    updatePackageManagerFiles(tmpDir, packageManager);
 
     await execAndWait(install, tmpDir);
 
