@@ -1,6 +1,7 @@
 import { workspaceRoot } from '../utils/workspace-root';
 import { mkdir, mkdirSync, pathExists, readFile, writeFile } from 'fs-extra';
 import { join } from 'path';
+import { performance } from 'perf_hooks';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
 import { cacheDir } from '../utils/cache-directory';
