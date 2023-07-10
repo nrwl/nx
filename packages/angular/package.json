@@ -49,6 +49,7 @@
     "@typescript-eslint/type-utils": "^5.36.1",
     "chalk": "^4.1.0",
     "chokidar": "^3.5.1",
+    "find-cache-dir": "^3.3.2",
     "http-server": "^14.1.0",
     "ignore": "^5.0.4",
     "magic-string": "~0.26.2",
