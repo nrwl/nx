@@ -219,6 +219,7 @@
     - [Identify Dependencies Between Folders](/recipes/other/identify-dependencies-between-folders)
     - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
     - [Standalone NgRx APIs](/recipes/other/standalone-ngrx-apis)
+    - [Unknown Local Cache Error](/recipes/other/unknown-local-cache)
 
 - Plugins
 

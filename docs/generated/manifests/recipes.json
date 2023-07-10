@@ -1587,6 +1587,16 @@
         "isExternal": false,
         "path": "/recipes/other/standalone-ngrx-apis",
         "tags": []
+      },
+      {
+        "id": "unknown-local-cache",
+        "name": "Unknown Local Cache Error",
+        "description": "",
+        "file": "shared/guides/unknown-local-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/unknown-local-cache",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1851,6 +1861,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/standalone-ngrx-apis",
+    "tags": []
+  },
+  "/recipes/other/unknown-local-cache": {
+    "id": "unknown-local-cache",
+    "name": "Unknown Local Cache Error",
+    "description": "",
+    "file": "shared/guides/unknown-local-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/unknown-local-cache",
     "tags": []
   }
 }

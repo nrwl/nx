@@ -3234,6 +3234,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Unknown Local Cache Error",
+            "path": "/recipes/other/unknown-local-cache",
+            "id": "unknown-local-cache",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3442,6 +3450,14 @@
         "name": "Standalone NgRx APIs",
         "path": "/recipes/other/standalone-ngrx-apis",
         "id": "standalone-ngrx-apis",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Unknown Local Cache Error",
+        "path": "/recipes/other/unknown-local-cache",
+        "id": "unknown-local-cache",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
