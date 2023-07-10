@@ -111,7 +111,7 @@ We can display a special button inviting the reader to go to a GitHub repository
 You can add an "open in stackblitz" button as follows:
 
 ```markdown
-{% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/standalone-angular-app?file=README.md" /%}
+{% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/angular-standalone?file=README.md" /%}
 ```
 
 #### Install Nx Console
