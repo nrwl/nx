@@ -25,7 +25,8 @@
     "webpack",
     "http-server",
     "magic-string",
-    "enquirer"
+    "enquirer",
+    "find-cache-dir"
   ],
   "keepLifecycleScripts": true
 }
