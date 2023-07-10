@@ -1458,6 +1458,12 @@
               "id": "standalone-ngrx-apis",
               "tags": [],
               "file": "shared/recipes/standalone-ngrx-apis"
+            },
+            {
+              "name": "Unknown Local Cache Error",
+              "id": "unknown-local-cache",
+              "tags": [],
+              "file": "shared/guides/unknown-local-cache"
             }
           ]
         }

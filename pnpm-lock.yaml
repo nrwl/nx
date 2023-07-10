@@ -101,6 +101,9 @@ dependencies:
   next-seo:
     specifier: ^5.13.0
     version: 5.13.0(next@13.3.4)(react-dom@18.2.0)(react@18.2.0)
+  node-machine-id:
+    specifier: 1.1.12
+    version: 1.1.12
   npm-run-path:
     specifier: ^4.0.1
     version: 4.0.1
@@ -20359,7 +20362,6 @@ packages:
 
   /node-machine-id@1.1.12:
     resolution: {integrity: sha512-QNABxbrPa3qEIfrE6GOJ7BYIuignnJw7iQ2YPbc3Nla1HzRJjXzZOiikfF8m7eAMfichLt3M4VgLOetqgDmgGQ==}
-    dev: true
 
   /node-releases@2.0.10:
     resolution: {integrity: sha512-5GFldHPXVG/YZmFzJvKK2zDSzPKhEp0+ZR5SVaoSag9fsL5YgHbUHDfnG5494ISANDcK4KwPXAx2xqVEydmd7w==}
