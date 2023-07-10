@@ -6,6 +6,7 @@ import { join } from 'path';
 import {
   generatePackageManagerFiles,
   getPackageManagerCommand,
+  getPackageManagerVersion,
   PackageManager,
 } from './utils/package-manager';
 import { execAndWait } from './utils/child-process-utils';
@@ -25,17 +26,25 @@ export async function createSandbox(packageManager: PackageManager) {
 
   const { install, preInstall } = getPackageManagerCommand(packageManager);
 
+  const packageJson: any = {
+    dependencies: {
+      nx: nxVersion,
+      '@nx/workspace': nxVersion,
+    },
+    license: 'MIT',
+  };
+
+  // if it's yarn, we want to add the version information to the package.json
+  if (packageManager === 'yarn') {
+    const yarnVersion = getPackageManagerVersion(packageManager);
+    packageJson.packageManager = `yarn@${yarnVersion}`;
+  }
+
   const tmpDir = dirSync().name;
   try {
     writeFileSync(
       join(tmpDir, 'package.json'),
-      JSON.stringify({
-        dependencies: {
-          nx: nxVersion,
-          '@nx/workspace': nxVersion,
-        },
-        license: 'MIT',
-      })
+      JSON.stringify(packageJson, null, 2)
     );
     generatePackageManagerFiles(tmpDir, packageManager);
 

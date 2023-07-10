@@ -13,7 +13,7 @@ import {
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e/utils';
-import { existsSync, mkdirSync, readdirSync, rmSync } from 'fs-extra';
+import { existsSync, mkdirSync, rmSync } from 'fs-extra';
 
 describe('create-nx-workspace', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
@@ -441,7 +441,8 @@ describe('create-nx-workspace yarn berry', () => {
 
   beforeAll(() => {
     mkdirSync(tmpDir, { recursive: true });
-    runCommand('yarn set version berry', { cwd: tmpDir });
+    runCommand('corepack prepare yarn@3 --activate', { cwd: tmpDir });
+    runCommand('yarn set version stable', { cwd: tmpDir });
     // previous command creates a package.json file which we don't want
     rmSync(`${tmpDir}/package.json`);
   });
@@ -458,7 +459,8 @@ describe('create-nx-workspace yarn berry', () => {
     });
 
     expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
-    console.log(readdirSync(`${tmpDir}/${wsName}`));
+    const packageJson = readJson('package.json');
+    expect(packageJson.packageManager).toMatch(/yarn@3/);
   });
 
   it('should create a js workspace with yarn berry', () => {
@@ -471,6 +473,7 @@ describe('create-nx-workspace yarn berry', () => {
     });
 
     expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
-    console.log(readdirSync(`${tmpDir}/${wsName}`));
+    const packageJson = readJson('package.json');
+    expect(packageJson.packageManager).toMatch(/yarn@3/);
   });
 });
