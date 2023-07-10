@@ -27,7 +27,10 @@
         "description": "Specify which IP addresses the server should listen on.",
         "oneOf": [{ "type": "boolean" }, { "type": "string" }]
       },
-      "https": { "type": "boolean", "description": "Serve using HTTPS." },
+      "https": {
+        "oneOf": [{ "type": "boolean" }, { "type": "object" }],
+        "description": "Serve using HTTPS. https://vitejs.dev/config/server-options.html#server-https"
+      },
       "open": {
         "description": "Automatically open the app in the browser on server start. When the value is a string, it will be used as the URL's pathname.",
         "oneOf": [{ "type": "boolean" }, { "type": "string" }]
