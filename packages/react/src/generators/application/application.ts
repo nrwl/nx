@@ -32,7 +32,7 @@ import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-proj
 import {
   babelLoaderVersion,
   nxRspackVersion,
-  nxVersion
+  nxVersion,
 } from '../../utils/versions';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
