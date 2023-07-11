@@ -22,6 +22,7 @@ import {
   retrieveWorkspaceFiles,
   retrieveProjectConfigurations,
 } from '../../project-graph/utils/retrieve-workspace-files';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -115,8 +116,18 @@ export function addUpdatedAndDeletedFiles(
   }
 }
 
-function computeWorkspaceConfigHash(projectsConfigurations: any) {
-  return hashArray([JSON.stringify(projectsConfigurations)]);
+function computeWorkspaceConfigHash(
+  projectsConfigurations: Record<string, ProjectConfiguration>
+) {
+  const projectConfigurationStrings = Object.entries(projectsConfigurations)
+    .sort(([projectNameA], [projectNameB]) =>
+      projectNameA.localeCompare(projectNameB)
+    )
+    .map(
+      ([projectName, projectConfig]) =>
+        `${projectName}:${JSON.stringify(projectConfig)}`
+    );
+  return hashArray(projectConfigurationStrings);
 }
 
 /**
