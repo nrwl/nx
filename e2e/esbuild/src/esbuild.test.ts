@@ -190,10 +190,18 @@ describe('EsBuild Plugin', () => {
       return json;
     });
 
-    runCommand(`build ${myPkg}`);
+    runCLI(`build ${myPkg}`);
 
-    expect(runCommand(`node dist/libs/${myPkg}/main.js`)).toMatch(/main/);
-    expect(runCommand(`node dist/libs/${myPkg}/extra.js`)).toMatch(/extra/);
+    checkFilesExist(
+      `dist/libs/${myPkg}/index.js`,
+      `dist/libs/${myPkg}/extra.js`
+    );
+    expect(
+      runCommand(`node dist/libs/${myPkg}/index.js`, { failOnError: true })
+    ).toMatch(/main/);
+    expect(
+      runCommand(`node dist/libs/${myPkg}/extra.js`, { failOnError: true })
+    ).toMatch(/extra/);
   }, 120_000);
 
   it('should support external esbuild.config.js file', async () => {
