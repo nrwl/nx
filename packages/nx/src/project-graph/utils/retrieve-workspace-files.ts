@@ -109,7 +109,7 @@ function buildAllWorkspaceFiles(
   performance.mark('get-all-workspace-files:start');
   let fileData = Object.values(projectFileMap).flat();
 
-  fileData.push(...globalFiles);
+  fileData = fileData.concat(globalFiles);
   performance.mark('get-all-workspace-files:end');
   performance.measure(
     'get-all-workspace-files',
