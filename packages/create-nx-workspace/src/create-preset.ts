@@ -33,7 +33,10 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
     /\s/.test(nxWorkspaceRoot) &&
     packageManager === 'npm'
   ) {
-    const pmVersion = +getPackageManagerVersion(packageManager).split('.')[0];
+    const pmVersion = +getPackageManagerVersion(
+      packageManager,
+      workingDir
+    ).split('.')[0];
     if (pmVersion < 7) {
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }

@@ -75,7 +75,7 @@ export function updatePackageManagerFiles(
 ) {
   switch (packageManager) {
     case 'yarn':
-      const yarnVersion = getPackageManagerVersion(packageManager);
+      const yarnVersion = getPackageManagerVersion(packageManager, root);
       const [pmMajor] = yarnVersion.split('.');
       const packageJson = JSON.parse(
         readFileSync(join(root, 'package.json'), 'utf-8')
@@ -98,12 +98,13 @@ export function updatePackageManagerFiles(
 const pmVersionCache = new Map<PackageManager, string>();
 
 export function getPackageManagerVersion(
-  packageManager: PackageManager
+  packageManager: PackageManager,
+  cwd = process.cwd()
 ): string {
   if (pmVersionCache.has(packageManager)) {
     return pmVersionCache.get(packageManager) as string;
   }
-  const version = execSync(`${packageManager} --version`)
+  const version = execSync(`${packageManager} --version`, { cwd })
     .toString('utf-8')
     .trim();
   pmVersionCache.set(packageManager, version);
