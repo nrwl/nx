@@ -36,7 +36,6 @@ pub(super) async fn create_runtime(
     runtime.filterer(Arc::new(WatchFilterer {
         inner: IgnoreFilterer(filter),
     }));
-    runtime.action_throttle(Duration::from_millis(500));
 
     // let watch_directories = get_watch_directories(origin);
     // trace!(directories = ?watch_directories, "watching");
