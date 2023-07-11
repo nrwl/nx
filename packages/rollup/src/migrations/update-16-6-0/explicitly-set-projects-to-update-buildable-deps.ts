@@ -1,6 +1,7 @@
 import {
+  createProjectGraphAsync,
   formatFiles,
-  getProjects,
+  readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
@@ -8,30 +9,36 @@ import {
 const executors = new Set(['@nx/rollup:rollup', '@nrwl/rollup:rollup']);
 
 export default async function (tree: Tree) {
-  const projects = getProjects(tree);
+  // use project graph to get the expanded target configurations
+  const projectGraph = await createProjectGraphAsync();
 
-  for (const [projectName, project] of projects) {
-    if (project.projectType !== 'library') {
+  for (const [projectName, { data: projectData }] of Object.entries(
+    projectGraph.nodes
+  )) {
+    if (projectData.projectType !== 'library') {
       continue;
     }
 
-    let updated = false;
-    for (const [, target] of Object.entries(project.targets || {})) {
+    for (const [targetName, target] of Object.entries(
+      projectData.targets || {}
+    )) {
       if (!executors.has(target.executor)) {
         continue;
       }
 
       if (
-        target.options &&
+        !target.options ||
         target.options.updateBuildableProjectDepsInPackageJson === undefined
       ) {
-        target.options.updateBuildableProjectDepsInPackageJson = true;
-        updated = true;
+        // read the project configuration to write the explicit project configuration
+        // and avoid writing the expanded target configuration
+        const project = readProjectConfiguration(tree, projectName);
+        project.targets[targetName].options ??= {};
+        project.targets[
+          targetName
+        ].options.updateBuildableProjectDepsInPackageJson = true;
+        updateProjectConfiguration(tree, projectName, project);
       }
-    }
-
-    if (updated) {
-      updateProjectConfiguration(tree, projectName, project);
     }
   }
 
