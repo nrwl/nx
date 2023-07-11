@@ -24,7 +24,17 @@ export interface RollupExecutorOptions {
   rollupConfig?: string | string[];
   watch?: boolean;
   assets?: any[];
+  /**
+   * @deprecated Configure the project to use the `@nx/dependency-checks` ESLint
+   * rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).
+   * It will be removed in v17.
+   */
   updateBuildableProjectDepsInPackageJson?: boolean;
+  /**
+   * @deprecated Configure the project to use the `@nx/dependency-checks` ESLint
+   * rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).
+   * It will be removed in v17.
+   */
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   deleteOutputPath?: boolean;
   format?: string[];
