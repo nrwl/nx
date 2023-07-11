@@ -8,7 +8,7 @@ nx g @nx/react:app myapp
 nx g @nx/react:lib mylib
 ```
 
-...and then import the library from the application. In this case, `mylib` isn't a buildable library. We cannot test and lint it independently, but the only way to build it is by building some application using it (in this case `myapp`). The default setup is to use Webpack, which builds "mylib" and bundles it directly into "myapp".
+...and then import the library from the application. In this case, `mylib` isn't a buildable library. We can test and lint it independently, but the only way to build it is by building some application using it (in this case `myapp`). The default setup is to use Webpack, which builds "mylib" and bundles it directly into "myapp".
 This provides the best dev experience for small and medium-size applications, because Webpack is optimized for this scenario. But as your application keeps growing, the dev experience degrades.
 
 > The **duration** of the invoked operations should be **proportional** to the **size of the change**
