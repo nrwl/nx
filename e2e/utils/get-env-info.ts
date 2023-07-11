@@ -122,6 +122,10 @@ export function getStrippedEnvironmentVariables() {
         return false;
       }
 
+      if (key === 'JEST_WORKER_ID') {
+        return false;
+      }
+
       return true;
     })
   );
