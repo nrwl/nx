@@ -56,7 +56,7 @@ function normalizeOptions(
   };
 }
 
-export async function jestProjectGenerator(
+export async function configurationGenerator(
   tree: Tree,
   schema: JestProjectSchema
 ): Promise<GeneratorCallback> {
@@ -74,4 +74,6 @@ export async function jestProjectGenerator(
   return installTask;
 }
 
-export const jestProjectSchematic = convertNxGenerator(jestProjectGenerator);
+export default configurationGenerator;
+
+export const compat = convertNxGenerator(configurationGenerator);

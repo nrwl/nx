@@ -5199,9 +5199,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "jest-project",
-                "path": "/packages/jest/generators/jest-project",
-                "name": "jest-project",
+                "id": "configuration",
+                "path": "/packages/jest/generators/configuration",
+                "name": "configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

@@ -23,7 +23,7 @@ starting point not the definite list of what you must and must not do.
 
 - Apps configure dependency injection and wire up libraries. They should not contain any components, services, or
   business logic.
-- Libs contain services, components, utilities, etc. They have well-≠defined public API.
+- Libs contain services, components, utilities, etc. They have well-defined public API.
 
 A typical Nx workspace has many more libs than apps, so pay especially careful attention to the organization of the libs
 directory.

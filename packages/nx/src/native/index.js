@@ -246,7 +246,7 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { expandOutputs, remove, copy, hashArray, hashFile, hashFiles, hashFilesMatchingGlobs, EventType, Watcher, WorkspaceErrors, getConfigFiles, getWorkspaceFilesNative } = nativeBinding
+const { expandOutputs, remove, copy, hashArray, hashFile, hashFiles, hashFilesMatchingGlobs, EventType, Watcher, WorkspaceErrors, getProjectConfigurations, getWorkspaceFilesNative } = nativeBinding
 
 module.exports.expandOutputs = expandOutputs
 module.exports.remove = remove
@@ -258,5 +258,5 @@ module.exports.hashFilesMatchingGlobs = hashFilesMatchingGlobs
 module.exports.EventType = EventType
 module.exports.Watcher = Watcher
 module.exports.WorkspaceErrors = WorkspaceErrors
-module.exports.getConfigFiles = getConfigFiles
+module.exports.getProjectConfigurations = getProjectConfigurations
 module.exports.getWorkspaceFilesNative = getWorkspaceFilesNative

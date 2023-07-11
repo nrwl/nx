@@ -6,7 +6,7 @@ export async function addJest(
   host: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const { jestProjectGenerator } = ensurePackage<typeof import('@nx/jest')>(
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
     '@nx/jest',
     nxVersion
   );
@@ -15,7 +15,7 @@ export async function addJest(
     return () => {};
   }
 
-  return await jestProjectGenerator(host, {
+  return await configurationGenerator(host, {
     ...options,
     project: options.projectName,
     supportTsx: true,

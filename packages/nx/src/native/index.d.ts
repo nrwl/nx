@@ -37,14 +37,13 @@ export const enum WorkspaceErrors {
   Generic = 'Generic'
 }
 /** Get workspace config files based on provided globs */
-export function getConfigFiles(workspaceRoot: string, globs: Array<string>): Array<string>
+export function getProjectConfigurations(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Record<string, object>): Record<string, object>
 export interface NxWorkspaceFiles {
   projectFileMap: Record<string, Array<FileData>>
   globalFiles: Array<FileData>
-  configFiles: Array<string>
+  projectConfigurations: Record<string, object>
 }
-/** Throws exceptions */
-export function getWorkspaceFilesNative(workspaceRoot: string, globs: Array<string>): NxWorkspaceFiles
+export function getWorkspaceFilesNative(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Record<string, object>): NxWorkspaceFiles
 export class Watcher {
   origin: string
   /**

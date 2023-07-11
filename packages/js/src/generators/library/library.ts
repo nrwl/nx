@@ -366,8 +366,8 @@ async function addJest(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const { jestProjectGenerator } = ensurePackage('@nx/jest', nxVersion);
-  return await jestProjectGenerator(tree, {
+  const { configurationGenerator } = ensurePackage('@nx/jest', nxVersion);
+  return await configurationGenerator(tree, {
     ...options,
     project: options.name,
     setupFile: 'none',

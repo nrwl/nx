@@ -1,5 +1,5 @@
 import { Tree } from '@nx/devkit';
-import { jestProjectGenerator } from '@nx/jest';
+import { configurationGenerator } from '@nx/jest';
 
 export async function addJest(
   host: Tree,
@@ -13,7 +13,7 @@ export async function addJest(
     return () => {};
   }
 
-  const jestTask = await jestProjectGenerator(host, {
+  const jestTask = await configurationGenerator(host, {
     js,
     project: projectName,
     supportTsx: true,

@@ -4,7 +4,7 @@ export interface ViteDevServerExecutorOptions {
   proxyConfig?: string;
   port?: number;
   host?: string | boolean;
-  https?: boolean;
+  https?: boolean | Json;
   hmr?: boolean;
   open?: string | boolean;
   cors?: boolean;

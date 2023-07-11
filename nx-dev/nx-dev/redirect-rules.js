@@ -150,6 +150,8 @@ const schemaUrls = {
     '/packages/cypress/generators/component-configuration',
   '/packages/esbuild/generators/esbuild-project':
     '/packages/esbuild/generators/configuration',
+  '/packages/jest/generators/jest-project':
+    '/packages/jest/generators/configuration',
   '/packages/nx-plugin/generators/executor':
     '/packages/plugin/generators/executor',
   '/packages/nx-plugin/generators/migration':
