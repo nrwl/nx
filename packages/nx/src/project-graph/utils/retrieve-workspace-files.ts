@@ -84,7 +84,7 @@ export async function retrieveWorkspaceFiles(
 export async function retrieveProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
-) {
+): Promise<Record<string, ProjectConfiguration>> {
   const { getProjectConfigurations } = require('../../native');
   const globs = await configurationGlobs(workspaceRoot, nxJson);
   return getProjectConfigurations(
