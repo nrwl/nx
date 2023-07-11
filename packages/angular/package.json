@@ -58,7 +58,7 @@
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.1.2",
     "webpack": "^5.80.0",
-    "webpack-merge": "5.7.3",
+    "webpack-merge": "^5.8.0",
     "enquirer": "^2.3.6",
     "@nx/cypress": "file:../cypress",
     "@nx/devkit": "file:../devkit",
