@@ -18,9 +18,9 @@ Note, this tutorial sets up a repo with a single application at the root level t
 
 Here's the source code of the final result for this tutorial.
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/standalone-angular-app" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/angular-standalone" /%}
 
-{% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/standalone-angular-app?file=README.md" /%}
+{% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/angular-standalone?file=README.md" /%}
 
 Also, if you prefer learning with a video, join Juri and walk through the tutorial, step by step together.
 
