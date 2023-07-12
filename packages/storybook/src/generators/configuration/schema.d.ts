@@ -7,10 +7,10 @@ export interface StorybookConfigureSchema {
   configureCypress?: boolean;
   linter?: Linter;
   js?: boolean;
+  interactionTests?: boolean;
   tsConfiguration?: boolean;
   cypressDirectory?: string;
   standaloneConfig?: boolean;
-  configureTestRunner?: boolean;
   configureStaticServe?: boolean;
   skipFormat?: boolean;
 }

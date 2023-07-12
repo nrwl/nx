@@ -5,7 +5,7 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
 
 const config: StorybookConfig = {
   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -66,7 +66,11 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
 
 const config: StorybookConfig = {
   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+  addons: [
+    '@storybook/addon-essentials',
+    '@storybook/addon-interactions',
+    '@nx/react/plugins/storybook',
+  ],
   framework: {
     name: '@storybook/react-webpack5',
     options: {},

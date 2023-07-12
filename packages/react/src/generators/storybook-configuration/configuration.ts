@@ -10,6 +10,7 @@ import {
 import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
+  // TODO(katerina): Remove cypress stuff for Nx 17?
   ensurePackage('@nx/cypress', nxVersion);
   const { getE2eProjectName } = await import(
     '@nx/cypress/src/utils/project-name'
@@ -57,7 +58,7 @@ export async function storybookConfigurationGenerator(
     linter: schema.linter,
     cypressDirectory: schema.cypressDirectory,
     tsConfiguration: schema.tsConfiguration,
-    configureTestRunner: schema.configureTestRunner,
+    interactionTests: schema.interactionTests,
     configureStaticServe: schema.configureStaticServe,
     uiFramework:
       bundler === 'vite'
