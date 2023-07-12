@@ -285,39 +285,6 @@
           "alwaysAddToPackageJson": false
         }
       }
-    },
-    "16.5.2": {
-      "version": "16.5.2-beta.0",
-      "packages": {
-        "jest": {
-          "version": "~29.6.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/jest": {
-          "version": "~29.5.3",
-          "alwaysAddToPackageJson": false
-        },
-        "expect": {
-          "version": "~29.6.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@jest/globals": {
-          "version": "~29.6.1",
-          "alwaysAddToPackageJson": false
-        },
-        "jest-jasmine2": {
-          "version": "~29.6.1",
-          "alwaysAddToPackageJson": false
-        },
-        "jest-environment-jsdom": {
-          "version": "~29.6.1",
-          "alwaysAddToPackageJson": false
-        },
-        "babel-jest": {
-          "version": "~29.6.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
     }
   }
 }
