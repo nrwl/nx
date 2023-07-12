@@ -48,7 +48,8 @@ export function getPackageManagerCommand(
         install: useBerry
           ? installCommand
           : `${installCommand} --ignore-scripts`,
-        exec: 'yarn',
+        // using npx is necessary to avoid yarn classic manipulating the version detection when using berry
+        exec: useBerry ? 'npx' : 'yarn',
       };
 
     case 'pnpm':

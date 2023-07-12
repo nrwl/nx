@@ -44,6 +44,8 @@ export async function generateWorkspaceFiles(
       json.packageManager = `yarn@${packageManagerVersion}`;
       return json;
     });
+    // avoids errors when using nested yarn projects
+    tree.write(join(options.directory, 'yarn.lock'), '');
   }
   setPresetProperty(tree, options);
   addNpmScripts(tree, options);
