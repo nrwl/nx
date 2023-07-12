@@ -189,12 +189,28 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
     it('should add test-storybook target', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
-        configureTestRunner: true,
+        interactionTests: true,
         uiFramework: '@storybook/react-webpack5',
       });
 
       expect(
         readJson(tree, 'package.json').devDependencies['@storybook/test-runner']
+      ).toBeTruthy();
+
+      expect(
+        readJson(tree, 'package.json').devDependencies[
+          '@storybook/testing-library'
+        ]
+      ).toBeTruthy();
+
+      expect(
+        readJson(tree, 'package.json').devDependencies['@storybook/jest']
+      ).toBeTruthy();
+
+      expect(
+        readJson(tree, 'package.json').devDependencies[
+          '@storybook/addon-interactions'
+        ]
       ).toBeTruthy();
 
       const project = readProjectConfiguration(tree, 'test-ui-lib');

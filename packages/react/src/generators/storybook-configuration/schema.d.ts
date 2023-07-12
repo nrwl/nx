@@ -10,6 +10,6 @@ export interface StorybookConfigureSchema {
   linter?: Linter;
   cypressDirectory?: string;
   ignorePaths?: string[];
-  configureTestRunner?: boolean;
+  interactionTests?: boolean;
   configureStaticServe?: boolean;
 }

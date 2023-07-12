@@ -35,7 +35,7 @@ export function addStorybookTask(
   tree: Tree,
   projectName: string,
   uiFramework: string,
-  configureTestRunner: boolean
+  interactionTests: boolean
 ) {
   if (uiFramework === '@storybook/react-native') {
     return;
@@ -68,7 +68,7 @@ export function addStorybookTask(
     },
   };
 
-  if (configureTestRunner === true) {
+  if (interactionTests === true) {
     projectConfig.targets['test-storybook'] = {
       executor: 'nx:run-commands',
       options: {
@@ -83,7 +83,7 @@ export function addStorybookTask(
 export function addAngularStorybookTask(
   tree: Tree,
   projectName: string,
-  configureTestRunner: boolean
+  interactionTests: boolean
 ) {
   const projectConfig = readProjectConfiguration(tree, projectName);
   const { ngBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
@@ -124,7 +124,7 @@ export function addAngularStorybookTask(
     },
   };
 
-  if (configureTestRunner === true) {
+  if (interactionTests === true) {
     projectConfig.targets['test-storybook'] = {
       executor: 'nx:run-commands',
       options: {
@@ -497,6 +497,7 @@ export function createProjectStorybookDir(
   root: string,
   projectType: string,
   projectIsRootProjectInStandaloneWorkspace: boolean,
+  interactionTests: boolean,
   mainDir?: string,
   isNextJs?: boolean,
   usesSwc?: boolean,
@@ -533,6 +534,7 @@ export function createProjectStorybookDir(
     offsetFromRoot: offsetFromRoot(root),
     projectDirectory,
     projectType,
+    interactionTests,
     mainDir,
     isNextJs: isNextJs && projectType === 'application',
     usesSwc,

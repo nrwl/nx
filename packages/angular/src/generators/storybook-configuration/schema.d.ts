@@ -11,5 +11,5 @@ export interface StorybookConfigurationOptions {
   tsConfiguration?: boolean;
   skipFormat?: boolean;
   ignorePaths?: string[];
-  configureTestRunner?: boolean;
+  interactionTests?: boolean;
 }
