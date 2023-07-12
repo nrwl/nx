@@ -4,7 +4,7 @@ import * as ora from 'ora';
 import { join } from 'path';
 
 import {
-  updatePackageManagerFiles,
+  generatePackageManagerFiles,
   getPackageManagerCommand,
   PackageManager,
 } from './utils/package-manager';
@@ -29,19 +29,15 @@ export async function createSandbox(packageManager: PackageManager) {
   try {
     writeFileSync(
       join(tmpDir, 'package.json'),
-      JSON.stringify(
-        {
-          dependencies: {
-            nx: nxVersion,
-            '@nx/workspace': nxVersion,
-          },
-          license: 'MIT',
+      JSON.stringify({
+        dependencies: {
+          nx: nxVersion,
+          '@nx/workspace': nxVersion,
         },
-        null,
-        2
-      )
+        license: 'MIT',
+      })
     );
-    updatePackageManagerFiles(tmpDir, packageManager);
+    generatePackageManagerFiles(tmpDir, packageManager);
 
     await execAndWait(install, tmpDir);
 

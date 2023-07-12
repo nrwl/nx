@@ -129,12 +129,10 @@ export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager(),
   cwd = process.cwd()
 ): string {
-  delete process.env.npm_config_user_agent;
-  delete process.env.npm_execpath;
-
-  return execSync(`${packageManager} --version`, { cwd, env: process.env })
-    .toString('utf-8')
-    .trim();
+  return execSync(`${packageManager} --version`, {
+    cwd,
+    encoding: 'utf-8',
+  }).trim();
 }
 
 /**

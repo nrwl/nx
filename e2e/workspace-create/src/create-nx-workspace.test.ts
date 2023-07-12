@@ -13,6 +13,7 @@ import {
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e/utils';
+import { readFileSync } from 'fs';
 import { existsSync, mkdirSync, rmSync } from 'fs-extra';
 
 describe('create-nx-workspace', () => {
@@ -458,9 +459,10 @@ describe('create-nx-workspace yarn berry', () => {
       cwd: tmpDir,
     });
 
-    expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
-    const packageJson = readJson('package.json');
-    expect(packageJson.packageManager).toMatch(/yarn@3/);
+    expect(existsSync(`${tmpDir}/${wsName}/.yarnrc.yml`)).toBeTruthy();
+    expect(
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+    ).toMatchInlineSnapshot();
   });
 
   it('should create a js workspace with yarn berry', () => {
@@ -472,8 +474,9 @@ describe('create-nx-workspace yarn berry', () => {
       cwd: tmpDir,
     });
 
-    expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
-    const packageJson = readJson('package.json');
-    expect(packageJson.packageManager).toMatch(/yarn@3/);
+    expect(existsSync(`${tmpDir}/${wsName}/.yarnrc.yml`)).toBeTruthy();
+    expect(
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+    ).toMatchInlineSnapshot();
   });
 });

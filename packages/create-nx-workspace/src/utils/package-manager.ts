@@ -70,7 +70,7 @@ export function getPackageManagerCommand(
   }
 }
 
-export function updatePackageManagerFiles(
+export function generatePackageManagerFiles(
   root: string,
   packageManager: PackageManager = detectPackageManager()
 ) {
@@ -82,10 +82,7 @@ export function updatePackageManagerFiles(
         readFileSync(join(root, 'package.json'), 'utf-8')
       );
       packageJson.packageManager = `yarn@${yarnVersion}`;
-      writeFileSync(
-        join(root, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
-      );
+      writeFileSync(join(root, 'package.json'), JSON.stringify(packageJson));
       if (+pmMajor >= 2) {
         writeFileSync(
           join(root, '.yarnrc.yml'),
