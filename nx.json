@@ -88,8 +88,7 @@
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",
         "passWithNoTests": true,
-        "runInBand": 1,
-        "bail": true,
+        "runInBand": true,
         "logHeapUsage": true,
         "detectOpenHandles": true,
         "forceExit": true
