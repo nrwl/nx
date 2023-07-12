@@ -87,7 +87,12 @@
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": true
+        "passWithNoTests": true,
+        "runInBand": 1,
+        "bail": true,
+        "logHeapUsage": true,
+        "detectOpenHandles": true,
+        "forceExit": true
       },
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
