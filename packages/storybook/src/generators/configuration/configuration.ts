@@ -150,7 +150,7 @@ export async function configurationGenerator(
     addStaticTarget(tree, schema);
   }
 
-  // TODO(katerina): remove this feature in 17?
+  // TODO(katerina): remove Cypress for Nx 18
   if (schema.configureCypress) {
     const e2eProject = await getE2EProjectName(tree, schema.name);
     if (!e2eProject) {
