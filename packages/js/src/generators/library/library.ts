@@ -178,12 +178,13 @@ function addProject(
 
     if (options.bundler === 'esbuild') {
       projectConfiguration.targets.build.options.generatePackageJson = true;
-      projectConfiguration.targets.build.options.format = ['cjs', 'esm'];
+      projectConfiguration.targets.build.options.format = ['cjs'];
     }
 
     if (options.bundler === 'rollup') {
       projectConfiguration.targets.build.options.project = `${options.projectRoot}/package.json`;
       projectConfiguration.targets.build.options.compiler = 'swc';
+      projectConfiguration.targets.build.options.format = ['cjs', 'esm'];
     }
 
     if (options.bundler === 'swc' && options.skipTypeCheck) {
@@ -334,7 +335,10 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
       }
       return {
         ...json,
-        dependencies: determineDependencies(options),
+        dependencies: {
+          ...json.dependencies,
+          ...determineDependencies(options),
+        },
         ...determineEntryFields(options),
       };
     });
@@ -668,8 +672,9 @@ function determineEntryFields(
     case 'rollup':
       return {
         type: 'commonjs',
-        module: './index.cjs',
-        // typings is missing for esbuild currently
+        main: './index.cjs',
+        module: './index.js',
+        // typings is missing for rollup currently
       };
     case 'vite':
       return {
@@ -680,11 +685,10 @@ function determineEntryFields(
         typings: './index.d.ts',
       };
     case 'esbuild':
+      // For libraries intended for Node, use CJS.
       return {
-        // Since we're publishing both formats, skip the type field.
-        // Bundlers or Node will determine the entry point to use.
-        main: 'index.cjs',
-        module: './index.js',
+        type: 'commonjs',
+        main: './index.cjs',
         // typings is missing for esbuild currently
       };
     default: {
