@@ -26,13 +26,15 @@ export function sendCustomEvent(
   action: string,
   category: string,
   label: string,
-  value?: number
+  value?: number,
+  customObject?: Record<string, unknown>
 ): void {
   try {
     gtag('event', action, {
       event_category: category,
       event_label: label,
       value,
+      ...customObject,
     });
   } catch (error) {
     throw new Error(`Cannot send Google Tag event: ${error}`);
