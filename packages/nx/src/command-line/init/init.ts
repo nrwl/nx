@@ -25,7 +25,8 @@ export interface InitArgs {
 }
 
 export async function initHandler(options: InitArgs) {
-  const args = process.argv.slice(2).join(' ');
+  // strip the 'init' command itself so we don't forward it
+  const args = process.argv.slice(3).join(' ');
   const flags = parser(args, {
     boolean: ['useDotNxInstallation'],
     alias: {
