@@ -6,11 +6,7 @@ import { performance } from 'perf_hooks';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile, readYamlFile } from '../utils/fileutils';
 import { logger, NX_PREFIX } from '../utils/logger';
-import {
-  loadNxPlugins,
-  loadNxPluginsSync,
-  readPluginPackageJson,
-} from '../utils/nx-plugin';
+import { loadNxPlugins, loadNxPluginsSync } from '../utils/nx-plugin';
 
 import type { NxJsonConfiguration, TargetDefaults } from './nx-json';
 import {
@@ -18,11 +14,6 @@ import {
   ProjectsConfigurations,
   TargetConfiguration,
 } from './workspace-json-project-json';
-import {
-  Generator,
-  GeneratorsJson,
-  GeneratorsJsonEntry,
-} from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
 import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
@@ -36,7 +27,6 @@ import {
   findProjectForPath,
   normalizeProjectRoot,
 } from '../project-graph/utils/find-project-for-path';
-import { getImplementationFactory, resolveSchema } from './schema-utils';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
@@ -164,69 +154,6 @@ export class Workspaces {
     return projects;
   }
 
-  isNxGenerator(collectionName: string, generatorName: string) {
-    return !this.readGenerator(collectionName, generatorName).isNgCompat;
-  }
-
-  readGenerator(
-    collectionName: string,
-    generatorName: string
-  ): {
-    resolvedCollectionName: string;
-    normalizedGeneratorName: string;
-    schema: any;
-    implementationFactory: () => Generator<unknown>;
-    isNgCompat: boolean;
-    /**
-     * @deprecated(v16): This will be removed in v16, use generatorConfiguration.aliases
-     */
-    aliases: string[];
-    generatorConfiguration: GeneratorsJsonEntry;
-  } {
-    try {
-      const {
-        generatorsFilePath,
-        generatorsJson,
-        resolvedCollectionName,
-        normalizedGeneratorName,
-      } = this.readGeneratorsJson(collectionName, generatorName);
-      const generatorsDir = path.dirname(generatorsFilePath);
-      const generatorConfig =
-        generatorsJson.generators?.[normalizedGeneratorName] ||
-        generatorsJson.schematics?.[normalizedGeneratorName];
-      const isNgCompat = !generatorsJson.generators?.[normalizedGeneratorName];
-      const schemaPath = resolveSchema(generatorConfig.schema, generatorsDir);
-      const schema = readJsonFile(schemaPath);
-      if (!schema.properties || typeof schema.properties !== 'object') {
-        schema.properties = {};
-      }
-      generatorConfig.implementation =
-        generatorConfig.implementation || generatorConfig.factory;
-      const implementationFactory = getImplementationFactory<Generator>(
-        generatorConfig.implementation,
-        generatorsDir
-      );
-      const normalizedGeneratorConfiguration: GeneratorsJsonEntry = {
-        ...generatorConfig,
-        aliases: generatorConfig.aliases ?? [],
-        hidden: !!generatorConfig.hidden,
-      };
-      return {
-        resolvedCollectionName,
-        normalizedGeneratorName,
-        schema,
-        implementationFactory,
-        isNgCompat,
-        aliases: generatorConfig.aliases || [],
-        generatorConfiguration: normalizedGeneratorConfiguration,
-      };
-    } catch (e) {
-      throw new Error(
-        `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
-      );
-    }
-  }
-
   hasNxJson(): boolean {
     const nxJson = path.join(this.root, 'nx.json');
     return existsSync(nxJson);
@@ -262,64 +189,6 @@ export class Workspaces {
       }
     }
   }
-
-  private readGeneratorsJson(
-    collectionName: string,
-    generator: string
-  ): {
-    generatorsFilePath: string;
-    generatorsJson: GeneratorsJson;
-    normalizedGeneratorName: string;
-    resolvedCollectionName: string;
-  } {
-    let generatorsFilePath;
-    if (collectionName.endsWith('.json')) {
-      generatorsFilePath = require.resolve(collectionName, {
-        paths: this.resolvePaths(),
-      });
-    } else {
-      const { json: packageJson, path: packageJsonPath } =
-        readPluginPackageJson(collectionName, this.resolvePaths());
-      const generatorsFile = packageJson.generators ?? packageJson.schematics;
-
-      if (!generatorsFile) {
-        throw new Error(
-          `The "${collectionName}" package does not support Nx generators.`
-        );
-      }
-
-      generatorsFilePath = require.resolve(
-        path.join(path.dirname(packageJsonPath), generatorsFile)
-      );
-    }
-    const generatorsJson = readJsonFile<GeneratorsJson>(generatorsFilePath);
-
-    let normalizedGeneratorName =
-      findFullGeneratorName(generator, generatorsJson.generators) ||
-      findFullGeneratorName(generator, generatorsJson.schematics);
-
-    if (!normalizedGeneratorName) {
-      for (let parent of generatorsJson.extends || []) {
-        try {
-          return this.readGeneratorsJson(parent, generator);
-        } catch (e) {}
-      }
-
-      throw new Error(
-        `Cannot find generator '${generator}' in ${generatorsFilePath}.`
-      );
-    }
-    return {
-      generatorsFilePath,
-      generatorsJson,
-      normalizedGeneratorName,
-      resolvedCollectionName: collectionName,
-    };
-  }
-
-  private resolvePaths() {
-    return this.root ? [this.root, __dirname] : [__dirname];
-  }
 }
 
 function findMatchingProjectInCwd(
@@ -333,26 +202,6 @@ function findMatchingProjectInCwd(
   }
   const matchingProject = findProjectForPath(relativeCwd, projectRootMappings);
   return matchingProject;
-}
-
-function findFullGeneratorName(
-  name: string,
-  generators: {
-    [name: string]: { aliases?: string[] };
-  }
-) {
-  if (generators) {
-    for (let [key, data] of Object.entries<{ aliases?: string[] }>(
-      generators
-    )) {
-      if (
-        key === name ||
-        (data.aliases && (data.aliases as string[]).includes(name))
-      ) {
-        return key;
-      }
-    }
-  }
 }
 
 /**

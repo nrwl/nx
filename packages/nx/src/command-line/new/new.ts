@@ -1,6 +1,6 @@
-import { Workspaces } from '../../config/workspaces';
 import { flushChanges, FsTree } from '../../generators/tree';
 import { combineOptionsForGenerator, handleErrors } from '../../utils/params';
+import { getGeneratorInformation } from '../generate/generator-utils';
 
 function removeSpecialFlags(generatorOptions: { [p: string]: any }): void {
   delete generatorOptions.interactive;
@@ -11,14 +11,12 @@ function removeSpecialFlags(generatorOptions: { [p: string]: any }): void {
 }
 
 export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
-  const ws = new Workspaces(null);
-
   return handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true' || args.verbose,
     async () => {
       const isInteractive = args.interactive;
       const { normalizedGeneratorName, schema, implementationFactory } =
-        ws.readGenerator('@nx/workspace/generators.json', 'new');
+        getGeneratorInformation('@nx/workspace/generators.json', 'new', null);
       removeSpecialFlags(args);
       const combinedOpts = await combineOptionsForGenerator(
         args,

@@ -47,7 +47,6 @@ import {
   toOldFormat,
 } from './angular-json';
 import { normalizeExecutorSchema } from '../command-line/run/executor-utils';
-import { Workspaces } from '../config/workspaces';
 import {
   CustomHasher,
   Executor,
@@ -92,9 +91,7 @@ export async function scheduleTarget(
     require('@angular-devkit/architect/node').WorkspaceNodeModulesArchitectHost;
 
   class WrappedWorkspaceNodeModulesArchitectHost extends AngularWorkspaceNodeModulesArchitectHost {
-    private workspaces = new Workspaces(this.root);
-
-    constructor(private workspace, private root) {
+    constructor(private workspace, private root: string) {
       super(workspace, root);
     }
     async resolveBuilder(builderStr: string): Promise<NodeModulesBuilderInfo> {
@@ -123,7 +120,7 @@ export async function scheduleTarget(
       const { json: packageJson, path: packageJsonPath } =
         readPluginPackageJson(
           nodeModule,
-          this.workspaces['resolvePaths'].bind(this.workspaces)()
+          this.root ? getNxRequirePaths(this.root) : getNxRequirePaths()
         );
       const executorsFile = packageJson.executors ?? packageJson.builders;
 
