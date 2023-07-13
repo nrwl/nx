@@ -9,6 +9,7 @@ export function getAllDependencies(
     ...packageJson.dependencies,
     ...packageJson.devDependencies,
     ...packageJson.peerDependencies,
+    ...packageJson.optionalDependencies,
   };
 }
 
@@ -17,16 +18,4 @@ export function getPackageJson(path: string): PackageJson {
     return readJsonFile(path);
   }
   return {} as PackageJson;
-}
-
-export function removePackageJsonFromFileMap(
-  projectFileMap: ProjectFileMap
-): ProjectFileMap {
-  const newFileMap = {};
-  Object.keys(projectFileMap).forEach((key) => {
-    newFileMap[key] = projectFileMap[key].filter(
-      (f) => !f.file.endsWith('/package.json')
-    );
-  });
-  return newFileMap;
 }

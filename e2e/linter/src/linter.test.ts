@@ -452,6 +452,12 @@ describe('Linter', () => {
           ];
           return json;
         });
+        // Set this to false for now until the `@nx/js:lib` generator is updated to include ts/swc helpers by default.
+        // TODO(jack): Remove this once the above is addressed in another PR.
+        updateJson(`libs/${mylib}/tsconfig.lib.json`, (json) => {
+          json.compilerOptions.importHelpers = false;
+          return json;
+        });
         updateJson(`libs/${mylib}/project.json`, (json) => {
           json.targets.lint.options.lintFilePatterns = [
             `libs/${mylib}/**/*.ts`,
@@ -465,8 +471,7 @@ describe('Linter', () => {
       it('should report dependency check issues', () => {
         const rootPackageJson = readJson('package.json');
         const nxVersion = rootPackageJson.devDependencies.nx;
-        const swcCoreVersion = rootPackageJson.devDependencies['@swc/core'];
-        const swcHelpersVersion = rootPackageJson.dependencies['@swc/helpers'];
+        const tslibVersion = rootPackageJson.devDependencies['tslib'];
 
         let out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain('All files pass linting');
@@ -495,9 +500,6 @@ describe('Linter', () => {
           {
             "dependencies": {
               "@nx/devkit": "${nxVersion}",
-              "@swc/core": "${swcCoreVersion}",
-              "@swc/helpers": "${swcHelpersVersion}",
-              "nx": "${nxVersion}",
             },
             "name": "@proj/${mylib}",
             "type": "commonjs",
