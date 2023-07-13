@@ -22,9 +22,10 @@ let tsModule: typeof import('typescript');
 
 export interface StorybookStoriesSchema {
   project: string;
-  generateCypressSpecs: boolean;
+  interactionTests?: boolean;
   js?: boolean;
   cypressProject?: string;
+  generateCypressSpecs?: boolean;
   ignorePaths?: string[];
   skipFormat?: boolean;
 }
@@ -84,8 +85,9 @@ export function containsComponentDeclaration(
 export async function createAllStories(
   tree: Tree,
   projectName: string,
-  generateCypressSpecs: boolean,
+  interactionTests: boolean,
   js: boolean,
+  generateCypressSpecs?: boolean,
   cypressProject?: string,
   ignorePaths?: string[]
 ) {
@@ -142,6 +144,7 @@ export async function createAllStories(
         componentPath: relativeCmpDir,
         project: projectName,
         skipFormat: true,
+        interactionTests,
       });
 
       if (generateCypressSpecs && e2eProject) {
@@ -164,8 +167,9 @@ export async function storiesGenerator(
   await createAllStories(
     host,
     schema.project,
-    schema.generateCypressSpecs,
+    schema.interactionTests ?? true,
     schema.js,
+    schema.generateCypressSpecs,
     schema.cypressProject,
     schema.ignorePaths
   );

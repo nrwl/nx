@@ -10,7 +10,7 @@ import {
 import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
-  // TODO(katerina): Remove cypress stuff for Nx 17?
+  // TODO(katerina): remove Cypress for Nx 18
   ensurePackage('@nx/cypress', nxVersion);
   const { getE2eProjectName } = await import(
     '@nx/cypress/src/utils/project-name'
@@ -29,6 +29,7 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
     cypressProject,
     ignorePaths: schema.ignorePaths,
     skipFormat: true,
+    interactionTests: schema.interactionTests ?? true,
   });
 }
 
@@ -57,8 +58,8 @@ export async function storybookConfigurationGenerator(
     js: schema.js,
     linter: schema.linter,
     cypressDirectory: schema.cypressDirectory,
-    tsConfiguration: schema.tsConfiguration,
-    interactionTests: schema.interactionTests,
+    tsConfiguration: schema.tsConfiguration ?? true, // default is true
+    interactionTests: schema.interactionTests ?? true, // default is true
     configureStaticServe: schema.configureStaticServe,
     uiFramework:
       bundler === 'vite'
