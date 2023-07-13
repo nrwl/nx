@@ -39,13 +39,9 @@ export async function generateWorkspaceFiles(
   } else if (options.packageManager === 'yarn') {
     if (+packageMajor >= 2) {
       createYarnrcYml(tree, options);
+      // avoids errors when using nested yarn projects
+      tree.write(join(options.directory, 'yarn.lock'), '');
     }
-    updateJson(tree, join(options.directory, 'package.json'), (json) => {
-      json.packageManager = `yarn@${packageManagerVersion}`;
-      return json;
-    });
-    // avoids errors when using nested yarn projects
-    tree.write(join(options.directory, 'yarn.lock'), '');
   }
   setPresetProperty(tree, options);
   addNpmScripts(tree, options);

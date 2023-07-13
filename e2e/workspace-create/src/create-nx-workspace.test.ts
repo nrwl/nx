@@ -446,6 +446,7 @@ describe('create-nx-workspace yarn berry', () => {
     runCommand('yarn set version stable', { cwd: tmpDir });
     // previous command creates a package.json file which we don't want
     rmSync(`${tmpDir}/package.json`);
+    process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
   });
 
   afterEach(() => cleanupProject({ cwd: `${tmpDir}/${wsName}` }));
@@ -462,7 +463,12 @@ describe('create-nx-workspace yarn berry', () => {
     expect(existsSync(`${tmpDir}/${wsName}/.yarnrc.yml`)).toBeTruthy();
     expect(
       readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
-    ).toMatchInlineSnapshot();
+    ).toMatchInlineSnapshot(`
+      "nodeLinker: node-modules
+
+      yarnPath: .yarn/releases/yarn-3.6.1.cjs
+      "
+    `);
   });
 
   it('should create a js workspace with yarn berry', () => {
@@ -477,6 +483,11 @@ describe('create-nx-workspace yarn berry', () => {
     expect(existsSync(`${tmpDir}/${wsName}/.yarnrc.yml`)).toBeTruthy();
     expect(
       readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
-    ).toMatchInlineSnapshot();
+    ).toMatchInlineSnapshot(`
+      "nodeLinker: node-modules
+
+      yarnPath: .yarn/releases/yarn-3.6.1.cjs
+      "
+    `);
   });
 });

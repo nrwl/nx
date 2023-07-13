@@ -36,6 +36,7 @@ export function getPackageManagerCommand(
 ): {
   install: string;
   exec: string;
+  preInstall?: string;
 } {
   const [pmMajor, pmMinor] =
     getPackageManagerVersion(packageManager).split('.');
@@ -45,6 +46,9 @@ export function getPackageManagerCommand(
       const useBerry = +pmMajor >= 2;
       const installCommand = 'yarn install --silent';
       return {
+        preInstall: useBerry
+          ? 'yarn set version stable'
+          : 'yarn set version classic',
         install: useBerry
           ? installCommand
           : `${installCommand} --ignore-scripts`,
@@ -74,20 +78,16 @@ export function generatePackageManagerFiles(
   root: string,
   packageManager: PackageManager = detectPackageManager()
 ) {
+  const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
   switch (packageManager) {
     case 'yarn':
-      const yarnVersion = getPackageManagerVersion(packageManager, root);
-      const [pmMajor] = yarnVersion.split('.');
-      const packageJson = JSON.parse(
-        readFileSync(join(root, 'package.json'), 'utf-8')
-      );
-      packageJson.packageManager = `yarn@${yarnVersion}`;
-      writeFileSync(join(root, 'package.json'), JSON.stringify(packageJson));
       if (+pmMajor >= 2) {
         writeFileSync(
           join(root, '.yarnrc.yml'),
           'nodeLinker: node-modules\nenableScripts: false'
         );
+        // avoids errors when using nested yarn projects
+        writeFileSync(join(root, 'yarn.lock'), '');
       }
       break;
   }
@@ -102,9 +102,10 @@ export function getPackageManagerVersion(
   if (pmVersionCache.has(packageManager)) {
     return pmVersionCache.get(packageManager) as string;
   }
-  const version = execSync(`${packageManager} --version`, { cwd })
-    .toString('utf-8')
-    .trim();
+  const version = execSync(`${packageManager} --version`, {
+    cwd,
+    encoding: 'utf-8',
+  }).trim();
   pmVersionCache.set(packageManager, version);
   return version;
 }
