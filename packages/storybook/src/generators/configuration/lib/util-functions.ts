@@ -719,17 +719,29 @@ export function renameAndMoveOldTsConfig(
 
   const projectTsConfig = joinPathFragments(projectRoot, 'tsconfig.json');
 
-  if (!tree.exists(projectTsConfig)) {
-    return;
+  if (tree.exists(projectTsConfig)) {
+    updateJson(tree, projectTsConfig, (json) => {
+      for (let i = 0; i < json.references?.length; i++) {
+        if (json.references[i].path === './.storybook/tsconfig.json') {
+          json.references[i].path = './tsconfig.storybook.json';
+          break;
+        }
+      }
+      return json;
+    });
   }
 
-  updateJson(tree, projectTsConfig, (json) => {
-    for (let i = 0; i < json.references?.length; i++) {
-      if (json.references[i].path === './.storybook/tsconfig.json') {
-        json.references[i].path = './tsconfig.storybook.json';
-        break;
-      }
-    }
-    return json;
-  });
+  const projectEsLintFile = joinPathFragments(projectRoot, '.eslintrc.json');
+
+  if (tree.exists(projectEsLintFile)) {
+    updateJson(tree, projectEsLintFile, (json) => {
+      const jsonString = JSON.stringify(json);
+      const newJsonString = jsonString.replace(
+        /\.storybook\/tsconfig\.json/g,
+        'tsconfig.storybook.json'
+      );
+      json = JSON.parse(newJsonString);
+      return json;
+    });
+  }
 }
