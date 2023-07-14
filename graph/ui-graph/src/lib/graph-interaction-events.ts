@@ -32,9 +32,16 @@ interface BackgroundClickEvent {
   type: 'BackgroundClick';
 }
 
+interface FileLinkClickEvent {
+  type: 'FileLinkClick';
+  sourceRoot: string;
+  file: string;
+}
+
 export type GraphInteractionEvents =
   | ProjectNodeClickEvent
   | EdgeClickEvent
   | GraphRegeneratedEvent
   | TaskNodeClickEvent
-  | BackgroundClickEvent;
+  | BackgroundClickEvent
+  | FileLinkClickEvent;

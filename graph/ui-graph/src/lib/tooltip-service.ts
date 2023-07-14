@@ -33,11 +33,21 @@ export class GraphTooltipService {
           });
           break;
         case 'EdgeClick':
+          const callback =
+            graph.renderMode === 'nx-console'
+              ? (url) =>
+                  graph.broadcast({
+                    type: 'FileLinkClick',
+                    sourceRoot: event.data.sourceRoot,
+                    file: url,
+                  })
+              : undefined;
           this.openEdgeToolTip(event.ref, {
             type: event.data.type,
             target: event.data.target,
             source: event.data.source,
             fileDependencies: event.data.fileDependencies,
+            fileClickCallback: callback,
           });
           break;
       }
@@ -57,7 +67,11 @@ export class GraphTooltipService {
   }
 
   openEdgeToolTip(ref: VirtualElement, props: ProjectEdgeNodeTooltipProps) {
-    this.currentTooltip = { type: 'projectEdge', ref, props };
+    this.currentTooltip = {
+      type: 'projectEdge',
+      ref,
+      props,
+    };
     this.broadcastChange();
   }
 
