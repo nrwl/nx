@@ -35,6 +35,7 @@ import {
   storybookMajorVersion,
 } from '../../utils/utilities';
 import {
+  coreJsVersion,
   nxVersion,
   storybookJestVersion,
   storybookTestingLibraryVersion,
@@ -189,6 +190,13 @@ export async function configurationGenerator(
 
   if (schema.configureStaticServe) {
     devDeps['@nx/web'] = nxVersion;
+  }
+
+  if (
+    projectType !== 'application' &&
+    schema.uiFramework === '@storybook/react-webpack5'
+  ) {
+    devDeps['core-js'] = coreJsVersion;
   }
 
   tasks.push(addDependenciesToPackageJson(tree, {}, devDeps));
