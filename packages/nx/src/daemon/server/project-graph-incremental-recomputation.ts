@@ -137,6 +137,10 @@ function computeWorkspaceConfigHash(
  * TODO(Cammisuli): remove after 16.4 - Rust watcher handles nested gitignores
  */
 function filterUpdatedFiles(files: string[]) {
+  if (files.length === 0) {
+    return files;
+  }
+
   try {
     const quoted = files.map((f) => '"' + f + '"');
     const ignored = execSync(`git check-ignore ${quoted.join(' ')}`, {
