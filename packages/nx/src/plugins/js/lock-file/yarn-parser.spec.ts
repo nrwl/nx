@@ -616,6 +616,81 @@ describe('yarn LockFile utility', () => {
     });
   });
 
+  describe('auxiliary packages PnP', () => {
+    it('should parse yarn berry pnp', () => {
+      const berryLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/yarn-berry.lock'
+      )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package.json'
+      ));
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(berryLockFile, packageJson, builder);
+      const graph = builder.getUpdatedProjectGraph();
+      expect(Object.keys(graph.externalNodes).length).toEqual(129);
+
+      expect(graph.externalNodes['npm:react']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "88e38092da8839b830cda6feef2e8505dec8ace60579e46aa5490fc3dc9bba0bd50336507dc166f43e3afc1c42939c09fe33b25fae889d6f402721dcd78fca1b",
+            "packageName": "react",
+            "version": "18.2.0",
+          },
+          "name": "npm:react",
+          "type": "npm",
+        }
+      `);
+
+      expect(graph.externalNodes['npm:typescript']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "ee000bc26848147ad423b581bd250075662a354d84f0e06eb76d3b892328d8d4440b7487b5a83e851b12b255f55d71835b008a66cbf8f255a11e4400159237db",
+            "packageName": "typescript",
+            "version": "4.8.4",
+          },
+          "name": "npm:typescript",
+          "type": "npm",
+        }
+      `);
+      expect(graph.externalNodes['npm:@nrwl/devkit']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "7dcc3600998448c496228e062d7edd8ecf959fa1ddb9721e91bb1f60f1a2284fd0e12e09edc022170988e2fb54acf101c79dc09fe9c54a21c9941e682eb73b92",
+            "packageName": "@nrwl/devkit",
+            "version": "15.0.13",
+          },
+          "name": "npm:@nrwl/devkit",
+          "type": "npm",
+        }
+      `);
+      expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "521660853e0c9f1c604cf43d32c75e2b4675e2d912eaec7bb6749716539dd53f1dfaf575a422087f6a53362f5162f9a4b8a88cc1dadf9d7580423fc05137767a",
+            "packageName": "postgres",
+            "version": "https://github.com/charsleysa/postgres.git#commit=3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+          },
+          "name": "npm:postgres",
+          "type": "npm",
+        }
+      `);
+      expect(graph.externalNodes['npm:eslint-plugin-disable-autofix'])
+        .toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "fb7272c37e5701df14a79d0f8a9d6a0cb521972011ba91d70290eefc33fca589307908a6fb63e2985257b1c7cc3839c076d1c8def0caabddf21a91f13d7c8fc1",
+            "packageName": "eslint-plugin-disable-autofix",
+            "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
+          },
+          "name": "npm:eslint-plugin-disable-autofix",
+          "type": "npm",
+        }
+      `);
+    });
+  });
+
   describe('duplicate packages', () => {
     beforeEach(() => {
       const fileSys = {
