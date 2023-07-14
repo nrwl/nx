@@ -87,6 +87,7 @@
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@rollup/plugin-url": "^7.0.0",
     "@schematics/angular": "~16.1.0",
+    "@side/jest-runtime": "^1.1.0",
     "@storybook/addon-essentials": "^7.0.24",
     "@storybook/core-server": "^7.0.24",
     "@storybook/react": "^7.0.24",
@@ -217,7 +218,7 @@
     "nx-cloud": "16.1.0",
     "octokit": "^2.0.14",
     "open": "^8.4.0",
-    "openai":"~3.3.0",
+    "openai": "~3.3.0",
     "ora": "5.3.0",
     "parse-markdown-links": "^1.0.4",
     "parse5": "4.0.0",
@@ -319,6 +320,7 @@
     "license-checker": "^25.0.1",
     "next": "13.3.4",
     "next-seo": "^5.13.0",
+    "node-machine-id": "1.1.12",
     "npm-run-path": "^4.0.1",
     "preact": "10.6.4",
     "react": "18.2.0",
@@ -334,8 +336,7 @@
     "tailwindcss": "3.2.4",
     "tslib": "^2.3.0",
     "vitest": "^0.32.0",
-    "weak-napi": "^2.0.2",
-    "node-machine-id": "1.1.12"
+    "weak-napi": "^2.0.2"
   },
   "resolutions": {
     "minimist": "^1.2.6",
