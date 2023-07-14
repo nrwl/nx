@@ -37,6 +37,7 @@ type YarnDependency = {
 
 export function parseYarnLockfile(
   lockFileContent: string,
+  packageJson: NormalizedPackageJson,
   builder: ProjectGraphBuilder
 ) {
   const { parseSyml } = require('@yarnpkg/parsers');
@@ -103,23 +104,23 @@ function addNodes(
         };
 
         keyMap.set(key, node);
+        // use actual version so we can detect it later based on npm package's version
+        const mapKey =
+          snapshot.version && version !== snapshot.version
+            ? snapshot.version
+            : version;
         if (!nodes.has(packageName)) {
-          nodes.set(packageName, new Map([[version, node]]));
+          nodes.set(packageName, new Map([[mapKey, node]]));
         } else {
-          nodes.get(packageName).set(version, node);
+          nodes.get(packageName).set(mapKey, node);
         }
       });
     });
   });
 
   for (const [packageName, versionMap] of nodes.entries()) {
-    let hoistedNode: ProjectGraphExternalNode;
-    if (versionMap.size === 1) {
-      hoistedNode = versionMap.values().next().value;
-    } else {
-      const hoistedVersion = getHoistedVersion(packageName);
-      hoistedNode = versionMap.get(hoistedVersion);
-    }
+    const hoistedVersion = getHoistedVersion(packageName);
+    const hoistedNode = versionMap.get(hoistedVersion);
     if (hoistedNode) {
       hoistedNode.name = `npm:${packageName}`;
     }
