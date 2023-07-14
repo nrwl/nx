@@ -3,6 +3,7 @@ import { Workspaces } from '../config/workspaces';
 import { removeTasksFromTaskGraph } from './utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DependencyType, ProjectGraph } from '../config/project-graph';
+import * as nxJsonUtils from '../config/nx-json';
 import * as executorUtils from '../command-line/run/executor-utils';
 
 function createMockTask(id: string): Task {
@@ -43,11 +44,7 @@ describe('TasksSchedule', () => {
         },
         roots: ['lib1:build', 'app2:build'],
       };
-      const workspace: Partial<Workspaces> = {
-        readNxJson() {
-          return {};
-        },
-      };
+      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
       jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
         schema: {
           version: 2,
@@ -127,16 +124,9 @@ describe('TasksSchedule', () => {
         endTask: jest.fn(),
         scheduleTask: jest.fn(),
       };
-      taskSchedule = new TasksSchedule(
-        hasher,
-        {},
-        projectGraph,
-        taskGraph,
-        workspace as Workspaces,
-        {
-          lifeCycle,
-        }
-      );
+      taskSchedule = new TasksSchedule(hasher, projectGraph, taskGraph, {
+        lifeCycle,
+      });
     });
 
     describe('Without Batch Mode', () => {
@@ -269,11 +259,7 @@ describe('TasksSchedule', () => {
         },
         roots: ['app1:test', 'app2:test', 'lib1:test'],
       };
-      const workspace: Partial<Workspaces> = {
-        readNxJson() {
-          return {};
-        },
-      };
+      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
       jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
         schema: {
           version: 2,
@@ -353,16 +339,9 @@ describe('TasksSchedule', () => {
         endTask: jest.fn(),
         scheduleTask: jest.fn(),
       };
-      taskSchedule = new TasksSchedule(
-        hasher,
-        {},
-        projectGraph,
-        taskGraph,
-        workspace as Workspaces,
-        {
-          lifeCycle,
-        }
-      );
+      taskSchedule = new TasksSchedule(hasher, projectGraph, taskGraph, {
+        lifeCycle,
+      });
     });
 
     describe('Without Batch Mode', () => {

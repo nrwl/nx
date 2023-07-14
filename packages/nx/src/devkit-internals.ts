@@ -5,3 +5,4 @@
  */
 export { createTempNpmDirectory } from './utils/package-manager';
 export { getExecutorInformation } from './command-line/run/executor-utils';
+export { readNxJson as readNxJsonFromDisk } from './config/nx-json';

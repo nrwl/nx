@@ -17,6 +17,7 @@ import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import { splitByColons, splitTarget } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
+import { CustomHasher } from '../config/misc-interfaces';
 
 export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
@@ -244,9 +245,7 @@ export async function getExecutorNameForTask(
 
 export async function getExecutorForTask(
   task: Task,
-  workspace: Workspaces,
-  projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration
+  projectGraph: ProjectGraph
 ) {
   const executor = await getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
@@ -256,13 +255,9 @@ export async function getExecutorForTask(
 
 export async function getCustomHasher(
   task: Task,
-  workspace: Workspaces,
-  nxJson: NxJsonConfiguration,
   projectGraph: ProjectGraph
-) {
-  const factory = (
-    await getExecutorForTask(task, workspace, projectGraph, nxJson)
-  ).hasherFactory;
+): Promise<CustomHasher> | null {
+  const factory = (await getExecutorForTask(task, projectGraph)).hasherFactory;
   return factory ? factory() : null;
 }
 

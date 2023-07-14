@@ -1,5 +1,5 @@
 import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
-import { readNxJson } from '../config/configuration';
+import { readNxJson } from '../config/nx-json';
 import { NxArgs } from '../utils/command-line-utils';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';

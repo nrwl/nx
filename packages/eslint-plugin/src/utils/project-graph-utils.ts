@@ -9,7 +9,7 @@ import {
   createProjectRootMappings,
   ProjectRootMappings,
 } from 'nx/src/project-graph/utils/find-project-for-path';
-import { readNxJson } from 'nx/src/project-graph/file-utils';
+import { readNxJson } from 'nx/src/config/nx-json';
 import { TargetProjectLocator } from '@nx/js/src/internal';
 import { readProjectFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 

@@ -2,7 +2,7 @@ import { Workspaces } from '../config/workspaces';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
-import { readNxJson } from '../config/configuration';
+import { readNxJson } from '../config/nx-json';
 import { FileData } from '../config/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import type { NxArgs } from '../utils/command-line-utils';
@@ -158,7 +158,6 @@ export { FileData };
 
 // TODO(v16): Remove these exports
 export {
-  readNxJson,
   readAllWorkspaceConfiguration,
   workspaceLayout,
 } from '../config/configuration';

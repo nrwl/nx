@@ -18,7 +18,7 @@ import {
 } from '../../plugins/js/utils/typescript';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
-import { readNxJson } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { chunkify } from '../../utils/chunkify';
 import { allFileData } from '../../utils/all-file-data';

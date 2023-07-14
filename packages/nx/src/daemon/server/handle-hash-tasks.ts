@@ -1,7 +1,7 @@
 import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
-import { readNxJson } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import { fileHasher } from '../../hasher/file-hasher';
 import { setHashEnv } from '../../hasher/set-hash-env';
 

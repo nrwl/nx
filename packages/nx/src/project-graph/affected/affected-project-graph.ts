@@ -11,7 +11,7 @@ import {
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
-import { readNxJson } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';
 
 export async function filterAffected(

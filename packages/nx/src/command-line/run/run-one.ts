@@ -18,7 +18,7 @@ import {
   ProjectsConfigurations,
   TargetDependencyConfig,
 } from '../../config/workspace-json-project-json';
-import { readNxJson } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
 import { generateGraph } from '../graph/graph';
 

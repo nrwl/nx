@@ -4,7 +4,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import { readNxJson } from '../config/configuration';
+import { readNxJson } from '../config/nx-json';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { toOldFormat } from './angular-json';
 

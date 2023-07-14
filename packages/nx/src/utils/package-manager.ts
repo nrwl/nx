@@ -8,7 +8,7 @@ import { readFileIfExisting, writeJsonFile } from './fileutils';
 import { readModulePackageJson } from './package-json';
 import { gte, lt } from 'semver';
 import { workspaceRoot } from './workspace-root';
-import { readNxJson } from '../config/configuration';
+import { readNxJson } from '../config/nx-json';
 
 const execAsync = promisify(exec);
 

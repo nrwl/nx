@@ -27,6 +27,7 @@ import {
   findProjectForPath,
   normalizeProjectRoot,
 } from '../project-graph/utils/find-project-for-path';
+import { readNxJson } from './nx-json';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
@@ -79,7 +80,7 @@ export class Workspaces {
     ) {
       return this.cachedProjectsConfig;
     }
-    const nxJson = this.readNxJson();
+    const nxJson = readNxJson(this.root);
     let projectsConfigurations = buildProjectsConfigurationsFromProjectPaths(
       nxJson,
       globForProjectFiles(
@@ -123,7 +124,7 @@ export class Workspaces {
     _ignorePluginInference?: boolean;
     _includeProjectsFromAngularJson?: boolean;
   }): ProjectsConfigurations & NxJsonConfiguration {
-    const nxJson = this.readNxJson();
+    const nxJson = readNxJson(this.root);
     return { ...this.readProjectsConfigurations(opts), ...nxJson };
   }
 
@@ -157,37 +158,6 @@ export class Workspaces {
   hasNxJson(): boolean {
     const nxJson = path.join(this.root, 'nx.json');
     return existsSync(nxJson);
-  }
-
-  readNxJson(): NxJsonConfiguration {
-    const nxJson = path.join(this.root, 'nx.json');
-    if (existsSync(nxJson)) {
-      const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
-      if (nxJsonConfiguration.extends) {
-        const extendedNxJsonPath = require.resolve(
-          nxJsonConfiguration.extends,
-          {
-            paths: [dirname(nxJson)],
-          }
-        );
-        const baseNxJson =
-          readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
-        return {
-          ...baseNxJson,
-          ...nxJsonConfiguration,
-        };
-      } else {
-        return nxJsonConfiguration;
-      }
-    } else {
-      try {
-        return readJsonFile(
-          join(__dirname, '..', '..', 'presets', 'core.json')
-        );
-      } catch (e) {
-        return {};
-      }
-    }
   }
 }
 

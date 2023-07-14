@@ -10,7 +10,7 @@ import {
   unlinkSync,
 } from 'fs-extra';
 import { joinPathFragments } from '../path';
-import { appendFileSync, writeFileSync, renameSync } from 'fs';
+import { appendFileSync, writeFileSync, renameSync, existsSync } from 'fs';
 
 type NestedFiles = {
   [fileName: string]: string;
@@ -52,7 +52,9 @@ export class TempFs {
   }
 
   removeFileSync(filePath: string): void {
-    unlinkSync(joinPathFragments(this.tempDir, filePath));
+    if (existsSync(joinPathFragments(this.tempDir, filePath))) {
+      unlinkSync(joinPathFragments(this.tempDir, filePath));
+    }
   }
 
   appendFile(filePath: string, content: string) {

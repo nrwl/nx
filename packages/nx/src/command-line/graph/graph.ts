@@ -7,7 +7,8 @@ import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
-import { readNxJson, workspaceLayout } from '../../config/configuration';
+import { workspaceLayout } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import { output } from '../../utils/output';
 import { writeJsonFile } from '../../utils/fileutils';
 import {

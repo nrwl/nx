@@ -4,7 +4,7 @@ import {
 } from '../../config/project-graph';
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
-import { readNxJson } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import { fileExists, readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import {

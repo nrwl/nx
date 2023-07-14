@@ -4,6 +4,7 @@
 
 import type { Observable } from 'rxjs';
 import { Workspaces } from '../../config/workspaces';
+import { readNxJson } from '../../config/nx-json';
 import { Executor, ExecutorContext } from '../../config/misc-interfaces';
 
 /**
@@ -17,7 +18,7 @@ export function convertNxExecutor(executor: Executor) {
     const projectsConfigurations = workspaces.readProjectsConfigurations();
 
     const promise = async () => {
-      const nxJsonConfiguration = workspaces.readNxJson();
+      const nxJsonConfiguration = readNxJson(builderContext.workspaceRoot);
       const context: ExecutorContext = {
         root: builderContext.workspaceRoot,
         projectName: builderContext.target.project,

@@ -1,7 +1,7 @@
 import { output } from '../../utils/output';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { execSync } from 'child_process';
-import { readNxJson } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import {
   getNxCloudToken,
   getNxCloudUrl,

@@ -17,7 +17,7 @@ import {
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { isCI } from '../../utils/is-ci';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { readNxJson } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { Workspaces } from '../../config/workspaces';
 import { Message, SocketMessenger } from './socket-messenger';

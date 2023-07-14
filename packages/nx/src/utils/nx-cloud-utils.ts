@@ -1,4 +1,4 @@
-import { readNxJson } from '../config/configuration';
+import { readNxJson } from '../config/nx-json';
 
 export function isNxCloudUsed() {
   const nxJson = readNxJson();

@@ -1,6 +1,6 @@
 jest.mock('fs');
 import * as fs from 'fs';
-import * as configModule from '../config/configuration';
+import * as nxJsonUtils from '../config/nx-json';
 import {
   detectPackageManager,
   modifyYarnRcToFitNewDirectory,
@@ -10,7 +10,7 @@ import {
 describe('package-manager', () => {
   describe('detectPackageManager', () => {
     it('should detect package manager in nxJson', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValueOnce({
         cli: {
           packageManager: 'pnpm',
         },
@@ -21,7 +21,7 @@ describe('package-manager', () => {
     });
 
     it('should detect yarn package manager from yarn.lock', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValueOnce({});
       (fs.existsSync as jest.Mock).mockReturnValueOnce(true);
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('yarn');
@@ -29,7 +29,7 @@ describe('package-manager', () => {
     });
 
     it('should detect pnpm package manager from pnpm-lock.yaml', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValueOnce({});
       (fs.existsSync as jest.Mock).mockImplementation((path) => {
         return path === 'pnpm-lock.yaml';
       });
@@ -39,7 +39,7 @@ describe('package-manager', () => {
     });
 
     it('should use npm package manager as default', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValueOnce({});
       (fs.existsSync as jest.Mock).mockReturnValue(false);
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');

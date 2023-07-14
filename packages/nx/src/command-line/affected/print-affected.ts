@@ -10,10 +10,8 @@ import {
   mapTargetDefaultsToDependencies,
 } from '../../tasks-runner/create-task-graph';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { Workspaces } from '../../config/workspaces';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { hashTask } from '../../hasher/hash-task';
-import { workspaceRoot } from '../../utils/workspace-root';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { fileHasher } from '../../hasher/file-hasher';
 import { printAffectedDeprecationMessage } from './command-object';
@@ -63,7 +61,6 @@ async function createTasks(
   nxJson: NxJsonConfiguration,
   overrides: yargs.Arguments
 ) {
-  const workspaces = new Workspaces(workspaceRoot);
   const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
     nxJson.targetDefaults
   );
@@ -88,7 +85,7 @@ async function createTasks(
   const tasks = Object.values(taskGraph.tasks);
 
   await Promise.all(
-    tasks.map((t) => hashTask(workspaces, hasher, projectGraph, {} as any, t))
+    tasks.map((t) => hashTask(hasher, projectGraph, {} as any, t))
   );
 
   return tasks.map((task) => ({

@@ -26,7 +26,7 @@ import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
-import { readNxJson } from '../config/configuration';
+import { readNxJson } from '../config/nx-json';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
 

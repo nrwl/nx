@@ -27,7 +27,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { ProjectGraph } from '../../config/project-graph';
-import { readNxJson } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import {
   getLastValueFromAsyncIterableIterator,
   isAsyncIterator,

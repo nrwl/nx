@@ -13,7 +13,7 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
-import { readNxJson } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import { isAsyncIterator } from '../../utils/async-iterator';
 import { getExecutorInformation } from '../../command-line/run/executor-utils';
 

@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 
-import { readNxJson } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { Workspaces } from '../../config/workspaces';
 import { FileChange, flushChanges, FsTree } from '../../generators/tree';

@@ -13,7 +13,7 @@ import {
   filterUsingGlobPatterns,
   getTargetInputs,
 } from '../../../hasher/task-hasher';
-import { readNxJson } from '../../../config/configuration';
+import { readNxJson } from '../../../config/nx-json';
 import { readProjectFileMapCache } from '../../../project-graph/nx-deps-cache';
 import { join } from 'path';
 

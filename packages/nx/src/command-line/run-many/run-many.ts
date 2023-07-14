@@ -13,7 +13,7 @@ import {
 } from '../../config/project-graph';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
-import { readNxJson } from '../../config/configuration';
+import { readNxJson } from '../../config/nx-json';
 import { output } from '../../utils/output';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
