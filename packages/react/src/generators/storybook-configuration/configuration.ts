@@ -41,15 +41,16 @@ export async function storybookConfigurationGenerator(
     typeof import('@nx/storybook')
   >('@nx/storybook', nxVersion);
 
-  let bundler = 'vite';
+  let uiFramework = '@storybook/react-vite';
   const projectConfig = readProjectConfiguration(host, schema.name);
 
   if (
-    projectConfig.projectType === 'application' &&
-    (projectConfig.targets['build']?.executor === '@nx/webpack:webpack' ||
-      projectConfig.targets['build']?.executor === '@nrwl/webpack:webpack')
+    projectConfig.targets['build']?.executor === '@nx/webpack:webpack' ||
+    projectConfig.targets['build']?.executor === '@nrwl/webpack:webpack' ||
+    projectConfig.targets['build']?.executor === '@nx/rollup:rollup' ||
+    projectConfig.targets['build']?.executor === '@nrwl/rollup:rollup'
   ) {
-    bundler = 'webpack';
+    uiFramework = '@storybook/react-webpack5';
   }
 
   const installTask = await configurationGenerator(host, {
@@ -61,10 +62,7 @@ export async function storybookConfigurationGenerator(
     tsConfiguration: schema.tsConfiguration ?? true, // default is true
     interactionTests: schema.interactionTests ?? true, // default is true
     configureStaticServe: schema.configureStaticServe,
-    uiFramework:
-      bundler === 'vite'
-        ? '@storybook/react-vite'
-        : '@storybook/react-webpack5',
+    uiFramework: uiFramework as any, // cannot import UiFramework7 type dynamically
     skipFormat: true,
   });
 

@@ -166,6 +166,10 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       expect(
         tree.read('libs/test-ui-lib2/tsconfig.storybook.json', 'utf-8')
       ).toMatchSnapshot();
+
+      expect(
+        readJson(tree, 'package.json').devDependencies['core-js']
+      ).toBeTruthy();
     });
 
     it('should generate TS config for project if tsConfiguration true', async () => {
@@ -195,6 +199,10 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
 
       expect(
         readJson(tree, 'package.json').devDependencies['@storybook/test-runner']
+      ).toBeTruthy();
+
+      expect(
+        readJson(tree, 'package.json').devDependencies['core-js']
       ).toBeTruthy();
 
       expect(
