@@ -165,7 +165,7 @@ export class DaemonClient {
     );
 
     await this.queue.sendToQueue(() =>
-      messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', config })
+      messenger?.sendMessage({ type: 'REGISTER_FILE_WATCHER', config })
     );
 
     return () => {
@@ -295,7 +295,7 @@ export class DaemonClient {
       this.currentResolve = resolve;
       this.currentReject = reject;
 
-      this.socketMessenger.sendMessage(message);
+      this.socketMessenger?.sendMessage(message);
     });
   }
 
