@@ -1,8 +1,6 @@
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
-import {
-  calculateFileChanges,
-  readNxJson,
-} from '../../project-graph/file-utils';
+import { calculateFileChanges } from '../../project-graph/file-utils';
+import { readNxJson } from '../../config/nx-json';
 import {
   NxArgs,
   parseFiles,

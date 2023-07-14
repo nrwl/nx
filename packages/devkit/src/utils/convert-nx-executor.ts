@@ -2,7 +2,7 @@ import type { Observable } from 'rxjs';
 import type { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { requireNx } from '../../nx';
 
-const { Workspaces } = requireNx();
+const { Workspaces, readNxJsonFromDisk } = requireNx();
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
@@ -13,7 +13,9 @@ const { Workspaces } = requireNx();
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
     const workspaces = new Workspaces(builderContext.workspaceRoot);
-    const nxJsonConfiguration = workspaces.readNxJson();
+    const nxJsonConfiguration = readNxJsonFromDisk(
+      builderContext.workspaceRoot
+    );
     const projectsConfigurations = workspaces.readProjectsConfigurations({
       _includeProjectsFromAngularJson: true,
     });

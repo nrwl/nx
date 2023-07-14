@@ -13,7 +13,7 @@ import {
   findProjectForPath,
 } from 'nx/src/project-graph/utils/find-project-for-path';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { readNxJson } from 'nx/src/project-graph/file-utils';
+import { readNxJson } from 'nx/src/config/nx-json';
 
 export const CY_FILE_MATCHER = new RegExp(/\.cy\.[tj]sx?$/);
 /**
