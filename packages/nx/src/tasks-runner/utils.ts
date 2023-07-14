@@ -16,6 +16,7 @@ import { joinPathFragments } from '../utils/path';
 import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import { splitByColons, splitTarget } from '../utils/split-target';
+import { getExecutorInformation } from '../command-line/run/executor-utils';
 
 export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
@@ -250,7 +251,7 @@ export async function getExecutorForTask(
   const executor = await getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
 
-  return workspace.readExecutor(nodeModule, executorName);
+  return getExecutorInformation(nodeModule, executorName, workspaceRoot);
 }
 
 export async function getCustomHasher(

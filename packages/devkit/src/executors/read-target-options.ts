@@ -4,7 +4,7 @@ import type { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { combineOptionsForExecutor } from 'nx/src/utils/params';
 import { requireNx } from '../../nx';
 
-const { Workspaces } = requireNx();
+const { Workspaces, getExecutorInformation } = requireNx();
 
 /**
  * Reads and combines options for a given target.
@@ -22,7 +22,11 @@ export function readTargetOptions<T = any>(
 
   const ws = new Workspaces(context.root);
   const [nodeModule, executorName] = targetConfiguration.executor.split(':');
-  const { schema } = ws.readExecutor(nodeModule, executorName);
+  const { schema } = getExecutorInformation(
+    nodeModule,
+    executorName,
+    context.root
+  );
 
   const defaultProject = ws.calculateDefaultProjectName(
     context.cwd,

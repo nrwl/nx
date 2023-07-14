@@ -46,7 +46,8 @@ import {
   toNewFormat,
   toOldFormat,
 } from './angular-json';
-import { normalizeExecutorSchema, Workspaces } from '../config/workspaces';
+import { normalizeExecutorSchema } from '../command-line/run/executor-utils';
+import { Workspaces } from '../config/workspaces';
 import {
   CustomHasher,
   Executor,
@@ -55,6 +56,11 @@ import {
   TaskGraphExecutor,
 } from '../config/misc-interfaces';
 import { readPluginPackageJson } from '../utils/nx-plugin';
+import {
+  getImplementationFactory,
+  resolveImplementation,
+  resolveSchema,
+} from '../config/schema-utils';
 
 export async function scheduleTarget(
   root: string,
@@ -106,7 +112,7 @@ export async function scheduleTarget(
           readJsonFile<ExecutorsJson>(executorsFilePath).builders[builderName]
             .description,
         optionSchema: builderInfo.schema,
-        import: this.workspaces['resolveImplementation'].bind(this.workspaces)(
+        import: resolveImplementation(
           executorConfig.implementation,
           dirname(executorsFilePath)
         ),
@@ -153,9 +159,7 @@ export async function scheduleTarget(
         const { executorsFilePath, executorConfig, isNgCompat } =
           this.readExecutorsJson(nodeModule, executor);
         const executorsDir = dirname(executorsFilePath);
-        const schemaPath = this.workspaces['resolveSchema'].bind(
-          this.workspaces
-        )(executorConfig.schema, executorsDir);
+        const schemaPath = resolveSchema(executorConfig.schema, executorsDir);
         const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
 
         const implementationFactory = this.getImplementationFactory<Executor>(
@@ -195,10 +199,7 @@ export async function scheduleTarget(
       implementation: string,
       executorsDir: string
     ): () => T {
-      return this.workspaces['getImplementationFactory'].bind(this.workspaces)(
-        implementation,
-        executorsDir
-      );
+      return getImplementationFactory(implementation, executorsDir);
     }
   }
 
