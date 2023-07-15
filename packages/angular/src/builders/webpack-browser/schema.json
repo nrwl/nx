@@ -455,8 +455,7 @@
           "type": "string"
         }
       },
-      "x-priority": "important",
-      "additionalProperties": false
+      "x-priority": "important"
     },
     "indexFileTransformer": {
       "description": "Path to transformer function to transform the index.html",
