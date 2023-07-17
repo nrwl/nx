@@ -154,11 +154,6 @@ export class Workspaces {
     }
     return projects;
   }
-
-  hasNxJson(): boolean {
-    const nxJson = path.join(this.root, 'nx.json');
-    return existsSync(nxJson);
-  }
 }
 
 function findMatchingProjectInCwd(
