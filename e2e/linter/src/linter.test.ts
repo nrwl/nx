@@ -478,12 +478,12 @@ describe('Linter', () => {
             content.replace(/return .*;/, `return names(${mylib}).className;`)
         );
 
-        // output should now report missing dependencies section
+        // output should now report missing dependency
         out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain('they are missing');
         expect(out).toContain('@nx/devkit');
 
-        // should fix the missing section issue
+        // should fix the missing dependency issue
         out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
         expect(out).toContain(
           `Successfully ran target lint for project ${mylib}`

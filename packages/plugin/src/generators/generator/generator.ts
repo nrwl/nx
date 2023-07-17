@@ -17,12 +17,7 @@ import * as path from 'path';
 import { hasGenerator } from '../../utils/has-generator';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
-import {
-  nxVersion,
-  swcCoreVersion,
-  swcHelpersVersion,
-  swcNodeVersion,
-} from '@nx/js/src/utils/versions';
+import { nxVersion } from '@nx/js/src/utils/versions';
 
 type NormalizedSchema = Schema &
   ReturnType<typeof names> & {
@@ -154,10 +149,6 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
       json.dependencies = {
         ...json.dependencies,
         '@nx/devkit': nxVersion,
-        nx: nxVersion,
-        '@swc-node/register': swcNodeVersion,
-        '@swc/core': swcCoreVersion,
-        '@swc/helpers': swcHelpersVersion,
       };
       return json;
     }

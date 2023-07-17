@@ -16,12 +16,7 @@ import type { Schema } from './schema';
 import * as path from 'path';
 import { PackageJson } from 'nx/src/utils/package-json';
 import pluginLintCheckGenerator from '../lint-checks/generator';
-import {
-  nxVersion,
-  swcCoreVersion,
-  swcHelpersVersion,
-  swcNodeVersion,
-} from '@nx/js/src/utils/versions';
+import { nxVersion } from '@nx/js/src/utils/versions';
 
 interface NormalizedSchema extends Schema {
   fileName: string;
@@ -136,10 +131,6 @@ async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
       json.dependencies = {
         ...json.dependencies,
         '@nx/devkit': nxVersion,
-        nx: nxVersion,
-        '@swc-node/register': swcNodeVersion,
-        '@swc/core': swcCoreVersion,
-        '@swc/helpers': swcHelpersVersion,
       };
       return json;
     }
