@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::path::Path;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -10,8 +11,9 @@ use tracing::trace;
 
 use swc_common::{BytePos, SourceFile, SourceMap, Spanned};
 use swc_ecma_ast::EsVersion::EsNext;
+use swc_ecma_parser::error::Error;
 use swc_ecma_parser::lexer::Lexer;
-use swc_ecma_parser::token::Keyword::{Class, Export, Function, Import};
+use swc_ecma_parser::token::Keyword::{Class, Default_, Export, Function, Import};
 use swc_ecma_parser::token::Word::{Ident, Keyword};
 use swc_ecma_parser::token::{BinOpToken, Token, TokenAndSpan};
 use swc_ecma_parser::{Syntax, Tokens, TsConfig};
@@ -46,128 +48,120 @@ fn is_identifier(token: &Token) -> bool {
     matches!(token, Token::Word(Ident(_)))
 }
 
-fn process_file((source_project, file_path): (&String, &String)) -> Option<ImportResult> {
-    let now = Instant::now();
-    let cm = Arc::<SourceMap>::default()
-        .load_file(Path::new(file_path))
-        .unwrap();
+struct State<'a> {
+    lexer: Lexer<'a>,
+    pub current_token: Option<TokenAndSpan>,
+    pub previous_token: Option<TokenAndSpan>,
+    pub import_type: ImportType,
+    open_brace_count: i128,
+    blocks_stack: Vec<BlockType>,
+    next_block_type: BlockType,
+}
 
-    let tsx = file_path.ends_with(".tsx") || file_path.ends_with(".jsx");
-    let mut lexer = Lexer::new(
-        Syntax::Typescript(TsConfig {
-            tsx,
-            decorators: false,
-            dts: file_path.ends_with(".d.ts"),
-            no_early_errors: false,
-            disallow_ambiguous_jsx_like: false,
-        }),
-        EsNext,
-        (&*cm).into(),
-        None,
-    );
+impl<'a> State<'a> {
+    pub fn new(lexer: Lexer<'a>) -> Self {
+        State {
+            lexer,
+            current_token: None,
+            previous_token: None,
+            open_brace_count: 0,
+            blocks_stack: vec![],
+            next_block_type: BlockType::Block,
+            import_type: ImportType::Dynamic,
+        }
+    }
 
-    let mut static_import_expressions: Vec<String> = vec![];
-    let mut dynamic_import_expressions: Vec<String> = vec![];
+    pub fn take_errors(&mut self) -> Vec<Error> {
+        self.lexer.take_errors()
+    }
 
-    // State
-    let mut open_brace_count: i128 = 0;
-
-    let mut current_token: Option<TokenAndSpan> = None;
-    let mut last_token: Option<TokenAndSpan>;
-    let mut import_type: ImportType = ImportType::Dynamic;
-
-    let mut blocks_stack: Vec<BlockType> = vec![];
-    let mut next_block_type = BlockType::Block;
-
-    'outer: loop {
+    pub fn next(&mut self) -> &Option<TokenAndSpan> {
         // Keep the current token as the last token before calling next
-        last_token = current_token;
+        self.previous_token = self.current_token.clone();
 
-        if let Some(t) = lexer.next() {
+        let next = self.lexer.next();
+
+        // Store current token
+        self.current_token = next;
+
+        if let Some(current) = &self.current_token {
             // Keep track of braces/ when blocks begin and end
-            match &t.token {
+            match &current.token {
                 Token::DollarLBrace => {
-                    open_brace_count += 1;
+                    self.open_brace_count += 1;
                 }
                 Token::LBrace => {
-                    open_brace_count += 1;
+                    self.open_brace_count += 1;
 
                     // A new block has opened so push the new block type
-                    blocks_stack.push(next_block_type);
+                    self.blocks_stack.push(self.next_block_type);
                 }
                 Token::RBrace => {
-                    open_brace_count -= 1;
+                    self.open_brace_count -= 1;
 
                     // Reset the next block type
-                    next_block_type = BlockType::Block;
+                    self.next_block_type = BlockType::Block;
 
                     // The block has closed so remove it from the block stack
-                    blocks_stack.pop();
+                    self.blocks_stack.pop();
                 }
                 _ => {}
             }
 
-            // Keeps the current token so it can be kept as the last token later
-            current_token = Some(t);
-        } else {
-            // This is the end of the file, break out of the loop
-            break;
-        }
+            // Keep track of when we are in an object declaration because colons mean different things
+            let in_object_declaration = self.blocks_stack.contains(&BlockType::Object);
 
-        // Keep track of when we are in an object declaration because colons mean different things
-        let in_object_declaration = blocks_stack.contains(&BlockType::Object);
-
-        if let Some(current) = &current_token {
-            let new_line = lexer.had_line_break_before_last();
+            let new_line = self.lexer.had_line_break_before_last();
 
             // This is the beginning of a new statement, reset the import type to the default
             // Reset import type when there is new line not in braces
-            if new_line && open_brace_count == 0 {
-                import_type = ImportType::Dynamic;
+            if new_line && self.open_brace_count == 0 {
+                self.import_type = ImportType::Dynamic;
             }
+
             match &current.token {
                 Token::Word(word) => match word {
                     // Matches something like const a = a as import('a')
                     // This is a static type import
                     Ident(i) if i == "as" => {
-                        import_type = ImportType::Static;
+                        self.import_type = ImportType::Static;
                     }
                     // Matches something like export const = import('a')
                     // This is a dynamic import
                     Keyword(keyword) if *keyword == Export => {
-                        import_type = ImportType::Dynamic;
+                        self.import_type = ImportType::Dynamic;
                     }
 
                     // If a function keyword appears, the next open brace will start a function block
                     Keyword(keyword) if *keyword == Function => {
-                        next_block_type = BlockType::Function;
+                        self.next_block_type = BlockType::Function;
                     }
                     // If a class keyword appears, the next open brace will start a class block
                     Keyword(keyword) if *keyword == Class => {
-                        next_block_type = BlockType::Class;
+                        self.next_block_type = BlockType::Class;
                     }
                     _ => {}
                 },
                 Token::AssignOp(_) => {
                     // When things are assigned, they are dynamic imports
                     // Ex: const a = import('a');
-                    import_type = ImportType::Dynamic;
+                    self.import_type = ImportType::Dynamic;
 
                     // When assigning things, an open brace means an object
-                    next_block_type = BlockType::Object
+                    self.next_block_type = BlockType::Object
                 }
                 // When we see a (, the next brace is an object passed into a function
                 // Matches console.log({ a: import('a') });
                 Token::LParen => {
-                    if let Some(t) = &last_token {
+                    if let Some(t) = &self.previous_token {
                         match t.token {
                             _ if is_identifier(&t.token) => {
                                 // Function Call
-                                next_block_type = BlockType::Object;
+                                self.next_block_type = BlockType::Object;
                             }
                             _ => {
                                 // Arrow Function Declaration
-                                next_block_type = BlockType::ArrowFunction;
+                                self.next_block_type = BlockType::ArrowFunction;
                             }
                         }
                     }
@@ -176,11 +170,11 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
                     BinOpToken::Lt => {
                         // Matches things like Foo<typeof import('a')>
                         // This is a static import
-                        if let Some(t) = &last_token {
+                        if let Some(t) = &self.previous_token {
                             match t.token {
                                 _ if is_identifier(&t.token) => {
                                     // Generic
-                                    import_type = ImportType::Static;
+                                    self.import_type = ImportType::Static;
                                 }
                                 _ => {}
                             }
@@ -188,7 +182,7 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
                     }
 
                     BinOpToken::Div => {
-                        if let Some(t) = &last_token {
+                        if let Some(t) = &self.previous_token {
                             match t.token {
                                 // Real division of numbers or identifier
                                 // 2 / 1
@@ -203,18 +197,19 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
                                 | Token::RBrace
                                 | Token::RBracket
                                 | Token::Str { .. }
-                                | Token::BackQuote { .. } => {
-                                    continue;
+                                | Token::BackQuote
+                                | Token::JSXTagStart
+                                | Token::JSXName { .. } => {
+                                    return self.next();
                                 }
                                 // Everything else, is the start of a regex
                                 // The lexer needs to know when there's a regex
                                 _ => {
-                                    lexer.set_next_regexp(Some(current_token.span_lo()));
+                                    self.lexer
+                                        .set_next_regexp(Some(self.current_token.span_lo()));
 
-                                    if lexer.next().is_some() {
-                                        lexer.set_next_regexp(None);
-
-                                        continue;
+                                    if let Some(_) = self.next() {
+                                        self.lexer.set_next_regexp(None);
                                     }
                                 }
                             }
@@ -224,244 +219,313 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
                     // When there are binary operations, it is dynamic
                     // Matches things like const a = 3 + (await import('a'))
                     _ => {
-                        import_type = ImportType::Dynamic;
+                        self.import_type = ImportType::Dynamic;
                     }
                 },
                 // When there is a string literal, ${ begins a dynamic expression
-                Token::DollarLBrace => {
-                    import_type = ImportType::Dynamic;
-                }
                 // When functions and methods begin, this starts a dynamic block
-                Token::LBrace => {
-                    import_type = ImportType::Dynamic;
+                Token::DollarLBrace | Token::LBrace => {
+                    self.import_type = ImportType::Dynamic;
                 }
                 // When we see a ; A new dynamic statement begins
                 Token::Semi => {
-                    import_type = ImportType::Dynamic;
+                    self.import_type = ImportType::Dynamic;
                 }
                 Token::Colon => {
-                    if let Some(t) = &last_token {
+                    if let Some(t) = &self.previous_token {
                         match t.token {
                             // Matches { 'a': import('a') }
                             Token::Str { .. } if in_object_declaration => {
                                 // Object Property Assignment
-                                import_type = ImportType::Dynamic
+                                self.import_type = ImportType::Dynamic
                             }
                             // Matches { [a]: import('a') }
                             Token::RBracket if in_object_declaration => {
                                 // Object Property Assignment
-                                import_type = ImportType::Dynamic
+                                self.import_type = ImportType::Dynamic
                             }
                             // Object Property Assignment
                             // Matches { a: import('a') }
                             _ if is_identifier(&t.token) && in_object_declaration => {
-                                import_type = ImportType::Dynamic
+                                self.import_type = ImportType::Dynamic
                             }
                             // Matches const a: typeof import('a')
                             _ => {
                                 // A brace would begin an object type
                                 // Ex: const a: { a: typeof import('a') }
-                                next_block_type = BlockType::ObjectType;
+                                self.next_block_type = BlockType::ObjectType;
                                 // This is a typing and is static
-                                import_type = ImportType::Static;
+                                self.import_type = ImportType::Static;
                             }
                         }
                     }
                 }
                 _ => {}
             }
+        }
 
-            let mut add_import = |import: String| match &import_type {
-                ImportType::Static => {
-                    static_import_expressions.push(import);
-                }
-                ImportType::Dynamic => {
-                    dynamic_import_expressions.push(import);
-                }
-            };
+        &self.current_token
+    }
+}
 
+fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
+    if let Some(next) = state.next() {
+        // This match is pretty strict on what should follow an import, anything else is skipped
+        match &next.token {
+            // This begins a module naming
+            // Ex: import { a } from 'a';
+            Token::LBrace => {}
+            // This indicates a import function call
+            // Ex: import('a')
+            Token::LParen => {
+                let mut maybe_literal = None;
+
+                while let Some(current) = state.next() {
+                    match &current.token {
+                        // If we match a string, then it might be a literal import
+                        Token::Str { value, .. } => {
+                            maybe_literal = Some(value.to_string());
+                        }
+                        Token::RParen => {
+                            // When the function call is closed, add the import if it exists
+                            if let Some(import) = maybe_literal {
+                                return match &state.import_type {
+                                    ImportType::Static => Some((import, ImportType::Static)),
+                                    ImportType::Dynamic => Some((import, ImportType::Dynamic)),
+                                };
+                            }
+                        }
+                        // If we match anything else, continue the outer loop and skip this import
+                        // because it is not a literal import
+                        _ => {
+                            return None;
+                        }
+                    }
+                }
+            }
+            // This is a import star statement
+            // Ex: import * from 'a';
+            Token::BinOp(op) if *op == BinOpToken::Mul => {}
+            Token::Word(word) => match word {
+                // This is a import type statement
+                // Ex: import type { } from 'a';
+                Ident(i) if i == "type" => {
+                    if let Some(next) = state.next() {
+                        // What follows a type import is pretty strict, otherwise ignore it
+                        match &next.token {
+                            // Matches import type {} from 'a';
+                            Token::LBrace => {}
+                            // Matches import type * from 'a';
+                            Token::BinOp(op) if *op == BinOpToken::Mul => {}
+                            // Matches import type Cat from 'a';
+                            Token::Word(word) if matches!(word, Ident(_)) => {}
+                            _ => {
+                                return None;
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            },
+            // Matches: import 'a';
+            Token::Str { value, .. } => {
+                return Some((value.to_string(), ImportType::Static));
+            }
+            _ => {
+                return None;
+            }
+        }
+    }
+
+    // This is a static import because it is not a import function call
+    // import { } from 'a';
+    while let Some(current) = state.next() {
+        if let Token::Str { value, .. } = &current.token {
+            return Some((value.to_string(), ImportType::Static));
+        }
+    }
+
+    None
+}
+
+fn find_specifier_in_export(state: &mut State) -> Option<(String, ImportType)> {
+    if let Some(next) = state.next() {
+        // This match is pretty strict about what follows an export keyword
+        // Everything else is skipped
+        match &next.token {
+            // Matches export { } from 'a';
+            Token::LBrace => {}
+            Token::Word(Ident(i)) if i == "type" => {
+                // Matches an export type
+                if let Some(next) = state.next() {
+                    // What follows is pretty strict
+                    match next.token {
+                        // Matches export type { a } from 'a';
+                        Token::LBrace => {}
+                        // Anything else after a type is a definition, not an import
+                        // Matches export type = 'a';
+                        _ => {
+                            return None;
+                        }
+                    }
+                }
+            }
+            // Matches export * from 'a';
+            Token::BinOp(op) if *op == BinOpToken::Mul => {}
+            _ => {
+                return None;
+            }
+        }
+    }
+
+    while let Some(current) = state.next() {
+        match &current.token {
+            // Matches:
+            // export { A }
+            // export { A as B }
+            // export { A } from
+            // export { A, B } from
+            Token::RBrace | Token::Word(Ident(_)) | Token::Comma => {}
+            Token::Word(Keyword(kw)) if *kw == Default_ => {}
+            // When we find a string, it's a export
+            Token::Str { value, .. } => return Some((value.to_string(), ImportType::Static)),
+            _ => {
+                return None;
+            }
+        }
+    }
+
+    None
+}
+
+fn find_specifier_in_require(state: &mut State) -> Option<(String, ImportType)> {
+    let mut import = None;
+    while let Some(current) = state.next() {
+        match &current.token {
+            // This opens the require call
+            Token::LParen |
+            // Matches things like require.resolve
+            Token::Dot |
+            Token::Word(Ident(_)) => {}
+            // This could be a string literal
+            Token::Str { value, .. } => {
+                import = Some(value.to_string());
+            }
+
+            // When the require call ends, add the require
+            Token::RParen => {
+                if let Some(import) = import {
+                    // When all blocks are object blocks, this is a static require
+                    // Matches things like const a = { a: require('a') };
+                    let static_import = state
+                        .blocks_stack
+                        .iter()
+                        .all(|block_type| matches!(block_type, BlockType::Object));
+
+                    let import_type = if static_import {
+                        ImportType::Static
+                    } else {
+                        ImportType::Dynamic
+                    };
+
+                    return Some((import, import_type));
+                } else {
+                    return None;
+                }
+            }
+            // Anything else means this is not a require of a string literal
+            _ => {
+                return None;
+            }
+        }
+    }
+
+    None
+}
+
+fn process_file((source_project, file_path): (&String, &String)) -> Option<ImportResult> {
+    let now = Instant::now();
+    let cm = Arc::<SourceMap>::default()
+        .load_file(Path::new(file_path))
+        .unwrap();
+
+    let tsx = file_path.ends_with(".tsx") || file_path.ends_with(".jsx");
+    let lexer = Lexer::new(
+        Syntax::Typescript(TsConfig {
+            tsx,
+            decorators: false,
+            dts: file_path.ends_with(".d.ts"),
+            no_early_errors: false,
+            disallow_ambiguous_jsx_like: false,
+        }),
+        EsNext,
+        (&*cm).into(),
+        None,
+    );
+
+    // State
+    let mut state = State::new(lexer);
+
+    let mut static_import_expressions: Vec<String> = vec![];
+    let mut dynamic_import_expressions: Vec<String> = vec![];
+
+    loop {
+        let current_token = state.next();
+
+        // This is the end of the file
+        if current_token.is_none() {
+            break;
+        }
+
+        if let Some(current) = &current_token {
             let word = match &current.token {
                 Token::Word(w) => w,
                 _ => {
                     continue;
                 }
             };
-            match word {
+            let import = match word {
                 // This is an import keyword
                 Keyword(keyword) if *keyword == Import => {
                     if is_code_ignored(&cm, current.span.lo) {
                         continue;
                     }
 
-                    if let Some(next) = lexer.next() {
-                        // This match is pretty strict on what should follow an import, anything else is skipped
-                        match next.token {
-                            // This begins a module naming
-                            // Ex: import { a } from 'a';
-                            Token::LBrace => {}
-                            // This indicates a import function call
-                            // Ex: import('a')
-                            Token::LParen => {
-                                let mut maybe_literal = None;
-                                for current in lexer.by_ref() {
-                                    match current.token {
-                                        // If we match a string, then it might be a literal import
-                                        Token::Str { value, .. } => {
-                                            maybe_literal = Some(value.to_string());
-                                        }
-                                        Token::RParen => {
-                                            // When the function call is closed, add the import if it exists
-                                            if let Some(maybe_literal) = maybe_literal {
-                                                add_import(maybe_literal);
-                                                continue 'outer;
-                                            }
-                                        }
-                                        // If we match anything else, continue the outer loop and skip this import
-                                        // because it is not a literal import
-                                        _ => {
-                                            continue 'outer;
-                                        }
-                                    }
-                                }
-                            }
-                            // This is a import star statement
-                            // Ex: import * from 'a';
-                            Token::BinOp(op) if op == BinOpToken::Mul => {}
-                            Token::Word(word) => match word {
-                                // This is a import type statement
-                                // Ex: import type { } from 'a';
-                                Ident(i) if &i == "type" => {
-                                    if let Some(next) = lexer.next() {
-                                        // What follows a type import is pretty strict, otherwise ignore it
-                                        match next.token {
-                                            // Matches import type {} from 'a';
-                                            Token::LBrace => {}
-                                            // Matches import type * from 'a';
-                                            Token::BinOp(op) if op == BinOpToken::Mul => {}
-                                            // Matches import type Cat from 'a';
-                                            Token::Word(word) if matches!(word, Ident(_)) => {}
-                                            _ => {
-                                                continue;
-                                            }
-                                        }
-                                    }
-                                }
-                                _ => {}
-                            },
-                            // Matches: import 'a';
-                            Token::Str { value, .. } => {
-                                static_import_expressions.push(value.to_string());
-                                continue;
-                            }
-                            _ => {
-                                continue;
-                            }
-                        }
-                    }
-
-                    // This is a static import because it is not a import function call
-                    // import { } from 'a';
-                    for current in lexer.by_ref() {
-                        if let Token::Str { value, .. } = current.token {
-                            static_import_expressions.push(value.to_string());
-                            break;
-                        }
-                    }
+                    find_specifier_in_import(&mut state)
                 }
                 Keyword(keyword) if *keyword == Export => {
                     if is_code_ignored(&cm, current.span.lo) {
                         continue;
                     }
-                    if let Some(next) = lexer.next() {
-                        // This match is pretty strict about what follows an export keyword
-                        // Everything else is skipped
-                        match next.token {
-                            // Matches export { } from 'a';
-                            Token::LBrace => {}
-                            Token::Word(word) => match word {
-                                // Matches an export type
-                                Ident(i) if &i == "type" => {
-                                    if let Some(next) = lexer.next() {
-                                        // What follows is pretty strict
-                                        match next.token {
-                                            // Matches export type { a } from 'a';
-                                            Token::LBrace => {}
-                                            // Anything else after a type is a definition, not an import
-                                            // Matches export type = 'a';
-                                            _ => {
-                                                continue;
-                                            }
-                                        }
-                                    }
-                                }
-                                _ => {
-                                    continue;
-                                }
-                            },
-                            // Matches export * from 'a';
-                            Token::BinOp(op) if op == BinOpToken::Mul => {}
-                            _ => {
-                                continue;
-                            }
-                        }
-                    }
-                    for current in lexer.by_ref() {
-                        // When we find a string, it's a export
-                        if let Token::Str { value, .. } = current.token {
-                            static_import_expressions.push(value.to_string());
-                            break;
-                        }
-                    }
+
+                    find_specifier_in_export(&mut state)
                 }
                 Ident(ident) if ident == "require" => {
                     if is_code_ignored(&cm, current.span.lo) {
                         continue;
                     }
-                    let mut import = None;
-                    for current in lexer.by_ref() {
-                        match current.token {
-                            // This opens the require call
-                            Token::LParen => {}
-                            // This could be a string literal
-                            Token::Str { value, .. } => {
-                                import = Some(value.to_string());
-                            }
-                            // Matches things like require.resolve
-                            Token::Dot => {}
-                            Token::Word(Ident(_)) => {}
+                    find_specifier_in_require(&mut state)
+                }
+                _ => None,
+            };
 
-                            // When the require call ends, add the require
-                            Token::RParen => {
-                                if let Some(import) = import {
-                                    // When all blocks are object blocks, this is a static require
-                                    // Matches things like const a = { a: require('a') };
-                                    let static_import = blocks_stack
-                                        .iter()
-                                        .all(|block_type| matches!(block_type, BlockType::Object));
-                                    if static_import {
-                                        static_import_expressions.push(import);
-                                    } else {
-                                        dynamic_import_expressions.push(import);
-                                    }
-                                }
-                                break;
-                            }
-                            // Anything else means this is not a require of a string literal
-                            _ => {
-                                break;
-                            }
-                        }
+            if let Some((specifier, import_type)) = import {
+                match import_type {
+                    ImportType::Static => {
+                        static_import_expressions.push(specifier);
+                    }
+                    ImportType::Dynamic => {
+                        dynamic_import_expressions.push(specifier);
                     }
                 }
-                _ => {}
-            };
+            }
         }
     }
 
     trace!("finding imports in {} {:.2?}", file_path, now.elapsed());
 
     // These are errors from the lexer. They don't always mean something is broken
-    let mut errs = lexer.take_errors();
+    let mut errs = state.take_errors();
     if !errs.is_empty() {
         for err in errs.iter() {
             debug!(
@@ -473,6 +537,11 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
             );
         }
         errs.clear();
+    }
+
+    if file_path == "nx-dev/ui-markdoc/src/lib/tags/graph.component.tsx" {
+        trace!("{:?}", static_import_expressions);
+        trace!("{:?}", dynamic_import_expressions);
     }
 
     Some(ImportResult {
@@ -514,14 +583,14 @@ fn find_imports(project_file_map: HashMap<String, Vec<String>>) -> Vec<ImportRes
         .collect()
 }
 #[cfg(test)]
-mod test {
+mod find_imports {
     use super::*;
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
     use swc_common::comments::NoopComments;
 
     #[test]
-    fn test_find_imports() {
+    fn should_find_imports() {
         let temp_dir = TempDir::new().unwrap();
         temp_dir
             .child("test.ts")
@@ -686,7 +755,7 @@ mod test {
     }
 
     #[test]
-    fn test_find_imports_with_all_sorts_of_imports() {
+    fn should_find_imports_in_all_sorts_of_import_statements() {
         let temp_dir = TempDir::new().unwrap();
         temp_dir
             .child("test.ts")
@@ -733,7 +802,7 @@ mod test {
     }
 
     #[test]
-    fn test_find_imports_with_all_sorts_of_exports() {
+    fn should_find_imports_in_all_sorts_of_export_statements() {
         let temp_dir = TempDir::new().unwrap();
         temp_dir
             .child("test.ts")
@@ -751,6 +820,20 @@ mod test {
 
       const a = 1;
       export class App {}
+
+      export { a as aa }
+
+      export function f() {
+        return 'value-after-export';
+      }
+
+      export { a as aa };
+
+      export { a as default } from 'static-default-export';
+
+      export function f() {
+        return 'value-after-export';
+      }
                 "#,
             )
             .unwrap();
@@ -776,7 +859,7 @@ mod test {
     }
 
     #[test]
-    fn test_find_with_require_statements() {
+    fn should_find_imports_in_all_sorts_of_require_statements() {
         let temp_dir = TempDir::new().unwrap();
         temp_dir
             .child("test.ts")
@@ -814,7 +897,54 @@ mod test {
     }
 
     #[test]
-    fn test_find_imports_should_ignore_lines_with_nx_ignore() {
+    fn should_find_imports_in_tsx_files() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.tsx")
+            .write_str(
+                r#"
+                import dynamic from 'next/dynamic';
+                import { ReactElement, useEffect, useState } from 'react';
+
+
+                export function A() {
+                  return (
+                        <button className="sr-only">Loading...</button>
+                  );
+                }
+                const NxProjectGraphViz = dynamic(
+                  () => import('dynamic-import-after-jsx').then((m) => m.A),
+                  {
+                    ssr: false,
+                    loading: () => <A />,
+                  }
+                );
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.tsx";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]));
+
+        let result = results.get(0).unwrap();
+        let ast_results: ImportResult = find_imports_with_ast(test_file_path);
+
+        assert_eq!(
+            result.static_import_expressions,
+            ast_results.static_import_expressions
+        );
+        assert_eq!(
+            result.dynamic_import_expressions,
+            ast_results.dynamic_import_expressions
+        );
+    }
+
+    #[test]
+    fn should_ignore_lines_with_nx_ignore() {
         let temp_dir = TempDir::new().unwrap();
         temp_dir
             .child("test.ts")
@@ -851,7 +981,7 @@ mod test {
     }
 
     #[test]
-    fn find_imports_should_find_imports_around_template_literals() {
+    fn should_find_imports_around_template_literals() {
         let temp_dir = TempDir::new().unwrap();
         temp_dir
             .child("test.ts")
@@ -897,7 +1027,7 @@ mod test {
     }
 
     #[test]
-    fn find_imports_should_find_imports_after_regexp() {
+    fn should_find_imports_after_regexp() {
         let temp_dir = TempDir::new().unwrap();
         temp_dir
             .child("test.ts")
@@ -937,7 +1067,6 @@ mod test {
         let result = results.get(0).unwrap();
         let ast_results: ImportResult = find_imports_with_ast(test_file_path);
 
-        dbg!(&result);
         assert_eq!(
             result.static_import_expressions,
             ast_results.static_import_expressions
@@ -954,7 +1083,7 @@ mod test {
             .load_file(Path::new(file_path.as_str()))
             .unwrap();
 
-        let mut errs: Vec<swc_ecma_parser::error::Error> = vec![];
+        let mut errs: Vec<Error> = vec![];
         let tsx = file_path.ends_with(".tsx") || file_path.ends_with(".jsx");
 
         let module = swc_ecma_parser::parse_file_as_module(
