@@ -182,3 +182,8 @@ export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
     }
   }
 }
+
+export function hasNxJson(root: string): boolean {
+  const nxJson = join(root, 'nx.json');
+  return existsSync(nxJson);
+}
