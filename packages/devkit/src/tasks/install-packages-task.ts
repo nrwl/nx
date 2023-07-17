@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { type ExecSyncOptions, execSync } from 'child_process';
 import { join } from 'path';
 import { requireNx } from '../../nx';
 
@@ -38,9 +38,13 @@ export function installPackagesTask(
   if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
     global['__packageJsonInstallCache__'] = packageJsonValue;
     const pmc = getPackageManagerCommand(packageManager);
-    execSync(pmc.install, {
+    const execSyncOptions: ExecSyncOptions = {
       cwd: join(tree.root, cwd),
       stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
-    });
+    };
+    if (pmc.preInstall) {
+      execSync(pmc.preInstall, execSyncOptions);
+    }
+    execSync(pmc.install, execSyncOptions);
   }
 }

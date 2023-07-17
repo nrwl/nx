@@ -11,6 +11,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   beforeEach(() => {
     tree = createTree();
+    // we need an actual path for the package manager version check
+    tree.root = process.cwd();
   });
 
   it('should create files', async () => {

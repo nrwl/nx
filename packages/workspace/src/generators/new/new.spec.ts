@@ -32,6 +32,8 @@ describe('new', () => {
 
   beforeEach(() => {
     tree = createTree();
+    // we need an actual path for the package manager version check
+    tree.root = process.cwd();
   });
 
   it('should generate an empty nx.json', async () => {

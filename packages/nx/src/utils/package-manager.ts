@@ -61,7 +61,7 @@ export function getPackageManagerCommand(
 ): PackageManagerCommands {
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => {
-      const yarnVersion = getPackageManagerVersion('yarn');
+      const yarnVersion = getPackageManagerVersion('yarn', root);
       const useBerry = gte(yarnVersion, '2.0.0');
 
       return {
@@ -81,7 +81,7 @@ export function getPackageManagerCommand(
       };
     },
     pnpm: () => {
-      const pnpmVersion = getPackageManagerVersion('pnpm');
+      const pnpmVersion = getPackageManagerVersion('pnpm', root);
       const useExec = gte(pnpmVersion, '6.13.0');
       const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
       const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
@@ -126,9 +126,13 @@ export function getPackageManagerCommand(
  * but it can also be passed in explicitly.
  */
 export function getPackageManagerVersion(
-  packageManager: PackageManager = detectPackageManager()
+  packageManager: PackageManager = detectPackageManager(),
+  cwd = process.cwd()
 ): string {
-  return execSync(`${packageManager} --version`).toString('utf-8').trim();
+  return execSync(`${packageManager} --version`, {
+    cwd,
+    encoding: 'utf-8',
+  }).trim();
 }
 
 /**

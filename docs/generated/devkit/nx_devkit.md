@@ -1397,7 +1397,7 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 ### getPackageManagerVersion
 
-▸ **getPackageManagerVersion**(`packageManager?`): `string`
+▸ **getPackageManagerVersion**(`packageManager?`, `cwd?`): `string`
 
 Returns the version of the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -1408,6 +1408,7 @@ but it can also be passed in explicitly.
 | Name             | Type                                                                |
 | :--------------- | :------------------------------------------------------------------ |
 | `packageManager` | [`PackageManager`](../../devkit/documents/nx_devkit#packagemanager) |
+| `cwd`            | `string`                                                            |
 
 #### Returns
 
