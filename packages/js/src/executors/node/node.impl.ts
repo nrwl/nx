@@ -8,6 +8,7 @@ import {
   ProjectGraphProjectNode,
   readTargetOptions,
   runExecutor,
+  Target,
 } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { daemonClient } from 'nx/src/daemon/client/client';
@@ -60,6 +61,14 @@ export async function* nodeExecutor(
   const buildTargetExecutor =
     project.data.targets[buildTarget.target]?.executor;
 
+  if (
+    buildTargetExecutor === 'nx:run-commands' ||
+    buildTargetExecutor === '@nrwl/workspace:run-commands'
+  ) {
+    // Run commands does not emit build event, so we have to switch to run entire build through Nx CLI.
+    options.runBuildTargetDependencies = true;
+  }
+
   const buildOptions: Record<string, any> = {
     ...readTargetOptions(buildTarget, context),
     ...options.buildTargetOptions,
@@ -85,8 +94,9 @@ export async function* nodeExecutor(
     buildTargetExecutor
   );
 
-  const tasks: ActiveTask[] = [];
+  let additionalExitHandler: null | (() => void) = null;
   let currentTask: ActiveTask = null;
+  const tasks: ActiveTask[] = [];
 
   yield* createAsyncIterable<{
     success: boolean;
@@ -107,66 +117,26 @@ export async function* nodeExecutor(
       options.debounce ?? 1_000
     );
 
-    const addToQueue = async () => {
+    const addToQueue = async (
+      childProcess: null | ChildProcess,
+      buildResult: Promise<{ success: boolean }>
+    ) => {
       const task: ActiveTask = {
         id: randomUUID(),
         killed: false,
-        childProcess: null,
+        childProcess,
         promise: null,
         start: async () => {
-          if (options.runBuildTargetDependencies) {
-            // If task dependencies are to be run, then we need to run through CLI since `runExecutor` doesn't support it.
-            task.promise = new Promise<void>(async (resolve, reject) => {
-              task.childProcess = fork(
-                require.resolve('nx'),
-                [
-                  'run',
-                  `${context.projectName}:${buildTarget.target}${
-                    buildTarget.configuration
-                      ? `:${buildTarget.configuration}`
-                      : ''
-                  }`,
-                ],
-                {
-                  cwd: context.root,
-                  stdio: 'inherit',
-                }
-              );
-              task.childProcess.once('exit', (code) => {
-                if (code === 0) resolve();
-                else reject();
-              });
-            });
-          } else {
-            const output = await runExecutor(
-              buildTarget,
-              {
-                ...options.buildTargetOptions,
-                watch: false, // we'll handle the watch in this executor
-              },
-              context
-            );
-            task.promise = new Promise(async (resolve, reject) => {
-              let error = false;
-              let event;
-              do {
-                event = await output.next();
-                if (event.value?.success === false) {
-                  error = true;
-                }
-              } while (!event.done);
-              if (error) reject();
-              else resolve();
-            });
-          }
-
           // Wait for build to finish.
-          try {
-            await task.promise;
-          } catch {
+          const result = await buildResult;
+
+          if (!result.success) {
             // If in watch-mode, don't throw or else the process exits.
             if (options.watch) {
-              logger.error(`Build failed, waiting for changes to restart...`);
+              if (!task.killed) {
+                // Only log build error if task was not killed by a new change.
+                logger.error(`Build failed, waiting for changes to restart...`);
+              }
               return;
             } else {
               throw new Error(`Build failed. See above for errors.`);
@@ -234,8 +204,35 @@ export async function* nodeExecutor(
       tasks.push(task);
     };
 
-    if (options.watch) {
-      const stopWatch = await daemonClient.registerFileWatcher(
+    if (options.runBuildTargetDependencies) {
+      // If a all dependencies need to be rebuild on changes, then register with watcher
+      // and run through CLI, otherwise only the current project will rebuild.
+      const runBuild = async () => {
+        let childProcess: ChildProcess = null;
+        const whenReady = new Promise<{ success: boolean }>(async (resolve) => {
+          childProcess = fork(
+            require.resolve('nx'),
+            [
+              'run',
+              `${context.projectName}:${buildTarget.target}${
+                buildTarget.configuration ? `:${buildTarget.configuration}` : ''
+              }`,
+            ],
+            {
+              cwd: context.root,
+              stdio: 'inherit',
+            }
+          );
+          childProcess.once('exit', (code) => {
+            if (code === 0) resolve({ success: true });
+            // If process is killed due to current task being killed, then resolve with success.
+            else resolve({ success: !!currentTask?.killed });
+          });
+        });
+        await addToQueue(childProcess, whenReady);
+        await debouncedProcessQueue();
+      };
+      additionalExitHandler = await daemonClient.registerFileWatcher(
         {
           watchProjects: [context.projectName],
           includeDependentProjects: true,
@@ -248,37 +245,52 @@ export async function* nodeExecutor(
             logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
           } else {
             logger.info(`NX File change detected. Restarting...`);
-            await addToQueue();
-            await debouncedProcessQueue();
+            await runBuild();
           }
         }
       );
-
-      const stopAllTasks = (signal: NodeJS.Signals = 'SIGTERM') => {
-        for (const task of tasks) {
-          task.stop(signal);
+      await runBuild(); // run first build
+    } else {
+      // Otherwise, run the build executor, which will not run task dependencies.
+      // This is mostly fine for bundlers like webpack that should already watch for dependency libs.
+      // For tsc/swc or custom build commands, consider using `runBuildTargetDependencies` instead.
+      const output = await runExecutor(
+        buildTarget,
+        {
+          ...options.buildTargetOptions,
+          watch: options.watch,
+        },
+        context
+      );
+      while (true) {
+        const event = await output.next();
+        await addToQueue(null, Promise.resolve(event.value));
+        await debouncedProcessQueue();
+        if (event.done || !options.watch) {
+          break;
         }
-      };
-
-      process.on('SIGTERM', async () => {
-        stopWatch();
-        stopAllTasks('SIGTERM');
-        process.exit(128 + 15);
-      });
-      process.on('SIGINT', async () => {
-        stopWatch();
-        stopAllTasks('SIGINT');
-        process.exit(128 + 2);
-      });
-      process.on('SIGHUP', async () => {
-        stopWatch();
-        stopAllTasks('SIGHUP');
-        process.exit(128 + 1);
-      });
+      }
     }
 
-    await addToQueue();
-    await processQueue();
+    const stopAllTasks = (signal: NodeJS.Signals = 'SIGTERM') => {
+      additionalExitHandler?.();
+      for (const task of tasks) {
+        task.stop(signal);
+      }
+    };
+
+    process.on('SIGTERM', async () => {
+      stopAllTasks('SIGTERM');
+      process.exit(128 + 15);
+    });
+    process.on('SIGINT', async () => {
+      stopAllTasks('SIGINT');
+      process.exit(128 + 2);
+    });
+    process.on('SIGHUP', async () => {
+      stopAllTasks('SIGHUP');
+      process.exit(128 + 1);
+    });
   });
 }
 
@@ -345,6 +357,18 @@ function getFileToRun(
   buildOptions: Record<string, any>,
   buildTargetExecutor: string
 ): string {
+  // If using run-commands or another custom executor, then user should set
+  // outputFileName, but we can try the default value that we use.
+  if (!buildOptions?.outputPath && !buildOptions?.outputFileName) {
+    const fallbackFile = path.join('dist', project.data.root, 'main.js');
+    logger.warn(
+      `Build option ${chalk.bold('outputFileName')} not set for ${chalk.bold(
+        project.name
+      )}. Using fallback value of ${chalk.bold(fallbackFile)}.`
+    );
+    return join(context.root, fallbackFile);
+  }
+
   let outputFileName = buildOptions.outputFileName;
 
   if (!outputFileName) {
