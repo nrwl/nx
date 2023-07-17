@@ -54,7 +54,7 @@ export async function recordStat(opts: {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.log(`Record stat. Major: ${major}`);
     }
-    if (major < 10 || major > 15) return; // test version, skip it
+    if (major < 10 || major > 16) return; // test version, skip it
     const axios = require('axios');
     await (axios['default'] ?? axios)
       .create({
