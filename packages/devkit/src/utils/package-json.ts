@@ -10,6 +10,8 @@ import { installPackagesTask } from '../tasks/install-packages-task';
 import { requireNx } from '../../nx';
 import { dirSync } from 'tmp';
 import { join } from 'path';
+import type { PackageManager } from 'nx/src/utils/package-manager';
+import { writeFileSync } from 'fs';
 
 const {
   readJson,
@@ -18,6 +20,7 @@ const {
   workspaceRoot,
   detectPackageManager,
   createTempNpmDirectory,
+  getPackageManagerVersion,
 } = requireNx();
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
@@ -465,6 +468,7 @@ export function ensurePackage<T extends any = any>(
   console.log(`Fetching ${pkg}...`);
   const packageManager = detectPackageManager();
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+  generatePackageManagerFiles(tempDir, packageManager);
   const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
   if (preInstallCommand) {
     // ensure package.json and repo in tmp folder is set to a proper package manager state
@@ -505,6 +509,27 @@ export function ensurePackage<T extends any = any>(
       return null;
     }
     throw e;
+  }
+}
+
+/**
+ * Generates necessary files needed for the package manager to work
+ * and for the node_modules to be accessible.
+ */
+function generatePackageManagerFiles(
+  root: string,
+  packageManager: PackageManager = detectPackageManager()
+) {
+  const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
+  switch (packageManager) {
+    case 'yarn':
+      if (+pmMajor >= 2) {
+        writeFileSync(
+          join(root, '.yarnrc.yml'),
+          'nodeLinker: node-modules\nenableScripts: false'
+        );
+      }
+      break;
   }
 }
 
