@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { basename, dirname, join } from 'path';
 import { tmpdir } from 'os';
 import {
   mkdtempSync,
@@ -8,9 +8,10 @@ import {
   emptyDirSync,
   outputFileSync,
   unlinkSync,
+  mkdirpSync,
 } from 'fs-extra';
 import { joinPathFragments } from '../path';
-import { appendFileSync, writeFileSync, renameSync } from 'fs';
+import { appendFileSync, writeFileSync, renameSync, existsSync } from 'fs';
 
 type NestedFiles = {
   [fileName: string]: string;
@@ -44,7 +45,11 @@ export class TempFs {
   }
 
   createFileSync(filePath: string, content: string) {
-    outputFileSync(joinPathFragments(this.tempDir, filePath), content);
+    let dir = joinPathFragments(this.tempDir, dirname(filePath));
+    if (!existsSync(dir)) {
+      mkdirpSync(dir);
+    }
+    writeFileSync(joinPathFragments(this.tempDir, filePath), content);
   }
 
   async readFile(filePath: string): Promise<string> {
