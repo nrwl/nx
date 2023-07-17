@@ -342,12 +342,6 @@ describe('detox application generator', () => {
             'cd ../../../my-dir/my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
           type: 'android.apk',
         },
-        'android.eas': {
-          binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.apk',
-          build:
-            'npx nx run my-dir-my-app:download --platform android --distribution simulator --output=../../../my-dir/my-app/dist/',
-          type: 'android.apk',
-        },
         'android.local': {
           binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.apk',
           build:
@@ -366,12 +360,6 @@ describe('detox application generator', () => {
             '../../../my-dir/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyDirMyApp.app',
           build:
             "cd ../../../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
-          type: 'ios.app',
-        },
-        'ios.eas': {
-          binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.app',
-          build:
-            'npx nx run my-dir-my-app:download --platform ios --distribution simulator --output=../../../my-dir/my-app/dist/',
           type: 'ios.app',
         },
         'ios.local': {

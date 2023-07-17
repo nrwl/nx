@@ -1,6 +1,5 @@
 import { ExecutorContext, names } from '@nx/devkit';
 import { ChildProcess, fork } from 'child_process';
-import { join } from 'path';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { ExpoInstallOptions } from './schema';
@@ -38,7 +37,7 @@ export function installAsync(
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
+      require.resolve('@expo/cli/build/bin/cli'),
       ['install', ...createInstallOptions(options)],
       { cwd: workspaceRoot, env: process.env }
     );

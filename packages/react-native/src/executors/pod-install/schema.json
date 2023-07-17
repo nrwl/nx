@@ -9,9 +9,19 @@
   "type": "object",
   "properties": {
     "buildFolder": {
-      "description": "Location for iOS build artifacts. Corresponds to Xcode's \"-derivedDataPath\". Relative to ios directory",
+      "description": "Location for iOS build artifacts. Corresponds to Xcode's \"-derivedDataPath\". Relative to ios directory.",
       "type": "string",
       "default": "./build"
+    },
+    "repoUpdate": {
+      "description": "Force running `pod repo update` before install.",
+      "type": "boolean",
+      "default": false
+    },
+    "deployment": {
+      "description": "Disallow any changes to the Podfile or the Podfile.lock during installation.",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["buildFolder"]

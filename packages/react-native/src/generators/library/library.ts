@@ -170,7 +170,6 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     {
       ...options,
       ...names(options.name),
-      tmpl: '',
       offsetFromRoot: offsetFromRoot(options.projectRoot),
       rootTsConfigPath: getRelativePathToRootTsConfig(
         host,

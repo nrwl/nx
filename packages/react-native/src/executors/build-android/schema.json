@@ -51,7 +51,8 @@
     "packager": {
       "type": "boolean",
       "description": "Launch packager while building",
-      "default": true
+      "default": true,
+      "x-deprecated": "Run `nx run <project>:start` instead. Will be removed in Nx 17."
     },
     "port": {
       "type": "number",
@@ -59,10 +60,10 @@
       "default": 8081
     },
     "tasks": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
+      "oneOf": [
+        { "type": "array", "items": { "type": "string" } },
+        { "type": "string" }
+      ],
       "description": "Run custom Gradle tasks. By default it's \"assembleDebug\". Will override passed mode and variant arguments.",
       "examples": [
         "assembleDebug",
@@ -79,8 +80,12 @@
       "default": false
     },
     "extraParams": {
-      "type": "string",
-      "description": "Custom params passed to gradle build command"
+      "oneOf": [
+        { "type": "array", "items": { "type": "string" } },
+        { "type": "string" }
+      ],
+      "description": "Custom params passed to gradle build command",
+      "examples": ["-x lint -x test"]
     },
     "interactive": {
       "type": "boolean",
@@ -89,7 +94,8 @@
     "sync": {
       "type": "boolean",
       "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
-      "default": true
+      "default": true,
+      "x-deprecated": "Add sync-deps to dependsOn instead"
     },
     "resetCache": {
       "type": "boolean",
