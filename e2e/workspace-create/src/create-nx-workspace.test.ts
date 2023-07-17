@@ -9,10 +9,12 @@ import {
   getSelectedPackageManager,
   packageManagerLockFile,
   readJson,
+  runCommand,
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e/utils';
-import { existsSync, mkdirSync } from 'fs-extra';
+import { readFileSync } from 'fs';
+import { existsSync, mkdirSync, rmSync } from 'fs-extra';
 
 describe('create-nx-workspace', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
@@ -414,7 +416,7 @@ describe('create-nx-workspace', () => {
   });
 });
 
-describe('create-nx-workspace custom parent folder', () => {
+describe('create-nx-workspace parent folder', () => {
   const tmpDir = `${e2eCwd}/${uniq('with space')}`;
   const wsName = uniq('parent');
   const packageManager = getSelectedPackageManager() || 'pnpm';
@@ -431,5 +433,61 @@ describe('create-nx-workspace custom parent folder', () => {
     });
 
     expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
+  });
+});
+
+describe('create-nx-workspace yarn berry', () => {
+  const tmpDir = `${e2eCwd}/${uniq('yarn-berry')}`;
+  let wsName: string;
+
+  beforeAll(() => {
+    mkdirSync(tmpDir, { recursive: true });
+    runCommand('corepack prepare yarn@stable --activate', { cwd: tmpDir });
+    runCommand('yarn set version stable', { cwd: tmpDir });
+    // previous command creates a package.json file which we don't want
+    rmSync(`${tmpDir}/package.json`);
+    process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
+  });
+
+  afterEach(() => cleanupProject({ cwd: `${tmpDir}/${wsName}` }));
+
+  it('should create a workspace with yarn berry', () => {
+    wsName = uniq('apps');
+
+    runCreateWorkspace(wsName, {
+      preset: 'apps',
+      packageManager: 'yarn',
+      cwd: tmpDir,
+    });
+
+    expect(existsSync(`${tmpDir}/${wsName}/.yarnrc.yml`)).toBeTruthy();
+    expect(
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+    ).toMatchInlineSnapshot(`
+      "nodeLinker: node-modules
+
+      yarnPath: .yarn/releases/yarn-3.6.1.cjs
+      "
+    `);
+  });
+
+  it('should create a js workspace with yarn berry', () => {
+    wsName = uniq('ts');
+
+    runCreateWorkspace(wsName, {
+      preset: 'ts',
+      packageManager: 'yarn',
+      cwd: tmpDir,
+    });
+
+    expect(existsSync(`${tmpDir}/${wsName}/.yarnrc.yml`)).toBeTruthy();
+    expect(
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+    ).toMatchInlineSnapshot(`
+      "nodeLinker: node-modules
+
+      yarnPath: .yarn/releases/yarn-3.6.1.cjs
+      "
+    `);
   });
 });

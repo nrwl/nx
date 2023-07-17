@@ -10,7 +10,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
-import { join, join as pathJoin } from 'path';
+import { join } from 'path';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { NormalizedSchema } from './new';
@@ -22,18 +22,26 @@ export async function generateWorkspaceFiles(
   if (!options.name) {
     throw new Error(`Invalid options, "name" is required.`);
   }
+  // we need to check package manager version before the package.json is generated
+  // since it might influence the version report
+  const packageManagerVersion = getPackageManagerVersion(
+    options.packageManager as PackageManager,
+    tree.root
+  );
   options = normalizeOptions(options);
   createReadme(tree, options);
   createFiles(tree, options);
   createNxJson(tree, options);
 
-  const [packageMajor] = getPackageManagerVersion(
-    options.packageManager as PackageManager
-  ).split('.');
+  const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
     createNpmrc(tree, options);
-  } else if (options.packageManager === 'yarn' && +packageMajor >= 2) {
-    createYarnrcYml(tree, options);
+  } else if (options.packageManager === 'yarn') {
+    if (+packageMajor >= 2) {
+      createYarnrcYml(tree, options);
+      // avoids errors when using nested yarn projects
+      tree.write(join(options.directory, 'yarn.lock'), '');
+    }
   }
   setPresetProperty(tree, options);
   addNpmScripts(tree, options);
@@ -133,7 +141,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
       : options.preset === Preset.NPM || options.preset === Preset.Core
       ? './files-package-based-repo'
       : './files-integrated-repo';
-  generateFiles(tree, pathJoin(__dirname, filesDirName), options.directory, {
+  generateFiles(tree, join(__dirname, filesDirName), options.directory, {
     formattedNames,
     dot: '.',
     tmpl: '',
