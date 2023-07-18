@@ -5,16 +5,8 @@ export function ConfLocation(): JSX.Element {
         <article className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
           <div className="px-5 py-12 md:pr-12">
             <p className="mb-8">
-              Nx Conf 2023 will be located in New York. More details soon.
-              {/* <a
-                href="https://www.hyatt.com/en-US/group-booking/PHXDT/G-NXCF"
-                rel="noreferrer"
-                target="_blank"
-                className="text-blue-500 underline dark:text-sky-500"
-              >
-                Use this link to book your room at a discounted rate
-              </a>
-              . */}
+              Nx Conf 2023 is taking place in New York at the Sheraton Times
+              Square Hotel, West 53rd Street.
             </p>
             <iframe
               title="Nx Conf 2023 Location Map"
