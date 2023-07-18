@@ -22,7 +22,8 @@
           "test-native",
           "sitemap",
           "build-storybook",
-          "copy-docs"
+          "copy-docs",
+          "random-target-to-affect-everything"
         ],
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1,
