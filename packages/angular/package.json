@@ -72,7 +72,8 @@
     "@schematics/angular": ">= 14.0.0 < 17.0.0",
     "@angular-devkit/core": ">= 14.0.0 < 17.0.0",
     "@nguniversal/builders": ">= 14.0.0 < 17.0.0",
-    "rxjs": "^6.5.3 || ^7.5.0"
+    "rxjs": "^6.5.3 || ^7.5.0",
+    "esbuild": "^0.17.5"
   },
   "peerDependenciesMeta": {
     "@nguniversal/builders": {

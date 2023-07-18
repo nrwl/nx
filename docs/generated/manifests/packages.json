@@ -58,6 +58,15 @@
         "path": "/packages/angular/executors/package",
         "type": "executor"
       },
+      "/packages/angular/executors/browser-esbuild": {
+        "description": "Builds your application with esbuild and adds support for incremental builds.",
+        "file": "generated/packages/angular/executors/browser-esbuild.json",
+        "hidden": false,
+        "name": "browser-esbuild",
+        "originalFilePath": "/packages/angular/src/executors/browser-esbuild/schema.json",
+        "path": "/packages/angular/executors/browser-esbuild",
+        "type": "executor"
+      },
       "/packages/angular/executors/webpack-browser": {
         "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
         "file": "generated/packages/angular/executors/webpack-browser.json",
