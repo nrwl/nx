@@ -412,7 +412,6 @@ async function determineNoneOptions(
     } else {
       preset = Preset.NPM;
     }
-    preset = workspaceType === 'standalone' ? Preset.TsStandalone : Preset.TS;
   }
 
   if (parsedArgs.js !== undefined) {
