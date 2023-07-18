@@ -12,6 +12,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
@@ -22,6 +23,16 @@ describe('expo', () => {
 
   beforeAll(() => {
     proj = newProject();
+    // we create empty preset above which skips creation of `production` named input
+    updateJson('nx.json', (nxJson) => {
+      nxJson.namedInputs = {
+        default: ['{projectRoot}/**/*', 'sharedGlobals'],
+        production: ['default'],
+        sharedGlobals: [],
+      };
+      nxJson.targetDefaults.build.inputs = ['production', '^production'];
+      return nxJson;
+    });
     runCLI(`generate @nx/expo:application ${appName} --no-interactive`);
     runCLI(
       `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`

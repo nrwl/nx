@@ -35,10 +35,8 @@ import {
   swcHelpersVersion,
   tsLibVersion,
   typesNodeVersion,
-  tsLibVersion,
   swcNodeVersion,
   swcCoreVersion,
-  swcHelpersVersion,
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
 import { type PackageJson } from 'nx/src/utils/package-json';

@@ -14,6 +14,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
 import { join } from 'path';
@@ -25,6 +26,16 @@ describe('react native', () => {
 
   beforeAll(() => {
     proj = newProject();
+    // we create empty preset above which skips creation of `production` named input
+    updateJson('nx.json', (nxJson) => {
+      nxJson.namedInputs = {
+        default: ['{projectRoot}/**/*', 'sharedGlobals'],
+        production: ['default'],
+        sharedGlobals: [],
+      };
+      nxJson.targetDefaults.build.inputs = ['production', '^production'];
+      return nxJson;
+    });
     runCLI(
       `generate @nx/react-native:application ${appName} --install=false --no-interactive`
     );

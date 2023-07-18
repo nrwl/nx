@@ -15,7 +15,6 @@ import {
   getPackageManagerCommand,
   getSelectedPackageManager,
   runCommand,
-  runCreateWorkspace,
 } from '@nx/e2e/utils';
 
 let proj: string;
@@ -176,6 +175,7 @@ describe('Workspace Tests', () => {
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
         `libs/shared/${lib1}/data-access/**/*.ts`,
+        `libs/shared/${lib1}/data-access/package.json`,
       ]);
 
       /**
@@ -306,6 +306,7 @@ describe('Workspace Tests', () => {
 
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
         `libs/shared/${lib1}/data-access/**/*.ts`,
+        `libs/shared/${lib1}/data-access/package.json`,
       ]);
 
       /**
@@ -434,6 +435,7 @@ describe('Workspace Tests', () => {
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
         `packages/shared/${lib1}/data-access/**/*.ts`,
+        `packages/shared/${lib1}/data-access/package.json`,
       ]);
       expect(project.tags).toEqual([]);
 
@@ -569,6 +571,7 @@ describe('Workspace Tests', () => {
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
         `libs/${lib1}/data-access/**/*.ts`,
+        `libs/${lib1}/data-access/package.json`,
       ]);
 
       /**
@@ -682,6 +685,7 @@ describe('Workspace Tests', () => {
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
         `libs/shared/${lib1}/data-access/**/*.ts`,
+        `libs/shared/${lib1}/data-access/package.json`,
       ]);
 
       /**
