@@ -48,7 +48,6 @@ import {
   toOldFormat,
 } from './angular-json';
 import { normalizeExecutorSchema } from '../command-line/run/executor-utils';
-import { Workspaces } from '../config/workspaces';
 import {
   CustomHasher,
   Executor,
@@ -1033,8 +1032,6 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
   } = await import('@angular-devkit/architect/node');
 
   class WrappedWorkspaceNodeModulesArchitectHost extends AngularWorkspaceNodeModulesArchitectHost {
-    private workspaces = new Workspaces(this.root);
-
     constructor(private workspace, private root) {
       super(workspace, root);
     }
@@ -1064,7 +1061,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
       const { json: packageJson, path: packageJsonPath } =
         readPluginPackageJson(
           nodeModule,
-          this.workspaces['resolvePaths'].bind(this.workspaces)()
+          this.root ? [this.root, __dirname] : [__dirname]
         );
       const executorsFile = packageJson.executors ?? packageJson.builders;
 
