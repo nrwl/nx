@@ -7,6 +7,7 @@ import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-bui
 import { join } from 'path';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-explicit-typescript-and-package-json-dependencies';
 import * as os from 'os';
+import { ExplicitDependency } from './explicit-project-dependencies';
 
 export function buildExplicitDependencies(
   jsPluginConfig: {
@@ -93,6 +94,25 @@ function createWorkerPool(numberOfWorkers: number) {
   return res;
 }
 
+function addDependency(
+  builder: ProjectGraphBuilder,
+  dependency: ExplicitDependency
+) {
+  if (dependency.type === DependencyType.static) {
+    builder.addStaticDependency(
+      dependency.sourceProjectName,
+      dependency.targetProjectName,
+      dependency.sourceProjectFile
+    );
+  } else {
+    builder.addDynamicDependency(
+      dependency.sourceProjectName,
+      dependency.targetProjectName,
+      dependency.sourceProjectFile
+    );
+  }
+}
+
 function buildExplicitDependenciesWithoutWorkers(
   jsPluginConfig: {
     analyzeSourceFiles?: boolean;
@@ -107,21 +127,7 @@ function buildExplicitDependenciesWithoutWorkers(
     ctx.projectsConfigurations,
     builder.graph,
     ctx.filesToProcess
-  ).forEach((r) => {
-    if (r.type === DependencyType.static) {
-      builder.addStaticDependency(
-        r.sourceProjectName,
-        r.targetProjectName,
-        r.sourceProjectFile
-      );
-    } else {
-      builder.addDynamicDependency(
-        r.sourceProjectName,
-        r.targetProjectName,
-        r.sourceProjectFile
-      );
-    }
-  });
+  ).forEach((r) => addDependency(builder, r));
 }
 
 function buildExplicitDependenciesUsingWorkers(
@@ -148,13 +154,7 @@ function buildExplicitDependenciesUsingWorkers(
   return new Promise((res, reject) => {
     for (let w of workers) {
       w.on('message', (explicitDependencies) => {
-        explicitDependencies.forEach((r) => {
-          builder.addExplicitDependency(
-            r.sourceProjectName,
-            r.sourceProjectFile,
-            r.targetProjectName
-          );
-        });
+        explicitDependencies.forEach((r) => addDependency(builder, r));
         if (bins.length > 0) {
           w.postMessage({ filesToProcess: bins.shift() });
         }
