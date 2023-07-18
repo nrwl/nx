@@ -458,5 +458,10 @@
     "name": "@nxlv/python",
     "description": "Nx plugin designed to extend the Nx features to work with Python projects based on Poetry.",
     "url": "https://github.com/lucasvieirasilva/nx-plugins/tree/main/packages/nx-python"
+  },
+  {
+    "name": "nx-gcp-cache",
+    "description": "Nx plugin to use Google Cloud Storage as distributed remote cache",
+    "url": "https://github.com/davidgarciab/nx-gcp-cache"
   }
 ]
