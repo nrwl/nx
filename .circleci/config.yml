@@ -145,7 +145,7 @@ jobs:
       - run:
           name: Set dynamic nx run variable
           command: |
-            echo "export NX_RUN_GROUP=\"run-group-<< parameters.os >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+            echo "export NX_CI_EXECUTION_ENV=\"<< parameters.os >>\";" >> $BASH_ENV
       - setup:
           os: << parameters.os >>
       - run:
@@ -168,7 +168,7 @@ jobs:
       - run:
           name: Set dynamic nx run variable
           command: |
-            echo "export NX_RUN_GROUP=\"run-group-linux-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+            echo "export NX_CI_EXECUTION_ENV=\"linux\";" >> $BASH_ENV
       - setup:
           os: linux
       - nx/set-shas:
@@ -215,7 +215,7 @@ jobs:
       - run:
           name: Set dynamic nx run variable
           command: |
-            echo "export NX_RUN_GROUP=\"run-group-macos-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+            echo "export NX_CI_EXECUTION_ENV=\"macos\";" >> $BASH_ENV
       - setup:
           os: macos
       - rust/install
