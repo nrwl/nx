@@ -16,8 +16,8 @@
     "Playwright",
     "CLI"
   ],
-  "main": "./index",
-  "typings": "./index.d.ts",
+  "main": "./src/index",
+  "typings": "./src/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
