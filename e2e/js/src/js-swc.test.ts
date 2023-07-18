@@ -91,6 +91,12 @@ describe('js e2e', () => {
       return json;
     });
 
+    updateJson(`libs/${lib}/package.json`, (json) => {
+      // Delete automatically generated helper dependency to test legacy behavior.
+      delete json.dependencies['@swc/helpers'];
+      return json;
+    });
+
     runCLI(
       `build ${lib} --generateLockfile=true --updateBuildableProjectDepsInPackageJson`
     );

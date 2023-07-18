@@ -129,6 +129,12 @@ describe('js e2e', () => {
       return json;
     });
 
+    updateJson(`libs/${lib}/package.json`, (json) => {
+      // Delete automatically generated helper dependency to test legacy behavior.
+      delete json.dependencies.tslib;
+      return json;
+    });
+
     runCLI(`build ${lib} --updateBuildableProjectDepsInPackageJson`);
 
     expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
@@ -226,6 +232,12 @@ describe('package.json updates', () => {
         import 'react';
         ${content};
     `;
+    });
+
+    updateJson(`libs/${lib}/package.json`, (json) => {
+      // Delete automatically generated helper dependency to test legacy behavior.
+      delete json.dependencies.tslib;
+      return json;
     });
 
     runCLI(`build ${lib} --updateBuildableProjectDepsInPackageJson`);
