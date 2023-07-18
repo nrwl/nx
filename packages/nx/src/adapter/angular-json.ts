@@ -28,6 +28,7 @@ export function shouldMergeAngularProjects(
 
 export function isAngularPluginInstalled() {
   try {
+    // nx-ignore-next-line
     require.resolve('@nx/angular');
     return true;
   } catch {

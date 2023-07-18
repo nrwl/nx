@@ -18,6 +18,7 @@ import { projectGraphCacheDirectory } from '../../utils/cache-directory';
 import { readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ensureDirSync } from 'fs-extra';
+import { performance } from 'perf_hooks';
 
 export const processProjectGraph: ProjectGraphProcessor = async (
   graph,
@@ -41,7 +42,14 @@ export const processProjectGraph: ProjectGraphProcessor = async (
     }
   }
 
+  performance.mark('build typescript dependencies - start');
   await buildExplicitDependencies(pluginConfig, context, builder);
+  performance.mark('build typescript dependencies - end');
+  performance.measure(
+    'build typescript dependencies',
+    'build typescript dependencies - start',
+    'build typescript dependencies - end'
+  );
 
   return builder.getUpdatedProjectGraph();
 };

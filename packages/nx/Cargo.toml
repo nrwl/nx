@@ -27,6 +27,11 @@ watchexec-filterer-ignore = "1.2.1"
 watchexec-signals = "1.0.0"
 xxhash-rust = { version = '0.8.5', features = ['xxh3', 'xxh64'] }
 
+swc_common = "0.31.16"
+swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
+swc_ecma_visit = "0.93.0"
+swc_ecma_ast = "0.107.0"
+
 [lib]
 crate-type = ['cdylib']
 
@@ -35,3 +40,5 @@ napi-build = '2.0.1'
 
 [dev-dependencies]
 assert_fs = "1.0.10"
+# This is only used for unit tests
+swc_ecma_dep_graph = "0.109.1"
