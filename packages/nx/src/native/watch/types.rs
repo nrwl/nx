@@ -24,11 +24,11 @@ pub struct WatchEvent {
     pub r#type: EventType,
 }
 
-impl From<WatchEventInternal> for WatchEvent {
-    fn from(value: WatchEventInternal) -> Self {
+impl From<&WatchEventInternal> for WatchEvent {
+    fn from(value: &WatchEventInternal) -> Self {
         let path = value
             .path
-            .strip_prefix(&value.origin.expect("origin is available"))
+            .strip_prefix(value.origin.as_ref().expect("origin is available"))
             .unwrap_or(&value.path)
             .display()
             .to_string();
