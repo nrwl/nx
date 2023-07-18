@@ -465,6 +465,7 @@ describe('Linter', () => {
       it('should report dependency check issues', () => {
         const rootPackageJson = readJson('package.json');
         const nxVersion = rootPackageJson.devDependencies.nx;
+        const tslibVersion = rootPackageJson.dependencies['tslib'];
 
         let out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain('All files pass linting');
@@ -492,7 +493,7 @@ describe('Linter', () => {
           {
             "dependencies": {
               "@nx/devkit": "${nxVersion}",
-              "tslib": "^2.3.0",
+              "tslib": "${tslibVersion}",
             },
             "main": "./src/index.js",
             "name": "@proj/${mylib}",
