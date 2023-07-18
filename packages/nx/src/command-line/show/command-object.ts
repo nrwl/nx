@@ -41,8 +41,12 @@ export const yargsShowCommand: CommandModule<
         'Show a list of all projects in the workspace'
       )
       .example(
-        '$0 show targets',
-        'Show a list of all targets in the workspace'
+        '$0 show projects --with-target serve',
+        'Show a list of all projects in the workspace that have a "serve" target'
+      )
+      .example(
+        '$0 show project [projectName]',
+        'Shows the resolved configuration for [projectName]'
       ),
   handler: async (args) => {
     showHelp();
@@ -96,13 +100,13 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
 
 const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
   command: 'project <projectName>',
-  describe: 'Show a list of targets in the workspace.',
+  describe: 'Shows resolved project configuration for a given project.',
   builder: (yargs) =>
     yargs
       .positional('projectName', {
         type: 'string',
         alias: 'p',
-        description: 'Show targets for the given project',
+        description: 'Which project should be viewed?',
       })
       .default('json', true)
       .example(
