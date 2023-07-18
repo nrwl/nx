@@ -216,7 +216,7 @@
     "ng-packagr": "~16.1.0",
     "node-fetch": "^2.6.7",
     "nx": "16.6.0-beta.2",
-    "nx-cloud": "16.1.0",
+    "nx-cloud": "16.1.1-beta.2",
     "octokit": "^2.0.14",
     "open": "^8.4.0",
     "openai": "~3.3.0",
