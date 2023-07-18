@@ -1029,6 +1029,12 @@
                   "file": "shared/recipes/add-stack/add-lit"
                 },
                 {
+                  "name": "Add a Qwik Project",
+                  "id": "add-qwik",
+                  "description": "Add a Qwik project to your repo",
+                  "file": "shared/recipes/add-stack/add-qwik"
+                },
+                {
                   "name": "Powering Up React Development With Nx",
                   "id": "react-nx",
                   "file": "shared/examples/react-nx"
