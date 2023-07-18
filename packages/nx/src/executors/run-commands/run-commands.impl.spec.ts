@@ -20,7 +20,20 @@ function readFile(f: string) {
 }
 
 describe('Run Commands', () => {
-  const context = {} as any;
+  const projectName = 'proj';
+  const workspaceRoot = dirSync().name;
+  const projectRoot = dirSync({ dir: workspaceRoot }).name;
+  const context = {
+    root: workspaceRoot,
+    projectName: projectName,
+    workspace: {
+      projects: {
+        [projectName]: {
+          root: projectRoot,
+        },
+      },
+    },
+  } as any;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -190,7 +203,7 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        context
+        {} as any
       );
 
       expect(exec).toHaveBeenCalledTimes(2);
@@ -219,7 +232,7 @@ describe('Run Commands', () => {
           color: true,
           __unparsed__: [],
         },
-        context
+        {} as any
       );
 
       expect(exec).toHaveBeenCalledTimes(2);
@@ -250,7 +263,10 @@ describe('Run Commands', () => {
           cwd: process.cwd(),
           __unparsed__: [],
         },
-        { root } as any
+        {
+          ...context,
+          root,
+        } as any
       );
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).not.toBe('12.0.0');
@@ -271,7 +287,10 @@ describe('Run Commands', () => {
           __unparsed__: [],
         },
 
-        { root } as any
+        {
+          ...context,
+          root,
+        } as any
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
@@ -295,7 +314,10 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
+        {
+          ...context,
+          root,
+        } as any
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
@@ -317,7 +339,10 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
+        {
+          ...context,
+          root,
+        } as any
       );
 
       expect(result).toEqual(expect.objectContaining({ success: false }));
@@ -339,11 +364,80 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
+        {
+          ...context,
+          root,
+        } as any
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).toBe(childFolder);
+    });
+
+    it('should interpolate provided cwd with workspaceRoot', async () => {
+      const childFolder = dirSync({ dir: workspaceRoot }).name;
+      const path = relative(workspaceRoot, childFolder);
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          command: `pwd >> ${f}`,
+          cwd: `{workspaceRoot}/${path}`,
+          __unparsed__: [],
+        },
+        context
+      );
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(normalize(readFile(f))).toEqual(normalize(childFolder));
+    });
+
+    it('should interpolate provided cwd with projectRoot', async () => {
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          command: `pwd >> ${f}`,
+          cwd: '{projectRoot}',
+          __unparsed__: [],
+        },
+        context
+      );
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(normalize(readFile(f))).toEqual(
+        normalize(context.workspace.projects[projectName].root)
+      );
+    });
+
+    it('should interpolate provided cwd containing projectRoot', async () => {
+      const subfolder = dirSync({ dir: projectRoot }).name;
+      const path = relative(projectRoot, subfolder);
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          command: `pwd >> ${f}`,
+          cwd: `{projectRoot}/${path}`,
+          __unparsed__: [],
+        },
+        context
+      );
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(normalize(readFile(f))).toEqual(normalize(subfolder));
+    });
+
+    it('should throw if incorrect usage of workspaceRoot', async () => {
+      try {
+        await runCommands(
+          {
+            command: 'echo foo',
+            cwd: `bla/{workspaceRoot}`,
+            __unparsed__: [],
+          },
+          context
+        );
+        fail('should throw');
+      } catch (e) {
+        expect(e.message).toEqual(
+          `ERROR: Something went wrong in run-commands - Output 'bla/{workspaceRoot}' is invalid. {workspaceRoot} can only be used at the beginning of the expression.`
+        );
+      }
     });
   });
 

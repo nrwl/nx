@@ -4,6 +4,7 @@ import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import * as chalk from 'chalk';
+import { interpolate } from '../../tasks-runner/utils';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -273,8 +274,14 @@ function calculateCwd(
   context: ExecutorContext
 ): string {
   if (!cwd) return context.root;
-  if (path.isAbsolute(cwd)) return cwd;
-  return path.join(context.root, cwd);
+  const interpolatedCwd = interpolate(cwd, {
+    projectRoot: context.workspace.projects[context.projectName]?.root,
+    workspaceRoot: context.root,
+  });
+
+  if (!interpolatedCwd) return context.root;
+  if (path.isAbsolute(interpolatedCwd)) return interpolatedCwd;
+  return path.join(context.root, interpolatedCwd);
 }
 
 function processEnv(color: boolean) {

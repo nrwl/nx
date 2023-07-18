@@ -61,6 +61,20 @@ By setting the `cwd` option, each command will run in the `apps/frontend` folder
 }
 ```
 
+You can also use `{workspaceRoot}` and `{projectRoot}` interpolations in `cwd`:
+
+```json
+"print-project-root": {
+    "executor": "nx:run-commands",
+    "options": {
+        "cwd": "{projectRoot}",
+        "commands": [
+          "echo This is running from the project root: `pwd`",
+        ]
+    }
+}
+```
+
 {% /tab %}
 {% tab label="Interpolating Args" %}
 
