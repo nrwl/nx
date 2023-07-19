@@ -74,14 +74,18 @@ describe('watcher', () => {
 
     watcher.watch((err, paths) => {
       expect(paths.length).toBe(2);
-      expect(paths.find((p) => p.type === 'update')).toMatchObject({
-        path: 'app1/rename.js',
-        type: 'update',
-      });
-      expect(paths.find((p) => p.type === 'delete')).toMatchObject({
-        path: 'app1/main.js',
-        type: 'delete',
-      });
+      expect(paths.find((p) => p.type === 'create')).toMatchInlineSnapshot(`
+        {
+          "path": "app1/rename.js",
+          "type": "create",
+        }
+      `);
+      expect(paths.find((p) => p.type === 'delete')).toMatchInlineSnapshot(`
+        {
+          "path": "app1/main.js",
+          "type": "delete",
+        }
+      `);
       done();
     });
 

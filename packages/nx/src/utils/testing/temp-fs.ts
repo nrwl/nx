@@ -37,8 +37,6 @@ export class TempFs {
   createFilesSync(fileObject: NestedFiles) {
     for (let path of Object.keys(fileObject)) {
       this.createFileSync(path, fileObject[path]);
-      // update the file after creating it to ensure the mtime is different
-      this.appendFile(path, '\n');
     }
   }
 
