@@ -11,6 +11,8 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './<%= directory %>',
+  /* When updating this path, make sure to update the outputs in the project.json */
+  outputDir: '<%= offsetFromRoot %>dist/.playwright/<%= projectRoot %>/test-output',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -25,7 +27,7 @@ export default defineConfig({
       'html',
       {
         outputFolder:
-          '<%= offsetFromRoot %>/dist/playwright/<%= projectRoot %>/playwright-report',
+          '<%= offsetFromRoot %>dist/playwright/<%= projectRoot %>/playwright-report',
       },
     ],
   ],
@@ -76,10 +78,14 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
-  // webServer: {
+  /* Run your local dev server before starting the tests */<% if(webServerCommand && webServerAddress) {%> 
+   webServer: {
+     command: '<%= webServerCommand %>',
+     url: '<%= webServerAddress %>',
+     reuseExistingServer: !process.env.CI,
+   },<% } else {%>// webServer: {
   //   command: 'npm run start',
   //   url: 'http://127.0.0.1:3000',
   //   reuseExistingServer: !process.env.CI,
-  // },
+  // },<% } %>
 });

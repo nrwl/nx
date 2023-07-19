@@ -22,6 +22,8 @@ export async function configurationGenerator(
   generateFiles(tree, path.join(__dirname, 'files'), projectConfig.root, {
     offsetFromRoot: offsetFromRoot(projectConfig.root),
     projectRoot: projectConfig.root,
+    webServerCommand: options.webServerCommand ?? null,
+    webServerAddress: options.webServerAddress ?? null,
     ...options,
   });
 
@@ -67,8 +69,10 @@ function addE2eTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
     throw new Error(`Project ${options.project} already has an e2e target.
 Rename or remove the existing e2e target.`);
   }
+  projectConfig.targets ??= {};
   projectConfig.targets.e2e = {
     executor: '@nx/playwright:playwright',
+    outputs: [`dist/.playwright/${projectConfig.root}`],
     options: {},
   };
   updateProjectConfiguration(tree, options.project, projectConfig);

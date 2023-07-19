@@ -25,6 +25,14 @@
       "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
     },
+    "webServerCommand": {
+      "type": "string",
+      "description": "The command to start the web server."
+    },
+    "webServerAddress": {
+      "type": "string",
+      "description": "The address of the web server."
+    },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
