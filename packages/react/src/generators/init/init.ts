@@ -12,7 +12,6 @@ import {
 
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
-  babelPresetReactVersion,
   nxVersion,
   reactDomVersion,
   reactVersion,

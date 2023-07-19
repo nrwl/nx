@@ -85,7 +85,7 @@
       "e2eTestRunner": {
         "description": "The tool to use for running e2e tests.",
         "type": "string",
-        "enum": ["cypress", "jest", "detox", "none"]
+        "enum": ["cypress", "playwright", "jest", "detox", "none"]
       }
     },
     "required": ["preset", "name"],

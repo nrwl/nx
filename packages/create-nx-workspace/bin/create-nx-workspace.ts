@@ -49,6 +49,7 @@ interface ReactArguments extends BaseArguments {
   style: string;
   bundler: 'webpack' | 'vite' | 'rspack';
   nextAppDir: boolean;
+  e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
 interface AngularArguments extends BaseArguments {
@@ -58,6 +59,7 @@ interface AngularArguments extends BaseArguments {
   style: string;
   routing: boolean;
   standaloneApi: boolean;
+  e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
 interface NodeArguments extends BaseArguments {
@@ -147,6 +149,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('nextAppDir', {
             describe: chalk.dim`Enable the App Router for Next.js`,
             type: 'boolean',
+          })
+          .option('e2eTestRunner', {
+            describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
+            choices: ['cypress', 'playwright', 'none'],
+            type: 'string',
           }),
         withNxCloud,
         withCI,
@@ -448,6 +455,7 @@ async function determineReactOptions(
   let style: undefined | string = undefined;
   let appName: string;
   let bundler: undefined | 'webpack' | 'vite' | 'rspack' = undefined;
+  let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let nextAppDir = false;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.React) {
@@ -497,8 +505,10 @@ async function determineReactOptions(
 
   if (preset === Preset.ReactStandalone || preset === Preset.ReactMonorepo) {
     bundler = await determineReactBundler(parsedArgs);
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
     nextAppDir = await determineNextAppDir(parsedArgs);
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }
 
   if (parsedArgs.style) {
@@ -549,7 +559,7 @@ async function determineReactOptions(
     style = reply.style;
   }
 
-  return { preset, style, appName, bundler, nextAppDir };
+  return { preset, style, appName, bundler, nextAppDir, e2eTestRunner };
 }
 
 async function determineAngularOptions(
@@ -559,6 +569,7 @@ async function determineAngularOptions(
   let style: string;
   let appName: string;
   let standaloneApi: boolean;
+  let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let routing: boolean;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.Angular) {
@@ -609,6 +620,8 @@ async function determineAngularOptions(
     style = reply.style;
   }
 
+  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+
   if (parsedArgs.standaloneApi !== undefined) {
     standaloneApi = parsedArgs.standaloneApi;
   } else {
@@ -655,7 +668,7 @@ async function determineAngularOptions(
     routing = reply.routing === 'Yes';
   }
 
-  return { preset, style, appName, standaloneApi, routing };
+  return { preset, style, appName, standaloneApi, routing, e2eTestRunner };
 }
 
 async function determineNodeOptions(
@@ -949,4 +962,36 @@ async function determineNodeFramework(
     },
   ]);
   return reply.framework;
+}
+
+async function determineE2eTestRunner(
+  parsedArgs: yargs.Arguments<{
+    e2eTestRunner?: 'none' | 'cypress' | 'playwright';
+  }>
+): Promise<'none' | 'cypress' | 'playwright'> {
+  if (parsedArgs.e2eTestRunner) return parsedArgs.e2eTestRunner;
+  const reply = await enquirer.prompt<{
+    e2eTestRunner: 'none' | 'cypress' | 'playwright';
+  }>([
+    {
+      message: 'Test runner to use for end to end (E2E) tests',
+      type: 'autocomplete',
+      name: 'e2eTestRunner',
+      choices: [
+        {
+          name: 'cypress',
+          message: 'Cypress [ https://www.cypress.io/ ]',
+        },
+        {
+          name: 'playwright',
+          message: 'Playwright [ https://playwright.dev/ ]',
+        },
+        {
+          name: 'none',
+          message: 'None',
+        },
+      ],
+    },
+  ]);
+  return reply.e2eTestRunner;
 }
