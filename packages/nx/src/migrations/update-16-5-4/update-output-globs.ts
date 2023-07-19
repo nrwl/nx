@@ -8,19 +8,13 @@ import { TargetConfiguration } from '../../config/workspace-json-project-json';
 import { updateJson } from '../../generators/utils/json';
 import { NxJsonConfiguration } from '../../config/nx-json';
 
-function replaceOutputs(targetConfiguration: TargetConfiguration<any>) {
-  let outputs = [];
-  for (const output of targetConfiguration.outputs ?? []) {
-    // replace {projectRoot}/folder/*.(js|map|ts) to {projectRoot}/folder/*.{js,map,ts}
-    const regex = /\(([^)]+)\)/g;
-    const newOutput = output.replace(regex, (match, group1) => {
-      let replacements = group1.split('|').join(',');
-      return `{${replacements}}`;
-    });
-
-    outputs.push(newOutput);
-  }
-  return outputs;
+function replaceOutput(output: string) {
+  // replace {projectRoot}/folder/*.(js|map|ts) to {projectRoot}/folder/*.{js,map,ts}
+  const regex = /\(([^)]+)\)/g;
+  return output.replace(regex, (match, group1) => {
+    let replacements = group1.split('|').join(',');
+    return `{${replacements}}`;
+  });
 }
 
 export default async function updateOutputsGlobs(tree: Tree) {
@@ -28,13 +22,14 @@ export default async function updateOutputsGlobs(tree: Tree) {
     tree
   ).entries()) {
     for (const [targetName, targetConfiguration] of Object.entries(
-      projectConfiguration.targets
+      projectConfiguration.targets ?? {}
     )) {
       if (!Array.isArray(targetConfiguration.outputs)) {
         continue;
       }
 
-      targetConfiguration.outputs = replaceOutputs(targetConfiguration);
+      targetConfiguration.outputs =
+        targetConfiguration.outputs.map(replaceOutput);
     }
     updateProjectConfiguration(tree, projectName, projectConfiguration);
   }
@@ -48,7 +43,8 @@ export default async function updateOutputsGlobs(tree: Tree) {
           continue;
         }
 
-        targetConfiguration.outputs = replaceOutputs(targetConfiguration);
+        targetConfiguration.outputs =
+          targetConfiguration.outputs.map(replaceOutput);
       }
       return json;
     });
