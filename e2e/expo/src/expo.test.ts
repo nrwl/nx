@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   expectTestsPass,
+  getPackageManagerCommand,
   killPorts,
   newProject,
   promisifiedTreeKill,
@@ -9,6 +10,7 @@ import {
   readResolvedConfiguration,
   runCLI,
   runCLIAsync,
+  runCommand,
   runCommandUntil,
   uniq,
   updateFile,
@@ -127,6 +129,21 @@ describe('expo', () => {
       runCLI(`build ${libName}`);
       checkFilesExist(`dist/libs/${libName}/index.js`);
       checkFilesExist(`dist/libs/${libName}/src/index.d.ts`);
+    }).not.toThrow();
+  });
+
+  it('should tsc app', async () => {
+    expect(() => {
+      const pmc = getPackageManagerCommand();
+      runCommand(
+        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`
+      );
+      checkFilesExist(
+        `dist/out-tsc/apps/${appName}/src/app/App.js`,
+        `dist/out-tsc/apps/${appName}/src/app/App.d.ts`,
+        `dist/out-tsc/libs/${libName}/src/index.js`,
+        `dist/out-tsc/libs/${libName}/src/index.d.ts`
+      );
     }).not.toThrow();
   });
 });
