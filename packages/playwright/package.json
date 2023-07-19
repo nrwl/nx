@@ -29,7 +29,8 @@
     "directory": "packages/playwright"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit"
+    "@nx/devkit": "file:../devkit",
+    "tslib": "^2.3.0"
   },
   "peerDependencies": {
     "@playwright/test": "^1.36.0"

@@ -35,6 +35,26 @@
           }
         ]
       }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "prettier",
+              "typescript",
+              "@angular-devkit/schematics",
+              "@angular-devkit/core",
+              "@angular-devkit/architect"
+            ]
+          }
+        ]
+      }
     }
   ],
   "ignorePatterns": ["!**/*"]

@@ -15,7 +15,6 @@
     "nx-release": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release",
     "prepublishOnly": "node ./scripts/update-package-group.js",
     "version": "pnpm prettier lerna.json --write",
-    "depcheck": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/depcheck",
     "local-registry": "nx local-registry @nx/nx-source",
     "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts && pnpm check-documentation-map",
     "submit-plugin": "node ./scripts/submit-plugin.js",
@@ -153,7 +152,6 @@
     "cytoscape-popper": "^2.0.0",
     "cz-git": "^1.4.0",
     "czg": "^1.4.0",
-    "depcheck": "^1.3.1",
     "detect-port": "^1.5.1",
     "dotenv": "~10.0.0",
     "ejs": "^3.1.7",
@@ -352,7 +350,6 @@
       "check-imports",
       "check-lock-files",
       "check-codeowners",
-      "depcheck",
       "documentation"
     ]
   },

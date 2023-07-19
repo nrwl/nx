@@ -68,6 +68,31 @@
       "rules": {
         "@nx/nx-plugin-checks": "error"
       }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "@nx/webpack",
+              "@nx/cypress",
+              "@nx/jest",
+              "typescript",
+              "react",
+              "webpack",
+              // require.resovle is used for these
+              "@babel/plugin-proposal-decorators",
+              "url-loader",
+              "@svgr/webpack"
+            ]
+          }
+        ]
+      }
     }
   ],
   "ignorePatterns": ["!**/*"]
