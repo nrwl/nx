@@ -2,7 +2,6 @@ use napi::bindgen_prelude::*;
 
 use std::path::PathBuf;
 use tracing::trace;
-use watchexec_events::filekind::FileEventKind;
 use watchexec_events::{Event, Tag};
 
 #[napi(string_enum)]
@@ -67,7 +66,7 @@ impl From<&Event> for WatchEventInternal {
         let path_ref = path.0;
         let event_type = if matches!(path.1, None) && !path_ref.exists() {
             EventType::delete
-        } else if cfg!(target_os = "macos") {
+        } else {
             #[cfg(target_os = "macos")]
             {
                 use std::fs;
@@ -89,11 +88,16 @@ impl From<&Event> for WatchEventInternal {
                     EventType::update
                 }
             }
-        } else {
-            match event_kind {
-                FileEventKind::Create(_) => EventType::create,
-                FileEventKind::Modify(_) => EventType::update,
-                _ => EventType::update,
+
+            #[cfg(not(target_os = "macos"))]
+            {
+                use watchexec_events::filekind::FileEventKind;
+
+                match event_kind {
+                    FileEventKind::Create(_) => EventType::create,
+                    FileEventKind::Modify(_) => EventType::update,
+                    _ => EventType::update,
+                }
             }
         };
 

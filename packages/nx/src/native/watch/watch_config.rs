@@ -2,7 +2,6 @@ use crate::native::watch::utils::get_ignore_files;
 use crate::native::watch::watch_filterer::WatchFilterer;
 use ignore_files::IgnoreFilter;
 use std::sync::Arc;
-use std::time::Duration;
 use tracing::trace;
 use watchexec::config::RuntimeConfig;
 use watchexec_filterer_ignore::IgnoreFilterer;
