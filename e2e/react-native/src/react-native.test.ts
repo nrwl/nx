@@ -194,4 +194,21 @@ describe('react native', () => {
       },
     });
   });
+
+  it('should tsc app', async () => {
+    expect(() => {
+      const pmc = getPackageManagerCommand();
+      runCommand(
+        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`
+      );
+      checkFilesExist(
+        `dist/out-tsc/apps/${appName}/src/main.js`,
+        `dist/out-tsc/apps/${appName}/src/main.d.ts`,
+        `dist/out-tsc/apps/${appName}/src/app/App.js`,
+        `dist/out-tsc/apps/${appName}/src/app/App.d.ts`,
+        `dist/out-tsc/libs/${libName}/src/index.js`,
+        `dist/out-tsc/libs/${libName}/src/index.d.ts`
+      );
+    }).not.toThrow();
+  });
 });
