@@ -11,7 +11,7 @@ import * as autoprefixer from 'autoprefixer';
 import type { ExecutorContext } from '@nx/devkit';
 import { joinPathFragments, logger, names, readJsonFile } from '@nx/devkit';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
@@ -52,7 +52,8 @@ export async function* rollupExecutor(
 
   const project = context.projectsConfigurations.projects[context.projectName];
   const sourceRoot = project.sourceRoot;
-  const { target, dependencies } = calculateProjectDependencies(
+  const { target, dependencies } = calculateProjectBuildableDependencies(
+    context.taskGraph,
     context.projectGraph,
     context.root,
     context.projectName,
