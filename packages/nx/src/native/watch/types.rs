@@ -76,15 +76,13 @@ impl From<&Event> for WatchEventInternal {
 
                 let t = fs::metadata(path_ref).expect("metadata should be available");
 
-                let access_time = t.st_atime();
                 let modified_time = t.st_mtime();
                 let birth_time = t.st_birthtime();
 
                 // if a file is created and updated near the same time, we always get a create event
                 // so we need to check the timestamps to see if it was created or updated
-                // if the access_time is the same as the modified_time, and modified time is the same as birth_time
-                // then it was created
-                if access_time == modified_time && modified_time == birth_time {
+                // if the modified time is the same as birth_time then it was created
+                if modified_time == birth_time {
                     EventType::create
                 } else {
                     EventType::update
