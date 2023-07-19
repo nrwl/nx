@@ -69,8 +69,8 @@ impl From<&Event> for WatchEventInternal {
             EventType::delete
         } else if cfg!(target_os = "macos") {
             #[cfg(target_os = "macos")]
-            use std::fs;
             {
+                use std::fs;
                 use std::os::macos::fs::MetadataExt;
 
                 let t = fs::metadata(path_ref).expect("metadata should be available");
