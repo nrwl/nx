@@ -190,6 +190,22 @@ module.exports = withNx({
         permanent: true,
       });
     }
+    // Plugins Documents
+    for (let s of Object.keys(redirectRules.pluginUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.pluginUrls[s],
+        permanent: true,
+      });
+    }
+    // References
+    for (let s of Object.keys(redirectRules.referenceUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.referenceUrls[s],
+        permanent: true,
+      });
+    }
     // Nesting 5min tutorials in Getting Started
     for (let s of Object.keys(redirectRules.nested5minuteTutorialUrls)) {
       rules.push({
