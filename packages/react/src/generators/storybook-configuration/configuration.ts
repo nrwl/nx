@@ -10,7 +10,7 @@ import {
 import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
-  // TODO(katerina): remove Cypress for Nx 18
+  // TODO(v18): remove Cypress
   ensurePackage('@nx/cypress', nxVersion);
   const { getE2eProjectName } = await import(
     '@nx/cypress/src/utils/project-name'

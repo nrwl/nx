@@ -19,6 +19,7 @@ export const Primary = {
 };
 
 export const Heading: Story = {
+  args: {},
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText(/Welcome to NxWelcome!/gi)).toBeTruthy();
@@ -49,6 +50,10 @@ export const Primary = {
 };
 
 export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();

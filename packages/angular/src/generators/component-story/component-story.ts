@@ -29,6 +29,8 @@ export async function componentStoryGenerator(
   generateFiles(tree, templatesDir, destinationDir, {
     componentFileName: componentFileName,
     componentName: componentName,
+    componentNameSimple: componentFileName.replace('.component', ''),
+    interactionTests: options.interactionTests,
     props: props.filter((p) => typeof p.defaultValue !== 'undefined'),
     tmpl: '',
   });

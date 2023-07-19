@@ -82,7 +82,7 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       }));
     });
 
-    it('should generate files for root app', async () => {
+    it('should generate files for root app - js for tsConfiguration: false', async () => {
       await configurationGenerator(tree, {
         name: 'web',
         uiFramework: '@storybook/react-webpack5',

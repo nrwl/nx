@@ -2,7 +2,6 @@ import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { Tree } from '@nx/devkit';
 import { writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { scamGenerator } from '../scam/scam';
@@ -15,6 +14,7 @@ import { angularStoriesGenerator } from './stories';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
+// TODO(v18): remove Cypress
 
 describe('angularStories generator: libraries', () => {
   const libName = 'test-ui-lib';
@@ -39,7 +39,6 @@ describe('angularStories generator: libraries', () => {
         async () =>
           await angularStoriesGenerator(tree, {
             name: libName,
-            generateCypressSpecs: false,
           })
       ).not.toThrow();
     });
@@ -47,13 +46,9 @@ describe('angularStories generator: libraries', () => {
 
   describe('Stories for non-empty Angular library', () => {
     let tree: Tree;
-    let cypressProjectGenerator;
 
     beforeEach(async () => {
       tree = await createStorybookTestWorkspaceForLib(libName);
-      cypressProjectGenerator = await (
-        await import('@nx/storybook')
-      ).cypressProjectGenerator;
     });
 
     it('should generate stories.ts files', async () => {
@@ -105,56 +100,11 @@ describe('angularStories generator: libraries', () => {
       ).toBeTruthy();
     });
 
-    it('should generate cypress spec files', async () => {
-      await cypressProjectGenerator(tree, {
-        linter: Linter.EsLint,
-        name: libName,
-      });
-
-      await angularStoriesGenerator(tree, {
-        name: libName,
-        generateCypressSpecs: true,
-      });
-
-      expect(
-        tree.exists(
-          `apps/${libName}-e2e/src/e2e/barrel-button/barrel-button.component.cy.ts`
-        )
-      ).toBeTruthy();
-      expect(
-        tree.exists(
-          `apps/${libName}-e2e/src/e2e/nested-button/nested-button.component.cy.ts`
-        )
-      ).toBeTruthy();
-      expect(
-        tree.exists(
-          `apps/${libName}-e2e/src/e2e/test-button/test-button.component.cy.ts`
-        )
-      ).toBeTruthy();
-      expect(
-        tree.exists(
-          `apps/${libName}-e2e/src/e2e/test-other/test-other.component.cy.ts`
-        )
-      ).toBeTruthy();
-      expect(
-        tree.read(
-          `apps/${libName}-e2e/src/e2e/test-button/test-button.component.cy.ts`,
-          'utf-8'
-        )
-      ).toMatchSnapshot();
-    });
-
     it('should run twice without errors', async () => {
-      await cypressProjectGenerator(tree, {
-        linter: Linter.EsLint,
-        name: libName,
-      });
-
       try {
         await angularStoriesGenerator(tree, { name: libName });
         await angularStoriesGenerator(tree, {
           name: libName,
-          generateCypressSpecs: true,
         });
       } catch {
         fail('Should not fail when running it twice.');
@@ -162,14 +112,8 @@ describe('angularStories generator: libraries', () => {
     });
 
     it('should handle modules with variable declarations rather than literals', async () => {
-      await cypressProjectGenerator(tree, {
-        linter: Linter.EsLint,
-        name: libName,
-      });
-
       await angularStoriesGenerator(tree, {
         name: libName,
-        generateCypressSpecs: true,
       });
 
       expect(
@@ -182,27 +126,11 @@ describe('angularStories generator: libraries', () => {
           `libs/${libName}/src/lib/variable-declare/variable-declare-view/variable-declare-view.component.stories.ts`
         )
       ).toBeTruthy();
-      expect(
-        tree.exists(
-          `apps/${libName}-e2e/src/e2e/variable-declare-button/variable-declare-button.component.cy.ts`
-        )
-      ).toBeTruthy();
-      expect(
-        tree.exists(
-          `apps/${libName}-e2e/src/e2e/variable-declare-view/variable-declare-view.component.cy.ts`
-        )
-      ).toBeTruthy();
     });
 
     it('should handle modules with where components are spread into the declarations array', async () => {
-      await cypressProjectGenerator(tree, {
-        linter: Linter.EsLint,
-        name: libName,
-      });
-
       await angularStoriesGenerator(tree, {
         name: libName,
-        generateCypressSpecs: true,
       });
 
       expect(
@@ -220,33 +148,11 @@ describe('angularStories generator: libraries', () => {
           `libs/${libName}/src/lib/variable-spread-declare/variable-spread-declare-view/variable-spread-declare-view.component.stories.ts`
         )
       ).toBeTruthy();
-
-      expect(
-        tree.exists(
-          `apps/${libName}-e2e/src/e2e/variable-spread-declare-button/variable-spread-declare-button.component.cy.ts`
-        )
-      ).toBeTruthy();
-      expect(
-        tree.exists(
-          `apps/${libName}-e2e/src/e2e/variable-spread-declare-view/variable-spread-declare-view.component.cy.ts`
-        )
-      ).toBeTruthy();
-      expect(
-        tree.exists(
-          `apps/${libName}-e2e/src/e2e/variable-spread-declare-anotherview/variable-spread-declare-anotherview.component.cy.ts`
-        )
-      ).toBeTruthy();
     });
 
     it('should handle modules using static members for declarations rather than literals', async () => {
-      await cypressProjectGenerator(tree, {
-        linter: Linter.EsLint,
-        name: libName,
-      });
-
       await angularStoriesGenerator(tree, {
         name: libName,
-        generateCypressSpecs: true,
       });
 
       expect(
@@ -258,12 +164,6 @@ describe('angularStories generator: libraries', () => {
         tree.exists(
           `libs/${libName}/src/lib/static-member-declarations/cmp2/cmp2.component.stories.ts`
         )
-      ).toBeTruthy();
-      expect(
-        tree.exists(`apps/${libName}-e2e/src/e2e/cmp1/cmp1.component.cy.ts`)
-      ).toBeTruthy();
-      expect(
-        tree.exists(`apps/${libName}-e2e/src/e2e/cmp2/cmp2.component.cy.ts`)
       ).toBeTruthy();
     });
 
