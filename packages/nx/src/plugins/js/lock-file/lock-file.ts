@@ -14,7 +14,7 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { ProjectGraph } from '../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { PackageJson } from '../../../utils/package-json';
-import { fileHasher, hashArray } from '../../../hasher/file-hasher';
+import { hashArray } from '../../../hasher/file-hasher';
 import { output } from '../../../utils/output';
 
 import { parseNpmLockfile, stringifyNpmLockfile } from './npm-parser';
@@ -22,6 +22,7 @@ import { parsePnpmLockfile, stringifyPnpmLockfile } from './pnpm-parser';
 import { parseYarnLockfile, stringifyYarnLockfile } from './yarn-parser';
 import { pruneProjectGraph } from './project-graph-pruning';
 import { normalizePackageJson } from './utils/package-json';
+import { readJsonFile } from '../../../utils/fileutils';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
@@ -86,7 +87,8 @@ export function parseLockFile(
   try {
     if (packageManager === 'yarn') {
       const content = readFileSync(YARN_LOCK_PATH, 'utf8');
-      parseYarnLockfile(content, builder);
+      const packageJson = readJsonFile('package.json');
+      parseYarnLockfile(content, packageJson, builder);
       return builder.getUpdatedProjectGraph();
     }
     if (packageManager === 'pnpm') {
@@ -145,19 +147,19 @@ export function createLockFile(
 ): string {
   const normalizedPackageJson = normalizePackageJson(packageJson);
   const content = readFileSync(getLockFileName(packageManager), 'utf8');
+  const rootPackageJson = readJsonFile('package.json');
 
   const builder = new ProjectGraphBuilder();
 
   try {
     if (packageManager === 'yarn') {
-      parseYarnLockfile(content, builder);
+      parseYarnLockfile(content, rootPackageJson, builder);
       const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'pnpm') {
       parsePnpmLockfile(content, builder);
-
       const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyPnpmLockfile(prunedGraph, content, normalizedPackageJson);
