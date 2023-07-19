@@ -184,7 +184,8 @@ export function getOutputsForTargetAndConfiguration(
       })
       .filter(
         (output) =>
-          !!output && !output.match(/{(projectRoot|workspaceRoot|(options.*))}/)
+          !!output &&
+          !output.match(/{(projectRoot|workspaceRoot|(options\.*))}/)
       );
   }
 

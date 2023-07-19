@@ -5,6 +5,8 @@ import {
   readProjectConfiguration,
 } from '../../generators/utils/project-configuration';
 import updateOutputsGlobs from './update-output-globs';
+import { readJson, updateJson } from '../../generators/utils/json';
+import { NxJsonConfiguration } from '../../config/nx-json';
 
 describe('update output globs', () => {
   it('should update output globs', () => {
@@ -24,6 +26,15 @@ describe('update output globs', () => {
     addProjectConfiguration(tree, 'my-app', {
       root: 'apps/my-app',
       targets,
+    });
+
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.targetDefaults = {
+        lint: {
+          outputs: ['dist/apps/my-app', '*.(js|map|ts)'],
+        },
+      };
+      return json;
     });
 
     updateOutputsGlobs(tree);
@@ -46,6 +57,18 @@ describe('update output globs', () => {
         "test": {
           "outputs": [
             "dist/apps/my-app/main.{js,map,ts}",
+          ],
+        },
+      }
+    `);
+
+    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
+      {
+        "lint": {
+          "outputs": [
+            "dist/apps/my-app",
+            "*.{js,map,ts}",
           ],
         },
       }
