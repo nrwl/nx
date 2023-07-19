@@ -190,6 +190,14 @@ module.exports = withNx({
         permanent: true,
       });
     }
+    // Nesting 5min tutorials in Getting Started
+    for (let s of Object.keys(redirectRules.nested5minuteTutorialUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.nested5minuteTutorialUrls[s],
+        permanent: true,
+      });
+    }
 
     // Docs
     rules.push({
