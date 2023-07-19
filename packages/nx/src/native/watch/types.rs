@@ -2,6 +2,8 @@ use napi::bindgen_prelude::*;
 
 use std::path::PathBuf;
 use tracing::trace;
+use watchexec_events::filekind::ModifyKind::Name;
+use watchexec_events::filekind::RenameMode;
 use watchexec_events::{Event, Tag};
 
 #[napi(string_enum)]
@@ -95,6 +97,8 @@ impl From<&Event> for WatchEventInternal {
 
                 match event_kind {
                     FileEventKind::Create(_) => EventType::create,
+                    FileEventKind::Modify(Name(RenameMode::To)) => EventType::create,
+                    FileEventKind::Modify(Name(RenameMode::From)) => EventType::delete,
                     FileEventKind::Modify(_) => EventType::update,
                     _ => EventType::update,
                 }
