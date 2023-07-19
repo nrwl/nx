@@ -267,6 +267,24 @@ describe('app', () => {
         },
       ].forEach(hasJsonValue);
     });
+
+    it('should setup playwright', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'myDir',
+        e2eTestRunner: 'playwright',
+      });
+
+      expect(
+        appTree.exists('apps/my-dir/my-app-e2e/playwright.config.ts')
+      ).toBeTruthy();
+      expect(
+        appTree.exists('apps/my-dir/my-app-e2e/src/example.spec.ts')
+      ).toBeTruthy();
+      expect(
+        readProjectConfiguration(appTree, 'my-app-e2e')?.targets?.e2e?.executor
+      ).toEqual('@nx/playwright:playwright');
+    });
   });
 
   it('should create Nx specific template', async () => {
@@ -332,7 +350,7 @@ describe('app', () => {
     );
   });
 
-  it('should setup the nrwl web build builder', async () => {
+  it('should setup the nx web build builder', async () => {
     await applicationGenerator(appTree, {
       ...schema,
       name: 'my-app',
@@ -372,7 +390,7 @@ describe('app', () => {
     });
   });
 
-  it('should setup the nrwl vite builder if bundler is vite', async () => {
+  it('should setup the nx vite builder if bundler is vite', async () => {
     await applicationGenerator(appTree, {
       ...schema,
       name: 'my-app',
@@ -394,7 +412,7 @@ describe('app', () => {
     ).toBeFalsy();
   });
 
-  it('should setup the nrwl web dev server builder', async () => {
+  it('should setup the nx web dev server builder', async () => {
     await applicationGenerator(appTree, {
       ...schema,
       name: 'my-app',
@@ -414,7 +432,7 @@ describe('app', () => {
     });
   });
 
-  it('should setup the nrwl vite dev server builder if bundler is vite', async () => {
+  it('should setup the nx vite dev server builder if bundler is vite', async () => {
     await applicationGenerator(appTree, {
       ...schema,
       name: 'my-app',
@@ -483,6 +501,25 @@ describe('app', () => {
       expect(appTree.exists('apps/my-app-e2e')).toBeFalsy();
       const projectsConfigurations = getProjects(appTree);
       expect(projectsConfigurations.get('my-app-e2e')).toBeUndefined();
+    });
+  });
+
+  describe('--e2e-test-runner playwright', () => {
+    it('should setup playwright', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        e2eTestRunner: 'playwright',
+      });
+
+      expect(
+        appTree.exists('apps/my-app-e2e/playwright.config.ts')
+      ).toBeTruthy();
+      expect(
+        appTree.exists('apps/my-app-e2e/src/example.spec.ts')
+      ).toBeTruthy();
+      expect(
+        readProjectConfiguration(appTree, 'my-app-e2e')?.targets?.e2e?.executor
+      ).toEqual('@nx/playwright:playwright');
     });
   });
 
@@ -949,6 +986,21 @@ describe('app', () => {
           'outputPath'
         ]
       ).toEqual('dist/my-app2');
+    });
+
+    it('should setup playwright', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        name: 'my-app3',
+        rootProject: true,
+        e2eTestRunner: 'playwright',
+      });
+
+      expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
+      expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
+      expect(
+        readProjectConfiguration(appTree, 'e2e')?.targets?.e2e?.executor
+      ).toEqual('@nx/playwright:playwright');
     });
   });
 

@@ -9,7 +9,7 @@ export interface Schema {
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   inSourceTests?: boolean;
-  e2eTestRunner: 'cypress' | 'none';
+  e2eTestRunner: 'cypress' | 'playwright' | 'none';
   linter: Linter;
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
@@ -32,6 +32,7 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   projectName: string;
   appProjectRoot: string;
   e2eProjectName: string;
+  e2eProjectRoot: string;
   parsedTags: string[];
   fileName: string;
   styledModule: null | SupportedStyles;

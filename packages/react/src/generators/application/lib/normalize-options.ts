@@ -3,6 +3,7 @@ import { assertValidStyle } from '../../../utils/assertion';
 import {
   extractLayoutDirectory,
   getWorkspaceLayout,
+  joinPathFragments,
   names,
   normalizePath,
   Tree,
@@ -36,6 +37,9 @@ export function normalizeOptions<T extends Schema = Schema>(
   const appProjectRoot = options.rootProject
     ? '.'
     : normalizePath(`${appsDir}/${appDirectory}`);
+  const e2eProjectRoot = options.rootProject
+    ? 'e2e'
+    : joinPathFragments(appsDir, `${appDirectory}-e2e`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -59,6 +63,7 @@ export function normalizeOptions<T extends Schema = Schema>(
     projectName: appProjectName,
     appProjectRoot,
     e2eProjectName,
+    e2eProjectRoot,
     parsedTags,
     fileName,
     styledModule,

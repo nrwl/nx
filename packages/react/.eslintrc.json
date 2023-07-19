@@ -47,6 +47,7 @@
               "react",
               // These are installed by ensurePackage so missing in package.json
               "@nx/cypress",
+              "@nx/playwright",
               "@nx/jest",
               "@nx/rollup",
               "@nx/storybook",
