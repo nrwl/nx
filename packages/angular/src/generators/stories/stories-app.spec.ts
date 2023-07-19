@@ -10,6 +10,8 @@ import { angularStoriesGenerator } from './stories';
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
 
+// TODO(v18): remove Cypress
+
 describe('angularStories generator: applications', () => {
   let tree: Tree;
   const appName = 'test-app';
@@ -25,12 +27,12 @@ describe('angularStories generator: applications', () => {
     });
   });
 
-  it('should generate stories file', async () => {
+  it('should generate stories file with interaction tests', async () => {
     await angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree.exists(`apps/${appName}/src/app/app.component.stories.ts`)
-    ).toBeTruthy();
+      tree.read(`apps/${appName}/src/app/app.component.stories.ts`, 'utf-8')
+    ).toMatchSnapshot();
   });
 
   it('should generate stories file for scam component', async () => {
@@ -90,11 +92,10 @@ describe('angularStories generator: applications', () => {
     });
 
     expect(
-      tree
-        .read(
-          `apps/${appName}/src/app/component-a/component-b/component-b.component.stories.ts`
-        )
-        .toString()
+      tree.read(
+        `apps/${appName}/src/app/component-a/component-b/component-b.component.stories.ts`,
+        'utf-8'
+      )
     ).toMatchSnapshot();
     expect(
       tree.exists(
@@ -113,20 +114,10 @@ describe('angularStories generator: applications', () => {
     await angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree
-        .read(`apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`)
-        .toString()
+      tree.read(
+        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`,
+        'utf-8'
+      )
     ).toMatchSnapshot();
-  });
-
-  it('should generate cypress spec file', async () => {
-    await angularStoriesGenerator(tree, {
-      name: appName,
-      generateCypressSpecs: true,
-    });
-
-    expect(
-      tree.exists(`apps/${appName}-e2e/src/e2e/app.component.cy.ts`)
-    ).toBeTruthy();
   });
 });

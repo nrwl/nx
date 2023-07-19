@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TS config for project if tsConfiguration true 1`] = `
+exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TS config for project by default 1`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
@@ -20,7 +20,7 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 1`] = `
+exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files by default 1`] = `
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "test-ui-lib",
@@ -97,9 +97,9 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
 }
 `;
 
-exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 2`] = `null`;
+exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files by default 2`] = `null`;
 
-exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 3`] = `
+exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files by default 3`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {

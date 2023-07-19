@@ -56,11 +56,10 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       }));
     });
 
-    it('should generate TypeScript Configuration files', async () => {
+    it('should generate TypeScript Configuration files by default', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         standaloneConfig: false,
-        tsConfiguration: true,
         uiFramework: '@storybook/angular',
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib');
@@ -172,11 +171,10 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       ).toBeTruthy();
     });
 
-    it('should generate TS config for project if tsConfiguration true', async () => {
+    it('should generate TS config for project by default', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         standaloneConfig: false,
-        tsConfiguration: true,
         uiFramework: '@storybook/angular',
       });
 
@@ -278,7 +276,6 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
       await configurationGenerator(tree, {
         name: 'main-vite-ts',
-        tsConfiguration: true,
         uiFramework: '@storybook/react-vite',
       });
       await configurationGenerator(tree, {

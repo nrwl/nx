@@ -1,9 +1,77 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`StorybookConfiguration generator should configure everything at once - and interaction tests too 1`] = `
+"import type { Meta, StoryObj } from '@storybook/angular';
+import { TestButtonComponent } from './test-button.component';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<TestButtonComponent> = {
+  component: TestButtonComponent,
+  title: 'TestButtonComponent',
+};
+export default meta;
+type Story = StoryObj<TestButtonComponent>;
+
+export const Primary: Story = {
+  args: {
+    buttonType: 'button',
+    style: 'default',
+    age: 0,
+    isOn: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    buttonType: 'button',
+    style: 'default',
+    age: 0,
+    isOn: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/test-button works!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`StorybookConfiguration generator should configure everything at once - and interaction tests too 2`] = `
+"import type { Meta, StoryObj } from '@storybook/angular';
+import { TestOtherComponent } from './test-other.component';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<TestOtherComponent> = {
+  component: TestOtherComponent,
+  title: 'TestOtherComponent',
+};
+export default meta;
+type Story = StoryObj<TestOtherComponent>;
+
+export const Primary: Story = {
+  args: {},
+};
+
+export const Heading: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/test-other works!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
 exports[`StorybookConfiguration generator should configure storybook to use webpack 5 1`] = `
-"const config = {
+"import type { StorybookConfig } from '@storybook/angular';
+
+const config: StorybookConfig = {
   stories: ['../**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/angular',
     options: {},
@@ -26,33 +94,12 @@ exports[`StorybookConfiguration generator should generate in the correct folder 
   ".prettierignore",
   ".prettierrc",
   "apps/.gitignore",
-  "apps/one/two/test-ui-lib-e2e/.eslintrc.json",
-  "apps/one/two/test-ui-lib-e2e/cypress.config.ts",
-  "apps/one/two/test-ui-lib-e2e/project.json",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/barrel-button/barrel-button.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/cmp1/cmp1.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/cmp2/cmp2.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/nested-button/nested-button.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/secondary-entry-point/secondary-button/secondary-button.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/secondary-entry-point/secondary-standalone/secondary-standalone.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/standalone/standalone.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/test-button/test-button.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/test-other/test-other.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/variable-declare-button/variable-declare-button.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/variable-declare-view/variable-declare-view.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/variable-spread-declare-anotherview/variable-spread-declare-anotherview.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/variable-spread-declare-button/variable-spread-declare-button.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/e2e/variable-spread-declare-view/variable-spread-declare-view.component.cy.ts",
-  "apps/one/two/test-ui-lib-e2e/src/fixtures/example.json",
-  "apps/one/two/test-ui-lib-e2e/src/support/commands.ts",
-  "apps/one/two/test-ui-lib-e2e/src/support/e2e.ts",
-  "apps/one/two/test-ui-lib-e2e/tsconfig.json",
   "jest.config.ts",
   "jest.preset.js",
   "libs/.gitignore",
   "libs/test-ui-lib/.eslintrc.json",
-  "libs/test-ui-lib/.storybook/main.js",
-  "libs/test-ui-lib/.storybook/preview.js",
+  "libs/test-ui-lib/.storybook/main.ts",
+  "libs/test-ui-lib/.storybook/preview.ts",
   "libs/test-ui-lib/.storybook/tsconfig.json",
   "libs/test-ui-lib/jest.config.ts",
   "libs/test-ui-lib/package.json",
@@ -158,33 +205,12 @@ exports[`StorybookConfiguration generator should generate the right files 1`] = 
   ".prettierignore",
   ".prettierrc",
   "apps/.gitignore",
-  "apps/test-ui-lib-e2e/.eslintrc.json",
-  "apps/test-ui-lib-e2e/cypress.config.ts",
-  "apps/test-ui-lib-e2e/project.json",
-  "apps/test-ui-lib-e2e/src/e2e/barrel-button/barrel-button.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/cmp1/cmp1.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/cmp2/cmp2.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/nested-button/nested-button.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/secondary-entry-point/secondary-button/secondary-button.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/secondary-entry-point/secondary-standalone/secondary-standalone.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/standalone/standalone.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/test-button/test-button.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/test-other/test-other.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/variable-declare-button/variable-declare-button.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/variable-declare-view/variable-declare-view.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/variable-spread-declare-anotherview/variable-spread-declare-anotherview.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/variable-spread-declare-button/variable-spread-declare-button.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/e2e/variable-spread-declare-view/variable-spread-declare-view.component.cy.ts",
-  "apps/test-ui-lib-e2e/src/fixtures/example.json",
-  "apps/test-ui-lib-e2e/src/support/commands.ts",
-  "apps/test-ui-lib-e2e/src/support/e2e.ts",
-  "apps/test-ui-lib-e2e/tsconfig.json",
   "jest.config.ts",
   "jest.preset.js",
   "libs/.gitignore",
   "libs/test-ui-lib/.eslintrc.json",
-  "libs/test-ui-lib/.storybook/main.js",
-  "libs/test-ui-lib/.storybook/preview.js",
+  "libs/test-ui-lib/.storybook/main.ts",
+  "libs/test-ui-lib/.storybook/preview.ts",
   "libs/test-ui-lib/.storybook/tsconfig.json",
   "libs/test-ui-lib/jest.config.ts",
   "libs/test-ui-lib/package.json",
