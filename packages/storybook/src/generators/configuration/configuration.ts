@@ -177,7 +177,6 @@ export async function configurationGenerator(
   const devDeps = {};
 
   if (schema.tsConfiguration) {
-    devDeps['@storybook/core-common'] = storybookVersion;
     devDeps['ts-node'] = tsNodeVersion;
   }
 
