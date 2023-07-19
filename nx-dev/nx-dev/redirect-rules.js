@@ -410,7 +410,8 @@ const oldNodeTutorialPaths = [
 ];
 
 const extraNodeRedirects = {
-  '/getting-started/node-tutorial': '/getting-started/node-server-tutorial',
+  '/getting-started/node-tutorial':
+    '/getting-started/tutorials/node-server-tutorial',
   '/node-tutorial/1-code-generation': '/node-server-tutorial/1-code-generation',
   '/node-tutorial/2-project-graph': '/node-server-tutorial/2-project-graph',
   '/node-tutorial/3-task-running': '/node-server-tutorial/3-task-running',
