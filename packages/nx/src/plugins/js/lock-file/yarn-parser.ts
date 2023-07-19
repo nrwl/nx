@@ -173,13 +173,6 @@ function findHoistedNode(
   if (version) {
     return versionMap.get(version);
   }
-
-  if (
-    packageName === 'postgres' ||
-    packageName === 'eslint-plugin-disable-autofix'
-  ) {
-    console.log({ packageName, versionMap, rootVersionSpecifier });
-  }
 }
 
 function findVersion(
