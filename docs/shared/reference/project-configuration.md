@@ -123,7 +123,7 @@ You can add Nx-specific configuration as follows:
 The `inputs` array tells Nx what to consider to determine whether a particular invocation of a script should be a cache
 hit or not. There are three types of inputs:
 
-_Filesets_
+#### Filesets
 
 Examples:
 
@@ -142,7 +142,7 @@ The `inputs` and `namedInputs` are parsed with the following rules:
 
 {% /callout %}
 
-_Runtime Inputs_
+#### Runtime Inputs
 
 Examples:
 
@@ -150,7 +150,7 @@ Examples:
 
 Note the result value is hashed, so it is never displayed.
 
-_Env Variables_
+#### Env Variables
 
 Examples:
 
@@ -158,7 +158,7 @@ Examples:
 
 Note the result value is hashed, so it is never displayed.
 
-_External Dependencies_
+#### External Dependencies
 
 For official plugins, Nx intelligently finds a set of external dependencies which it hashes for the target. `nx:run-commands` is an exception to this.
 Because you may specify any command to be run, it is not possible to determine which, if any, external dependencies are used by the target.
@@ -204,7 +204,7 @@ If a target uses a command from an npm package, that package should be listed.
 }
 ```
 
-_Dependent tasks output_
+#### Dependent tasks output
 
 This input allows us to depend on the output, rather than the input of the dependent tasks. We can specify the glob pattern to match only the subset of the output files.
 The `transitive` parameter defines whether the check and the pattern should be recursively applied to the dependent tasks of the child tasks.
@@ -227,7 +227,7 @@ Examples:
 }
 ```
 
-_Named Inputs_
+#### Named Inputs
 
 Examples:
 
@@ -266,7 +266,7 @@ sources (non-test sources) of its dependencies. In other words, it treats test s
 {% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/more-concepts/customizing-inputs" /%}
 {% /cards %}
 
-### outputs
+### Outputs
 
 Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. `"outputs": ["{workspaceRoot}/dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts.
 
