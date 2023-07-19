@@ -29,6 +29,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect.start = {
     executor: '@nx/expo:start',
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {
       port: 8081,
     },
@@ -43,6 +44,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect['run-ios'] = {
     executor: '@nx/expo:run',
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {
       platform: 'ios',
     },
@@ -50,6 +52,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect['run-android'] = {
     executor: '@nx/expo:run',
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {
       platform: 'android',
     },
@@ -70,6 +73,9 @@ function getTargets(options: NormalizedSchema) {
     options: {},
   };
 
+  /**
+   * @deprecated TODO(v17) this executor is no longer used, to be removed in v17
+   */
   architect['download'] = {
     executor: '@nx/expo:download',
     options: {
@@ -89,6 +95,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect['prebuild'] = {
     executor: '@nx/expo:prebuild',
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {},
   };
 
@@ -104,6 +111,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect['export'] = {
     executor: '@nx/expo:export',
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {
       platform: 'all',
       outputDir: `${offsetFromRoot(options.appProjectRoot)}dist/${

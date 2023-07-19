@@ -15,22 +15,15 @@ import { stripIndents } from '../src/utils/strip-indents';
 import { readModulePackageJson } from '../src/utils/package-json';
 import { execSync } from 'child_process';
 import { join } from 'path';
+import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
 
 function main() {
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
-    process.argv[2] !== '--help' &&
-    !_supportedPlatform()
+    process.argv[2] !== '--help'
   ) {
-    output.error({
-      title: 'Platform not supported',
-      bodyLines: [
-        `This platform (${process.platform}-${process.arch}) is currently not supported by Nx.`,
-        'For a list of supported platforms, please see https://nx.dev/recipes/ci/troubleshoot-nx-install-issues#supported-native-module-platform',
-      ],
-    });
-    process.exit(1);
+    assertSupportedPlatform();
   }
 
   const workspace = findWorkspaceRoot(process.cwd());
@@ -253,15 +246,6 @@ function _getLatestVersionOfNx(): string {
     } catch {
       return null;
     }
-  }
-}
-
-function _supportedPlatform(): boolean {
-  try {
-    require('../src/native');
-    return true;
-  } catch {
-    return false;
   }
 }
 

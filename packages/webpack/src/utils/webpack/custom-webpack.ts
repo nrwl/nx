@@ -1,26 +1,4 @@
-export function tsNodeRegister(file: string = '', tsConfig?: string) {
-  if (!file?.endsWith('.ts')) return;
-
-  // Avoid double-registering which can lead to issues type-checking already transformed files.
-  if (isRegistered()) return;
-
-  // Register TS compiler lazily
-  require('ts-node').register({
-    project: tsConfig,
-    compilerOptions: {
-      module: 'CommonJS',
-      types: ['node'],
-    },
-  });
-
-  // Register paths in tsConfig
-  const tsconfigPaths = require('tsconfig-paths');
-  const { absoluteBaseUrl: baseUrl, paths } =
-    tsconfigPaths.loadConfig(tsConfig);
-  if (baseUrl && paths) {
-    tsconfigPaths.register({ baseUrl, paths });
-  }
-}
+import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
 
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
   tsNodeRegister(path, tsConfig);
@@ -33,6 +11,7 @@ export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
   // `{ default: { ... } }`
   return customWebpackConfig.default || customWebpackConfig;
 }
+
 export function isRegistered() {
   return (
     require.extensions['.ts'] != undefined ||

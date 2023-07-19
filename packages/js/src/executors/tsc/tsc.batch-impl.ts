@@ -76,6 +76,20 @@ export async function* tscBatchExecutor(
     },
   };
 
+  const processTaskPostCompilation = (tsConfig: string) => {
+    if (tsConfigTaskInfoMap[tsConfig]) {
+      const taskInfo = tsConfigTaskInfoMap[tsConfig];
+      taskInfo.assetsHandler.processAllAssetsOnceSync();
+      updatePackageJson(
+        taskInfo.options,
+        taskInfo.context,
+        taskInfo.projectGraphNode,
+        taskInfo.buildableProjectNodeDependencies
+      );
+      taskInfo.endTime = Date.now();
+    }
+  };
+
   const typescriptCompilation = compileTypescriptSolution(
     tsCompilationContext,
     shouldWatch,
@@ -86,19 +100,7 @@ export async function* tscBatchExecutor(
           tsConfigTaskInfoMap[tsConfig].startTime = Date.now();
         }
       },
-      afterProjectCompilationCallback: (tsConfig) => {
-        if (tsConfigTaskInfoMap[tsConfig]) {
-          const taskInfo = tsConfigTaskInfoMap[tsConfig];
-          taskInfo.assetsHandler.processAllAssetsOnceSync();
-          updatePackageJson(
-            taskInfo.options,
-            taskInfo.context,
-            taskInfo.projectGraphNode,
-            taskInfo.buildableProjectNodeDependencies
-          );
-          taskInfo.endTime = Date.now();
-        }
-      },
+      afterProjectCompilationCallback: processTaskPostCompilation,
     }
   );
 
@@ -136,23 +138,68 @@ export async function* tscBatchExecutor(
     });
   }
 
-  return yield* mapAsyncIterable(typescriptCompilation, async (iterator) => {
-    const { value, done } = await iterator.next();
+  const toBatchExecutorTaskResult = (
+    tsConfig: string,
+    success: boolean
+  ): BatchExecutorTaskResult => ({
+    task: tsConfigTaskInfoMap[tsConfig].task,
+    result: {
+      success: success,
+      terminalOutput: tsConfigTaskInfoMap[tsConfig].terminalOutput,
+      startTime: tsConfigTaskInfoMap[tsConfig].startTime,
+      endTime: tsConfigTaskInfoMap[tsConfig].endTime,
+    },
+  });
+
+  let isCompilationDone = false;
+  const taskTsConfigsToReport = new Set(
+    Object.keys(taskGraph.tasks).map((t) => taskInMemoryTsConfigMap[t].path)
+  );
+  let tasksToReportIterator: IterableIterator<string>;
+
+  const processSkippedTasks = () => {
+    const { value: tsConfig, done } = tasksToReportIterator.next();
     if (done) {
-      return { value, done: true };
+      return { value: undefined, done: true };
     }
 
-    const taskResult: BatchExecutorTaskResult = {
-      task: tsConfigTaskInfoMap[value.tsConfig].task,
-      result: {
-        success: value.success,
-        terminalOutput: tsConfigTaskInfoMap[value.tsConfig].terminalOutput,
-        startTime: tsConfigTaskInfoMap[value.tsConfig].startTime,
-        endTime: tsConfigTaskInfoMap[value.tsConfig].endTime,
-      },
-    };
+    tsConfigTaskInfoMap[tsConfig].startTime = Date.now();
+    processTaskPostCompilation(tsConfig);
 
-    return { value: taskResult, done: false };
+    return { value: toBatchExecutorTaskResult(tsConfig, true), done: false };
+  };
+
+  return yield* mapAsyncIterable(typescriptCompilation, async (iterator) => {
+    if (isCompilationDone) {
+      return processSkippedTasks();
+    }
+
+    const { value, done } = await iterator.next();
+    if (done) {
+      if (taskTsConfigsToReport.size > 0) {
+        /**
+         * TS compilation is done but we still have tasks to report. This can
+         * happen if, for example, a project is identified as affected, but
+         * no file in the TS project is actually changed or if running a
+         * task with `--skip-nx-cache` and the outputs are already there. There
+         * can still be changes to assets or other files we need to process.
+         *
+         * Switch to handle the iterator for the tasks we still need to report.
+         */
+        isCompilationDone = true;
+        tasksToReportIterator = taskTsConfigsToReport.values();
+        return processSkippedTasks();
+      }
+
+      return { value: undefined, done: true };
+    }
+
+    taskTsConfigsToReport.delete(value.tsConfig);
+
+    return {
+      value: toBatchExecutorTaskResult(value.tsConfig, value.success),
+      done: false,
+    };
   });
 }
 

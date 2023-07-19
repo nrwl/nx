@@ -4,6 +4,11 @@ If you partition your code into well-defined cohesive units, even a small organi
 
 To help with that Nx uses code analysis to make sure projects can only depend on each other's well-defined public API. It also allows you to declaratively impose constraints on how projects can depend on each other.
 
+{% youtube
+src="https://www.youtube.com/embed/q0en5vlOsWY"
+title="Applying Module Boundaries"
+width="100%" /%}
+
 ## Project APIs
 
 Nx provides an `enforce-module-boundaries` eslint rule that enforces the public API of projects in the repo. Each project defines its public API in an `index.ts` (or `index.js`) file. If another project tries to import a variable from a file deep within a different project, an error will be thrown during linting.
@@ -94,7 +99,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {% /tab %}
 {% /tabs %}
 
-Next you should update your root lint configuration:
+Next, you should update your root lint configuration:
 
 - If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `"@nx/enforce-module-boundaries"` and you should update the `"depConstraints"`:
 
@@ -129,20 +134,61 @@ Next you should update your root lint configuration:
 }
 ```
 
-With these constraints in place, `scope:client` projects can only depend on other `scope:client` projects or on `scope:shared` projects. And `scope:admin` projects can only depend on other `scope:admin` projects or on `scope:shared` projects. So `scope:client` and `scope:admin` cannot depend on each other.
+With these constraints in place, `scope:client` projects can only depend on projects with `scope:client` or `scope:shared`. And `scope:admin` projects can only depend on projects with `scope:admin` or `scope:shared`. So `scope:client` and `scope:admin` cannot depend on each other.
 
-Projects without any tags cannot depend on any other projects. If you add the following, projects without any tags will be able to depend on any other project.
+Projects without any tags cannot depend on any other projects. If you try to violate the constraints, you will get an error when linting:
 
-```json
+```shell
+A project tagged with "scope:admin" can only depend on projects
+tagged with "scoped:shared" or "scope:admin".
+```
+
+The exception to this rule is by explicitly allowing all tags (see below).
+
+### Tag formats
+
+- `*`: allow all tags
+
+Example: projects with any tags (including untagged) can depend on any other project.
+
+```jsonc
 {
   "sourceTag": "*",
   "onlyDependOnLibsWithTags": ["*"]
 }
 ```
 
-If you try to violate the constraints, you will get an error when linting:
+- `string`: allow exact tags
 
-```shell
-A project tagged with "scope:admin" can only depend on projects
-tagged with "scoped:shared" or "scope:admin".
+Example: projects tagged with `scope:client` can only depend on projects tagged with `scope:util`.
+
+```jsonc
+{
+  "sourceTag": "scope:client",
+  "onlyDependOnLibsWithTags": ["scope:util"]
+}
 ```
+
+- `regex`: allow tags matching the regular expression
+
+Example: projects tagged with `scope:client` can depend on projects with a tag matching the regular expression `/^scope.*/`. In this case, the `scope:util`, `scope:client`, etc. are all allowed tags for dependencies.
+
+```json
+{
+  "sourceTag": "scope:client",
+  "onlyDependOnLibsWithTags": ["/^scope.*/"]
+}
+```
+
+- `glob`: allow tags matching the glob
+
+Example: projects with a tag starting with `scope:` can depend on projects with a tag that starts with `scope:*`. In this case `scope:a`, `scope:b`, etc are all allowed tags for dependencies.
+
+```json
+{
+  "sourceTag": "scope:*",
+  "onlyDependOnLibsWithTags": ["scope:*"]
+}
+```
+
+Globbing supports only the basic use of `*`. For more complex scenarios use the `regex` above.

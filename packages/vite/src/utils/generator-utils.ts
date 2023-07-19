@@ -587,20 +587,14 @@ export function createOrEditViteConfig(
     plugins: [
       ${dtsPlugin}
       ${reactPlugin}
-      viteTsConfigPaths({
-        root: '${offsetFromRoot(projectConfig.root)}',
-      }),
+      nxViteTsPaths(),
     ],
     `;
 
   const workerOption = `
     // Uncomment this if you are using workers. 
     // worker: {
-    //  plugins: [
-    //    viteTsConfigPaths({
-    //      root: '${offsetFromRoot(projectConfig.root)}',
-    //    }),
-    //  ],
+    //  plugins: [ nxViteTsPaths() ],
     // },`;
 
   const cacheDir = `cacheDir: '${offsetFromRoot(
@@ -628,7 +622,7 @@ export function createOrEditViteConfig(
       /// <reference types="vitest" />
       import { defineConfig } from 'vite';
       ${reactPluginImportLine}
-      import viteTsConfigPaths from 'vite-tsconfig-paths';
+      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       ${dtsImportLine}
       
       export default defineConfig({

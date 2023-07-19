@@ -19,13 +19,6 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
 }));
 
 describe('@nx/storybook:configuration for workspaces with Root project', () => {
-  beforeAll(() => {
-    process.env.NX_INTERACTIVE = 'true';
-  });
-  afterAll(() => {
-    // cleanup
-    delete process.env.NX_INTERACTIVE;
-  });
   describe('basic functionalities', () => {
     let tree: Tree;
     beforeEach(async () => {
@@ -93,6 +86,7 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       await configurationGenerator(tree, {
         name: 'web',
         uiFramework: '@storybook/react-webpack5',
+        tsConfiguration: false,
       });
 
       expect(tree.exists('.storybook/main.js')).toBeTruthy();
@@ -106,7 +100,6 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       await configurationGenerator(tree, {
         name: 'reapp',
         uiFramework: '@storybook/react-webpack5',
-        tsConfiguration: true,
       });
 
       expect(tree.exists('.storybook/main.ts')).toBeFalsy();
@@ -120,7 +113,6 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       await configurationGenerator(tree, {
         name: 'web',
         uiFramework: '@storybook/react-vite',
-        tsConfiguration: true,
       });
 
       expect(tree.exists('.storybook/main.ts')).toBeTruthy();

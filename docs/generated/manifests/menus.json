@@ -3,13 +3,13 @@
     "id": "nx",
     "menu": [
       {
-        "name": "Start Here",
+        "name": "Getting Started",
         "path": "/getting-started",
         "id": "getting-started",
         "isExternal": false,
         "children": [
           {
-            "name": "Getting Started",
+            "name": "Intro to Nx",
             "path": "/getting-started/intro",
             "id": "intro",
             "isExternal": false,
@@ -31,12 +31,61 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "5 min Tutorials",
+            "path": "/getting-started/tutorials",
+            "id": "tutorials",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Package-Based Monorepo",
+                "path": "/getting-started/tutorials/package-based-repo-tutorial",
+                "id": "package-based-repo-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Integrated Monorepo",
+                "path": "/getting-started/tutorials/integrated-repo-tutorial",
+                "id": "integrated-repo-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React Standalone",
+                "path": "/getting-started/tutorials/react-standalone-tutorial",
+                "id": "react-standalone-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Angular Standalone",
+                "path": "/getting-started/tutorials/angular-standalone-tutorial",
+                "id": "angular-standalone-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Node Standalone",
+                "path": "/getting-started/tutorials/node-server-tutorial",
+                "id": "node-server-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
       },
       {
-        "name": "Getting Started",
+        "name": "Intro to Nx",
         "path": "/getting-started/intro",
         "id": "intro",
         "isExternal": false,
@@ -61,13 +110,13 @@
       },
       {
         "name": "5 min Tutorials",
-        "path": "/tutorials",
+        "path": "/getting-started/tutorials",
         "id": "tutorials",
         "isExternal": false,
         "children": [
           {
             "name": "Package-Based Monorepo",
-            "path": "/tutorials/package-based-repo-tutorial",
+            "path": "/getting-started/tutorials/package-based-repo-tutorial",
             "id": "package-based-repo-tutorial",
             "isExternal": false,
             "children": [],
@@ -75,7 +124,7 @@
           },
           {
             "name": "Integrated Monorepo",
-            "path": "/tutorials/integrated-repo-tutorial",
+            "path": "/getting-started/tutorials/integrated-repo-tutorial",
             "id": "integrated-repo-tutorial",
             "isExternal": false,
             "children": [],
@@ -83,7 +132,7 @@
           },
           {
             "name": "React Standalone",
-            "path": "/tutorials/react-standalone-tutorial",
+            "path": "/getting-started/tutorials/react-standalone-tutorial",
             "id": "react-standalone-tutorial",
             "isExternal": false,
             "children": [],
@@ -91,7 +140,7 @@
           },
           {
             "name": "Angular Standalone",
-            "path": "/tutorials/angular-standalone-tutorial",
+            "path": "/getting-started/tutorials/angular-standalone-tutorial",
             "id": "angular-standalone-tutorial",
             "isExternal": false,
             "children": [],
@@ -99,7 +148,7 @@
           },
           {
             "name": "Node Standalone",
-            "path": "/tutorials/node-server-tutorial",
+            "path": "/getting-started/tutorials/node-server-tutorial",
             "id": "node-server-tutorial",
             "isExternal": false,
             "children": [],
@@ -110,7 +159,7 @@
       },
       {
         "name": "Package-Based Monorepo",
-        "path": "/tutorials/package-based-repo-tutorial",
+        "path": "/getting-started/tutorials/package-based-repo-tutorial",
         "id": "package-based-repo-tutorial",
         "isExternal": false,
         "children": [],
@@ -118,7 +167,7 @@
       },
       {
         "name": "Integrated Monorepo",
-        "path": "/tutorials/integrated-repo-tutorial",
+        "path": "/getting-started/tutorials/integrated-repo-tutorial",
         "id": "integrated-repo-tutorial",
         "isExternal": false,
         "children": [],
@@ -126,7 +175,7 @@
       },
       {
         "name": "React Standalone",
-        "path": "/tutorials/react-standalone-tutorial",
+        "path": "/getting-started/tutorials/react-standalone-tutorial",
         "id": "react-standalone-tutorial",
         "isExternal": false,
         "children": [],
@@ -134,7 +183,7 @@
       },
       {
         "name": "Angular Standalone",
-        "path": "/tutorials/angular-standalone-tutorial",
+        "path": "/getting-started/tutorials/angular-standalone-tutorial",
         "id": "angular-standalone-tutorial",
         "isExternal": false,
         "children": [],
@@ -142,7 +191,7 @@
       },
       {
         "name": "Node Standalone",
-        "path": "/tutorials/node-server-tutorial",
+        "path": "/getting-started/tutorials/node-server-tutorial",
         "id": "node-server-tutorial",
         "isExternal": false,
         "children": [],
@@ -2121,6 +2170,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Find the Last Successful Commit in Azure Pipelines",
+            "path": "/recipes/ci/azure-last-successful-commit",
+            "id": "azure-last-successful-commit",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Setting up CircleCI",
             "path": "/recipes/ci/monorepo-ci-circle-ci",
             "id": "monorepo-ci-circle-ci",
@@ -2191,6 +2248,14 @@
         "name": "Setting up Azure Pipelines",
         "path": "/recipes/ci/monorepo-ci-azure",
         "id": "monorepo-ci-azure",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Find the Last Successful Commit in Azure Pipelines",
+        "path": "/recipes/ci/azure-last-successful-commit",
+        "id": "azure-last-successful-commit",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3022,14 +3087,14 @@
         "disableCollapsible": false
       },
       {
-        "name": "Other",
-        "path": "/recipes/other",
-        "id": "other",
+        "name": "Managing Your Nx Repository",
+        "path": "/recipes/managing-repository",
+        "id": "managing-repository",
         "isExternal": false,
         "children": [
           {
             "name": "Run Root-Level NPM Scripts with Nx",
-            "path": "/recipes/other/root-level-scripts",
+            "path": "/recipes/managing-repository/root-level-scripts",
             "id": "root-level-scripts",
             "isExternal": false,
             "children": [],
@@ -3037,7 +3102,7 @@
           },
           {
             "name": "Disable Graph Links Created from Analyzing Source Files",
-            "path": "/recipes/other/analyze-source-files",
+            "path": "/recipes/managing-repository/analyze-source-files",
             "id": "analyze-source-files",
             "isExternal": false,
             "children": [],
@@ -3045,28 +3110,93 @@
           },
           {
             "name": "Workspace Watching",
-            "path": "/recipes/other/workspace-watching",
+            "path": "/recipes/managing-repository/workspace-watching",
             "id": "workspace-watching",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Advanced Update Nx",
-            "path": "/recipes/other/advanced-update",
+            "name": "Advanced Update Process",
+            "path": "/recipes/managing-repository/advanced-update",
             "id": "advanced-update",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "JavaScript and TypeScript",
-            "path": "/recipes/other/js-and-ts",
-            "id": "js-and-ts",
+            "name": "Convert from a Standalone Repository to an Integrated Repository",
+            "path": "/recipes/managing-repository/standalone-to-integrated",
+            "id": "standalone-to-integrated",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
+          {
+            "name": "JavaScript and TypeScript",
+            "path": "/recipes/managing-repository/js-and-ts",
+            "id": "js-and-ts",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Run Root-Level NPM Scripts with Nx",
+        "path": "/recipes/managing-repository/root-level-scripts",
+        "id": "root-level-scripts",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Disable Graph Links Created from Analyzing Source Files",
+        "path": "/recipes/managing-repository/analyze-source-files",
+        "id": "analyze-source-files",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Workspace Watching",
+        "path": "/recipes/managing-repository/workspace-watching",
+        "id": "workspace-watching",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Advanced Update Process",
+        "path": "/recipes/managing-repository/advanced-update",
+        "id": "advanced-update",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Convert from a Standalone Repository to an Integrated Repository",
+        "path": "/recipes/managing-repository/standalone-to-integrated",
+        "id": "standalone-to-integrated",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "JavaScript and TypeScript",
+        "path": "/recipes/managing-repository/js-and-ts",
+        "id": "js-and-ts",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Other",
+        "path": "/recipes/other",
+        "id": "other",
+        "isExternal": false,
+        "children": [
           {
             "name": "React Native with Nx",
             "path": "/recipes/other/react-native",
@@ -3164,14 +3294,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Find the Last Successful Commit in Azure Pipelines",
-            "path": "/recipes/other/azure-last-successful-commit",
-            "id": "azure-last-successful-commit",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Troubleshoot Cache Misses",
             "path": "/recipes/other/troubleshoot-cache-misses",
             "id": "troubleshoot-cache-misses",
@@ -3234,48 +3356,16 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Unknown Local Cache Error",
+            "path": "/recipes/other/unknown-local-cache",
+            "id": "unknown-local-cache",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Run Root-Level NPM Scripts with Nx",
-        "path": "/recipes/other/root-level-scripts",
-        "id": "root-level-scripts",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Disable Graph Links Created from Analyzing Source Files",
-        "path": "/recipes/other/analyze-source-files",
-        "id": "analyze-source-files",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Workspace Watching",
-        "path": "/recipes/other/workspace-watching",
-        "id": "workspace-watching",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Advanced Update Nx",
-        "path": "/recipes/other/advanced-update",
-        "id": "advanced-update",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "JavaScript and TypeScript",
-        "path": "/recipes/other/js-and-ts",
-        "id": "js-and-ts",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -3375,14 +3465,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Find the Last Successful Commit in Azure Pipelines",
-        "path": "/recipes/other/azure-last-successful-commit",
-        "id": "azure-last-successful-commit",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Troubleshoot Cache Misses",
         "path": "/recipes/other/troubleshoot-cache-misses",
         "id": "troubleshoot-cache-misses",
@@ -3442,6 +3524,14 @@
         "name": "Standalone NgRx APIs",
         "path": "/recipes/other/standalone-ngrx-apis",
         "id": "standalone-ngrx-apis",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Unknown Local Cache Error",
+        "path": "/recipes/other/unknown-local-cache",
+        "id": "unknown-local-cache",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3911,7 +4001,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "On Prem",
+        "name": "Enterprise + On Prem",
         "path": "/nx-cloud/private-cloud",
         "id": "private-cloud",
         "isExternal": false,
@@ -3936,6 +4026,14 @@
             "name": "Authenticate with GitHub",
             "path": "/nx-cloud/private-cloud/auth-github",
             "id": "auth-github",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "On-Prem VM Setup",
+            "path": "/nx-cloud/private-cloud/ami-setup",
+            "id": "ami-setup",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3971,22 +4069,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Kubernetes Setup",
-            "path": "/nx-cloud/private-cloud/kubernetes-setup",
-            "id": "kubernetes-setup",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Standalone",
-            "path": "/nx-cloud/private-cloud/standalone",
-            "id": "standalone",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4011,6 +4093,14 @@
         "name": "Authenticate with GitHub",
         "path": "/nx-cloud/private-cloud/auth-github",
         "id": "auth-github",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "On-Prem VM Setup",
+        "path": "/nx-cloud/private-cloud/ami-setup",
+        "id": "ami-setup",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4043,22 +4133,6 @@
         "name": "Advanced Configuration",
         "path": "/nx-cloud/private-cloud/advanced-config",
         "id": "advanced-config",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Kubernetes Setup",
-        "path": "/nx-cloud/private-cloud/kubernetes-setup",
-        "id": "kubernetes-setup",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Standalone",
-        "path": "/nx-cloud/private-cloud/standalone",
-        "id": "standalone",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4212,6 +4286,14 @@
                 "id": "package",
                 "path": "/packages/angular/executors/package",
                 "name": "package",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "browser-esbuild",
+                "path": "/packages/angular/executors/browser-esbuild",
+                "name": "browser-esbuild",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -4614,17 +4696,17 @@
                 "disableCollapsible": false
               },
               {
-                "id": "cypress-e2e-configuration",
-                "path": "/packages/cypress/generators/cypress-e2e-configuration",
-                "name": "cypress-e2e-configuration",
+                "id": "configuration",
+                "path": "/packages/cypress/generators/configuration",
+                "name": "configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "cypress-component-configuration",
-                "path": "/packages/cypress/generators/cypress-component-configuration",
-                "name": "cypress-component-configuration",
+                "id": "component-configuration",
+                "path": "/packages/cypress/generators/component-configuration",
+                "name": "component-configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -4808,9 +4890,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "esbuild-project",
-                "path": "/packages/esbuild/generators/esbuild-project",
-                "name": "esbuild-project",
+                "id": "configuration",
+                "path": "/packages/esbuild/generators/configuration",
+                "name": "configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -4845,6 +4927,14 @@
                 "name": "The `enforce-module-boundaries` rule",
                 "path": "/packages/eslint-plugin/documents/enforce-module-boundaries",
                 "id": "enforce-module-boundaries",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "The `dependency-checks` rule",
+                "path": "/packages/eslint-plugin/documents/dependency-checks",
+                "id": "dependency-checks",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5133,9 +5223,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "jest-project",
-                "path": "/packages/jest/generators/jest-project",
-                "name": "jest-project",
+                "id": "configuration",
+                "path": "/packages/jest/generators/configuration",
+                "name": "configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -6489,9 +6579,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "rollup-project",
-                "path": "/packages/rollup/generators/rollup-project",
-                "name": "rollup-project",
+                "id": "configuration",
+                "path": "/packages/rollup/generators/configuration",
+                "name": "configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -6945,9 +7035,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "webpack-project",
-                "path": "/packages/webpack/generators/webpack-project",
-                "name": "webpack-project",
+                "id": "configuration",
+                "path": "/packages/webpack/generators/configuration",
+                "name": "configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

@@ -198,6 +198,16 @@
         "tags": []
       },
       {
+        "id": "azure-last-successful-commit",
+        "name": "Find the Last Successful Commit in Azure Pipelines",
+        "description": "",
+        "file": "shared/recipes/azure-last-successful-commit",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/ci/azure-last-successful-commit",
+        "tags": []
+      },
+      {
         "id": "monorepo-ci-circle-ci",
         "name": "Setting up CircleCI",
         "description": "",
@@ -290,6 +300,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/ci/monorepo-ci-azure",
+    "tags": []
+  },
+  "/recipes/ci/azure-last-successful-commit": {
+    "id": "azure-last-successful-commit",
+    "name": "Find the Last Successful Commit in Azure Pipelines",
+    "description": "",
+    "file": "shared/recipes/azure-last-successful-commit",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/ci/azure-last-successful-commit",
     "tags": []
   },
   "/recipes/ci/monorepo-ci-circle-ci": {
@@ -1322,10 +1342,10 @@
     "path": "/recipes/example-repos/dte",
     "tags": []
   },
-  "/recipes/other": {
-    "id": "other",
-    "name": "Other",
-    "description": "Other recipes you will find useful.",
+  "/recipes/managing-repository": {
+    "id": "managing-repository",
+    "name": "Managing Your Nx Repository",
+    "description": "Configuring the Repository Itself",
     "file": "",
     "itemList": [
       {
@@ -1335,7 +1355,7 @@
         "file": "shared/recipes/root-level-scripts",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/root-level-scripts",
+        "path": "/recipes/managing-repository/root-level-scripts",
         "tags": ["run-tasks"]
       },
       {
@@ -1345,7 +1365,7 @@
         "file": "shared/recipes/analyze-source-files",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/analyze-source-files",
+        "path": "/recipes/managing-repository/analyze-source-files",
         "tags": ["explore-graph"]
       },
       {
@@ -1355,18 +1375,28 @@
         "file": "shared/recipes/workspace-watching",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/workspace-watching",
+        "path": "/recipes/managing-repository/workspace-watching",
         "tags": ["workspace-watching"]
       },
       {
         "id": "advanced-update",
-        "name": "Advanced Update Nx",
+        "name": "Advanced Update Process",
         "description": "",
         "file": "shared/recipes/advanced-update",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/advanced-update",
+        "path": "/recipes/managing-repository/advanced-update",
         "tags": ["automate-updating-dependencies"]
+      },
+      {
+        "id": "standalone-to-integrated",
+        "name": "Convert from a Standalone Repository to an Integrated Repository",
+        "description": "",
+        "file": "shared/recipes/repo-types/standalone-to-integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/managing-repository/standalone-to-integrated",
+        "tags": ["repository-types"]
       },
       {
         "id": "js-and-ts",
@@ -1375,9 +1405,80 @@
         "file": "shared/guides/js-and-ts",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/js-and-ts",
+        "path": "/recipes/managing-repository/js-and-ts",
         "tags": []
-      },
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/managing-repository",
+    "tags": []
+  },
+  "/recipes/managing-repository/root-level-scripts": {
+    "id": "root-level-scripts",
+    "name": "Run Root-Level NPM Scripts with Nx",
+    "description": "",
+    "file": "shared/recipes/root-level-scripts",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/managing-repository/root-level-scripts",
+    "tags": ["run-tasks"]
+  },
+  "/recipes/managing-repository/analyze-source-files": {
+    "id": "analyze-source-files",
+    "name": "Disable Graph Links Created from Analyzing Source Files",
+    "description": "",
+    "file": "shared/recipes/analyze-source-files",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/managing-repository/analyze-source-files",
+    "tags": ["explore-graph"]
+  },
+  "/recipes/managing-repository/workspace-watching": {
+    "id": "workspace-watching",
+    "name": "Workspace Watching",
+    "description": "",
+    "file": "shared/recipes/workspace-watching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/managing-repository/workspace-watching",
+    "tags": ["workspace-watching"]
+  },
+  "/recipes/managing-repository/advanced-update": {
+    "id": "advanced-update",
+    "name": "Advanced Update Process",
+    "description": "",
+    "file": "shared/recipes/advanced-update",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/managing-repository/advanced-update",
+    "tags": ["automate-updating-dependencies"]
+  },
+  "/recipes/managing-repository/standalone-to-integrated": {
+    "id": "standalone-to-integrated",
+    "name": "Convert from a Standalone Repository to an Integrated Repository",
+    "description": "",
+    "file": "shared/recipes/repo-types/standalone-to-integrated",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/managing-repository/standalone-to-integrated",
+    "tags": ["repository-types"]
+  },
+  "/recipes/managing-repository/js-and-ts": {
+    "id": "js-and-ts",
+    "name": "JavaScript and TypeScript",
+    "description": "",
+    "file": "shared/guides/js-and-ts",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/managing-repository/js-and-ts",
+    "tags": []
+  },
+  "/recipes/other": {
+    "id": "other",
+    "name": "Other",
+    "description": "Other recipes you will find useful.",
+    "file": "",
+    "itemList": [
       {
         "id": "react-native",
         "name": "React Native with Nx",
@@ -1499,16 +1600,6 @@
         "tags": []
       },
       {
-        "id": "azure-last-successful-commit",
-        "name": "Find the Last Successful Commit in Azure Pipelines",
-        "description": "",
-        "file": "shared/recipes/azure-last-successful-commit",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/azure-last-successful-commit",
-        "tags": []
-      },
-      {
         "id": "troubleshoot-cache-misses",
         "name": "Troubleshoot Cache Misses",
         "description": "",
@@ -1587,60 +1678,20 @@
         "isExternal": false,
         "path": "/recipes/other/standalone-ngrx-apis",
         "tags": []
+      },
+      {
+        "id": "unknown-local-cache",
+        "name": "Unknown Local Cache Error",
+        "description": "",
+        "file": "shared/guides/unknown-local-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/unknown-local-cache",
+        "tags": []
       }
     ],
     "isExternal": false,
     "path": "/recipes/other",
-    "tags": []
-  },
-  "/recipes/other/root-level-scripts": {
-    "id": "root-level-scripts",
-    "name": "Run Root-Level NPM Scripts with Nx",
-    "description": "",
-    "file": "shared/recipes/root-level-scripts",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/root-level-scripts",
-    "tags": ["run-tasks"]
-  },
-  "/recipes/other/analyze-source-files": {
-    "id": "analyze-source-files",
-    "name": "Disable Graph Links Created from Analyzing Source Files",
-    "description": "",
-    "file": "shared/recipes/analyze-source-files",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/analyze-source-files",
-    "tags": ["explore-graph"]
-  },
-  "/recipes/other/workspace-watching": {
-    "id": "workspace-watching",
-    "name": "Workspace Watching",
-    "description": "",
-    "file": "shared/recipes/workspace-watching",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/workspace-watching",
-    "tags": ["workspace-watching"]
-  },
-  "/recipes/other/advanced-update": {
-    "id": "advanced-update",
-    "name": "Advanced Update Nx",
-    "description": "",
-    "file": "shared/recipes/advanced-update",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/advanced-update",
-    "tags": ["automate-updating-dependencies"]
-  },
-  "/recipes/other/js-and-ts": {
-    "id": "js-and-ts",
-    "name": "JavaScript and TypeScript",
-    "description": "",
-    "file": "shared/guides/js-and-ts",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/js-and-ts",
     "tags": []
   },
   "/recipes/other/react-native": {
@@ -1763,16 +1814,6 @@
     "path": "/recipes/other/misc-data-persistence",
     "tags": []
   },
-  "/recipes/other/azure-last-successful-commit": {
-    "id": "azure-last-successful-commit",
-    "name": "Find the Last Successful Commit in Azure Pipelines",
-    "description": "",
-    "file": "shared/recipes/azure-last-successful-commit",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/azure-last-successful-commit",
-    "tags": []
-  },
   "/recipes/other/troubleshoot-cache-misses": {
     "id": "troubleshoot-cache-misses",
     "name": "Troubleshoot Cache Misses",
@@ -1851,6 +1892,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/standalone-ngrx-apis",
+    "tags": []
+  },
+  "/recipes/other/unknown-local-cache": {
+    "id": "unknown-local-cache",
+    "name": "Unknown Local Cache Error",
+    "description": "",
+    "file": "shared/guides/unknown-local-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/unknown-local-cache",
     "tags": []
   }
 }

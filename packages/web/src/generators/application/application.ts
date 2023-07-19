@@ -73,14 +73,15 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
   ];
 
   if (options.bundler === 'webpack') {
-    const { webpackProjectGenerator } = ensurePackage('@nx/webpack', nxVersion);
-    await webpackProjectGenerator(tree, {
+    const { configurationGenerator } = ensurePackage<
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
+    await configurationGenerator(tree, {
       project: options.projectName,
       main,
       tsConfig,
       compiler: options.compiler ?? 'babel',
       devServer: true,
-      isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'
@@ -272,10 +273,10 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     tasks.push(cypressTask);
   }
   if (options.unitTestRunner === 'jest') {
-    const { jestProjectGenerator } = await ensurePackage<
+    const { configurationGenerator } = await ensurePackage<
       typeof import('@nx/jest')
     >('@nx/jest', nxVersion);
-    const jestTask = await jestProjectGenerator(host, {
+    const jestTask = await configurationGenerator(host, {
       project: options.projectName,
       skipSerializers: true,
       setupFile: 'web-components',

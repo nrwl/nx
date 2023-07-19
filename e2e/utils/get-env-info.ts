@@ -111,6 +111,17 @@ export function ensureCypressInstallation() {
   }
 }
 
+export function ensurePlaywrightBrowsersInstallation() {
+  execSync('npx playwright install --with-deps --force', {
+    stdio: isVerbose() ? 'inherit' : 'pipe',
+    encoding: 'utf-8',
+    cwd: tmpProjPath(),
+  });
+  e2eConsoleLogger(
+    `Playwright browsers ${execSync('npx playwright --version')} installed.`
+  );
+}
+
 export function getStrippedEnvironmentVariables() {
   return Object.fromEntries(
     Object.entries(process.env).filter(([key, value]) => {
@@ -119,6 +130,10 @@ export function getStrippedEnvironmentVariables() {
       }
 
       if (key.startsWith('NX_')) {
+        return false;
+      }
+
+      if (key === 'JEST_WORKER_ID') {
         return false;
       }
 

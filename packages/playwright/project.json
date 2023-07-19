@@ -1,0 +1,50 @@
+{
+  "name": "playwright",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/playwright/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/playwright"],
+      "options": {
+        "commands": ["node ./scripts/copy-readme.js playwright"]
+      }
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "build/packages/playwright",
+        "main": "packages/playwright/src/index.ts",
+        "tsConfig": "packages/playwright/tsconfig.lib.json",
+        "assets": [
+          "packages/playwright/*.md",
+          {
+            "input": "./packages/playwright/src",
+            "glob": "**/!(*.ts)",
+            "output": "./src"
+          },
+          {
+            "input": "./packages/playwright/src",
+            "glob": "**/*.d.ts",
+            "output": "./src"
+          },
+          {
+            "input": "./packages/playwright",
+            "glob": "generators.json",
+            "output": "."
+          },
+          {
+            "input": "./packages/playwright",
+            "glob": "executors.json",
+            "output": "."
+          }
+        ]
+      }
+    },
+    "lint": {},
+    "test": {}
+  },
+  "tags": []
+}

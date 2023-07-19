@@ -94,15 +94,18 @@ function getSchemaList(
 
 /**
  * Generate the package metadata by exploring the directory path given.
+ * This function will look for all the packages in the given directory under packagesDirectory.
+ * It will then look for the package.json file and read the description and name of the package.
+ * It will also look for the generators.json and executors.json files and read the schema of each generator and executor.
+ * It will also look for the documents.json file and read the documents of each package.
+ * If the package is private and NODE_ENV is not development, it will not be included in the metadata.
  * @param absoluteRoot
  * @param packagesDirectory
- * @param documentationDirectory
  * @returns Configuration
  */
-export function getPackageMetadataList(
+export function findPackageMetadataList(
   absoluteRoot: string,
-  packagesDirectory: string = 'packages',
-  documentationDirectory: string = 'docs'
+  packagesDirectory: string = 'packages'
 ): PackageData[] {
   const packagesDir = resolve(join(absoluteRoot, packagesDirectory));
 
@@ -114,52 +117,59 @@ export function getPackageMetadataList(
     .itemList.map((item) => convertToDocumentMetadata(item));
 
   // Do not use map.json, but add a documentation property on the package.json directly that can be easily resolved
-  return sync(`${packagesDir}/*`, { ignore: [`${packagesDir}/cli`] }).map(
-    (folderPath): PackageData => {
+  return sync(`${packagesDir}/*`, { ignore: [`${packagesDir}/cli`] })
+    .map((folderPath: string): PackageData => {
       const folderName = folderPath.substring(packagesDir.length + 1);
       const relativeFolderPath = folderPath.replace(absoluteRoot, '');
       const packageJson = readJsonSync(
         join(folderPath, 'package.json'),
         'utf8'
       );
+      const isPrivate =
+        packageJson.private && process.env.NODE_ENV !== 'development'; // skip this check in dev mode
       const hasDocumentation = additionalApiReferences.find(
         (pkg) => pkg.id === folderName
       );
 
-      return {
-        githubRoot: 'https://github.com/nrwl/nx/blob/master',
-        name: folderName,
-        packageName: packageJson.name,
-        description: packageJson.description,
-        root: relativeFolderPath,
-        source: join(relativeFolderPath, '/src'),
-        documents: !!hasDocumentation
-          ? hasDocumentation.itemList.map((item) => ({
-              ...item,
-              path: item.path,
-              file: item.file,
-              content: readFileSync(join('docs', item.file + '.md'), 'utf8'),
-            }))
-          : [],
-        generators: getSchemaList(
-          {
-            absoluteRoot,
-            folderName,
+      return isPrivate
+        ? null
+        : {
+            githubRoot: 'https://github.com/nrwl/nx/blob/master',
+            name: folderName,
+            packageName: packageJson.name,
+            description: packageJson.description,
             root: relativeFolderPath,
-          },
-          'generators.json',
-          ['generators']
-        ),
-        executors: getSchemaList(
-          {
-            absoluteRoot,
-            folderName,
-            root: relativeFolderPath,
-          },
-          'executors.json',
-          ['executors', 'builders']
-        ),
-      };
-    }
-  );
+            source: join(relativeFolderPath, '/src'),
+            documents: !!hasDocumentation
+              ? hasDocumentation.itemList.map((item) => ({
+                  ...item,
+                  path: item.path,
+                  file: item.file,
+                  content: readFileSync(
+                    join('docs', item.file + '.md'),
+                    'utf8'
+                  ),
+                }))
+              : [],
+            generators: getSchemaList(
+              {
+                absoluteRoot,
+                folderName,
+                root: relativeFolderPath,
+              },
+              'generators.json',
+              ['generators']
+            ),
+            executors: getSchemaList(
+              {
+                absoluteRoot,
+                folderName,
+                root: relativeFolderPath,
+              },
+              'executors.json',
+              ['executors', 'builders']
+            ),
+          };
+    })
+    .filter(Boolean);
 }

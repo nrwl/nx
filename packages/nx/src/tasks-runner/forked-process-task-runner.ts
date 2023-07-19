@@ -78,30 +78,9 @@ export class ForkedProcessTaskRunner {
           }
         });
 
-        const printedTasks = new Set<string>();
         p.on('message', (message: BatchMessage) => {
           switch (message.type) {
-            case BatchMessageType.CompleteTask: {
-              this.options.lifeCycle.printTaskTerminalOutput(
-                batchTaskGraph.tasks[message.task],
-                message.result.success ? 'success' : 'failure',
-                message.result.terminalOutput
-              );
-              printedTasks.add(message.task);
-
-              break;
-            }
             case BatchMessageType.CompleteBatchExecution: {
-              Object.entries(message.results).forEach(([taskName, result]) => {
-                if (!printedTasks.has(taskName)) {
-                  this.options.lifeCycle.printTaskTerminalOutput(
-                    batchTaskGraph.tasks[taskName],
-                    result.success ? 'success' : 'failure',
-                    result.terminalOutput
-                  );
-                }
-              });
-
               res(message.results);
               break;
             }

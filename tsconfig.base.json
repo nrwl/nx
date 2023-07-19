@@ -25,6 +25,8 @@
       "@nx/detox": ["packages/detox"],
       "@nx/devkit": ["packages/devkit"],
       "@nx/devkit/*": ["packages/devkit/*"],
+      "@nx/docs": ["docs"],
+      "@nx/docs/*": ["docs/*"],
       "@nx/e2e/utils": ["e2e/utils"],
       "@nx/esbuild": ["packages/esbuild"],
       "@nx/eslint-plugin": ["packages/eslint-plugin/src"],
@@ -45,6 +47,7 @@
       "@nx/next/*": ["packages/next/*"],
       "@nx/node": ["packages/node"],
       "@nx/node/*": ["packages/node/*"],
+      "@nx/nx-dev/data-access-ai": ["nx-dev/data-access-ai/src/index.ts"],
       "@nx/nx-dev/data-access-documents": [
         "nx-dev/data-access-documents/src/index.ts"
       ],
@@ -58,6 +61,7 @@
       "@nx/nx-dev/data-access-packages/node-only": [
         "nx-dev/data-access-packages/src/node.index.ts"
       ],
+      "@nx/nx-dev/feature-ai": ["nx-dev/feature-ai/src/index.ts"],
       "@nx/nx-dev/feature-analytics": ["nx-dev/feature-analytics/src/index.ts"],
       "@nx/nx-dev/feature-doc-viewer": [
         "nx-dev/feature-doc-viewer/src/index.ts"
@@ -83,6 +87,7 @@
       "@nx/nx-dev/ui-references": ["nx-dev/ui-references/src/index.ts"],
       "@nx/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
       "@nx/nx-dev/ui-theme": ["nx-dev/ui-theme/src/index.ts"],
+      "@nx/playwright": ["packages/playwright/src/index.ts"],
       "@nx/plugin": ["packages/plugin"],
       "@nx/plugin/*": ["packages/plugin/*"],
       "@nx/react": ["packages/react"],

@@ -25,6 +25,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect.start = {
     executor: '@nx/react-native:start',
+    dependsOn: ['ensure-symlink', 'sync-deps', 'pod-install'],
     options: {
       port: 8081,
     },
@@ -39,11 +40,13 @@ function getTargets(options: NormalizedSchema) {
 
   architect['run-ios'] = {
     executor: '@nx/react-native:run-ios',
+    dependsOn: ['ensure-symlink', 'sync-deps', 'pod-install'],
     options: {},
   };
 
   architect['bundle-ios'] = {
     executor: '@nx/react-native:bundle',
+    dependsOn: ['ensure-symlink'],
     outputs: ['{options.bundleOutput}'],
     options: {
       entryFile: options.entryFile,
@@ -54,6 +57,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect['run-android'] = {
     executor: '@nx/react-native:run-android',
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {},
   };
 
@@ -63,12 +67,14 @@ function getTargets(options: NormalizedSchema) {
       `{projectRoot}/android/app/build/outputs/bundle`,
       `{projectRoot}/android/app/build/outputs/apk`,
     ],
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {},
   };
 
   architect['build-ios'] = {
     executor: '@nx/react-native:build-ios',
     outputs: ['{projectRoot}/ios/build/Build'],
+    dependsOn: ['ensure-symlink', 'sync-deps', 'pod-install'],
     options: {},
   };
 
@@ -79,6 +85,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect['bundle-android'] = {
     executor: '@nx/react-native:bundle',
+    dependsOn: ['ensure-symlink'],
     outputs: ['{options.bundleOutput}'],
     options: {
       entryFile: options.entryFile,

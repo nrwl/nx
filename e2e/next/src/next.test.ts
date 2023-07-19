@@ -1,6 +1,7 @@
 import { detectPackageManager, joinPathFragments } from '@nx/devkit';
 import { capitalize } from '@nx/devkit/src/utils/string-utils';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   getPackageManagerCommand,
@@ -226,6 +227,19 @@ describe('Next.js Applications', () => {
     });
   }, 1_000_000);
 
+  it('should build app and .next artifacts at the outputPath if provided by the CLI', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
+
+    runCLI(`build ${appName} --outputPath="dist/foo"`);
+
+    checkFilesExist('dist/foo/package.json');
+    checkFilesExist('dist/foo/next.config.js');
+    // Next Files
+    checkFilesExist('dist/foo/.next/package.json');
+    checkFilesExist('dist/foo/.next/build-manifest.json');
+  }, 600_000);
+
   // TODO(jack): re-enable this test
   xit('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');
@@ -367,6 +381,21 @@ describe('Next.js Applications', () => {
       runCLI(`build ${appName}`);
     }).not.toThrow();
     checkFilesExist(`apps/${appName}/.next/build-manifest.json`);
+  }, 300_000);
+
+  it('should build in dev mode without errors', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+    );
+
+    checkFilesDoNotExist(`apps/${appName}/.next/build-manifest.json`);
+    checkFilesDoNotExist(`apps/${appName}/.nx-helpers/with-nx.js`);
+
+    expect(() => {
+      runCLI(`build ${appName} --configuration=development`);
+    }).not.toThrow();
   }, 300_000);
 
   it('should support --js flag', async () => {

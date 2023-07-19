@@ -171,6 +171,10 @@ function withNx(
         }
       });
 
+      // process.env.NX_NEXT_OUTPUT_PATH is set when running @nx/next:build
+      options.outputPath =
+        process.env.NX_NEXT_OUTPUT_PATH || options.outputPath;
+
       // outputPath may be undefined if using run-commands or other executors other than @nx/next:build.
       // In this case, the user should set distDir in their next.config.js.
       if (options.outputPath) {

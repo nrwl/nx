@@ -54,6 +54,15 @@
         "type": "executor"
       },
       {
+        "description": "Builds your application with esbuild and adds support for incremental builds.",
+        "file": "generated/packages/angular/executors/browser-esbuild.json",
+        "hidden": false,
+        "name": "browser-esbuild",
+        "originalFilePath": "/packages/angular/src/executors/browser-esbuild/schema.json",
+        "path": "angular/executors/browser-esbuild",
+        "type": "executor"
+      },
+      {
         "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
         "file": "generated/packages/angular/executors/webpack-browser.json",
         "hidden": false,
@@ -477,20 +486,20 @@
       },
       {
         "description": "Add a Cypress E2E Configuration to an existing project.",
-        "file": "generated/packages/cypress/generators/cypress-e2e-configuration.json",
+        "file": "generated/packages/cypress/generators/configuration.json",
         "hidden": false,
-        "name": "cypress-e2e-configuration",
-        "originalFilePath": "/packages/cypress/src/generators/cypress-e2e-configuration/schema.json",
-        "path": "cypress/generators/cypress-e2e-configuration",
+        "name": "configuration",
+        "originalFilePath": "/packages/cypress/src/generators/configuration/schema.json",
+        "path": "cypress/generators/configuration",
         "type": "generator"
       },
       {
         "description": "Set up Cypress Component Test for a project",
-        "file": "generated/packages/cypress/generators/cypress-component-configuration.json",
+        "file": "generated/packages/cypress/generators/component-configuration.json",
         "hidden": true,
-        "name": "cypress-component-configuration",
-        "originalFilePath": "/packages/cypress/src/generators/cypress-component-configuration/schema.json",
-        "path": "cypress/generators/cypress-component-configuration",
+        "name": "component-configuration",
+        "originalFilePath": "/packages/cypress/src/generators/component-configuration/schema.json",
+        "path": "cypress/generators/component-configuration",
         "type": "generator"
       },
       {
@@ -642,11 +651,11 @@
       },
       {
         "description": "Add esbuild configuration to a project.",
-        "file": "generated/packages/esbuild/generators/esbuild-project.json",
+        "file": "generated/packages/esbuild/generators/configuration.json",
         "hidden": true,
-        "name": "esbuild-project",
-        "originalFilePath": "/packages/esbuild/src/generators/esbuild-project/schema.json",
-        "path": "esbuild/generators/esbuild-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/esbuild/src/generators/configuration/schema.json",
+        "path": "esbuild/generators/configuration",
         "type": "generator"
       }
     ],
@@ -680,6 +689,17 @@
         "path": "eslint-plugin/documents/enforce-module-boundaries",
         "tags": [],
         "originalFilePath": "shared/packages/linter/enforce-module-boundaries"
+      },
+      {
+        "id": "dependency-checks",
+        "name": "The `dependency-checks` rule",
+        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
+        "file": "generated/packages/eslint-plugin/documents/dependency-checks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "eslint-plugin/documents/dependency-checks",
+        "tags": [],
+        "originalFilePath": "shared/packages/linter/dependency-checks"
       }
     ],
     "executors": [],
@@ -939,11 +959,11 @@
       },
       {
         "description": "Add Jest configuration to a project.",
-        "file": "generated/packages/jest/generators/jest-project.json",
+        "file": "generated/packages/jest/generators/configuration.json",
         "hidden": true,
-        "name": "jest-project",
-        "originalFilePath": "/packages/jest/src/generators/jest-project/schema.json",
-        "path": "jest/generators/jest-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/jest/src/generators/configuration/schema.json",
+        "path": "jest/generators/configuration",
         "type": "generator"
       }
     ],
@@ -2302,11 +2322,11 @@
       },
       {
         "description": "Add rollup configuration to a project.",
-        "file": "generated/packages/rollup/generators/rollup-project.json",
+        "file": "generated/packages/rollup/generators/configuration.json",
         "hidden": true,
-        "name": "rollup-project",
-        "originalFilePath": "/packages/rollup/src/generators/rollup-project/schema.json",
-        "path": "rollup/generators/rollup-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/rollup/src/generators/configuration/schema.json",
+        "path": "rollup/generators/configuration",
         "type": "generator"
       }
     ],
@@ -2743,11 +2763,11 @@
       },
       {
         "description": "Add webpack configuration to a project.",
-        "file": "generated/packages/webpack/generators/webpack-project.json",
+        "file": "generated/packages/webpack/generators/configuration.json",
         "hidden": true,
-        "name": "webpack-project",
-        "originalFilePath": "/packages/webpack/src/generators/webpack-project/schema.json",
-        "path": "webpack/generators/webpack-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/webpack/src/generators/configuration/schema.json",
+        "path": "webpack/generators/configuration",
         "type": "generator"
       }
     ],

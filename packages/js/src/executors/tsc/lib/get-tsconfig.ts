@@ -249,7 +249,7 @@ function getInMemoryTsConfig(
       },
       references: allProjectReferences.map((pr) => ({ path: pr })),
     }),
-    path: tsConfig,
+    path: tsConfig.replace(/\\/g, '/'),
   };
 }
 

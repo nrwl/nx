@@ -19,7 +19,7 @@ describe('Webpack Plugin', () => {
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     runCLI(
-      `generate @nx/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
+      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
     );
 
     // Test `scriptType` later during during.
@@ -52,7 +52,7 @@ module.exports = composePlugins(withNx(), (config) => {
 
     // swc
     runCLI(
-      `generate @nx/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
+      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -66,7 +66,7 @@ module.exports = composePlugins(withNx(), (config) => {
 
     // tsc
     runCLI(
-      `generate @nx/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
+      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -80,7 +80,7 @@ module.exports = composePlugins(withNx(), (config) => {
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     runCLI(
-      `generate @nx/webpack:webpack-project ${myPkg} --target=node --compiler=babel --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
+      `generate @nx/webpack:configuration ${myPkg} --target=node --compiler=babel --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
     );
 
     updateFile(

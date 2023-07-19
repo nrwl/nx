@@ -9,12 +9,12 @@
       "description": "Nx documentation for you to discover!",
       "itemList": [
         {
-          "name": "Start Here",
+          "name": "Getting Started",
           "id": "getting-started",
           "description": "Get started with basic information, concepts and tutorials.",
           "itemList": [
             {
-              "name": "Getting Started",
+              "name": "Intro to Nx",
               "id": "intro",
               "file": "shared/getting-started/intro"
             },
@@ -27,38 +27,38 @@
               "name": "Why Nx?",
               "id": "why-nx",
               "file": "shared/getting-started/why-nx"
-            }
-          ]
-        },
-        {
-          "name": "5 min Tutorials",
-          "id": "tutorials",
-          "description": "Get started with basic information, concepts and tutorials.",
-          "itemList": [
-            {
-              "name": "Package-Based Monorepo",
-              "id": "package-based-repo-tutorial",
-              "file": "shared/npm-tutorial/package-based"
             },
             {
-              "name": "Integrated Monorepo",
-              "id": "integrated-repo-tutorial",
-              "file": "shared/npm-tutorial/integrated"
-            },
-            {
-              "name": "React Standalone",
-              "id": "react-standalone-tutorial",
-              "file": "shared/react-standalone-tutorial/react-standalone"
-            },
-            {
-              "name": "Angular Standalone",
-              "id": "angular-standalone-tutorial",
-              "file": "shared/angular-standalone-tutorial/angular-standalone"
-            },
-            {
-              "name": "Node Standalone",
-              "id": "node-server-tutorial",
-              "file": "shared/node-server-tutorial/1-code-generation"
+              "name": "5 min Tutorials",
+              "id": "tutorials",
+              "description": "Get started with basic information, concepts and tutorials.",
+              "itemList": [
+                {
+                  "name": "Package-Based Monorepo",
+                  "id": "package-based-repo-tutorial",
+                  "file": "shared/npm-tutorial/package-based"
+                },
+                {
+                  "name": "Integrated Monorepo",
+                  "id": "integrated-repo-tutorial",
+                  "file": "shared/npm-tutorial/integrated"
+                },
+                {
+                  "name": "React Standalone",
+                  "id": "react-standalone-tutorial",
+                  "file": "shared/react-standalone-tutorial/react-standalone"
+                },
+                {
+                  "name": "Angular Standalone",
+                  "id": "angular-standalone-tutorial",
+                  "file": "shared/angular-standalone-tutorial/angular-standalone"
+                },
+                {
+                  "name": "Node Standalone",
+                  "id": "node-server-tutorial",
+                  "file": "shared/node-server-tutorial/1-code-generation"
+                }
+              ]
             }
           ]
         },
@@ -345,7 +345,7 @@
           "itemList": [
             {
               "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-              "tags": ["intro"],
+              "tags": ["intro", "repository-types"],
               "id": "integrated-vs-package-based",
               "file": "shared/concepts/integrated-vs-package-based"
             },
@@ -959,6 +959,11 @@
               "file": "shared/monorepo-ci-azure"
             },
             {
+              "name": "Find the Last Successful Commit in Azure Pipelines",
+              "id": "azure-last-successful-commit",
+              "file": "shared/recipes/azure-last-successful-commit"
+            },
+            {
               "name": "Setting up CircleCI",
               "id": "monorepo-ci-circle-ci",
               "file": "shared/monorepo-ci-circle-ci"
@@ -1311,9 +1316,9 @@
           ]
         },
         {
-          "name": "Other",
-          "id": "other",
-          "description": "Other recipes you will find useful.",
+          "name": "Managing Your Nx Repository",
+          "id": "managing-repository",
+          "description": "Configuring the Repository Itself",
           "itemList": [
             {
               "name": "Run Root-Level NPM Scripts with Nx",
@@ -1334,16 +1339,29 @@
               "file": "shared/recipes/workspace-watching"
             },
             {
-              "name": "Advanced Update Nx",
+              "name": "Advanced Update Process",
               "id": "advanced-update",
               "tags": ["automate-updating-dependencies"],
               "file": "shared/recipes/advanced-update"
             },
             {
+              "name": "Convert from a Standalone Repository to an Integrated Repository",
+              "id": "standalone-to-integrated",
+              "tags": ["repository-types"],
+              "file": "shared/recipes/repo-types/standalone-to-integrated"
+            },
+            {
               "name": "JavaScript and TypeScript",
               "id": "js-and-ts",
               "file": "shared/guides/js-and-ts"
-            },
+            }
+          ]
+        },
+        {
+          "name": "Other",
+          "id": "other",
+          "description": "Other recipes you will find useful.",
+          "itemList": [
             {
               "name": "React Native with Nx",
               "id": "react-native",
@@ -1407,11 +1425,6 @@
               "file": "shared/guides/misc-data-persistence"
             },
             {
-              "name": "Find the Last Successful Commit in Azure Pipelines",
-              "id": "azure-last-successful-commit",
-              "file": "shared/recipes/azure-last-successful-commit"
-            },
-            {
               "name": "Troubleshoot Cache Misses",
               "id": "troubleshoot-cache-misses",
               "tags": ["cache-task-results"],
@@ -1458,6 +1471,12 @@
               "id": "standalone-ngrx-apis",
               "tags": [],
               "file": "shared/recipes/standalone-ngrx-apis"
+            },
+            {
+              "name": "Unknown Local Cache Error",
+              "id": "unknown-local-cache",
+              "tags": [],
+              "file": "shared/guides/unknown-local-cache"
             }
           ]
         }
@@ -1540,9 +1559,9 @@
           ]
         },
         {
-          "name": "On Prem",
+          "name": "Enterprise + On Prem",
           "id": "private-cloud",
-          "description": "Learn about Nx Cloud On Premise, dedicated Nx Cloud application hosted on your server, in your network with total private access.",
+          "description": "Learn about Nx Cloud Enterprise + On-Prem.",
           "itemList": [
             {
               "name": "Get Started",
@@ -1558,6 +1577,11 @@
               "name": "Authenticate with GitHub",
               "id": "auth-github",
               "file": "nx-cloud/private/auth-github"
+            },
+            {
+              "name": "On-Prem VM Setup",
+              "id": "ami-setup",
+              "file": "nx-cloud/private/ami-setup"
             },
             {
               "name": "Authenticate with GitLab",
@@ -1578,16 +1602,6 @@
               "name": "Advanced Configuration",
               "id": "advanced-config",
               "file": "nx-cloud/private/advanced-config"
-            },
-            {
-              "name": "Kubernetes Setup",
-              "id": "kubernetes-setup",
-              "file": "nx-cloud/private/kubernetes-setup"
-            },
-            {
-              "name": "Standalone",
-              "id": "standalone",
-              "file": "nx-cloud/private/standalone"
             }
           ]
         },
@@ -2067,6 +2081,12 @@
               "name": "The `enforce-module-boundaries` rule",
               "path": "/packages/eslint-plugin",
               "file": "shared/packages/linter/enforce-module-boundaries"
+            },
+            {
+              "id": "dependency-checks",
+              "name": "The `dependency-checks` rule",
+              "path": "/packages/eslint-plugin",
+              "file": "shared/packages/linter/dependency-checks"
             }
           ]
         },

@@ -40,8 +40,8 @@ describe('Storybook generators and executors for standalone workspaces - using R
   describe('Storybook generated files', () => {
     it('should generate storybook files', () => {
       checkFilesExist(
-        '.storybook/main.js',
-        '.storybook/preview.js',
+        '.storybook/main.ts',
+        '.storybook/preview.ts',
         'tsconfig.storybook.json'
       );
     });

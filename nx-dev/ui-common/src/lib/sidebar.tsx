@@ -107,7 +107,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
           </>
         )}
       </h5>
-      <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
+      <ul className={cx('mb-6 ml-3', collapsed ? 'hidden' : '')}>
         {(item.children as MenuItem[]).map((subItem, index) => {
           const isActiveLink = subItem.path === withoutAnchors(router.asPath);
           if (isActiveLink && collapsed) {
@@ -119,21 +119,25 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
               key={subItem.id + '-' + index}
               data-testid={`section-li:${subItem.id}`}
             >
-              <Link
-                href={subItem.path}
-                className={cx(
-                  'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'
-                )}
-              >
-                <span
-                  className={cx('relative', {
-                    'text-md font-medium text-blue-500 dark:text-sky-500':
-                      isActiveLink,
-                  })}
+              {subItem.children.length ? (
+                <SidebarSectionItems item={subItem} />
+              ) : (
+                <Link
+                  href={subItem.path}
+                  className={cx(
+                    'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'
+                  )}
                 >
-                  {subItem.name}
-                </span>
-              </Link>
+                  <span
+                    className={cx('relative', {
+                      'text-md font-medium text-blue-500 dark:text-sky-500':
+                        isActiveLink,
+                    })}
+                  >
+                    {subItem.name}
+                  </span>
+                </Link>
+              )}
             </li>
           );
         })}

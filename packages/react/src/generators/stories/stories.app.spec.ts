@@ -41,36 +41,37 @@ describe('react:stories for applications', () => {
     );
   });
 
-  it('should create the stories', async () => {
+  it('should create the stories with interaction tests', async () => {
     await storiesGenerator(appTree, {
       project: 'test-ui-app',
-      generateCypressSpecs: false,
     });
 
     expect(
-      appTree.exists('apps/test-ui-app/src/app/nx-welcome.stories.tsx')
-    ).toBeTruthy();
+      appTree.read('apps/test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
+    ).toMatchSnapshot();
     expect(
-      appTree.exists(
-        'apps/test-ui-app/src/app/anothercmp/another-cmp.stories.tsx'
+      appTree.read(
+        'apps/test-ui-app/src/app/anothercmp/another-cmp.stories.tsx',
+        'utf-8'
       )
-    ).toBeTruthy();
+    ).toMatchSnapshot();
   });
 
-  it('should generate Cypress specs', async () => {
+  it('should create the stories without interaction tests', async () => {
     await storiesGenerator(appTree, {
       project: 'test-ui-app',
-      generateCypressSpecs: true,
+      interactionTests: false,
     });
 
     expect(
-      appTree.exists('apps/test-ui-app-e2e/src/e2e/app.cy.ts')
-    ).toBeTruthy();
+      appTree.read('apps/test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
+    ).toMatchSnapshot();
     expect(
-      appTree.exists(
-        'apps/test-ui-app-e2e/src/e2e/another-cmp/another-cmp.cy.ts'
+      appTree.read(
+        'apps/test-ui-app/src/app/anothercmp/another-cmp.stories.tsx',
+        'utf-8'
       )
-    ).toBeTruthy();
+    ).toMatchSnapshot();
   });
 
   it('should ignore files that do not contain components', async () => {
@@ -82,7 +83,6 @@ describe('react:stories for applications', () => {
 
     await storiesGenerator(appTree, {
       project: 'test-ui-app',
-      generateCypressSpecs: false,
     });
 
     // should just create the story and not error, even though there's a js file
@@ -93,24 +93,18 @@ describe('react:stories for applications', () => {
   });
 
   it('should not update existing stories', async () => {
-    // ARRANGE
     appTree.write(
       'apps/test-ui-app/src/app/nx-welcome.stories.tsx',
       `import { ComponentStory, ComponentMeta } from '@storybook/react'`
     );
 
-    // ACT
     await storiesGenerator(appTree, {
       project: 'test-ui-app',
-      generateCypressSpecs: false,
     });
 
-    // ASSERT
     expect(
       appTree.read('apps/test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
-    ).toEqual(
-      `import { ComponentStory, ComponentMeta } from '@storybook/react';\n`
-    );
+    ).toMatchSnapshot();
   });
 
   describe('ignore paths', () => {
@@ -164,7 +158,6 @@ describe('react:stories for applications', () => {
     it('should generate stories for all if no ignorePaths', async () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
-        generateCypressSpecs: false,
       });
 
       expect(
@@ -192,7 +185,6 @@ describe('react:stories for applications', () => {
     it('should ignore entire paths', async () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
-        generateCypressSpecs: false,
         ignorePaths: [
           `apps/test-ui-app/src/app/anothercmp/**`,
           `**/**/src/**/test-path/ignore-it/**`,
@@ -224,7 +216,6 @@ describe('react:stories for applications', () => {
     it('should ignore path or a pattern', async () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
-        generateCypressSpecs: false,
         ignorePaths: [
           'apps/test-ui-app/src/app/anothercmp/**/*.skip.*',
           '**/**/src/**/test-path/**',
@@ -256,7 +247,6 @@ describe('react:stories for applications', () => {
     it('should ignore direct path to component', async () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
-        generateCypressSpecs: false,
         ignorePaths: ['apps/test-ui-app/src/app/anothercmp/**/*.skip.tsx'],
       });
 
@@ -308,7 +298,6 @@ describe('react:stories for applications', () => {
 
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
-        generateCypressSpecs: false,
         ignorePaths: [
           'apps/test-ui-app/src/app/anothercmp/another-cmp-test.skip.tsx',
         ],

@@ -682,7 +682,7 @@ nx test
 
 You should see green text as your test passes.
 
-![Unit tests passing](./migration-angularjs-unit-tests-passing.png)
+![Unit tests passing](/shared/migration/migration-angularjs-unit-tests-passing.png)
 
 ## End to End testing
 

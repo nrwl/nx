@@ -1,5 +1,5 @@
 import { ExecutorContext, names } from '@nx/devkit';
-import { join } from 'path';
+import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
@@ -53,9 +53,9 @@ function runCliUpdate(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/eas-cli/bin/run'),
+      require.resolve('eas-cli/bin/run'),
       ['update', ...createUpdateOptions(options)],
-      { cwd: join(workspaceRoot, projectRoot), env: process.env }
+      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits

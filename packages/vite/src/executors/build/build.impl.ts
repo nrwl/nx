@@ -1,5 +1,10 @@
 import 'dotenv/config';
-import { ExecutorContext, writeJsonFile } from '@nx/devkit';
+import {
+  ExecutorContext,
+  logger,
+  stripIndents,
+  writeJsonFile,
+} from '@nx/devkit';
 import { build, InlineConfig, mergeConfig } from 'vite';
 import {
   getProjectTsConfigPath,
@@ -16,7 +21,10 @@ import {
 import { existsSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
-import { registerPaths, validateTypes } from '../../utils/executor-utils';
+import {
+  createBuildableTsConfig,
+  validateTypes,
+} from '../../utils/executor-utils';
 
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
@@ -25,7 +33,7 @@ export async function* viteBuildExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  registerPaths(projectRoot, options, context);
+  createBuildableTsConfig(projectRoot, options, context);
 
   const normalizedOptions = normalizeOptions(options);
 
@@ -52,6 +60,13 @@ export async function* viteBuildExecutor(
 
   // Generate a package.json if option has been set.
   if (options.generatePackageJson) {
+    if (context.projectGraph.nodes[context.projectName].type !== 'app') {
+      logger.warn(
+        stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
+        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`
+      );
+    }
+
     const builtPackageJson = createPackageJson(
       context.projectName,
       context.projectGraph,

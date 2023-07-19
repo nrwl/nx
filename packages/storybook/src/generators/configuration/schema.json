@@ -18,15 +18,22 @@
       "x-dropdown": "projects",
       "x-priority": "important"
     },
+    "interactionTests": {
+      "type": "boolean",
+      "description": "Set up Storybook interaction tests.",
+      "x-prompt": "Do you want to set up Storybook interaction tests?",
+      "alias": ["configureTestRunner"],
+      "default": true
+    },
     "configureCypress": {
       "type": "boolean",
       "description": "Run the cypress-configure generator.",
-      "x-prompt": "Configure a cypress e2e app to run against the storybook instance?",
-      "x-priority": "important"
+      "x-deprecated": "Please use Storybook interaction tests instead."
     },
     "cypressDirectory": {
       "type": "string",
-      "description": "A directory where the Cypress project will be placed. Added at root by default."
+      "description": "A directory where the Cypress project will be placed. Added at root by default.",
+      "x-deprecated": "Please use Storybook interaction tests instead."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -55,10 +62,6 @@
       "type": "boolean",
       "description": "Add a static-storybook to serve the static storybook built files.",
       "default": false
-    },
-    "configureTestRunner": {
-      "type": "boolean",
-      "description": "Add a Storybook Test-Runner target."
     },
     "bundler": {
       "description": "The Storybook builder to use.",

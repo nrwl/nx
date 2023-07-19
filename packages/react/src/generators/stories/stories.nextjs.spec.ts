@@ -32,10 +32,20 @@ describe('nextjs:stories for applications', () => {
     );
   });
 
-  it('should create the stories', async () => {
+  it('should create the stories with interaction tests', async () => {
     await storiesGenerator(tree, {
       project: 'test-ui-app',
-      generateCypressSpecs: false,
+    });
+
+    expect(
+      tree.exists('apps/test-ui-app/components/test.stories.tsx')
+    ).toBeTruthy();
+  });
+
+  it('should create the stories without interaction tests', async () => {
+    await storiesGenerator(tree, {
+      project: 'test-ui-app',
+      interactionTests: false,
     });
 
     expect(
@@ -46,7 +56,6 @@ describe('nextjs:stories for applications', () => {
   it('should ignore paths', async () => {
     await storiesGenerator(tree, {
       project: 'test-ui-app',
-      generateCypressSpecs: false,
       ignorePaths: ['apps/test-ui-app/components/**'],
     });
 

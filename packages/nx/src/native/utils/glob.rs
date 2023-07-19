@@ -41,4 +41,16 @@ mod test {
         assert!(glob_set.is_match("node_modules"));
         assert!(glob_set.is_match("packages/nx/node_modules"));
     }
+
+    #[test]
+    fn should_not_detect_root_plugin_configs() {
+        let glob_set = build_glob_set(vec![
+            // String::from("!(Cargo.toml)"),
+            String::from("*/**/Cargo.toml"),
+        ])
+        .unwrap();
+        assert!(glob_set.is_match("packages/a/Cargo.toml"));
+        assert!(glob_set.is_match("a/Cargo.toml"));
+        assert!(!glob_set.is_match("Cargo.toml"))
+    }
 }

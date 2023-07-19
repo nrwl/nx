@@ -14,6 +14,7 @@ export function hashArray(input: Array<string>): string
 export function hashFile(file: string): FileData | null
 export function hashFiles(workspaceRoot: string): Record<string, string>
 export function hashFilesMatchingGlobs(directory: string, globPatterns: Array<string>): string | null
+export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 export interface FileData {
   file: string
   hash: string
@@ -37,14 +38,19 @@ export const enum WorkspaceErrors {
   Generic = 'Generic'
 }
 /** Get workspace config files based on provided globs */
-export function getConfigFiles(workspaceRoot: string, globs: Array<string>): Array<string>
+export function getProjectConfigurations(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Record<string, object>): Record<string, object>
 export interface NxWorkspaceFiles {
   projectFileMap: Record<string, Array<FileData>>
   globalFiles: Array<FileData>
-  configFiles: Array<string>
+  projectConfigurations: Record<string, object>
 }
-/** Throws exceptions */
-export function getWorkspaceFilesNative(workspaceRoot: string, globs: Array<string>): NxWorkspaceFiles
+export function getWorkspaceFilesNative(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Record<string, object>): NxWorkspaceFiles
+export class ImportResult {
+  file: string
+  sourceProject: string
+  dynamicImportExpressions: Array<string>
+  staticImportExpressions: Array<string>
+}
 export class Watcher {
   origin: string
   /**

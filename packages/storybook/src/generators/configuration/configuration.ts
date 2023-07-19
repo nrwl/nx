@@ -35,7 +35,10 @@ import {
   storybookMajorVersion,
 } from '../../utils/utilities';
 import {
+  coreJsVersion,
   nxVersion,
+  storybookJestVersion,
+  storybookTestingLibraryVersion,
   storybookTestRunnerVersion,
   storybookVersion,
   tsNodeVersion,
@@ -109,6 +112,7 @@ export async function configurationGenerator(
     root,
     projectType,
     projectIsRootProjectInStandaloneWorkspace(root),
+    schema.interactionTests,
     mainDir,
     !!nextBuildTarget,
     compiler === 'swc',
@@ -133,13 +137,13 @@ export async function configurationGenerator(
   addStorybookToNamedInputs(tree);
 
   if (schema.uiFramework === '@storybook/angular') {
-    addAngularStorybookTask(tree, schema.name, schema.configureTestRunner);
+    addAngularStorybookTask(tree, schema.name, schema.interactionTests);
   } else {
     addStorybookTask(
       tree,
       schema.name,
       schema.uiFramework,
-      schema.configureTestRunner
+      schema.interactionTests
     );
   }
 
@@ -147,6 +151,7 @@ export async function configurationGenerator(
     addStaticTarget(tree, schema);
   }
 
+  // TODO(katerina): remove Cypress for Nx 18
   if (schema.configureCypress) {
     const e2eProject = await getE2EProjectName(tree, schema.name);
     if (!e2eProject) {
@@ -176,11 +181,22 @@ export async function configurationGenerator(
     devDeps['ts-node'] = tsNodeVersion;
   }
 
-  if (schema.configureTestRunner === true) {
+  if (schema.interactionTests) {
     devDeps['@storybook/test-runner'] = storybookTestRunnerVersion;
+    devDeps['@storybook/addon-interactions'] = storybookVersion;
+    devDeps['@storybook/testing-library'] = storybookTestingLibraryVersion;
+    devDeps['@storybook/jest'] = storybookJestVersion;
   }
+
   if (schema.configureStaticServe) {
     devDeps['@nx/web'] = nxVersion;
+  }
+
+  if (
+    projectType !== 'application' &&
+    schema.uiFramework === '@storybook/react-webpack5'
+  ) {
+    devDeps['core-js'] = coreJsVersion;
   }
 
   tasks.push(addDependenciesToPackageJson(tree, {}, devDeps));
@@ -196,9 +212,10 @@ function normalizeSchema(
   schema: StorybookConfigureSchema
 ): StorybookConfigureSchema {
   const defaults = {
-    configureCypress: true,
+    interactionTests: true,
     linter: Linter.EsLint,
     js: false,
+    tsConfiguration: true,
   };
   return {
     ...defaults,

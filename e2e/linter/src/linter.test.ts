@@ -465,8 +465,7 @@ describe('Linter', () => {
       it('should report dependency check issues', () => {
         const rootPackageJson = readJson('package.json');
         const nxVersion = rootPackageJson.devDependencies.nx;
-        const swcCoreVersion = rootPackageJson.devDependencies['@swc/core'];
-        const swcHelpersVersion = rootPackageJson.dependencies['@swc/helpers'];
+        const tslibVersion = rootPackageJson.dependencies['tslib'];
 
         let out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain('All files pass linting');
@@ -481,9 +480,8 @@ describe('Linter', () => {
 
         // output should now report missing dependencies section
         out = runCLI(`lint ${mylib}`, { silenceError: true });
-        expect(out).toContain(
-          'Dependency sections are missing from the "package.json"'
-        );
+        expect(out).toContain('they are missing');
+        expect(out).toContain('@nx/devkit');
 
         // should fix the missing section issue
         out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
@@ -495,12 +493,12 @@ describe('Linter', () => {
           {
             "dependencies": {
               "@nx/devkit": "${nxVersion}",
-              "@swc/core": "${swcCoreVersion}",
-              "@swc/helpers": "${swcHelpersVersion}",
-              "nx": "${nxVersion}",
+              "tslib": "${tslibVersion}",
             },
+            "main": "./src/index.js",
             "name": "@proj/${mylib}",
             "type": "commonjs",
+            "typings": "./src/index.d.ts",
             "version": "0.0.1",
           }
         `);
@@ -512,7 +510,7 @@ describe('Linter', () => {
         });
         out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain(
-          `The version specifier does not contain the installed version of "@nx/devkit" package: ${nxVersion}`
+          'version specifier does not contain the installed version of "@nx/devkit"'
         );
 
         // should fix the version mismatch issue

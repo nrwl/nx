@@ -2,6 +2,7 @@ import {
   getProjects,
   joinPathFragments,
   names,
+  normalizePath,
   readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
@@ -88,13 +89,14 @@ export function updateModuleName(
   // Update any files which import the module
   for (const [, definition] of getProjects(tree)) {
     visitNotIgnoredFiles(tree, definition.root, (file) => {
-      // skip files that were already modified
+      const normalizedFile = normalizePath(file);
 
-      if (skipFiles.includes(file)) {
+      // skip files that were already modified
+      if (skipFiles.includes(normalizedFile)) {
         return;
       }
 
-      updateFileContent(tree, replacements, file);
+      updateFileContent(tree, replacements, normalizedFile);
     });
   }
 }
@@ -105,7 +107,7 @@ function updateFileContent(
   fileName: string,
   newFileName?: string
 ): void {
-  let content = tree.read(fileName)?.toString('utf-8');
+  let content = tree.read(fileName, 'utf-8');
 
   if (content) {
     let updated = false;

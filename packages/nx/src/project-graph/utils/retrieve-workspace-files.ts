@@ -9,14 +9,17 @@ import {
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import { readJsonFile } from '../../utils/fileutils';
 import { join } from 'path';
-import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  ProjectsConfigurations,
+} from '../../config/workspace-json-project-json';
 import {
   mergeAngularJsonAndProjects,
   shouldMergeAngularProjects,
 } from '../../adapter/angular-json';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectFileMap } from '../../config/project-graph';
-import { NxWorkspaceFiles, WorkspaceErrors } from '../../native';
+import type { NxWorkspaceFiles } from '../../native';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -40,19 +43,21 @@ export async function retrieveWorkspaceFiles(
   );
 
   performance.mark('get-workspace-files:start');
-  let workspaceFiles: NxWorkspaceFiles;
-  try {
-    workspaceFiles = getWorkspaceFilesNative(workspaceRoot, globs);
-  } catch (e) {
-    // If the error is a parse error from Rust, then use the JS readJsonFile function to write a pretty error message
-    if (e.code === WorkspaceErrors.ParseError) {
-      readJsonFile(join(workspaceRoot, e.message));
-      // readJsonFile should always fail, but if it doesn't, then throw the original error
-      throw e;
-    } else {
-      throw e;
-    }
-  }
+
+  const { projectConfigurations, projectFileMap, globalFiles } =
+    getWorkspaceFilesNative(
+      workspaceRoot,
+      globs,
+      (configs: string[]): Record<string, ProjectConfiguration> => {
+        const projectConfigurations = createProjectConfigurations(
+          workspaceRoot,
+          nxJson,
+          configs
+        );
+
+        return projectConfigurations.projects;
+      }
+    ) as NxWorkspaceFiles;
   performance.mark('get-workspace-files:end');
   performance.measure(
     'get-workspace-files',
@@ -61,16 +66,12 @@ export async function retrieveWorkspaceFiles(
   );
 
   return {
-    allWorkspaceFiles: buildAllWorkspaceFiles(
-      workspaceFiles.projectFileMap,
-      workspaceFiles.globalFiles
-    ),
-    projectFileMap: workspaceFiles.projectFileMap,
-    projectConfigurations: createProjectConfigurations(
-      workspaceRoot,
-      nxJson,
-      workspaceFiles.configFiles
-    ),
+    allWorkspaceFiles: buildAllWorkspaceFiles(projectFileMap, globalFiles),
+    projectFileMap,
+    projectConfigurations: {
+      version: 2,
+      projects: projectConfigurations,
+    } as ProjectsConfigurations,
   };
 }
 
@@ -83,11 +84,22 @@ export async function retrieveWorkspaceFiles(
 export async function retrieveProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
-) {
-  const { getConfigFiles } = require('../../native');
+): Promise<Record<string, ProjectConfiguration>> {
+  const { getProjectConfigurations } = require('../../native');
   const globs = await configurationGlobs(workspaceRoot, nxJson);
-  const configPaths = getConfigFiles(workspaceRoot, globs);
-  return createProjectConfigurations(workspaceRoot, nxJson, configPaths);
+  return getProjectConfigurations(
+    workspaceRoot,
+    globs,
+    (configs: string[]): Record<string, ProjectConfiguration> => {
+      const projectConfigurations = createProjectConfigurations(
+        workspaceRoot,
+        nxJson,
+        configs
+      );
+
+      return projectConfigurations.projects;
+    }
+  );
 }
 
 function buildAllWorkspaceFiles(
@@ -97,7 +109,7 @@ function buildAllWorkspaceFiles(
   performance.mark('get-all-workspace-files:start');
   let fileData = Object.values(projectFileMap).flat();
 
-  fileData.push(...globalFiles);
+  fileData = fileData.concat(globalFiles);
   performance.mark('get-all-workspace-files:end');
   performance.measure(
     'get-all-workspace-files',
@@ -123,8 +135,8 @@ function createProjectConfigurations(
   );
 
   if (shouldMergeAngularProjects(workspaceRoot, false)) {
-    projectConfigurations.projects = mergeAngularJsonAndProjects(
-      projectConfigurations.projects,
+    projectConfigurations = mergeAngularJsonAndProjects(
+      projectConfigurations,
       workspaceRoot
     );
   }
@@ -135,14 +147,17 @@ function createProjectConfigurations(
     'build-project-configs:end'
   );
 
-  return projectConfigurations;
+  return {
+    version: 2,
+    projects: projectConfigurations,
+  };
 }
 
 function mergeTargetDefaultsIntoProjectDescriptions(
-  config: ProjectsConfigurations,
+  projects: Record<string, ProjectConfiguration>,
   nxJson: NxJsonConfiguration
 ) {
-  for (const proj of Object.values(config.projects)) {
+  for (const proj of Object.values(projects)) {
     if (proj.targets) {
       for (const targetName of Object.keys(proj.targets)) {
         const projectTargetDefinition = proj.targets[targetName];
@@ -162,7 +177,7 @@ function mergeTargetDefaultsIntoProjectDescriptions(
       }
     }
   }
-  return config;
+  return projects;
 }
 
 async function configurationGlobs(

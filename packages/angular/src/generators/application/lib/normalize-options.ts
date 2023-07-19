@@ -68,6 +68,7 @@ export function normalizeOptions(
     e2eTestRunner: E2eTestRunner.Cypress,
     linter: Linter.EsLint,
     strict: true,
+    bundler: options.bundler ?? 'webpack',
     ...options,
     prefix,
     name: appProjectName,

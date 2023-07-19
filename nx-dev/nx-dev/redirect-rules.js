@@ -144,6 +144,14 @@ const schemaUrls = {
   '/react-native/start': '/packages/react-native/executors/start',
   '/react-native/storybook': '/packages/react-native/executors/storybook',
   '/react-native/sync-deps': '/packages/react-native/executors/sync-deps',
+  '/packages/cypress/generators/cypress-e2e-configuration':
+    '/packages/cypress/generators/configuration',
+  '/packages/cypress/generators/cypress-component-configuration':
+    '/packages/cypress/generators/component-configuration',
+  '/packages/esbuild/generators/esbuild-project':
+    '/packages/esbuild/generators/configuration',
+  '/packages/jest/generators/jest-project':
+    '/packages/jest/generators/configuration',
   '/packages/nx-plugin/generators/executor':
     '/packages/plugin/generators/executor',
   '/packages/nx-plugin/generators/migration':
@@ -152,6 +160,10 @@ const schemaUrls = {
   '/packages/nx-plugin/generators/schematic':
     '/packages/plugin/generators/generator',
   '/packages/nx-plugin/generators/e2e': '/packages/plugin/executors/e2e',
+  '/packages/rollup/generators/rollup-project':
+    '/packages/rollup/generators/configuration',
+  '/packages/webpack/generators/webpack-project':
+    '/packages/webpack/generators/configuration',
   '/nx-plugin/executor': '/packages/plugin/generators/executor',
   '/nx-plugin/migration': '/packages/plugin/generators/migration',
   '/nx-plugin/plugin': '/packages/plugin/generators/plugin',
@@ -351,6 +363,17 @@ const recipesUrls = {
   '/recipes/other/dte': '/recipes/example-repos/dte',
   '/recipes/other/deploy-nextjs-to-vercel':
     '/recipes/deployment/deploy-nextjs-to-vercel',
+  '/recipes/other/azure-last-successful-commit':
+    '/recipes/ci/azure-last-successful-commit',
+  '/recipes/other/root-level-scripts':
+    '/recipes/managing-repository/root-level-scripts',
+  '/recipes/other/analyze-source-files':
+    '/recipes/managing-repository/analyze-source-files',
+  '/recipes/other/workspace-watching':
+    '/recipes/managing-repository/workspace-watching',
+  '/recipes/other/advanced-update':
+    '/recipes/managing-repository/advanced-update',
+  '/recipes/other/js-and-ts': '/recipes/managing-repository/js-and-ts',
 };
 
 /**
@@ -360,6 +383,9 @@ const nxCloudUrls = {
   '/nx-cloud/set-up/add-nx-cloud': '/core-features/share-your-cache',
   '/nx-cloud/set-up/set-up-caching': '/core-features/share-your-cache',
   '/nx-cloud/set-up/set-up-dte': '/core-features/distribute-task-execution',
+  '/nx-cloud/private-cloud/standalone': '/nx-cloud/private-cloud/ami-setup',
+  '/nx-cloud/private-cloud/kubernetes-setup':
+    '/nx-cloud/private-cloud/get-started',
 };
 
 /**
@@ -369,7 +395,7 @@ const tutorialBaseUrls = {
   '/(l|latest)/(a|angular)/tutorial/1-code-generation':
     '/angular-tutorial/1-code-generation',
   '/(l|latest)/(a|node)/tutorial/1-code-generation':
-    '/tutorials/node-server-tutorial',
+    '/getting-started/tutorials/node-server-tutorial',
   '/(l|latest)/(r|react)/tutorial/1-code-generation':
     '/react-tutorial/1-code-generation',
 };
@@ -405,7 +431,7 @@ const oldNodeTutorialPaths = [
 ];
 
 const extraNodeRedirects = {
-  '/getting-started/node-tutorial': '/tutorials/node-server-tutorial',
+  '/getting-started/node-tutorial': '/getting-started/node-server-tutorial',
   '/node-tutorial/1-code-generation': '/node-server-tutorial/1-code-generation',
   '/node-tutorial/2-project-graph': '/node-server-tutorial/2-project-graph',
   '/node-tutorial/3-task-running': '/node-server-tutorial/3-task-running',
@@ -413,7 +439,8 @@ const extraNodeRedirects = {
   '/node-tutorial/5-docker-target': '/node-server-tutorial/5-docker-target',
   '/node-tutorial/6-summary': '/node-server-tutorial/6-summary',
 };
-const nodeRedirectDestination = '/tutorials/node-server-tutorial';
+const nodeRedirectDestination =
+  '/getting-started/tutorials/node-server-tutorial';
 const nodeTutorialRedirects = oldNodeTutorialPaths.reduce((acc, path) => {
   acc[path] = nodeRedirectDestination;
   return acc;
@@ -451,25 +478,25 @@ for (const path of oldAngularTutorialPaths) {
  */
 const standaloneTutorialRedirects = {
   '/shared/react-standalone-tutorial/1-code-generation':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   '/shared/react-standalone-tutorial/2-project-graph':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   '/shared/react-standalone-tutorial/3-task-running':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   '/shared/react-standalone-tutorial/4-task-pipelines':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   '/shared/react-standalone-tutorial/5-summary':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   'shared/angular-standalone-tutorial/1-code-generation':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
   'shared/angular-standalone-tutorial/2-project-graph':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
   'shared/angular-standalone-tutorial/3-task-running':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
   'shared/angular-standalone-tutorial/4-task-pipelines':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
   'shared/angular-standalone-tutorial/5-summary':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
 };
 
 const packagesIndexes = {
@@ -599,13 +626,26 @@ const conceptUrls = {
   '/more-concepts/global-nx':
     '/getting-started/installation#installing-nx-globally',
   '/getting-started/package-based-repo-tutorial':
-    '/tutorials/package-based-repo-tutorial',
+    '/getting-started/tutorials/package-based-repo-tutorial',
   '/getting-started/integrated-repo-tutorial':
-    '/tutorials/integrated-repo-tutorial',
+    '/getting-started/tutorials/integrated-repo-tutorial',
   '/getting-started/react-standalone-tutorial':
-    '/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-standalone-tutorial',
   '/getting-started/angular-standalone-tutorial':
-    '/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-standalone-tutorial',
+};
+
+const nested5minuteTutorialUrls = {
+  '/tutorials/package-based-repo-tutorial':
+    '/getting-started/tutorials/package-based-repo-tutorial',
+  '/tutorials/integrated-repo-tutorial':
+    '/getting-started/tutorials/integrated-repo-tutorial',
+  '/tutorials/react-standalone-tutorial':
+    '/getting-started/tutorials/react-standalone-tutorial',
+  '/tutorials/angular-standalone-tutorial':
+    '/getting-started/tutorials/angular-standalone-tutorial',
+  '/tutorials/node-server-tutorial':
+    '/getting-started/tutorials/node-server-tutorial',
 };
 
 const pluginUrls = {
@@ -632,6 +672,10 @@ const pluginUrls = {
   '/recipes/generators/modifying-files': '/plugins/recipes/modifying-files',
 };
 
+const referenceUrls = {
+  '/changelog': '/reference/changelog',
+};
+
 /**
  * Public export API
  */
@@ -648,5 +692,7 @@ module.exports = {
   packagesIndexes,
   packagesDocuments,
   conceptUrls,
+  nested5minuteTutorialUrls,
   pluginUrls,
+  referenceUrls,
 };

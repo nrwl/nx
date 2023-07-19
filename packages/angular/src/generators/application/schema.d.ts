@@ -27,4 +27,5 @@ export interface Schema {
   standalone?: boolean;
   rootProject?: boolean;
   minimal?: boolean;
+  bundler?: 'webpack' | 'esbuild';
 }

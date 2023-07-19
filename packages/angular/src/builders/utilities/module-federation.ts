@@ -1,7 +1,8 @@
 import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
-import { Remotes } from '@nx/devkit';
+import { logger } from '@nx/devkit';
+import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
 
 export function getDynamicRemotes(
   project: ProjectConfiguration,
@@ -45,23 +46,67 @@ export function getDynamicRemotes(
     return [];
   }
 
-  const dynamicRemotes = Object.entries(parsedManifest)
+  const allDynamicRemotes = Object.entries(parsedManifest)
     .map(([remoteName]) => remoteName)
     .filter((r) => !remotesToSkip.has(r));
-  const invalidDynamicRemotes = dynamicRemotes.filter(
-    (remote) => !workspaceProjects[remote]
-  );
-  if (invalidDynamicRemotes.length) {
-    throw new Error(
-      invalidDynamicRemotes.length === 1
-        ? `Invalid dynamic remote configured in "${pathToManifestFile}": ${invalidDynamicRemotes[0]}.`
-        : `Invalid dynamic remotes configured in "${pathToManifestFile}": ${invalidDynamicRemotes.join(
-            ', '
-          )}.`
+
+  const remotesNotInWorkspace: string[] = [];
+
+  const dynamicRemotes = allDynamicRemotes.filter((remote) => {
+    if (!workspaceProjects[remote]) {
+      remotesNotInWorkspace.push(remote);
+
+      return false;
+    }
+    return true;
+  });
+
+  if (remotesNotInWorkspace.length > 0) {
+    logger.warn(
+      `Skipping serving ${remotesNotInWorkspace.join(
+        ', '
+      )} as they could not be found in the workspace. Ensure they are served correctly.`
     );
   }
 
   return dynamicRemotes;
+}
+
+function getModuleFederationConfig(
+  tsconfigPath: string,
+  workspaceRoot: string,
+  projectRoot: string
+) {
+  const moduleFederationConfigPathJS = join(
+    workspaceRoot,
+    projectRoot,
+    'module-federation.config.js'
+  );
+
+  const moduleFederationConfigPathTS = join(
+    workspaceRoot,
+    projectRoot,
+    'module-federation.config.ts'
+  );
+
+  let moduleFederationConfigPath = moduleFederationConfigPathJS;
+
+  if (existsSync(moduleFederationConfigPathTS)) {
+    tsNodeRegister(moduleFederationConfigPathTS, tsconfigPath);
+    moduleFederationConfigPath = moduleFederationConfigPathTS;
+  }
+
+  try {
+    const config = require(moduleFederationConfigPath);
+    return {
+      mfeConfig: config.default || config,
+      mfConfigPath: moduleFederationConfigPath,
+    };
+  } catch {
+    throw new Error(
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/angular:host"?`
+    );
+  }
 }
 
 export function getStaticRemotes(
@@ -70,41 +115,37 @@ export function getStaticRemotes(
   workspaceProjects: Record<string, ProjectConfiguration>,
   remotesToSkip: Set<string>
 ): string[] {
-  const mfConfigPath = join(
+  const { mfeConfig, mfConfigPath } = getModuleFederationConfig(
+    project.targets.build.options.tsConfig,
     context.workspaceRoot,
-    project.root,
-    'module-federation.config.js'
+    project.root
   );
-
-  let mfeConfig: { remotes: Remotes };
-  try {
-    mfeConfig = require(mfConfigPath);
-  } catch {
-    throw new Error(
-      `Could not load ${mfConfigPath}. Was this project generated with "@nx/angular:host"?`
-    );
-  }
 
   const remotesConfig =
     Array.isArray(mfeConfig.remotes) && mfeConfig.remotes.length > 0
       ? mfeConfig.remotes
       : [];
-  const staticRemotes = remotesConfig
+  const allStaticRemotes = remotesConfig
     .map((remoteDefinition) =>
       Array.isArray(remoteDefinition) ? remoteDefinition[0] : remoteDefinition
     )
     .filter((r) => !remotesToSkip.has(r));
+  const remotesNotInWorkspace: string[] = [];
 
-  const invalidStaticRemotes = staticRemotes.filter(
-    (remote) => !workspaceProjects[remote]
-  );
-  if (invalidStaticRemotes.length) {
-    throw new Error(
-      invalidStaticRemotes.length === 1
-        ? `Invalid static remote configured in "${mfConfigPath}": ${invalidStaticRemotes[0]}.`
-        : `Invalid static remotes configured in "${mfConfigPath}": ${invalidStaticRemotes.join(
-            ', '
-          )}.`
+  const staticRemotes = allStaticRemotes.filter((remote) => {
+    if (!workspaceProjects[remote]) {
+      remotesNotInWorkspace.push(remote);
+
+      return false;
+    }
+    return true;
+  });
+
+  if (remotesNotInWorkspace.length > 0) {
+    logger.warn(
+      `Skipping serving ${remotesNotInWorkspace.join(
+        ', '
+      )} as they could not be found in the workspace. Ensure they are served correctly.`
     );
   }
 

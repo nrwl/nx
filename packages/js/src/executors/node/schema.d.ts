@@ -14,4 +14,5 @@ export interface NodeExecutorOptions {
   port: number;
   watch?: boolean;
   debounce?: number;
+  runBuildTargetDependencies?: boolean;
 }

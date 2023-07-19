@@ -161,6 +161,12 @@
         "description": "Generate a Angular app with a minimal setup.",
         "type": "boolean",
         "default": false
+      },
+      "bundler": {
+        "description": "Bundler to use to build the application.",
+        "type": "string",
+        "enum": ["webpack", "esbuild"],
+        "default": "webpack"
       }
     },
     "additionalProperties": false,

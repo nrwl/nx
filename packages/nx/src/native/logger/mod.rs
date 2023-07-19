@@ -63,7 +63,7 @@ where
 
 pub(crate) fn enable_logger() {
     let env_filter =
-        EnvFilter::try_from_env("NX_NATIVE_LOGGING").unwrap_or_else(|_| EnvFilter::new("INFO"));
+        EnvFilter::try_from_env("NX_NATIVE_LOGGING").unwrap_or_else(|_| EnvFilter::new("ERROR"));
     _ = tracing_subscriber::fmt()
         .with_env_filter(env_filter)
         .event_format(NxLogFormatter)

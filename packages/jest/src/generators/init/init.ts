@@ -68,7 +68,7 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
     addTestInputs(tree);
   }
   if (options.rootProject) {
-    // we don't want any config to be made because the `jestProjectGenerator`
+    // we don't want any config to be made because the `configurationGenerator` will do it.
     // will copy the template config file
     return;
   }
@@ -124,7 +124,9 @@ function addTestInputs(tree: Tree) {
       // Remove tsconfig.spec.json
       '!{projectRoot}/tsconfig.spec.json',
       // Remove jest.config.js/ts
-      '!{projectRoot}/jest.config.[jt]s'
+      '!{projectRoot}/jest.config.[jt]s',
+      // Remove test-setup.js/ts
+      '!{projectRoot}/src/test-setup.[jt]s'
     );
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));

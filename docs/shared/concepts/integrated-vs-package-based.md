@@ -18,7 +18,7 @@ A package-based repo is a collection of packages that depend on each other via `
 Lerna, Yarn, Lage, [Turborepo](/more-concepts/turbo-and-nx) and Nx (without plugins) support this style.
 
 {% cards %}
-{% card title="Tutorial: Getting Started with Package-Based Repos" description="Walkthrough for creating a package-based monorepo with Nx" type="documentation" url="/tutorials/package-based-repo-tutorial" /%}
+{% card title="Tutorial: Getting Started with Package-Based Repos" description="Walkthrough for creating a package-based monorepo with Nx" type="documentation" url="/getting-started/tutorials/package-based-repo-tutorial" /%}
 {% /cards %}
 
 ## Integrated Repos
@@ -28,7 +28,7 @@ An integrated repo contains projects that depend on each other through standard 
 Bazel and Nx (with plugins) support this style.
 
 {% cards %}
-{% card title="Tutorial: Getting Started with Integrated Repos" description="Walkthrough for creating an integrated monorepo with Nx" type="documentation" url="/tutorials/integrated-repo-tutorial" /%}
+{% card title="Tutorial: Getting Started with Integrated Repos" description="Walkthrough for creating an integrated monorepo with Nx" type="documentation" url="/getting-started/tutorials/integrated-repo-tutorial" /%}
 {% /cards %}
 
 ## Standalone Applications
@@ -37,8 +37,8 @@ Nx plugins, especially the [generators](/plugin-features/use-code-generators), [
 
 {% cards %}
 {% card title="Standalone Applications with Nx" description="Learn what Standlone Apps are and how Nx can be useful" type="video" url="https://youtu.be/qEaVzh-oBBc" /%}
-{% card title="Tutorial: React Standalone Tutorial" description="Walkthrough for creating a React standalone application with Nx" type="documentation" url="/tutorials/react-standalone-tutorial" /%}
-{% card title="Tutorial: Angular Standalone Tutorial" description="Walkthrough for creating an Angular standalone application with Nx" type="documentation" url="/tutorials/angular-standalone-tutorial" /%}
+{% card title="Tutorial: React Standalone Tutorial" description="Walkthrough for creating a React standalone application with Nx" type="documentation" url="/getting-started/tutorials/react-standalone-tutorial" /%}
+{% card title="Tutorial: Angular Standalone Tutorial" description="Walkthrough for creating an Angular standalone application with Nx" type="documentation" url="/getting-started/tutorials/angular-standalone-tutorial" /%}
 {% /cards %}
 
 ## How to Choose

@@ -45,6 +45,7 @@ describe('lib', () => {
           build: "echo 'implement build'",
           test: "echo 'implement test'",
         },
+        dependencies: {},
       });
 
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();

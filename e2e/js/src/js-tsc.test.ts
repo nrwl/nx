@@ -129,9 +129,13 @@ describe('js e2e', () => {
       return json;
     });
 
-    runCLI(`build ${lib}`);
+    updateJson(`libs/${lib}/package.json`, (json) => {
+      // Delete automatically generated helper dependency to test legacy behavior.
+      delete json.dependencies.tslib;
+      return json;
+    });
 
-    const rootPackageJson = readJson(`package.json`);
+    runCLI(`build ${lib} --updateBuildableProjectDepsInPackageJson`);
 
     expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
       'peerDependencies.tslib'
@@ -189,6 +193,15 @@ describe('js e2e', () => {
       `dist/libs/${lib}/src/lib/${lib}.js`,
       `dist/libs/${lib}/src/lib/${lib}.d.ts`
     );
+
+    // run a second time skipping the nx cache and with the outputs present
+    const secondBatchBuildOutput = runCLI(
+      `build ${parentLib} --skip-nx-cache`,
+      { env: { NX_BATCH_MODE: 'true' } }
+    );
+    expect(secondBatchBuildOutput).toContain(
+      `Successfully ran target build for project ${parentLib} and 1 task it depends on`
+    );
   }, 240_000);
 
   it('should not create a `.babelrc` file when creating libs with js executors (--compiler=tsc)', () => {
@@ -221,7 +234,13 @@ describe('package.json updates', () => {
     `;
     });
 
-    runCLI(`build ${lib}`);
+    updateJson(`libs/${lib}/package.json`, (json) => {
+      // Delete automatically generated helper dependency to test legacy behavior.
+      delete json.dependencies.tslib;
+      return json;
+    });
+
+    runCLI(`build ${lib} --updateBuildableProjectDepsInPackageJson`);
 
     // Check that only 'react' exists, don't care about version
     expect(readJson(`dist/libs/${lib}/package.json`).dependencies).toEqual({

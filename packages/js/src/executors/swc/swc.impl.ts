@@ -1,4 +1,4 @@
-import { ExecutorContext, readJsonFile, writeJsonFile } from '@nx/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
 import { removeSync } from 'fs-extra';
 import { dirname, join, relative, resolve } from 'path';
@@ -21,7 +21,6 @@ import {
 import { compileSwc, compileSwcWatch } from '../../utils/swc/compile-swc';
 import { getSwcrcPath } from '../../utils/swc/get-swcrc-path';
 import { generateTmpSwcrc } from '../../utils/swc/inline';
-import type { Options } from '@swc/core';
 
 export function normalizeOptions(
   options: SwcExecutorOptions,

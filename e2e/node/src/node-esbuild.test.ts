@@ -3,8 +3,11 @@ import {
   checkFilesExist,
   cleanupProject,
   newProject,
+  promisifiedTreeKill,
+  readFile,
   runCLI,
   runCLIAsync,
+  runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
@@ -24,12 +27,21 @@ describe('Node Applications + esbuild', () => {
     checkFilesDoNotExist(`apps/${app}/webpack.config.js`);
 
     updateFile(`apps/${app}/src/main.ts`, `console.log('Hello World!');`);
-    await runCLIAsync(`build ${app}`);
 
+    const p = await runCommandUntil(`serve ${app} --watch=false`, (output) => {
+      process.stdout.write(output);
+      return output.includes(`Hello World!`);
+    });
     checkFilesExist(`dist/apps/${app}/main.js`);
-    const result = execSync(`node dist/apps/${app}/main.js`, {
-      cwd: tmpProjPath(),
-    }).toString();
-    expect(result).toMatch(/Hello World!/);
+
+    // Check that updating the file won't trigger a rebuild since --watch=false.
+    updateFile(`apps/${app}/src/main.ts`, `console.log('Bye1');`);
+    await new Promise((res) => setTimeout(res, 2000));
+
+    expect(readFile(`dist/apps/${app}/apps/${app}/src/main.js`)).not.toContain(
+      `Bye!`
+    );
+
+    await promisifiedTreeKill(p.pid, 'SIGKILL');
   }, 300_000);
 });

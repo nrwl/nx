@@ -37,6 +37,17 @@ describe('create-nx-workspace --preset=npm', () => {
     cleanupProject({ skipReset: true });
   });
 
+  it('should setup package-based workspace', () => {
+    const packageJson = readJson('package.json');
+    expect(packageJson.dependencies).toEqual({});
+
+    if (getSelectedPackageManager() === 'pnpm') {
+      checkFilesExist('pnpm-workspace.yaml');
+    } else {
+      expect(packageJson.workspaces).toEqual(['packages/*']);
+    }
+  });
+
   it('should add angular application', () => {
     packageInstall('@nx/angular', wsName);
     const appName = uniq('my-app');

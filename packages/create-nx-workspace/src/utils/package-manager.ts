@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { existsSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 /*
@@ -36,6 +36,7 @@ export function getPackageManagerCommand(
 ): {
   install: string;
   exec: string;
+  preInstall?: string;
 } {
   const [pmMajor, pmMinor] =
     getPackageManagerVersion(packageManager).split('.');
@@ -45,10 +46,14 @@ export function getPackageManagerCommand(
       const useBerry = +pmMajor >= 2;
       const installCommand = 'yarn install --silent';
       return {
+        preInstall: useBerry
+          ? 'yarn set version stable'
+          : 'yarn set version classic',
         install: useBerry
           ? installCommand
           : `${installCommand} --ignore-scripts`,
-        exec: 'yarn',
+        // using npx is necessary to avoid yarn classic manipulating the version detection when using berry
+        exec: useBerry ? 'npx' : 'yarn',
       };
 
     case 'pnpm':
@@ -81,15 +86,28 @@ export function generatePackageManagerFiles(
           join(root, '.yarnrc.yml'),
           'nodeLinker: node-modules\nenableScripts: false'
         );
+        // avoids errors when using nested yarn projects
+        writeFileSync(join(root, 'yarn.lock'), '');
       }
       break;
   }
 }
 
+const pmVersionCache = new Map<PackageManager, string>();
+
 export function getPackageManagerVersion(
-  packageManager: PackageManager
+  packageManager: PackageManager,
+  cwd = process.cwd()
 ): string {
-  return execSync(`${packageManager} --version`).toString('utf-8').trim();
+  if (pmVersionCache.has(packageManager)) {
+    return pmVersionCache.get(packageManager) as string;
+  }
+  const version = execSync(`${packageManager} --version`, {
+    cwd,
+    encoding: 'utf-8',
+  }).trim();
+  pmVersionCache.set(packageManager, version);
+  return version;
 }
 
 /**

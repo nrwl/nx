@@ -4,7 +4,7 @@ exports[`@nx/vite:configuration library mode should add config for building libr
 "/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
 
@@ -18,18 +18,12 @@ export default defineConfig({
       skipDiagnostics: true,
     }),
     react(),
-    viteTsConfigPaths({
-      root: '../',
-    }),
+    nxViteTsPaths(),
   ],
 
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [
-  //    viteTsConfigPaths({
-  //      root: '../',
-  //    }),
-  //  ],
+  //  plugins: [ nxViteTsPaths() ],
   // },
 
   // Configuration for building your library.
@@ -57,7 +51,7 @@ exports[`@nx/vite:configuration library mode should set up non buildable library
 "/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
 
@@ -71,18 +65,12 @@ export default defineConfig({
       skipDiagnostics: true,
     }),
     react(),
-    viteTsConfigPaths({
-      root: '../../',
-    }),
+    nxViteTsPaths(),
   ],
 
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [
-  //    viteTsConfigPaths({
-  //      root: '../../',
-  //    }),
-  //  ],
+  //  plugins: [ nxViteTsPaths() ],
   // },
 
   // Configuration for building your library.
@@ -301,7 +289,7 @@ exports[`@nx/vite:configuration transform React app to use Vite should create vi
 "/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/my-test-react-app',
@@ -316,20 +304,11 @@ export default defineConfig({
     host: 'localhost',
   },
 
-  plugins: [
-    react(),
-    viteTsConfigPaths({
-      root: '../../',
-    }),
-  ],
+  plugins: [react(), nxViteTsPaths()],
 
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [
-  //    viteTsConfigPaths({
-  //      root: '../../',
-  //    }),
-  //  ],
+  //  plugins: [ nxViteTsPaths() ],
   // },
 });
 "
@@ -451,7 +430,7 @@ exports[`@nx/vite:configuration transform Web app to use Vite should create vite
 "/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/my-test-web-app',
@@ -466,19 +445,11 @@ export default defineConfig({
     host: 'localhost',
   },
 
-  plugins: [
-    viteTsConfigPaths({
-      root: '../../',
-    }),
-  ],
+  plugins: [nxViteTsPaths()],
 
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [
-  //    viteTsConfigPaths({
-  //      root: '../../',
-  //    }),
-  //  ],
+  //  plugins: [ nxViteTsPaths() ],
   // },
 });
 "
@@ -587,7 +558,7 @@ exports[`@nx/vite:configuration vitest should create a vitest configuration if "
 "/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/my-test-react-app',
@@ -602,20 +573,11 @@ export default defineConfig({
     host: 'localhost',
   },
 
-  plugins: [
-    react(),
-    viteTsConfigPaths({
-      root: '../../',
-    }),
-  ],
+  plugins: [react(), nxViteTsPaths()],
 
   // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [
-  //    viteTsConfigPaths({
-  //      root: '../../',
-  //    }),
-  //  ],
+  //  plugins: [ nxViteTsPaths() ],
   // },
 
   test: {

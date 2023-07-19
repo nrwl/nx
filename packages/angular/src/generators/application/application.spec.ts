@@ -969,6 +969,27 @@ describe('app', () => {
         appTree.read('apps/plain/src/app/app.component.html', 'utf-8')
       ).toMatchSnapshot();
     });
+
+    it('should generate a correct build target for --bundler=esbuild', async () => {
+      await generateApp(appTree, 'ngesbuild', {
+        routing: true,
+        bundler: 'esbuild',
+      });
+
+      const project = readProjectConfiguration(appTree, 'ngesbuild');
+      expect(project.targets.build.executor).toEqual(
+        '@angular-devkit/build-angular:browser-esbuild'
+      );
+      expect(
+        project.targets.build.configurations.development.namedChunks
+      ).toBeUndefined();
+      expect(
+        project.targets.build.configurations.development.vendorChunks
+      ).toBeUndefined();
+      expect(
+        project.targets.build.configurations.production.budgets
+      ).toBeUndefined();
+    });
   });
 });
 

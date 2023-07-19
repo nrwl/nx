@@ -1,4 +1,4 @@
-import { TagIcon } from '@heroicons/react/24/outline';
+import { LinkIcon, TagIcon } from '@heroicons/react/24/outline';
 import {
   Breadcrumbs,
   DocumentationHeader,
@@ -188,7 +188,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
     return entry;
   });
   const convertToDate = (invalidDate) =>
-    new Date(invalidDate.replace(/(nd|th|rd)/g, ''));
+    new Date(invalidDate.replace(/(nd|th|rd|st)/g, ''));
   const { toggleNav, navIsOpen } = useNavToggle();
 
   const menu = {
@@ -251,7 +251,10 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                 <div className="mt-1 hidden relative sm:flex h-6 w-6 flex-none items-center justify-center">
                   <div className="h-2 w-2 rounded-full bg-slate-100 ring-1 ring-slate-300 dark:ring-slate-500 dark:bg-slate-600" />
                 </div>
-                <div className="flex flex-col w-36 shrink-0">
+                <div
+                  id={changelog.version}
+                  className="flex flex-col w-36 shrink-0 group"
+                >
                   <p className="py-0.5">
                     <a
                       title="See release tag on GitHub"
@@ -265,6 +268,9 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                         aria-hidden="true"
                       />{' '}
                       v{changelog.version}
+                    </a>
+                    <a aria-hidden="true" href={`#${changelog.version}`}>
+                      <LinkIcon className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
                     </a>
                   </p>
                   <p className="py-0.5 text-xs leading-5 text-slate-400 dark:text-slate-500">

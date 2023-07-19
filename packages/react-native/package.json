@@ -30,7 +30,8 @@
     "fs-extra": "^11.1.0",
     "glob": "7.1.4",
     "ignore": "^5.0.4",
-    "metro-resolver": "^0.74.1",
+    "metro-config": "0.76.7",
+    "metro-resolver": "0.76.7",
     "minimatch": "3.0.5",
     "node-fetch": "^2.6.7",
     "tsconfig-paths": "^4.1.2",
@@ -43,7 +44,7 @@
     "@nx/workspace": "file:../workspace"
   },
   "peerDependencies": {
-    "react-native": ">= 0.71.0"
+    "react-native": ">= 0.72.0 < 0.73.0"
   },
   "builders": "./executors.json",
   "ng-update": {

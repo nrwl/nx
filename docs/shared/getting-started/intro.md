@@ -1,6 +1,26 @@
 # Intro to Nx
 
-Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. Learn more about [how Nx works](/getting-started/why-nx).
+Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. Find out more about [why you should use Nx](/getting-started/why-nx).
+
+If instead you want to jump right into it, run the following command. It will guide you through the setup:
+
+{% tabs %}
+{% tab label="npm" %}
+
+{% terminal-command command="npx create-nx-workspace"  /%}
+
+{% /tab %}
+{% tab label="yarn" %}
+
+{% terminal-command command="npx create-nx-workspace --pm yarn"  /%}
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+{% terminal-command command="npx create-nx-workspace --pm pnpm"  /%}
+
+{% /tab %}
+{% /tabs %}
 
 You can use Nx to quickly scaffold a new standalone project or even an entire monorepo. It can be incrementally adopted and will grow with your project as it scales.
 
@@ -17,18 +37,18 @@ You can use Nx to quickly scaffold a new standalone project or even an entire mo
 Its modular architecture lets you adopt Nx for package-based monorepos in combination with NPM, Yarn or PNPM, or create a fully integrated monorepo using Nx plugins. Learn more with the tutorials below.
 
 {% personas %}
-{% persona type="javascript" title="New Package-Based Repo" url="/tutorials/package-based-repo-tutorial" %}
+{% persona type="javascript" title="New Package-Based Repo" url="/getting-started/tutorials/package-based-repo-tutorial" %}
 Create a monorepo with Yarn, NPM or PNPM. Nx makes it fast, but lets you run things your way.
 
-- [Get started with your package-based repo](/tutorials/package-based-repo-tutorial)
+- [Get started with your package-based repo](/getting-started/tutorials/package-based-repo-tutorial)
 
 {% /persona %}
 
-{% persona type="integrated" title="New Integrated Repo" url="/tutorials/integrated-repo-tutorial" %}
+{% persona type="integrated" title="New Integrated Repo" url="/getting-started/tutorials/integrated-repo-tutorial" %}
 
 Get a pre-configured setup. Nx configures your favorite frameworks and lets you focus on shipping features.
 
-- [Get started with your integrated repo](/tutorials/integrated-repo-tutorial)
+- [Get started with your integrated repo](/getting-started/tutorials/integrated-repo-tutorial)
 
 {% /persona %}
 
@@ -42,27 +62,27 @@ Nx works well not just for monorepos. Nx plugins help you scaffold new standalon
 
 {% cards cols="3" %}
 
-{% persona type="react" title="Create a Standalone React app" url="/tutorials/react-standalone-tutorial" %}
+{% persona type="react" title="Create a Standalone React app" url="/getting-started/tutorials/react-standalone-tutorial" %}
 
 A modern React setup with built-in support for Vite, ESLint, Cypress, and more. Think CRA but modern, always up-to-date and scalable.
 
-- [Create a Standalone React app](/tutorials/react-standalone-tutorial)
+- [Create a Standalone React app](/getting-started/tutorials/react-standalone-tutorial)
 
 {% /persona %}
 
-{% persona type="angular" title="Create a Standalone Angular app" url="/tutorials/angular-standalone-tutorial" %}
+{% persona type="angular" title="Create a Standalone Angular app" url="/getting-started/tutorials/angular-standalone-tutorial" %}
 
 A modern Angular development experience powered by advanced generators and integrations with modern tooling.
 
-- [Create a Standalone Angular app](/tutorials/angular-standalone-tutorial)
+- [Create a Standalone Angular app](/getting-started/tutorials/angular-standalone-tutorial)
 
 {% /persona %}
 
-{% persona type="node" title="Create a Standalone Node server" url="/tutorials/node-server-tutorial" %}
+{% persona type="node" title="Create a Standalone Node server" url="/getting-started/tutorials/node-server-tutorial" %}
 
 A modern Node server with scaffolding for Express, Fastify or Koa. There's also Docker support built-in.
 
-- [Create a Standalone Node server](/tutorials/node-server-tutorial)
+- [Create a Standalone Node server](/getting-started/tutorials/node-server-tutorial)
 
 {% /persona %}
 
@@ -70,7 +90,11 @@ A modern Node server with scaffolding for Express, Fastify or Koa. There's also 
 
 ## Adding Nx to an Existing Project or Monorepo
 
-Coming from an existing project and want to adopt Nx? We have a few recipes to help you get started.
+If you have an existing project and want to adopt Nx or migrate to Nx just run the following command which guides you through the migration process:
+
+{% terminal-command command="npx nx@latest init"  /%}
+
+Alternatively, here are some recipes that give you more details based on the technology stack you're using:
 
 {% cards cols="2" %}
 

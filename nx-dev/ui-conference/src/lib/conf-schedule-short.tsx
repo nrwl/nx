@@ -11,7 +11,7 @@ export function ConfScheduleShort(): JSX.Element {
   const scheduleItemsDiscussions: ScheduleItem[] = [
     {
       type: 'event',
-      time: '9:00am - 5:00pm (UTC-07:00)',
+      time: '9:00am - 5:00pm',
       title: 'Nx Workshop - Day 2',
       description:
         'Note, environment setup starts at 8am. Join day 2 to take a deep dive into advanced Nx concepts that help you leverage Nx to its fullest. More details in the workshop section further down.',
@@ -22,95 +22,86 @@ export function ConfScheduleShort(): JSX.Element {
   const scheduleItemsConference: ScheduleItem[] = [
     {
       type: 'event',
-      time: '8:30 - 9:30am (UTC-07:00)',
-      title: 'Registration',
+      time: '7:00am',
+      title: 'Breakfast & Registration',
       description: 'Conference registration',
       speakers: [],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '9:30 - 9:45am (UTC-07:00)',
+      time: '9:00am',
       title: 'Welcome & Opening Remarks',
       description: '',
-      speakers: ['Jeff Cross', 'Katerina Skroumpelou', 'Philp Fulcher'],
+      speakers: ['Jeff Cross', 'Lara Newsom', 'Philip Fulcher'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '9:50 - 10:15am (UTC-07:00)',
-      title: 'Keynote - Nx and Lerna: Integrated vs Package-Based Monorepos',
-      description:
-        'The JS community has two main styles of monorepos: the “package-based” approach (popularized by Lerna) and the “integrated” style (popularized by Nx, used by Google, Facebook etc.). While one is lightweight and easy to adopt, the other gives much more flexibility, scales better, and provides better dev ergonomics but requires a mind shift.\n' +
-        'In this talk, we’ll have a deeper look at how Lerna and Nx implement these approaches, the trade-offs, and the advantages; we will help you pick the right one and show how to migrate from one to the other.\n',
-      speakers: ['Victor Savkin'],
+      time: '9:10am',
+      title: 'Keynote',
+      description: 'tbd',
+      speakers: ['Victor Savkin', 'Juri Strumpflohner'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '10:20 - 10:45am (UTC-07:00)',
-      title: 'Re-thinking CI bottlenecks with Distributed Execution',
-      description:
-        'Nx’s powerful caching algorithms and dependency graph knowledge allow you to build simple CI pipelines that scale as your workspace grows. But caching and affected work best in the average case: when only some projects are changed in a PR, you can skip anything that can’t be affected by that change, and from the remaining ones the caching algorithms will help you replay all the work that has been done before. But after a certain point you have to start splitting the work across multiple agents if you want your workspace to scale.      In this talk we’ll explore why your CI can slow down in big workspaces, and how you can unlock horizontal scaling by distributing your tasks across multiple machines. We’ll look at some of the issues with task distribution and how you can use NxCloud workflows to implement scalable CI configs that optimally splits the work across your matrix of agents.',
-      speakers: ['Rareş Matei', 'Altan Stalker'],
+      time: '10:05am',
+      title: 'Announcement - tbd',
+      description: 'tbd',
+      speakers: ['Simon Critchley'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '10:50 - 11:15am (UTC-07:00)',
-      title: 'Lerna Reborn',
-      description:
-        "Lerna blazed the original trail in the open-source JavaScript monorepo space, and the whole ecosystem has benefitted immensely from that experience. It remains extremely popular for versioning/publishing and full monorepo workspace management, and now that the Nrwl Team has taken over stewardship of the project, we want to share some of the great updates we've made over the last few months as well as what we have planned for the near future.",
-      speakers: ['James Henry'],
+      time: '10:35am',
+      title:
+        'United by Nxcellent DX - An Nx adoption plan for migrating and onboarding hundreds of developers to an Nx monorepo',
+      description: `In one of our projects, Push-Based currently support a large enterprise. They are migrating from a complex .NET and Angular polyrepo setup to an organization-wide Nx monorepo for hundreds of developers that build web apps for 30 brands across a hundred domains. To achieve their Nx migration goals, we defined guiding principles and fitted an Nx adoption strategy.
+ 
+      This talk covers the tactics we apply to avoid interrupting the teams' workflow and onboard them to Nx and a monorepo workflow. An important part is what we call the Migration Toolkit. This custom Nx plugin helps teams prepare their repo by identifying the minimum requirements for migrating to the Nx monorepo workspace and offering custom Nx migration generators.`,
+      speakers: ['Michael Hladky'],
       videoUrl: '',
     },
     {
       type: 'break',
-      time: '11:15 - 11:35am (UTC-07:00)',
+      time: '10:55am',
       title: 'Break',
-      description: '',
+      description:
+        'Get some snacks and coffee to be ready for the 2nd set of morning talks',
       speakers: [],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '11:35 - 11:55pm (UTC-07:00)',
-      title: 'Nx + Cypress Like Peanut Butter & Jelly',
-      description:
-        "Name a more iconic duo than Nx & Cypress... I'll wait. In this talk I will highlight some of ways in which Nx integrates seamlessly with Cypress and how it can speed up both your development and overall developer experience. We will also take a look at Cypress Component Testing and how you can leverage Nx in your testing. By the end you will see why Nx and Cypress are the peanut butter and jelly of your developer toolbox.",
-      speakers: ['Jordan Powell'],
+      time: '11:25am',
+      title: 'Redefining Projects with Nx: A Dive into the New Inference API',
+      description: `In a continuous strive for improvement, we have revamped the project inference API, aiming to provide greater flexibility and power in defining and managing projects. This talk will walk through the evolution of the project inference API, highlighting the transition from a 1:1 file-to-project mapping to a more nuanced approach that handles complex project configurations. We'll explore the key advantages of the new API, including the ability to define multiple projects within a single file and set more comprehensive project properties. Join us to learn about these exciting changes and understand how they can enhance your work with Nx.`,
+      speakers: ['Craigory Coppola'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '12:05 - 12:15pm (UTC-07:00)',
-      title: 'CI/CD tricks with Nx',
-      description:
-        '⚡️ Lightning talk - Nx is great at telling us what changed and what needs to be rebuilt and/or deployed. How do we use this information to dynamically trigger CICD pipelines or workflows? In this talk we’ll review some tricks to generate dynamic configuration for both Azure DevOps and CircleCI that help to solve this problem. ',
-      speakers: ['Kennie Davis'],
+      time: '11:55',
+      title: 'Package-based to Integrated: One Small Step or One Giant Leap?',
+      description: `When you have a package-based repo, it can feel like the features of an integrated repo are all the way on the moon.  But, in the same way that Neil Armstrong had a whole team of people enabling him to take his one small step, you can take advantage of the hard work of the Nx team to incrementally move your package-based repo toward an integrated repo.
+
+      Starting from a package-based repo, we'll enforce project boundaries, create and use code generators and, finally, use task executors and automate updating dependencies.  Together, these improvements add up to one giant leap forward in developer experience.`,
+      speakers: ['Isaac Mann'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '12:15 - 12:25pm (UTC-07:00)',
-      title: 'Exploring Library Boundaries for State Management Libraries',
+      time: '12:25pm',
+      title: `Nx't Level Publishing`,
       description:
-        '⚡️ Lightning talk - State management libraries like Redux, Vuex, and NgRx give developers tools to introduce indirection between state management, side effects, and the view layer. Quickly learn about the ramifications indirection introduces for Nx libraries and explore ideas about creating module boundaries around your state management code.',
-      speakers: ['Mike Ryan'],
-      videoUrl: '',
-    },
-    {
-      type: 'event',
-      time: '12:25 - 12:35pm (UTC-07:00)',
-      title: 'Nx Workspace Guardrails',
-      description:
-        '⚡️ Lightning talk - Concept: in a Nx monorepo with lots of contributors, how do you help ensure engineers follow the desired patterns for development?  You may have a roadmap for where you want to go, but how do you make sure folks don’t slide off the cliff along the way?  You need some guardrails to help keep people on track.  Thankfully, Nx has got you covered. We’ll show how built-in tools like workspace lint, ESLint, and workspace ESLint rules can help put checks in place to ensure the overall health of your workspace.',
-      speakers: ['Ryan Diehl'],
+        'In this talk we will dig into practical examples of various approaches to versioning and publishing packages from an Nx workspace.',
+      speakers: ['James Henry'],
       videoUrl: '',
     },
     {
       type: 'break',
-      time: '12:35 - 1:50pm (UTC-07:00)',
+      time: '12:45pm - 2:45pm',
       title: 'Lunch',
       description: '',
       speakers: [],
@@ -118,34 +109,42 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'event',
-      time: '1:50 - 2:15pm (UTC-07:00)',
-      title: 'Extending Nx: Polyglot Superpowers',
-      description:
-        "Extensibility is in Nx's DNA, and having a tool that you can extend and customize to your monorepo setup is crucial. Sharing different languages in a monorepo is extremely common yet toolchains usually don't play well together. Fortunately, Nx allows you to extend its capabilities to integrate your whole stack. Use Nx's graph on your Go or Python code and see what is affected, or generate Go code via Nx. Make Nx polyglot to take advantage of affected tests and remote caching for all your tech stack.",
-      speakers: ['Jack Hsu', 'Benjamin Cabanes'],
+      time: '2:45pm',
+      title:
+        'Lightning Talk: What if your stories were - already - your e2e tests?',
+      description: `Storybook interaction tests allow developers to verify the functional aspects of UI components by simulating user behavior and checking UI and state updates. They integrate with Storybook's existing stories, utilizing a 'play' function to recreate user interactions, effectively transforming these stories into comprehensive e2e tests. Nx enhances the testing process by providing generators for Storybook interaction tests. This means that you don't need third-party tools for e2e tests if you're already using Storybook. What's awesome is that everything is fully integrated into your project right off the bat, with zero extra setup needed. So you can focus on what matters: building amazing UIs, with the peace of mind that testing is taken care of.`,
+      speakers: ['Katerina Skroumpelou'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '2:20 - 2:45pm (UTC-07:00)',
-      title: 'Nx, Ionic, Appflow: Navigating the Wild West of Hybrid Apps',
-      description:
-        'These days there are a lot of ways to build mobile apps. But what if you want to share your types across the frontend and backend, or share components and logic across your mobile and web app, and maybe an admin panel? At this point, your options get pretty limited, and things only get more complicated once you start thinking about how to automate building and deploying your native apps to the app store. In this talk, we’ll explore how to develop Ionic applications in an Nx workspace and how to configure Appflow for automated app store deployments.',
-      speakers: ['Devin Shoemaker'],
+      time: '3:00pm',
+      title: 'Lightning Talk: Nx Cloud Demo',
+      description: `We're going to take a tour through some of the features of our latest release of Nx Cloud. We'll show you some of the latest analytics, organization management tools and ways that Nx Cloud can help you figure out what's really going on in CI without digging through endless logs.`,
+      speakers: ['Johanna Pearce'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '2:50 - 3:15pm (UTC-07:00)',
-      title: 'Nx at Celonis',
-      description:
-        'Celonis adopted AngularJS in 2011, 5 years later in 2016 we had fewer applications to manage, and individual teams were responsible for each application, soon we found there are many issues with each team owning the code, we are duplicating some code, some teams dont have frontend developers and are sometimes dependent on each other is delaying the development workflow. Celonis decided to introduce the project "One Frontend" and we chose Nx and use Module Federation, join us to learn about the journey of Celonis migrating to Nx, why we chose Nx, and how CLI made our life easier, and what Nx\'s future is at Celonis.',
-      speakers: ['Santosh Yadav'],
+      time: '3:25pm',
+      title: 'From DIY to DTE - An Enterprise Experience',
+      description: `Nobody likes a slow CI/CD pipeline. When working in a monorepo with hundreds of projects, it can be difficult to optimize your CI/CD for performance and efficiency. Sure, you can DIY a crafty solution for it, but why DIY when you can DTE? Nx distributed task execution (DTE) is designed to fully optimize your CI/CD performance. Although configuring DTE for large monorepos can be challenging, it's not impossible. In this talk, we'll explore an enterprise experience, where we start with a DIY solution for CI/CD performance, realize its limitations, and embark on a bumpy but promising journey towards Nx DTE.`,
+      speakers: ['Adrian Baran'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '3:55pm',
+      title: 'Vanquishing Deployment Dragons with Nx wizardry',
+      description: `A tale about a brave peasant that is set on a journey to vanquish the deployment dragon that has been tormenting the poor villagers that just want to push their apps on (but not over) the edge and become the prince of the castle.
+
+      This talk will take us on an epic journey with Nx and the powerful monorepo wizardry to show us how good tooling eventually defeats even the scariest of dev ops monsters.`,
+      speakers: ['Miroslav Jonas'],
       videoUrl: '',
     },
     {
       type: 'break',
-      time: '3:15 - 3:45pm (UTC-07:00)',
+      time: '4:15pm',
       title: 'Break',
       description: '',
       speakers: [],
@@ -153,44 +152,30 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'event',
-      time: '3:40 - 4:10pm (UTC-07:00)',
-      title: 'Make Nx Work for You with Custom Generators',
-      description:
-        'There is a lot the Nx can do for your application right out of the box, but did you know you can write custom workspace generators specific to YOUR application to help automate the various tasks your team performs on a daily basis? Why write yet another confluence page documenting all of the little things that have to be done after generating a library when you can write a workspace generator that handles all of the little details for you? In this talk we will cover everything you need to know to create your own workspace generator to help reduce manual tasks, enforce architectural patterns, and generate more consistent predictable code.',
-      speakers: ['Lara Newsom'],
+      time: '4:45pm',
+      title: 'Optimizing your OSS infrastructure with Nx Plugins',
+      description: `When building and maintaining open source projects, offloading maintenance is vital to continue working on the features you want to ship. Building, testing, distribution are all part of maintaining an open source project. This talk shows how to optimize your open source workflow through an Nx Plugin.`,
+      speakers: ['Brandon Roberts'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '4:15 - 4:40pm (UTC-07:00)',
-      title: 'The power of Nx Console',
-      description:
-        'Are you tired of searching the docs for the exact name of that Nx command flag? Or do you want to explore what’s possible but don’t know where to start? Nx isn’t just fast! We deeply care about the developer experience too! Every command, with all its options, running tasks, and the Nx graph. Just fingertips away so you can keep focused and remain in the flow. In this talk, we’re going deep into how to augment your Nx experience in VSCode! Not a VSCode user? Then be all ears: we might have a surprise.',
-      speakers: ['Jonathan Cammisuli'],
+      time: '5:05pm',
+      title: 'Level Up Your Productivity with Nx Console',
+      description: `In today's fast-paced and demanding software development landscape, maximizing productivity is paramount. Are you seeking ways to enhance your coding efficiency and streamline your development workflows? Look no further than Nx Console!
+      In this talk, we will explore the powerful capabilities of Nx Console, a game-changing tool designed to supercharge your productivity and seamlessly integrate with  popular editors like Visual Studio Code and JetBrains editors (WebStorm, IntelliJ IDEA, PhpStorm).
+      During the session, we will dive into the key features of Nx Console and demonstrate how it enhances code generation and boosts your ability to navigate and understand complex codebases.
+      Whether you are a seasoned developer or just starting your coding journey, this talk will provide you with valuable insights and practical tips on how to leverage the full potential of Nx Console in your daily development workflow. Don't miss this opportunity to discover some new features, accelerate your productivity and take your coding prowess to the next level!
+      `,
+      speakers: ['Jonathan Cammisuli', 'Max Kless'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '4:45 - 5:00pm (UTC-07:00)',
+      time: '5:25 - 5:30pm',
       title: 'Closing Remarks',
       description: '',
-      speakers: ['Jeff Cross'],
-      videoUrl: '',
-    },
-    {
-      type: 'break',
-      time: '8:00pm - 12:00am (UTC-07:00)',
-      title: 'After Party',
-      description: 'Location: Cloister',
-      speakers: [],
-      videoUrl: '',
-    },
-    {
-      type: 'break',
-      time: '8:00pm - 12:00am (UTC-07:00)',
-      title: 'Networking, Games & Activities',
-      description: 'Location: Palms Courtyard',
-      speakers: [],
+      speakers: ['Jeff Cross', 'Lara Newsom', 'Philip Fulcher'],
       videoUrl: '',
     },
   ];
@@ -215,14 +200,14 @@ export function ConfScheduleShort(): JSX.Element {
                 selected community speakers.
               </p>
               <p className="mb-4">
-                The detailed scheduled will be announced soon.
+                Note: all time indications are in New York timezone (UTC-04:00).
               </p>
             </div>
           </article>
         </div>
-        {/* {scheduleItemsConference.map((item) =>
+        {scheduleItemsConference.map((item) =>
           item.type === 'event' ? scheduleRow(item) : breakRow(item)
-        )} */}
+        )}
       </section>
 
       {/* {scheduleItemsDiscussions.map((item) =>

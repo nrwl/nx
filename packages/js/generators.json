@@ -12,7 +12,6 @@
     "init": {
       "factory": "./src/generators/init/init#initSchematic",
       "schema": "./src/generators/init/schema.json",
-      "aliases": ["lib"],
       "x-type": "init",
       "description": "Initialize a TS/JS workspace.",
       "hidden": true
