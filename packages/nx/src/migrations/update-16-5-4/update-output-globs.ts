@@ -3,6 +3,7 @@ import {
   getProjects,
   updateProjectConfiguration,
 } from '../../generators/utils/project-configuration';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 
 export default async function updateOutputsGlobs(tree: Tree) {
   for (const [projectName, projectConfiguration] of getProjects(
@@ -31,4 +32,5 @@ export default async function updateOutputsGlobs(tree: Tree) {
     }
     updateProjectConfiguration(tree, projectName, projectConfiguration);
   }
+  await formatChangedFilesWithPrettierIfAvailable(tree);
 }
