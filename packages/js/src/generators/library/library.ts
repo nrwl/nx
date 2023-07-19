@@ -12,6 +12,7 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  readJson,
   runTasksInSerial,
   toJS,
   Tree,
@@ -35,8 +36,6 @@ import {
   swcHelpersVersion,
   tsLibVersion,
   typesNodeVersion,
-  swcNodeVersion,
-  swcCoreVersion,
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
 import { type PackageJson } from 'nx/src/utils/package-json';
@@ -539,8 +538,9 @@ function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const importPath =
-    options.importPath || getImportPath(tree, projectDirectory);
+  const importPath = options.rootProject
+    ? readJson(tree, 'package.json').name ?? getImportPath(tree, 'core')
+    : options.importPath || getImportPath(tree, projectDirectory);
 
   options.minimal ??= false;
 
