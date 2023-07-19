@@ -1,6 +1,7 @@
 import PQueue from 'p-queue';
 import {
   ProjectGraph,
+  ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
 import { getCycles, mergeOverlappingCycles } from './cycles';
@@ -23,8 +24,10 @@ export async function runProjectsTopologically<T>(
   const returnValues: T[] = [];
 
   const projectsMap = new Map(projects.map((p) => [p.name, p]));
-  const localDependencies = projectGraph.dependencies;
-  const flattenedLocalDependencies = flatten(Object.values(localDependencies));
+  const localDependencies = getLocalDependencies(
+    projectsMap,
+    projectGraph.dependencies
+  );
 
   const getProject = (name: string) => {
     const project = projectsMap.get(name);
@@ -44,9 +47,11 @@ export async function runProjectsTopologically<T>(
     {}
   );
 
-  flattenedLocalDependencies.forEach((dep) => {
-    if (dependenciesBySource[dep.source] && projectsMap.has(dep.target)) {
-      dependenciesBySource[dep.source].add(dep.target);
+  Object.entries(localDependencies).forEach(([key, deps]) => {
+    if (dependenciesBySource[key]) {
+      deps.forEach((dep) => {
+        dependenciesBySource[dep.source].add(dep.target);
+      });
     }
   });
 
@@ -71,6 +76,11 @@ export async function runProjectsTopologically<T>(
         const cycleHasExternalDependencies = cycle.some((project) => {
           const projectDeps = dependenciesBySource[project];
           const depIsNotInCycle = (dep: string) => cycle.indexOf(dep) === -1;
+          if (!projectDeps) {
+            throw new Error(
+              `Failed to find dependencies for ${project}. This is likely a bug in Nx.`
+            );
+          }
           return Array.from(projectDeps).filter(depIsNotInCycle).length > 0;
         });
         return !cycleHasExternalDependencies;
@@ -123,6 +133,19 @@ export async function runProjectsTopologically<T>(
   return returnValues;
 }
 
-function flatten<T>(arr: T[][]): T[] {
-  return arr.reduce((acc, next) => [...acc, ...next], []);
+function getLocalDependencies(
+  projectsMap: Map<string, ProjectGraphProjectNode>,
+  deps: Record<string, ProjectGraphDependency[]>
+): Record<string, ProjectGraphDependency[]> {
+  return Object.entries(deps).reduce(
+    (prev, [key, value]) => ({
+      ...prev,
+      [key]: value
+        .filter(
+          (dep) => projectsMap.has(dep.source) && projectsMap.has(dep.target)
+        )
+        .sort((a, b) => a.target.localeCompare(b.target)),
+    }),
+    {}
+  );
 }

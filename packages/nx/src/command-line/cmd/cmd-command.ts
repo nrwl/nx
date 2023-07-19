@@ -4,7 +4,7 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
+import { LARGE_BUFFER } from '../../executors/run-commands/run-commands.impl';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import {
   NxArgs,
@@ -13,25 +13,16 @@ import {
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { output } from '../../utils/output';
 import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { runProjectsTopologically } from './run-projects-topologically';
 
-export async function cmdCommand(
-  args: { [k: string]: any },
-  extraTargetDependencies: Record<
-    string,
-    (TargetDependencyConfig | string)[]
-  > = {},
-  extraOptions = { excludeTaskDependencies: false, loadDotEnvFiles: true } as {
-    excludeTaskDependencies: boolean;
-    loadDotEnvFiles: boolean;
-  }
-) {
+export async function cmdCommand(args: { [k: string]: any }) {
   workspaceConfigurationCheck();
   const nxJson = readNxJson();
-  const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
+  const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
     args,
     'run-many',
-    { printWarnings: args.graph !== 'stdout' },
+    { printWarnings: false },
     nxJson
   );
 
@@ -49,7 +40,12 @@ export async function cmdCommand(
 
   const runner: (node: ProjectGraphProjectNode) => Promise<unknown> = async (
     node
-  ) => execSync(args.command, { cwd: node.data.root, stdio: 'inherit' });
+  ) =>
+    execSync(replaceCommandArgs(args.command, node), {
+      cwd: node.data.root,
+      stdio: 'inherit',
+      maxBuffer: LARGE_BUFFER,
+    });
 
   await runProjectsTopologically(projects, projectGraph, runner, {
     concurrency: nxArgs.parallel ?? 3,
@@ -85,4 +81,14 @@ function projectsToRun(
   }
 
   return Object.values(selectedProjects);
+}
+
+function replaceCommandArgs(
+  command: string,
+  project: ProjectGraphProjectNode
+): string {
+  return command
+    .replace(/\{workspaceRoot\}/g, workspaceRoot)
+    .replace(/\{projectRoot\}/g, project.data.root)
+    .replace(/\{projectName\}/g, project.name);
 }
