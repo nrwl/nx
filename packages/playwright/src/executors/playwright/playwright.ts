@@ -64,7 +64,7 @@ export async function playwrightExecutor(
     );
   }
   const args = createArgs(options);
-  const p = runPlaywright(args, join(context.root, projectRoot));
+  const p = runPlaywright(args, context.root);
 
   return new Promise<{ success: boolean }>((resolve) => {
     p.on('close', (code) => {
