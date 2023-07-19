@@ -1,4 +1,5 @@
 use napi::bindgen_prelude::*;
+
 use std::path::PathBuf;
 use tracing::trace;
 use watchexec_events::filekind::FileEventKind;
@@ -66,11 +67,29 @@ impl From<&Event> for WatchEventInternal {
         let path_ref = path.0;
         let event_type = if matches!(path.1, None) && !path_ref.exists() {
             EventType::delete
+        } else if cfg!(target_os = "macos") {
+            use std::fs;
+            use std::os::unix::prelude::MetadataExt;
+
+            let t = fs::metadata(path_ref).expect("metadata should be available");
+
+            let access_time = t.atime();
+            let modified_time = t.mtime();
+            let status_time = t.ctime();
+
+            // if a file is created and updated near the same time, we always get a create event
+            // so we need to check the timestamps to see if it was created or updated
+            // if the access time is the same as the modified time, and modified time is the same as status time
+            // then it was created
+            if access_time == modified_time && modified_time == status_time {
+                EventType::create
+            } else {
+                EventType::update
+            }
         } else {
             match event_kind {
                 FileEventKind::Create(_) => EventType::create,
                 FileEventKind::Modify(_) => EventType::update,
-                FileEventKind::Remove(_) => EventType::delete,
                 _ => EventType::update,
             }
         };
