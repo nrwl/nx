@@ -17,7 +17,7 @@ import * as path from 'path';
 import { hasGenerator } from '../../utils/has-generator';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
-import { nxVersion } from '@nx/js/src/utils/versions';
+import { nxVersion } from '../../utils/versions';
 
 type NormalizedSchema = Schema &
   ReturnType<typeof names> & {
@@ -147,8 +147,8 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
     joinPathFragments(options.projectRoot, 'package.json'),
     (json) => {
       json.dependencies = {
-        ...json.dependencies,
         '@nx/devkit': nxVersion,
+        ...json.dependencies,
       };
       return json;
     }
