@@ -17,7 +17,7 @@ import * as path from 'path';
 import { join } from 'path';
 
 import { InspectType, NodeExecutorOptions } from './schema';
-import { calculateProjectDependencies } from '../../utils/buildable-libs-utils';
+import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils';
 import { killTree } from './lib/kill-tree';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { getMainFileDirRelativeToProjectRoot } from '../../utils/get-main-file-dir';
@@ -314,7 +314,8 @@ function calculateResolveMappings(
   options: NodeExecutorOptions
 ) {
   const parsed = parseTargetString(options.buildTarget, context.projectGraph);
-  const { dependencies } = calculateProjectDependencies(
+  const { dependencies } = calculateProjectBuildableDependencies(
+    context.taskGraph,
     context.projectGraph,
     context.root,
     parsed.project,

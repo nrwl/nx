@@ -11,7 +11,7 @@ import * as WebpackDevServer from 'webpack-dev-server';
 
 import { getDevServerConfig } from './lib/get-dev-server-config';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { runWebpackDevServer } from '../../utils/run-webpack';
@@ -43,7 +43,8 @@ export async function* devServerExecutor(
   }
 
   if (!buildOptions.buildLibsFromSource) {
-    const { target, dependencies } = calculateProjectDependencies(
+    const { target, dependencies } = calculateProjectBuildableDependencies(
+      context.taskGraph,
       context.projectGraph,
       context.root,
       context.projectName,
