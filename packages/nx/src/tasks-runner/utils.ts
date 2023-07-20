@@ -173,6 +173,7 @@ export function getOutputsForTargetAndConfiguration(
       }
     }
 
+    const seen = new Set();
     return targetConfiguration.outputs
       .map((output: string) => {
         return interpolate(output, {
@@ -182,7 +183,14 @@ export function getOutputsForTargetAndConfiguration(
           options,
         });
       })
-      .filter((output) => !!output && !output.match(/{.*}/));
+      .filter((output) => !!output && !output.match(/{.*}/))
+      .filter((p) => {
+        if (seen.has(p)) {
+          return false;
+        }
+        seen.add(p);
+        return true;
+      });
   }
 
   // Keep backwards compatibility in case `outputs` doesn't exist
