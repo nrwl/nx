@@ -4,11 +4,10 @@ import {
   Schema,
 } from '../../utils/params';
 import { printHelp } from '../../utils/print-help';
-import { Workspaces } from '../../config/workspaces';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { buildTargetFromScript, PackageJson } from '../../utils/package-json';
-import { join } from 'path';
+import { join, relative } from 'path';
 import { existsSync } from 'fs';
 import {
   loadNxPlugins,
@@ -111,7 +110,6 @@ function createImplicitTargetConfig(
 }
 
 async function parseExecutorAndTarget(
-  ws: Workspaces,
   { project, target, configuration }: Target,
   root: string,
   projectsConfigurations: ProjectsConfigurations,
@@ -147,9 +145,7 @@ async function printTargetRunHelpInternal(
   projectsConfigurations: ProjectsConfigurations,
   nxJsonConfiguration: NxJsonConfiguration
 ) {
-  const ws = new Workspaces(root);
   const { executor, nodeModule, schema } = await parseExecutorAndTarget(
-    ws,
     { project, target, configuration },
     root,
     projectsConfigurations,
@@ -176,10 +172,8 @@ async function runExecutorInternal<T extends { success: boolean }>(
 ): Promise<AsyncIterableIterator<T>> {
   validateProject(projectsConfigurations, project);
 
-  const ws = new Workspaces(root);
   const { executor, implementationFactory, nodeModule, schema, targetConfig } =
     await parseExecutorAndTarget(
-      ws,
       { project, target, configuration },
       root,
       projectsConfigurations,
@@ -193,7 +187,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
     targetConfig,
     schema,
     project,
-    ws.relativeCwd(cwd),
+    relative(cwd, root),
     isVerbose
   );
 

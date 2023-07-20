@@ -6,7 +6,6 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { renamePropertyWithStableKeys } from '../config/workspaces';
-import { workspaceRoot } from '../utils/workspace-root';
 
 export function shouldMergeAngularProjects(
   root: string,
