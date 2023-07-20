@@ -58,7 +58,7 @@ export function updateEslintrcJson(
         eslintRcJson.extends,
         offset
       );
-    } else {
+    } else if (eslintRcJson.extends) {
       eslintRcJson.extends = eslintRcJson.extends.map((extend: string) =>
         offsetFilePath(project, extend, offset)
       );

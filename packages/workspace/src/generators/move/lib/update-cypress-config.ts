@@ -51,7 +51,9 @@ export function updateCypressConfig(
     schema.relativeToRootDestination,
     'cypress.config.ts'
   );
-  if (tree.exists(cypressConfigPath)) {
+  // Search and replace for "e2e" directory is not safe, and will result in an invalid config file.
+  // Leave it and let users fix the config if needed.
+  if (project.root !== 'e2e' && tree.exists(cypressConfigPath)) {
     const oldContent = tree.read(cypressConfigPath, 'utf-8');
     const findName = new RegExp(`'${schema.projectName}'`, 'g');
     const findDir = new RegExp(project.root, 'g');

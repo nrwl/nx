@@ -4,6 +4,7 @@ import {
   GeneratorCallback,
   getProjects,
   readNxJson,
+  readProjectConfiguration,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   stripIndents,
@@ -100,10 +101,12 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
       const isProjectConfig = jestTarget?.options?.jestConfig === rootJestPath;
       // if root project doesn't have jest target, there's nothing to migrate
       if (isProjectConfig) {
-        const jestAppConfig = `jest.config.app.${options.js ? 'js' : 'ts'}`;
+        const jestProjectConfig = `jest.config.${
+          rootProjectConfig.projectType === 'application' ? 'app' : 'lib'
+        }.${options.js ? 'js' : 'ts'}`;
 
-        tree.rename(rootJestPath, jestAppConfig);
-        jestTarget.options.jestConfig = jestAppConfig;
+        tree.rename(rootJestPath, jestProjectConfig);
+        jestTarget.options.jestConfig = jestProjectConfig;
         updateProjectConfiguration(tree, rootProject, rootProjectConfig);
       }
       // generate new global config as it was move to project config or is missing
