@@ -74,18 +74,22 @@ impl From<&Event> for WatchEventInternal {
                 use std::fs;
                 use std::os::macos::fs::MetadataExt;
 
-                let t = fs::metadata(path_ref).expect("metadata should be available");
+                let t = fs::metadata(path_ref);
+                match t {
+                    Err(_) => EventType::delete,
+                    Ok(t) => {
+                        let modified_time = t.st_mtime();
+                        let birth_time = t.st_birthtime();
 
-                let modified_time = t.st_mtime();
-                let birth_time = t.st_birthtime();
-
-                // if a file is created and updated near the same time, we always get a create event
-                // so we need to check the timestamps to see if it was created or updated
-                // if the modified time is the same as birth_time then it was created
-                if modified_time == birth_time {
-                    EventType::create
-                } else {
-                    EventType::update
+                        // if a file is created and updated near the same time, we always get a create event
+                        // so we need to check the timestamps to see if it was created or updated
+                        // if the modified time is the same as birth_time then it was created
+                        if modified_time == birth_time {
+                            EventType::create
+                        } else {
+                            EventType::update
+                        }
+                    }
                 }
             }
 
