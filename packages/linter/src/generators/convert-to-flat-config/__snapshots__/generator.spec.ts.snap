@@ -98,53 +98,6 @@ export default [
 "
 `;
 
-exports[`convert-to-flat-config generator should add plugins 1`] = `
-"const { FlatCompat } = require("@eslint/eslintrc");
-const eslintrc = new FlatCompat({
-    baseDirectory: __dirname
-});
-export default [
-    { ignores: ["**/*"] },
-    { ignores: ["node_modules"] },
-    {
-        files: [
-            "*.ts",
-            "*.tsx",
-            "*.js",
-            "*.jsx"
-        ],
-        rules: { @nx/enforce-module-boundaries: [
-                "error",
-                {
-                    enforceBuildableLibDependency: true,
-                    allow: [],
-                    depConstraints: [{
-                            sourceTag: "*",
-                            onlyDependOnLibsWithTags: ["*"]
-                        }]
-                }
-            ] }
-    },
-    {
-        files: [
-            "*.ts",
-            "*.tsx"
-        ],
-        extends: ["plugin:@nx/typescript"],
-        rules: {}
-    },
-    {
-        files: [
-            "*.js",
-            "*.jsx"
-        ],
-        extends: ["plugin:@nx/javascript"],
-        rules: {}
-    }
-];
-"
-`;
-
 exports[`convert-to-flat-config generator should run successfully 1`] = `
 "const { FlatCompat } = require("@eslint/eslintrc");
 const eslintrc = new FlatCompat({

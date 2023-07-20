@@ -11,12 +11,10 @@ import { generateAst } from './generate-ast';
 export function convertEslintJsonToFlatConfig(
   tree: Tree,
   root: string,
-  source: string,
-  destination: string
+  config: ESLint.ConfigData,
+  sourceFile: string,
+  destinationFile: string
 ) {
-  // read original config
-  const config: ESLint.ConfigData = readJson(tree, `${root}/${source}`);
-
   const importsList: ts.VariableStatement[] = [];
   const exportElements: ts.Expression[] = [];
 
@@ -61,14 +59,14 @@ export function convertEslintJsonToFlatConfig(
     });
   }
 
-  tree.delete(join(root, source));
+  tree.delete(join(root, sourceFile));
   tree.delete(join(root, '.eslintignore'));
 
   // create the node list and print it to new file
   const nodeList = createNodeList(importsList, exportElements);
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const resultFile = ts.createSourceFile(
-    join(root, destination),
+    join(root, destinationFile),
     '',
     ts.ScriptTarget.Latest,
     true,
@@ -79,7 +77,7 @@ export function convertEslintJsonToFlatConfig(
     nodeList,
     resultFile
   );
-  tree.write(join(root, destination), result);
+  tree.write(join(root, destinationFile), result);
 }
 
 // add parsed extends to export blocks and add import statements

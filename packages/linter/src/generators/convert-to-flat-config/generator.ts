@@ -2,6 +2,7 @@ import {
   formatFiles,
   getProjects,
   ProjectConfiguration,
+  readJson,
   Tree,
   updateNxJson,
   updateProjectConfiguration,
@@ -44,20 +45,15 @@ export default convertToFlatConfigGenerator;
 
 function convertRootToFlatConfig(tree: Tree) {
   if (tree.exists('.eslintrc.base.json')) {
-    convertEslintJsonToFlatConfig(
+    convertConfigToFlatConfig(
       tree,
       '',
       '.eslintrc.base.json',
-      'eslint.config.base.js'
+      'eslint.base.config.js'
     );
   }
   if (tree.exists('.eslintrc.json')) {
-    convertEslintJsonToFlatConfig(
-      tree,
-      '',
-      '.eslintrc.json',
-      'eslint.config.js'
-    );
+    convertConfigToFlatConfig(tree, '', '.eslintrc.json', 'eslint.config.js');
   }
 }
 
@@ -80,7 +76,7 @@ function convertProjectToFlatConfig(
       updateProjectConfiguration(tree, project, projectConfig);
     }
 
-    convertEslintJsonToFlatConfig(
+    convertConfigToFlatConfig(
       tree,
       projectConfig.root,
       '.eslintrc.json',
@@ -91,7 +87,7 @@ function convertProjectToFlatConfig(
 
 // update names of eslint files in nx.json
 // and remove eslintignore
-function updateNxJsonConfig(tree) {
+function updateNxJsonConfig(tree: Tree) {
   if (tree.exists('nx.json')) {
     const content = tree.read('nx.json', 'utf-8');
     const strippedConfig: string = content
@@ -100,4 +96,16 @@ function updateNxJsonConfig(tree) {
       .replace(/".*\.eslintignore.json",?/, '');
     updateNxJson(tree, JSON.parse(strippedConfig));
   }
+}
+
+function convertConfigToFlatConfig(
+  tree: Tree,
+  root: string,
+  source: string,
+  target: string
+) {
+  // read original config
+  const config = readJson(tree, `${root}/${source}`);
+
+  convertEslintJsonToFlatConfig(tree, root, config, source, target);
 }
