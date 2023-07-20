@@ -83,8 +83,7 @@ export async function* esbuildExecutor(
 
     const cpjOptions: CopyPackageJsonOptions = {
       ...options,
-      // TODO(jack): make types generate with esbuild
-      skipTypings: true,
+      skipTypings: options.skipTypeCheck,
       outputFileExtensionForCjs: getOutExtension('cjs', options),
       excludeLibsInPackageJson: !options.thirdParty,
       updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
@@ -208,12 +207,11 @@ function getTypeCheckOptions(
   const { watch, tsConfig, outputPath } = options;
 
   const typeCheckOptions: TypeCheckOptions = {
-    // TODO(jack): Add support for d.ts declaration files -- once the `@nx/js:tsc` changes are in we can use the same logic.
-    mode: 'noEmit',
+    mode: 'emitDeclarationOnly',
     tsConfigPath: tsConfig,
-    // outDir: outputPath,
+    outDir: outputPath,
     workspaceRoot: context.root,
-    rootDir: context.root,
+    rootDir: context.projectsConfigurations.projects[context.projectName].root,
   };
 
   if (watch) {

@@ -54,6 +54,15 @@ describe('EsBuild Plugin', () => {
     checkFilesExist(`dist/libs/${myPkg}/package.json`);
     expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
 
+    // types field should be set correctly in package.json and types should be generated
+    expect(readJson(`dist/libs/${myPkg}/package.json`).types).toEqual(
+      './src/index.d.ts'
+    );
+    checkFilesExist(
+      `dist/libs/${myPkg}/src/index.d.ts`,
+      `dist/libs/${myPkg}/src/lib/${myPkg}.d.ts`
+    );
+
     expect(runCommand(`node dist/libs/${myPkg}/index.cjs`)).toMatch(/Hello/);
     // main field should be set correctly in package.json
 
@@ -78,6 +87,10 @@ describe('EsBuild Plugin', () => {
     expect(() => runCLI(`build ${myPkg}`)).toThrow();
     expect(() => runCLI(`build ${myPkg} --skipTypeCheck`)).not.toThrow();
     expect(runCommand(`node dist/libs/${myPkg}/index.cjs`)).toMatch(/Bye/);
+    checkFilesDoNotExist(
+      `dist/libs/${myPkg}/src/index.d.ts`,
+      `dist/libs/${myPkg}/src/lib/${myPkg}.d.ts`
+    );
     // Reset file
     updateFile(
       `libs/${myPkg}/src/index.ts`,
