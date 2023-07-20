@@ -28,6 +28,7 @@ import {
 import { StorybookConfigureSchema } from '../schema';
 import { UiFramework7 } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
+import ts = require('typescript');
 
 const DEFAULT_PORT = 4400;
 
@@ -257,6 +258,23 @@ export function createStorybookTsconfigFile(
   };
 
   writeJson(tree, storybookTsConfigPath, storybookTsConfig);
+}
+
+export function editTsconfigBaseJson(tree: Tree) {
+  let tsconfigBasePath = 'tsconfig.base.json';
+
+  // standalone workspace maybe
+  if (!tree.exists(tsconfigBasePath)) tsconfigBasePath = 'tsconfig.json';
+
+  if (!tree.exists(tsconfigBasePath)) return;
+
+  const tsconfigBaseContent = readJson<TsConfig>(tree, tsconfigBasePath);
+
+  if (!tsconfigBaseContent.compilerOptions)
+    tsconfigBaseContent.compilerOptions = {};
+  tsconfigBaseContent.compilerOptions.skipLibCheck = true;
+
+  writeJson(tree, tsconfigBasePath, tsconfigBaseContent);
 }
 
 export function configureTsProjectConfig(
