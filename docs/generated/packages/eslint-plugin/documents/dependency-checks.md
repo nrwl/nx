@@ -8,9 +8,13 @@ We use the version numbers of the installed packages when checking whether the v
 
 ## Usage
 
-You can use the `dependency-checks` rule by adding it to your ESLint rules configuration:
+Library generators from `@nx` packages will configure this rule automatically when you opt-in for bundler/build setup. This rule is intended for publishable/buildable libraries, so it will only run if a `build` target is detected in the configuration (this name can be modified - see [options](#options)).
 
-```jsonc {% fileName=".eslintrc.json" %}
+### Manual setup
+
+To set it up manually for existing libraries, you need to add the `dependency-checks` rule to your project's ESLint configuration:
+
+```jsonc {% fileName="<your-project-root>/.eslintrc.json" %}
 {
   // ... more ESLint config here
   "overrides": [
@@ -26,9 +30,9 @@ You can use the `dependency-checks` rule by adding it to your ESLint rules confi
 }
 ```
 
-Linting `JSON` files is not enabled by default, so you will also need to add `package.json` to the `lintFilePatterns`:
+Additionally, you need to adjust your `lintFilePatterns` to include the project's `package.json` file::
 
-```jsonc {% fileName="project.json" %}
+```jsonc {% fileName="<your-project-root>/project.json" %}
 {
   // ... project.json config
   "targets": {
@@ -47,6 +51,8 @@ Linting `JSON` files is not enabled by default, so you will also need to add `pa
 }
 ```
 
+### Overriding defaults
+
 Sometimes we intentionally want to add or remove a dependency from our `package.json` despite what the rule suggests. We can use the rule's options to override default behavior:
 
 ```jsonc {% fileName=".eslintrc.json" %}
@@ -54,7 +60,11 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
   "@nx/dependency-checks": [
     "error",
     {
-      // for available options check below
+      "buildTargets": ["build", "custom-build"], // add non standard build target names
+      "ignoredDependencies": ["lodash"], // these libs will be omitted from checks
+      "checkMissingDependencies": true, // toggle to disable
+      "checkObsoleteDependencies": true, // toggle to disable
+      "checkVersionMismatches": true // toggle to disable
     }
   ]
 }

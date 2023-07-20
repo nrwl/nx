@@ -1,5 +1,14 @@
 // This must come before the Hasher import
 import { DependencyType } from '../config/project-graph';
+import { vol } from 'memfs';
+import {
+  expandNamedInput,
+  filterUsingGlobPatterns,
+  Hash,
+  InProcessTaskHasher,
+} from './task-hasher';
+import { fileHasher } from './file-hasher';
+import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 
 jest.mock('../utils/workspace-root', () => {
   return {
@@ -19,16 +28,6 @@ jest.mock('../plugins/js/utils/typescript', () => ({
     .fn()
     .mockImplementation(() => '/root/tsconfig.base.json'),
 }));
-
-import { vol } from 'memfs';
-import {
-  expandNamedInput,
-  filterUsingGlobPatterns,
-  Hash,
-  InProcessTaskHasher,
-} from './task-hasher';
-import { fileHasher } from './file-hasher';
-import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 
 describe('TaskHasher', () => {
   const packageJson = {
@@ -1161,7 +1160,7 @@ describe('TaskHasher', () => {
       expect(hash.value).toContain('|5.0.0|');
     });
 
-    it('should hash entire subtree of dependencies', async () => {
+    it('should hash entire subtree in a deterministic way', async () => {
       const createHasher = () =>
         new InProcessTaskHasher(
           {},
@@ -1217,44 +1216,51 @@ describe('TaskHasher', () => {
             dependencies: {
               appA: [
                 {
-                  source: 'app',
+                  source: 'appA',
                   target: 'npm:packageA',
                   type: DependencyType.static,
                 },
                 {
-                  source: 'app',
+                  source: 'appA',
                   target: 'npm:packageB',
                   type: DependencyType.static,
                 },
                 {
-                  source: 'app',
+                  source: 'appA',
                   target: 'npm:packageC',
                   type: DependencyType.static,
                 },
               ],
               appB: [
                 {
-                  source: 'app',
+                  source: 'appB',
                   target: 'npm:packageC',
                   type: DependencyType.static,
                 },
               ],
               'npm:packageC': [
                 {
-                  source: 'app',
+                  source: 'npm:packageC',
                   target: 'npm:packageA',
                   type: DependencyType.static,
                 },
                 {
-                  source: 'app',
+                  source: 'npm:packageC',
                   target: 'npm:packageB',
                   type: DependencyType.static,
                 },
               ],
               'npm:packageB': [
                 {
-                  source: 'app',
+                  source: 'npm:packageB',
                   target: 'npm:packageA',
+                  type: DependencyType.static,
+                },
+              ],
+              'npm:packageA': [
+                {
+                  source: 'npm:packageA',
+                  target: 'npm:packageC',
                   type: DependencyType.static,
                 },
               ],
@@ -1277,26 +1283,25 @@ describe('TaskHasher', () => {
         );
 
       const computeTaskHash = async (hasher, appName) => {
-        const hashAppA = await hasher.hashTask({
+        return await hasher.hashTask({
           target: { project: appName, target: 'build' },
           id: `${appName}-build`,
           overrides: { prop: 'prop-value' },
         });
-
-        return hashAppA.value;
       };
 
       const hasher1 = createHasher();
 
-      await computeTaskHash(hasher1, 'appA');
+      const hashAppA1 = await computeTaskHash(hasher1, 'appA');
       const hashAppB1 = await computeTaskHash(hasher1, 'appB');
 
       const hasher2 = createHasher();
 
       const hashAppB2 = await computeTaskHash(hasher2, 'appB');
-      await computeTaskHash(hasher2, 'appA');
+      const hashAppA2 = await computeTaskHash(hasher2, 'appA');
 
       expect(hashAppB1).toEqual(hashAppB2);
+      expect(hashAppA1).toEqual(hashAppA2);
     });
 
     it('should not hash when nx:run-commands executor', async () => {

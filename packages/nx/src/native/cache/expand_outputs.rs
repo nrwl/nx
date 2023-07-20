@@ -59,6 +59,10 @@ mod test {
             .child("nx.darwin-arm64.node")
             .touch()
             .unwrap();
+        temp.child("multi").child("file.js").touch().unwrap();
+        temp.child("multi").child("src.ts").touch().unwrap();
+        temp.child("multi").child("file.map").touch().unwrap();
+        temp.child("multi").child("file.txt").touch().unwrap();
         temp
     }
     #[test]
@@ -78,6 +82,18 @@ mod test {
                 "packages/nx/src/native/nx.darwin-arm64.node",
                 "test.txt"
             ]
+        );
+    }
+
+    #[test]
+    fn should_handle_multiple_extensions() {
+        let temp = setup_fs();
+        let entries = vec!["multi/*.{js,map,ts}".to_string()];
+        let mut result = expand_outputs(temp.display().to_string(), entries).unwrap();
+        result.sort();
+        assert_eq!(
+            result,
+            vec!["multi/file.js", "multi/file.map", "multi/src.ts"]
         );
     }
 }

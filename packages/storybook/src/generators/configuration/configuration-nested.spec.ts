@@ -9,6 +9,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import configurationGenerator from './configuration';
 import * as workspaceConfiguration from './test-configs/root-workspace-configuration.json';
+import { storybookVersion } from '../../utils/versions';
 
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
@@ -70,15 +71,15 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       });
       writeJson(tree, 'package.json', {
         devDependencies: {
-          '@storybook/addon-essentials': '7.0.2',
-          '@storybook/react': '7.0.2',
-          '@storybook/core-server': '7.0.2',
+          '@storybook/addon-essentials': storybookVersion,
+          '@storybook/react': storybookVersion,
+          '@storybook/core-server': storybookVersion,
         },
       });
 
       jest.resetModules();
       jest.doMock('@storybook/core-server/package.json', () => ({
-        version: '7.0.2',
+        version: storybookVersion,
       }));
     });
 

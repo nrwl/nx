@@ -23,6 +23,7 @@ import {
   configureTsSolutionConfig,
   createProjectStorybookDir,
   createStorybookTsconfigFile,
+  editTsconfigBaseJson,
   getE2EProjectName,
   getViteConfigFilePath,
   projectIsRootProjectInStandaloneWorkspace,
@@ -128,6 +129,7 @@ export async function configurationGenerator(
     );
   }
   configureTsProjectConfig(tree, schema);
+  editTsconfigBaseJson(tree);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
 

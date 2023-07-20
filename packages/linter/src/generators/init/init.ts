@@ -47,6 +47,9 @@ function addTargetDefaults(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
+/**
+ * Initializes ESLint configuration in a workspace and adds necessary dependencies.
+ */
 function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
   if (findEslintFile(tree)) {
     return () => {};

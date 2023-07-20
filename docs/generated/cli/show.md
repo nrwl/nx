@@ -159,7 +159,7 @@ Show only projects that have a specific target
 
 ### project
 
-Show a list of targets in the workspace.
+Shows resolved project configuration for a given project.
 
 ```shell
 nx show project <projectName>
@@ -177,7 +177,7 @@ Show help
 
 Type: `string`
 
-Show targets for the given project
+Which project should be viewed?
 
 ##### version
 

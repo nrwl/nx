@@ -52,7 +52,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
 
       jest.resetModules();
       jest.doMock('@storybook/core-server/package.json', () => ({
-        version: '7.0.2',
+        version: storybookVersion,
       }));
     });
 

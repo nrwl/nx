@@ -126,7 +126,9 @@ function addTestInputs(tree: Tree) {
       // Remove jest.config.js/ts
       '!{projectRoot}/jest.config.[jt]s',
       // Remove test-setup.js/ts
-      '!{projectRoot}/src/test-setup.[jt]s'
+      // TODO(meeroslav) this should be standardized
+      '!{projectRoot}/src/test-setup.[jt]s',
+      '!{projectRoot}/test-setup.[jt]s'
     );
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));

@@ -47,6 +47,7 @@
           "error",
           {
             "enforceBuildableLibDependency": true,
+            "checkDynamicDependenciesExceptions": [".*"],
             "allow": [],
             "depConstraints": [
               {

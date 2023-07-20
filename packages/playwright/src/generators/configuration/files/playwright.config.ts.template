@@ -1,5 +1,5 @@
 import { defineConfig } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright'
+import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
 /**
