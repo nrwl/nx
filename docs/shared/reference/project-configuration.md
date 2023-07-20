@@ -313,13 +313,13 @@ Sometimes, multiple targets might write to the same directory. When possible it 
 }
 ```
 
-But if the above is not possible, globs (parsed with the [minimatch](https://github.com/isaacs/minimatch) library) can be specified as outputs to only cache a set of files rather than the whole directory.
+But if the above is not possible, globs (parsed by the [GlobSet](https://docs.rs/globset/0.4.5/globset/#syntax) Rust library) can be specified as outputs to only cache a set of files rather than the whole directory.
 
 ```json
 {
   "targets": {
     "build-js": {
-      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.js"]
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.{js,map}"]
     },
     "build-css": {
       "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.css"]
