@@ -1,4 +1,4 @@
-import redirectRules, { guideUrls } from './redirect-rules';
+import redirectRules from './redirect-rules';
 
 describe('Redirect rules configuration', () => {
   describe('Safety checks', () => {
@@ -14,25 +14,6 @@ describe('Redirect rules configuration', () => {
 
       for (let k of Object.keys(rules)) {
         expect(k).not.toEqual(rules[k]);
-      }
-    });
-  });
-
-  describe('Guides', () => {
-    it('should have all three variants', () => {
-      for (let k of Object.keys(redirectRules.guideUrls)) {
-        expect(redirectRules.langSpecificGuideUrls[`/l/r${k}`]).toBeDefined();
-        expect(redirectRules.langSpecificGuideUrls[`/l/a${k}`]).toBeDefined();
-        expect(redirectRules.langSpecificGuideUrls[`/l/n${k}`]).toBeDefined();
-        expect(redirectRules.langSpecificGuideUrls[`/l/r${k}`]).toEqual(
-          redirectRules.guideUrls[k]
-        );
-        expect(redirectRules.langSpecificGuideUrls[`/l/a${k}`]).toEqual(
-          redirectRules.guideUrls[k]
-        );
-        expect(redirectRules.langSpecificGuideUrls[`/l/n${k}`]).toEqual(
-          redirectRules.guideUrls[k]
-        );
       }
     });
   });

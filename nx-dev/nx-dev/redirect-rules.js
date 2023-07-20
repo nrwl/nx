@@ -192,29 +192,6 @@ const guideUrls = {
     '/cypress/generators/migrate-to-cypress-11',
 };
 
-const langSpecificGuideUrls = ['/l/r', '/l/a', '/l/n'].reduce(
-  (acc, cur) => ({
-    ...acc,
-    [`${cur}/core-concepts/configuration`]: '/reference/project-configuration',
-    [`${cur}/core-concepts/mental-model`]: '/using-nx/mental-model',
-    [`${cur}/core-concepts/updating-nx`]: '/using-nx/updating-nx',
-    [`${cur}/core-concepts/ci-overview`]: '/using-nx/ci-overview',
-    [`${cur}/getting-started/nx-cli`]: '/using-nx/nx-cli',
-    [`${cur}/getting-started/console`]: '/using-nx/console',
-    [`${cur}/core-extended/affected`]: '/using-nx/affected',
-    [`${cur}/core-extended/computation-caching`]: '/using-nx/caching',
-    [`${cur}/guides/nextjs`]: '/next/overview',
-    [`${cur}/using-nx/nx-devkit`]: '/extending-nx/nx-devkit',
-    [`${cur}/structure/project-graph-plugins`]:
-      '/extending-nx/project-graph-plugins',
-    [`${cur}/guides/lerna-and-nx`]: '/migration/lerna-and-nx',
-    [`${cur}/cypress/v10-migration-guide`]: '/cypress/v11-migration-guide',
-    [`${cur}/cypress/generators/migrate-to-cypress-10`]:
-      '/cypress/generators/migrate-to-cypress-11',
-  }),
-  {}
-);
-
 /**
  * Diataxis restructure specific rules (added 2022-09-02)
  */
@@ -511,15 +488,15 @@ const standaloneTutorialRedirects = {
     '/getting-started/tutorials/react-standalone-tutorial',
   '/shared/react-standalone-tutorial/5-summary':
     '/getting-started/tutorials/react-standalone-tutorial',
-  'shared/angular-standalone-tutorial/1-code-generation':
+  '/shared/angular-standalone-tutorial/1-code-generation':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  'shared/angular-standalone-tutorial/2-project-graph':
+  '/shared/angular-standalone-tutorial/2-project-graph':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  'shared/angular-standalone-tutorial/3-task-running':
+  '/shared/angular-standalone-tutorial/3-task-running':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  'shared/angular-standalone-tutorial/4-task-pipelines':
+  '/shared/angular-standalone-tutorial/4-task-pipelines':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  'shared/angular-standalone-tutorial/5-summary':
+  '/shared/angular-standalone-tutorial/5-summary':
     '/getting-started/tutorials/angular-standalone-tutorial',
 };
 
@@ -723,7 +700,6 @@ module.exports = {
   cliUrls,
   diataxis,
   guideUrls,
-  langSpecificGuideUrls,
   overviewUrls,
   recipesUrls,
   nxCloudUrls,
@@ -736,5 +712,5 @@ module.exports = {
   nested5minuteTutorialUrls,
   pluginUrls,
   referenceUrls,
-  missingRedirects: missingAndCatchAllRedirects,
+  missingAndCatchAllRedirects,
 };
