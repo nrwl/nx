@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`nextjs:stories for applications should create the stories with interaction tests 1`] = `true`;
+
+exports[`nextjs:stories for applications should create the stories without interaction tests 1`] = `true`;

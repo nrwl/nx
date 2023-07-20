@@ -1,6 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`StorybookConfiguration generator should configure everything at once - and interaction tests too 1`] = `
+exports[`StorybookConfiguration generator should configure storybook to use webpack 5 1`] = `
+"import type { StorybookConfig } from '@storybook/angular';
+
+const config: StorybookConfig = {
+  stories: ['../**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  framework: {
+    name: '@storybook/angular',
+    options: {},
+  },
+};
+
+export default config;
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+"
+`;
+
+exports[`StorybookConfiguration generator should configure storybook with interaction tests and install dependencies 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestButtonComponent } from './test-button.component';
 
@@ -38,7 +58,7 @@ export const Heading: Story = {
 "
 `;
 
-exports[`StorybookConfiguration generator should configure everything at once - and interaction tests too 2`] = `
+exports[`StorybookConfiguration generator should configure storybook with interaction tests and install dependencies 2`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestOtherComponent } from './test-other.component';
 
@@ -63,26 +83,6 @@ export const Heading: Story = {
     expect(canvas.getByText(/test-other works!/gi)).toBeTruthy();
   },
 };
-"
-`;
-
-exports[`StorybookConfiguration generator should configure storybook to use webpack 5 1`] = `
-"import type { StorybookConfig } from '@storybook/angular';
-
-const config: StorybookConfig = {
-  stories: ['../**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
-  framework: {
-    name: '@storybook/angular',
-    options: {},
-  },
-};
-
-export default config;
-
-// To customize your webpack configuration you can use the webpackFinal field.
-// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
 `;
 
