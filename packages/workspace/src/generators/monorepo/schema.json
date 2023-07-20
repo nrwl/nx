@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxWorkspaceMonorepo",
+  "cli": "nx",
+  "title": "Nx Monorepo",
+  "description": "Convert a Nx project to a monorepo.",
+  "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nx/workspace:monorepo --appsDir=apps --libsDir=packages",
+      "description": "Convert to a monorepo with apps and libs directories."
+    }
+  ],
+  "properties": {
+    "appsDir": {
+      "type": "string",
+      "description": "The directory where apps are placed.",
+      "default": "apps"
+    },
+    "libsDir": {
+      "type": "string",
+      "alias": "packagesDir",
+      "description": "The directory where libs are placed.",
+      "default": "libs"
+    }
+  },
+  "required": ["appsDir", "libsDir"]
+}

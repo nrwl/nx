@@ -1,4 +1,4 @@
-import { readJson, Tree } from '@nx/devkit';
+import { readJson, Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { moveGenerator } from './move';
 
@@ -66,5 +66,117 @@ describe('move', () => {
     expect(projectJson['$schema']).toEqual(
       '../../../node_modules/nx/schemas/project-schema.json'
     );
+  });
+
+  it('should support moving root projects', async () => {
+    // Test that these are not moved
+    tree.write('.gitignore', '');
+    tree.write('README.md', '');
+
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      rootProject: true,
+      bundler: 'tsc',
+      buildable: true,
+      unitTestRunner: 'vitest',
+      linter: 'eslint',
+    });
+
+    updateJson(tree, 'tsconfig.json', (json) => {
+      json.extends = './tsconfig.base.json';
+      json.files = ['./node_modules/@foo/bar/index.d.ts'];
+      return json;
+    });
+
+    let projectJson = readJson(tree, 'project.json');
+    expect(projectJson['$schema']).toEqual(
+      'node_modules/nx/schemas/project-schema.json'
+    );
+    // Test that this does not get moved
+    tree.write('other-lib/index.ts', '');
+    const projectGraph = {
+      nodes: {
+        'my-lib': {
+          name: 'my-lib',
+          type: 'lib' as const,
+          data: {
+            root: '.',
+          },
+        },
+        'other-lib': {
+          name: 'other-lib',
+          type: 'lib' as const,
+          data: {
+            root: 'other-lib',
+          },
+        },
+      },
+      externalNodes: {},
+      dependencies: {},
+    };
+
+    await moveGenerator(
+      tree,
+      {
+        projectName: 'my-lib',
+        importPath: '@proj/my-lib',
+        updateImportPath: true,
+        destination: 'my-lib',
+      },
+      projectGraph
+    );
+
+    expect(readJson(tree, 'libs/my-lib/project.json')).toMatchObject({
+      name: 'my-lib',
+      $schema: '../../node_modules/nx/schemas/project-schema.json',
+      sourceRoot: 'libs/my-lib/src',
+      projectType: 'library',
+      targets: {
+        build: {
+          executor: '@nx/js:tsc',
+          outputs: ['{options.outputPath}'],
+          options: {
+            outputPath: 'dist/my-lib',
+            main: 'libs/my-lib/src/index.ts',
+            tsConfig: 'libs/my-lib/tsconfig.lib.json',
+          },
+        },
+        lint: {
+          executor: '@nx/linter:eslint',
+          outputs: ['{options.outputFile}'],
+          options: {
+            lintFilePatterns: ['libs/my-lib/**/*.ts'],
+          },
+        },
+        test: {
+          executor: '@nx/vite:test',
+          outputs: ['coverage/my-lib'],
+        },
+      },
+    });
+
+    expect(readJson(tree, 'libs/my-lib/tsconfig.json')).toMatchObject({
+      extends: '../../tsconfig.base.json',
+      files: ['../../node_modules/@foo/bar/index.d.ts'],
+      references: [
+        { path: './tsconfig.lib.json' },
+        { path: './tsconfig.spec.json' },
+      ],
+    });
+
+    const viteConfig = tree.read('libs/my-lib/vite.config.ts', 'utf-8');
+    expect(viteConfig).toContain('../../node_modules/.vitest');
+    expect(viteConfig).toContain('../../node_modules/.vite/my-lib');
+
+    expect(tree.exists('libs/my-lib/tsconfig.lib.json')).toBeTruthy();
+    expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
+    expect(tree.exists('libs/my-lib/.eslintrc.json')).toBeTruthy();
+    expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+
+    // Test that other libs and workspace files are not moved.
+    expect(tree.exists('package.json')).toBeTruthy();
+    expect(tree.exists('README.md')).toBeTruthy();
+    expect(tree.exists('.gitignore')).toBeTruthy();
+    expect(tree.exists('other-lib/index.ts')).toBeTruthy();
   });
 });

@@ -14,6 +14,11 @@
       "aliases": ["rm"],
       "description": "Remove an application or library."
     },
+    "monorepo": {
+      "factory": "./src/generators/monorepo/monorepo#monorepoSchematic",
+      "schema": "./src/generators/monorepo/schema.json",
+      "description": "Convert a Nx project to a monorepo."
+    },
     "workspace-generator": {
       "factory": "./src/generators/workspace-generator/workspace-generator",
       "schema": "./src/generators/workspace-generator/schema.json",
@@ -52,6 +57,11 @@
       "schema": "./src/generators/remove/schema.json",
       "aliases": ["rm"],
       "description": "Remove an application or library."
+    },
+    "monorepo": {
+      "factory": "./src/generators/monorepo/monorepo",
+      "schema": "./src/generators/monorepo/schema.json",
+      "description": "Convert a Nx project to a monorepo."
     },
     "new": {
       "factory": "./src/generators/new/new#newGenerator",

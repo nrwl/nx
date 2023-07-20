@@ -1,6 +1,8 @@
 import {
   convertNxGenerator,
+  createProjectGraphAsync,
   formatFiles,
+  ProjectGraph,
   readProjectConfiguration,
   removeProjectConfiguration,
   Tree,
@@ -22,13 +24,19 @@ import { updateReadme } from './lib/update-readme';
 import { updateStorybookConfig } from './lib/update-storybook-config';
 import { Schema } from './schema';
 
-export async function moveGenerator(tree: Tree, rawSchema: Schema) {
+export async function moveGenerator(
+  tree: Tree,
+  rawSchema: Schema,
+  projectGraph?: ProjectGraph // Passed in from unit tests (instantiated in body for real use)
+) {
+  projectGraph ??= await createProjectGraphAsync();
+
   const projectConfig = readProjectConfiguration(tree, rawSchema.projectName);
   checkDestination(tree, rawSchema, projectConfig);
   const schema = normalizeSchema(tree, rawSchema, projectConfig);
 
   removeProjectConfiguration(tree, schema.projectName);
-  moveProjectFiles(tree, schema, projectConfig);
+  moveProjectFiles(tree, schema, projectConfig, projectGraph);
   createProjectConfigurationInNewDestination(tree, schema, projectConfig);
   updateImports(tree, schema, projectConfig);
   updateProjectRootFiles(tree, schema, projectConfig);
