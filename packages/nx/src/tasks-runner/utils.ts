@@ -182,7 +182,10 @@ export function getOutputsForTargetAndConfiguration(
           options,
         });
       })
-      .filter((output) => !!output && !output.match(/{.*}/));
+      .filter(
+        (output) =>
+          !!output && !output.match(/{(projectRoot|workspaceRoot|(options.*))}/)
+      );
   }
 
   // Keep backwards compatibility in case `outputs` doesn't exist
