@@ -367,8 +367,6 @@ const recipesUrls = {
   '/recipes/other/dte': '/recipes/example-repos/dte',
   '/recipes/other/deploy-nextjs-to-vercel':
     '/recipes/deployment/deploy-nextjs-to-vercel',
-  '/recipes/other/azure-last-successful-commit':
-    '/recipes/ci/azure-last-successful-commit',
   '/recipes/other/root-level-scripts':
     '/recipes/managing-repository/root-level-scripts',
   '/recipes/other/analyze-source-files':
@@ -720,6 +718,114 @@ const pluginsToExtendNx = {
   '/plugins/:path*': '/extending-nx/:path*',
 };
 
+// (meeroslav) 2023-07-20
+const latestRecipesRefactoring = {
+  // removed
+  '/recipes/getting-started/set-up-a-new-workspace':
+    '/getting-started/installation',
+  '/recipes/other/misc-ngrx': '/packages/angular/generators/ngrx', // 486 views
+  '/recipes/other/misc-data-persistence': '/packages/angular/generators/ngrx', // 200 views
+  '/recipes/other/standalone-ngrx-apis': '/packages/angular/generators/ngrx', //47 views -> can be freely removed
+  '/recipes/other/export-project-graph': '/recipes/core-features/explore-graph', // 20 views -> contents moved to explore-graph
+  '/recipes/executors/use-executor-configurations':
+    '/plugin-features/use-task-executors', // --> contents are moved over to use-task-executors
+  // ci
+  '/recipes/other/azure-last-successful-commit':
+    '/recipes/ci/azure-last-successful-commit',
+  // angular
+  '/recipes/adopting-nx/migration-angular':
+    '/recipes/angular/migration/angular',
+  '/recipes/adopting-nx-angular/angular-integrated':
+    '/recipes/angular/migration/angular',
+  '/recipes/adopting-nx-angular/angular-manual':
+    '/recipes/angular/migration/manual',
+  '/recipes/adopting-nx-angular/angular-multiple':
+    '/recipes/angular/migration/multiple',
+  '/recipes/adopting-nx/migration-angularjs':
+    '/recipes/angular/migration/angularjs',
+  '/recipes/environment-variables/use-environment-variables-in-angular':
+    '/recipes/angular/use-environment-variables-in-angular',
+  '/recipes/other/using-tailwind-css-with-angular-projects':
+    '/recipes/angular/using-tailwind-css-with-angular-projects',
+  '/recipes/module-federation/dynamic-module-federation-with-angular':
+    '/recipes/angular/dynamic-module-federation-with-angular',
+  '/recipes/other/setup-incremental-builds-angular':
+    '/recipes/angular/setup-incremental-builds-angular',
+  // react
+  '/recipes/adopting-nx/migration-cra': '/recipes/react/migration-cra',
+  '/recipes/other/react-18': '/recipes/react/react-18',
+  '/recipes/other/react-native': '/recipes/react/react-native',
+  '/recipes/other/remix': '/recipes/react/remix',
+  '/recipes/environment-variables/use-environment-variables-in-react':
+    '/recipes/react/use-environment-variables-in-react',
+  '/recipes/other/using-tailwind-css-in-react':
+    '/recipes/react/using-tailwind-css-in-react',
+  '/recipes/deployment/deploy-nextjs-to-vercel':
+    '/recipes/react/deploy-nextjs-to-vercel',
+  '/recipes/module-federation/module-federation-with-ssr':
+    '/recipes/react/module-federation-with-ssr',
+  '/recipes/other/adding-assets-react': '/recipes/react/adding-assets',
+  // node
+  '/recipes/deployment/node-server-fly-io': '/recipes/node/node-server-fly-io',
+  '/recipes/deployment/node-serverless-functions-netlify':
+    '/recipes/node/node-serverless-functions-netlify',
+  '/recipes/deployment/node-aws-lambda': '/recipes/node/node-aws-lambda',
+  // examples
+  '/recipes/module-federation/nx-examples': '/recipes/example-repos/mfe',
+  '/recipes/database/nestjs-prisma': '/recipes/example-repos/nestjs-prisma',
+  '/recipes/database/mongo-fastify': '/recipes/example-repos/mongo-fastify',
+  '/recipes/database/redis-fastify': '/recipes/example-repos/redis-fastify',
+  '/recipes/database/postgres-fastify':
+    '/recipes/example-repos/postgres-fastify',
+  '/recipes/database/serverless-fastify-planetscale':
+    '/recipes/example-repos/serverless-fastify-planetscale',
+  // troubleshooting
+  '/recipes/other/resolve-circular-dependencies':
+    '/recipes/troubleshooting/resolve-circular-dependencies',
+  '/recipes/ci/troubleshoot-nx-install-issues':
+    '/recipes/troubleshooting/troubleshoot-nx-install-issues',
+  '/recipes/other/troubleshoot-cache-misses':
+    '/recipes/troubleshooting/troubleshoot-cache-misses',
+  '/recipes/other/unknown-local-cache':
+    '/recipes/troubleshooting/unknown-local-cache',
+  '/recipes/other/performance-profiling':
+    '/recipes/troubleshooting/performance-profiling',
+  // tips and tricks
+  '/recipes/environment-variables/define-environment-variables':
+    '/recipes/tips-n-tricks/define-environment-variables',
+  '/recipes/other/eslint': '/recipes/tips-n-tricks/eslint',
+  '/recipes/other/browser-support': '/recipes/tips-n-tricks/browser-support',
+  '/recipes/other/include-assets-in-build':
+    '/recipes/tips-n-tricks/include-assets-in-build',
+  '/recipes/other/include-all-packagejson':
+    '/recipes/tips-n-tricks/include-all-packagejson',
+  '/recipes/other/identify-dependencies-between-folders':
+    '/recipes/tips-n-tricks/identify-dependencies-between-folders',
+  '/recipes/managing-repository/root-level-scripts':
+    '/recipes/tips-n-tricks/root-level-scripts',
+  '/recipes/managing-repository/analyze-source-files':
+    '/recipes/tips-n-tricks/analyze-source-files',
+  '/recipes/managing-repository/workspace-watching':
+    '/recipes/tips-n-tricks/workspace-watching',
+  '/recipes/managing-repository/standalone-to-integrated':
+    '/recipes/tips-n-tricks/standalone-to-integrated',
+  '/recipes/managing-repository/js-and-ts': '/recipes/tips-n-tricks/js-and-ts',
+  '/recipes/managing-repository/advanced-update':
+    '/recipes/tips-n-tricks/advanced-update',
+  '/recipes/executors/run-commands-executor':
+    '/recipes/tips-n-tricks/run-commands-executor',
+  // ci
+  '/recipes/ci/azure-last-successful-commit': '/recipes/ci/monorepo-ci-azure',
+  // other
+  '/recipes/deployment/deno-deploy': '/recipes/other/deno-deploy',
+  '/recipes/deployment/deno-netlify-functions':
+    '/recipes/other/deno-netlify-functions',
+
+  // nx concepts
+  '/recipes/module-federation/faster-builds':
+    '/more-concepts/faster-builds-with-module-federation',
+};
+
 /**
  * Public export API
  */
@@ -743,4 +849,5 @@ module.exports = {
   movePluginFeaturesToCore,
   makeMoreConceptsSubmenu,
   pluginsToExtendNx,
+  latestRecipesRefactoring,
 };

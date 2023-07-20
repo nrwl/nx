@@ -133,5 +133,5 @@ To serve the `store` application and watch for changes on the `checkout` applica
 
 To learn more about Module Federation, we have some resources you might find useful:
 
-- [Guide: Faster Builds with Module Federation](/recipes/module-federation/faster-builds)
+- [Guide: Faster Builds with Module Federation](/more-concepts/faster-builds-with-module-federation)
 - [Video: Speed up your Angular serve and build times with Module Federation and Nx](https://www.youtube.com/watch?v=JkcaGzhRjkc)

@@ -4,7 +4,7 @@ describe('nx-dev: Recipes pages', () => {
   it('should list related recipes based on tags', () => {
     const { map, uniq } = Cypress._;
 
-    cy.visit('/recipes/deployment/deno-deploy');
+    cy.visit('/recipes/other/deno-deploy');
 
     // All text content has to be different
     cy.get('[data-document="related"] > article > ul > li').should(($list) => {

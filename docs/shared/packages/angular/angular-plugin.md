@@ -12,7 +12,7 @@ within an Nx workspace. It provides:
 
 {% callout type="note" title="Currently using the Angular CLI?" %}
 You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn
-more [here](/recipes/adopting-nx/migration-angular).
+more [here](/recipes/angular/migration/angular).
 {% /callout %}
 
 ## Setting up the Angular plugin
@@ -92,9 +92,7 @@ nx g @nx/angular:service my-service
 ## More Documentation
 
 - [Angular Nx Tutorial](/angular-tutorial/1-code-generation)
-- [Migrating from the Angular CLI](/recipes/adopting-nx/migration-angular)
-- [Setup Module Federation with Angular and Nx](/recipes/module-federation/faster-builds)
-- [Using NgRx](/recipes/other/misc-ngrx)
-- [Using Data Persistence operators](/recipes/other/misc-data-persistence)
-- [Upgrading an AngularJS application to Angular](/recipes/adopting-nx/migration-angularjs)
-- [Using Tailwind CSS with Angular projects](/recipes/other/using-tailwind-css-with-angular-projects)
+- [Migrating from the Angular CLI](/recipes/angular/migration/angular)
+- [Setup Module Federation with Angular and Nx](/more-concepts/faster-builds-with-module-federation)
+- [Upgrading an AngularJS application to Angular](/recipes/angular/migration/angularjs)
+- [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)
