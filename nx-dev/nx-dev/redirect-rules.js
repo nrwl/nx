@@ -192,6 +192,29 @@ const guideUrls = {
     '/cypress/generators/migrate-to-cypress-11',
 };
 
+const langSpecificGuideUrls = ['/l/r', '/l/a', '/l/n'].reduce(
+  (acc, cur) => ({
+    ...acc,
+    [`${cur}/core-concepts/configuration`]: '/reference/project-configuration',
+    [`${cur}/core-concepts/mental-model`]: '/using-nx/mental-model',
+    [`${cur}/core-concepts/updating-nx`]: '/using-nx/updating-nx',
+    [`${cur}/core-concepts/ci-overview`]: '/using-nx/ci-overview',
+    [`${cur}/getting-started/nx-cli`]: '/using-nx/nx-cli',
+    [`${cur}/getting-started/console`]: '/using-nx/console',
+    [`${cur}/core-extended/affected`]: '/using-nx/affected',
+    [`${cur}/core-extended/computation-caching`]: '/using-nx/caching',
+    [`${cur}/guides/nextjs`]: '/next/overview',
+    [`${cur}/using-nx/nx-devkit`]: '/extending-nx/nx-devkit',
+    [`${cur}/structure/project-graph-plugins`]:
+      '/extending-nx/project-graph-plugins',
+    [`${cur}/guides/lerna-and-nx`]: '/migration/lerna-and-nx',
+    [`${cur}/cypress/v10-migration-guide`]: '/cypress/v11-migration-guide',
+    [`${cur}/cypress/generators/migrate-to-cypress-10`]:
+      '/cypress/generators/migrate-to-cypress-11',
+  }),
+  {}
+);
+
 /**
  * Diataxis restructure specific rules (added 2022-09-02)
  */
@@ -677,6 +700,22 @@ const referenceUrls = {
   '/changelog': '/reference/changelog',
 };
 
+const missingAndCatchAllRedirects = {
+  // missing
+  '/docs': '/getting-started/intro',
+  // catch all
+  '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*': '/:path*',
+  '/(l|latest|p|previous)/:path*': '/:path*',
+  '/(a|angular|r|react|n|node)/:path*': '/:path*',
+  // Storybook
+  '/(l|latest)/(r|react)/storybook/overview': '/storybook/overview-react',
+  '/(l|latest)/(a|angular)/storybook/overview': '/storybook/overview-angular',
+  '/(l|latest)/(a|angular|r|react)/storybook/executors':
+    '/storybook/executors-storybook',
+  // Nx Console
+  '/nx-console': '/using-nx/console',
+};
+
 /**
  * Public export API
  */
@@ -684,6 +723,7 @@ module.exports = {
   cliUrls,
   diataxis,
   guideUrls,
+  langSpecificGuideUrls,
   overviewUrls,
   recipesUrls,
   nxCloudUrls,
@@ -696,4 +736,5 @@ module.exports = {
   nested5minuteTutorialUrls,
   pluginUrls,
   referenceUrls,
+  missingRedirects: missingAndCatchAllRedirects,
 };
