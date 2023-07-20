@@ -21,7 +21,7 @@ export function DocViewer({
 }): JSX.Element {
   const router = useRouter();
   const hideTableOfContent =
-    router.asPath.includes('/getting-started/intro') ||
+    // router.asPath.includes('/getting-started/intro') ||
     router.asPath.includes('/plugins/intro/getting-started') ||
     router.asPath.includes('/packages/devkit') ||
     router.asPath.includes('/reference/glossary');

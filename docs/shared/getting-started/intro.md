@@ -1,8 +1,18 @@
 # Intro to Nx
 
-Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. Find out more about [why you should use Nx](/getting-started/why-nx).
+Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality.
 
-If instead you want to jump right into it, run the following command. It will guide you through the setup:
+## Key Features
+
+- **Efficient Task Execution**: Nx runs tasks in parallel, keeping potential dependencies among them in mind
+- **Local & Remote Caching**: With local and remote caching, Nx prevents unnecessary re-runs of tasks, saving you valuable dev time.
+- **Smooth Code Migrations**: Leveraging Nx plugins means gaining automatic code generation and migration tools - useful for keeping NPM packages up-to-date and minimizing breaking changes.
+- **Editor Integration**: Nx ships with Nx Console, an extension for VSCode & IntelliJ (and an LSP for you Vim nerds out there)
+- **Make it Your Own**: The [Nx Devkit](/plugins/intro/getting-started) lets you extend Nx's capabilities with your own automation, or you can even build your CLI on top of it.
+
+Find out more about [why you should use Nx](/getting-started/why-nx) or browse our [core features](/core-features) section.
+
+## Try Yourself!
 
 {% tabs %}
 {% tab label="npm" %}
@@ -22,19 +32,7 @@ If instead you want to jump right into it, run the following command. It will gu
 {% /tab %}
 {% /tabs %}
 
-You can use Nx to quickly scaffold a new project or even an entire monorepo. It can be incrementally adopted and will grow with your project as it scales.
-
-{% cards cols="3" %}
-
-{% title-card title="New Monorepo" url="#get-started-with-the-basics" /%}
-{% title-card title="Choose a Stack" url="#learn-about-nx-and-your-favorite-stack" /%}
-{% title-card title="Add to an Existing Project" url="#http://localhost:4200/getting-started/intro#adding-nx-to-an-existing-project" /%}
-
-{% /cards %}
-
-## Get Started with the Basics
-
-Its modular architecture lets you adopt Nx for package-based monorepos in combination with NPM, Yarn or PNPM, or create a fully integrated monorepo using Nx plugins. Learn more with the tutorials below.
+## Learn Nx
 
 {% personas %}
 {% persona type="javascript" title="New Package-Based Repo" url="/getting-started/tutorials/package-based-repo-tutorial" %}
@@ -56,9 +54,7 @@ Get a pre-configured setup. Nx configures your favorite frameworks and lets you 
 
 {% /cards %}
 
-## Learn About Nx and Your Favorite Stack
-
-Nx works well not just for monorepos. Nx plugins help you scaffold new projects with pre-configured tooling and modularize your codebase with local libraries.
+## Know Already? Pick Your Stack!
 
 {% cards cols="3" %}
 
@@ -88,7 +84,7 @@ A modern Node server with scaffolding for Express, Fastify or Koa. There's also 
 
 {% /cards %}
 
-## Adding Nx to an Existing Project
+## Have an Existing Project? Add Nx to it!
 
 If you have an existing project and want to adopt Nx or migrate to Nx just run the following command which guides you through the migration process:
 
@@ -115,3 +111,12 @@ Automatically migrate from the Angular CLI
 {% /persona %}
 
 {% /cards %}
+
+## Connect With Us
+
+Connect on our channels and with the Nx Community to ask questions, get help and keep up to date with the latest news.
+
+- Talk to us in the [Slack Community](https://go.nrwl.io/join-slack)
+- Subscribe to our [Youtube Channel](https://www.youtube.com/@nxdevtools)
+- Follow us on [Twitter](https://twitter.com/nxdevtools)
+- Subscribe [to our tech newsletter](https://go.nrwl.io/nx-newsletter)
