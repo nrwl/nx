@@ -1,4 +1,4 @@
-import { Tree, readJson } from '@nx/devkit';
+import { Tree, names, readJson } from '@nx/devkit';
 import { join } from 'path';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
@@ -37,6 +37,14 @@ export function convertEslintJsonToFlatConfig(
       .split('\n')
       .filter((line) => line.length > 0);
     exportElements.push(generateAst({ ignores: patterns }, ts.factory));
+  }
+
+  if (config.plugins) {
+    addPlugins(importsList, exportElements, config);
+  }
+
+  if (config.parser) {
+    addParser(importsList, exportElements, config);
   }
 
   if (config.rules) {
@@ -112,7 +120,7 @@ function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
     });
   // add plugin extends
   // TODO(meeroslav): Check if this is the recommended way of doing it
-  const pluginExtends = extendsConfig.filter((e) => e.startsWith('plugin:'));
+  const pluginExtends = extendsConfig.filter((imp) => !imp.match(/^\.?(\.\/)/));
   if (pluginExtends.length) {
     const pluginExtendsSpread = ts.factory.createSpreadElement(
       ts.factory.createCallExpression(
@@ -126,6 +134,52 @@ function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
     );
     configBlocks.push(pluginExtendsSpread);
   }
+}
+
+function addPlugins(importsList, configBlocks, config: ESLint.ConfigData) {
+  // TODO we need to find import for each plugin
+  // configBlocks.push(generateAst({ plugins: config.plugins }, ts.factory));
+}
+
+function addParser(importsList, configBlocks, config: ESLint.ConfigData) {
+  // TODO we need to find import for each plugin
+  const imp = config.parser;
+  const parserName = names(
+    imp.replace(/^@/, '').split('/').join('-')
+  ).propertyName;
+
+  const importStatement = ts.factory.createVariableStatement(
+    undefined,
+    ts.factory.createVariableDeclarationList(
+      [
+        ts.factory.createVariableDeclaration(
+          parserName,
+          undefined,
+          undefined,
+          ts.factory.createCallExpression(
+            ts.factory.createIdentifier('require'),
+            undefined,
+            [ts.factory.createStringLiteral(imp)]
+          )
+        ),
+      ],
+      ts.NodeFlags.Const
+    )
+  );
+
+  importsList.push(importStatement);
+
+  configBlocks.push(
+    ts.factory.createObjectLiteralExpression(
+      [
+        ts.factory.createPropertyAssignment(
+          'parser',
+          ts.factory.createIdentifier(parserName)
+        ),
+      ],
+      true
+    )
+  );
 }
 
 const DEFAULT_FLAT_CONFIG = `const { FlatCompat } = require("@eslint/eslintrc");

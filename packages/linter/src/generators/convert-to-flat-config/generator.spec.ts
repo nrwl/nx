@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree, addProjectConfiguration } from '@nx/devkit';
+import { Tree, addProjectConfiguration, updateJson } from '@nx/devkit';
 
 import { convertToFlatConfigGenerator } from './generator';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
@@ -47,7 +47,40 @@ describe('convert-to-flat-config generator', () => {
     tree.write('.eslintignore', 'ignore/me');
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.exists('eslint.config.js')).toBeTruthy();
+    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+  });
+
+  // it('should add plugins', async () => {
+  //   await lintProjectGenerator(tree, {
+  //     skipFormat: false,
+  //     linter: Linter.EsLint,
+  //     eslintFilePatterns: ['**/*.ts'],
+  //     project: 'test-lib',
+  //     setParserOptionsProject: false,
+  //   });
+  //   updateJson(tree, '.eslintrc.json', (json) => {
+  //     json.plugins = ['@nrwl/nx'];
+  //     return json;
+  //   });
+  //   await convertToFlatConfigGenerator(tree, options);
+
+  //   expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+  // });
+
+  it('should add parser', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['**/*.ts'],
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, '.eslintrc.json', (json) => {
+      json.parser = '@typescript-eslint/parser';
+      return json;
+    });
+    await convertToFlatConfigGenerator(tree, options);
+
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
   });
 });
