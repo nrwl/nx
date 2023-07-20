@@ -68,4 +68,4 @@ Note: You may want to keep the `migrations.json` until every branch that was cre
 
 ## Need to opt-out of some migrations?
 
-Sometimes you need to temporarily opt-out from some migrations because your workspace is not ready yet. You can manually adjust the `migrations.json` or run the update with the `--interactive` flag to choose which migrations you accept. Find more details in our [Advanced Update Process](/recipes/managing-repository/advanced-update) guide.
+Sometimes you need to temporarily opt-out from some migrations because your workspace is not ready yet. You can manually adjust the `migrations.json` or run the update with the `--interactive` flag to choose which migrations you accept. Find more details in our [Advanced Update Process](/recipes/tips-n-tricks/advanced-update) guide.

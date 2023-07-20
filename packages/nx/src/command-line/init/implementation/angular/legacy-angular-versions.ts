@@ -109,7 +109,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
     }
 
     printFinalMessage({
-      learnMoreLink: 'https://nx.dev/recipes/adopting-nx/migration-angular',
+      learnMoreLink: 'https://nx.dev/recipes/angular/migration/angular',
       bodyLines: [
         '- Execute "npx nx build" twice to see the computation caching in action.',
       ],

@@ -48,15 +48,15 @@ The terminal output and any file artifacts created by running a [task](#task). T
 
 ### Command
 
-Anything you run in the terminal. An example commmand that invokes a [task](#task) is `nx build my-app`.
+Anything you run in the terminal. An example command that invokes a [task](#task) is `nx build my-app`.
 
 > See: [Run Tasks](/core-features/run-tasks)
 
 ### Configurations
 
-A set of preconfigured options for a [target](#target) that should be enabled all together. For example, a `production` configuration would set all the options needed for a build that could be deployed to production.
+A set of preconfigured options for a [target](#target) that should be enabled altogether. For example, a `production` configuration would set all the options needed for a build that could be deployed to production.
 
-> See: [Use Executor Configurations](/recipes/executors/use-executor-configurations)
+> See: [Use Executor Configurations](/plugin-features/use-task-executors#use-executor-configurations)
 
 ### Distributed Cache
 

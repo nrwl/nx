@@ -106,11 +106,11 @@ Add Nx to your existing NPM/YARN/PNPM workspace
 Add Nx to a project
 {% /persona %}
 
-{% persona title="Migrate from CRA" type="react" url="/recipes/adopting-nx/migration-cra" %}
+{% persona title="Migrate from CRA" type="react" url="/recipes/react/migration-cra" %}
 Migrate from a CRA setup and automatically switch to Vite
 {% /persona %}
 
-{% persona title="Migrate from Angular CLI" type="angular" url="/recipes/adopting-nx/migration-angular" %}
+{% persona title="Migrate from Angular CLI" type="angular" url="/recipes/angular/migration/angular" %}
 Automatically migrate from the Angular CLI
 {% /persona %}
 

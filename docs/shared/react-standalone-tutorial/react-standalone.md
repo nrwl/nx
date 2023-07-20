@@ -784,8 +784,8 @@ Learn more about how to [enforce module boundaries](/core-features/enforce-proje
 Here's some more things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- Learn how to [migrate your CRA app to Nx](/recipes/adopting-nx/migration-cra)
-- [Learn how to setup Tailwind](/recipes/other/using-tailwind-css-in-react)
+- Learn how to [migrate your CRA app to Nx](/recipes/react/migration-cra)
+- [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
 - [Setup Storybook for our shared UI library](/packages/storybook/documents/overview-react)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)]
 - [Speed up CI: Share your cache](/core-features/share-your-cache)]

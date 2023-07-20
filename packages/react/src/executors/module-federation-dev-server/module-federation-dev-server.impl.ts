@@ -63,7 +63,7 @@ function getModuleFederationConfig(
     return config.default || config;
   } catch {
     throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?\nSee: https://nx.dev/recipes/module-federation/faster-builds`
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?\nSee: https://nx.dev/more-concepts/faster-builds-with-module-federation`
     );
   }
 }
