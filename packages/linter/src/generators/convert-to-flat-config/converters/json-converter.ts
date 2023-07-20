@@ -128,77 +128,28 @@ function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
   }
 }
 
+const DEFAULT_FLAT_CONFIG = `const { FlatCompat } = require("@eslint/eslintrc");
+const eslintrc = new FlatCompat({
+    baseDirectory: __dirname
+});
+`;
+
 function createNodeList(
   importsList: ts.VariableStatement[],
   exportElements: ts.Expression[]
-): ts.NodeArray<ts.VariableStatement | ts.Identifier | ts.ExportAssignment> {
+): ts.NodeArray<
+  ts.VariableStatement | ts.Identifier | ts.ExportAssignment | ts.SourceFile
+> {
   return ts.factory.createNodeArray([
     // add plugin imports
     ...importsList,
-    // creates:
-    // const { FlatCompat } = require('@eslint/eslintrc');
-    ts.factory.createVariableStatement(
-      undefined,
-      ts.factory.createVariableDeclarationList(
-        [
-          ts.factory.createVariableDeclaration(
-            ts.factory.createObjectBindingPattern([
-              ts.factory.createBindingElement(
-                undefined,
-                undefined,
-                'FlatCompat'
-              ),
-            ]),
-            undefined,
-            undefined,
-            ts.factory.createCallExpression(
-              ts.factory.createIdentifier('require'),
-              undefined,
-              [ts.factory.createStringLiteral('@eslint/eslintrc')]
-            )
-          ),
-        ],
-        ts.NodeFlags.Const
-      )
+    ts.createSourceFile(
+      '',
+      DEFAULT_FLAT_CONFIG,
+      ts.ScriptTarget.Latest,
+      false,
+      ts.ScriptKind.JS
     ),
-
-    ts.factory.createIdentifier('\n'),
-
-    // creates:
-    // const eslintrc = new FlatCompat({
-    //   baseDirectory: __dirname,
-    // );
-    ts.factory.createVariableStatement(
-      undefined,
-      ts.factory.createVariableDeclarationList(
-        [
-          ts.factory.createVariableDeclaration(
-            'eslintrc',
-            undefined,
-            undefined,
-            ts.factory.createNewExpression(
-              ts.factory.createIdentifier('FlatCompat'),
-              undefined,
-              [
-                ts.factory.createObjectLiteralExpression(
-                  [
-                    ts.factory.createPropertyAssignment(
-                      'baseDirectory',
-                      ts.factory.createIdentifier('__dirname')
-                    ),
-                  ],
-                  true
-                ),
-              ]
-            )
-          ),
-        ],
-        ts.NodeFlags.Const
-      )
-    ),
-
-    ts.factory.createIdentifier('\n'),
-
     // creates:
     // export default [ ... ];
     ts.factory.createExportAssignment(

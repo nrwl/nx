@@ -2,18 +2,12 @@
 
 exports[`convert-to-flat-config generator should add global gitignores 1`] = `
 "const { FlatCompat } = require("@eslint/eslintrc");
-
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
-
 export default [
-    {
-        ignores: ["**/*"]
-    },
-    {
-        ignores: ["ignore/me"]
-    },
+    { ignores: ["**/*"] },
+    { ignores: ["ignore/me"] },
     {
         files: [
             "*.ts",
@@ -21,8 +15,7 @@ export default [
             "*.js",
             "*.jsx"
         ],
-        rules: {
-            @nx/enforce-module-boundaries: [
+        rules: { @nx/enforce-module-boundaries: [
                 "error",
                 {
                     enforceBuildableLibDependency: true,
@@ -32,8 +25,7 @@ export default [
                             onlyDependOnLibsWithTags: ["*"]
                         }]
                 }
-            ]
-        }
+            ] }
     },
     {
         files: [
@@ -57,18 +49,12 @@ export default [
 
 exports[`convert-to-flat-config generator should run successfully 1`] = `
 "const { FlatCompat } = require("@eslint/eslintrc");
-
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
-
 export default [
-    {
-        ignores: ["**/*"]
-    },
-    {
-        ignores: ["node_modules"]
-    },
+    { ignores: ["**/*"] },
+    { ignores: ["node_modules"] },
     {
         files: [
             "*.ts",
@@ -76,8 +62,7 @@ export default [
             "*.js",
             "*.jsx"
         ],
-        rules: {
-            @nx/enforce-module-boundaries: [
+        rules: { @nx/enforce-module-boundaries: [
                 "error",
                 {
                     enforceBuildableLibDependency: true,
@@ -87,8 +72,7 @@ export default [
                             onlyDependOnLibsWithTags: ["*"]
                         }]
                 }
-            ]
-        }
+            ] }
     },
     {
         files: [
@@ -113,16 +97,12 @@ export default [
 exports[`convert-to-flat-config generator should run successfully 2`] = `
 "const baseConfig = require('../../.eslintrc.json');
 const { FlatCompat } = require('@eslint/eslintrc');
-
 const eslintrc = new FlatCompat({
   baseDirectory: __dirname,
 });
-
 export default [
   ...baseConfig,
-  {
-    ignores: ['!**/*'],
-  },
+  { ignores: ['!**/*'] },
   {
     files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
     rules: {},

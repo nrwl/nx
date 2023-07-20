@@ -21,7 +21,7 @@ export function generateAst<T>(input: unknown, factory: ts.NodeFactory): T {
           generateAst<ts.Expression>(value, factory)
         )
       ),
-      true
+      Object.keys(input).length > 1 // multiline only if more than one property
     ) as T;
   }
   if (typeof input === 'string') {

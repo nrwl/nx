@@ -1,9 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import {
-  Tree,
-  readProjectConfiguration,
-  addProjectConfiguration,
-} from '@nx/devkit';
+import { Tree, addProjectConfiguration } from '@nx/devkit';
 
 import { convertToFlatConfigGenerator } from './generator';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
