@@ -488,15 +488,15 @@ const standaloneTutorialRedirects = {
     '/getting-started/tutorials/react-standalone-tutorial',
   '/shared/react-standalone-tutorial/5-summary':
     '/getting-started/tutorials/react-standalone-tutorial',
-  'shared/angular-standalone-tutorial/1-code-generation':
+  '/shared/angular-standalone-tutorial/1-code-generation':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  'shared/angular-standalone-tutorial/2-project-graph':
+  '/shared/angular-standalone-tutorial/2-project-graph':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  'shared/angular-standalone-tutorial/3-task-running':
+  '/shared/angular-standalone-tutorial/3-task-running':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  'shared/angular-standalone-tutorial/4-task-pipelines':
+  '/shared/angular-standalone-tutorial/4-task-pipelines':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  'shared/angular-standalone-tutorial/5-summary':
+  '/shared/angular-standalone-tutorial/5-summary':
     '/getting-started/tutorials/angular-standalone-tutorial',
 };
 
@@ -677,6 +677,22 @@ const referenceUrls = {
   '/changelog': '/reference/changelog',
 };
 
+const missingAndCatchAllRedirects = {
+  // missing
+  '/docs': '/getting-started/intro',
+  // catch all
+  '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*': '/:path*',
+  '/(l|latest|p|previous)/:path*': '/:path*',
+  '/(a|angular|r|react|n|node)/:path*': '/:path*',
+  // Storybook
+  '/(l|latest)/(r|react)/storybook/overview': '/storybook/overview-react',
+  '/(l|latest)/(a|angular)/storybook/overview': '/storybook/overview-angular',
+  '/(l|latest)/(a|angular|r|react)/storybook/executors':
+    '/storybook/executors-storybook',
+  // Nx Console
+  '/nx-console': '/using-nx/console',
+};
+
 /**
  * Public export API
  */
@@ -696,4 +712,5 @@ module.exports = {
   nested5minuteTutorialUrls,
   pluginUrls,
   referenceUrls,
+  missingAndCatchAllRedirects,
 };
