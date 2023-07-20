@@ -35,9 +35,11 @@ import {
   swcHelpersVersion,
   tsLibVersion,
   typesNodeVersion,
+  swcNodeVersion,
+  swcCoreVersion,
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { type PackageJson } from 'nx/src/utils/package-json';
 import setupVerdaccio from '../setup-verdaccio/generator';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 
@@ -128,6 +130,10 @@ export async function projectGenerator(
         'index.' + (options.js ? 'js' : 'ts')
       ),
     ]);
+  }
+
+  if (options.bundler !== 'none') {
+    addBundlerDependencies(tree, options);
   }
 
   if (!options.skipFormat) {
@@ -246,6 +252,23 @@ export async function addLint(
     ],
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
+  });
+}
+
+function addBundlerDependencies(tree: Tree, options: NormalizedSchema) {
+  updateJson(tree, `${options.projectRoot}/package.json`, (json) => {
+    if (options.bundler === 'tsc') {
+      json.dependencies = {
+        ...json.dependencies,
+        tslib: tsLibVersion,
+      };
+    } else if (options.bundler === 'swc') {
+      json.dependencies = {
+        ...json.dependencies,
+        '@swc/helpers': swcHelpersVersion,
+      };
+    }
+    return json;
   });
 }
 

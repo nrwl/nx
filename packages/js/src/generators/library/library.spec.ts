@@ -436,7 +436,10 @@ describe('lib', () => {
           executor: '@nx/linter:eslint',
           outputs: ['{options.outputFile}'],
           options: {
-            lintFilePatterns: ['libs/my-lib/**/*.ts'],
+            lintFilePatterns: [
+              'libs/my-lib/**/*.ts',
+              'libs/my-lib/package.json',
+            ],
           },
         });
       });
@@ -480,6 +483,15 @@ describe('lib', () => {
                 ],
                 "rules": {},
               },
+              {
+                "files": [
+                  "*.json",
+                ],
+                "parser": "jsonc-eslint-parser",
+                "rules": {
+                  "@nx/dependency-checks": "error",
+                },
+              },
             ],
           }
         `);
@@ -500,7 +512,10 @@ describe('lib', () => {
           executor: '@nx/linter:eslint',
           outputs: ['{options.outputFile}'],
           options: {
-            lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
+            lintFilePatterns: [
+              'libs/my-dir/my-lib/**/*.ts',
+              'libs/my-dir/my-lib/package.json',
+            ],
           },
         });
       });
@@ -544,6 +559,15 @@ describe('lib', () => {
                   "*.jsx",
                 ],
                 "rules": {},
+              },
+              {
+                "files": [
+                  "*.json",
+                ],
+                "parser": "jsonc-eslint-parser",
+                "rules": {
+                  "@nx/dependency-checks": "error",
+                },
               },
             ],
           }
@@ -626,7 +650,10 @@ describe('lib', () => {
         expect(
           readProjectConfiguration(tree, 'my-dir-my-lib').targets.lint.options
             .lintFilePatterns
-        ).toEqual(['libs/my-dir/my-lib/**/*.js']);
+        ).toEqual([
+          'libs/my-dir/my-lib/**/*.js',
+          'libs/my-dir/my-lib/package.json',
+        ]);
         expect(readJson(tree, 'libs/my-dir/my-lib/.eslintrc.json'))
           .toMatchInlineSnapshot(`
           {
@@ -659,6 +686,15 @@ describe('lib', () => {
                   "*.jsx",
                 ],
                 "rules": {},
+              },
+              {
+                "files": [
+                  "*.json",
+                ],
+                "parser": "jsonc-eslint-parser",
+                "rules": {
+                  "@nx/dependency-checks": "error",
+                },
               },
             ],
           }
