@@ -8,7 +8,6 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
@@ -22,13 +21,6 @@ import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-depe
 import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 
 import type { Schema } from './schema';
-import { type PackageJson } from 'nx/src/utils/package-json';
-import {
-  swcCoreVersion,
-  swcHelpersVersion,
-  swcNodeVersion,
-  tsLibVersion,
-} from '@nx/js/src/utils/versions';
 
 const nxVersion = require('../../../package.json').version;
 
