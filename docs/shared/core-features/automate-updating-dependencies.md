@@ -10,6 +10,11 @@ The `nx migrate` command helps by automating the process of updating:
 
 ## How does it work?
 
+{% youtube
+src="https://www.youtube.com/embed/3CIv-_hTTY4"
+title="How Automated Code Migrations Work"
+width="100%" /%}
+
 Nx knows where its configuration files are and can therefore make sure they match the expected format. This automated update process, commonly referred to as "migration," becomes even more powerful when you leverage [Nx plugins](/packages). Nx plugins, which are NPM packages with a range of capabilities (code generation, task automation...), offer targeted updates based on their specific areas of responsibility.
 
 For example, the [Nx ESLint plugin](/packages/linter) excels at configuring linting in your workspace. With its understanding of the configuration file locations, this plugin can provide precise migration scripts to update ESLint packages in your `package.json` and corresponding configuration files in your workspace when a new version is released.
