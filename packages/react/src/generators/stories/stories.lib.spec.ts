@@ -50,6 +50,15 @@ describe('react:stories for libraries', () => {
         'utf-8'
       )
     ).toMatchSnapshot();
+
+    const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
+    expect(
+      packageJson.devDependencies['@storybook/addon-interactions']
+    ).toBeDefined();
+    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
+    expect(
+      packageJson.devDependencies['@storybook/testing-library']
+    ).toBeDefined();
   });
 
   it('should create the stories without interaction tests', async () => {
@@ -66,6 +75,16 @@ describe('react:stories for libraries', () => {
         'utf-8'
       )
     ).toMatchSnapshot();
+    const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
+    expect(
+      packageJson.devDependencies['@storybook/addon-interactions']
+    ).toBeUndefined();
+    expect(
+      packageJson.devDependencies['@storybook/test-runner']
+    ).toBeUndefined();
+    expect(
+      packageJson.devDependencies['@storybook/testing-library']
+    ).toBeUndefined();
   });
 
   describe('ignore paths', () => {

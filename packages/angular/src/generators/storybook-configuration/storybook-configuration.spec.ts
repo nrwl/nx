@@ -78,7 +78,7 @@ describe('StorybookConfiguration generator', () => {
     ).toMatchSnapshot();
   });
 
-  it('should configure everything at once - and interaction tests too', async () => {
+  it('should configure storybook with interaction tests and install dependencies', async () => {
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
       name: libName,
       generateStories: true,
@@ -100,6 +100,16 @@ describe('StorybookConfiguration generator', () => {
         'utf-8'
       )
     ).toMatchSnapshot();
+
+    const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
+    expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
+    expect(
+      packageJson.devDependencies['@storybook/addon-interactions']
+    ).toBeDefined();
+    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
+    expect(
+      packageJson.devDependencies['@storybook/testing-library']
+    ).toBeDefined();
   });
 
   it('should generate the right files', async () => {

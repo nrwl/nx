@@ -34,7 +34,7 @@ describe('react:storybook-configuration', () => {
     jest.restoreAllMocks();
   });
 
-  it('should configure everything at once', async () => {
+  it('should configure everything and install correct dependencies', async () => {
     appTree = await createTestUILib('test-ui-lib');
     await storybookConfigurationGenerator(appTree, {
       name: 'test-ui-lib',
@@ -46,6 +46,16 @@ describe('react:storybook-configuration', () => {
     expect(
       appTree.exists('libs/test-ui-lib/tsconfig.storybook.json')
     ).toBeTruthy();
+
+    const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
+    expect(packageJson.devDependencies['@storybook/react-vite']).toBeDefined();
+    expect(
+      packageJson.devDependencies['@storybook/addon-interactions']
+    ).toBeDefined();
+    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
+    expect(
+      packageJson.devDependencies['@storybook/testing-library']
+    ).toBeDefined();
   });
 
   it('should generate stories for components', async () => {

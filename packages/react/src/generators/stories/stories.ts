@@ -178,10 +178,11 @@ export async function storiesGenerator(
 ) {
   const projects = getProjects(host);
   const projectConfiguration = projects.get(schema.project);
+  schema.interactionTests = schema.interactionTests ?? true;
   await createAllStories(
     host,
     schema.project,
-    schema.interactionTests ?? true,
+    schema.interactionTests,
     schema.js,
     projects,
     projectConfiguration,

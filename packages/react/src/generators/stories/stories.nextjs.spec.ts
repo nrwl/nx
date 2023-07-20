@@ -39,7 +39,16 @@ describe('nextjs:stories for applications', () => {
 
     expect(
       tree.exists('apps/test-ui-app/components/test.stories.tsx')
-    ).toBeTruthy();
+    ).toMatchSnapshot();
+
+    const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
+    expect(
+      packageJson.devDependencies['@storybook/addon-interactions']
+    ).toBeDefined();
+    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
+    expect(
+      packageJson.devDependencies['@storybook/testing-library']
+    ).toBeDefined();
   });
 
   it('should create the stories without interaction tests', async () => {
@@ -50,7 +59,17 @@ describe('nextjs:stories for applications', () => {
 
     expect(
       tree.exists('apps/test-ui-app/components/test.stories.tsx')
-    ).toBeTruthy();
+    ).toMatchSnapshot();
+    const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
+    expect(
+      packageJson.devDependencies['@storybook/addon-interactions']
+    ).toBeUndefined();
+    expect(
+      packageJson.devDependencies['@storybook/test-runner']
+    ).toBeUndefined();
+    expect(
+      packageJson.devDependencies['@storybook/testing-library']
+    ).toBeUndefined();
   });
 
   it('should ignore paths', async () => {
