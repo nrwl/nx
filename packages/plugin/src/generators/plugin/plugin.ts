@@ -98,32 +98,6 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
 
   if (options.bundler === 'tsc') {
     tasks.push(addTsLibDependencies(host));
-
-    updateJson<PackageJson>(
-      host,
-      `${options.projectRoot}/package.json`,
-      (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          tslib: tsLibVersion,
-        };
-        return json;
-      }
-    );
-  } else if (options.bundler === 'swc') {
-    updateJson<PackageJson>(
-      host,
-      `${options.projectRoot}/package.json`,
-      (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@swc-node/register': swcNodeVersion,
-          '@swc/core': swcCoreVersion,
-          '@swc/helpers': swcHelpersVersion,
-        };
-        return json;
-      }
-    );
   }
 
   tasks.push(

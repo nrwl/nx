@@ -265,8 +265,6 @@ function addBundlerDependencies(tree: Tree, options: NormalizedSchema) {
     } else if (options.bundler === 'swc') {
       json.dependencies = {
         ...json.dependencies,
-        '@swc-node/register': swcNodeVersion,
-        '@swc/core': swcCoreVersion,
         '@swc/helpers': swcHelpersVersion,
       };
     }
