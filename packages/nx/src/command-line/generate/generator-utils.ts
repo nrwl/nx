@@ -10,7 +10,6 @@ import {
 } from '../../config/schema-utils';
 import { readJsonFile } from '../../utils/fileutils';
 import { readPluginPackageJson } from '../../utils/nx-plugin';
-import { getNxRequirePaths } from '../../utils/installation-directory';
 
 export function getGeneratorInformation(
   collectionName: string,
