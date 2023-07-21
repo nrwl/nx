@@ -13,7 +13,7 @@ import {
   Tree,
   workspaceRoot,
 } from '@nx/devkit';
-import { readNxJson } from 'nx/src/project-graph/file-utils';
+import { readNxJson } from 'nx/src/config/nx-json';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 
 interface FindTargetOptions {

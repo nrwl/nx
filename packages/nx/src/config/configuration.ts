@@ -2,10 +2,7 @@ import { Workspaces } from './workspaces';
 import { workspaceRoot } from '../utils/workspace-root';
 import { NxJsonConfiguration } from './nx-json';
 import { ProjectsConfigurations } from './workspace-json-project-json';
-
-export function readNxJson(): NxJsonConfiguration {
-  return new Workspaces(workspaceRoot).readNxJson();
-}
+import { readNxJson } from './nx-json';
 
 // TODO(vsavkin): Remove after Nx 16 is out
 /**
@@ -26,3 +23,5 @@ export function workspaceLayout(): { appsDir: string; libsDir: string } {
     libsDir: nxJson.workspaceLayout?.libsDir ?? 'libs',
   };
 }
+
+export { readNxJson } from './nx-json';

@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { readNxJson } from 'nx/src/project-graph/file-utils';
+import { readNxJson } from 'nx/src/config/nx-json';
 import {
   getTargetInputs,
   filterUsingGlobPatterns,

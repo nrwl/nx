@@ -42,11 +42,10 @@ export type {
  */
 export { Workspaces } from './config/workspaces';
 
-// TODO (v16): Change this to export from './config/configuration'
 export {
   readAllWorkspaceConfiguration,
   workspaceLayout,
-} from './project-graph/file-utils';
+} from './config/configuration';
 
 export type { NxPlugin, ProjectTargetConfigurator } from './utils/nx-plugin';
 
