@@ -1,9 +1,13 @@
+import type { Linter } from '@nx/linter';
+
 export interface ConfigurationGeneratorSchema {
   project: string;
   directory: string;
   js: boolean; // default is false
   skipFormat: boolean;
   skipPackageJson: boolean;
+  linter: Linter;
+  setParserOptionsProject: boolean; // default is false
   /**
    * command to give playwright to run the web server
    * @example: "npx nx serve my-fe-app"
