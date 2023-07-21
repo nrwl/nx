@@ -9,9 +9,11 @@ You can read more about how this generator works, in the [Storybook for React ov
 When running this generator, you will be prompted to provide the following:
 
 - The `name` of the project you want to generate the configuration for.
-- Whether you want to `generateCypressSpecs`. If you choose `yes`, a test file is going to be generated in the project's Cypress e2e app for each of your components.
+- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/angular/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, a `play` function will be added to your stories, and all the necessary dependencies will be installed. You can read more about this in the [Nx Storybook interaction tests documentation page](/packages/storybook/documents/interaction-tests)..
 
 You must provide a `name` for the generator to work.
+
+By default, this generator will also set up [Storybook interaction tests](https://storybook.js.org/docs/angular/writing-tests/interaction-testing). If you don't want to set up Storybook interaction tests, you can pass the `--interactionTests=false` option, but it's not recommended.
 
 There are a number of other options available. Let's take a look at some examples.
 
