@@ -556,6 +556,7 @@
       - [Storybook 7 overview](/packages/storybook/documents/storybook-7-setup)
       - [Configuring Storybook on Nx](/packages/storybook/documents/configuring-storybook)
       - [How to configure Webpack and Vite for Storybook](/packages/storybook/documents/custom-builder-configs)
+      - [Setting up Storybook Interaction Tests with Nx](/packages/storybook/documents/storybook-interaction-tests)
       - [Setting up Storybook Composition with Nx](/packages/storybook/documents/storybook-composition-setup)
       - [Angular: Set up Compodoc for Storybook on Nx](/packages/storybook/documents/angular-storybook-compodoc)
       - [Angular: Configuring styles and preprocessor options](/packages/storybook/documents/angular-configuring-styles)

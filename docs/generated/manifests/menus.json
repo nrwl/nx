@@ -7424,6 +7424,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Setting up Storybook Interaction Tests with Nx",
+                "path": "/packages/storybook/documents/storybook-interaction-tests",
+                "id": "storybook-interaction-tests",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Setting up Storybook Composition with Nx",
                 "path": "/packages/storybook/documents/storybook-composition-setup",
                 "id": "storybook-composition-setup",
