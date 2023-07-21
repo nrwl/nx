@@ -19,7 +19,7 @@ import { isCI } from '../../utils/is-ci';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
-import { Workspaces } from '../../config/workspaces';
+import { hasNxJson } from '../../config/nx-json';
 import { Message, SocketMessenger } from './socket-messenger';
 import { safelyCleanUpExistingProcess } from '../cache';
 import { Hash } from '../../hasher/task-hasher';
@@ -438,7 +438,7 @@ function isDocker() {
 }
 
 function nxJsonIsNotPresent() {
-  return !new Workspaces(workspaceRoot).hasNxJson();
+  return !hasNxJson(workspaceRoot);
 }
 
 function daemonProcessException(message: string) {
