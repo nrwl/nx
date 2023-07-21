@@ -31,13 +31,7 @@ export interface StorybookStoriesSchema {
   js?: boolean;
   ignorePaths?: string[];
   skipFormat?: boolean;
-  /**
-   * @deprecated Use interactionTests instead. This option will be removed in v18.
-   */
   cypressProject?: string;
-  /**
-   * @deprecated Use interactionTests instead. This option will be removed in v18.
-   */
   generateCypressSpecs?: boolean;
 }
 
