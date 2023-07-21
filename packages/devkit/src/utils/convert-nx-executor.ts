@@ -13,9 +13,10 @@ const { Workspaces, readNxJsonFromDisk } = requireNx();
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
     const workspaces = new Workspaces(builderContext.workspaceRoot);
-    const nxJsonConfiguration = readNxJsonFromDisk(
-      builderContext.workspaceRoot
-    );
+    const nxJsonConfiguration = readNxJsonFromDisk
+      ? readNxJsonFromDisk(builderContext.workspaceRoot)
+      : // TODO(v18): remove readNxJson. This is to be backwards compatible with Nx 16.5 and below.
+        (workspaces as any).readNxJson();
     const projectsConfigurations = workspaces.readProjectsConfigurations({
       _includeProjectsFromAngularJson: true,
     });
