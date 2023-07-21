@@ -2,9 +2,11 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
+  GeneratorCallback,
   offsetFromRoot,
   readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
   toJS,
   Tree,
   updateNxJson,
@@ -13,11 +15,19 @@ import {
 import * as path from 'path';
 import { ConfigurationGeneratorSchema } from './schema';
 import initGenerator from '../init/init';
+import { addLinterToPlaywrightProject } from '../../utils/add-linter';
 
 export async function configurationGenerator(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await initGenerator(tree, {
+      skipFormat: true,
+      skipPackageJson: options.skipPackageJson,
+    })
+  );
   const projectConfig = readProjectConfiguration(tree, options.project);
   generateFiles(tree, path.join(__dirname, 'files'), projectConfig.root, {
     offsetFromRoot: offsetFromRoot(projectConfig.root),
@@ -29,6 +39,17 @@ export async function configurationGenerator(
 
   addE2eTarget(tree, options);
   setupE2ETargetDefaults(tree);
+  tasks.push(
+    await addLinterToPlaywrightProject(tree, {
+      project: options.project,
+      linter: options.linter,
+      skipPackageJson: options.skipPackageJson,
+      js: options.js,
+      directory: options.directory,
+      setParserOptionsProject: options.setParserOptionsProject,
+      rootProject: projectConfig.root === '.',
+    })
+  );
 
   if (options.js) {
     toJS(tree);
@@ -37,10 +58,7 @@ export async function configurationGenerator(
     await formatFiles(tree);
   }
 
-  return initGenerator(tree, {
-    skipFormat: true,
-    skipPackageJson: options.skipPackageJson,
-  });
+  return runTasksInSerial(...tasks);
 }
 
 function setupE2ETargetDefaults(tree: Tree) {

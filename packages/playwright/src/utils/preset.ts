@@ -41,7 +41,7 @@ export interface NxPlaywrightOptions {
  * })
  *
  * @param pathToConfig will be used to construct the output paths for reporters and test results
- * @param options optional confiuration options
+ * @param options optional configuration options
  */
 export function nxE2EPreset(
   pathToConfig: string,

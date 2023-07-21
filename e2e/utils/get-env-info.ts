@@ -118,7 +118,9 @@ export function ensurePlaywrightBrowsersInstallation() {
     cwd: tmpProjPath(),
   });
   e2eConsoleLogger(
-    `Playwright browsers ${execSync('npx playwright --version')} installed.`
+    `Playwright browsers ${execSync('npx playwright --version')
+      .toString()
+      .trim()} installed.`
   );
 }
 
