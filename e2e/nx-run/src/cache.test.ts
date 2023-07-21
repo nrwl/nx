@@ -157,11 +157,12 @@ describe('cache', () => {
     updateProjectConfig(mylib, (c) => {
       c.targets.build = {
         executor: 'nx:run-commands',
-        outputs: ['{workspaceRoot}/dist/*.{txt,md}'],
+        outputs: ['{workspaceRoot}/dist/!(.next)/**/!(z|x).(txt|md)'],
         options: {
           commands: [
             'rm -rf dist',
             'mkdir dist',
+            'mkdir dist/.next',
             'echo a > dist/a.txt',
             'echo b > dist/b.txt',
             'echo c > dist/c.txt',
@@ -169,6 +170,9 @@ describe('cache', () => {
             'echo e > dist/e.txt',
             'echo f > dist/f.md',
             'echo g > dist/g.html',
+            'echo h > dist/.next/h.txt',
+            'echo x > dist/x.txt',
+            'echo z > dist/z.md',
           ],
           parallel: false,
         },
@@ -191,6 +195,9 @@ describe('cache', () => {
     expect(outputsWithUntouchedOutputs).toContain('e.txt');
     expect(outputsWithUntouchedOutputs).toContain('f.md');
     expect(outputsWithUntouchedOutputs).toContain('g.html');
+    expect(outputsWithUntouchedOutputs).toContain('h.txt');
+    expect(outputsWithUntouchedOutputs).toContain('x.txt');
+    expect(outputsWithUntouchedOutputs).toContain('z.md');
 
     // Create a file in the dist that does not match output glob
     updateFile('dist/c.ts', '');
@@ -206,6 +213,11 @@ describe('cache', () => {
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('e.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('f.md');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('g.html');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain(
+      '.next/h.txt'
+    );
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('x.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('z.md');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('c.ts');
 
     // Clear Dist
@@ -223,6 +235,9 @@ describe('cache', () => {
     expect(outputsWithoutOutputs).toContain('f.md');
     expect(outputsWithoutOutputs).not.toContain('c.ts');
     expect(outputsWithoutOutputs).not.toContain('g.html');
+    expect(outputsWithoutOutputs).not.toContain('.next/h.txt');
+    expect(outputsWithoutOutputs).not.toContain('x.txt');
+    expect(outputsWithoutOutputs).not.toContain('z.md');
   });
 
   it('should use consider filesets when hashing', async () => {

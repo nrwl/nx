@@ -1,7 +1,6 @@
-use crate::native::utils::glob::build_glob_set;
+use crate::native::utils::glob::{build_glob_set, NxGlobSet};
 use crate::native::utils::path::Normalize;
 use crate::native::walker::nx_walker;
-use globset::GlobSet;
 
 use napi::JsObject;
 use std::collections::hash_map::Entry;
@@ -19,7 +18,7 @@ pub fn get_project_configurations<ConfigurationParser>(
 where
     ConfigurationParser: Fn(Vec<String>) -> napi::Result<HashMap<String, JsObject>>,
 {
-    let globs = build_glob_set(globs)?;
+    let globs = build_glob_set(&globs)?;
     let config_paths: Vec<String> = nx_walker(workspace_root, move |rec| {
         let mut config_paths: HashMap<PathBuf, PathBuf> = HashMap::new();
         for (path, _) in rec {
@@ -38,7 +37,7 @@ where
 pub fn insert_config_file_into_map(
     path: PathBuf,
     config_paths: &mut HashMap<PathBuf, PathBuf>,
-    globs: &GlobSet,
+    globs: &NxGlobSet,
 ) {
     if globs.is_match(&path) {
         let parent = path.parent().unwrap_or_else(|| Path::new("")).to_path_buf();
@@ -78,7 +77,7 @@ mod test {
     #[test]
     fn should_insert_config_files_properly() {
         let mut config_paths: HashMap<PathBuf, PathBuf> = HashMap::new();
-        let globs = build_glob_set(vec!["**/*".into()]).unwrap();
+        let globs = build_glob_set(&["**/*"]).unwrap();
 
         insert_config_file_into_map(PathBuf::from("project.json"), &mut config_paths, &globs);
         insert_config_file_into_map(PathBuf::from("package.json"), &mut config_paths, &globs);

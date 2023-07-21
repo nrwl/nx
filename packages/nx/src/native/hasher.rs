@@ -43,7 +43,7 @@ fn hash_files_matching_globs(
     directory: String,
     glob_patterns: Vec<String>,
 ) -> anyhow::Result<Option<String>> {
-    let glob_set = build_glob_set(glob_patterns)?;
+    let glob_set = build_glob_set(&glob_patterns)?;
 
     let mut hashes = nx_walker(directory, move |receiver| {
         let mut collection: Vec<FileData> = Vec::new();

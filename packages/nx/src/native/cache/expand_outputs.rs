@@ -19,7 +19,7 @@ pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result
         return Ok(existing_paths);
     }
 
-    let glob_set = build_glob_set(not_found)?;
+    let glob_set = build_glob_set(&not_found)?;
     let found_paths = nx_walker_sync(directory)
         .filter_map(|path| {
             if glob_set.is_match(&path) {
