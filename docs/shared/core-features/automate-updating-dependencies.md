@@ -11,7 +11,7 @@ The `nx migrate` command helps by automating the process of updating:
 ## How does it work?
 
 {% youtube
-src="https://www.youtube.com/embed/3CIv-_hTTY4"
+src="https://www.youtube.com/embed/Ss6MfcXi0jE"
 title="How Automated Code Migrations Work"
 width="100%" /%}
 
