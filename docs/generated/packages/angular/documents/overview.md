@@ -75,9 +75,9 @@ nx lint libName
 
 Read more about:
 
-- [Creating Libraries](/more-concepts/creating-libraries)
-- [Library Types](/more-concepts/library-types)
-- [Buildable and Publishable Libraries](/more-concepts/buildable-and-publishable-libraries)
+- [Creating Libraries](/concepts/more-concepts/creating-libraries)
+- [Library Types](/concepts/more-concepts/library-types)
+- [Buildable and Publishable Libraries](/concepts/more-concepts/buildable-and-publishable-libraries)
 
 ### Fallback to `@schematics/angular`
 

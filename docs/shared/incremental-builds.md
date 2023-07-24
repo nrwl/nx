@@ -27,7 +27,7 @@ On the other hand, the executor of a **buildable library**, performs a subset of
 nx g @nx/react:lib mylib --buildable
 ```
 
-Read more about [Publishable and Buildable Nx Libraries here.](/more-concepts/buildable-and-publishable-libraries)
+Read more about [Publishable and Buildable Nx Libraries here.](/concepts/more-concepts/buildable-and-publishable-libraries)
 
 ## Nx computation cache and Nx Cloud
 

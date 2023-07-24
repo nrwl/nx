@@ -65,7 +65,7 @@ If you're not ready to make the change yet, you can come back to this later:
 
 {% cards %}
 
-{% card title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" type="documentation" url="/more-concepts/nx-and-angular" /%}
+{% card title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" type="documentation" url="/concepts/more-concepts/nx-and-angular" /%}
 
 {% card title="Angular CLI to Integrated Nx Workspace" description="Change the folder structure to use an integrated style" type="documentation" url="/recipes/adopting-nx-angular/angular-integrated" /%}
 
