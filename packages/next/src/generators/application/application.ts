@@ -1,6 +1,7 @@
 import {
   convertNxGenerator,
   formatFiles,
+  GeneratorCallback,
   joinPathFragments,
   runTasksInSerial,
   Tree,
@@ -8,7 +9,7 @@ import {
 
 import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
-import { addCypress } from './lib/add-cypress';
+import { addE2e } from './lib/add-e2e';
 import { addJest } from './lib/add-jest';
 import { addProject } from './lib/add-project';
 import { createApplicationFiles } from './lib/create-application-files';
@@ -22,6 +23,7 @@ import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
+  const tasks: GeneratorCallback[] = [];
   const options = normalizeOptions(host, schema);
 
   showPossibleWarnings(host, options);
@@ -30,17 +32,28 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     ...options,
     skipFormat: true,
   });
+  tasks.push(nextTask);
+
   createApplicationFiles(host, options);
   addProject(host, options);
-  const cypressTask = await addCypress(host, options);
+
+  const e2eTask = await addE2e(host, options);
+  tasks.push(e2eTask);
+
   const jestTask = await addJest(host, options);
+  tasks.push(jestTask);
+
   const lintTask = await addLinting(host, options);
-  updateJestConfig(host, options);
-  updateCypressTsConfig(host, options);
+  tasks.push(lintTask);
+
   const styledTask = addStyleDependencies(host, {
     style: options.style,
     swc: !host.exists(joinPathFragments(options.appProjectRoot, '.babelrc')),
   });
+  tasks.push(styledTask);
+
+  updateJestConfig(host, options);
+  updateCypressTsConfig(host, options);
   setDefaults(host, options);
 
   if (options.customServer) {
@@ -54,13 +67,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     await formatFiles(host);
   }
 
-  return runTasksInSerial(
-    nextTask,
-    cypressTask,
-    jestTask,
-    lintTask,
-    styledTask
-  );
+  return runTasksInSerial(...tasks);
 }
 
 export const applicationSchematic = convertNxGenerator(applicationGenerator);

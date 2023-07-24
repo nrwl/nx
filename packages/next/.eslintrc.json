@@ -82,6 +82,7 @@
               "@nx/webpack",
               "@nx/cypress",
               "@nx/jest",
+              "@nx/playwright",
               "typescript",
               "react",
               "webpack",

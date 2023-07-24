@@ -8,7 +8,7 @@ export interface Schema {
   directory?: string;
   tags?: string;
   unitTestRunner?: 'jest' | 'none';
-  e2eTestRunner?: 'cypress' | 'none';
+  e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   linter?: Linter;
   js?: boolean;
   setParserOptionsProject?: boolean;
