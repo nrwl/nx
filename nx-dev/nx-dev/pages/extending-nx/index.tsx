@@ -10,15 +10,18 @@ import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { nxPluginsApi } from '../../lib/plugins.api';
 import { tagsApi } from '../../lib/tags.api';
+import { fetchGithubStarCount } from '../../lib/githubStars.api';
 
 export default function PluginsRoot({
   document,
   menu,
   relatedDocuments,
+  widgetData,
 }: {
   document: ProcessedDocument;
   menu: MenuItem[];
   relatedDocuments: RelatedDocument[];
+  widgetData: { githubStarsCount: number };
 }) {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -72,6 +75,7 @@ export default function PluginsRoot({
           <DocViewer
             document={document}
             relatedDocuments={vm.relatedDocuments}
+            widgetData={widgetData}
           />
         </div>
       </main>
@@ -87,6 +91,9 @@ export const getStaticProps: GetStaticProps = async () => {
   return {
     props: {
       document,
+      widgetData: {
+        githubStarsCount: await fetchGithubStarCount(),
+      },
       menu: menusApi.getMenu('extending-nx', ''),
       relatedDocuments: document.tags
         .map((t) => tagsApi.getAssociatedItems(t))

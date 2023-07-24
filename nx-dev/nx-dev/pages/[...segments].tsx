@@ -1,7 +1,7 @@
 import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
 import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
 import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
-import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
+import { MenuItem } from '@nx/nx-dev/models-menu';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { useRouter } from 'next/router';
@@ -10,15 +10,18 @@ import { menusApi } from '../lib/menus.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { nxDocumentationApi } from '../lib/nx.api';
 import { tagsApi } from '../lib/tags.api';
+import { fetchGithubStarCount } from '../lib/githubStars.api';
 
 export default function NxDocumentation({
   document,
   menu,
   relatedDocuments,
+  widgetData,
 }: {
   document: ProcessedDocument;
   menu: MenuItem[];
   relatedDocuments: RelatedDocument[];
+  widgetData: { githubStarsCount: number };
 }) {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -40,16 +43,8 @@ export default function NxDocumentation({
     return () => router.events.off('routeChangeComplete', handleRouteChange);
   }, [router, wrapperElement]);
 
-  const vm: {
-    document: ProcessedDocument;
-    menu: Menu;
-    relatedDocuments: RelatedDocument[];
-  } = {
-    document,
-    menu: {
-      sections: [getBasicNxSection(menu)],
-    },
-    relatedDocuments,
+  const menuWithSections = {
+    sections: [getBasicNxSection(menu)],
   };
 
   return (
@@ -62,7 +57,7 @@ export default function NxDocumentation({
         role="main"
         className="flex h-full flex-1 overflow-y-hidden"
       >
-        <SidebarContainer menu={vm.menu} navIsOpen={navIsOpen} />
+        <SidebarContainer menu={menuWithSections} navIsOpen={navIsOpen} />
         <div
           ref={wrapperElement}
           id="wrapper"
@@ -70,8 +65,9 @@ export default function NxDocumentation({
           className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
         >
           <DocViewer
-            document={vm.document}
-            relatedDocuments={vm.relatedDocuments}
+            document={document}
+            relatedDocuments={relatedDocuments}
+            widgetData={widgetData}
           />
         </div>
       </main>
@@ -100,6 +96,9 @@ export const getStaticProps: GetStaticProps = async ({
     return {
       props: {
         document,
+        widgetData: {
+          githubStarsCount: await fetchGithubStarCount(),
+        },
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item
