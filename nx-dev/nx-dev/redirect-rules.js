@@ -674,7 +674,7 @@ const pluginUrls = {
 };
 
 const referenceUrls = {
-  '/changelog': '/reference/changelog',
+  '/reference/changelog': '/changelog',
 };
 
 const missingAndCatchAllRedirects = {

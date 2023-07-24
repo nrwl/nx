@@ -1492,14 +1492,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Changelog",
-            "path": "/reference/changelog",
-            "id": "changelog",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -1565,14 +1557,6 @@
         "path": "/reference/glossary",
         "id": "glossary",
         "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Changelog",
-        "path": "/reference/changelog",
-        "id": "changelog",
-        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },

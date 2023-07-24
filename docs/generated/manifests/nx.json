@@ -1857,16 +1857,6 @@
         "isExternal": false,
         "path": "/reference/glossary",
         "tags": []
-      },
-      {
-        "id": "changelog",
-        "name": "Changelog",
-        "description": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": true,
-        "path": "/reference/changelog",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -1951,16 +1941,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/reference/glossary",
-    "tags": []
-  },
-  "/reference/changelog": {
-    "id": "changelog",
-    "name": "Changelog",
-    "description": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": true,
-    "path": "/reference/changelog",
     "tags": []
   },
   "/deprecated": {

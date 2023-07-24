@@ -11,9 +11,9 @@ import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { Octokit } from 'octokit';
 import { compare, parse } from 'semver';
-import { changeLogApi } from '../../lib/changelog.api';
-import { useNavToggle } from '../../lib/navigation-toggle.effect';
-import { menusApi } from '../../lib/menus.api';
+import { changeLogApi } from '../lib/changelog.api';
+import { useNavToggle } from '../lib/navigation-toggle.effect';
+import { menusApi } from '../lib/menus.api';
 import { MenuItem } from '@nx/nx-dev/models-menu';
 import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
 
