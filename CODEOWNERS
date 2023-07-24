@@ -4,8 +4,8 @@
 /e2e/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /scripts/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /tools/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
-package.json @nrwl/nx-pipelines-reviewers
-pnpm-lock.yaml @nrwl/nx-pipelines-reviewers
+package.json @nrwl/nx-core-reviewers
+pnpm-lock.yaml @nrwl/nx-core-reviewers
 
 # Docs Site + Graph
 /docs @nrwl/nx-docs-reviewers
