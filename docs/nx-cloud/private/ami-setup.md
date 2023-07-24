@@ -49,7 +49,7 @@ secret:
 2. Apply the configuration:
 
 ```bash
-scp -r ./myconfiguration.yaml nx-cloud@<your-instance-ip>:~/config/user/update.yaml
+scp -i ./<path-to-your-ssh-pem-file>.pem -r ./myconfiguration.yaml nx-cloud@<your-instance-ip>:~/config/user/update.yaml
 ```
 
 That's it! After a few minutes, you should be able to log-in with:
