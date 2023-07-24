@@ -4488,6 +4488,16 @@
             "tags": []
           },
           {
+            "id": "add-astro",
+            "name": "Add an Astro Project",
+            "description": "Add Nx to an Astro project",
+            "file": "shared/recipes/add-stack/add-astro",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-astro",
+            "tags": []
+          },
+          {
             "id": "react-nx",
             "name": "Powering Up React Development With Nx",
             "description": "",
@@ -4634,6 +4644,16 @@
         "tags": []
       },
       {
+        "id": "add-astro",
+        "name": "Add an Astro Project",
+        "description": "Add Nx to an Astro project",
+        "file": "shared/recipes/add-stack/add-astro",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-astro",
+        "tags": []
+      },
+      {
         "id": "react-nx",
         "name": "Powering Up React Development With Nx",
         "description": "",
@@ -4766,6 +4786,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-qwik",
+    "tags": []
+  },
+  "/showcase/example-repos/add-astro": {
+    "id": "add-astro",
+    "name": "Add an Astro Project",
+    "description": "Add Nx to an Astro project",
+    "file": "shared/recipes/add-stack/add-astro",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-astro",
     "tags": []
   },
   "/showcase/example-repos/react-nx": {

@@ -3600,6 +3600,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Add an Astro Project",
+                "path": "/showcase/example-repos/add-astro",
+                "id": "add-astro",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Powering Up React Development With Nx",
                 "path": "/showcase/example-repos/react-nx",
                 "id": "react-nx",
@@ -3716,6 +3724,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Add an Astro Project",
+            "path": "/showcase/example-repos/add-astro",
+            "id": "add-astro",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Powering Up React Development With Nx",
             "path": "/showcase/example-repos/react-nx",
             "id": "react-nx",
@@ -3818,6 +3834,14 @@
         "name": "Add a Qwik Project",
         "path": "/showcase/example-repos/add-qwik",
         "id": "add-qwik",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add an Astro Project",
+        "path": "/showcase/example-repos/add-astro",
+        "id": "add-astro",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
