@@ -1594,246 +1594,745 @@
         "disableCollapsible": false
       },
       {
-        "name": "All Recipes »",
+        "name": "Recipes",
         "path": "/recipes",
-        "id": "all",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "CI Setup",
-        "path": "/recipes/ci/ci-setup",
-        "id": "ci-setup",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Adopting Nx",
-        "path": "/recipes/adopting-nx",
-        "id": "adopting-nx",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Reference",
-        "path": "/reference",
-        "id": "reference",
+        "id": "recipes",
         "isExternal": false,
         "children": [
           {
-            "name": "Commands",
-            "path": "/reference/commands",
-            "id": "commands",
+            "name": "Adopting Nx",
+            "path": "/recipes/adopting-nx",
+            "id": "adopting-nx",
             "isExternal": false,
-            "children": [],
+            "children": [
+              {
+                "name": "NPM/Yarn/PNPM workspaces",
+                "path": "/recipes/adopting-nx/adding-to-monorepo",
+                "id": "adding-to-monorepo",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add to any Project",
+                "path": "/recipes/adopting-nx/adding-to-existing-project",
+                "id": "adding-to-existing-project",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx and Lerna",
+                "path": "/recipes/adopting-nx/lerna-and-nx",
+                "id": "lerna-and-nx",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Preserving Git Histories",
+                "path": "/recipes/adopting-nx/preserving-git-histories",
+                "id": "preserving-git-histories",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Manual migration",
+                "path": "/recipes/adopting-nx/manual",
+                "id": "manual",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
             "disableCollapsible": false
           },
           {
-            "name": "nx.json",
-            "path": "/reference/nx-json",
-            "id": "nx-json",
+            "name": "Angular",
+            "path": "/recipes/angular",
+            "id": "angular",
             "isExternal": false,
-            "children": [],
+            "children": [
+              {
+                "name": "Migration",
+                "path": "/recipes/angular/migration",
+                "id": "migration",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Migrating from Angular CLI",
+                    "path": "/recipes/angular/migration/angular",
+                    "id": "angular",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Migrating From Multiple Angular CLI Repos",
+                    "path": "/recipes/angular/migration/angular-multiple",
+                    "id": "angular-multiple",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Migrating Angular Application manually",
+                    "path": "/recipes/angular/migration/angular-manual",
+                    "id": "angular-manual",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Migrating from AngularJS",
+                    "path": "/recipes/angular/migration/angularjs",
+                    "id": "angularjs",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Use Environment Variables in Angular",
+                "path": "/recipes/angular/use-environment-variables-in-angular",
+                "id": "use-environment-variables-in-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using Tailwind CSS with Angular projects",
+                "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
+                "id": "using-tailwind-css-with-angular-projects",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setup Module Federation with SSR for Angular",
+                "path": "/recipes/angular/module-federation-with-ssr",
+                "id": "module-federation-with-ssr",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+                "path": "/recipes/angular/dynamic-module-federation-with-angular",
+                "id": "dynamic-module-federation-with-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setup incremental builds for Angular applications",
+                "path": "/recipes/angular/setup-incremental-builds-angular",
+                "id": "setup-incremental-builds-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
             "disableCollapsible": false
           },
           {
-            "name": "Project Configuration",
-            "path": "/reference/project-configuration",
-            "id": "project-configuration",
+            "name": "React",
+            "path": "/recipes/react",
+            "id": "react",
             "isExternal": false,
-            "children": [],
+            "children": [
+              {
+                "name": "Migrating from CRA",
+                "path": "/recipes/react/migration-cra",
+                "id": "migration-cra",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React 18 Migration",
+                "path": "/recipes/react/react-18",
+                "id": "react-18",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React Native with Nx",
+                "path": "/recipes/react/react-native",
+                "id": "react-native",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Remix with Nx",
+                "path": "/recipes/react/remix",
+                "id": "remix",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Use Environment Variables in React",
+                "path": "/recipes/react/use-environment-variables-in-react",
+                "id": "use-environment-variables-in-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using Tailwind CSS in React",
+                "path": "/recipes/react/using-tailwind-css-in-react",
+                "id": "using-tailwind-css-in-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Adding Images, Fonts, and Files",
+                "path": "/recipes/react/adding-assets-react",
+                "id": "adding-assets-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setup Module Federation with SSR for React",
+                "path": "/recipes/react/module-federation-with-ssr",
+                "id": "module-federation-with-ssr",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Deploying Next.js applications to Vercel",
+                "path": "/recipes/react/deploy-nextjs-to-vercel",
+                "id": "deploy-nextjs-to-vercel",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
             "disableCollapsible": false
           },
           {
-            "name": ".nxignore",
-            "path": "/reference/nxignore",
-            "id": "nxignore",
+            "name": "Node",
+            "path": "/recipes/node",
+            "id": "node",
             "isExternal": false,
-            "children": [],
+            "children": [
+              {
+                "name": "Deploying a Node App to Fly.io",
+                "path": "/recipes/node/node-server-fly-io",
+                "id": "node-server-fly-io",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add and Deploy Netlify Edge Functions with Node",
+                "path": "/recipes/node/node-serverless-functions-netlify",
+                "id": "node-serverless-functions-netlify",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Deploying AWS lambda in Node.js",
+                "path": "/recipes/node/node-aws-lambda",
+                "id": "node-aws-lambda",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
             "disableCollapsible": false
           },
           {
-            "name": "Environment Variables",
-            "path": "/reference/environment-variables",
-            "id": "environment-variables",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Glossary",
-            "path": "/reference/glossary",
-            "id": "glossary",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Commands",
-        "path": "/reference/commands",
-        "id": "commands",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "nx.json",
-        "path": "/reference/nx-json",
-        "id": "nx-json",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Project Configuration",
-        "path": "/reference/project-configuration",
-        "id": "project-configuration",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": ".nxignore",
-        "path": "/reference/nxignore",
-        "id": "nxignore",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Environment Variables",
-        "path": "/reference/environment-variables",
-        "id": "environment-variables",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Glossary",
-        "path": "/reference/glossary",
-        "id": "glossary",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Deprecated",
-        "path": "/deprecated",
-        "id": "deprecated",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "workspace.json",
-            "path": "/deprecated/workspace-json",
-            "id": "workspace-json",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "workspace-lint",
-            "path": "/deprecated/workspace-lint",
-            "id": "workspace-lint",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Workspace Generators",
-            "path": "/deprecated/workspace-generators",
-            "id": "workspace-generators",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Workspace Executors",
-            "path": "/deprecated/workspace-executors",
-            "id": "workspace-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "defaultCollection",
-            "path": "/deprecated/default-collection",
-            "id": "default-collection",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "runtimeCacheInputs",
-            "path": "/deprecated/runtime-cache-inputs",
-            "id": "runtime-cache-inputs",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "globalImplicitDependencies",
-            "path": "/deprecated/global-implicit-dependencies",
-            "id": "global-implicit-dependencies",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Storybook deprecated docs",
-            "path": "/deprecated/storybook",
+            "name": "Storybook",
+            "path": "/recipes/storybook",
             "id": "storybook",
             "isExternal": false,
             "children": [
               {
-                "name": "Angular: Information about the Storybook targets",
-                "path": "/deprecated/storybook/angular-storybook-targets",
-                "id": "angular-storybook-targets",
+                "name": "One main Storybook instance for all projects",
+                "path": "/recipes/storybook/one-storybook-for-all",
+                "id": "one-storybook-for-all",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Angular: The browserTarget",
-                "path": "/deprecated/storybook/angular-browser-target",
-                "id": "angular-browser-target",
+                "name": "One Storybook instance per scope",
+                "path": "/recipes/storybook/one-storybook-per-scope",
+                "id": "one-storybook-per-scope",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Angular: Storybook Migration to webpackFinal",
-                "path": "/deprecated/storybook/migrate-webpack-final-angular",
-                "id": "migrate-webpack-final-angular",
+                "name": "One main Storybook instance using Storybook Composition",
+                "path": "/recipes/storybook/one-storybook-with-composition",
+                "id": "one-storybook-with-composition",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Enforce Module Boundaries",
+            "path": "/recipes/enforce-module-boundaries",
+            "id": "enforce-module-boundaries",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Ban Dependencies with Certain Tags",
+                "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
+                "id": "ban-dependencies-with-tags",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Angular: Upgrading to Storybook 6",
-                "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-                "id": "upgrade-storybook-v6-angular",
+                "name": "Tag in Multiple Dimensions",
+                "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
+                "id": "tag-multiple-dimensions",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-                "path": "/deprecated/storybook/migrate-webpack-final-react",
-                "id": "migrate-webpack-final-react",
+                "name": "Ban External Imports",
+                "path": "/recipes/enforce-module-boundaries/ban-external-imports",
+                "id": "ban-external-imports",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "React: Upgrading to Storybook 6",
-                "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-                "id": "upgrade-storybook-v6-react",
+                "name": "Tags Allow List",
+                "path": "/recipes/enforce-module-boundaries/tags-allow-list",
+                "id": "tags-allow-list",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "CI",
+            "path": "/recipes/ci",
+            "id": "ci",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "CI Setup",
+                "path": "/recipes/ci/ci-setup",
+                "id": "ci-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Prepare applications for deployment via CI",
+                "path": "/recipes/ci/ci-deployment",
+                "id": "ci-deployment",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setting up Azure Pipelines",
+                "path": "/recipes/ci/monorepo-ci-azure",
+                "id": "monorepo-ci-azure",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setting up CircleCI",
+                "path": "/recipes/ci/monorepo-ci-circle-ci",
+                "id": "monorepo-ci-circle-ci",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setting up GitHub Actions",
+                "path": "/recipes/ci/monorepo-ci-github-actions",
+                "id": "monorepo-ci-github-actions",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setting up Jenkins",
+                "path": "/recipes/ci/monorepo-ci-jenkins",
+                "id": "monorepo-ci-jenkins",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setting up GitLab",
+                "path": "/recipes/ci/monorepo-ci-gitlab",
+                "id": "monorepo-ci-gitlab",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setting up Bitbucket",
+                "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
+                "id": "monorepo-ci-bitbucket-pipelines",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Nx Console",
+            "path": "/recipes/nx-console",
+            "id": "nx-console",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Telemetry",
+                "path": "/recipes/nx-console/console-telemetry",
+                "id": "console-telemetry",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Generate Command",
+                "path": "/recipes/nx-console/console-generate-command",
+                "id": "console-generate-command",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Run Command",
+                "path": "/recipes/nx-console/console-run-command",
+                "id": "console-run-command",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add Dependency Command",
+                "path": "/recipes/nx-console/console-add-dependency-command",
+                "id": "console-add-dependency-command",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Project Pane",
+                "path": "/recipes/nx-console/console-project-pane",
+                "id": "console-project-pane",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Keyboard Shortcuts",
+                "path": "/recipes/nx-console/console-shortcuts",
+                "id": "console-shortcuts",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting",
+            "path": "/recipes/troubleshooting",
+            "id": "troubleshooting",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Resolve Circular Dependencies",
+                "path": "/recipes/troubleshooting/resolve-circular-dependencies",
+                "id": "resolve-circular-dependencies",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Troubleshooting Nx Install Issues",
+                "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
+                "id": "troubleshoot-nx-install-issues",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Troubleshoot Cache Misses",
+                "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
+                "id": "troubleshoot-cache-misses",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Unknown Local Cache Error",
+                "path": "/recipes/troubleshooting/unknown-local-cache",
+                "id": "unknown-local-cache",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Profiling Build Performance",
+                "path": "/recipes/troubleshooting/performance-profiling",
+                "id": "performance-profiling",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Tips and tricks",
+            "path": "/recipes/tips-n-tricks",
+            "id": "tips-n-tricks",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Configuring ESLint with Typescript",
+                "path": "/recipes/tips-n-tricks/eslint",
+                "id": "eslint",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Define Environment Variables",
+                "path": "/recipes/tips-n-tricks/define-environment-variables",
+                "id": "define-environment-variables",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Configuring Browser Support",
+                "path": "/recipes/tips-n-tricks/browser-support",
+                "id": "browser-support",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Include Assets in Build",
+                "path": "/recipes/tips-n-tricks/include-assets-in-build",
+                "id": "include-assets-in-build",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Include All package.json Files as Projects",
+                "path": "/recipes/tips-n-tricks/include-all-packagejson",
+                "id": "include-all-packagejson",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Identify Dependencies Between Folders",
+                "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
+                "id": "identify-dependencies-between-folders",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Run Root-Level NPM Scripts with Nx",
+                "path": "/recipes/tips-n-tricks/root-level-scripts",
+                "id": "root-level-scripts",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Disable Graph Links Created from Analyzing Source Files",
+                "path": "/recipes/tips-n-tricks/analyze-source-files",
+                "id": "analyze-source-files",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Workspace Watching",
+                "path": "/recipes/tips-n-tricks/workspace-watching",
+                "id": "workspace-watching",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Convert from a Standalone Repository to an Integrated Repository",
+                "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+                "id": "standalone-to-integrated",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Use JavaScript instead TypeScript",
+                "path": "/recipes/tips-n-tricks/js-and-ts",
+                "id": "js-and-ts",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Altering Migration Process",
+                "path": "/recipes/tips-n-tricks/advanced-update",
+                "id": "advanced-update",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Running Custom Commands",
+                "path": "/recipes/tips-n-tricks/run-commands-executor",
+                "id": "run-commands-executor",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Other",
+            "path": "/recipes/other",
+            "id": "other",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Serverless deployment with Deno Deploy",
+                "path": "/recipes/other/deno-deploy",
+                "id": "deno-deploy",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add and Deploy Netlify Edge Functions with Deno",
+                "path": "/recipes/other/deno-netlify-functions",
+                "id": "deno-netlify-functions",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Rescope Packages from @nrwl to @nx",
+                "path": "/recipes/other/rescope",
+                "id": "rescope",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Example Repos",
+            "path": "/recipes/example-repos",
+            "id": "example-repos",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Powering Up React Development With Nx",
+                "path": "/recipes/example-repos/react-nx",
+                "id": "react-nx",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using Apollo GraphQL",
+                "path": "/recipes/example-repos/apollo-react",
+                "id": "apollo-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using Prisma with NestJS",
+                "path": "/recipes/example-repos/nestjs-prisma",
+                "id": "nestjs-prisma",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using Mongo with Fastify",
+                "path": "/recipes/example-repos/mongo-fastify",
+                "id": "mongo-fastify",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using Redis with Fastify",
+                "path": "/recipes/example-repos/redis-fastify",
+                "id": "redis-fastify",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using Postgres with Fastify",
+                "path": "/recipes/example-repos/postgres-fastify",
+                "id": "postgres-fastify",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using PlanetScale with Serverless Fastify",
+                "path": "/recipes/example-repos/serverless-fastify-planetscale",
+                "id": "serverless-fastify-planetscale",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Large Repo and Caching",
+                "path": "/recipes/example-repos/caching",
+                "id": "caching",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Large Repo and DTE",
+                "path": "/recipes/example-repos/dte",
+                "id": "dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx Micro-Frontend Example",
+                "path": "/recipes/example-repos/mfe",
+                "id": "mfe",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1845,318 +2344,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "workspace.json",
-        "path": "/deprecated/workspace-json",
-        "id": "workspace-json",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "workspace-lint",
-        "path": "/deprecated/workspace-lint",
-        "id": "workspace-lint",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Workspace Generators",
-        "path": "/deprecated/workspace-generators",
-        "id": "workspace-generators",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Workspace Executors",
-        "path": "/deprecated/workspace-executors",
-        "id": "workspace-executors",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "defaultCollection",
-        "path": "/deprecated/default-collection",
-        "id": "default-collection",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "runtimeCacheInputs",
-        "path": "/deprecated/runtime-cache-inputs",
-        "id": "runtime-cache-inputs",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "globalImplicitDependencies",
-        "path": "/deprecated/global-implicit-dependencies",
-        "id": "global-implicit-dependencies",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Storybook deprecated docs",
-        "path": "/deprecated/storybook",
-        "id": "storybook",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Angular: Information about the Storybook targets",
-            "path": "/deprecated/storybook/angular-storybook-targets",
-            "id": "angular-storybook-targets",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular: The browserTarget",
-            "path": "/deprecated/storybook/angular-browser-target",
-            "id": "angular-browser-target",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular: Storybook Migration to webpackFinal",
-            "path": "/deprecated/storybook/migrate-webpack-final-angular",
-            "id": "migrate-webpack-final-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular: Upgrading to Storybook 6",
-            "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-            "id": "upgrade-storybook-v6-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-            "path": "/deprecated/storybook/migrate-webpack-final-react",
-            "id": "migrate-webpack-final-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React: Upgrading to Storybook 6",
-            "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-            "id": "upgrade-storybook-v6-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Information about the Storybook targets",
-        "path": "/deprecated/storybook/angular-storybook-targets",
-        "id": "angular-storybook-targets",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: The browserTarget",
-        "path": "/deprecated/storybook/angular-browser-target",
-        "id": "angular-browser-target",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Storybook Migration to webpackFinal",
-        "path": "/deprecated/storybook/migrate-webpack-final-angular",
-        "id": "migrate-webpack-final-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Upgrading to Storybook 6",
-        "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-        "id": "upgrade-storybook-v6-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-        "path": "/deprecated/storybook/migrate-webpack-final-react",
-        "id": "migrate-webpack-final-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React: Upgrading to Storybook 6",
-        "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-        "id": "upgrade-storybook-v6-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "See Also",
-        "path": "/see-also",
-        "id": "see-also",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Nx Cloud Documentation",
-            "path": "/nx-cloud/intro/what-is-nx-cloud",
-            "id": "nx-cloud-documentation",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Nx Cloud Main Site",
-            "path": "https://nx.app",
-            "id": "nx-cloud-main-site",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "--skip-nx-cache flag",
-            "path": "/packages/nx/documents/affected#skip-nx-cache",
-            "id": "skip-nx-cache-flag",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "tasks-runner-options property",
-            "path": "/reference/nx-json#tasks-runner-options",
-            "id": "tasks-runner-options-property",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "nx.json reference: inputs and namedInputs",
-            "path": "/reference/nx-json#inputs-&-namedinputs",
-            "id": "nxjson-inputs",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Project Configuration reference: inputs and namedInputs",
-            "path": "/reference/project-configuration#inputs-&-namedinputs",
-            "id": "project-config-inputs",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "nx.json workspaceLayout property",
-            "path": "/reference/nx-json#workspace-layout",
-            "id": "nxjson-workspaceLayout",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "nx.json generator defaults",
-            "path": "/reference/nx-json#generators",
-            "id": "nxjson-generator-defaults",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Site Map",
-            "path": "/see-also/sitemap",
-            "id": "sitemap",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Cloud Documentation",
-        "path": "/nx-cloud/intro/what-is-nx-cloud",
-        "id": "nx-cloud-documentation",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "--skip-nx-cache flag",
-        "path": "/packages/nx/documents/affected#skip-nx-cache",
-        "id": "skip-nx-cache-flag",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "tasks-runner-options property",
-        "path": "/reference/nx-json#tasks-runner-options",
-        "id": "tasks-runner-options-property",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "nx.json reference: inputs and namedInputs",
-        "path": "/reference/nx-json#inputs-&-namedinputs",
-        "id": "nxjson-inputs",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Project Configuration reference: inputs and namedInputs",
-        "path": "/reference/project-configuration#inputs-&-namedinputs",
-        "id": "project-config-inputs",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "nx.json workspaceLayout property",
-        "path": "/reference/nx-json#workspace-layout",
-        "id": "nxjson-workspaceLayout",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "nx.json generator defaults",
-        "path": "/reference/nx-json#generators",
-        "id": "nxjson-generator-defaults",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Site Map",
-        "path": "/see-also/sitemap",
-        "id": "sitemap",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      }
-    ]
-  },
-  {
-    "id": "recipes",
-    "menu": [
-      {
-        "name": "Migrating to Nx",
+        "name": "Adopting Nx",
         "path": "/recipes/adopting-nx",
         "id": "adopting-nx",
         "isExternal": false,
@@ -3557,6 +3745,539 @@
         "name": "Nx Micro-Frontend Example",
         "path": "/recipes/example-repos/mfe",
         "id": "mfe",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Reference",
+        "path": "/reference",
+        "id": "reference",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Commands",
+            "path": "/reference/commands",
+            "id": "commands",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "nx.json",
+            "path": "/reference/nx-json",
+            "id": "nx-json",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Project Configuration",
+            "path": "/reference/project-configuration",
+            "id": "project-configuration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": ".nxignore",
+            "path": "/reference/nxignore",
+            "id": "nxignore",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Environment Variables",
+            "path": "/reference/environment-variables",
+            "id": "environment-variables",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Glossary",
+            "path": "/reference/glossary",
+            "id": "glossary",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Commands",
+        "path": "/reference/commands",
+        "id": "commands",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "nx.json",
+        "path": "/reference/nx-json",
+        "id": "nx-json",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Project Configuration",
+        "path": "/reference/project-configuration",
+        "id": "project-configuration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": ".nxignore",
+        "path": "/reference/nxignore",
+        "id": "nxignore",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Environment Variables",
+        "path": "/reference/environment-variables",
+        "id": "environment-variables",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Glossary",
+        "path": "/reference/glossary",
+        "id": "glossary",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Deprecated",
+        "path": "/deprecated",
+        "id": "deprecated",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "workspace.json",
+            "path": "/deprecated/workspace-json",
+            "id": "workspace-json",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "workspace-lint",
+            "path": "/deprecated/workspace-lint",
+            "id": "workspace-lint",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Workspace Generators",
+            "path": "/deprecated/workspace-generators",
+            "id": "workspace-generators",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Workspace Executors",
+            "path": "/deprecated/workspace-executors",
+            "id": "workspace-executors",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "defaultCollection",
+            "path": "/deprecated/default-collection",
+            "id": "default-collection",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "runtimeCacheInputs",
+            "path": "/deprecated/runtime-cache-inputs",
+            "id": "runtime-cache-inputs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "globalImplicitDependencies",
+            "path": "/deprecated/global-implicit-dependencies",
+            "id": "global-implicit-dependencies",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Storybook deprecated docs",
+            "path": "/deprecated/storybook",
+            "id": "storybook",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Angular: Information about the Storybook targets",
+                "path": "/deprecated/storybook/angular-storybook-targets",
+                "id": "angular-storybook-targets",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Angular: The browserTarget",
+                "path": "/deprecated/storybook/angular-browser-target",
+                "id": "angular-browser-target",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Angular: Storybook Migration to webpackFinal",
+                "path": "/deprecated/storybook/migrate-webpack-final-angular",
+                "id": "migrate-webpack-final-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Angular: Upgrading to Storybook 6",
+                "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
+                "id": "upgrade-storybook-v6-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
+                "path": "/deprecated/storybook/migrate-webpack-final-react",
+                "id": "migrate-webpack-final-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React: Upgrading to Storybook 6",
+                "path": "/deprecated/storybook/upgrade-storybook-v6-react",
+                "id": "upgrade-storybook-v6-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "workspace.json",
+        "path": "/deprecated/workspace-json",
+        "id": "workspace-json",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "workspace-lint",
+        "path": "/deprecated/workspace-lint",
+        "id": "workspace-lint",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Workspace Generators",
+        "path": "/deprecated/workspace-generators",
+        "id": "workspace-generators",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Workspace Executors",
+        "path": "/deprecated/workspace-executors",
+        "id": "workspace-executors",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "defaultCollection",
+        "path": "/deprecated/default-collection",
+        "id": "default-collection",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "runtimeCacheInputs",
+        "path": "/deprecated/runtime-cache-inputs",
+        "id": "runtime-cache-inputs",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "globalImplicitDependencies",
+        "path": "/deprecated/global-implicit-dependencies",
+        "id": "global-implicit-dependencies",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Storybook deprecated docs",
+        "path": "/deprecated/storybook",
+        "id": "storybook",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Angular: Information about the Storybook targets",
+            "path": "/deprecated/storybook/angular-storybook-targets",
+            "id": "angular-storybook-targets",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Angular: The browserTarget",
+            "path": "/deprecated/storybook/angular-browser-target",
+            "id": "angular-browser-target",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Angular: Storybook Migration to webpackFinal",
+            "path": "/deprecated/storybook/migrate-webpack-final-angular",
+            "id": "migrate-webpack-final-angular",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Angular: Upgrading to Storybook 6",
+            "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
+            "id": "upgrade-storybook-v6-angular",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
+            "path": "/deprecated/storybook/migrate-webpack-final-react",
+            "id": "migrate-webpack-final-react",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "React: Upgrading to Storybook 6",
+            "path": "/deprecated/storybook/upgrade-storybook-v6-react",
+            "id": "upgrade-storybook-v6-react",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular: Information about the Storybook targets",
+        "path": "/deprecated/storybook/angular-storybook-targets",
+        "id": "angular-storybook-targets",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular: The browserTarget",
+        "path": "/deprecated/storybook/angular-browser-target",
+        "id": "angular-browser-target",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular: Storybook Migration to webpackFinal",
+        "path": "/deprecated/storybook/migrate-webpack-final-angular",
+        "id": "migrate-webpack-final-angular",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular: Upgrading to Storybook 6",
+        "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
+        "id": "upgrade-storybook-v6-angular",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
+        "path": "/deprecated/storybook/migrate-webpack-final-react",
+        "id": "migrate-webpack-final-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React: Upgrading to Storybook 6",
+        "path": "/deprecated/storybook/upgrade-storybook-v6-react",
+        "id": "upgrade-storybook-v6-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "See Also",
+        "path": "/see-also",
+        "id": "see-also",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Nx Cloud Documentation",
+            "path": "/nx-cloud/intro/what-is-nx-cloud",
+            "id": "nx-cloud-documentation",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Nx Cloud Main Site",
+            "path": "https://nx.app",
+            "id": "nx-cloud-main-site",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "--skip-nx-cache flag",
+            "path": "/packages/nx/documents/affected#skip-nx-cache",
+            "id": "skip-nx-cache-flag",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "tasks-runner-options property",
+            "path": "/reference/nx-json#tasks-runner-options",
+            "id": "tasks-runner-options-property",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "nx.json reference: inputs and namedInputs",
+            "path": "/reference/nx-json#inputs-&-namedinputs",
+            "id": "nxjson-inputs",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Project Configuration reference: inputs and namedInputs",
+            "path": "/reference/project-configuration#inputs-&-namedinputs",
+            "id": "project-config-inputs",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "nx.json workspaceLayout property",
+            "path": "/reference/nx-json#workspace-layout",
+            "id": "nxjson-workspaceLayout",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "nx.json generator defaults",
+            "path": "/reference/nx-json#generators",
+            "id": "nxjson-generator-defaults",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Site Map",
+            "path": "/see-also/sitemap",
+            "id": "sitemap",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Cloud Documentation",
+        "path": "/nx-cloud/intro/what-is-nx-cloud",
+        "id": "nx-cloud-documentation",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "--skip-nx-cache flag",
+        "path": "/packages/nx/documents/affected#skip-nx-cache",
+        "id": "skip-nx-cache-flag",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "tasks-runner-options property",
+        "path": "/reference/nx-json#tasks-runner-options",
+        "id": "tasks-runner-options-property",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "nx.json reference: inputs and namedInputs",
+        "path": "/reference/nx-json#inputs-&-namedinputs",
+        "id": "nxjson-inputs",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Project Configuration reference: inputs and namedInputs",
+        "path": "/reference/project-configuration#inputs-&-namedinputs",
+        "id": "project-config-inputs",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "nx.json workspaceLayout property",
+        "path": "/reference/nx-json#workspace-layout",
+        "id": "nxjson-workspaceLayout",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "nx.json generator defaults",
+        "path": "/reference/nx-json#generators",
+        "id": "nxjson-generator-defaults",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Site Map",
+        "path": "/see-also/sitemap",
+        "id": "sitemap",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

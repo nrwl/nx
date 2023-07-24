@@ -738,9 +738,9 @@ const latestRecipesRefactoring = {
   '/recipes/adopting-nx-angular/angular-integrated':
     '/recipes/angular/migration/angular',
   '/recipes/adopting-nx-angular/angular-manual':
-    '/recipes/angular/migration/manual',
+    '/recipes/angular/migration/angular-manual',
   '/recipes/adopting-nx-angular/angular-multiple':
-    '/recipes/angular/migration/multiple',
+    '/recipes/angular/migration/angular-multiple',
   '/recipes/adopting-nx/migration-angularjs':
     '/recipes/angular/migration/angularjs',
   '/recipes/environment-variables/use-environment-variables-in-angular':
