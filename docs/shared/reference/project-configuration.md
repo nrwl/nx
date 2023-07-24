@@ -1,7 +1,7 @@
 # Project Configuration
 
 Projects can be configured in `package.json` (if you use npm scripts and not Nx executors) and `project.json` (if you
-[use task executors](/plugin-features/use-task-executors)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
+[use task executors](/core-features/plugin-features/use-task-executors)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
 files to get each project's configuration.
 
 The following configuration creates `build` and `test` targets for Nx.

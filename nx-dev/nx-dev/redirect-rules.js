@@ -226,11 +226,13 @@ const diataxis = {
   '/migration/preserving-git-histories':
     '/recipes/adopting-nx/preserving-git-histories',
   '/migration/manual': '/recipes/adopting-nx/manual',
-  '/executors/using-builders': '/plugin-features/use-task-executors',
+  '/executors/using-builders':
+    '/core-features/plugin-features/use-task-executors',
   '/executors/run-commands-builder': '/recipes/executors/run-commands-executor',
   '/executors/creating-custom-builders':
     '/recipes/executors/creating-custom-executors',
-  '/generators/using-generators': '/plugin-features/use-code-generators',
+  '/generators/using-generators':
+    '/core-features/plugin-features/use-code-generators',
   '/generators/workspace-generators':
     '/recipes/generators/workspace-generators',
   '/generators/composing-generators':
@@ -693,6 +695,13 @@ const missingAndCatchAllRedirects = {
   '/nx-console': '/using-nx/console',
 };
 
+const movePluginFeaturesToCore = {
+  '/plugin-features/use-task-executors':
+    '/core-features/plugin-features/use-task-executors',
+  '/plugin-features/use-code-generators':
+    '/core-features/plugin-features/use-code-generators',
+};
+
 /**
  * Public export API
  */
@@ -713,4 +722,5 @@ module.exports = {
   pluginUrls,
   referenceUrls,
   missingAndCatchAllRedirects,
+  movePluginFeaturesToCore,
 };

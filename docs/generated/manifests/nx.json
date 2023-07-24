@@ -1033,6 +1033,37 @@
         "isExternal": false,
         "path": "/core-features/enforce-project-boundaries",
         "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "plugin-features",
+        "name": "Plugin Features",
+        "description": "Learn what is a plugin, the different type of plugins and how to create one.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "use-task-executors",
+            "name": "Use Task Executors",
+            "description": "",
+            "file": "shared/plugin-features/use-task-executors",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/core-features/plugin-features/use-task-executors",
+            "tags": ["use-task-executors"]
+          },
+          {
+            "id": "use-code-generators",
+            "name": "Use Code Generators",
+            "description": "",
+            "file": "shared/plugin-features/use-code-generators",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/core-features/plugin-features/use-code-generators",
+            "tags": ["use-code-generators"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/core-features/plugin-features",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1119,7 +1150,7 @@
     "path": "/core-features/enforce-project-boundaries",
     "tags": ["enforce-project-boundaries"]
   },
-  "/plugin-features": {
+  "/core-features/plugin-features": {
     "id": "plugin-features",
     "name": "Plugin Features",
     "description": "Learn what is a plugin, the different type of plugins and how to create one.",
@@ -1132,7 +1163,7 @@
         "file": "shared/plugin-features/use-task-executors",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugin-features/use-task-executors",
+        "path": "/core-features/plugin-features/use-task-executors",
         "tags": ["use-task-executors"]
       },
       {
@@ -1142,32 +1173,32 @@
         "file": "shared/plugin-features/use-code-generators",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugin-features/use-code-generators",
+        "path": "/core-features/plugin-features/use-code-generators",
         "tags": ["use-code-generators"]
       }
     ],
     "isExternal": false,
-    "path": "/plugin-features",
+    "path": "/core-features/plugin-features",
     "tags": []
   },
-  "/plugin-features/use-task-executors": {
+  "/core-features/plugin-features/use-task-executors": {
     "id": "use-task-executors",
     "name": "Use Task Executors",
     "description": "",
     "file": "shared/plugin-features/use-task-executors",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugin-features/use-task-executors",
+    "path": "/core-features/plugin-features/use-task-executors",
     "tags": ["use-task-executors"]
   },
-  "/plugin-features/use-code-generators": {
+  "/core-features/plugin-features/use-code-generators": {
     "id": "use-code-generators",
     "name": "Use Code Generators",
     "description": "",
     "file": "shared/plugin-features/use-code-generators",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugin-features/use-code-generators",
+    "path": "/core-features/plugin-features/use-code-generators",
     "tags": ["use-code-generators"]
   },
   "/concepts": {

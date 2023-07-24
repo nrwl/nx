@@ -216,7 +216,7 @@ Not all tasks might be cacheable though. You can configure `cacheableOperations`
 
 ## Creating New Components
 
-You can just create new React components as you normally would. However, Nx plugins usually also ship [generators](/plugin-features/use-code-generators). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin ships, run the following command and inspect the output:
+You can just create new React components as you normally would. However, Nx plugins usually also ship [generators](/core-features/plugin-features/use-code-generators). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin ships, run the following command and inspect the output:
 
 ```shell {% command="npx nx list @nx/react" path="myreactapp" %}
 

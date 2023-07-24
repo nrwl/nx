@@ -832,6 +832,31 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Plugin Features",
+            "path": "/core-features/plugin-features",
+            "id": "plugin-features",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Use Task Executors",
+                "path": "/core-features/plugin-features/use-task-executors",
+                "id": "use-task-executors",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Use Code Generators",
+                "path": "/core-features/plugin-features/use-code-generators",
+                "id": "use-code-generators",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -902,13 +927,13 @@
       },
       {
         "name": "Plugin Features",
-        "path": "/plugin-features",
+        "path": "/core-features/plugin-features",
         "id": "plugin-features",
         "isExternal": false,
         "children": [
           {
             "name": "Use Task Executors",
-            "path": "/plugin-features/use-task-executors",
+            "path": "/core-features/plugin-features/use-task-executors",
             "id": "use-task-executors",
             "isExternal": false,
             "children": [],
@@ -916,7 +941,7 @@
           },
           {
             "name": "Use Code Generators",
-            "path": "/plugin-features/use-code-generators",
+            "path": "/core-features/plugin-features/use-code-generators",
             "id": "use-code-generators",
             "isExternal": false,
             "children": [],
@@ -927,7 +952,7 @@
       },
       {
         "name": "Use Task Executors",
-        "path": "/plugin-features/use-task-executors",
+        "path": "/core-features/plugin-features/use-task-executors",
         "id": "use-task-executors",
         "isExternal": false,
         "children": [],
@@ -935,7 +960,7 @@
       },
       {
         "name": "Use Code Generators",
-        "path": "/plugin-features/use-code-generators",
+        "path": "/core-features/plugin-features/use-code-generators",
         "id": "use-code-generators",
         "isExternal": false,
         "children": [],
