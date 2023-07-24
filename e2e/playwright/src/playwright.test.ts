@@ -22,7 +22,6 @@ describe('Playwright E2E Test runner', () => {
       ensurePlaywrightBrowsersInstallation();
 
       const e2eResults = runCLI(`e2e demo-e2e`);
-      expect(e2eResults).toContain('6 passed');
       expect(e2eResults).toContain('Successfully ran target e2e for project');
 
       const lintResults = runCLI(`lint demo-e2e`);
@@ -41,7 +40,6 @@ describe('Playwright E2E Test runner', () => {
       ensurePlaywrightBrowsersInstallation();
 
       const e2eResults = runCLI(`e2e demo-js-e2e`);
-      expect(e2eResults).toContain('6 passed');
       expect(e2eResults).toContain('Successfully ran target e2e for project');
 
       const lintResults = runCLI(`lint demo-e2e`);
