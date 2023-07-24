@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  ensurePlaywrightBrowsersInstallation,
   isNotWindows,
   killPorts,
   listFiles,
@@ -96,6 +97,26 @@ describe('Web Components Applications', () => {
     expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
       '<link rel="stylesheet" href="styles.css">'
     );
+  }, 500000);
+
+  it('should generate working playwright e2e app', async () => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nx/web:app ${appName} --bundler=webpack --e2eTestRunner=playwright --no-interactive`
+    );
+
+    const lintE2eResults = runCLI(`lint ${appName}-e2e`);
+
+    expect(lintE2eResults).toContain('All files pass linting.');
+
+    if (isNotWindows() && runCypressTests()) {
+      ensurePlaywrightBrowsersInstallation();
+      const e2eResults = runCLI(`e2e ${appName}-e2e`);
+      expect(e2eResults).toContain(
+        `Successfully ran target e2e for project ${appName}-e2e`
+      );
+      expect(await killPorts()).toBeTruthy();
+    }
   }, 500000);
 
   it('should remove previous output before building', async () => {
