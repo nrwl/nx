@@ -6815,6 +6815,57 @@
         "disableCollapsible": false
       },
       {
+        "id": "playwright",
+        "path": "/packages/playwright",
+        "name": "playwright",
+        "children": [
+          {
+            "id": "executors",
+            "path": "/packages/playwright/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "playwright",
+                "path": "/packages/playwright/executors/playwright",
+                "name": "playwright",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/packages/playwright/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "configuration",
+                "path": "/packages/playwright/generators/configuration",
+                "name": "configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "init",
+                "path": "/packages/playwright/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "plugin",
         "path": "/packages/plugin",
         "name": "plugin",

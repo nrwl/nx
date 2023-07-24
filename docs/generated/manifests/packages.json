@@ -1833,6 +1833,47 @@
     "generators": {},
     "path": "/packages/nx"
   },
+  "playwright": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "playwright",
+    "packageName": "@nx/playwright",
+    "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
+    "documents": {},
+    "root": "/packages/playwright",
+    "source": "/packages/playwright/src",
+    "executors": {
+      "/packages/playwright/executors/playwright": {
+        "description": "Run Playwright tests.",
+        "file": "generated/packages/playwright/executors/playwright.json",
+        "hidden": false,
+        "name": "playwright",
+        "originalFilePath": "/packages/playwright/src/executors/playwright/schema.json",
+        "path": "/packages/playwright/executors/playwright",
+        "type": "executor"
+      }
+    },
+    "generators": {
+      "/packages/playwright/generators/configuration": {
+        "description": "Add Nx Playwright configuration to your project",
+        "file": "generated/packages/playwright/generators/configuration.json",
+        "hidden": false,
+        "name": "configuration",
+        "originalFilePath": "/packages/playwright/src/generators/configuration/schema.json",
+        "path": "/packages/playwright/generators/configuration",
+        "type": "generator"
+      },
+      "/packages/playwright/generators/init": {
+        "description": "Initializes a Playwright project in the current workspace",
+        "file": "generated/packages/playwright/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/packages/playwright/src/generators/init/schema.json",
+        "path": "/packages/playwright/generators/init",
+        "type": "generator"
+      }
+    },
+    "path": "/packages/playwright"
+  },
   "plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "plugin",
