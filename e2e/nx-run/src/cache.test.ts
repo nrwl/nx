@@ -187,7 +187,10 @@ describe('cache', () => {
     // Rerun without touching anything
     const rerunWithUntouchedOutputs = runCLI(`build ${mylib}`);
     expect(rerunWithUntouchedOutputs).toContain('local cache');
-    const outputsWithUntouchedOutputs = listFiles('dist');
+    const outputsWithUntouchedOutputs = [
+      ...listFiles('dist'),
+      ...listFiles('dist/.next'),
+    ];
     expect(outputsWithUntouchedOutputs).toContain('a.txt');
     expect(outputsWithUntouchedOutputs).toContain('b.txt');
     expect(outputsWithUntouchedOutputs).toContain('c.txt');
@@ -195,7 +198,7 @@ describe('cache', () => {
     expect(outputsWithUntouchedOutputs).toContain('e.txt');
     expect(outputsWithUntouchedOutputs).toContain('f.md');
     expect(outputsWithUntouchedOutputs).toContain('g.html');
-    expect(outputsWithUntouchedOutputs).toContain('h.txt');
+    expect(outputsWithUntouchedOutputs).toContain('.next/h.txt');
     expect(outputsWithUntouchedOutputs).toContain('x.txt');
     expect(outputsWithUntouchedOutputs).toContain('z.md');
 
@@ -205,7 +208,10 @@ describe('cache', () => {
     // Rerun
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
     expect(rerunWithNewUnrelatedFile).toContain('local cache');
-    const outputsAfterAddingUntouchedFileAndRerunning = listFiles('dist');
+    const outputsAfterAddingUntouchedFileAndRerunning = [
+      ...listFiles('dist'),
+      ...listFiles('dist/.next'),
+    ];
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('a.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('b.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('c.txt');
@@ -226,7 +232,10 @@ describe('cache', () => {
     // Rerun
     const rerunWithoutOutputs = runCLI(`build ${mylib}`);
     expect(rerunWithoutOutputs).toContain('read the output from the cache');
-    const outputsWithoutOutputs = listFiles('dist');
+    const outputsWithoutOutputs = [
+      ...listFiles('dist'),
+      ...listFiles('dist/.next'),
+    ];
     expect(outputsWithoutOutputs).toContain('a.txt');
     expect(outputsWithoutOutputs).toContain('b.txt');
     expect(outputsWithoutOutputs).toContain('c.txt');
