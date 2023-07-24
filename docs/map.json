@@ -564,21 +564,6 @@
               "file": "shared/reference/environment-variables"
             },
             {
-              "name": "Packages",
-              "id": "packages",
-              "file": "",
-              "path": "/packages",
-              "isExternal": true
-            },
-            {
-              "name": "Nx Devkit",
-              "id": "packages-devkit",
-              "tags": ["create-your-own-plugin"],
-              "file": "",
-              "path": "/packages/devkit/documents/nx_devkit",
-              "isExternal": true
-            },
-            {
               "name": "Glossary",
               "id": "glossary",
               "tags": [],
