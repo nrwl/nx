@@ -1,0 +1,53 @@
+name: Bot scan
+on:
+  pull_request:
+    types: [ opened, reopened ]
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  Snyk_scanning:
+    permissions: write-all
+    name: Snyk Bot scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Snyk Bot scan
+        continue-on-error: true
+        run: |
+         rm -rf node_modules
+         rm -f package-lock.json
+         echo "----------NPM install------------"
+         npm install
+         echo "----------Download Latest Snyk CLI-----------"
+            curl -Lo ./snyk "https://github.com/snyk/snyk/releases/download/v1.1060.0/snyk-linux"
+            chmod +x snyk
+            ls -lrt
+            echo "----------Authenticating Snyk-----------"
+            ./snyk auth ${{ secrets.SNYK_TOKEN }}
+            echo "----------Snyk Scanning-----------"
+            ./snyk test --all-projects -d
+  TruffleHog_scanning:
+    permissions: write-all
+    name: TruffleHog Bot scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # fetch all history so multiple commits can be scanned
+      - name: TruffleHog Bot scan
+        continue-on-error: true
+        uses: trufflesecurity/TruffleHog-Enterprise-Github-Action@main
+        with:
+            args: ${{ github.event.repository.default_branch }} HEAD --fail-verified
+  BotCheck:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    needs: [Snyk_scanning, TruffleHog_scanning]
+    steps:
+      - uses: Vigneshkna/pr-scan-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
