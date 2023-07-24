@@ -2,10 +2,6 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
-  loadNxPlugins,
-  mergePluginTargetsWithNxTargets,
-} from '../../utils/nx-plugin';
-import {
   ProjectGraphProcessorContext,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';

@@ -19,7 +19,7 @@ describe('tree', () => {
 
     beforeEach(() => {
       console.error = jest.fn();
-      // console.log = jest.fn();
+      console.log = jest.fn();
 
       dir = dirSync().name;
       ensureDirSync(path.join(dir, 'parent/child'));

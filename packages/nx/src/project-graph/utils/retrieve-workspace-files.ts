@@ -1,7 +1,6 @@
 import { performance } from 'perf_hooks';
 import {
   buildProjectsConfigurationsFromProjectPaths,
-  getGlobPatternsFromPackageManagerWorkspaces,
   getGlobPatternsFromPlugins,
   getGlobPatternsFromPluginsAsync,
   mergeTargetConfigurations,
@@ -25,6 +24,7 @@ import {
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
 import type { NxWorkspaceFiles } from '../../native';
+import { getGlobPatternsFromPackageManagerWorkspaces } from '../../../plugins/package-json-workspaces';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -147,7 +147,12 @@ export function retrieveProjectConfigurationsWithoutPluginInference(
     root,
     projectGlobPatterns,
     (configs: string[]) => {
-      const { projects } = createProjectConfigurations(root, nxJson, configs);
+      const { projects } = createProjectConfigurations(
+        root,
+        nxJson,
+        configs,
+        true
+      );
       return {
         projectNodes: projects,
         externalNodes: {},
@@ -181,7 +186,8 @@ function buildAllWorkspaceFiles(
 function createProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
-  configFiles: string[]
+  configFiles: string[],
+  _ignorePluginInference = false
 ): {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
@@ -193,7 +199,8 @@ function createProjectConfigurations(
       nxJson,
       configFiles,
       workspaceRoot,
-      (path) => readJsonFile(join(workspaceRoot, path))
+      (path) => readJsonFile(join(workspaceRoot, path)),
+      _ignorePluginInference
     );
 
   let projectConfigurations = mergeTargetDefaultsIntoProjectDescriptions(
@@ -263,7 +270,7 @@ async function configurationGlobs(
 /**
  * @deprecated Use {@link configurationGlobs} instead.
  */
-function configurationGlobsSync(
+export function configurationGlobsSync(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
 ): string[] {

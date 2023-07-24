@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import * as path from 'path';
-import { dirname, join } from 'path';
+import { basename, dirname, join } from 'path';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile, readYamlFile } from '../utils/fileutils';
 import { NX_PREFIX } from '../utils/logger';
@@ -27,6 +27,12 @@ import {
 } from '../adapter/angular-json';
 import { retrieveProjectConfigurationPaths } from '../project-graph/utils/retrieve-workspace-files';
 import { ProjectGraphExternalNode } from './project-graph';
+import { combineGlobPatterns } from '../utils/globs';
+import {
+  getGlobPatternsFromPackageManagerWorkspaces,
+  getPackageJsonWorkspacesPlugin,
+} from '../../plugins/package-json-workspaces';
+import { getProjectJsonPlugin } from '../../plugins/project-json';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
@@ -149,142 +155,38 @@ export async function getGlobPatternsFromPluginsAsync(
   );
 }
 
-/**
- * Get the package.json globs from package manager workspaces
- */
-export function getGlobPatternsFromPackageManagerWorkspaces(
-  root: string
-): string[] {
-  try {
-    const patterns: string[] = [];
-    const packageJson = readJsonFile<PackageJson>(join(root, 'package.json'));
-
-    patterns.push(
-      ...normalizePatterns(
-        Array.isArray(packageJson.workspaces)
-          ? packageJson.workspaces
-          : packageJson.workspaces?.packages ?? []
-      )
-    );
-
-    if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
-      try {
-        const { packages } = readYamlFile<{ packages: string[] }>(
-          join(root, 'pnpm-workspace.yaml')
-        );
-        patterns.push(...normalizePatterns(packages || []));
-      } catch (e: unknown) {
-        output.warn({
-          title: `${NX_PREFIX} Unable to parse pnpm-workspace.yaml`,
-          bodyLines: [e.toString()],
-        });
-      }
-    }
-
-    if (existsSync(join(root, 'lerna.json'))) {
-      try {
-        const { packages } = readJsonFile<any>(join(root, 'lerna.json'));
-        patterns.push(
-          ...normalizePatterns(packages?.length > 0 ? packages : ['packages/*'])
-        );
-      } catch (e: unknown) {
-        output.warn({
-          title: `${NX_PREFIX} Unable to parse lerna.json`,
-          bodyLines: [e.toString()],
-        });
-      }
-    }
-
-    // Merge patterns from workspaces definitions
-    // TODO(@AgentEnder): update logic after better way to determine root project inclusion
-    // Include the root project
-    return packageJson.nx ? patterns.concat('package.json') : patterns;
-  } catch {
-    return [];
-  }
-}
-
-function normalizePatterns(patterns: string[]): string[] {
-  return patterns.map((pattern) =>
-    removeRelativePath(
-      pattern.endsWith('/package.json')
-        ? pattern
-        : joinPathFragments(pattern, 'package.json')
-    )
-  );
-}
-
-function removeRelativePath(pattern: string): string {
-  return pattern.startsWith('./') ? pattern.substring(2) : pattern;
-}
-
-const combineGlobPatterns = (patterns: string[]) =>
-  patterns.length > 1
-    ? '{' + patterns.join(',') + '}'
-    : patterns.length === 1
-    ? patterns[0]
-    : '';
-
-function buildProjectConfigurationFromPackageJson(
-  path: string,
-  packageJson: { name: string },
-  nxJson: NxJsonConfiguration
-): ProjectConfiguration & { name: string } {
-  const normalizedPath = path.split('\\').join('/');
-  const directory = dirname(normalizedPath);
-
-  if (!packageJson.name && directory === '.') {
-    throw new Error(
-      'Nx requires the root package.json to specify a name if it is being used as an Nx project.'
-    );
-  }
-
-  let name = packageJson.name ?? toProjectName(normalizedPath);
-  if (nxJson?.npmScope) {
-    const npmPrefix = `@${nxJson.npmScope}/`;
-    if (name.startsWith(npmPrefix)) {
-      name = name.replace(npmPrefix, '');
-    }
-  }
-  const projectType =
-    nxJson?.workspaceLayout?.appsDir != nxJson?.workspaceLayout?.libsDir &&
-    nxJson?.workspaceLayout?.appsDir &&
-    directory.startsWith(nxJson.workspaceLayout.appsDir)
-      ? 'application'
-      : 'library';
-
-  return {
-    root: directory,
-    sourceRoot: directory,
-    name,
-    projectType,
-  };
-}
-
-export function inferProjectFromNonStandardFile(
-  file: string
-): ProjectConfiguration & { name: string } {
-  const directory = dirname(file).split('\\').join('/');
-
-  return {
-    name: toProjectName(file),
-    root: directory,
-  };
-}
-
 function mergeProjectConfigurationIntoWorkspace(
   // projectName -> ProjectConfiguration
   existingProjects: Record<string, ProjectConfiguration>,
   // projectRoot -> projectName
   existingProjectRootMap: Map<string, string>,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
+  // project.json is a special case, so we need to detect it.
+  file: string
 ): void {
-  const matchingProjectName = existingProjectRootMap.get(project.root);
+  let matchingProjectName = existingProjectRootMap.get(project.root);
 
   if (!matchingProjectName) {
     existingProjects[project.name] = project;
     existingProjectRootMap.set(project.root, project.name);
     return;
+    // There are some special cases for handling project.json - mainly
+    // that it should override any name the project already has.
+  } else if (
+    project.name &&
+    project.name !== matchingProjectName &&
+    basename(file) === 'project.json'
+  ) {
+    // Copy config to new name
+    existingProjects[project.name] = existingProjects[matchingProjectName];
+    // Update name in project config
+    existingProjects[project.name].name = project.name;
+    // Update root map to point to new name
+    existingProjectRootMap[project.root] = project.name;
+    // Remove entry for old name
+    delete existingProjects[matchingProjectName];
+    // Update name that config should be merged to
+    matchingProjectName = project.name;
   }
 
   const matchingProject = existingProjects[matchingProjectName];
@@ -334,7 +236,8 @@ export function buildProjectsConfigurationsFromProjectPaths(
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   root: string = workspaceRoot,
   readJson: <T extends Object>(string) => T = <T extends Object>(string) =>
-    readJsonFile<T>(string) // making this an arg allows us to reuse in devkit
+    readJsonFile<T>(string), // making this an arg allows us to reuse in devkit
+  _ignorePluginInference = false // When resolving a local plugin, we can't also load plugins. This would cause an infinite loop.
 ): {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
@@ -344,48 +247,17 @@ export function buildProjectsConfigurationsFromProjectPaths(
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
   // We go in reverse here s.t. plugins listed first in the plugins array have highest priority - they overwrite
   // whatever configuration was added by plugins later in the array.
-  const plugins = loadNxPluginsSync(nxJson.plugins).reverse();
+  const plugins =
+    _ignorePluginInference || !nxJson?.plugins?.length
+      ? []
+      : loadNxPluginsSync(nxJson.plugins).reverse();
 
   // We push the nx core node builder onto the end, s.t. it overwrites any user specified behavior
-  const globPatternsFromPackageManagerWorkspaces =
-    getGlobPatternsFromPackageManagerWorkspaces(root);
-  const nxCorePlugin: NxPluginV2 = {
-    name: 'nx-core-build-nodes',
-    processProjectNodes: {
-      // Load projects from pnpm / npm workspaces
-      ...(globPatternsFromPackageManagerWorkspaces.length
-        ? {
-            [combineGlobPatterns(globPatternsFromPackageManagerWorkspaces)]: (
-              pkgJsonPath
-            ) => {
-              const json = readJson<PackageJson>(pkgJsonPath);
-              return {
-                projectNodes: {
-                  [json.name]: buildProjectConfigurationFromPackageJson(
-                    pkgJsonPath,
-                    json,
-                    nxJson
-                  ),
-                },
-              };
-            },
-          }
-        : {}),
-      // Load projects from project.json files. These will be read second, since
-      // they are listed last in the plugin, so they will overwrite things from the package.json
-      // based projects.
-      '{project.json,**/project.json}': (file) => {
-        const json = readJson<ProjectConfiguration>(file);
-        json.name ??= toProjectName(file);
-        return {
-          projectNodes: {
-            [json.name]: json,
-          },
-        };
-      },
-    },
-  };
-  plugins.push(nxCorePlugin);
+
+  const nxCorePlugin: NxPluginV2 = getProjectJsonPlugin(readJson);
+  const nxPackageManagerWorkspacesPlugin: NxPluginV2 =
+    getPackageJsonWorkspacesPlugin(root, nxJson, readJson);
+  plugins.push(nxPackageManagerWorkspacesPlugin, nxCorePlugin);
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const plugin of plugins) {
@@ -403,7 +275,8 @@ export function buildProjectsConfigurationsFromProjectPaths(
             mergeProjectConfigurationIntoWorkspace(
               projects,
               projectRootMap,
-              projectNodes[node]
+              projectNodes[node],
+              file
             );
           }
           Object.assign(externalNodes, pluginExternalNodes);

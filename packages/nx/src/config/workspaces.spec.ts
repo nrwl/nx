@@ -9,6 +9,7 @@ import { TempFs } from '../utils/testing/temp-fs';
 
 const libConfig = (root, name?: string) => ({
   name: name ?? toProjectName(`${root}/some-file`),
+  projectType: 'library',
   root: `libs/${root}`,
   sourceRoot: `libs/${root}/src`,
 });
@@ -50,7 +51,6 @@ describe('Workspaces', () => {
 
       const workspaces = new Workspaces(fs.tempDir);
       const resolved = workspaces.readProjectsConfigurations();
-      console.log(resolved);
       expect(resolved.projects.lib1).toEqual(standaloneConfig);
     });
 
@@ -80,7 +80,6 @@ describe('Workspaces', () => {
 
       const workspaces = new Workspaces(fs.tempDir);
       const { projects } = workspaces.readProjectsConfigurations();
-      console.log(projects);
 
       // projects got merged for lib1
       expect(projects['lib1']).toEqual({

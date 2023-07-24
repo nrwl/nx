@@ -12,7 +12,7 @@ import {
 } from './nx-deps-cache';
 import { buildImplicitProjectDependencies } from './build-dependencies';
 import { buildWorkspaceProjectNodes } from './build-nodes';
-import { loadNxPlugins } from '../utils/nx-plugin';
+import { isNxPluginV1, isNxPluginV2, loadNxPlugins } from '../utils/nx-plugin';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   ProjectFileMap,
@@ -22,7 +22,10 @@ import {
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { ProjectGraphBuilder } from './project-graph-builder';
+import {
+  ProjectDependencyBuilder,
+  ProjectGraphBuilder,
+} from './project-graph-builder';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
@@ -216,15 +219,34 @@ async function updateProjectGraphWithPlugins(
   context: ProjectGraphProcessorContext,
   initProjectGraph: ProjectGraph
 ) {
-  const plugins = (
-    await loadNxPlugins(context.nxJsonConfiguration.plugins)
-  ).filter((x) => !!x.processProjectGraph);
+  const plugins = await loadNxPlugins(context.nxJsonConfiguration.plugins);
   let graph = initProjectGraph;
   for (const plugin of plugins) {
     try {
-      graph = await plugin.processProjectGraph(graph, context);
+      if (isNxPluginV1(plugin) && plugin.processProjectGraph) {
+        graph = await plugin.processProjectGraph(graph, context);
+      }
     } catch (e) {
       let message = `Failed to process the project graph with "${plugin.name}".`;
+      if (e instanceof Error) {
+        e.message = message + '\n' + e.message;
+        throw e;
+      }
+      throw new Error(message);
+    }
+  }
+  for (const plugin of plugins) {
+    try {
+      if (isNxPluginV2(plugin)) {
+        const builder = new ProjectDependencyBuilder(graph);
+        await plugin.processProjectDependencies?.(builder, {
+          ...context,
+          graph,
+        });
+        graph = builder.getUpdatedProjectGraph();
+      }
+    } catch (e) {
+      let message = `Failed to process project dependencies with "${plugin.name}".`;
       if (e instanceof Error) {
         e.message = message + '\n' + e.message;
         throw e;

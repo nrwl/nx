@@ -15,7 +15,12 @@ import { readJson, writeJson } from './json';
 import { PackageJson } from '../../utils/package-json';
 import { readNxJson } from './nx-json';
 import { output } from '../../utils/output';
-import { retrieveProjectConfigurationPaths } from '../../project-graph/utils/retrieve-workspace-files';
+import {
+  configurationGlobsSync,
+  retrieveProjectConfigurationPaths,
+} from '../../project-graph/utils/retrieve-workspace-files';
+import minimatch = require('minimatch');
+import { buildProjectFromProjectJson } from '../../../plugins/project-json';
 
 export { readNxJson, updateNxJson } from './nx-json';
 export {
@@ -86,7 +91,7 @@ export function updateProjectConfiguration(
 
   if (!tree.exists(projectConfigFile)) {
     throw new Error(
-      `Cannot update Project ${projectName} at ${projectConfiguration.root}. It doesn't exist or uses package.json configuration.`
+      `Cannot update Project ${projectName} at ${projectConfiguration.root}. It either doesn't exist yet, or may not use project.json for configuration. Use \`addProjectConfiguration()\` instead if you want to create a new project.`
     );
   }
   writeJson(tree, projectConfigFile, {
@@ -180,19 +185,52 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
 } {
   const nxJson = readNxJson(tree);
 
+  const patterns = configurationGlobsSync(tree.root, nxJson);
   const globbedFiles = retrieveProjectConfigurationPaths(tree.root, nxJson);
-  const createdFiles = findCreatedProjectFiles(tree);
-  const deletedFiles = findDeletedProjectFiles(tree);
+  const createdFiles = findCreatedProjectFiles(tree, patterns);
+  const deletedFiles = findDeletedProjectFiles(tree, patterns);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(
     (r) => deletedFiles.indexOf(r) === -1
   );
 
-  return buildProjectsConfigurationsFromProjectPaths(
+  const { projects } = buildProjectsConfigurationsFromProjectPaths(
     nxJson,
     projectFiles,
     tree.root,
     (file) => readJson(tree, file)
-  ).projects;
+  );
+
+  for (const project in projects) {
+    const config = projects[project];
+    const maybeProjectJsonPath = joinPathFragments(config.root, 'project.json');
+    if (tree.exists(maybeProjectJsonPath)) {
+      const json = readJson(tree, maybeProjectJsonPath);
+      projects[project] = buildProjectFromProjectJson(
+        json,
+        maybeProjectJsonPath
+      );
+    } else {
+      // TODO - We should enable this. It's currently disabled because
+      // it causes issues with the migrator (e.g. e2e.migrator.ts) code inside @nx/angular. With this disabled,
+      // inferred projects will be visible in their final state, which could be confusing for folks
+      // who are writing migration generators.
+      //
+      // The reason this breaks the angular migrator stuff is that we write a project.json file
+      // where projectConfig.root !== dirname(path/to/project.json). We don't support this, but the
+      // migrator does it as a "staging" step. When we try to read the project.json above its not
+      // present at the expected location, so the below code would wipe the targets from the project
+      // Wiping the targets causes the migrator to fail.
+      //
+      // // Inferred targets, tags, etc don't show up when running generators
+      // // This is to help avoid running into issues when trying to update the workspace
+      // projects[project] = {
+      //   name: project,
+      //   root: config.root,
+      // };
+    }
+  }
+
+  return projects;
 }
 
 /**
@@ -204,14 +242,13 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
  * We exclude the root `package.json` from this list unless
  * considered a project during workspace generation
  */
-function findCreatedProjectFiles(tree: Tree) {
+function findCreatedProjectFiles(tree: Tree, globPatterns: string[]) {
   const createdProjectFiles = [];
 
   for (const change of tree.listChanges()) {
     if (change.type === 'CREATE') {
       const fileName = basename(change.path);
-      // all created project json files are created projects
-      if (fileName === 'project.json') {
+      if (globPatterns.some((pattern) => minimatch(change.path, pattern))) {
         createdProjectFiles.push(change.path);
       } else if (fileName === 'package.json') {
         try {
@@ -232,14 +269,13 @@ function findCreatedProjectFiles(tree: Tree) {
  * there is no project.json file, as `glob`
  * cannot find them.
  */
-function findDeletedProjectFiles(tree: Tree) {
+function findDeletedProjectFiles(tree: Tree, globPatterns: string[]) {
   return tree
     .listChanges()
     .filter((f) => {
-      const fileName = basename(f.path);
       return (
         f.type === 'DELETE' &&
-        (fileName === 'project.json' || fileName === 'package.json')
+        globPatterns.some((pattern) => minimatch(f.path, pattern))
       );
     })
     .map((r) => r.path);

@@ -248,8 +248,9 @@ export const getMatchingStringsWithCache = (() => {
       const regex = minimatch.makeRe(pattern);
       if (regex) {
         regexCache.set(pattern, regex);
+      } else {
+        throw new Error('Invalid glob pattern ' + pattern);
       }
-      throw new Error('Unable to build regex for glob pattern ' + pattern);
     }
     const matcher = regexCache.get(pattern);
     return items.filter((item) => {

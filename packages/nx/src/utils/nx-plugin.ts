@@ -38,6 +38,7 @@ import type * as ts from 'typescript';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
 import { NxPluginV1 } from './nx-plugin.deprecated';
 import { ProjectDependencyBuilder } from '../project-graph/project-graph-builder';
+import { combineGlobPatterns } from './globs';
 
 export type ProjectConfigurationBuilder = (
   projectConfigurationFile: string,
@@ -79,7 +80,7 @@ export type DependencyLocator = (
      */
     filesToProcess: ProjectFileMap;
   }
-) => {};
+) => void | Promise<void>;
 
 export type NxPluginV2 = {
   name: string;
@@ -230,11 +231,11 @@ export async function loadNxPlugins(
 }
 
 function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
-  if ('projectFilePatterns' in plugin && !('buildProjectNodes' in plugin)) {
+  if (isNxPluginV1(plugin) && plugin.projectFilePatterns) {
     return {
       ...plugin,
       processProjectNodes: {
-        [`*/**/{${(plugin.projectFilePatterns ?? []).join(',')}}`]: (
+        [`*/**/${combineGlobPatterns(plugin.projectFilePatterns)}`]: (
           configFilePath
         ) => {
           const name = toProjectName(configFilePath);
@@ -252,6 +253,19 @@ function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
     };
   }
   return plugin;
+}
+
+export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
+  return (
+    'processProjectNodes' in plugin || 'processProjectDependencies' in plugin
+  );
+}
+
+export function isNxPluginV1(plugin: NxPlugin): plugin is NxPluginV1 {
+  return (
+    ('processProjectGraph' in plugin || 'projectFilePatterns' in plugin) &&
+    !isNxPluginV2(plugin)
+  );
 }
 
 export function mergePluginTargetsWithNxTargets(

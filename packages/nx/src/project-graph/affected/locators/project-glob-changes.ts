@@ -1,13 +1,11 @@
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import minimatch = require('minimatch');
-import {
-  getGlobPatternsFromPackageManagerWorkspaces,
-  getGlobPatternsFromPluginsAsync,
-} from '../../../config/workspaces';
+import { getGlobPatternsFromPluginsAsync } from '../../../config/workspaces';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { getGlobPatternsFromPackageManagerWorkspaces } from '../../../../plugins/package-json-workspaces';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
   async (touchedFiles, projectGraphNodes, nxJson): Promise<string[]> => {

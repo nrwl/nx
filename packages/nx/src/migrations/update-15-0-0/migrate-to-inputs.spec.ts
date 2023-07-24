@@ -7,7 +7,7 @@ import {
   readProjectConfiguration,
   updateNxJson,
 } from '../../generators/utils/project-configuration';
-import { readJson, writeJson } from '../../generators/utils/json';
+import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import migrateToInputs from './migrate-to-inputs';
 import { NxJsonConfiguration } from '../../config/nx-json';
 
@@ -206,6 +206,10 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
   });
 
   it('should add project specific implicit dependencies to projects with package.json', async () => {
+    updateJson(tree, 'package.json', (j) => ({
+      ...j,
+      workspaces: ['**/package.json'],
+    }));
     updateNxJson(tree, {
       implicitDependencies: {
         'tools/scripts/build-app.js': ['app1', 'app2'],
