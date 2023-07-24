@@ -316,25 +316,25 @@
               "id": "enforce-project-boundaries",
               "tags": ["enforce-project-boundaries"],
               "file": "shared/core-features/enforce-project-boundaries"
-            }
-          ]
-        },
-        {
-          "name": "Plugin Features",
-          "id": "plugin-features",
-          "description": "Learn what is a plugin, the different type of plugins and how to create one.",
-          "itemList": [
-            {
-              "name": "Use Task Executors",
-              "id": "use-task-executors",
-              "tags": ["use-task-executors"],
-              "file": "shared/plugin-features/use-task-executors"
             },
             {
-              "name": "Use Code Generators",
-              "id": "use-code-generators",
-              "tags": ["use-code-generators"],
-              "file": "shared/plugin-features/use-code-generators"
+              "name": "Plugin Features",
+              "id": "plugin-features",
+              "description": "Learn what is a plugin, the different type of plugins and how to create one.",
+              "itemList": [
+                {
+                  "name": "Use Task Executors",
+                  "id": "use-task-executors",
+                  "tags": ["use-task-executors"],
+                  "file": "shared/plugin-features/use-task-executors"
+                },
+                {
+                  "name": "Use Code Generators",
+                  "id": "use-code-generators",
+                  "tags": ["use-code-generators"],
+                  "file": "shared/plugin-features/use-code-generators"
+                }
+              ]
             }
           ]
         },

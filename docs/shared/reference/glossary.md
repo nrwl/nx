@@ -74,13 +74,13 @@ A system for running [tasks](#task) in CI across multiple agent processes in the
 
 A script that performs some action on your code. This can include building, linting, testing, serving and many other actions. A [target](#target) configuration specifies an executor and a set of options. Executors can be found in [plugins](#plugin).
 
-> See: [Use Task Executors](/plugin-features/use-task-executors)
+> See: [Use Task Executors](/core-features/plugin-features/use-task-executors)
 
 ### Generator
 
 A script that creates or modifies your code. Generators can be found in [plugins](#plugin).
 
-> See: [Use Code Generators](/plugin-features/use-code-generators)
+> See: [Use Code Generators](/core-features/plugin-features/use-code-generators)
 
 ### Graph
 

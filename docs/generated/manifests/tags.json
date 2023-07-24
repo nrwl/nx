@@ -434,7 +434,7 @@
       "file": "shared/plugin-features/use-task-executors",
       "id": "use-task-executors",
       "name": "Use Task Executors",
-      "path": "/plugin-features/use-task-executors"
+      "path": "/core-features/plugin-features/use-task-executors"
     },
     {
       "description": "",
@@ -541,7 +541,7 @@
       "file": "shared/plugin-features/use-code-generators",
       "id": "use-code-generators",
       "name": "Use Code Generators",
-      "path": "/plugin-features/use-code-generators"
+      "path": "/core-features/plugin-features/use-code-generators"
     },
     {
       "description": "",
