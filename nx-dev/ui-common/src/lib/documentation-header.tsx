@@ -42,7 +42,9 @@ export function DocumentationHeader({
   const isPackages: boolean = router.asPath.startsWith('/packages');
   const isPlugins: boolean = router.asPath.startsWith('/plugins');
   const isRecipes: boolean = router.asPath.startsWith('/recipes');
-  const isNx: boolean = !isNxCloud && !isPackages && !isPlugins && !isRecipes;
+  const isChangelog: boolean = router.asPath.startsWith('/changelog');
+  const isNx: boolean =
+    !isNxCloud && !isPackages && !isPlugins && !isRecipes && !isChangelog;
 
   const sections = [
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
@@ -65,6 +67,11 @@ export function DocumentationHeader({
       name: 'Recipes',
       href: '/recipes',
       current: isRecipes,
+    },
+    {
+      name: 'Changelog',
+      href: '/changelog',
+      current: isChangelog,
     },
   ];
 
