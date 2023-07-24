@@ -1829,26 +1829,6 @@
         "tags": ["environment-variables"]
       },
       {
-        "id": "packages",
-        "name": "Packages",
-        "description": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": true,
-        "path": "/packages",
-        "tags": []
-      },
-      {
-        "id": "packages-devkit",
-        "name": "Nx Devkit",
-        "description": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": true,
-        "path": "/packages/devkit/documents/nx_devkit",
-        "tags": ["create-your-own-plugin"]
-      },
-      {
         "id": "glossary",
         "name": "Glossary",
         "description": "",
@@ -1922,26 +1902,6 @@
     "isExternal": false,
     "path": "/reference/environment-variables",
     "tags": ["environment-variables"]
-  },
-  "/packages": {
-    "id": "packages",
-    "name": "Packages",
-    "description": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": true,
-    "path": "/packages",
-    "tags": []
-  },
-  "/packages/devkit/documents/nx_devkit": {
-    "id": "packages-devkit",
-    "name": "Nx Devkit",
-    "description": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": true,
-    "path": "/packages/devkit/documents/nx_devkit",
-    "tags": ["create-your-own-plugin"]
   },
   "/reference/glossary": {
     "id": "glossary",

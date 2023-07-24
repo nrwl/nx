@@ -642,13 +642,6 @@
     },
     {
       "description": "",
-      "file": "",
-      "id": "packages-devkit",
-      "name": "Nx Devkit",
-      "path": "/packages/devkit/documents/nx_devkit"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/plugins/migration-generators",
       "id": "migration-generators",
       "name": "Write a Migration",

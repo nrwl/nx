@@ -1470,22 +1470,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Packages",
-            "path": "/packages",
-            "id": "packages",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Nx Devkit",
-            "path": "/packages/devkit/documents/nx_devkit",
-            "id": "packages-devkit",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Glossary",
             "path": "/reference/glossary",
             "id": "glossary",
@@ -1541,22 +1525,6 @@
         "path": "/reference/environment-variables",
         "id": "environment-variables",
         "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Packages",
-        "path": "/packages",
-        "id": "packages",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Devkit",
-        "path": "/packages/devkit/documents/nx_devkit",
-        "id": "packages-devkit",
-        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
