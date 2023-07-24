@@ -541,6 +541,60 @@
               ]
             },
             {
+              "name": "React",
+              "id": "react",
+              "description": "Advanced guides to adopt Nx in React.",
+              "itemList": [
+                {
+                  "name": "Migrating from CRA",
+                  "id": "migration-cra",
+                  "file": "shared/migration/migration-cra"
+                },
+                {
+                  "name": "React 18 Migration",
+                  "id": "react-18",
+                  "file": "shared/guides/react-18"
+                },
+                {
+                  "name": "React Native with Nx",
+                  "id": "react-native",
+                  "file": "shared/guides/react-native"
+                },
+                {
+                  "name": "Remix with Nx",
+                  "id": "remix",
+                  "file": "shared/guides/remix"
+                },
+                {
+                  "name": "Use Environment Variables in React",
+                  "id": "use-environment-variables-in-react",
+                  "tags": ["environment-variables"],
+                  "file": "shared/guides/use-environment-variables-in-react"
+                },
+                {
+                  "name": "Using Tailwind CSS in React",
+                  "id": "using-tailwind-css-in-react",
+                  "file": "shared/guides/using-tailwind-css-in-react"
+                },
+                {
+                  "name": "Adding Images, Fonts, and Files",
+                  "id": "adding-assets-react",
+                  "file": "shared/guides/adding-assets"
+                },
+                {
+                  "name": "Setup Module Federation with SSR for React",
+                  "id": "module-federation-with-ssr",
+                  "tags": ["use-task-executors", "module-federation", "react"],
+                  "file": "shared/recipes/module-federation-with-ssr"
+                },
+                {
+                  "name": "Deploying Next.js applications to Vercel",
+                  "id": "deploy-nextjs-to-vercel",
+                  "file": "shared/recipes/deployment/deploy-nextjs-to-vercel"
+                }
+              ]
+            },
+            {
               "name": "Angular",
               "id": "angular",
               "description": "Advanced guides to adopt Nx in Angular.",
@@ -606,60 +660,6 @@
                   "name": "Setup incremental builds for Angular applications",
                   "id": "setup-incremental-builds-angular",
                   "file": "shared/guides/setup-incremental-builds-angular"
-                }
-              ]
-            },
-            {
-              "name": "React",
-              "id": "react",
-              "description": "Advanced guides to adopt Nx in React.",
-              "itemList": [
-                {
-                  "name": "Migrating from CRA",
-                  "id": "migration-cra",
-                  "file": "shared/migration/migration-cra"
-                },
-                {
-                  "name": "React 18 Migration",
-                  "id": "react-18",
-                  "file": "shared/guides/react-18"
-                },
-                {
-                  "name": "React Native with Nx",
-                  "id": "react-native",
-                  "file": "shared/guides/react-native"
-                },
-                {
-                  "name": "Remix with Nx",
-                  "id": "remix",
-                  "file": "shared/guides/remix"
-                },
-                {
-                  "name": "Use Environment Variables in React",
-                  "id": "use-environment-variables-in-react",
-                  "tags": ["environment-variables"],
-                  "file": "shared/guides/use-environment-variables-in-react"
-                },
-                {
-                  "name": "Using Tailwind CSS in React",
-                  "id": "using-tailwind-css-in-react",
-                  "file": "shared/guides/using-tailwind-css-in-react"
-                },
-                {
-                  "name": "Adding Images, Fonts, and Files",
-                  "id": "adding-assets-react",
-                  "file": "shared/guides/adding-assets"
-                },
-                {
-                  "name": "Setup Module Federation with SSR for React",
-                  "id": "module-federation-with-ssr",
-                  "tags": ["use-task-executors", "module-federation", "react"],
-                  "file": "shared/recipes/module-federation-with-ssr"
-                },
-                {
-                  "name": "Deploying Next.js applications to Vercel",
-                  "id": "deploy-nextjs-to-vercel",
-                  "file": "shared/recipes/deployment/deploy-nextjs-to-vercel"
                 }
               ]
             },
@@ -794,85 +794,6 @@
               ]
             },
             {
-              "name": "Nx Console",
-              "id": "nx-console",
-              "description": "Checkout all the recipes related to Nx Console.",
-              "itemList": [
-                {
-                  "name": "Telemetry",
-                  "id": "console-telemetry",
-                  "tags": ["integrate-with-editors"],
-                  "file": "shared/recipes/console-telemetry"
-                },
-                {
-                  "name": "Generate Command",
-                  "id": "console-generate-command",
-                  "tags": ["integrate-with-editors"],
-                  "file": "shared/recipes/console-generate-command"
-                },
-                {
-                  "name": "Run Command",
-                  "id": "console-run-command",
-                  "tags": ["integrate-with-editors"],
-                  "file": "shared/recipes/console-run-command"
-                },
-                {
-                  "name": "Add Dependency Command",
-                  "id": "console-add-dependency-command",
-                  "tags": ["integrate-with-editors"],
-                  "file": "shared/recipes/console-add-dependency-command"
-                },
-                {
-                  "name": "Project Pane",
-                  "id": "console-project-pane",
-                  "tags": ["integrate-with-editors"],
-                  "file": "shared/recipes/console-project-pane"
-                },
-                {
-                  "name": "Keyboard Shortcuts",
-                  "id": "console-shortcuts",
-                  "tags": ["integrate-with-editors"],
-                  "file": "shared/recipes/console-shortcuts"
-                }
-              ]
-            },
-            {
-              "name": "Troubleshooting",
-              "id": "troubleshooting",
-              "description": "Learn how to troubleshoot common problems.",
-              "itemList": [
-                {
-                  "name": "Resolve Circular Dependencies",
-                  "id": "resolve-circular-dependencies",
-                  "tags": ["explore-graph"],
-                  "file": "shared/recipes/resolve-circular-dependencies"
-                },
-                {
-                  "name": "Troubleshooting Nx Install Issues",
-                  "id": "troubleshoot-nx-install-issues",
-                  "file": "shared/installation/troubleshoot-installation"
-                },
-                {
-                  "name": "Troubleshoot Cache Misses",
-                  "id": "troubleshoot-cache-misses",
-                  "tags": ["cache-task-results"],
-                  "file": "shared/recipes/troubleshoot-cache-misses"
-                },
-                {
-                  "name": "Unknown Local Cache Error",
-                  "id": "unknown-local-cache",
-                  "tags": [],
-                  "file": "shared/guides/unknown-local-cache"
-                },
-                {
-                  "name": "Profiling Build Performance",
-                  "id": "performance-profiling",
-                  "tags": ["use-task-executors", "environment-variables"],
-                  "file": "shared/guides/performance-profiling"
-                }
-              ]
-            },
-            {
               "name": "Tips and tricks",
               "id": "tips-n-tricks",
               "description": "Various tips and tricks for using Nx.",
@@ -951,6 +872,85 @@
                   "id": "run-commands-executor",
                   "tags": ["use-task-executors"],
                   "file": "shared/running-custom-commands"
+                }
+              ]
+            },
+            {
+              "name": "Troubleshooting",
+              "id": "troubleshooting",
+              "description": "Learn how to troubleshoot common problems.",
+              "itemList": [
+                {
+                  "name": "Resolve Circular Dependencies",
+                  "id": "resolve-circular-dependencies",
+                  "tags": ["explore-graph"],
+                  "file": "shared/recipes/resolve-circular-dependencies"
+                },
+                {
+                  "name": "Troubleshooting Nx Install Issues",
+                  "id": "troubleshoot-nx-install-issues",
+                  "file": "shared/installation/troubleshoot-installation"
+                },
+                {
+                  "name": "Troubleshoot Cache Misses",
+                  "id": "troubleshoot-cache-misses",
+                  "tags": ["cache-task-results"],
+                  "file": "shared/recipes/troubleshoot-cache-misses"
+                },
+                {
+                  "name": "Unknown Local Cache Error",
+                  "id": "unknown-local-cache",
+                  "tags": [],
+                  "file": "shared/guides/unknown-local-cache"
+                },
+                {
+                  "name": "Profiling Build Performance",
+                  "id": "performance-profiling",
+                  "tags": ["use-task-executors", "environment-variables"],
+                  "file": "shared/guides/performance-profiling"
+                }
+              ]
+            },
+            {
+              "name": "Nx Console",
+              "id": "nx-console",
+              "description": "Checkout all the recipes related to Nx Console.",
+              "itemList": [
+                {
+                  "name": "Telemetry",
+                  "id": "console-telemetry",
+                  "tags": ["integrate-with-editors"],
+                  "file": "shared/recipes/console-telemetry"
+                },
+                {
+                  "name": "Generate Command",
+                  "id": "console-generate-command",
+                  "tags": ["integrate-with-editors"],
+                  "file": "shared/recipes/console-generate-command"
+                },
+                {
+                  "name": "Run Command",
+                  "id": "console-run-command",
+                  "tags": ["integrate-with-editors"],
+                  "file": "shared/recipes/console-run-command"
+                },
+                {
+                  "name": "Add Dependency Command",
+                  "id": "console-add-dependency-command",
+                  "tags": ["integrate-with-editors"],
+                  "file": "shared/recipes/console-add-dependency-command"
+                },
+                {
+                  "name": "Project Pane",
+                  "id": "console-project-pane",
+                  "tags": ["integrate-with-editors"],
+                  "file": "shared/recipes/console-project-pane"
+                },
+                {
+                  "name": "Keyboard Shortcuts",
+                  "id": "console-shortcuts",
+                  "tags": ["integrate-with-editors"],
+                  "file": "shared/recipes/console-shortcuts"
                 }
               ]
             },

@@ -1649,6 +1649,87 @@
             "disableCollapsible": false
           },
           {
+            "name": "React",
+            "path": "/recipes/react",
+            "id": "react",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Migrating from CRA",
+                "path": "/recipes/react/migration-cra",
+                "id": "migration-cra",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React 18 Migration",
+                "path": "/recipes/react/react-18",
+                "id": "react-18",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React Native with Nx",
+                "path": "/recipes/react/react-native",
+                "id": "react-native",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Remix with Nx",
+                "path": "/recipes/react/remix",
+                "id": "remix",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Use Environment Variables in React",
+                "path": "/recipes/react/use-environment-variables-in-react",
+                "id": "use-environment-variables-in-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using Tailwind CSS in React",
+                "path": "/recipes/react/using-tailwind-css-in-react",
+                "id": "using-tailwind-css-in-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Adding Images, Fonts, and Files",
+                "path": "/recipes/react/adding-assets-react",
+                "id": "adding-assets-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setup Module Federation with SSR for React",
+                "path": "/recipes/react/module-federation-with-ssr",
+                "id": "module-federation-with-ssr",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Deploying Next.js applications to Vercel",
+                "path": "/recipes/react/deploy-nextjs-to-vercel",
+                "id": "deploy-nextjs-to-vercel",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Angular",
             "path": "/recipes/angular",
             "id": "angular",
@@ -1731,87 +1812,6 @@
                 "name": "Setup incremental builds for Angular applications",
                 "path": "/recipes/angular/setup-incremental-builds-angular",
                 "id": "setup-incremental-builds-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React",
-            "path": "/recipes/react",
-            "id": "react",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Migrating from CRA",
-                "path": "/recipes/react/migration-cra",
-                "id": "migration-cra",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React 18 Migration",
-                "path": "/recipes/react/react-18",
-                "id": "react-18",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React Native with Nx",
-                "path": "/recipes/react/react-native",
-                "id": "react-native",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Remix with Nx",
-                "path": "/recipes/react/remix",
-                "id": "remix",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Use Environment Variables in React",
-                "path": "/recipes/react/use-environment-variables-in-react",
-                "id": "use-environment-variables-in-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Using Tailwind CSS in React",
-                "path": "/recipes/react/using-tailwind-css-in-react",
-                "id": "using-tailwind-css-in-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Adding Images, Fonts, and Files",
-                "path": "/recipes/react/adding-assets-react",
-                "id": "adding-assets-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Setup Module Federation with SSR for React",
-                "path": "/recipes/react/module-federation-with-ssr",
-                "id": "module-federation-with-ssr",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Deploying Next.js applications to Vercel",
-                "path": "/recipes/react/deploy-nextjs-to-vercel",
-                "id": "deploy-nextjs-to-vercel",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2000,112 +2000,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx Console",
-            "path": "/recipes/nx-console",
-            "id": "nx-console",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Telemetry",
-                "path": "/recipes/nx-console/console-telemetry",
-                "id": "console-telemetry",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Generate Command",
-                "path": "/recipes/nx-console/console-generate-command",
-                "id": "console-generate-command",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Run Command",
-                "path": "/recipes/nx-console/console-run-command",
-                "id": "console-run-command",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Add Dependency Command",
-                "path": "/recipes/nx-console/console-add-dependency-command",
-                "id": "console-add-dependency-command",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Project Pane",
-                "path": "/recipes/nx-console/console-project-pane",
-                "id": "console-project-pane",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Keyboard Shortcuts",
-                "path": "/recipes/nx-console/console-shortcuts",
-                "id": "console-shortcuts",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Troubleshooting",
-            "path": "/recipes/troubleshooting",
-            "id": "troubleshooting",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Resolve Circular Dependencies",
-                "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-                "id": "resolve-circular-dependencies",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Troubleshooting Nx Install Issues",
-                "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-                "id": "troubleshoot-nx-install-issues",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Troubleshoot Cache Misses",
-                "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-                "id": "troubleshoot-cache-misses",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Unknown Local Cache Error",
-                "path": "/recipes/troubleshooting/unknown-local-cache",
-                "id": "unknown-local-cache",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Profiling Build Performance",
-                "path": "/recipes/troubleshooting/performance-profiling",
-                "id": "performance-profiling",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "Tips and tricks",
             "path": "/recipes/tips-n-tricks",
             "id": "tips-n-tricks",
@@ -2211,6 +2105,112 @@
                 "name": "Running Custom Commands",
                 "path": "/recipes/tips-n-tricks/run-commands-executor",
                 "id": "run-commands-executor",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting",
+            "path": "/recipes/troubleshooting",
+            "id": "troubleshooting",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Resolve Circular Dependencies",
+                "path": "/recipes/troubleshooting/resolve-circular-dependencies",
+                "id": "resolve-circular-dependencies",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Troubleshooting Nx Install Issues",
+                "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
+                "id": "troubleshoot-nx-install-issues",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Troubleshoot Cache Misses",
+                "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
+                "id": "troubleshoot-cache-misses",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Unknown Local Cache Error",
+                "path": "/recipes/troubleshooting/unknown-local-cache",
+                "id": "unknown-local-cache",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Profiling Build Performance",
+                "path": "/recipes/troubleshooting/performance-profiling",
+                "id": "performance-profiling",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Nx Console",
+            "path": "/recipes/nx-console",
+            "id": "nx-console",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Telemetry",
+                "path": "/recipes/nx-console/console-telemetry",
+                "id": "console-telemetry",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Generate Command",
+                "path": "/recipes/nx-console/console-generate-command",
+                "id": "console-generate-command",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Run Command",
+                "path": "/recipes/nx-console/console-run-command",
+                "id": "console-run-command",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add Dependency Command",
+                "path": "/recipes/nx-console/console-add-dependency-command",
+                "id": "console-add-dependency-command",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Project Pane",
+                "path": "/recipes/nx-console/console-project-pane",
+                "id": "console-project-pane",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Keyboard Shortcuts",
+                "path": "/recipes/nx-console/console-shortcuts",
+                "id": "console-shortcuts",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2339,6 +2339,159 @@
         "name": "Manual migration",
         "path": "/recipes/adopting-nx/manual",
         "id": "manual",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React",
+        "path": "/recipes/react",
+        "id": "react",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Migrating from CRA",
+            "path": "/recipes/react/migration-cra",
+            "id": "migration-cra",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "React 18 Migration",
+            "path": "/recipes/react/react-18",
+            "id": "react-18",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "React Native with Nx",
+            "path": "/recipes/react/react-native",
+            "id": "react-native",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Remix with Nx",
+            "path": "/recipes/react/remix",
+            "id": "remix",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Use Environment Variables in React",
+            "path": "/recipes/react/use-environment-variables-in-react",
+            "id": "use-environment-variables-in-react",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Using Tailwind CSS in React",
+            "path": "/recipes/react/using-tailwind-css-in-react",
+            "id": "using-tailwind-css-in-react",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Adding Images, Fonts, and Files",
+            "path": "/recipes/react/adding-assets-react",
+            "id": "adding-assets-react",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Setup Module Federation with SSR for React",
+            "path": "/recipes/react/module-federation-with-ssr",
+            "id": "module-federation-with-ssr",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Deploying Next.js applications to Vercel",
+            "path": "/recipes/react/deploy-nextjs-to-vercel",
+            "id": "deploy-nextjs-to-vercel",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrating from CRA",
+        "path": "/recipes/react/migration-cra",
+        "id": "migration-cra",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React 18 Migration",
+        "path": "/recipes/react/react-18",
+        "id": "react-18",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React Native with Nx",
+        "path": "/recipes/react/react-native",
+        "id": "react-native",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Remix with Nx",
+        "path": "/recipes/react/remix",
+        "id": "remix",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Use Environment Variables in React",
+        "path": "/recipes/react/use-environment-variables-in-react",
+        "id": "use-environment-variables-in-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using Tailwind CSS in React",
+        "path": "/recipes/react/using-tailwind-css-in-react",
+        "id": "using-tailwind-css-in-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Adding Images, Fonts, and Files",
+        "path": "/recipes/react/adding-assets-react",
+        "id": "adding-assets-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Setup Module Federation with SSR for React",
+        "path": "/recipes/react/module-federation-with-ssr",
+        "id": "module-federation-with-ssr",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Deploying Next.js applications to Vercel",
+        "path": "/recipes/react/deploy-nextjs-to-vercel",
+        "id": "deploy-nextjs-to-vercel",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2542,159 +2695,6 @@
         "name": "Setup incremental builds for Angular applications",
         "path": "/recipes/angular/setup-incremental-builds-angular",
         "id": "setup-incremental-builds-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React",
-        "path": "/recipes/react",
-        "id": "react",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Migrating from CRA",
-            "path": "/recipes/react/migration-cra",
-            "id": "migration-cra",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React 18 Migration",
-            "path": "/recipes/react/react-18",
-            "id": "react-18",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React Native with Nx",
-            "path": "/recipes/react/react-native",
-            "id": "react-native",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Remix with Nx",
-            "path": "/recipes/react/remix",
-            "id": "remix",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Use Environment Variables in React",
-            "path": "/recipes/react/use-environment-variables-in-react",
-            "id": "use-environment-variables-in-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Using Tailwind CSS in React",
-            "path": "/recipes/react/using-tailwind-css-in-react",
-            "id": "using-tailwind-css-in-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Adding Images, Fonts, and Files",
-            "path": "/recipes/react/adding-assets-react",
-            "id": "adding-assets-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Setup Module Federation with SSR for React",
-            "path": "/recipes/react/module-federation-with-ssr",
-            "id": "module-federation-with-ssr",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Deploying Next.js applications to Vercel",
-            "path": "/recipes/react/deploy-nextjs-to-vercel",
-            "id": "deploy-nextjs-to-vercel",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Migrating from CRA",
-        "path": "/recipes/react/migration-cra",
-        "id": "migration-cra",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React 18 Migration",
-        "path": "/recipes/react/react-18",
-        "id": "react-18",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React Native with Nx",
-        "path": "/recipes/react/react-native",
-        "id": "react-native",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Remix with Nx",
-        "path": "/recipes/react/remix",
-        "id": "remix",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Use Environment Variables in React",
-        "path": "/recipes/react/use-environment-variables-in-react",
-        "id": "use-environment-variables-in-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Using Tailwind CSS in React",
-        "path": "/recipes/react/using-tailwind-css-in-react",
-        "id": "using-tailwind-css-in-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Adding Images, Fonts, and Files",
-        "path": "/recipes/react/adding-assets-react",
-        "id": "adding-assets-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Setup Module Federation with SSR for React",
-        "path": "/recipes/react/module-federation-with-ssr",
-        "id": "module-federation-with-ssr",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Deploying Next.js applications to Vercel",
-        "path": "/recipes/react/deploy-nextjs-to-vercel",
-        "id": "deploy-nextjs-to-vercel",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3024,200 +3024,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nx Console",
-        "path": "/recipes/nx-console",
-        "id": "nx-console",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Telemetry",
-            "path": "/recipes/nx-console/console-telemetry",
-            "id": "console-telemetry",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Generate Command",
-            "path": "/recipes/nx-console/console-generate-command",
-            "id": "console-generate-command",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Run Command",
-            "path": "/recipes/nx-console/console-run-command",
-            "id": "console-run-command",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Add Dependency Command",
-            "path": "/recipes/nx-console/console-add-dependency-command",
-            "id": "console-add-dependency-command",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Project Pane",
-            "path": "/recipes/nx-console/console-project-pane",
-            "id": "console-project-pane",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Keyboard Shortcuts",
-            "path": "/recipes/nx-console/console-shortcuts",
-            "id": "console-shortcuts",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Telemetry",
-        "path": "/recipes/nx-console/console-telemetry",
-        "id": "console-telemetry",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Generate Command",
-        "path": "/recipes/nx-console/console-generate-command",
-        "id": "console-generate-command",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Run Command",
-        "path": "/recipes/nx-console/console-run-command",
-        "id": "console-run-command",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Add Dependency Command",
-        "path": "/recipes/nx-console/console-add-dependency-command",
-        "id": "console-add-dependency-command",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Project Pane",
-        "path": "/recipes/nx-console/console-project-pane",
-        "id": "console-project-pane",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Keyboard Shortcuts",
-        "path": "/recipes/nx-console/console-shortcuts",
-        "id": "console-shortcuts",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Troubleshooting",
-        "path": "/recipes/troubleshooting",
-        "id": "troubleshooting",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Resolve Circular Dependencies",
-            "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-            "id": "resolve-circular-dependencies",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Troubleshooting Nx Install Issues",
-            "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-            "id": "troubleshoot-nx-install-issues",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Troubleshoot Cache Misses",
-            "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-            "id": "troubleshoot-cache-misses",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Unknown Local Cache Error",
-            "path": "/recipes/troubleshooting/unknown-local-cache",
-            "id": "unknown-local-cache",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Profiling Build Performance",
-            "path": "/recipes/troubleshooting/performance-profiling",
-            "id": "performance-profiling",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Resolve Circular Dependencies",
-        "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-        "id": "resolve-circular-dependencies",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Troubleshooting Nx Install Issues",
-        "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-        "id": "troubleshoot-nx-install-issues",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Troubleshoot Cache Misses",
-        "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-        "id": "troubleshoot-cache-misses",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Unknown Local Cache Error",
-        "path": "/recipes/troubleshooting/unknown-local-cache",
-        "id": "unknown-local-cache",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Profiling Build Performance",
-        "path": "/recipes/troubleshooting/performance-profiling",
-        "id": "performance-profiling",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Tips and tricks",
         "path": "/recipes/tips-n-tricks",
         "id": "tips-n-tricks",
@@ -3430,6 +3236,200 @@
         "name": "Running Custom Commands",
         "path": "/recipes/tips-n-tricks/run-commands-executor",
         "id": "run-commands-executor",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshooting",
+        "path": "/recipes/troubleshooting",
+        "id": "troubleshooting",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Resolve Circular Dependencies",
+            "path": "/recipes/troubleshooting/resolve-circular-dependencies",
+            "id": "resolve-circular-dependencies",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting Nx Install Issues",
+            "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
+            "id": "troubleshoot-nx-install-issues",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshoot Cache Misses",
+            "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
+            "id": "troubleshoot-cache-misses",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Unknown Local Cache Error",
+            "path": "/recipes/troubleshooting/unknown-local-cache",
+            "id": "unknown-local-cache",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Profiling Build Performance",
+            "path": "/recipes/troubleshooting/performance-profiling",
+            "id": "performance-profiling",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Resolve Circular Dependencies",
+        "path": "/recipes/troubleshooting/resolve-circular-dependencies",
+        "id": "resolve-circular-dependencies",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshooting Nx Install Issues",
+        "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
+        "id": "troubleshoot-nx-install-issues",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshoot Cache Misses",
+        "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
+        "id": "troubleshoot-cache-misses",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Unknown Local Cache Error",
+        "path": "/recipes/troubleshooting/unknown-local-cache",
+        "id": "unknown-local-cache",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Profiling Build Performance",
+        "path": "/recipes/troubleshooting/performance-profiling",
+        "id": "performance-profiling",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Console",
+        "path": "/recipes/nx-console",
+        "id": "nx-console",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Telemetry",
+            "path": "/recipes/nx-console/console-telemetry",
+            "id": "console-telemetry",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Generate Command",
+            "path": "/recipes/nx-console/console-generate-command",
+            "id": "console-generate-command",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Run Command",
+            "path": "/recipes/nx-console/console-run-command",
+            "id": "console-run-command",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add Dependency Command",
+            "path": "/recipes/nx-console/console-add-dependency-command",
+            "id": "console-add-dependency-command",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Project Pane",
+            "path": "/recipes/nx-console/console-project-pane",
+            "id": "console-project-pane",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Keyboard Shortcuts",
+            "path": "/recipes/nx-console/console-shortcuts",
+            "id": "console-shortcuts",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Telemetry",
+        "path": "/recipes/nx-console/console-telemetry",
+        "id": "console-telemetry",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Generate Command",
+        "path": "/recipes/nx-console/console-generate-command",
+        "id": "console-generate-command",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Run Command",
+        "path": "/recipes/nx-console/console-run-command",
+        "id": "console-run-command",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add Dependency Command",
+        "path": "/recipes/nx-console/console-add-dependency-command",
+        "id": "console-add-dependency-command",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Project Pane",
+        "path": "/recipes/nx-console/console-project-pane",
+        "id": "console-project-pane",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Keyboard Shortcuts",
+        "path": "/recipes/nx-console/console-shortcuts",
+        "id": "console-shortcuts",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

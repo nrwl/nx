@@ -2052,6 +2052,107 @@
         "tags": []
       },
       {
+        "id": "react",
+        "name": "React",
+        "description": "Advanced guides to adopt Nx in React.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "migration-cra",
+            "name": "Migrating from CRA",
+            "description": "",
+            "file": "shared/migration/migration-cra",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/migration-cra",
+            "tags": []
+          },
+          {
+            "id": "react-18",
+            "name": "React 18 Migration",
+            "description": "",
+            "file": "shared/guides/react-18",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/react-18",
+            "tags": []
+          },
+          {
+            "id": "react-native",
+            "name": "React Native with Nx",
+            "description": "",
+            "file": "shared/guides/react-native",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/react-native",
+            "tags": []
+          },
+          {
+            "id": "remix",
+            "name": "Remix with Nx",
+            "description": "",
+            "file": "shared/guides/remix",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/remix",
+            "tags": []
+          },
+          {
+            "id": "use-environment-variables-in-react",
+            "name": "Use Environment Variables in React",
+            "description": "",
+            "file": "shared/guides/use-environment-variables-in-react",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/use-environment-variables-in-react",
+            "tags": ["environment-variables"]
+          },
+          {
+            "id": "using-tailwind-css-in-react",
+            "name": "Using Tailwind CSS in React",
+            "description": "",
+            "file": "shared/guides/using-tailwind-css-in-react",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/using-tailwind-css-in-react",
+            "tags": []
+          },
+          {
+            "id": "adding-assets-react",
+            "name": "Adding Images, Fonts, and Files",
+            "description": "",
+            "file": "shared/guides/adding-assets",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/adding-assets-react",
+            "tags": []
+          },
+          {
+            "id": "module-federation-with-ssr",
+            "name": "Setup Module Federation with SSR for React",
+            "description": "",
+            "file": "shared/recipes/module-federation-with-ssr",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/module-federation-with-ssr",
+            "tags": ["use-task-executors", "module-federation", "react"]
+          },
+          {
+            "id": "deploy-nextjs-to-vercel",
+            "name": "Deploying Next.js applications to Vercel",
+            "description": "",
+            "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/deploy-nextjs-to-vercel",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/react",
+        "tags": []
+      },
+      {
         "id": "angular",
         "name": "Angular",
         "description": "Advanced guides to adopt Nx in Angular.",
@@ -2161,107 +2262,6 @@
         ],
         "isExternal": false,
         "path": "/recipes/angular",
-        "tags": []
-      },
-      {
-        "id": "react",
-        "name": "React",
-        "description": "Advanced guides to adopt Nx in React.",
-        "file": "",
-        "itemList": [
-          {
-            "id": "migration-cra",
-            "name": "Migrating from CRA",
-            "description": "",
-            "file": "shared/migration/migration-cra",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/migration-cra",
-            "tags": []
-          },
-          {
-            "id": "react-18",
-            "name": "React 18 Migration",
-            "description": "",
-            "file": "shared/guides/react-18",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/react-18",
-            "tags": []
-          },
-          {
-            "id": "react-native",
-            "name": "React Native with Nx",
-            "description": "",
-            "file": "shared/guides/react-native",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/react-native",
-            "tags": []
-          },
-          {
-            "id": "remix",
-            "name": "Remix with Nx",
-            "description": "",
-            "file": "shared/guides/remix",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/remix",
-            "tags": []
-          },
-          {
-            "id": "use-environment-variables-in-react",
-            "name": "Use Environment Variables in React",
-            "description": "",
-            "file": "shared/guides/use-environment-variables-in-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/use-environment-variables-in-react",
-            "tags": ["environment-variables"]
-          },
-          {
-            "id": "using-tailwind-css-in-react",
-            "name": "Using Tailwind CSS in React",
-            "description": "",
-            "file": "shared/guides/using-tailwind-css-in-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/using-tailwind-css-in-react",
-            "tags": []
-          },
-          {
-            "id": "adding-assets-react",
-            "name": "Adding Images, Fonts, and Files",
-            "description": "",
-            "file": "shared/guides/adding-assets",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/adding-assets-react",
-            "tags": []
-          },
-          {
-            "id": "module-federation-with-ssr",
-            "name": "Setup Module Federation with SSR for React",
-            "description": "",
-            "file": "shared/recipes/module-federation-with-ssr",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/module-federation-with-ssr",
-            "tags": ["use-task-executors", "module-federation", "react"]
-          },
-          {
-            "id": "deploy-nextjs-to-vercel",
-            "name": "Deploying Next.js applications to Vercel",
-            "description": "",
-            "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/deploy-nextjs-to-vercel",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/react",
         "tags": []
       },
       {
@@ -2489,138 +2489,6 @@
         "tags": []
       },
       {
-        "id": "nx-console",
-        "name": "Nx Console",
-        "description": "Checkout all the recipes related to Nx Console.",
-        "file": "",
-        "itemList": [
-          {
-            "id": "console-telemetry",
-            "name": "Telemetry",
-            "description": "",
-            "file": "shared/recipes/console-telemetry",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-telemetry",
-            "tags": ["integrate-with-editors"]
-          },
-          {
-            "id": "console-generate-command",
-            "name": "Generate Command",
-            "description": "",
-            "file": "shared/recipes/console-generate-command",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-generate-command",
-            "tags": ["integrate-with-editors"]
-          },
-          {
-            "id": "console-run-command",
-            "name": "Run Command",
-            "description": "",
-            "file": "shared/recipes/console-run-command",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-run-command",
-            "tags": ["integrate-with-editors"]
-          },
-          {
-            "id": "console-add-dependency-command",
-            "name": "Add Dependency Command",
-            "description": "",
-            "file": "shared/recipes/console-add-dependency-command",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-add-dependency-command",
-            "tags": ["integrate-with-editors"]
-          },
-          {
-            "id": "console-project-pane",
-            "name": "Project Pane",
-            "description": "",
-            "file": "shared/recipes/console-project-pane",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-project-pane",
-            "tags": ["integrate-with-editors"]
-          },
-          {
-            "id": "console-shortcuts",
-            "name": "Keyboard Shortcuts",
-            "description": "",
-            "file": "shared/recipes/console-shortcuts",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-shortcuts",
-            "tags": ["integrate-with-editors"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/nx-console",
-        "tags": []
-      },
-      {
-        "id": "troubleshooting",
-        "name": "Troubleshooting",
-        "description": "Learn how to troubleshoot common problems.",
-        "file": "",
-        "itemList": [
-          {
-            "id": "resolve-circular-dependencies",
-            "name": "Resolve Circular Dependencies",
-            "description": "",
-            "file": "shared/recipes/resolve-circular-dependencies",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-            "tags": ["explore-graph"]
-          },
-          {
-            "id": "troubleshoot-nx-install-issues",
-            "name": "Troubleshooting Nx Install Issues",
-            "description": "",
-            "file": "shared/installation/troubleshoot-installation",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-            "tags": []
-          },
-          {
-            "id": "troubleshoot-cache-misses",
-            "name": "Troubleshoot Cache Misses",
-            "description": "",
-            "file": "shared/recipes/troubleshoot-cache-misses",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-            "tags": ["cache-task-results"]
-          },
-          {
-            "id": "unknown-local-cache",
-            "name": "Unknown Local Cache Error",
-            "description": "",
-            "file": "shared/guides/unknown-local-cache",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/unknown-local-cache",
-            "tags": []
-          },
-          {
-            "id": "performance-profiling",
-            "name": "Profiling Build Performance",
-            "description": "",
-            "file": "shared/guides/performance-profiling",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/performance-profiling",
-            "tags": ["use-task-executors", "environment-variables"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting",
-        "tags": []
-      },
-      {
         "id": "tips-n-tricks",
         "name": "Tips and tricks",
         "description": "Various tips and tricks for using Nx.",
@@ -2759,6 +2627,138 @@
         ],
         "isExternal": false,
         "path": "/recipes/tips-n-tricks",
+        "tags": []
+      },
+      {
+        "id": "troubleshooting",
+        "name": "Troubleshooting",
+        "description": "Learn how to troubleshoot common problems.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "resolve-circular-dependencies",
+            "name": "Resolve Circular Dependencies",
+            "description": "",
+            "file": "shared/recipes/resolve-circular-dependencies",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/troubleshooting/resolve-circular-dependencies",
+            "tags": ["explore-graph"]
+          },
+          {
+            "id": "troubleshoot-nx-install-issues",
+            "name": "Troubleshooting Nx Install Issues",
+            "description": "",
+            "file": "shared/installation/troubleshoot-installation",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
+            "tags": []
+          },
+          {
+            "id": "troubleshoot-cache-misses",
+            "name": "Troubleshoot Cache Misses",
+            "description": "",
+            "file": "shared/recipes/troubleshoot-cache-misses",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
+            "tags": ["cache-task-results"]
+          },
+          {
+            "id": "unknown-local-cache",
+            "name": "Unknown Local Cache Error",
+            "description": "",
+            "file": "shared/guides/unknown-local-cache",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/troubleshooting/unknown-local-cache",
+            "tags": []
+          },
+          {
+            "id": "performance-profiling",
+            "name": "Profiling Build Performance",
+            "description": "",
+            "file": "shared/guides/performance-profiling",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/troubleshooting/performance-profiling",
+            "tags": ["use-task-executors", "environment-variables"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting",
+        "tags": []
+      },
+      {
+        "id": "nx-console",
+        "name": "Nx Console",
+        "description": "Checkout all the recipes related to Nx Console.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "console-telemetry",
+            "name": "Telemetry",
+            "description": "",
+            "file": "shared/recipes/console-telemetry",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-telemetry",
+            "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-generate-command",
+            "name": "Generate Command",
+            "description": "",
+            "file": "shared/recipes/console-generate-command",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-generate-command",
+            "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-run-command",
+            "name": "Run Command",
+            "description": "",
+            "file": "shared/recipes/console-run-command",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-run-command",
+            "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-add-dependency-command",
+            "name": "Add Dependency Command",
+            "description": "",
+            "file": "shared/recipes/console-add-dependency-command",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-add-dependency-command",
+            "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-project-pane",
+            "name": "Project Pane",
+            "description": "",
+            "file": "shared/recipes/console-project-pane",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-project-pane",
+            "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-shortcuts",
+            "name": "Keyboard Shortcuts",
+            "description": "",
+            "file": "shared/recipes/console-shortcuts",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-shortcuts",
+            "tags": ["integrate-with-editors"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/nx-console",
         "tags": []
       },
       {
@@ -2916,6 +2916,197 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/manual",
+    "tags": []
+  },
+  "/recipes/react": {
+    "id": "react",
+    "name": "React",
+    "description": "Advanced guides to adopt Nx in React.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "migration-cra",
+        "name": "Migrating from CRA",
+        "description": "",
+        "file": "shared/migration/migration-cra",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/migration-cra",
+        "tags": []
+      },
+      {
+        "id": "react-18",
+        "name": "React 18 Migration",
+        "description": "",
+        "file": "shared/guides/react-18",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/react-18",
+        "tags": []
+      },
+      {
+        "id": "react-native",
+        "name": "React Native with Nx",
+        "description": "",
+        "file": "shared/guides/react-native",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/react-native",
+        "tags": []
+      },
+      {
+        "id": "remix",
+        "name": "Remix with Nx",
+        "description": "",
+        "file": "shared/guides/remix",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/remix",
+        "tags": []
+      },
+      {
+        "id": "use-environment-variables-in-react",
+        "name": "Use Environment Variables in React",
+        "description": "",
+        "file": "shared/guides/use-environment-variables-in-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/use-environment-variables-in-react",
+        "tags": ["environment-variables"]
+      },
+      {
+        "id": "using-tailwind-css-in-react",
+        "name": "Using Tailwind CSS in React",
+        "description": "",
+        "file": "shared/guides/using-tailwind-css-in-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/using-tailwind-css-in-react",
+        "tags": []
+      },
+      {
+        "id": "adding-assets-react",
+        "name": "Adding Images, Fonts, and Files",
+        "description": "",
+        "file": "shared/guides/adding-assets",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/adding-assets-react",
+        "tags": []
+      },
+      {
+        "id": "module-federation-with-ssr",
+        "name": "Setup Module Federation with SSR for React",
+        "description": "",
+        "file": "shared/recipes/module-federation-with-ssr",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/module-federation-with-ssr",
+        "tags": ["use-task-executors", "module-federation", "react"]
+      },
+      {
+        "id": "deploy-nextjs-to-vercel",
+        "name": "Deploying Next.js applications to Vercel",
+        "description": "",
+        "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/deploy-nextjs-to-vercel",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/react",
+    "tags": []
+  },
+  "/recipes/react/migration-cra": {
+    "id": "migration-cra",
+    "name": "Migrating from CRA",
+    "description": "",
+    "file": "shared/migration/migration-cra",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/migration-cra",
+    "tags": []
+  },
+  "/recipes/react/react-18": {
+    "id": "react-18",
+    "name": "React 18 Migration",
+    "description": "",
+    "file": "shared/guides/react-18",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/react-18",
+    "tags": []
+  },
+  "/recipes/react/react-native": {
+    "id": "react-native",
+    "name": "React Native with Nx",
+    "description": "",
+    "file": "shared/guides/react-native",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/react-native",
+    "tags": []
+  },
+  "/recipes/react/remix": {
+    "id": "remix",
+    "name": "Remix with Nx",
+    "description": "",
+    "file": "shared/guides/remix",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/remix",
+    "tags": []
+  },
+  "/recipes/react/use-environment-variables-in-react": {
+    "id": "use-environment-variables-in-react",
+    "name": "Use Environment Variables in React",
+    "description": "",
+    "file": "shared/guides/use-environment-variables-in-react",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/use-environment-variables-in-react",
+    "tags": ["environment-variables"]
+  },
+  "/recipes/react/using-tailwind-css-in-react": {
+    "id": "using-tailwind-css-in-react",
+    "name": "Using Tailwind CSS in React",
+    "description": "",
+    "file": "shared/guides/using-tailwind-css-in-react",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/using-tailwind-css-in-react",
+    "tags": []
+  },
+  "/recipes/react/adding-assets-react": {
+    "id": "adding-assets-react",
+    "name": "Adding Images, Fonts, and Files",
+    "description": "",
+    "file": "shared/guides/adding-assets",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/adding-assets-react",
+    "tags": []
+  },
+  "/recipes/react/module-federation-with-ssr": {
+    "id": "module-federation-with-ssr",
+    "name": "Setup Module Federation with SSR for React",
+    "description": "",
+    "file": "shared/recipes/module-federation-with-ssr",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/module-federation-with-ssr",
+    "tags": ["use-task-executors", "module-federation", "react"]
+  },
+  "/recipes/react/deploy-nextjs-to-vercel": {
+    "id": "deploy-nextjs-to-vercel",
+    "name": "Deploying Next.js applications to Vercel",
+    "description": "",
+    "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/deploy-nextjs-to-vercel",
     "tags": []
   },
   "/recipes/angular": {
@@ -3169,197 +3360,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/setup-incremental-builds-angular",
-    "tags": []
-  },
-  "/recipes/react": {
-    "id": "react",
-    "name": "React",
-    "description": "Advanced guides to adopt Nx in React.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "migration-cra",
-        "name": "Migrating from CRA",
-        "description": "",
-        "file": "shared/migration/migration-cra",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/migration-cra",
-        "tags": []
-      },
-      {
-        "id": "react-18",
-        "name": "React 18 Migration",
-        "description": "",
-        "file": "shared/guides/react-18",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/react-18",
-        "tags": []
-      },
-      {
-        "id": "react-native",
-        "name": "React Native with Nx",
-        "description": "",
-        "file": "shared/guides/react-native",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/react-native",
-        "tags": []
-      },
-      {
-        "id": "remix",
-        "name": "Remix with Nx",
-        "description": "",
-        "file": "shared/guides/remix",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/remix",
-        "tags": []
-      },
-      {
-        "id": "use-environment-variables-in-react",
-        "name": "Use Environment Variables in React",
-        "description": "",
-        "file": "shared/guides/use-environment-variables-in-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/use-environment-variables-in-react",
-        "tags": ["environment-variables"]
-      },
-      {
-        "id": "using-tailwind-css-in-react",
-        "name": "Using Tailwind CSS in React",
-        "description": "",
-        "file": "shared/guides/using-tailwind-css-in-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/using-tailwind-css-in-react",
-        "tags": []
-      },
-      {
-        "id": "adding-assets-react",
-        "name": "Adding Images, Fonts, and Files",
-        "description": "",
-        "file": "shared/guides/adding-assets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/adding-assets-react",
-        "tags": []
-      },
-      {
-        "id": "module-federation-with-ssr",
-        "name": "Setup Module Federation with SSR for React",
-        "description": "",
-        "file": "shared/recipes/module-federation-with-ssr",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/module-federation-with-ssr",
-        "tags": ["use-task-executors", "module-federation", "react"]
-      },
-      {
-        "id": "deploy-nextjs-to-vercel",
-        "name": "Deploying Next.js applications to Vercel",
-        "description": "",
-        "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/deploy-nextjs-to-vercel",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/react",
-    "tags": []
-  },
-  "/recipes/react/migration-cra": {
-    "id": "migration-cra",
-    "name": "Migrating from CRA",
-    "description": "",
-    "file": "shared/migration/migration-cra",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/migration-cra",
-    "tags": []
-  },
-  "/recipes/react/react-18": {
-    "id": "react-18",
-    "name": "React 18 Migration",
-    "description": "",
-    "file": "shared/guides/react-18",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/react-18",
-    "tags": []
-  },
-  "/recipes/react/react-native": {
-    "id": "react-native",
-    "name": "React Native with Nx",
-    "description": "",
-    "file": "shared/guides/react-native",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/react-native",
-    "tags": []
-  },
-  "/recipes/react/remix": {
-    "id": "remix",
-    "name": "Remix with Nx",
-    "description": "",
-    "file": "shared/guides/remix",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/remix",
-    "tags": []
-  },
-  "/recipes/react/use-environment-variables-in-react": {
-    "id": "use-environment-variables-in-react",
-    "name": "Use Environment Variables in React",
-    "description": "",
-    "file": "shared/guides/use-environment-variables-in-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/use-environment-variables-in-react",
-    "tags": ["environment-variables"]
-  },
-  "/recipes/react/using-tailwind-css-in-react": {
-    "id": "using-tailwind-css-in-react",
-    "name": "Using Tailwind CSS in React",
-    "description": "",
-    "file": "shared/guides/using-tailwind-css-in-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/using-tailwind-css-in-react",
-    "tags": []
-  },
-  "/recipes/react/adding-assets-react": {
-    "id": "adding-assets-react",
-    "name": "Adding Images, Fonts, and Files",
-    "description": "",
-    "file": "shared/guides/adding-assets",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/adding-assets-react",
-    "tags": []
-  },
-  "/recipes/react/module-federation-with-ssr": {
-    "id": "module-federation-with-ssr",
-    "name": "Setup Module Federation with SSR for React",
-    "description": "",
-    "file": "shared/recipes/module-federation-with-ssr",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/module-federation-with-ssr",
-    "tags": ["use-task-executors", "module-federation", "react"]
-  },
-  "/recipes/react/deploy-nextjs-to-vercel": {
-    "id": "deploy-nextjs-to-vercel",
-    "name": "Deploying Next.js applications to Vercel",
-    "description": "",
-    "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/deploy-nextjs-to-vercel",
     "tags": []
   },
   "/recipes/node": {
@@ -3766,248 +3766,6 @@
     "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
     "tags": []
   },
-  "/recipes/nx-console": {
-    "id": "nx-console",
-    "name": "Nx Console",
-    "description": "Checkout all the recipes related to Nx Console.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "console-telemetry",
-        "name": "Telemetry",
-        "description": "",
-        "file": "shared/recipes/console-telemetry",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-telemetry",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "console-generate-command",
-        "name": "Generate Command",
-        "description": "",
-        "file": "shared/recipes/console-generate-command",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-generate-command",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "console-run-command",
-        "name": "Run Command",
-        "description": "",
-        "file": "shared/recipes/console-run-command",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-run-command",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "console-add-dependency-command",
-        "name": "Add Dependency Command",
-        "description": "",
-        "file": "shared/recipes/console-add-dependency-command",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-add-dependency-command",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "console-project-pane",
-        "name": "Project Pane",
-        "description": "",
-        "file": "shared/recipes/console-project-pane",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-project-pane",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "console-shortcuts",
-        "name": "Keyboard Shortcuts",
-        "description": "",
-        "file": "shared/recipes/console-shortcuts",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-shortcuts",
-        "tags": ["integrate-with-editors"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/nx-console",
-    "tags": []
-  },
-  "/recipes/nx-console/console-telemetry": {
-    "id": "console-telemetry",
-    "name": "Telemetry",
-    "description": "",
-    "file": "shared/recipes/console-telemetry",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-telemetry",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/nx-console/console-generate-command": {
-    "id": "console-generate-command",
-    "name": "Generate Command",
-    "description": "",
-    "file": "shared/recipes/console-generate-command",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-generate-command",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/nx-console/console-run-command": {
-    "id": "console-run-command",
-    "name": "Run Command",
-    "description": "",
-    "file": "shared/recipes/console-run-command",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-run-command",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/nx-console/console-add-dependency-command": {
-    "id": "console-add-dependency-command",
-    "name": "Add Dependency Command",
-    "description": "",
-    "file": "shared/recipes/console-add-dependency-command",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-add-dependency-command",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/nx-console/console-project-pane": {
-    "id": "console-project-pane",
-    "name": "Project Pane",
-    "description": "",
-    "file": "shared/recipes/console-project-pane",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-project-pane",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/nx-console/console-shortcuts": {
-    "id": "console-shortcuts",
-    "name": "Keyboard Shortcuts",
-    "description": "",
-    "file": "shared/recipes/console-shortcuts",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-shortcuts",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/troubleshooting": {
-    "id": "troubleshooting",
-    "name": "Troubleshooting",
-    "description": "Learn how to troubleshoot common problems.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "resolve-circular-dependencies",
-        "name": "Resolve Circular Dependencies",
-        "description": "",
-        "file": "shared/recipes/resolve-circular-dependencies",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-        "tags": ["explore-graph"]
-      },
-      {
-        "id": "troubleshoot-nx-install-issues",
-        "name": "Troubleshooting Nx Install Issues",
-        "description": "",
-        "file": "shared/installation/troubleshoot-installation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-        "tags": []
-      },
-      {
-        "id": "troubleshoot-cache-misses",
-        "name": "Troubleshoot Cache Misses",
-        "description": "",
-        "file": "shared/recipes/troubleshoot-cache-misses",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-        "tags": ["cache-task-results"]
-      },
-      {
-        "id": "unknown-local-cache",
-        "name": "Unknown Local Cache Error",
-        "description": "",
-        "file": "shared/guides/unknown-local-cache",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/unknown-local-cache",
-        "tags": []
-      },
-      {
-        "id": "performance-profiling",
-        "name": "Profiling Build Performance",
-        "description": "",
-        "file": "shared/guides/performance-profiling",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/performance-profiling",
-        "tags": ["use-task-executors", "environment-variables"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting",
-    "tags": []
-  },
-  "/recipes/troubleshooting/resolve-circular-dependencies": {
-    "id": "resolve-circular-dependencies",
-    "name": "Resolve Circular Dependencies",
-    "description": "",
-    "file": "shared/recipes/resolve-circular-dependencies",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-    "tags": ["explore-graph"]
-  },
-  "/recipes/troubleshooting/troubleshoot-nx-install-issues": {
-    "id": "troubleshoot-nx-install-issues",
-    "name": "Troubleshooting Nx Install Issues",
-    "description": "",
-    "file": "shared/installation/troubleshoot-installation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-    "tags": []
-  },
-  "/recipes/troubleshooting/troubleshoot-cache-misses": {
-    "id": "troubleshoot-cache-misses",
-    "name": "Troubleshoot Cache Misses",
-    "description": "",
-    "file": "shared/recipes/troubleshoot-cache-misses",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-    "tags": ["cache-task-results"]
-  },
-  "/recipes/troubleshooting/unknown-local-cache": {
-    "id": "unknown-local-cache",
-    "name": "Unknown Local Cache Error",
-    "description": "",
-    "file": "shared/guides/unknown-local-cache",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/unknown-local-cache",
-    "tags": []
-  },
-  "/recipes/troubleshooting/performance-profiling": {
-    "id": "performance-profiling",
-    "name": "Profiling Build Performance",
-    "description": "",
-    "file": "shared/guides/performance-profiling",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/performance-profiling",
-    "tags": ["use-task-executors", "environment-variables"]
-  },
   "/recipes/tips-n-tricks": {
     "id": "tips-n-tricks",
     "name": "Tips and tricks",
@@ -4278,6 +4036,248 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/run-commands-executor",
     "tags": ["use-task-executors"]
+  },
+  "/recipes/troubleshooting": {
+    "id": "troubleshooting",
+    "name": "Troubleshooting",
+    "description": "Learn how to troubleshoot common problems.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "resolve-circular-dependencies",
+        "name": "Resolve Circular Dependencies",
+        "description": "",
+        "file": "shared/recipes/resolve-circular-dependencies",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting/resolve-circular-dependencies",
+        "tags": ["explore-graph"]
+      },
+      {
+        "id": "troubleshoot-nx-install-issues",
+        "name": "Troubleshooting Nx Install Issues",
+        "description": "",
+        "file": "shared/installation/troubleshoot-installation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
+        "tags": []
+      },
+      {
+        "id": "troubleshoot-cache-misses",
+        "name": "Troubleshoot Cache Misses",
+        "description": "",
+        "file": "shared/recipes/troubleshoot-cache-misses",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "unknown-local-cache",
+        "name": "Unknown Local Cache Error",
+        "description": "",
+        "file": "shared/guides/unknown-local-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting/unknown-local-cache",
+        "tags": []
+      },
+      {
+        "id": "performance-profiling",
+        "name": "Profiling Build Performance",
+        "description": "",
+        "file": "shared/guides/performance-profiling",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting/performance-profiling",
+        "tags": ["use-task-executors", "environment-variables"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting",
+    "tags": []
+  },
+  "/recipes/troubleshooting/resolve-circular-dependencies": {
+    "id": "resolve-circular-dependencies",
+    "name": "Resolve Circular Dependencies",
+    "description": "",
+    "file": "shared/recipes/resolve-circular-dependencies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/resolve-circular-dependencies",
+    "tags": ["explore-graph"]
+  },
+  "/recipes/troubleshooting/troubleshoot-nx-install-issues": {
+    "id": "troubleshoot-nx-install-issues",
+    "name": "Troubleshooting Nx Install Issues",
+    "description": "",
+    "file": "shared/installation/troubleshoot-installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
+    "tags": []
+  },
+  "/recipes/troubleshooting/troubleshoot-cache-misses": {
+    "id": "troubleshoot-cache-misses",
+    "name": "Troubleshoot Cache Misses",
+    "description": "",
+    "file": "shared/recipes/troubleshoot-cache-misses",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
+    "tags": ["cache-task-results"]
+  },
+  "/recipes/troubleshooting/unknown-local-cache": {
+    "id": "unknown-local-cache",
+    "name": "Unknown Local Cache Error",
+    "description": "",
+    "file": "shared/guides/unknown-local-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/unknown-local-cache",
+    "tags": []
+  },
+  "/recipes/troubleshooting/performance-profiling": {
+    "id": "performance-profiling",
+    "name": "Profiling Build Performance",
+    "description": "",
+    "file": "shared/guides/performance-profiling",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/performance-profiling",
+    "tags": ["use-task-executors", "environment-variables"]
+  },
+  "/recipes/nx-console": {
+    "id": "nx-console",
+    "name": "Nx Console",
+    "description": "Checkout all the recipes related to Nx Console.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "console-telemetry",
+        "name": "Telemetry",
+        "description": "",
+        "file": "shared/recipes/console-telemetry",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-telemetry",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-generate-command",
+        "name": "Generate Command",
+        "description": "",
+        "file": "shared/recipes/console-generate-command",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-generate-command",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-run-command",
+        "name": "Run Command",
+        "description": "",
+        "file": "shared/recipes/console-run-command",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-run-command",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-add-dependency-command",
+        "name": "Add Dependency Command",
+        "description": "",
+        "file": "shared/recipes/console-add-dependency-command",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-add-dependency-command",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-project-pane",
+        "name": "Project Pane",
+        "description": "",
+        "file": "shared/recipes/console-project-pane",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-project-pane",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-shortcuts",
+        "name": "Keyboard Shortcuts",
+        "description": "",
+        "file": "shared/recipes/console-shortcuts",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-shortcuts",
+        "tags": ["integrate-with-editors"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/nx-console",
+    "tags": []
+  },
+  "/recipes/nx-console/console-telemetry": {
+    "id": "console-telemetry",
+    "name": "Telemetry",
+    "description": "",
+    "file": "shared/recipes/console-telemetry",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-telemetry",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-generate-command": {
+    "id": "console-generate-command",
+    "name": "Generate Command",
+    "description": "",
+    "file": "shared/recipes/console-generate-command",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-generate-command",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-run-command": {
+    "id": "console-run-command",
+    "name": "Run Command",
+    "description": "",
+    "file": "shared/recipes/console-run-command",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-run-command",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-add-dependency-command": {
+    "id": "console-add-dependency-command",
+    "name": "Add Dependency Command",
+    "description": "",
+    "file": "shared/recipes/console-add-dependency-command",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-add-dependency-command",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-project-pane": {
+    "id": "console-project-pane",
+    "name": "Project Pane",
+    "description": "",
+    "file": "shared/recipes/console-project-pane",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-project-pane",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-shortcuts": {
+    "id": "console-shortcuts",
+    "name": "Keyboard Shortcuts",
+    "description": "",
+    "file": "shared/recipes/console-shortcuts",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-shortcuts",
+    "tags": ["integrate-with-editors"]
   },
   "/recipes/other": {
     "id": "other",

@@ -162,17 +162,17 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/resolve-circular-dependencies",
-      "id": "resolve-circular-dependencies",
-      "name": "Resolve Circular Dependencies",
-      "path": "/recipes/troubleshooting/resolve-circular-dependencies"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/analyze-source-files",
       "id": "analyze-source-files",
       "name": "Disable Graph Links Created from Analyzing Source Files",
       "path": "/recipes/tips-n-tricks/analyze-source-files"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/resolve-circular-dependencies",
+      "id": "resolve-circular-dependencies",
+      "name": "Resolve Circular Dependencies",
+      "path": "/recipes/troubleshooting/resolve-circular-dependencies"
     },
     {
       "description": "",
@@ -440,6 +440,13 @@
       "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for React",
+      "path": "/recipes/react/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for Angular",
       "path": "/recipes/angular/module-federation-with-ssr"
     },
@@ -452,10 +459,10 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for React",
-      "path": "/recipes/react/module-federation-with-ssr"
+      "file": "shared/running-custom-commands",
+      "id": "run-commands-executor",
+      "name": "Running Custom Commands",
+      "path": "/recipes/tips-n-tricks/run-commands-executor"
     },
     {
       "description": "",
@@ -463,13 +470,6 @@
       "id": "performance-profiling",
       "name": "Profiling Build Performance",
       "path": "/recipes/troubleshooting/performance-profiling"
-    },
-    {
-      "description": "",
-      "file": "shared/running-custom-commands",
-      "id": "run-commands-executor",
-      "name": "Running Custom Commands",
-      "path": "/recipes/tips-n-tricks/run-commands-executor"
     },
     {
       "description": "",
@@ -651,13 +651,6 @@
   "environment-variables": [
     {
       "description": "",
-      "file": "shared/guides/use-environment-variables-in-angular",
-      "id": "use-environment-variables-in-angular",
-      "name": "Use Environment Variables in Angular",
-      "path": "/recipes/angular/use-environment-variables-in-angular"
-    },
-    {
-      "description": "",
       "file": "shared/guides/use-environment-variables-in-react",
       "id": "use-environment-variables-in-react",
       "name": "Use Environment Variables in React",
@@ -665,10 +658,10 @@
     },
     {
       "description": "",
-      "file": "shared/guides/performance-profiling",
-      "id": "performance-profiling",
-      "name": "Profiling Build Performance",
-      "path": "/recipes/troubleshooting/performance-profiling"
+      "file": "shared/guides/use-environment-variables-in-angular",
+      "id": "use-environment-variables-in-angular",
+      "name": "Use Environment Variables in Angular",
+      "path": "/recipes/angular/use-environment-variables-in-angular"
     },
     {
       "description": "",
@@ -676,6 +669,13 @@
       "id": "define-environment-variables",
       "name": "Define Environment Variables",
       "path": "/recipes/tips-n-tricks/define-environment-variables"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/performance-profiling",
+      "id": "performance-profiling",
+      "name": "Profiling Build Performance",
+      "path": "/recipes/troubleshooting/performance-profiling"
     },
     {
       "description": "",
@@ -690,25 +690,9 @@
       "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for Angular",
-      "path": "/recipes/angular/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
-      "id": "dynamic-module-federation-with-angular",
-      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/angular/dynamic-module-federation-with-angular"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for React",
       "path": "/recipes/react/module-federation-with-ssr"
-    }
-  ],
-  "angular": [
+    },
     {
       "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
@@ -731,6 +715,22 @@
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for React",
       "path": "/recipes/react/module-federation-with-ssr"
+    }
+  ],
+  "angular": [
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for Angular",
+      "path": "/recipes/angular/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/dynamic-mfe-angular",
+      "id": "dynamic-module-federation-with-angular",
+      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+      "path": "/recipes/angular/dynamic-module-federation-with-angular"
     }
   ],
   "deployment": [
